@@ -2,7 +2,7 @@
 
 > 🇬🇧 [English version](README.md)
 
-**Version 1.10.79**
+**Version 1.10.81**
 
 **Application de découpage de Bandes Dessinées** : outil de storyboard pour créer, organiser et visualiser des planches de BD avec rendu 3D des scènes.
 
@@ -41,7 +41,7 @@ Versions précédentes et notes de version : [toutes les releases](https://githu
 - 🦴 **Modèles articulés** : morphologie et correspondance des os proposées à l'import, corrigibles et réutilisables
 
 ### Éditeur de modèle
-- 🎯 **Poser n'importe quelle figure** (Personnage, Animal ou modèle articulé) au glisser d'une articulation ou au curseur exact
+- 🎯 **Poser n'importe quelle figure** (Personnage, Animal ou modèle articulé) au glisser d'une articulation ou au curseur exact, la figure se choisissant parmi vos modèles
 - 📚 **Bibliothèque de poses** partagée par tous vos Projets, rangée par archétype
 
 ### Projet & application

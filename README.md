@@ -2,7 +2,7 @@
 
 > 🇫🇷 [Version française](README.fr.md)
 
-**Version 1.10.79**
+**Version 1.10.81**
 
 **Comic book storyboarding application**: a desktop tool to create, organize and visualize comic book pages with real-time 3D scene rendering.
 
@@ -41,7 +41,7 @@ Previous versions and release notes: [all releases](https://github.com/val66/sto
 - 🦴 **Articulated models**: morphology and bone mapping proposed on import, correctable and reusable
 
 ### Model editor
-- 🎯 **Pose any figure** (character, animal or articulated model) by dragging a joint or with exact sliders
+- 🎯 **Pose any figure** (character, animal or articulated model) by dragging a joint or with exact sliders, picking the figure among your models
 - 📚 **Pose library** shared across every project, filed by archetype
 
 ### Project & application

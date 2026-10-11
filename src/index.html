@@ -71,9 +71,6 @@
        visibles et utilisables, comme pour toute autre vue. La Page ou la Scène dessous reste
        intacte, fermer rend la main à ce qui était là. -->
 <div id="personaEditorOverlay" class="persona-editor hidden">
-  <div class="persona-editor-bar">
-    <span class="persona-editor-title" id="personaEditorTitle">Éditeur de modèle</span>
-  </div>
   <div class="persona-editor-body">
     <div class="persona-editor-stage">
       <canvas id="personaEditorCanvas"></canvas>
@@ -81,6 +78,13 @@
     <!-- Panneau de réglage fin. Le conteneur est rempli par buildPersonaEditorJointSlidersUI
          (events.js) à partir des mêmes descripteurs que la modale, cf. poseSliderSpecs3D. -->
     <aside class="persona-editor-panel">
+      <!-- Le titre en tête du menu, comme les autres menus de droite (demandé : il était dans une
+           barre en haut à gauche). Ce qu'il disait de la figure est passé dans la section Modèle. -->
+      <div class="menu-header">
+        <span></span>
+        <span class="menu-title" id="personaEditorTitle">Éditeur de modèle</span>
+        <span></span>
+      </div>
       <!-- Fix 68 — deux BLOCS distincts plutôt que deux titres dans un même flux. Ils ne répondent
            pas à la même question : « quelle pose ? » se choisit d'un geste et se range, « quel
            angle ? » se retouche longuement. Les fondre faisait lire la liste des poses comme une
@@ -96,11 +100,15 @@
            englobant est donc aussi celui qu'on pose en premier.
            C'est un mannequin — poser en regardant le vrai corps évite de juger de travers —, et non
            ce qu'on édite : « Appliquer » vise toujours l'Élément d'où l'on vient.
-           Masquée devant un Personnage tant qu'il ne sait pas porter un fichier importé (E4d) : un
-           choix qui serait perdu à l'enregistrement vaut moins que pas de choix du tout. -->
-      <section class="side-section" id="personaEditorModelSection" style="display:none">
+           La section dit TOUJOURS quelle figure est posée (nom et archétype). Changer de figure ne se fait qu'en Éditeur autonome : « Mes modèles »
+           ouvre le store sur ses seuls modèles, et une vignette cliquée s'ouvre ici (demandé, à la
+           place d'une liste déroulante). -->
+      <section class="side-section" id="personaEditorModelSection">
         <h2 id="personaEditorModelHeading">Modèle</h2>
-        <select id="personaEditorModelSelect"></select>
+        <div class="persona-editor-figure" id="personaEditorFigure">—</div>
+        <div class="persona-editor-figure-actions" id="personaEditorFigureActions">
+          <button id="personaEditorStoreBtn" type="button" class="nav-btn" title="Choisir le modèle à poser parmi vos modèles">Mes modèles</button>
+        </div>
       </section>
       <!-- Pose de référence du brouillon. Appliquer une pose COPIE ses angles : aucun Personnage ne
            dépend de la bibliothèque, cf. docs/en/editeur-personnage.md. -->

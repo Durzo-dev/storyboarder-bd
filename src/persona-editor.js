@@ -52,12 +52,15 @@ import { confirmAction, setDismissedPoses, setPoseLibrary } from './io.js';
 import { afficherManuelLateral } from './sidebar.js';
 import { scheduleDrawCurrentPage } from './draw.js';
 
-// The ONLY thing this module needs from events.js, and therefore the only thing that would make a
-// cycle: refreshing the Character modal's pose <select> after the library changes. Injected rather
-// than imported, exactly as draw.js / io.js / sidebar.js already do, see architecture.md.
+// What this module needs from events.js, injected rather than imported so as not to make a cycle,
+// exactly as draw.js / io.js / sidebar.js already do, see architecture.md: refreshing the Character
+// modal's pose <select> after the library changes, and opening the store on « Mes modèles » to pick
+// the figure (the button of the Model section, demandé).
 let _buildPersonaPositionOptions = () => {};
-export function setPersonaEditorCallbacks({ buildPersonaPositionOptions }) {
+let _choisirFigureDansLeStore = null;
+export function setPersonaEditorCallbacks({ buildPersonaPositionOptions, choisirFigureDansLeStore }) {
   _buildPersonaPositionOptions = buildPersonaPositionOptions;
+  if (choisirFigureDansLeStore) _choisirFigureDansLeStore = choisirFigureDansLeStore;
 }
 
 // ---------- Persona editor (Fix 48) ----------
@@ -469,6 +472,9 @@ export const PERSONA_EDITOR_ROT_X_MAX = 85 * Math.PI / 180;
 // Deux fois plus lente qu'à l'origine (0,008, demandé) : un glisser d'un tiers de l'écran faisait
 // presque un demi-tour, trop pour ajuster un angle de vue au jugé.
 export const PERSONA_EDITOR_ORBIT_RAD_PER_PX = 0.004;
+// Le DÉPLACEMENT au clic droit, deux fois plus lent que la vitesse du pointeur (demandé : le modèle
+// filait trop vite pour se recadrer finement). Un facteur sur les pixels passés à deplacement3D.
+export const PERSONA_EDITOR_PAN_FACTEUR = 0.5;
 
 export function setPersonaEditorOrbit(rotX, rotY){
   S.personaEditorCamRotX = clamp(rotX || 0, -PERSONA_EDITOR_ROT_X_MAX, PERSONA_EDITOR_ROT_X_MAX);
@@ -576,46 +582,29 @@ export function resetPersonaEditorCamera(){
 }
 
 /**
- * Le titre de l'Éditeur. Fonction PURE.
+ * La FIGURE posée, telle que la section Modèle l'annonce : « cerberus (Quadrupède) ». Fonction PURE.
  *
- * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * IL NOMME LA FIGURE POSÉE, PAS L'ÉLÉMENT D'OÙ L'ON VIENT (#396)
- * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ * Elle était dans le titre de l'Éditeur (« Éditeur de modèle — cerberus (Quadrupède) », #396) ; le
+ * titre est désormais celui du menu de droite, nu, et ce qu'il disait de la figure est passé dans la
+ * section Modèle (demandé).
  *
- * Devant un modèle importé : « Éditeur de modèle — cerberus (Quadrupède) ». Le fichier et son
- * archétype, parce que c'est ce que l'écran manipule désormais — les articulations d'un squelette,
- * la bibliothèque de poses de son archétype, et la correspondance de son fichier. Tout cela vaut
- * pour le FICHIER, pas pour l'Élément qui le porte.
+ * IL NOMME LA FIGURE, PAS L'ÉLÉMENT D'OÙ L'ON VIENT (#396). Ce que l'écran manipule (articulations
+ * d'un squelette, poses de son archétype, correspondance de son fichier) vaut pour le FICHIER, pas
+ * pour l'Élément qui le porte : « Aldo » ne s'y invite pas.
  *
- * ⚠️ LE FICHIER EST DONC UN PARAMÈTRE, ET NON `target.modelFile` : l'Éditeur peut changer de figure
- * en cours de route par son sélecteur, et un titre lu sur la cible annoncerait alors le modèle
- * PRÉCÉDENT pendant qu'on en pose un autre. C'est la même règle que partout ici, ce qui est affiché
- * se lit sur la figure affichée (cf. figureImporteeDeLEditeur).
+ * ⚠️ LE FICHIER EST UN PARAMÈTRE, ET NON `target.modelFile` : l'Éditeur autonome peut changer de
+ * figure en cours de route, et ce qui est affiché se lit sur la figure affichée (cf.
+ * figureImporteeDeLEditeur).
  *
- * L'extension disparaît : elle appartient au disque, pas à ce que l'utilisateur a nommé.
- *
- * Devant le Personnage intégré, rien ne change : il n'a ni fichier ni archétype à annoncer.
+ * L'extension disparaît : elle appartient au disque. Le Personnage intégré est une figure comme une
+ * autre (#397) : il n'a pas de fichier, mais un nom et un archétype, humanoïde par construction.
  */
-export function personaEditorTitle3D(target, lang, fichier, archetype){
+export function figureDeLEditeur3D(lang, fichier, archetype){
   const fr = (lang !== 'en');
-  const base = fr ? 'Éditeur de modèle' : 'Model editor';
-  // ⚠️ LE PERSONNAGE INTÉGRÉ EST UNE FIGURE COMME UNE AUTRE (#397), et son titre suit donc la même
-  // forme. Il n'a pas de fichier — nous le construisons — mais il a bien un nom et un archétype :
-  // c'est un humanoïde, celui dont les dix-huit emplacements servent de vocabulaire à tous les
-  // autres. Un titre à part pour lui aurait laissé croire à un écran à part.
   const nom = fichier ? String(fichier).replace(/\.(glb|gltf)$/i, '') : (fr ? 'Personnage' : 'Character');
   const def = ARCHETYPES_3D.find(a => a.cle === (fichier ? archetype : 'humanoide'));
   const etiquette = def ? (fr ? def.label : def.labelEn) : null;
-  const figure = etiquette ? `${nom} (${etiquette})` : nom;
-  // ⚠️ LE MODE AUTONOME RESTE ANNONCÉ, et ce n'est pas une décoration : sans cible, « Appliquer »
-  // est ABSENT du panneau, et le Fix 64 avait ajouté cette mention précisément pour que cette
-  // absence s'explique. La forme change, la raison non — le titre nomme la figure, puis dit dans
-  // quel mode on la pose.
-  //
-  // ⚠️ CE QUI A DISPARU, EN REVANCHE : le nom de l'ÉLÉMENT. « Éditeur de modèle — Aldo » nommait
-  // la cible ; le titre nomme désormais ce qu'on POSE, et ce qu'on pose vaut pour toutes les
-  // figures du même genre, pas pour Aldo.
-  return target ? `${base} — ${figure}` : `${base} — ${figure}, ${fr ? 'pose libre' : 'free pose'}`;
+  return etiquette ? `${nom} (${etiquette})` : nom;
 }
 
 export function personaEditorPoseLabel(){
@@ -739,43 +728,56 @@ export function applyPersonaEditorJointDrag(session, dx, dy, geste){
  * mensonge, la même règle que pour le champ Position de la fiche.
  */
 /**
- * La section « Modèle » du panneau droit : sur quelle figure on pose.
+ * La section « Modèle » du panneau droit : QUELLE figure on pose, et de quoi en changer.
  *
- * QUAND ELLE APPARAÎT. Devant un modèle importé, et en mode autonome, deux cas où le choix ne peut
- * rien faire perdre. Devant un PERSONNAGE elle reste masquée : il ne sait pas encore porter un
- * fichier importé, et un choix effacé à l'enregistrement serait pire que pas de choix.
+ * Elle est TOUJOURS là quand l'Éditeur est ouvert : le nom de la figure et son archétype (ce que
+ * disait le titre, demandé). « Pose libre » s'y est affiché un temps, puis a été retiré (demandé).
  *
- * Le Personnage intégré est toujours proposé : c'est le repli, et il faut pouvoir y revenir.
+ * CHANGER DE FIGURE, en Éditeur AUTONOME seulement : ouvert depuis la fiche d'un Élément, on ne
+ * change pas son modèle (demandé, comme la fiche qui n'a plus de champ « Modèle »), et un Animal a sa
+ * propre figure. « Mes modèles » ouvre le store sur ses seuls modèles, et la vignette cliquée vient
+ * ici (demandé, à la place d'une liste déroulante qui ne montrait que des noms). Un bouton
+ * « Personnage intégré » a été jugé inutile et retiré (demandé) : pour revenir au mannequin, on
+ * rouvre l'Éditeur sans sélection.
  */
 export function buildPersonaEditorModelUI(){
   const section = document.getElementById('personaEditorModelSection');
-  const sel = document.getElementById('personaEditorModelSelect');
-  if (!section || !sel) return;
+  if (!section) return;
+  section.style.display = S.personaEditorOpen ? '' : 'none';
+  if (!S.personaEditorOpen) return;
   const cible = personaEditorTarget();
-  const figures = figuresDeLaBibliotheque3D();
-  // Seulement en mode AUTONOME (sans cible) : ouvert depuis la fiche d'un Élément, on ne change pas
-  // son modèle (demandé, comme la fiche qui n'a plus de champ « Modèle »), ni devant un Personnage,
-  // qui ne sait pas porter un fichier importé.
-  const utile = S.personaEditorOpen && figures.length > 0 && !cible;
-  section.style.display = utile ? '' : 'none';
-  if (!utile) return;
+  const animal = S.personaEditorAnimal;
+  const fichier = figureImporteeDeLEditeur();
 
   const titre = document.getElementById('personaEditorModelHeading');
   if (titre) titre.textContent = tr('Model', 'Modèle');
-  sel.innerHTML = '';
-  [{ v: '', t: tr('Character (built-in)', 'Personnage (intégré)') },
-    ...figures.map(nom => ({ v: nom, t: nom }))].forEach(({ v, t }) => {
-    const opt = document.createElement('option');
-    opt.value = v; opt.textContent = t;
-    sel.appendChild(opt);
-  });
-  sel.value = S.personaEditorModelFile || '';
+  const figure = document.getElementById('personaEditorFigure');
+  if (figure) {
+    figure.textContent = animal
+      ? figureDeLEditeur3D(S.appLang, libelleTypeObjet3D(animal, tr), squelettePourAnimal3D(animal))
+      : figureDeLEditeur3D(S.appLang, fichier, fichier ? morphologiePourModele(fichier) : null);
+  }
 
-  // ⚠️ CHANGER DE FIGURE RESYNCHRONISE TOUT LE PANNEAU, pas seulement le dessin (#383a). Redessiner
-  // seul laissait en place les curseurs ET la liste de poses de la figure PRÉCÉDENTE : choisir une
-  // araignée affichait une araignée pilotée par dix-huit articulations humaines, et proposait des
-  // poses d'humanoïde qu'elle ne sait pas porter. Le vocabulaire avait changé, l'écran non.
-  sel.onchange = () => { choisirFigureDeLEditeur(sel.value); syncPersonaEditorDom(); };
+  const actions = document.getElementById('personaEditorFigureActions');
+  if (actions) actions.hidden = !!(cible || animal);
+  const store = document.getElementById('personaEditorStoreBtn');
+  // Les libellés des deux boutons sont dans la table i18n, comme les autres boutons du panneau.
+  if (store) {
+    store.onclick = () => { if (_choisirFigureDansLeStore) _choisirFigureDansLeStore(); };
+  }
+}
+
+/**
+ * La figure choisie dans le store (« Mes modèles », mode choix) : décodée si besoin, puis posée.
+ * `charger(fichier)` décode le modèle (preloadModels, injecté) ; sans lui on pose directement.
+ * Ignoré si l'Éditeur a été fermé entre-temps.
+ */
+export async function poserFigureChoisie(fichier, charger){
+  if (!S.personaEditorOpen || !fichier) return;
+  if (charger) await charger(fichier);
+  if (!S.personaEditorOpen) return;
+  choisirFigureDeLEditeur(fichier);
+  syncPersonaEditorDom();
 }
 
 /**
@@ -1754,24 +1756,11 @@ function syncPersonaEditorDom(){
     //
     // Ce qui reste ici est la seule chose qui dépende vraiment de l'état : sa PRÉSENCE.
   }
-  // Fix 64 : le titre dit lequel des deux modes est actif, faute de quoi l'absence d'« Appliquer »
-  // resterait inexpliquée. Écrit ici plutôt que dans la table i18n : il dépend de la cible.
+  // Le titre est celui du menu de droite, nu : « Éditeur de modèle » (demandé). Ce qu'il disait de
+  // la figure et du mode (Fix 64, #396, #397, #401b) est dans la section Modèle, cf.
+  // buildPersonaEditorModelUI.
   const titleEl = document.getElementById('personaEditorTitle');
-  // La FIGURE, pas la cible : l'Éditeur peut changer de modèle en cours de route, et le titre doit
-  // suivre ce qui est à l'écran (#396). `morphologiePourModele` est le point de décision unique,
-  // celui-là même qui range les poses et construit les curseurs.
-  // ⚠️ TROIS FIGURES, UNE SEULE FORME DE TITRE (#401b). Un Animal n'a pas de fichier : c'est son
-  // NOM d'espèce qui le désigne — « Loup » — et son archétype vient de la table, pas d'une
-  // reconnaissance de squelette. Le reste du titre ne change pas d'un mot.
-  const fichierAffiche = figureImporteeDeLEditeur();
-  const animal = S.personaEditorAnimal;
-  if (titleEl) {
-    titleEl.textContent = animal
-      ? personaEditorTitle3D(personaEditorTarget(), S.appLang, libelleTypeObjet3D(animal, tr),
-        squelettePourAnimal3D(animal))
-      : personaEditorTitle3D(personaEditorTarget(), S.appLang, fichierAffiche,
-        fichierAffiche ? morphologiePourModele(fichierAffiche) : null);
-  }
+  if (titleEl) titleEl.textContent = tr('Model editor', 'Éditeur de modèle');
   if (S.personaEditorOpen) {
     buildPersonaEditorModelUI();
     buildPersonaEditorMapButtonUI();
@@ -2134,13 +2123,15 @@ export function wirePersonaEditor(){
         return;
       }
       if (panning && S.personaEditorOpen) {
-        // Le point visé glisse dans le plan de l'écran, à la vitesse du pointeur à cette distance.
+        // Le point visé glisse dans le plan de l'écran, à la moitié de la vitesse du pointeur à
+        // cette distance (PERSONA_EDITOR_PAN_FACTEUR).
         const cam = cameraDesApercus3D();
         const distance = (cam && cam.userData.distanceVisee) || 1;
         const p = S.personaEditorPan || { x: 0, y: 0 };
         const [x, y, z] = deplacement3D([p.x || 0, p.y || 0, p.z || 0],
           { lacet: S.personaEditorCamRotY || 0, tangage: S.personaEditorCamRotX || 0 },
-          e.clientX - panning.x, e.clientY - panning.y, distance, cnv.clientHeight || 1, (cam && cam.fov) || 36);
+          (e.clientX - panning.x) * PERSONA_EDITOR_PAN_FACTEUR, (e.clientY - panning.y) * PERSONA_EDITOR_PAN_FACTEUR,
+          distance, cnv.clientHeight || 1, (cam && cam.fov) || 36);
         S.personaEditorPan = { x, y, z };
         panning = { x: e.clientX, y: e.clientY };
         dessinerALaProchaineImage();

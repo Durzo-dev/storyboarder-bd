@@ -46,7 +46,7 @@ import {
   togglePersonaEditorHandle, applyPersonaEditorPose, personaEditorPoseLabel,
   savePersonaEditorPose, renamePersonaEditorPose, deletePersonaEditorPose,
   personaEditorPoseUsage, applyPersonaEditorToModal, poseKeyStillInLibrary,
-  personaEditorHasChanges, personaEditorTitle3D,
+  personaEditorHasChanges, figureDeLEditeur3D,
   setPersonaEditorOrbit, resetPersonaEditorCamera,
   PERSONA_EDITOR_FRONT_ROT_Y,
   beginPersonaEditorJointDrag, applyPersonaEditorJointDrag,
@@ -1656,110 +1656,37 @@ describe('éditeur de Personnage : détection des changements (Fix 61)', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Fix 64 : entrée AUTONOME de l'éditeur (phase 6).
+// #396, #397 : la figure posée, dans la section Modèle.
 //
-// Deux entrées, deux sémantiques : depuis une modale on retouche UN Personnage et « Appliquer »
-// existe ; depuis le menu de gauche on compose une pose pour la bibliothèque, sans cible, et le
-// bouton est ABSENT, masqué, pas grisé. Le titre nomme le mode, sans quoi cette disparition
-// resterait inexpliquée.
+// Elle était dans le titre de l'Éditeur (« Éditeur de modèle — cerberus (Quadrupède), pose
+// libre ») ; le titre est désormais celui du menu de droite, nu, et la figure est passée dans la
+// section Modèle (demandé). « Pose libre » a été retiré (demandé).
 // ─────────────────────────────────────────────────────────────────────────────
-describe('éditeur de Personnage : titre selon le mode (Fix 64)', () => {
-  test('sans cible : le titre annonce le mode pose libre', () => {
-    assert.match(personaEditorTitle3D(null), /pose libre/);
-    assert.match(personaEditorTitle3D(null, 'en'), /free pose/);
-  });
-
+describe('éditeur de modèle : la figure posée (#396, #397)', () => {
   test('#397 : le Personnage intégré est une FIGURE comme une autre', () => {
-    // ⚠️ CE TEST DISAIT « avec une cible nommée, le titre porte son nom », et la règle a changé avec
-    // #396 puis #397 : le titre nomme ce qu'on POSE, pas l'Élément d'où l'on vient. Le Personnage
-    // intégré n'a pas de fichier — nous le construisons — mais il a bien un nom et un archétype.
-    assert.equal(personaEditorTitle3D({ name: 'Aldo' }),
-      'Éditeur de modèle — Personnage (Humanoïde)');
-    assert.equal(personaEditorTitle3D({ name: 'Aldo' }, 'en'),
-      'Model editor — Character (Humanoid)');
+    assert.equal(figureDeLEditeur3D('fr'), 'Personnage (Humanoïde)');
+    assert.equal(figureDeLEditeur3D('en'), 'Character (Humanoid)');
   });
 
-  test('⚠️ le nom de l\'ÉLÉMENT ne s\'y invite plus, quel qu\'il soit', () => {
-    // « Éditeur de Personnage — Aldo » nommait la CIBLE. Ce que cet écran règle vaut pour toutes
-    // les figures du même genre — la bibliothèque de poses, les articulations, la correspondance —
-    // et jamais pour Aldo en particulier.
-    ['Aldo', '', '   ', undefined].forEach(name => {
-      assert.ok(!personaEditorTitle3D({ name }).includes('Aldo'));
-      assert.equal(personaEditorTitle3D({ name }), 'Éditeur de modèle — Personnage (Humanoïde)');
-    });
-    // Et plus de titre nu : la figure est TOUJOURS nommée, il n'y a plus de cas « rien à dire ».
-    assert.match(personaEditorTitle3D({}), /— Personnage \(Humanoïde\)$/);
-  });
-
-  test('les deux modes se distinguent bien', () => {
-    // C'est le seul point qui compte vraiment : lire le titre doit suffire à savoir si
-    // « Appliquer » a une raison d'exister. La forme a changé deux fois (#396, #397), la raison
-    // non — sans cible, « Appliquer » est ABSENT du panneau, et son absence doit s'expliquer.
-    assert.notEqual(personaEditorTitle3D(null), personaEditorTitle3D({ name: 'Aldo' }));
-    assert.match(personaEditorTitle3D(null, 'fr', 'cerberus.glb', 'quadrupede'), /pose libre$/,
-      'le mode autonome cesse d\'être annoncé dès qu\'on pose un modèle importé');
-  });
-
-  // ═════════════════════════════════════════════════════════════════════════════════════════════
-  // #396 — DEVANT UN MODÈLE, LE TITRE NOMME LE FICHIER ET SON ARCHÉTYPE
-  // ═════════════════════════════════════════════════════════════════════════════════════════════
-  //
-  // Demandé à l'usage : « Éditeur de modèle — cerberus (Quadrupède) ». C'est ce que l'écran manipule
-  // désormais — les articulations d'un squelette, la bibliothèque de poses de son archétype, la
-  // correspondance de son fichier — et tout cela vaut pour le FICHIER, pas pour l'Élément.
-
-  test('le fichier et son archétype, dans les deux langues', () => {
-    assert.equal(personaEditorTitle3D({ name: 'Aldo' }, 'fr', 'cerberus.glb', 'quadrupede'),
-      'Éditeur de modèle — cerberus (Quadrupède)');
-    assert.equal(personaEditorTitle3D({ name: 'Aldo' }, 'en', 'cerberus.glb', 'quadrupede'),
-      'Model editor — cerberus (Quadruped)');
-  });
-
-  test('⚠️ le NOM DE L\'ÉLÉMENT ne s\'y invite pas', () => {
-    // Il décrit un Élément ; le titre annonce ce que cet écran RÈGLE, qui vaut pour le fichier
-    // entier. Les mêler ferait croire qu'on pose cet Élément-là.
-    const titre = personaEditorTitle3D({ name: 'Aldo' }, 'fr', 'cerberus.glb', 'quadrupede');
-    assert.ok(!titre.includes('Aldo'));
-    assert.ok(!titre.includes('Personnage'));
-  });
-
-  test('#397 : une seule forme pour toutes les figures', () => {
-    // La garantie qui rend l'écran lisible : Personnage intégré et modèle importé se lisent de la
-    // même façon, « Éditeur de modèle — <figure> (<archétype>) ». Un titre à part pour le
-    // Personnage aurait laissé croire à un écran à part.
-    const forme = /^Éditeur de modèle — .+ \(.+\)$/;
-    assert.match(personaEditorTitle3D({ name: 'Aldo' }), forme);
-    assert.match(personaEditorTitle3D({ name: 'Aldo' }, 'fr', 'cerberus.glb', 'quadrupede'), forme);
-  });
-
-  test('l\'extension disparaît : elle appartient au disque', () => {
-    // Avec une CIBLE : sans elle le titre gagne « , pose libre » et l'ancrage de fin ne mord plus.
-    const cible = { name: 'Aldo' };
-    ['cerberus.glb', 'cerberus.gltf', 'cerberus.GLB'].forEach(f => {
-      assert.match(personaEditorTitle3D(cible, 'fr', f, 'quadrupede'),
-        /— cerberus \(Quadrupède\)$/, `extension non retirée pour ${f}`);
-    });
+  test('le fichier et son archétype, dans les deux langues, sans l\'extension', () => {
+    assert.equal(figureDeLEditeur3D('fr', 'cerberus.glb', 'quadrupede'), 'cerberus (Quadrupède)');
+    assert.equal(figureDeLEditeur3D('en', 'cerberus.glb', 'quadrupede'), 'cerberus (Quadruped)');
+    ['cerberus.glb', 'cerberus.gltf', 'cerberus.GLB'].forEach(f =>
+      assert.equal(figureDeLEditeur3D('fr', f, 'quadrupede'), 'cerberus (Quadrupède)', `extension non retirée pour ${f}`));
     // Un point AILLEURS dans le nom survit : « v2.1_cerberus.glb » reste lisible.
-    assert.match(personaEditorTitle3D(cible, 'fr', 'v2.1_cerberus.glb', 'quadrupede'),
-      /— v2\.1_cerberus \(/);
+    assert.match(figureDeLEditeur3D('fr', 'v2.1_cerberus.glb', 'quadrupede'), /^v2\.1_cerberus \(/);
   });
 
   test('un archétype inconnu ne laisse pas de parenthèse vide', () => {
-    // Un fichier dont la morphologie n'est pas encore décidée, ou une clé venue d'un vieux Projet :
-    // « cerberus () » ferait croire à un libellé tronqué.
-    assert.equal(personaEditorTitle3D({ name: 'Aldo' }, 'fr', 'cerberus.glb', null),
-      'Éditeur de modèle — cerberus');
-    assert.equal(personaEditorTitle3D({ name: 'Aldo' }, 'fr', 'cerberus.glb', 'inconnu'),
-      'Éditeur de modèle — cerberus');
+    assert.equal(figureDeLEditeur3D('fr', 'cerberus.glb', null), 'cerberus');
+    assert.equal(figureDeLEditeur3D('fr', 'cerberus.glb', 'inconnu'), 'cerberus');
   });
 
   test('sans fichier, l\'archétype passé est IGNORÉ', () => {
     // Le Personnage intégré est humanoïde par construction : lui coller l'archétype d'un modèle
     // qu'on vient de quitter annoncerait un quadrupède devant une silhouette humaine.
-    assert.match(personaEditorTitle3D(null, 'fr', null, 'quadrupede'),
-      /^Éditeur de modèle — Personnage \(Humanoïde\), pose libre$/);
-    assert.equal(personaEditorTitle3D({ name: 'Aldo' }, 'fr', '', 'quadrupede'),
-      'Éditeur de modèle — Personnage (Humanoïde)');
+    assert.equal(figureDeLEditeur3D('fr', null, 'quadrupede'), 'Personnage (Humanoïde)');
+    assert.equal(figureDeLEditeur3D('fr', '', 'quadrupede'), 'Personnage (Humanoïde)');
   });
 });
 
@@ -2406,8 +2333,13 @@ describe('Extraction de persona-editor.js : la couture tient', () => {
   });
 
   test('RÉGRESSION : events.js injecte buildPersonaPositionOptions', () => {
-    assert.match(evt, /setPersonaEditorCallbacks\(\{\s*buildPersonaPositionOptions\s*\}\)/,
+    assert.match(evt, /setPersonaEditorCallbacks\(\{\s*buildPersonaPositionOptions\s*,/,
       'sans injection, la modale Personnage garde une liste de poses périmée');
+  });
+
+  test('events.js injecte le choix de la figure dans le store (« Mes modèles », mode choix)', () => {
+    const bloc = evt.slice(evt.indexOf('setPersonaEditorCallbacks({'), evt.indexOf('setScenesCallbacks('));
+    assert.match(bloc, /choisirFigureDansLeStore: \(\) => ouvrirStore\(\{ choisir: \(fichier\) => poserFigureChoisie\(fichier, \(f\) => preloadModels\(\[f\]\)\) \}\)/);
   });
 
   test('l\'appel de câblage précède les écouteurs qui lisent l\'éditeur', () => {

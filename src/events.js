@@ -43,7 +43,7 @@ import { propositionDeRoles3D } from './archetype-roles.js';
 import { enregistrerFermeture, pileOuverte } from './modal-stack.js';
 import { initialiserMiseAJour, rafraichirTextesMaj, fermerModaleMaj } from './update-button.js';
 import { verifierRessources, rafraichirApresChangementDeDossier, simulationRessources } from './missing-resources.js';
-import { cablerStore, rafraichirTextesStore, fermerStore, rafraichirBibliothequeLocale, basculerStore } from './store-ui.js';
+import { cablerStore, rafraichirTextesStore, fermerStore, rafraichirBibliothequeLocale, basculerStore, ouvrirStore } from './store-ui.js';
 import { initLecteur, cablerLecteur, ouvrirLecteur, fermerLecteur, lecteurOuvert } from './lecteur-ui.js';
 import { oublierVignette } from './model-thumbnails.js';
 import { definirLumiereDeCase3D, effacerLumiereDeCase3D, directionDepuisDome3D,
@@ -102,7 +102,7 @@ import {
   buildPersonaEditorPosesUI, isPersonaEditorOpen, setPersonaEditorCallbacks, showPersonaEditor,
   syncPersonaEditorPoseLabel, wirePersonaEditor,
   figureImporteeDeLEditeur, oublierChainesDeLEditeur3D, buildPersonaEditorJointSlidersUI,
-  syncPersonaEditorSliders, drawPersonaEditor, ouvrirEditeurSurModele, hidePersonaEditor,
+  syncPersonaEditorSliders, drawPersonaEditor, ouvrirEditeurSurModele, poserFigureChoisie, hidePersonaEditor,
 } from './persona-editor.js';
 import { BUBBLE_FONT_PRELOAD_LIST } from './help-content.js';
 import { grainsAPrecharger3D } from './bubble-texture.js';
@@ -372,7 +372,12 @@ document.addEventListener('mousedown', (e) => {
 // editor's listener block used to run: an imported module is evaluated BEFORE its importer, so
 // calling wirePersonaEditor() from here, rather than letting the module wire itself on load,
 // keeps the original ordering.
-setPersonaEditorCallbacks({ buildPersonaPositionOptions });
+setPersonaEditorCallbacks({
+  buildPersonaPositionOptions,
+  // « Mes modèles » de la section Modèle (demandé) : le store en mode choix, sur ses seuls modèles ;
+  // la vignette cliquée est décodée puis posée dans l'Éditeur, au lieu d'ouvrir sa fiche.
+  choisirFigureDansLeStore: () => ouvrirStore({ choisir: (fichier) => poserFigureChoisie(fichier, (f) => preloadModels([f])) }),
+});
 setScenesCallbacks({ snapshot });
 setCanvasToolsCallbacks({ snapshot });
 // Un modèle importé qui finit d'être décodé doit apparaître sans que l'utilisateur touche à

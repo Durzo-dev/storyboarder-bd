@@ -270,6 +270,14 @@ l'éditeur touche à un Personnage ; le nom se déduit alors de `S.personaEditor
 - **6.1** Section Personnage du menu de gauche, Personnage par défaut. Pas de cible → bouton
   « Appliquer » **absent**, pas seulement grisé : les deux modes ont des sémantiques différentes et
   le titre doit dire lequel est actif.
+- **6.2** *(revu depuis)* Le titre est devenu celui du menu de droite, nu (« Éditeur de modèle ») :
+  la figure posée et son archétype sont passés dans la section Modèle (`figureDeLEditeur3D`). La
+  mention « Pose libre » a été retirée à l'usage : l'absence d'« Appliquer » se comprend sans elle. La liste déroulante des figures est remplacée par le
+  bouton « Mes modèles », qui ouvre le store en **mode choix** (`ouvrirStore({ choisir })` : seul
+  l'onglet « Mes modèles », une vignette choisit au lieu d'ouvrir sa fiche, un modèle statique est
+  inactif, l'onglet d'avant revient à la fermeture). Un bouton « Personnage intégré » a été essayé
+  puis retiré, jugé inutile. Le déplacement au clic droit va à la moitié de la vitesse du pointeur
+  (`PERSONA_EDITOR_PAN_FACTEUR`).
 
 ### Phase 7 — Finitions
 

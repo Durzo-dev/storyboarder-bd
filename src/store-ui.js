@@ -46,6 +46,14 @@ let positionListe = 0;
 let possedes = new Map();
 /** Les résultats affichés, pour refaire les cartes sans nouvelle requête. */
 let affiches = [];
+/**
+ * Le MODE CHOIX (demandé, l'Éditeur de modèle) : la fenêtre ne montre que « Mes modèles », et un clic
+ * sur une vignette rend le modèle à l'appelant au lieu d'ouvrir sa fiche. `choix(fichier)` est le
+ * rappel ; null hors de ce mode. L'onglet d'avant est rendu à la fermeture, et la fiche laissée
+ * ouverte la dernière fois n'est ni rouverte ni oubliée.
+ */
+let choix = null;
+let sourceAvantChoix = null;
 /** La pause de saisie avant de lancer la recherche. */
 export const PAUSE_SAISIE_MS = 450;
 
@@ -114,7 +122,8 @@ export function rafraichirTextesStore(){
 function rendreOnglets(){
   const zone = $('storeOnglets');
   if (!zone) return;
-  zone.replaceChildren(...SOURCES_STORE.map(id => {
+  // En mode choix, le seul onglet est « Mes modèles » : on ne pose que ce qui est sur le disque.
+  zone.replaceChildren(...SOURCES_STORE.filter(id => !choix || id === LOCAL).map(id => {
     const nom = id === LOCAL ? textesStore(langue()).mesModeles : ((infosPar[id] && infosPar[id].source.nom) || id);
     const b = el('button', { texte: nom, classe: 'store-onglet' + (id === source ? ' actif' : ''),
       attrs: { type: 'button', role: 'tab', 'aria-selected': String(id === source) } });
@@ -929,7 +938,20 @@ function carteLocale(e){
       e.taille ? el('span', { texte: poidsLisible(e.taille, langue()) }) : null,
     ]),
   ]);
-  c.onclick = () => ouvrirFiche(e);
+  // En mode choix, la vignette CHOISIT le modèle (demandé). Un modèle statique (squelette mesuré, sans
+  // os) n'a rien à poser : sa carte reste visible mais inactive.
+  const statique = e.os === 0;
+  if (choix && statique) {
+    c.classList.add('store-carte-inactive');
+    c.title = e.fichier + ' · ' + t.statiqueNonPosable;
+  }
+  c.onclick = () => {
+    if (!choix) { ouvrirFiche(e); return; }
+    if (statique) return;
+    const rendre = choix;
+    fermerStore();
+    rendre(e.fichier);
+  };
   // Le clic droit garde le menu du reste de l'application (demandé).
   c.addEventListener('contextmenu', (ev) => {
     ev.preventDefault();
@@ -1103,9 +1125,17 @@ export function basculerStore(){
   else fermerStore();
 }
 
-export async function ouvrirStore({ onglet } = {}){
+export async function ouvrirStore({ onglet, choisir } = {}){
   const pont = window.storyboarderAPI;
   if (!pont || !pont.storeChercher) return;
+  if (typeof choisir === 'function') {
+    if (!choix) sourceAvantChoix = infos ? source : ((etatMemorise() || {}).source || null);
+    choix = choisir;
+    onglet = LOCAL;
+  } else if (choix) {
+    // Le bouton du bandeau pendant un choix : on revient à la fenêtre ordinaire.
+    quitterModeChoix();
+  }
   let restaure = null;
   if (!infos) {
     // Première ouverture de la session : on reprend l'onglet et les filtres de la dernière fois.
@@ -1129,8 +1159,9 @@ export async function ouvrirStore({ onglet } = {}){
   // cartes déjà affichées sont refaites, sans nouvelle requête, pour que leur badge suive.
   await rafraichirPossedes();
   $('storeModal').classList.remove('hidden');
-  const reprise = aRouvrir;
-  aRouvrir = null;
+  // En mode choix, la fiche laissée ouverte attend la prochaine ouverture normale.
+  const reprise = choix ? null : aRouvrir;
+  if (!choix) aRouvrir = null;
   // Une première page dès l'ouverture : une fenêtre vide n'apprend rien sur ce qu'on peut y trouver.
   // La bibliothèque locale est TOUJOURS relue : un modèle a pu être placé, renommé ou importé.
   if (source === LOCAL || !$('storeGrille').children.length) await chercher();
@@ -1144,7 +1175,27 @@ export async function ouvrirStore({ onglet } = {}){
   $('storeTexte').focus();
 }
 
+/** Fin du mode choix : l'onglet d'avant revient, et la grille sera refaite à la prochaine ouverture. */
+function quitterModeChoix(){
+  choix = null;
+  if (sourceAvantChoix && sourceAvantChoix !== source && infosPar[sourceAvantChoix]) {
+    source = sourceAvantChoix;
+    infos = infosPar[source];
+    $('storeGrille').replaceChildren();
+    affiches = [];
+  }
+  sourceAvantChoix = null;
+  rafraichirTextesStore();
+}
+
 export function fermerStore(){
+  if (choix) {
+    quitterModeChoix();
+    memoriserEtat();
+    fermerFiche();
+    $('storeModal').classList.add('hidden');
+    return;
+  }
   memoriserEtat();
   const ouverte = !$('storeFiche').hidden && ficheCourante;
   aRouvrir = { fiche: ouverte ? ficheCourante : null, position: ouverte ? positionListe : $('storeDefilement').scrollTop };

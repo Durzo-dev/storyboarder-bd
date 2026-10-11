@@ -49,7 +49,8 @@ import { box3FromObjectSkinAware3D } from '../src/skinned-box-3d.js';
 import {
   openPersonaEditor, closePersonaEditor, personaEditorTarget, personaEditorInitialJoints,
   setPersonaEditorJointDeg, applyPersonaEditorToModal, hidePersonaEditor, figureImporteeDeLEditeur,
-  buildPersonaEditorModelUI, choisirFigureDeLEditeur, orbiteDouvertureEditeur3D,
+  buildPersonaEditorModelUI, choisirFigureDeLEditeur, orbiteDouvertureEditeur3D, poserFigureChoisie,
+  setPersonaEditorCallbacks,
   PERSONA_EDITOR_FRONT_ROT_Y, setPersonaEditorOrbit, editeurPoseUneCreature3D,
   personaEditorHasChanges, showPersonaEditor, entreeDePoigneesDeCreature3D, focusPersonaEditorHandle,
   specsDeCreature3D, personaEditorSpecsOf, beginPersonaEditorJointDrag, applyPersonaEditorJointDrag,
@@ -646,33 +647,56 @@ describe('Le champ « Modèle » : changer de figure sans perdre la pose', () =>
       'un fichier sans squelette reconnu ne doit pas être proposé : rien ne pourrait le poser');
   });
 
-  test('la section « Modèle » de l\'éditeur : présente selon la cible', () => {
+  test('la section « Modèle » de l\'éditeur : toujours là, mais on ne change de figure qu\'en autonome', () => {
+    // La section dit TOUJOURS quelle figure est posée (ce que disait le titre, demandé). Changer de
+    // figure (« Mes modèles », « Personnage intégré ») n'est offert qu'en Éditeur autonome.
     const section = document.getElementById('personaEditorModelSection');
+    const actions = document.getElementById('personaEditorFigureActions');
     const o = modele();
     S.tomes = [{ pages: [{ objects: [o] }] }];
     S.currentTomeIndex = 0; S.currentPageIndex = 0; S.editingSceneId = null;
 
     openPersonaEditor(o, 'objectModal');
     buildPersonaEditorModelUI();
+    assert.equal(section.style.display, '', 'la figure posée doit rester annoncée');
     // Demandé par Valentin : ouvert depuis la fiche d'un modèle, l'Éditeur ne change pas son modèle,
     // pas plus que la fiche (qui n'a plus de champ « Modèle »).
-    assert.equal(section.style.display, 'none', 'devant un modèle importé, on ne change plus de figure');
+    assert.equal(actions.hidden, true, 'devant un modèle importé, on ne change plus de figure');
     closePersonaEditor();
 
     // Mode autonome : rien à perdre, on regarde ce qu'on veut.
     openPersonaEditor(null);
     buildPersonaEditorModelUI();
     assert.equal(section.style.display, '');
+    assert.equal(actions.hidden, false);
     closePersonaEditor();
 
-    // Devant un PERSONNAGE : masquée tant qu'il ne sait pas porter un fichier importé. Un choix
-    // effacé à l'enregistrement vaudrait moins que pas de choix du tout.
+    // Devant un PERSONNAGE : pas de changement de figure tant qu'il ne sait pas porter un fichier importé.
     const perso = { id: 'p9', type: 'perso', position: 'debout' };
     S.tomes = [{ pages: [{ objects: [perso] }] }];
     openPersonaEditor(perso, 'descModal');
     buildPersonaEditorModelUI();
-    assert.equal(section.style.display, 'none');
+    assert.equal(actions.hidden, true);
     closePersonaEditor();
+  });
+
+  test('« Mes modèles » ouvre le store en mode choix, et la vignette choisie est posée', async () => {
+    let appels = 0;
+    setPersonaEditorCallbacks({ buildPersonaPositionOptions: () => {}, choisirFigureDansLeStore: () => { appels++; } });
+    openPersonaEditor(null);
+    buildPersonaEditorModelUI();
+    document.getElementById('personaEditorStoreBtn').onclick();
+    assert.equal(appels, 1, 'le bouton n\'ouvre pas le store');
+    // Ce que le store rend : le fichier cliqué, décodé par le chargeur puis posé.
+    const charges = [];
+    await poserFigureChoisie(AUTRE, async (f) => { charges.push(f); })
+      .catch(e => { if (!/createElementNS|WebGL/.test(e.message)) throw e; });
+    assert.deepEqual(charges, [AUTRE], 'le modèle choisi doit être décodé avant d\'être posé');
+    assert.equal(S.personaEditorModelFile, AUTRE);
+    closePersonaEditor();
+    // Éditeur fermé entre-temps : rien n'est posé.
+    await poserFigureChoisie(FICHIER);
+    assert.equal(S.personaEditorOpen, false);
   });
 
   test('« Appliquer » emporte la figure choisie, et la pose traduite POUR elle', () => {
@@ -698,14 +722,12 @@ describe('Le champ « Modèle » : changer de figure sans perdre la pose', () =>
     closePersonaEditor();
   });
 
-  test('revenir au Personnage intégré est toujours possible (Éditeur autonome)', () => {
-    openPersonaEditor(null);
-    buildPersonaEditorModelUI();
-    const sel = document.getElementById('personaEditorModelSelect');
-    assert.ok(sel.children.some(o2 => o2.value === ''), 'le repli doit être offert');
+  test('plus de bouton « Personnage intégré » (demandé), mais la chaîne vide reste le Personnage', () => {
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+    assert.ok(!html.includes('personaEditorBuiltinBtn'), 'le bouton « Personnage intégré » est revenu');
+    assert.ok(!html.includes('id="personaEditorMode"'), '« Pose libre » est revenu sous le nom du modèle');
     assert.equal(choisirFigureDeLEditeur(''), null,
       'la chaîne vide n\'est pas un nom de fichier : c\'est le Personnage intégré');
-    closePersonaEditor();
   });
 
   test('RÉGRESSION : le sens est unique, corps → os et jamais l\'inverse', () => {
@@ -1464,7 +1486,7 @@ describe('l\'Éditeur transmet l\'intention à la figure qu\'il affiche', () => 
     hidePersonaEditor();
   });
 
-  test('#383a : changer de figure refait le panneau, dans les DEUX sens', () => {
+  test('#383a : changer de figure refait le panneau, dans les DEUX sens', async () => {
     // Le sélecteur est le second moment où le vocabulaire change, et il souffrait du même mal :
     // choisir une araignée laissait en place les dix-huit articulations humaines. Le retour au
     // Personnage compte autant : sans lui, on garderait des curseurs d'os d'araignée pour poser un
@@ -1478,14 +1500,12 @@ describe('l\'Éditeur transmet l\'intention à la figure qu\'il affiche', () => 
     assert.ok(GROUPES_PERSO.every(nom => textesDuPanneau().includes(nom)),
       'préalable : le Personnage montre bien ses six groupes');
 
-    const sel = document.getElementById('personaEditorModelSelect');
-    sel.value = 'creature-sel.glb';
-    sansDessiner(() => sel.onchange());
+    // Le vrai chemin : la figure rendue par le store (« Mes modèles »), puis le bouton de retour.
+    await poserFigureChoisie('creature-sel.glb').catch(e => { if (!/createElementNS|WebGL/.test(e.message)) throw e; });
     assert.match(textesDuPanneau(), /mixamorig:Spine/,
       'choisir une créature laisse les articulations de l\'humanoïde en place');
 
-    sel.value = '';
-    sansDessiner(() => sel.onchange());
+    sansDessiner(() => { choisirFigureDeLEditeur(null); buildPersonaEditorJointSlidersUI(); });
     const retour = textesDuPanneau();
     assert.ok(GROUPES_PERSO.every(nom => retour.includes(nom)),
       'revenir au Personnage laisse les os de la créature en place');
@@ -2585,42 +2605,37 @@ describe('#394 : le bouton du tableau de correspondance, et le dépliage de l\'�
   });
 });
 
-describe('#396 : le titre suit la FIGURE affichée, pas la cible', () => {
+describe('#396 : la section Modèle suit la FIGURE affichée, pas la cible', () => {
   const sansDessiner = (f) => {
     try { f(); } catch (e) {
       if (!/createElementNS|WebGL/.test(e.message)) throw e;
     }
   };
 
-  test('⚠️ changer de figure change le titre', () => {
-    // L'Éditeur AUTONOME peut changer de modèle en cours de route par son sélecteur (ouvert depuis
-    // une fiche, il ne le peut plus, demandé). Le titre doit suivre la figure affichée.
+  test('⚠️ changer de figure change ce que la section annonce ; le titre, lui, reste nu', async () => {
+    // L'Éditeur AUTONOME peut changer de modèle en cours de route (ouvert depuis une fiche, il ne le
+    // peut plus, demandé). La section Modèle doit suivre la figure affichée ; le titre est celui
+    // du menu, « Éditeur de modèle », et ne nomme plus la figure (demandé).
     _setModelCacheEntry('creature-titre.glb', { scene: squeletteSansBras() });
     S.tomes = [{ pages: [{ objects: [] }] }];
     S.currentTomeIndex = 0; S.currentPageIndex = 0; S.editingSceneId = null;
     sansDessiner(() => showPersonaEditor(null));
 
     const titre = () => document.getElementById('personaEditorTitle').textContent;
-    buildPersonaEditorModelUI();
-    const sel = document.getElementById('personaEditorModelSelect');
-    sel.value = 'creature-titre.glb';
-    sansDessiner(() => sel.onchange());
-    const surLeModele = titre();
-    assert.match(titre(), /creature-titre/, 'le titre ne nomme pas le fichier posé');
-    assert.ok(!titre().includes('.glb'), 'l\'extension appartient au disque, pas au titre');
+    const figure = () => document.getElementById('personaEditorFigure').textContent;
+    const titreNu = titre();
+    await poserFigureChoisie('creature-titre.glb').catch(e => { if (!/createElementNS|WebGL/.test(e.message)) throw e; });
+    const surLeModele = figure();
+    assert.match(figure(), /creature-titre/, 'la section ne nomme pas le fichier posé');
+    assert.ok(!figure().includes('.glb'), 'l\'extension appartient au disque');
+    assert.equal(titre(), titreNu, 'le titre ne doit plus nommer la figure');
+    assert.ok(!titre().includes('creature-titre'));
 
-    // Retour au Personnage intégré PAR LE VRAI CHEMIN, le sélecteur de figure : c'est lui qui
-    // resynchronise l'écran, et le titre en fait partie.
-    sel.value = '';
-    sansDessiner(() => sel.onchange());
-    // ⚠️ AUCUN LIBELLÉ EN DUR : la suite tourne en anglais, et une première version de ce test
-    // cherchait « Personnage ». Ce qui compte est le CHANGEMENT — le fichier n'est plus nommé, et
-    // le nom de l'Élément revient, ce qui est le titre du Personnage intégré.
-    assert.ok(!titre().includes('creature-titre'),
-      'le titre annonce encore un modèle qu\'on ne pose plus');
-    assert.notEqual(titre(), surLeModele, 'le titre n\'a pas suivi le changement de figure');
-    assert.ok(!titre().includes('Aldo'),
-      'le nom de l\'Élément s\'est réinvité : le titre nomme la FIGURE (#396, #397)');
+    // Retour au Personnage intégré, puis la resynchronisation de l'écran, dont la section fait partie.
+    sansDessiner(() => { choisirFigureDeLEditeur(null); buildPersonaEditorModelUI(); });
+    // ⚠️ AUCUN LIBELLÉ EN DUR : la suite tourne en anglais. Ce qui compte est le CHANGEMENT.
+    assert.ok(!figure().includes('creature-titre'), 'la section annonce encore un modèle qu\'on ne pose plus');
+    assert.notEqual(figure(), surLeModele, 'la section n\'a pas suivi le changement de figure');
     hidePersonaEditor();
   });
 });
@@ -3185,5 +3200,14 @@ describe('#402c : une créature n\'a pas de repère de corps, et c\'est la réco
       'le même squelette déclaré humanoïde n\'a plus de repère : les poses ne s\'appliquent plus');
     setSkeletonBridge(null);
     _viderCacheCorrespondances();
+  });
+});
+
+describe('Éditeur : le déplacement au clic droit est ralenti (demandé)', () => {
+  test('les pixels passés à deplacement3D sont multipliés par PERSONA_EDITOR_PAN_FACTEUR, inférieur à 1', async () => {
+    const { PERSONA_EDITOR_PAN_FACTEUR } = await import('../src/persona-editor.js');
+    assert.ok(PERSONA_EDITOR_PAN_FACTEUR > 0 && PERSONA_EDITOR_PAN_FACTEUR < 1);
+    const src = readFileSync(new URL('../src/persona-editor.js', import.meta.url), 'utf8');
+    assert.match(src, /\(e\.clientX - panning\.x\) \* PERSONA_EDITOR_PAN_FACTEUR, \(e\.clientY - panning\.y\) \* PERSONA_EDITOR_PAN_FACTEUR/);
   });
 });

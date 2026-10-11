@@ -262,6 +262,13 @@ to maintain.
 - **6.1** Character section of the left menu, default character. No target → "Apply" button
   **absent**, not merely greyed out: the two modes have different semantics and the title must say
   which one is active.
+- **6.2** *(revised since)* The title became that of the right-hand menu, bare ("Model editor"): the
+  figure posed and its archetype moved to the Model section (`figureDeLEditeur3D`). The "Free pose"
+  mention was removed in use: the missing "Apply" is understood without it. The figure drop-down is replaced by the "My models"
+  button, which opens the store in **choice mode** (`ouvrirStore({ choisir })`: only the "My models"
+  tab, a thumbnail chooses instead of opening its details, a static model is inactive, the previous
+  tab comes back on closing). A "Built-in character" button was tried then removed, deemed
+  useless. Right-drag panning runs at half the pointer's speed (`PERSONA_EDITOR_PAN_FACTEUR`).
 
 ### Phase 7 — Finishing touches
 
