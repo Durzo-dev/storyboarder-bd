@@ -285,7 +285,9 @@ l'éditeur touche à un Personnage ; le nom se déduit alors de `S.personaEditor
   sensibilité d'une Case reste un multiplicateur. Dans les Scènes, la rotation ne dépend plus ni de
   la distance de la caméra ni du zoom de la vue (`tests/vitesses-3d.test.mjs`). Réglées ensuite à l'usage,
   store compris : rotation à 0,0025 rad par pixel (le quart de Sketchfab), déplacement à la moitié de
-  la vitesse du pointeur.
+  la vitesse du pointeur. Ces valeurs sont la BASE (100 %) : la Configuration les ajuste en
+  pourcentage, de 25 à 200 % (`settings.json`, clés `vitesseRotation3D` et `vitesseDeplacement3D`),
+  et les gestes lisent `vitesseRotation3D()` / `vitesseDeplacement3D()`.
 
 ### Phase 7 — Finitions
 

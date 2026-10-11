@@ -514,6 +514,14 @@ export const I18N_MODALS = [
   ['#cacheMoLabel', 'Pages kept in memory', 'Planches en mémoire'],
   ['#cacheMoRange', null],   // sa valeur est écrite par le code, unité comprise
   ['#cacheMoValue', null],
+  // Les vitesses des gestes 3D : même forme que le curseur de mémoire, valeurs écrites par le code.
+  ['#gestesRotationLabel', '3D rotation speed', 'Vitesse de rotation 3D'],
+  ['#gestesRotationRange', null],
+  ['#gestesRotationValue', null],
+  ['#gestesDeplacementLabel', '3D panning speed', 'Vitesse de déplacement 3D'],
+  ['#gestesDeplacementRange', null],
+  ['#gestesDeplacementValue', null],
+  ['#gestesResetBtn', '↺ Default speeds', '↺ Vitesses par défaut'],
   ['#exportShowPanelBadgesCheckbox', null], // handled via trailing helper below
   ['#exportShowPanelDescriptionsCheckbox', null],
   ['#settingsModalClose', 'Close', 'Fermer'],

@@ -1272,6 +1272,31 @@
         <span style="--i:0">0</span><span style="--i:1">150</span><span style="--i:2">300</span><span style="--i:3">450</span><span style="--i:4">600</span><span style="--i:5">750</span><span style="--i:6">900</span>
       </div>
     </div>
+    <!-- Gestes 3D (demandé) : la vitesse du clic gauche (tourner) et du clic droit (déplacer), la
+         même partout (store, Éditeur de modèle, Scènes, Cases en mode Caméra). En pourcentage des
+         vitesses de base (utils.js) : « 0,0025 rad par pixel » ne parle à personne. Huit crans,
+         d'où --crans-moins-un:7. -->
+    <label class="modal-field-label" id="gestesRotationLabel">Vitesse de rotation 3D</label>
+    <div class="curseur-gradue" style="--crans-moins-un:7;">
+      <div class="curseur-gradue-ligne">
+        <input type="range" id="gestesRotationRange" min="25" max="200" step="25" value="100">
+        <span id="gestesRotationValue">100 %</span>
+      </div>
+      <div class="curseur-gradue-crans" aria-hidden="true">
+        <span style="--i:0">25</span><span style="--i:1">50</span><span style="--i:2">75</span><span style="--i:3">100</span><span style="--i:4">125</span><span style="--i:5">150</span><span style="--i:6">175</span><span style="--i:7">200</span>
+      </div>
+    </div>
+    <label class="modal-field-label" id="gestesDeplacementLabel">Vitesse de déplacement 3D</label>
+    <div class="curseur-gradue" style="--crans-moins-un:7;">
+      <div class="curseur-gradue-ligne">
+        <input type="range" id="gestesDeplacementRange" min="25" max="200" step="25" value="100">
+        <span id="gestesDeplacementValue">100 %</span>
+      </div>
+      <div class="curseur-gradue-crans" aria-hidden="true">
+        <span style="--i:0">25</span><span style="--i:1">50</span><span style="--i:2">75</span><span style="--i:3">100</span><span style="--i:4">125</span><span style="--i:5">150</span><span style="--i:6">175</span><span style="--i:7">200</span>
+      </div>
+    </div>
+    <button class="project-modal-btn nav-btn" id="gestesResetBtn" type="button" style="margin-top:0; width:100%;">↺ Vitesses par défaut</button>
     <!-- Section "Langue" (cf. appLang/applyI18n) — sur demande utilisateur : Anglais par défaut, Français
          disponible (langue d'origine de l'application). -->
     <label class="modal-field-label">Langue de l'interface</label>

@@ -278,6 +278,11 @@ export const S = {
   // cran nommé : la valeur se compare à des octets mesurés, et un jour où le coût d'une Planche
   // changera, « moyen » aurait voulu dire autre chose sans que personne ne s'en aperçoive.
   appCacheMo:              300,
+  // Les vitesses des gestes 3D (clic gauche pour tourner, clic droit pour déplacer), en POURCENTAGE
+  // des vitesses de base (utils.js, VITESSE_ROTATION_3D / VITESSE_DEPLACEMENT_3D). Une préférence
+  // de l'application (settings.json), pas du Projet : elle dépend de la souris et de l'écran.
+  appVitesseRotation3D:    100,
+  appVitesseDeplacement3D: 100,
   // Un seul instantané d'annulation par GESTE sur les deux réglages continus de la Lumière : un
   // sélecteur de couleur et un curseur émettent en continu, et empiler une annulation par nuance
   // survolée noierait l'historique de 50 actions (#414d).

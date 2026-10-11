@@ -276,7 +276,10 @@ to maintain.
   once, which is the point: the same feel everywhere. A panel's sensitivity setting stays a
   multiplier. In Scenes, rotation no longer depends on the camera distance or the view zoom
   (`tests/vitesses-3d.test.mjs`). Then tuned in use, store included: rotation at
-  0.0025 rad per pixel (a quarter of Sketchfab's), panning at half the pointer's speed.
+  0.0025 rad per pixel (a quarter of Sketchfab's), panning at half the pointer's speed. These values
+  are the BASE (100%): Settings adjust them as a percentage, from 25 to 200% (`settings.json`, keys
+  `vitesseRotation3D` and `vitesseDeplacement3D`), and the gestures read `vitesseRotation3D()` /
+  `vitesseDeplacement3D()`.
 
 ### Phase 7 — Finishing touches
 

@@ -1033,22 +1033,53 @@ export function orbiteDeFace3D(avantDuCorps){
  *   VITESSE_DEPLACEMENT_3D 1 = le point visé suit exactement le pointeur ; 0,5 (retenu à l'usage) =
  *                          deux fois moins vite
  *
+ * Ce sont les valeurs de BASE, celles d'un réglage à 100 %. L'utilisateur les ajuste dans la
+ * Configuration (« Gestes 3D », demandé), en pourcentage : une préférence de l'application, pas du
+ * Projet, puisqu'elle dépend de la souris et de l'écran. Les gestes lisent donc `vitesseRotation3D()`
+ * et `vitesseDeplacement3D()`, jamais les constantes directement.
+ *
  * Le réglage de sensibilité d'une Case (camRotSensitivity, camPanSensitivity) reste un
  * multiplicateur par-dessus, à 1 par défaut.
  */
 export const VITESSE_ROTATION_3D = 0.0025;
 export const VITESSE_DEPLACEMENT_3D = 0.5;
 
+/** Les bornes du réglage de la Configuration, en pourcentage de la base. */
+export const POURCENT_GESTES_3D = Object.freeze({ min: 25, max: 200, pas: 25, defaut: 100 });
+
+/** Un pourcentage lu d'ailleurs (settings.json), ramené aux bornes et au pas ; 100 à défaut. PURE. */
+export function pourcentGeste3D(v){
+  const n = Number(v);
+  if (v === null || v === '' || !Number.isFinite(n)) return POURCENT_GESTES_3D.defaut;
+  const { min, max, pas } = POURCENT_GESTES_3D;
+  return Math.max(min, Math.min(max, Math.round(n / pas) * pas));
+}
+
+let _facteurRotation3D = 1;
+let _facteurDeplacement3D = 1;
+
+/** Applique la préférence de l'utilisateur (en pourcentages) à tous les gestes 3D à la fois. */
+export function reglerVitessesGestes3D({ rotation, deplacement } = {}){
+  _facteurRotation3D = pourcentGeste3D(rotation) / 100;
+  _facteurDeplacement3D = pourcentGeste3D(deplacement) / 100;
+}
+
+/** La vitesse de rotation effective : la base, fois la préférence. */
+export function vitesseRotation3D(){ return VITESSE_ROTATION_3D * _facteurRotation3D; }
+
+/** La vitesse de déplacement effective : la base, fois la préférence. */
+export function vitesseDeplacement3D(){ return VITESSE_DEPLACEMENT_3D * _facteurDeplacement3D; }
+
 /**
  * Déplacer : le glisser au clic droit fait glisser le point visé dans le plan de l'écran, à la
- * vitesse du pointeur multipliée par VITESSE_DEPLACEMENT_3D (un pixel parcouru = un pixel de déplacement du modèle à la distance visée).
+ * vitesse du pointeur multipliée par vitesseDeplacement3D() (un pixel parcouru = un pixel de déplacement du modèle à la distance visée).
  * Le modèle suit la souris : glisser vers la droite le pousse à droite. PURE.
  *
  * Les angles sont ceux d'orbitCameraPosition3D (lacet = rotY, tangage = rotX) : la même caméra pour
  * l'aperçu du store et pour l'Éditeur de modèle, qui partagent ce geste (demandé).
  */
 export function deplacement3D(centre, { lacet, tangage }, dx, dy, distance, hauteurPx, champDeg){
-  const parPixel = VITESSE_DEPLACEMENT_3D * 2 * distance * Math.tan((champDeg * Math.PI / 180) / 2) / Math.max(1, hauteurPx);
+  const parPixel = vitesseDeplacement3D() * 2 * distance * Math.tan((champDeg * Math.PI / 180) / 2) / Math.max(1, hauteurPx);
   // Les axes de l'écran, en monde, pour une caméra placée par positionCamera3D et visant le centre.
   const droite = [Math.cos(lacet), 0, -Math.sin(lacet)];
   const haut = [-Math.sin(tangage) * Math.sin(lacet), Math.cos(tangage), -Math.sin(tangage) * Math.cos(lacet)];

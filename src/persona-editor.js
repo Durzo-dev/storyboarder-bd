@@ -26,7 +26,7 @@ import {
   renamePose3D, resolvePoseLabel3D, straightDragDegrees3D, straightDragDirection3D, wrapAngle,
   writePoseSliderDeg3D, axeDePose3D, modelAxisVector3D, squelettePourAnimal3D,
 
-  orbiteDeFace3D, deplacement3D, VITESSE_ROTATION_3D,
+  orbiteDeFace3D, deplacement3D, vitesseRotation3D,
 } from './utils.js';
 import {
   cloneJoints, figuresDeLaBibliotheque3D,
@@ -2139,7 +2139,7 @@ export function wirePersonaEditor(){
       // La sensibilité NE dépend pas du zoom, contrairement à l'ancien déplacement : une rotation
       // est un angle, pas une distance, la même traversée d'écran doit faire le même tour, qu'on
       // soit près ou loin du Personnage.
-      const k = VITESSE_ROTATION_3D;
+      const k = vitesseRotation3D();
       setPersonaEditorOrbit(orbiting.rotX - (e.clientY - orbiting.y) * k,
                             orbiting.rotY + (e.clientX - orbiting.x) * k);
       dessinerALaProchaineImage();

@@ -114,7 +114,7 @@ import {
   hauteurBase3D, hauteurDepuisPourcentage3D, pourcentageDepuisHauteur3D,
 
   pageVoisine3D, nomNumeroteLibre3D, libelleTypeObjet3D, libelleTable3D, positionInfobulle3D,
-  VITESSE_ROTATION_3D, VITESSE_DEPLACEMENT_3D,
+  vitesseRotation3D, vitesseDeplacement3D, reglerVitessesGestes3D, pourcentGeste3D,
 } from './utils.js';
 import {
   S, currentPageData, currentPage, newId, createVolume, addPageToVolume, tr, isLockedScenePanel,
@@ -3852,12 +3852,13 @@ window.addEventListener('mousemove', (e) => {
     const dx = x - S.dragStart.x, dy = y - S.dragStart.y;
     const camRotSens = obj.camRotSensitivity != null ? obj.camRotSensitivity : 1;
     // LA VITESSE COMMUNE À TOUS LES GESTES 3D (demandé) : celle de l'aperçu du store,
-    // VITESSE_ROTATION_3D radians par pixel D'ÉCRAN (utils.js), multipliée par le réglage de la Case.
+    // vitesseRotation3D() radians par pixel D'ÉCRAN (utils.js, préférence comprise), multipliée par le
+    // réglage de la Case.
     // `dx`/`dy` sont en unités de Page : ramenés en pixels d'écran, le zoom de la vue ne change plus
     // la vitesse. Ce qui l'adaptait avant a été retiré pour la même raison : la distance de la caméra
     // (Phase 9, jusqu'à 3 fois plus vite de loin) et le ralenti du lacet près des pôles (Phase 10 B).
     // Le tangage reste borné à ±85° (Phase 10 A) : au-delà, la caméra passerait de l'autre côté.
-    const _k9 = VITESSE_ROTATION_3D * camRotSens * pixelsEcranParUnitePage();
+    const _k9 = vitesseRotation3D() * camRotSens * pixelsEcranParUnitePage();
     const _CAM_PITCH_MAX = 85 * Math.PI / 180;   // ±1.4835 rad
     obj.camRotYTarget = wrapAngle(S.dragOrig.camRotY + dx * _k9);
     obj.camRotXTarget = clamp(S.dragOrig.camRotX - dy * _k9, -_CAM_PITCH_MAX, _CAM_PITCH_MAX);
@@ -3897,9 +3898,9 @@ window.addEventListener('mousemove', (e) => {
       const _K9     = WALL_PX_PER_UNIT_3D * PANEL_CAM_DEFAULT_DIST_3D;
       const _pSens9 = _pObj9.camPanSensitivity != null ? _pObj9.camPanSensitivity : 1;
       // Le point visé suit le pointeur (en unités de Page, le cadrage d'une Case est calibré sur la
-      // hauteur de la Page, cf. framePanelCamera3D), à la vitesse commune VITESSE_DEPLACEMENT_3D
+      // hauteur de la Page, cf. framePanelCamera3D), à la vitesse commune vitesseDeplacement3D()
       // (utils.js, celle de l'aperçu du store, demandé), multipliée par le réglage de la Case.
-      const _pScale = VITESSE_DEPLACEMENT_3D * (S.dragOrig.camDist || PANEL_CAM_DEFAULT_DIST_3D) * _pSens9 / _K9;
+      const _pScale = vitesseDeplacement3D() * (S.dragOrig.camDist || PANEL_CAM_DEFAULT_DIST_3D) * _pSens9 / _K9;
       const _pLim9  = Math.max(PANEL_CAM_REF_DIST_3D * 20, (S.dragOrig.camDist || PANEL_CAM_DEFAULT_DIST_3D) * 4);
       // Fix 13: pan in world coordinates (camWx/Wy/Wz stable across rotation).
       // drag right (dx>0) → orbit center moves back along -right → scene follows right ✓
@@ -7675,10 +7676,10 @@ window.addEventListener('mousemove', (e) => {
   const panel = S.camGizmoDrag.panel;
   const dx = e.clientX - S.camGizmoDrag.x, dy = e.clientY - S.camGizmoDrag.y;
   const camRotSens = panel.camRotSensitivity != null ? panel.camRotSensitivity : 1;
-  // La vitesse commune à tous les gestes 3D (VITESSE_ROTATION_3D, utils.js, demandé) ; ici déjà en
+  // La vitesse commune à tous les gestes 3D (vitesseRotation3D, utils.js, demandé) ; ici déjà en
   // pixels d'écran.
-  panel.camRotYTarget = wrapAngle(S.camGizmoDrag.camRotY + dx * VITESSE_ROTATION_3D * camRotSens);
-  panel.camRotXTarget = wrapAngle(S.camGizmoDrag.camRotX - dy * VITESSE_ROTATION_3D * camRotSens);
+  panel.camRotYTarget = wrapAngle(S.camGizmoDrag.camRotY + dx * vitesseRotation3D() * camRotSens);
+  panel.camRotXTarget = wrapAngle(S.camGizmoDrag.camRotX - dy * vitesseRotation3D() * camRotSens);
   // Fix 13c (gizmo): freeze the orbit center at its CURRENT value on every frame of the drag.
   // Fix 13d: the snap is applied on EVERY mousemove (no more one-shot _snapped flag) because
   // framePanelCamera3D can rewrite camWxTarget between two animation frames (notably via the
@@ -8352,6 +8353,11 @@ const contrastCheckbox = document.getElementById('contrastCheckbox');
 const uiScaleSelect = document.getElementById('uiScaleSelect');
 const cacheMoRange = document.getElementById('cacheMoRange');
 const cacheMoValue = document.getElementById('cacheMoValue');
+const gestesRotationRange = document.getElementById('gestesRotationRange');
+const gestesRotationValue = document.getElementById('gestesRotationValue');
+const gestesDeplacementRange = document.getElementById('gestesDeplacementRange');
+const gestesDeplacementValue = document.getElementById('gestesDeplacementValue');
+const gestesResetBtn = document.getElementById('gestesResetBtn');
 const languageSelect = document.getElementById('languageSelect');
 const exportShowPanelBadgesCheckbox = document.getElementById('exportShowPanelBadgesCheckbox');
 const exportShowPanelDescriptionsCheckbox = document.getElementById('exportShowPanelDescriptionsCheckbox');
@@ -8431,6 +8437,17 @@ function rafraichirValeurCacheMo(){
   cacheMoValue.textContent = `${S.appCacheMo} ${tr('MB', 'Mo')}`;
 }
 
+// Les vitesses des gestes 3D (demandé) : les afficheurs, et l'application à tous les gestes à la
+// fois (reglerVitessesGestes3D, utils.js). « 100 % » en français, « 100% » en anglais.
+function rafraichirValeursGestes3D(){
+  const pc = (n) => (S.appLang === 'en' ? `${n}%` : `${n} %`);
+  gestesRotationValue.textContent = pc(S.appVitesseRotation3D);
+  gestesDeplacementValue.textContent = pc(S.appVitesseDeplacement3D);
+}
+function appliquerVitessesGestes3D(){
+  reglerVitessesGestes3D({ rotation: S.appVitesseRotation3D, deplacement: S.appVitesseDeplacement3D });
+}
+
 function applyTheme(theme, contraste = S.appContrast){
   const classes = classesDeTheme3D(theme, contraste);
   Object.entries(classes).forEach(([nom, actif]) => document.body.classList.toggle(nom, actif));
@@ -8453,6 +8470,9 @@ function openSettingsModal(){
   uiScaleSelect.value = S.appUiScale;
   cacheMoRange.value = String(S.appCacheMo);
   rafraichirValeurCacheMo();
+  gestesRotationRange.value = String(S.appVitesseRotation3D);
+  gestesDeplacementRange.value = String(S.appVitesseDeplacement3D);
+  rafraichirValeursGestes3D();
   languageSelect.value = S.appLang;
   exportShowPanelBadgesCheckbox.checked = S.exportShowPanelBadges;
   exportShowPanelDescriptionsCheckbox.checked = S.exportShowPanelDescriptions;
@@ -8556,6 +8576,31 @@ cacheMoRange.addEventListener('input', () => {
   elaguerCacheDeCases3D();
 });
 
+// Les vitesses des gestes 3D : `input`, comme le curseur de mémoire, pour que l'afficheur suive le
+// pouce. La valeur s'applique aussitôt à tous les gestes, et s'enregistre dans settings.json.
+gestesRotationRange.addEventListener('input', () => {
+  S.appVitesseRotation3D = pourcentGeste3D(gestesRotationRange.value);
+  rafraichirValeursGestes3D();
+  appliquerVitessesGestes3D();
+  if (hasElectronAPI()) window.storyboarderAPI.setSetting('vitesseRotation3D', S.appVitesseRotation3D);
+});
+gestesDeplacementRange.addEventListener('input', () => {
+  S.appVitesseDeplacement3D = pourcentGeste3D(gestesDeplacementRange.value);
+  rafraichirValeursGestes3D();
+  appliquerVitessesGestes3D();
+  if (hasElectronAPI()) window.storyboarderAPI.setSetting('vitesseDeplacement3D', S.appVitesseDeplacement3D);
+});
+gestesResetBtn.addEventListener('click', () => {
+  S.appVitesseRotation3D = 100; S.appVitesseDeplacement3D = 100;
+  gestesRotationRange.value = '100'; gestesDeplacementRange.value = '100';
+  rafraichirValeursGestes3D();
+  appliquerVitessesGestes3D();
+  if (hasElectronAPI()) {
+    window.storyboarderAPI.setSetting('vitesseRotation3D', 100);
+    window.storyboarderAPI.setSetting('vitesseDeplacement3D', 100);
+  }
+});
+
 languageSelect.addEventListener('change', () => {
   S.appLang = languageSelect.value;
   applyI18n(S.appLang);
@@ -8566,6 +8611,7 @@ languageSelect.addEventListener('change', () => {
   // n'indique qu'il faut la refermer pour en sortir.
   rafraichirManuelOuvert(S.appLang);
   rafraichirValeurCacheMo();   // l'unité change avec la langue, et la modale est ouverte
+  rafraichirValeursGestes3D(); // « 100 % » ou « 100% »
   rafraichirTextesMaj();       // #442 : le bouton et la modale de mise à jour sont écrits par le code
   rafraichirTextesStore();     // #444b : idem pour le store
   if (hasElectronAPI()) window.storyboarderAPI.setSetting('lang', S.appLang);
@@ -8645,6 +8691,11 @@ async function loadAppSettings(){
     if (settings && typeof settings.cacheMo === 'number' && settings.cacheMo >= 0) {
       S.appCacheMo = settings.cacheMo;
     }
+    // Les vitesses des gestes 3D : un ancien settings.json n'en porte pas, 100 % s'applique alors.
+    // pourcentGeste3D ramène une valeur éditée à la main aux bornes et au pas du curseur.
+    if (settings && settings.vitesseRotation3D != null) S.appVitesseRotation3D = pourcentGeste3D(settings.vitesseRotation3D);
+    if (settings && settings.vitesseDeplacement3D != null) S.appVitesseDeplacement3D = pourcentGeste3D(settings.vitesseDeplacement3D);
+    appliquerVitessesGestes3D();
     // ⚠️ LA BIBLIOTHÈQUE DE STYLES EST UN RÉGLAGE DE L'APPLICATION, PAS DU PROJET. Arbitré avec
     // l'utilisateur : un style créé dans un Projet doit être disponible dans tous les autres, ce
     // que le mot « bibliothèque » suppose. La contrepartie est écrite dans la note : les styles ne
