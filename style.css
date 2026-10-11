@@ -1526,11 +1526,11 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
                        transition: transform .35s ease, width .35s ease, height .35s ease;
                        box-shadow: 0 6px 24px rgba(0,0,0,.45); }
 .lecteur-page-guidee.sans-transition { transition: none; }
-.lecteur-bord { position: absolute; top: 0; bottom: 0; width: 64px; border: 0; background: transparent;
+.lecteur-bord { position: absolute; top: 0; bottom: 0; width: 64px; display: flex; align-items: center; padding: 0 14px; border: 0; background: transparent;
                 color: rgba(255,255,255,0); font-size: 46px; cursor: pointer; z-index: 2; }
 .lecteur-bord:hover { color: rgba(255,255,255,.8); }
-.lecteur-bord-gauche { left: 0; }
-.lecteur-bord-droite { right: 0; }
+.lecteur-bord-gauche { left: 0; justify-content: flex-end; }
+.lecteur-bord-droite { right: 0; justify-content: flex-start; }
 .lecteur[data-fond="clair"] .lecteur-bord:hover { color: rgba(0,0,0,.6); }
 .lecteur-miniatures { flex: none; display: flex; gap: 6px; padding: 8px 10px; overflow-x: auto; background: #101113; z-index: 3; }
 .lecteur-miniatures[hidden] { display: none; }

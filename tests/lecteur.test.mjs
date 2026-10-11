@@ -105,7 +105,12 @@ describe('Le branchement', () => {
     const UI = lire('src/lecteur-ui.js');
     assert.match(UI, /\$\{rangs\.join\('&'\)\}\/\$\{n\}/);
     assert.match(UI, /g\.hidden = avancer\(L\.index, pasDuCote\('gauche', options\.sens\), n\)\.fin;/);
-    assert.match(UI, /g\.style\.left = `\$\{Math\.max\(0, r\.left - scene\.left - large\)\}px`;/);
+    // Tout l'espace de chaque côté de la page est cliquable.
+    assert.match(UI, /const gauche = Math\.max\(large, r\.left - scene\.left\);/);
+    assert.match(UI, /const droite = Math\.max\(large, scene\.right - r\.right\);/);
+    // Plein écran et fenêtre : recalage immédiat sans redessin, dessin une fois la taille stable.
+    assert.match(UI, /function surRedimension\(\)\{\n  if \(!L\) return;\n  retailler\(\);\n  clearTimeout\(_redimension\);\n  _redimension = setTimeout\(afficher, 250\);/);
+    assert.match(UI, /window\.addEventListener\('resize', surRedimension\);/);
     assert.match(UI, /choix\('sens', \[\['rtl', tr\('To the left', 'Vers la gauche'\)\], \['ltr', tr\('To the right', 'Vers la droite'\)\]\]\)/);
     assert.match(UI, /\[vitesse, lecture\]/);
     const HTML = lire('index.html');

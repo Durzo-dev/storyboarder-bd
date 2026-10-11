@@ -56,7 +56,7 @@ export function ouvrirLecteur(ti, pages, titre, depart = null){
   construireMiniatures();
   afficher();
   window.addEventListener('keydown', clavier, true);
-  window.addEventListener('resize', afficher);
+  window.addEventListener('resize', surRedimension);
 }
 
 export function fermerLecteur(){
@@ -68,7 +68,7 @@ export function fermerLecteur(){
   $('lecteurVue').replaceChildren();
   $('lecteurMiniatures').replaceChildren();
   window.removeEventListener('keydown', clavier, true);
-  window.removeEventListener('resize', afficher);
+  window.removeEventListener('resize', surRedimension);
   if (_rappels.apresFermeture) _rappels.apresFermeture();
 }
 
@@ -127,6 +127,54 @@ async function planche(pi, hauteurPx){
   return c;
 }
 
+/** Hauteur affichée d'une page : la vue entière (« page entière »), ou ce qui remplit la largeur. */
+function hauteurParPage(zone, nb, t){
+  return options.ajustement === 'largeur'
+    ? (zone.w * 0.98 / nb) * (t.h / t.w)
+    : Math.min(zone.h * 0.96, (zone.w * 0.98 / nb) * (t.h / t.w));
+}
+
+/**
+ * REMET À LA TAILLE, SANS REDESSINER, ce qui est déjà à l'écran : appelé à chaque changement de
+ * taille de la vue (fenêtre, plein écran). Signalé : passer en plein écran faisait deux ou trois
+ * sauts de taille, parce que chaque événement relançait un dessin asynchrone, chacun s'affichant à
+ * son tour à une taille déjà dépassée. Ici tout se recale dans la même image, sans glisser (la
+ * transition de la vue guidée est coupée le temps du recalage) ; le dessin à la bonne définition
+ * vient une fois la taille stabilisée (cf. surRedimension).
+ */
+function retailler(){
+  if (!L) return;
+  const t = S.tomes[L.ti];
+  const vue = $('lecteurVue');
+  const zone = vueRect();
+  if (options.guide) {
+    const img = vue.querySelector('canvas.lecteur-page-guidee');
+    const etape = etapes()[L.index];
+    if (img && etape) {
+      const cad = cadrageDansLaVue(etape.cadre, { w: t.w, h: t.h }, zone);
+      img.classList.add('sans-transition');
+      img.style.width = `${t.w * cad.echelle}px`;
+      img.style.height = `${t.h * cad.echelle}px`;
+      img.style.transform = `translate(${cad.x}px, ${cad.y}px)`;
+      void img.offsetWidth;
+      img.classList.remove('sans-transition');
+    }
+  } else {
+    const pages = vue.querySelectorAll('.lecteur-etalement > .lecteur-page');
+    const parPage = hauteurParPage(zone, pages.length || 1, t);
+    pages.forEach(el => { el.style.height = `${parPage}px`; el.style.width = `${parPage * t.w / t.h}px`; });
+  }
+  placerBords();
+}
+
+let _redimension = null;
+function surRedimension(){
+  if (!L) return;
+  retailler();
+  clearTimeout(_redimension);
+  _redimension = setTimeout(afficher, 250);
+}
+
 function vueRect(){
   const v = $('lecteurVue');
   return { w: v.clientWidth || 1, h: v.clientHeight || 1 };
@@ -167,10 +215,7 @@ async function afficher(){
     const e = etalementsCourants()[L.index];
     if (!e) return;
     const slots = options.double ? [e.gauche, e.droite] : [e.gauche];
-    // Hauteur affichée d'une page : la vue entière (« page entière »), ou ce qui remplit la largeur.
-    const parPage = options.ajustement === 'largeur'
-      ? (zone.w * 0.98 / slots.length) * (t.h / t.w)
-      : Math.min(zone.h * 0.96, (zone.w * 0.98 / slots.length) * (t.h / t.w));
+    const parPage = hauteurParPage(zone, slots.length, t);
     const rendus = await Promise.all(slots.map(pi => (pi == null ? null : planche(pi, parPage * dpr))));
     if (!L || gen !== L.generation) return;
     const ligne = document.createElement('div');
@@ -221,13 +266,17 @@ function placerBords(){
   const scene = g.parentNode.getBoundingClientRect();
   const page = !options.guide && $('lecteurVue').querySelector('.lecteur-etalement');
   const r = page ? page.getBoundingClientRect() : null;
+  // TOUT L'ESPACE de chaque côté de la page est cliquable (demandé, plus ergonomique qu'une bande
+  // collée à elle) ; la flèche reste contre la page. Au moins 64 px, même quand la page remplit tout.
   const large = 64;
   if (r && r.width) {
-    g.style.left = `${Math.max(0, r.left - scene.left - large)}px`;
-    d.style.left = `${Math.min(scene.width - large, r.right - scene.left)}px`;
-    d.style.right = 'auto';
+    const gauche = Math.max(large, r.left - scene.left);
+    const droite = Math.max(large, scene.right - r.right);
+    g.style.left = '0px'; g.style.width = `${gauche}px`;
+    d.style.left = 'auto'; d.style.right = '0px'; d.style.width = `${droite}px`;
   } else {
-    g.style.left = '0px'; d.style.left = 'auto'; d.style.right = '0px';
+    g.style.left = '0px'; g.style.width = `${large}px`;
+    d.style.left = 'auto'; d.style.right = '0px'; d.style.width = `${large}px`;
   }
   const n = total();
   g.hidden = avancer(L.index, pasDuCote('gauche', options.sens), n).fin;
@@ -393,7 +442,9 @@ function basculerPleinEcran(){
 document.addEventListener('fullscreenchange', () => {
   const o = $('lecteurOverlay');
   if (o) o.classList.toggle('lecteur-plein-ecran', document.fullscreenElement === o);
-  if (L) setTimeout(afficher, 50);
+  // Recalé tout de suite (la barre et le menu viennent de disparaître ou de revenir), redessiné une
+  // fois la taille stable.
+  surRedimension();
 });
 
 function clavier(e){
