@@ -295,9 +295,11 @@ header span{ font-size:12px; color:var(--ink-soft); }
    même style rond que le bouton "?" du Manuel d'utilisation (cf. .help-round-btn) plutôt que le
    .tool-btn générique de la barre latérale. */
 .header-btn{ margin-left:auto; }
-/* La bibliothèque de modèles et l'Éditeur : aucune marge propre (demandé, après un essai à 24 px).
-   L'écart qui les sépare de ce qui précède (la version, ou le bouton de mise à jour quand il est là)
-   est l'écart du bandeau, le MÊME que celui qui sépare les deux boutons entre eux. */
+/* La bibliothèque de modèles et l'Éditeur se placent APRÈS LA PLACE du bouton de mise à jour, à
+   l'écart du bandeau, le même que celui qui les sépare (demandé). Masqué, ce bouton GARDE sa place
+   (invisible et inerte) : les deux boutons ne bougent donc pas quand une mise à jour apparaît. Son
+   libellé est écrit dans index.html pour que la place réservée ait la largeur du vrai bouton. */
+#majBtn[hidden]{ display:inline-block; visibility:hidden; }
 
 /* `position:relative` : c'est le bloc de référence de l'Éditeur de Personnage, positionné en
    absolu à l'intérieur. Le calage vertical vient donc de .app lui-même, qui commence déjà sous

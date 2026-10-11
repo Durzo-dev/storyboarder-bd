@@ -40,6 +40,9 @@ export const I18N_TEXT = [
   ['#undoBtn', null, null, 'title', 'Undo (Ctrl+Z)', "Annuler (Ctrl+Z)"],
   ['#headerSaveBtn', null, null, 'title', 'Save project (Ctrl+S)', "Sauvegarder le projet (Ctrl+S)"],
   ['#settingsBtn', null, null, 'title', 'Settings (Ctrl+,)', 'Configuration (Ctrl+,)'],
+  // Le libellé du bouton de mise à jour, aussi posé par src/update-button.js (mêmes mots, cf.
+  // update-texts.js) : masqué, il garde sa place dans le bandeau, à la largeur de ce libellé.
+  ['#majBtn', 'Update', 'Mise à jour'],
   ['#openPoseEditorBtn', null, null, 'title', 'Model editor', 'Éditeur de modèle'],
   // Fix 63 : ce bouton porte une ICÔNE : son libellé traduit va sur `title`, pas sur le texte.
   // Écrire dans textContent remplaçait l'icône par la phrase, qui débordait du bouton de 30px.

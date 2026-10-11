@@ -140,6 +140,9 @@ describe('Section Modèles : le câblage', () => {
     assert.ok(header.indexOf('id="majBtn"') < header.indexOf('id="storeOuvrirBtn"')
       && header.indexOf('id="storeOuvrirBtn"') < header.indexOf('id="openPoseEditorBtn"'),
       'ordre voulu : version, mise à jour, bibliothèque, Éditeur');
+    // Masqué, le bouton de mise à jour garde sa place : les deux boutons ne bougent pas (demandé).
+    assert.match(readFileSync(new URL('../style.css', import.meta.url), 'utf8'), /#majBtn\[hidden\]\{ display:inline-block; visibility:hidden; \}/);
+    assert.match(HTML, /<button id="majBtn" class="maj-btn" type="button" hidden>Mise à jour<\/button>/);
   });
 
   // CE TEST DISAIT L'INVERSE. Il épinglait « le menu n'offre AUCUN renommage », au nom d'une
