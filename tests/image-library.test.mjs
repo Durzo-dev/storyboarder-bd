@@ -337,12 +337,12 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
-const HTML   = readFileSync(join(RACINE, 'index.html'), 'utf8');
+const HTML   = readFileSync(join(RACINE, 'src/index.html'), 'utf8');
 const EVENTS = readFileSync(join(RACINE, 'src/events.js'), 'utf8');
 const TREE   = readFileSync(join(RACINE, 'src/project-tree.js'), 'utf8');
 const DRAW   = readFileSync(join(RACINE, 'src/draw.js'), 'utf8');
 const IO     = readFileSync(join(RACINE, 'src/io.js'), 'utf8');
-const CSS    = readFileSync(join(RACINE, 'style.css'), 'utf8');
+const CSS    = readFileSync(join(RACINE, 'src/style.css'), 'utf8');
 
 /** Le corps de `_renommerImage`, COMMENTAIRES RETIRÉS (cf. l'avertissement ci-dessus). */
 function corpsDuRenommage(){

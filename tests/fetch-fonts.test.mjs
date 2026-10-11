@@ -326,7 +326,7 @@ describe('La liste des familles, et ses accords', () => {
     // Inter n'est dans aucune liste de Bulles : rien ne la rattraperait si elle sortait d'ici, et
     // c'est toute l'interface qui changerait d'aspect.
     assert.ok(FAMILLES.some(f => f.nom === 'Inter'));
-    const css = readFileSync(join(RACINE, 'style.css'), 'utf8');
+    const css = readFileSync(join(RACINE, 'src/style.css'), 'utf8');
     assert.ok(css.includes("font-family:'Inter'") || css.includes("font-family: 'Inter'"),
       'style.css n\'utilise plus Inter : la liste des familles est périmée');
   });

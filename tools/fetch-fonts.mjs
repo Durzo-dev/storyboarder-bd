@@ -6,7 +6,7 @@
  * POURQUOI CET OUTIL EXISTE
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  *
- * `style.css` commençait par deux `@import` vers fonts.googleapis.com : Inter pour l'interface,
+ * `src/style.css` commençait par deux `@import` vers fonts.googleapis.com : Inter pour l'interface,
  * dix familles de lettrage pour le texte des Bulles. Trois conséquences, d'importance très
  * inégale.
  *
@@ -69,7 +69,7 @@ const DOSSIER = join(RACINE, 'assets', 'fonts');
 
 /**
  * ⚠️ CETTE LISTE EST LA SOURCE UNIQUE, et elle doit rester d'accord avec deux autres endroits :
- * les graisses réellement employées par `style.css`, et `BUBBLE_FONT_PRELOAD_LIST` de
+ * les graisses réellement employées par `src/style.css`, et `BUBBLE_FONT_PRELOAD_LIST` de
  * `src/help-content.js`, qui nomme les dix familles proposées pour les Bulles. Un test tient cet
  * accord (cf. tests/fetch-fonts.test.mjs) : sans lui, ajouter une famille à la liste déroulante
  * sans la télécharger produirait une police fantôme, choisissable et jamais dessinée.

@@ -414,7 +414,7 @@ describe('#414d : la section du menu de droite', () => {
    * incohérent, une section qui ne suit pas la sélection, un historique d'annulation noyé, ou un
    * réglage qui ne redessine pas.
    */
-  const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const SIDEBAR = sourceSansCommentaires(
     readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8'));
   const EVENTS = sourceSansCommentaires(
@@ -564,7 +564,7 @@ describe('#414e : le dôme et ses deux gestes', () => {
    * elle, est testée pour de bon plus haut dans ce fichier — projection, saisie, rotation de vue,
    * bords. Ne reste ici que le câblage, dont trois points peuvent casser en silence.
    */
-  const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const SIDEBAR = sourceSansCommentaires(
     readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8'));
   const EVENTS = sourceSansCommentaires(
@@ -632,7 +632,7 @@ describe('#414e : le dôme et ses deux gestes', () => {
 });
 
 describe('#414i : trois retours d\'usage sur le dôme', () => {
-  const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const SIDEBAR = sourceSansCommentaires(
     readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8'));
   const EVENTS = sourceSansCommentaires(
@@ -776,7 +776,7 @@ describe('#414k : l\'encre des cardinaux, et le Nord en rouge', () => {
    * un jeton ne prouve pas qu'il est employé là où on le croit. Le premier test ci-dessous couvre
    * précisément ce trou pour ces deux jetons-là, en lisant le code du dessin.
    */
-  const CSS = readFileSync(new URL('../style.css', import.meta.url), 'utf8');
+  const CSS = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
   const SIDEBAR = sourceSansCommentaires(
     readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8'));
 

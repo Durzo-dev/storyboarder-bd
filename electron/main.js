@@ -2,7 +2,7 @@ const { app, BrowserWindow, Menu, ipcMain, dialog, screen, shell } = require('el
 const path = require('path');
 const fs = require('fs');
 
-// Ce fichier vit dans electron/ : la RACINE de l'application (index.html, assets/, tests/fixtures, et
+// Ce fichier vit dans electron/ : la RACINE de l'application (src/index.html, assets/, tests/fixtures, et
 // en développement le dossier Projets) est le dossier parent. Les preloads et l'écran de blocage,
 // eux, sont à côté de ce fichier (__dirname).
 const RACINE = path.join(__dirname, '..');
@@ -238,7 +238,7 @@ function createWindow(mode = 'app') {
     // #443 : en développement, STORYBOARD_SIMULER_RESSOURCES montre la modale des ressources
     // introuvables avec des données factices (cf. src/missing-resources.js, simulationRessources).
     const simulerRessources = !app.isPackaged && process.env.STORYBOARD_SIMULER_RESSOURCES;
-    win.loadFile(path.join(RACINE, 'index.html'), simulerRessources ? { query: { simulerRessources: '1' } } : undefined);
+    win.loadFile(path.join(RACINE, 'src', 'index.html'), simulerRessources ? { query: { simulerRessources: '1' } } : undefined);
   }
   return win;
 }

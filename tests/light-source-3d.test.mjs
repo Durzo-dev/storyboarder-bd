@@ -267,7 +267,7 @@ describe('#420b : la création depuis « Ajouter → Lumière »', () => {
    */
   const EVENTS = readFileSync(new URL('../src/events.js', import.meta.url), 'utf8');
   const SCENE = readFileSync(new URL('../src/scene3d.js', import.meta.url), 'utf8');
-  const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const I18N = readFileSync(new URL('../src/i18n.js', import.meta.url), 'utf8');
 
   test('l\'entrée existe dans le sous-menu Ajouter, et elle est traduite', () => {
@@ -980,7 +980,7 @@ describe('⚠️ LE PRIX D\'UN NOMBRE DE LUMIÈRES NE DÉPEND PAS DU NOMBRE D\'�
  * correctement dérivée et s'est révélée trop faible dès qu'on a pu la regarder.
  */
 describe('⚠️ LA FICHE D’UNE LUMIÈRE COUVRE TOUTE LA MODALE, ET RIEN QUE LA MODALE', () => {
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
 
   /** Le corps de `objectModal`, du marqueur d'ouverture à la modale suivante. */
   function corpsDeLaModaleObjet(){

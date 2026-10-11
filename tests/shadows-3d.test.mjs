@@ -712,7 +712,7 @@ describe('⚠️ UNE SOURCE NE PROJETTE QUE SI LA CASE ET ELLE LE VEULENT (#422d
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  */
 describe('⚠️ « PROJETTE UNE OMBRE » SE RÈGLE DANS LA FICHE D’UNE LUMIÈRE (#422d)', () => {
-  const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const MODALS = sourceSansCommentaires(
     readFileSync(new URL('../src/modals.js', import.meta.url), 'utf8'));
   const EVENTS = sourceSansCommentaires(

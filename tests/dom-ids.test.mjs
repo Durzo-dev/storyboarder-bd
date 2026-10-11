@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
-const html = readFileSync(join(RACINE, 'index.html'), 'utf8');
+const html = readFileSync(join(RACINE, 'src/index.html'), 'utf8');
 
 const idsDuDocument = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
 const IDS = new Set(idsDuDocument);
@@ -69,7 +69,7 @@ describe('index.html ↔ src/ : les ids cherchés existent', () => {
     // arrivé, au lieu de laisser l'application muette au démarrage suivant.
     const absents = refs.filter(r => !IDS.has(r.id));
     assert.deepEqual(absents.map(r => `${r.id} (${r.nom}:${r.ligne})`), [],
-      `${absents.length} id(s) cherché(s) mais absent(s) d'index.html`);
+      `${absents.length} id(s) cherché(s) mais absent(s) de src/index.html`);
   });
 
   test('RÉGRESSION : les sélecteurs de i18n.js désignent tous un élément réel', () => {
@@ -203,7 +203,7 @@ describe('Menus contextuels : un menu qui s\'ouvre doit pouvoir se refermer', ()
 // est relue à l'exécution, et que la suppression ne touche à rien d'autre.
 describe('#399 : supprimer un Projet', () => {
   const io = readFileSync(new URL('../src/io.js', import.meta.url), 'utf8');
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
 
   test('le bouton de confirmation naît DÉSACTIVÉ', () => {
     // Sans cela, la modale s'ouvrirait avec un bouton actif : le mot ne serait plus une garde mais

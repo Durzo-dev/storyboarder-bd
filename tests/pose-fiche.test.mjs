@@ -3016,7 +3016,7 @@ describe('#401b3 : un seul libellé pour « Appliquer »', () => {
     // donc un troisième pour les Animaux. Or ce que ce bouton fait ne dépend pas de la figure : il
     // porte le travail de cet écran vers la fiche d'où l'on vient. Nommer la cible obligeait à tenir
     // une liste qui grandit avec les types d'Éléments.
-    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
     assert.match(html, /id="personaEditorApplyBtn"[^>]*>Appliquer les modifications</);
     const i18n = readFileSync(new URL('../src/i18n.js', import.meta.url), 'utf8');
     assert.match(i18n, /\['#personaEditorApplyBtn', 'Apply changes', 'Appliquer les modifications'\]/,

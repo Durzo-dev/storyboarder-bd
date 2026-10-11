@@ -112,7 +112,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
-const HTML = readFileSync(join(RACINE, 'index.html'), 'utf8');
+const HTML = readFileSync(join(RACINE, 'src/index.html'), 'utf8');
 const EVENTS = readFileSync(join(RACINE, 'src/events.js'), 'utf8');
 const MAIN = readFileSync(join(RACINE, 'electron/main.js'), 'utf8');
 const IO = readFileSync(join(RACINE, 'src/io.js'), 'utf8');
@@ -141,7 +141,7 @@ describe('Section Modèles : le câblage', () => {
       && header.indexOf('id="storeOuvrirBtn"') < header.indexOf('id="openPoseEditorBtn"'),
       'ordre voulu : version, mise à jour, bibliothèque, Éditeur');
     // Masqué, le bouton de mise à jour garde sa place : les deux boutons ne bougent pas (demandé).
-    assert.match(readFileSync(new URL('../style.css', import.meta.url), 'utf8'), /#majBtn\[hidden\]\{ display:inline-block; visibility:hidden; \}/);
+    assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /#majBtn\[hidden\]\{ display:inline-block; visibility:hidden; \}/);
     assert.match(HTML, /<button id="majBtn" class="maj-btn" type="button" hidden>Mise à jour<\/button>/);
   });
 
@@ -295,7 +295,7 @@ describe('Section Modèles : le câblage', () => {
 // la section Images partage toujours.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CSS = readFileSync(join(RACINE, 'style.css'), 'utf8');
+const CSS = readFileSync(join(RACINE, 'src/style.css'), 'utf8');
 const { setModelBridge } = await import('../src/model-store.js');
 const { S } = await import('../src/state.js');
 

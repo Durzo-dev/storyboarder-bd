@@ -2576,8 +2576,8 @@ describe('éditeur de Personnage : il n\'occupe plus la fenêtre entière', () =
   // LECTURE DES FICHIERS, faute de mieux : il n'y a pas de moteur de rendu CSS sous Node, et le
   // dom-stub n'exécute aucun écouteur. Ce qui est figé ici, c'est ce qui rendrait le reste
   // inopérant, un retour au plein écran, ou une sortie non câblée.
-  const css = readFileSync(new URL('../style.css', import.meta.url), 'utf8');
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const src = readFileSync(new URL('../src/persona-editor.js', import.meta.url), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '').split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');
 

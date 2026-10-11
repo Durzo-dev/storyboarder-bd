@@ -40,7 +40,7 @@ import {
 } from '../src/modal-stack.js';
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
-const HTML = readFileSync(join(RACINE, 'index.html'), 'utf8');
+const HTML = readFileSync(join(RACINE, 'src/index.html'), 'utf8');
 // update-button.js (#442) et missing-resources.js (#443) : leurs modales s'y câblent elles-mêmes.
 const SRC = ['io.js', 'events.js', 'modals.js', 'update-button.js', 'missing-resources.js', 'store-ui.js']
   .map(f => readFileSync(join(RACINE, 'src', f), 'utf8')).join('\n');
@@ -336,7 +336,7 @@ describe('COMPLÉTUDE : aucune modale ne peut être oubliée', () => {
 describe('L\'empilement visuel — la dernière ouverte est devant', () => {
   test('le z-index de base est celui que style.css donne aux modales', () => {
     // S'ils divergeaient, une modale empilée passerait DERRIÈRE une modale simple.
-    const css = readFileSync(join(RACINE, 'style.css'), 'utf8');
+    const css = readFileSync(join(RACINE, 'src/style.css'), 'utf8');
     const bloc = css.slice(css.indexOf('.modal-overlay{'), css.indexOf('.modal-overlay{') + 200);
     assert.match(bloc, new RegExp(`z-index:\\s*${Z_MODALE_BASE}`),
       `style.css et Z_MODALE_BASE (${Z_MODALE_BASE}) ne disent plus la même chose`);

@@ -16,7 +16,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
 
 // Éléments sans fermeture. `!DOCTYPE` est traité comme une balise ouvrante par le tokeniseur.
 const VIDES = new Set(['br', 'hr', 'img', 'input', 'meta', 'link', 'source', 'area',

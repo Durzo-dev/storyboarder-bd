@@ -34,8 +34,8 @@ import { dirname, join } from 'node:path';
 import { classesDeTheme3D, FACTEURS_ECHELLE_UI, facteurEchelleUI3D } from '../src/events.js';
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
-const CSS = readFileSync(join(RACINE, 'style.css'), 'utf8');
-const HTML = readFileSync(join(RACINE, 'index.html'), 'utf8');
+const CSS = readFileSync(join(RACINE, 'src/style.css'), 'utf8');
+const HTML = readFileSync(join(RACINE, 'src/index.html'), 'utf8');
 const EVENTS = readFileSync(join(RACINE, 'src', 'events.js'), 'utf8');
 
 // Corps d'une règle CSS, commentaires retirés — sinon un mot cité dans un commentaire compterait

@@ -451,7 +451,7 @@ describe('resetModalSections : par clé, jamais par titre affiché', () => {
   // traduit. En anglais, « Main characteristics » ne figurait dans aucune liste écrite en français :
   // plus une seule section ne correspondait, et toutes s'ouvraient repliées. Invisible en français,
   // systématique en anglais, exactement le genre de défaut que personne ne signale.
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const src = readFileSync(new URL('../src/modals.js', import.meta.url), 'utf8');
   const i18n = readFileSync(new URL('../src/i18n.js', import.meta.url), 'utf8');
 
@@ -540,7 +540,7 @@ describe('Une rangée d\'étiquettes : tout sur une ligne, ou une par ligne (#38
 describe('#401a : la fiche du Personnage ne pose plus rien', () => {
   const MODALS = readFileSync(new URL('../src/modals.js', import.meta.url), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '').split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');
-  const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
 
   // Même décision que pour les Modèles importés (#394), et le même gain : trois fiches réglaient
   // les articulations de trois façons, avec trois jeux de registres et trois câblages de souris qui
@@ -639,7 +639,7 @@ describe('#401c : la fiche d\'un Animal ne pose plus rien', () => {
     readFileSync(new URL('../src/modals.js', import.meta.url), 'utf8'));
   const EVENTS = sourceSansCommentaires(
     readFileSync(new URL('../src/events.js', import.meta.url), 'utf8'));
-  const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
 
   // Le troisième et dernier retrait. L'ordre n'était pas libre : l'Éditeur devait d'abord savoir
   // poser un Animal (#401b), sans quoi ce retrait l'aurait rendu impossible à poser.
@@ -705,7 +705,7 @@ describe('#401c : la fiche d\'un Animal ne pose plus rien', () => {
  * correctement dérivée, et la trouver trop faible.
  */
 describe('⚠️ LE CURSEUR D’INTENSITÉ NE PEUT PAS TRAHIR LA VALEUR QU’IL AFFICHE (#421b)', () => {
-  const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
 
   /** Les attributs du curseur d'intensité, lus dans index.html. */
   function curseurIntensite(){
@@ -794,7 +794,7 @@ describe('⚠️ LES TROIS RÉGLAGES NE SONT ÉCRITS QUE POUR UNE SOURCE (#421b)
 describe('⚠️ L’AFFICHAGE DE LA SECTION VIENT DE LA TABLE, PAS D’UN SECOND TEST (#421b)', () => {
   const SRC = sourceSansCommentaires(
     readFileSync(new URL('../src/modals.js', import.meta.url), 'utf8'));
-  const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
 
   test('⚠️ UN SEUL PROPRIÉTAIRE POUR LA VISIBILITÉ, et ce n’est pas le remplissage (#421h)', () => {
     // ⚠️ IL Y EN A EU DEUX, ET ÇA S'EST PAYÉ. `remplirSectionLuminosite3D` posait la visibilité, et
@@ -861,7 +861,7 @@ describe('⚠️ L’AFFICHAGE DE LA SECTION VIENT DE LA TABLE, PAS D’UN SECON
 });
 
 describe('⚠️ « 0 » NE SE LIT PAS TOUT SEUL : l’indice de portée est là, et traduit (#421b)', () => {
-  const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const I18N = readFileSync(new URL('../src/i18n.js', import.meta.url), 'utf8');
 
   test('l’indice existe et dit ce que « 0 » veut dire', () => {
@@ -1114,7 +1114,7 @@ describe('⚠️ LE LIBELLÉ DE TAILLE SURVIT À UN CHANGEMENT DE LANGUE (#421c)
 });
 
 describe('⚠️ LA SPHÈRE N’EST PAS LA LUMIÈRE : deux cases, deux sens (#421c)', () => {
-  const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const EV = sourceSansCommentaires(
     readFileSync(new URL('../src/events.js', import.meta.url), 'utf8'));
 

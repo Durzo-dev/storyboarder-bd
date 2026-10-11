@@ -84,7 +84,7 @@ describe('Le branchement', () => {
     const EV = lire('src/events.js');
     assert.match(EV, /ouvrirLecteur\(ti, t\.pages\.map\(\(p, i\) => i\), t\.name, depart\);/);
     assert.match(EV, /ouvrirLecteur\(ti, pages, `\$\{t\.name\} · \$\{ch\.nom\}`, depart\);/);
-    const HTML = lire('index.html');
+    const HTML = lire('src/index.html');
     assert.match(HTML, /id="ctxReadVolume"/);
     assert.match(HTML, /id="ctxReadChapter"/);
     assert.match(HTML, /id="lecteurOverlay"/);
@@ -113,7 +113,7 @@ describe('Le branchement', () => {
     assert.match(UI, /window\.addEventListener\('resize', surRedimension\);/);
     assert.match(UI, /choix\('sens', \[\['rtl', tr\('To the left', 'Vers la gauche'\)\], \['ltr', tr\('To the right', 'Vers la droite'\)\]\]\)/);
     assert.match(UI, /\[vitesse, lecture\]/);
-    const HTML = lire('index.html');
+    const HTML = lire('src/index.html');
     assert.doesNotMatch(HTML, /lecteur-bar/);
     assert.match(HTML, /<div class="menu-header lecteur-entete">/);
   });
@@ -126,7 +126,7 @@ describe('Le branchement', () => {
     const UI = lire('src/lecteur-ui.js');
     assert.match(UI, /const cote = options\.livre && L\.pas \? coteQuiTourne\(L\.pas, options\.sens\) : null;/);
     assert.match(UI, /caseACocher\('livre', tr\('Book view', 'Vue livre'\), options\.guide\)/);
-    const CSS = lire('style.css');
+    const CSS = lire('src/style.css');
     assert.match(CSS, /\.lecteur-bord-gauche \{ left: 0; justify-content: flex-end; padding-right: 32px; \}/);
     assert.match(CSS, /\.lecteur-bord-droite \{ right: 0; justify-content: flex-start; padding-left: 32px; \}/);
     assert.doesNotMatch(CSS, /\.lecteur-page \{[^}]*box-shadow/, 'à plat, aucune ombre');

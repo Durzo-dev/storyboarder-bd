@@ -160,7 +160,7 @@ describe('I18N_TEXT : forme des entrées', () => {
    * tenue à la main des libellés concernés se périmerait au premier ajout.
    */
   test('⚠️ AUCUN LIBELLÉ ENVELOPPANT UNE CASE À COCHER NE VIT DANS I18N_TEXT', () => {
-    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
     // Les <label id="…"> … <input type="checkbox"> … </label>, refermés sans <label> imbriqué.
     const enveloppants = [];
     const re = /<label\b([^>]*)>([\s\S]*?)<\/label>/g;
@@ -202,7 +202,7 @@ describe('I18N_TEXT : forme des entrées', () => {
    * déclarée, toutes doivent l'être — de sorte qu'aucune liste n'a besoin d'être tenue à la main.
    */
   test('⚠️ UN MENU PARTIELLEMENT TRADUIT N’EXISTE PAS : TOUTES SES OPTIONS OU AUCUNE', () => {
-    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
     const toutes = [...I18N_TEXT, ...I18N_TRAILING, ...I18N_LEADING].map(e => e[0]);
     const manquantes = [];
     let menusVus = 0;
@@ -258,7 +258,7 @@ describe('I18N_TEXT : forme des entrées', () => {
 // seulement, pas toutes.
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Fix 68 : chaque #id des tables i18n existe dans index.html', () => {
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const idsPresents = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]));
 
   const tables = {
@@ -305,7 +305,7 @@ describe('Fix 68 : chaque #id des tables i18n existe dans index.html', () => {
 // Ces tests ferment les deux : clé obligatoire des deux côtés, et plus un seul <p> en dur.
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Manuel d\'utilisation — le HTML et les tables ne peuvent plus diverger', () => {
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const bloc = (() => {
     const i = html.indexOf('<div class="help-text">');
     assert.ok(i > 0, 'bloc d\'aide introuvable dans index.html');
@@ -575,7 +575,7 @@ describe('Un seul nom pour « Réglages des articulations »', () => {
   const LIBELLE_FR = 'Réglages des articulations';
   const LIBELLE_EN = 'Joint settings';
   const lire = (rel) => readFileSync(new URL('../' + rel, import.meta.url), 'utf8');
-  const HTML   = lire('index.html');
+  const HTML   = lire('src/index.html');
   const I18N   = lire('src/i18n.js');
   const MODALS = lire('src/modals.js');
 
@@ -674,7 +674,7 @@ describe('Aucun bouton ne reste en français en mode anglais', () => {
   // français, tout paraît normal ; c'est l'utilisateur anglophone qui découvre « Supprimer du
   // disque » dans son menu. Rien ne pouvait le signaler, puisqu'une traduction absente n'est pas
   // une erreur, juste un texte qui ne change pas.
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const i18nSrc = readFileSync(new URL('../src/i18n.js', import.meta.url), 'utf8');
 
   // Boutons dont le libellé est posé PAR LE CODE, et qui n'ont donc rien à faire dans les tables.
@@ -896,7 +896,7 @@ describe('#397 : le bouton « Éditeur de modèle », désormais dans le bandeau
   // avant sans qu'un test bronche. Ce n'est pas qu'une question de nom choisi : le texte ÉCRIT DANS
   // index.html est celui qu'on lit avant qu'`applyI18n` ne passe, et s'il diverge de la table, le
   // libellé change sous les yeux au démarrage.
-  const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const I18N = readFileSync(new URL('../src/i18n.js', import.meta.url), 'utf8');
 
 
@@ -927,7 +927,7 @@ describe('#397a : « Éditeur de Personnage » ne se dit plus nulle part', () =>
   const sansCommentaires = (txt) => txt
     .replace(/\/\*[\s\S]*?\*\//g, '').replace(/<!--[\s\S]*?-->/g, '')
     .split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');
-  const sources = ['index.html', 'src/i18n.js', 'src/help-content.js'];
+  const sources = ['src/index.html', 'src/i18n.js', 'src/help-content.js'];
 
   test('ni en français, ni en anglais, dans ce que l\'utilisateur lit', () => {
     sources.forEach(rel => {
@@ -942,7 +942,7 @@ describe('#397a : « Éditeur de Personnage » ne se dit plus nulle part', () =>
   test('et le nouveau nom, lui, est bien là', () => {
     // Sans cette moitié, le test ci-dessus passerait dans une application où l'écran n'a plus de
     // nom du tout.
-    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
     assert.match(html, /id="personaEditorTitle">Éditeur de modèle</);
     assert.match(html, /help-group-title">Éditeur de modèle</);
     const i18n = readFileSync(new URL('../src/i18n.js', import.meta.url), 'utf8');
@@ -997,7 +997,7 @@ describe('#403n : un libellé porte UNE majuscule, la première', () => {
   });
 
   test('aucun libellé de bouton ou d\'option dans index.html', () => {
-    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
     const libelles = [];
     for (const re of [/<button[^>]*>([\s\S]*?)<\/button>/g, /<option[^>]*>([\s\S]*?)<\/option>/g]) {
       for (const m of html.matchAll(re)) {
@@ -1047,7 +1047,7 @@ describe('#413 : un bouton dont l\'action a un raccourci le DIT, et le raccourci
    * ⚠️ CE QUI N'EST PAS TENU ICI : que la touche fasse ce que le bouton fait. Le test voit que
    * `F1` est écouté et que le libellé le mentionne, pas que les deux mènent au même endroit.
    */
-  const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const I18N = readFileSync(new URL('../src/i18n.js', import.meta.url), 'utf8');
   const EVENTS = readFileSync(new URL('../src/events.js', import.meta.url), 'utf8');
   const IO = readFileSync(new URL('../src/io.js', import.meta.url), 'utf8');
@@ -1141,7 +1141,7 @@ describe('#414g : une section du menu de droite se retrouve dans le manuel', () 
 
   // Le titre est lu dans le HTML, pas recopié : une section renommée doit faire échouer ce test,
   // sinon il surveillerait un nom qui n'est plus à l'écran.
-  const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
 
   function sectionsDuMenu() {
     const re = /<div id="(side[A-Za-z]+Section)"[^>]*class="[^"]*side-section[^>]*>\s*(?:<!--[\s\S]*?-->\s*)*<h2[^>]*>([^<]+)<\/h2>/g;
@@ -1282,7 +1282,7 @@ describe('tr() : les deux langues calculent la même chose', () => {
  * l'expliquer. C'est un fil de détente contre l'oubli, comme celui de #414g, pas une relecture.
  */
 describe('#425z : les formes et les pointes offertes sont toutes nommées dans le manuel', () => {
-  const HTML_FICHE = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML_FICHE = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
 
   const optionsDe = (id) => {
     const i = HTML_FICHE.indexOf(`<select id="${id}"`);

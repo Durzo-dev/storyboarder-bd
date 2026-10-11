@@ -871,7 +871,7 @@ describe('doitOuvrirCorrespondance : n\'ouvrir que quand il y a quelque chose à
 
 describe('Câblage de l\'écran de correspondance', () => {
   const EVENTS = _lire(_joindre(_RACINE, 'src/events.js'), 'utf8');
-  const HTML = _lire(_joindre(_RACINE, 'index.html'), 'utf8');
+  const HTML = _lire(_joindre(_RACINE, 'src/index.html'), 'utf8');
   const IMPORT = _lire(_joindre(_RACINE, 'src/model-import.js'), 'utf8');
 
   test('la modale et ses commandes existent', () => {
@@ -962,7 +962,7 @@ describe('Câblage de l\'écran de correspondance', () => {
   });
 
   test('les classes d\'origine existent dans style.css', () => {
-    const CSS = _lire(_joindre(_RACINE, 'style.css'), 'utf8');
+    const CSS = _lire(_joindre(_RACINE, 'src/style.css'), 'utf8');
     ['origine-nom', 'origine-structure', 'origine-manuel', 'origine-vide']
       .forEach(c => assert.match(CSS, new RegExp(`\\.${c}`), `classe absente : .${c}`));
   });
@@ -970,8 +970,8 @@ describe('Câblage de l\'écran de correspondance', () => {
 
 describe('Une correspondance VALIDÉE cesse d\'alerter, sans perdre sa provenance', () => {
   const EV2 = _lire(_joindre(_RACINE, 'src/events.js'), 'utf8');
-  const CSS2 = _lire(_joindre(_RACINE, 'style.css'), 'utf8');
-  const HTML2 = _lire(_joindre(_RACINE, 'index.html'), 'utf8');
+  const CSS2 = _lire(_joindre(_RACINE, 'src/style.css'), 'utf8');
+  const HTML2 = _lire(_joindre(_RACINE, 'src/index.html'), 'utf8');
 
   test('RÉGRESSION : l\'écran sait si la correspondance a été validée', () => {
     // Signalé à l'usage : après validation, les lignes « structure » restaient orangées et
@@ -1095,7 +1095,7 @@ describe('La légende dit l\'état, pas le devenir', () => {
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');
   const EV3 = sansCommentaires(_lire(_joindre(_RACINE, 'src/events.js'), 'utf8'));
-  const CSS3 = _lire(_joindre(_RACINE, 'style.css'), 'utf8');
+  const CSS3 = _lire(_joindre(_RACINE, 'src/style.css'), 'utf8');
   const debut = EV3.indexOf("getElementById('skeletonMapLegend')");
   const bloc = EV3.slice(debut, debut + 1600);
 
@@ -1292,8 +1292,8 @@ describe('membres : le second AJOUT au fichier (#373)', () => {
 
 describe('L\'écran montre les MEMBRES, pas seulement dix-huit emplacements (#373)', () => {
   const EV2 = _lire(_joindre(_RACINE, 'src/events.js'), 'utf8');
-  const CSS2 = _lire(_joindre(_RACINE, 'style.css'), 'utf8');
-  const HTML2 = _lire(_joindre(_RACINE, 'index.html'), 'utf8');
+  const CSS2 = _lire(_joindre(_RACINE, 'src/style.css'), 'utf8');
+  const HTML2 = _lire(_joindre(_RACINE, 'src/index.html'), 'utf8');
 
   // Signalé à l'usage : les têtes latérales d'un cerbère et les pattes surnuméraires d'une araignée
   // étaient invisibles. Ces tests lisent la SOURCE, comme le reste de ce fichier : le rendu touche

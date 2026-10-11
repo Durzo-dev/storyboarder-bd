@@ -412,7 +412,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
-const HTML = readFileSync(join(RACINE, 'index.html'), 'utf8');
+const HTML = readFileSync(join(RACINE, 'src/index.html'), 'utf8');
 const EVENTS = readFileSync(join(RACINE, 'src/events.js'), 'utf8');
 const MODALS = readFileSync(join(RACINE, 'src/modals.js'), 'utf8');
 const SIDEBAR = readFileSync(join(RACINE, 'src/sidebar.js'), 'utf8');

@@ -1,6 +1,6 @@
 {
   "name": "storyboard-bd",
-  "version": "1.10.76",
+  "version": "1.10.78",
   "engines": {
     "node": ">=22"
   },
@@ -38,8 +38,6 @@
     "productName": "Storyboarder BD",
     "files": [
       "electron/**/*",
-      "index.html",
-      "style.css",
       "assets/**/*",
       "!assets/textures/sources/**",
       "package.json",

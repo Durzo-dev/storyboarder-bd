@@ -10,7 +10,7 @@ import { decalageBorne, habillerModales, VISIBLE_MIN_PX, TITRE_PX } from '../src
 import { enregistrerFermeture, fermerModale, _reinitialiserPile } from '../src/modal-stack.js';
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
-const html = readFileSync(join(RACINE, 'index.html'), 'utf8');
+const html = readFileSync(join(RACINE, 'src/index.html'), 'utf8');
 
 /** Un DOM minimal : assez pour habillerModales, rien de plus. */
 function element(tag, classes = [], id = ''){
@@ -109,7 +109,7 @@ describe('Déplacer une modale', () => {
   });
 
   test('le CSS : le titre-poignée laisse la place à la croix et montre qu’on peut l’attraper', () => {
-    const css = readFileSync(join(RACINE, 'style.css'), 'utf8');
+    const css = readFileSync(join(RACINE, 'src/style.css'), 'utf8');
     assert.match(css, /\.modal-box > h3\.modal-poignee\{[^}]*cursor:move[^}]*padding-right:30px/);
   });
 });

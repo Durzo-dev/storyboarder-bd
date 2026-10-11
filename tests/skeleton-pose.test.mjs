@@ -525,7 +525,7 @@ describe('La fiche : un brouillon, et rien d\'écrit avant Enregistrer', () => {
     .split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');
   const MODALS = sansCommentaires(readFileSync(join(RACINE, 'src/modals.js'), 'utf8'));
   const EVENTS = sansCommentaires(readFileSync(join(RACINE, 'src/events.js'), 'utf8'));
-  const HTML   = readFileSync(join(RACINE, 'index.html'), 'utf8');
+  const HTML   = readFileSync(join(RACINE, 'src/index.html'), 'utf8');
 
   test('RÉGRESSION : le brouillon est une COPIE, pas l\'objet de l\'Élément', () => {
     // Sans la copie, chaque curseur écrirait directement dans l'Élément : « Annuler » n'annulerait

@@ -117,8 +117,8 @@ describe('le câblage', () => {
     assert.match(c, /return sources\.pageAffichable\(module\.pageNormalisee\(json\), recherche\);/);
   });
   test('retours de Valentin (6 octobre 2026) : une seule zone défile, la fiche remplace la liste, une ligne par licence', () => {
-    const css = lire('style.css');
-    const html = lire('index.html');
+    const css = lire('src/style.css');
+    const html = lire('src/index.html');
     assert.match(css, /\.store-grille\[hidden\], \.store-fiche\[hidden\], \.store-plus\[hidden\]/);
     assert.match(css, /display:flex; flex-direction:column; overflow:hidden;/);
     assert.match(css, /\.store-box > \.store-defilement\{ flex:1 1 auto; min-height:0; overflow-y:auto;/);
@@ -139,11 +139,11 @@ describe('le câblage', () => {
     assert.match(f, /section\(t\.licence,/);
     assert.match(f, /section\(t\.caracteristiques, details\)/);
     // Plus de bouton Rechercher : la saisie relance après une pause, Entrée tout de suite.
-    assert.ok(!lire('index.html').includes('storeChercherBtn'));
+    assert.ok(!lire('src/index.html').includes('storeChercherBtn'));
     assert.match(UI, /minuterie = setTimeout\(\(\) => chercher\(\), PAUSE_SAISIE_MS\);/);
   });
   test('retours de Valentin (3e passe) : le bouton Télécharger ne sort plus de la fiche', () => {
-    const css = lire('style.css');
+    const css = lire('src/style.css');
     // `.nav-btn` porte width:100% : sans width:auto, « Retour » prenait toute la ligne et poussait
     // « Télécharger » hors de la fiche (barre de défilement horizontale sur la capture).
     assert.match(css, /\.store-fiche-actions > \*\{ flex:1 1 0; width:auto; margin:0; \}/);
@@ -155,7 +155,7 @@ describe('le câblage', () => {
     const r = UI.slice(UI.indexOf('function fermerFiche'));
     assert.match(f, /\$\('storeFormulaire'\)\.hidden = true;/);
     assert.match(r, /\$\('storeFormulaire'\)\.hidden = false;/);
-    assert.match(lire('style.css'), /\.store-filtres\[hidden\]\{ display:none; \}/);
+    assert.match(lire('src/style.css'), /\.store-filtres\[hidden\]\{ display:none; \}/);
   });
   test('retours de Valentin (5e passe) : deux colonnes, boutons du bas toujours visibles', () => {
     const f = UI.slice(UI.indexOf('function ouvrirFiche'), UI.indexOf('function fermerFiche'));
@@ -164,8 +164,8 @@ describe('le câblage', () => {
     // #445 : « Télécharger » est un bouton SCINDÉ, sa flèche ouvre le choix de la qualité (demandé).
     assert.match(f, /el\('div', \{ classe: 'store-fiche-pied' \}, \[\n\s+el\('div', \{ classe: 'store-fiche-actions' \}, \[retour, scinde\]\)/);
     assert.match(f, /const scinde = el\('div', \{ classe: 'store-bouton-scinde' \}, \[telecharger, fleche, menu\]\);/);
-    assert.match(lire('style.css'), /\.store-menu-resolutions\{\n\s+position:absolute; right:0; bottom:calc\(100% \+ 6px\);/);
-    const css = lire('style.css');
+    assert.match(lire('src/style.css'), /\.store-menu-resolutions\{\n\s+position:absolute; right:0; bottom:calc\(100% \+ 6px\);/);
+    const css = lire('src/style.css');
     assert.match(css, /\.store-fiche-pied\{ position:sticky; bottom:0;/);
     assert.match(css, /\.store-fiche-corps\{ flex:1 1 auto; display:grid; grid-template-columns:minmax\(0, 3fr\) minmax\(0, 2fr\);/);
     assert.match(css, /\.store-fiche:not\(\[hidden\]\)\{ display:flex; flex-direction:column; min-height:100%; \}/);
@@ -187,12 +187,12 @@ describe('le câblage', () => {
     assert.match(sans(lire('electron/main.js')), /await fs\.promises\.rename\(src, dst\);\n\s+await store\.renommerAttribution\(getProjectsDir\(\), ancien, nouveau\);/);
   });
   test('« Mes modèles » : la bibliothèque passe SOUS les fenêtres qu\'elle ouvre, et le clic droit devant elle', () => {
-    const html = lire('index.html');
+    const html = lire('src/index.html');
     const store = html.indexOf('id="storeModal"');
     for (const id of ['renameEntityModal', 'confirmActionModal', 'skeletonMapModal', 'modelUsagesModal']) {
       assert.ok(store < html.indexOf(`id="${id}"`), `${id} s'ouvrirait DERRIÈRE la bibliothèque`);
     }
-    assert.match(lire('style.css'), /#modelContextMenu\{ z-index:1100; \}/);
+    assert.match(lire('src/style.css'), /#modelContextMenu\{ z-index:1100; \}/);
   });
   test('« Mes modèles » : les actions de la fiche sont celles de l\'application, injectées', () => {
     const ev = sans(lire('src/events.js'));
@@ -218,9 +218,9 @@ describe('le câblage', () => {
   test('la fiche locale : sous-sections repliables, zone des endroits qui défile seule', () => {
     const f = UI.slice(UI.indexOf('function ficheLocale'));
     assert.match(f, /const cle = 'fiche-modele:' \+ id;/);
-    assert.match(lire('style.css'), /\.store-usages\{ max-height:38vh; overflow-y:auto;/);
-    assert.match(lire('style.css'), /\.store-usages-groupe \+ \.store-usages-groupe\{ margin-top:4px; \}/);
-    assert.match(lire('style.css'), /\.store-fiche-droite > p\{ margin:4px 0 0; \}/);
+    assert.match(lire('src/style.css'), /\.store-usages\{ max-height:38vh; overflow-y:auto;/);
+    assert.match(lire('src/style.css'), /\.store-usages-groupe \+ \.store-usages-groupe\{ margin-top:4px; \}/);
+    assert.match(lire('src/style.css'), /\.store-fiche-droite > p\{ margin:4px 0 0; \}/);
   });
   test('fermer garde la fiche ouverte pour la réouverture ; la fiche locale s\'ouvre en 3D', () => {
     const f = UI.slice(UI.indexOf('export function fermerStore('));
@@ -230,7 +230,7 @@ describe('le câblage', () => {
     const fl = UI.slice(UI.indexOf('function ficheLocale'));
     assert.doesNotMatch(fl.slice(0, fl.indexOf('\n}\n')), /bascule3D\.onclick\(\)/);
     assert.match(fl, /imageDeFiche\(e\.fichier, visuel\.clientWidth \* ratio, visuel\.clientHeight \* ratio\)/);
-    assert.match(lire('style.css'), /justify-content:flex-start; text-align:left;/);
+    assert.match(lire('src/style.css'), /justify-content:flex-start; text-align:left;/);
   });
   test('la fiche locale : catégorie et tags sous la source, plus dans les caractéristiques', () => {
     const f = UI.slice(UI.indexOf('function ficheLocale'));
@@ -240,16 +240,16 @@ describe('le câblage', () => {
     assert.match(UI, /\(\) => \{ if \(!reconstruction\) menuTags = false; \}/);
   });
   test('retours sur les tags : filtre à côté des catégories, menu qui s\'ouvre vers la droite, corbeille visible', () => {
-    const html = lire('index.html');
+    const html = lire('src/index.html');
     assert.ok(html.indexOf('id="storeTagsZone"') > html.indexOf('id="storeCategorie"') && html.indexOf('id="storeTagsZone"') < html.indexOf('id="storeTri"'));
-    assert.match(lire('style.css'), /\.store-tags-zone \.store-menu-flottant\{ left:0; right:auto; \}/);
-    assert.match(lire('style.css'), /\.store-tag-corbeille\{ color:var\(--ink\);/);
+    assert.match(lire('src/style.css'), /\.store-tags-zone \.store-menu-flottant\{ left:0; right:auto; \}/);
+    assert.match(lire('src/style.css'), /\.store-tag-corbeille\{ color:var\(--ink\);/);
     // La même liste de tags (créer, renommer, supprimer) dans la fiche ET dans le filtre.
     assert.equal((UI.match(/remplirListeTags\(menu, \{/g) || []).length, 3);   // la définition, la fiche, le filtre
     assert.doesNotMatch(UI, /texte: '🗑'/);
   });
   test('retours sur les tags (2) : bouton à l\'allure des listes, une seule ligne, tags en jaune', () => {
-    const css = lire('style.css');
+    const css = lire('src/style.css');
     const bouton = css.slice(css.indexOf('.store-tags-btn{'), css.indexOf('.store-tags-btn.actif'));
     assert.match(bouton, /border:1px solid var\(--bord-actif\); border-radius:7px; padding:8px 28px 8px 8px;/);
     assert.match(bouton, /background-position:right 8px center/);
@@ -261,7 +261,7 @@ describe('le câblage', () => {
     assert.doesNotMatch(chip, /var\(--accent\)/);
   });
   test('fiche : chaque section dans sa carte, comme les fiches d\'Éléments', () => {
-    const css = lire('style.css');
+    const css = lire('src/style.css');
     const corps = (sel) => css.slice(css.indexOf(sel + '{'), css.indexOf('}', css.indexOf(sel + '{')));
     const carte = corps('.store-fiche-section'), reference = corps('.modal-section');
     for (const decl of ['background:var(--creux)', 'border:1px solid var(--line)', 'border-radius:8px', 'padding:4px 14px 12px']) {
@@ -275,7 +275,7 @@ describe('le câblage', () => {
   test('la catégorie de la fiche : plus de « devinée », un chevron dessiné et centré', () => {
     assert.doesNotMatch(UI, /devineeCourt|categorieDevinee/);
     assert.match(UI, /if \(e\.categorieChoisie && e\.attribution && e\.attribution\.categorie\) menu\.appendChild/);
-    const css = lire('style.css');
+    const css = lire('src/style.css');
     const apres = css.slice(css.indexOf('.store-chip-categorie::after{'), css.indexOf('}', css.indexOf('.store-chip-categorie::after{')));
     assert.match(apres, /content:''/);
     assert.match(apres, /margin-left:8px/);
@@ -293,13 +293,13 @@ describe('le câblage', () => {
     assert.match(UI, /e\.os > 0 \? pastilleArticule\(t\) : null,/);
     assert.match(UI, /attrs: \{ title: t\.articule, role: 'img', 'aria-label': t\.articule \}/);
     assert.doesNotMatch(UI, /texte: t\.articule/, 'une icône, plus un libellé');
-    assert.match(lire('style.css'), /select#storeTri\{ flex:0 0 110px; \}/);
+    assert.match(lire('src/style.css'), /select#storeTri\{ flex:0 0 110px; \}/);
     assert.match(UI, /Number\.isInteger\(e\.os\) \? t\.ligneSquelette\(e\.os\) : null,/);
     assert.match(UI, /\$\('storeSquelette'\)\.hidden = !local;/);
     assert.match(UI, /squelette: \$\('storeSquelette'\)\.value \|\| 'tous',/);
     assert.match(UI, /squelette: p\.squelette,/);
     assert.match(UI, /squelette: 'storeSquelette' \};/);
-    assert.match(lire('index.html'), /<select id="storeSquelette"><\/select>/);
+    assert.match(lire('src/index.html'), /<select id="storeSquelette"><\/select>/);
   });
   test('les modules du store voyagent avec l\'application', () => {
     const pkg = JSON.parse(lire('package.json'));

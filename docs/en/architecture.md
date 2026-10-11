@@ -13,8 +13,9 @@ the repository root keeps only what tools look for there (`package.json`, the RE
 the ESLint and type-check configurations). `electron/` holds the two files above, the blocking
 screen and its bridge, and the pure decisions they apply (window, Projects folder, updates).
 `electron/bibliotheque/` groups the model store, the thumbnails and the imported-model library.
-`main.js` resolves the application root there (`RACINE`, the parent folder) for `index.html`,
-`assets/` and the fixtures.
+`main.js` resolves the application root there (`RACINE`, the parent folder) for `assets/` and the
+fixtures. The interface lives entirely in `src/`: `src/index.html` and `src/style.css` next to the
+modules they load.
 
 `window-state.js` arrived with #407b and is worth a word, because one more file next to `main.js`
 looks like a crack in the rule and is not one. Window **geometry** is listed among the main process's own

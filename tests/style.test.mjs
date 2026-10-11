@@ -14,7 +14,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const css = readFileSync(new URL('../style.css', import.meta.url), 'utf8');
+const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
 
 // Corps d'une règle, commentaires retirés, sinon un mot cité dans un commentaire compterait comme
 // une déclaration (le commentaire du Fix 69 mentionne « margin-bottom » sans le déclarer).
@@ -68,7 +68,7 @@ describe('Fix 69 : hauteurs égales dans la rangée Enregistrer / Renommer / Sup
 });
 
 describe('Fix 70 : le panneau de l\'éditeur ne diverge pas de l\'encart de droite', () => {
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
 
   test('RÉGRESSION : les deux panneaux déclarent le même jeton de fond', () => {
     // C'était déjà vrai quand l'utilisateur a signalé un panneau « plus sombre » : ce n'est pas la
@@ -116,7 +116,7 @@ describe('Fix 70 : le panneau de l\'éditeur ne diverge pas de l\'encart de droi
  * détecteur de code mort, transposée à la feuille de style.
  */
 describe('#426e ter — aucune classe du HTML n\'est orpheline', () => {
-  const htmlClasses = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const htmlClasses = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const EN_ATTENTE_CSS = {};
 
   test('toute classe posée dans index.html est déclarée par la feuille ou lue par le code', () => {
@@ -141,7 +141,7 @@ describe('#426e ter — aucune classe du HTML n\'est orpheline', () => {
 });
 
 describe('#426e ter — « Séparer » vit sous la case qui l\'a rendu possible', () => {
-  const page = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const page = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
 
   test('RÉGRESSION : le bouton suit « Bulle fusionnable », dans la section Apparence', () => {
     // Il avait sa propre section, dans le menu Texte : un bloc de réglage pour un seul bouton, loin
@@ -158,7 +158,7 @@ describe('#426e ter — « Séparer » vit sous la case qui l\'a rendu possible'
 });
 
 describe('#426e bis — le champ de texte d\'une Bulle est habillé par une CLASSE', () => {
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
 
   /**
    * ⚠️ UNE RÈGLE PAR IDENTIFIANT NE PEUT PAS SERVIR UN ÉLÉMENT CRÉÉ EN JAVASCRIPT. Signalé à
@@ -440,7 +440,7 @@ describe('l\'espacement entre champs d\'une modale vient du champ qui PRÉCÈDE'
    * l'usage, comme les deux fois précédentes.
    *
    * On ne rallonge donc pas la liste : on la SUPPRIME. Les champs concernés se reconnaissent à ce
-   * qui les définit — une règle de `style.css` qui donne `width:100%` à un champ de modale — et la
+   * qui les définit — une règle de `src/style.css` qui donne `width:100%` à un champ de modale — et la
    * règle suivante ne pourra pas échapper à l'énumération parce que personne n'aura pensé à elle.
    * Même remède qu'en #421a pour les champs d'une fiche et qu'en #421d pour les chemins
    * d'ouverture : une énumération qui se maintient toute seule.
@@ -523,7 +523,7 @@ describe('l\'espacement entre champs d\'une modale vient du champ qui PRÉCÈDE'
   test('la classe du champ Hauteur est bien celle que porte le HTML', () => {
     // Une classe CSS que personne n'applique est une décoration ; un attribut class qui ne
     // correspond à aucune règle est un champ sans style. Les deux se lisent bien séparément.
-    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
     ['personaHeightInput', 'objectHeightInput'].forEach(id => {
       const m = new RegExp(`<input[^>]*id="${id}"[^>]*>`).exec(html);
       assert.ok(m, `${id} introuvable`);
@@ -545,7 +545,7 @@ describe('l\'espacement entre champs d\'une modale vient du champ qui PRÉCÈDE'
 // correspond à ce que son LIBELLÉ annonce. La teinte exacte, elle, n'est pas testée — un test qui
 // recopie une valeur hexadécimale ne fait qu'interdire de la changer (cf. l'en-tête de ce fichier).
 describe('#398 : la classe d\'un bouton correspond à son libellé', () => {
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   // Les boutons de la famille « plein cadre » seulement : les entrées de menu contextuel et les
   // ronds d'en-tête ont leur propre langage, et la convention ne les vise pas.
   const boutons = [...html.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/g)]
@@ -657,7 +657,7 @@ describe('#398 : la classe d\'un bouton correspond à son libellé', () => {
     // ⚠️ MUTATION ÉCHAPPÉE : les règles CSS existaient, mais rien ne vérifiait qu'un bouton les
     // PORTE. Retirer `nav-btn` de « Charger un projet existant » ne faisait donc rien échouer, et
     // ce bouton reprenait le survol orange du défaut — celui des actions qui ajoutent.
-    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
     const roles = {
       projectModalRename: 'edit-btn',
       projectModalLoad: 'nav-btn',
@@ -719,7 +719,7 @@ describe('#400 : les articulations dans le panneau de l\'Éditeur', () => {
   // ont été choisies pour une MODALE, où la place manque — et les fiches Personnage et Animaux y
   // sont toujours. L'Éditeur occupe la zone centrale depuis #383 : ce qui était un compromis y est
   // devenu une contrainte sans cause. Élargir la règle générale aurait rétréci les modales d'autant.
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
 
   test('⚠️ les modales gardent leurs tailles serrées', () => {
     // La garantie qui autorise le reste. Sans elle, agrandir le panneau agrandirait aussi les
@@ -875,7 +875,7 @@ describe('#402a : le CSS ne garde pas de règles pour des éléments disparus', 
   // tombales qui NOMMENT les règles supprimées, « .skeleton-map-open-btn n'existe plus nulle part ».
   // Les lire comme des sélecteurs faisait échouer le test sur le texte même qui explique le retrait.
   const cssNu = css.replace(/\/\*[\s\S]*?\*\//g, '');
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const SRC = ['modals.js', 'events.js', 'draw.js', 'persona-editor.js', 'scene3d.js', 'rig3d.js',
     'sidebar.js', 'skeleton-map.js', 'i18n.js', 'help-content.js', 'modal-stack.js']
     .map(f => readFileSync(new URL('../src/' + f, import.meta.url), 'utf8')).join('\n');
@@ -1100,7 +1100,7 @@ describe('#409e : une superposition en dur ne suit aucun thème', () => {
     // La marge de « Fermer » vivait dans un attribut `style` du HTML, hors de portée de toute
     // règle. Une valeur en ligne gagne sur la feuille de style : la corriger dans le CSS n'aurait
     // rien changé, et le test précédent aurait été vert pour rien.
-    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
     ['personaEditorResetBtn', 'personaEditorApplyBtn', 'personaEditorCloseBtn'].forEach(id => {
       const m = new RegExp(`<button[^>]*id="${id}"[^>]*>`).exec(html);
       assert.ok(m, `bouton ${id} introuvable dans index.html`);

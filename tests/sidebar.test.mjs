@@ -821,7 +821,7 @@ describe('#425c — masquer la bordure masque ce qui ne règle QUE le trait', ()
 });
 
 describe('#425c — les valeurs des menus SONT les valeurs persistées', () => {
-  const HTML = sourceSansCommentaires(readFileSync(new URL('../index.html', import.meta.url), 'utf8'));
+  const HTML = sourceSansCommentaires(readFileSync(new URL('../src/index.html', import.meta.url), 'utf8'));
   const STYLE = sourceSansCommentaires(readFileSync(new URL('../src/bubble-style.js', import.meta.url), 'utf8'));
 
   test('aucune traduction entre le menu et le fichier enregistré', () => {

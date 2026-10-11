@@ -1232,7 +1232,7 @@ describe('#403e : le mode de recadrage, et ce que le câblage promet', () => {
     readFileSync(new URL('../src/draw.js', import.meta.url), 'utf8'));
   const IO = sourceSansCommentaires(
     readFileSync(new URL('../src/io.js', import.meta.url), 'utf8'));
-  const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
 
   /**
    * Le bloc `mousedown` DU MODE, et pas celui du clic droit.
@@ -1460,7 +1460,7 @@ describe('#403f : le zoom et le retour au cadrage d\'origine, câblage', () => {
     readFileSync(new URL('../src/events.js', import.meta.url), 'utf8'));
   const SIDEBAR = sourceSansCommentaires(
     readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8'));
-  const HTML = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const HTML = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
 
   // ⚠️ LA COUPE SE FAIT SUR « \\n}); », EN DÉBUT DE LIGNE, ET PAS SUR « }); ». Le corps du
   // gestionnaire contient lui-même `zoomDeLImage3D({ … })` suivi d'un point-virgule : couper à la
@@ -2001,7 +2001,7 @@ describe('#411k : le cache garde les dernières Planches, sous un plafond', () =
     // Le pas et les bornes vivent dans index.html, seule source de vérité du widget. Ce test relie
     // les deux : un maximum HTML au-delà du plafond du code promettrait une mémoire que le code
     // refuserait ensuite en silence.
-    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
     const i = html.indexOf('id="cacheMoRange"');
     assert.ok(i > 0, 'le curseur de mémoire a disparu de la modale');
     const balise = html.slice(html.lastIndexOf('<', i), html.indexOf('>', i));

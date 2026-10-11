@@ -122,7 +122,7 @@ describe('Le branchement', () => {
     assert.match(EV, /exportPages\(ti, indexDuChapitre\(S\.tomes\[ti\], id\)\)/);
     assert.match(EV, /supprimerChapitre\(t, id\);/);
     assert.match(EV, /deplacerPlanche\(t, pg\.id, \{ chapitreId: null \}\);/);
-    assert.match(lire('index.html'), /id="chapterContextMenu"/);
+    assert.match(lire('src/index.html'), /id="chapterContextMenu"/);
   });
   test('un fichier est remis en ordre à la lecture, Planche courante suivie par son id', () => {
     const IO = lire('src/io.js');

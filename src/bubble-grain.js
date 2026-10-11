@@ -35,7 +35,8 @@ import { rvbDeCouleur3D, natureDuNom3D, appliquerTeinteAuMotif3D,
          tuileAEvincer3D } from './bubble-texture.js';
 
 /** Où vivent les grains cuits par `tools/bake-textures.mjs`. */
-const DOSSIER_GRAINS = 'assets/textures/';
+// Relatif à la page (src/index.html) : assets/ est à la racine de l'application.
+const DOSSIER_GRAINS = '../assets/textures/';
 
 /**
  * Combien de tuiles composées on garde.

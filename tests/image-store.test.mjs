@@ -612,7 +612,7 @@ describe('#403c : ce qu\'une Case accepte, et ce que son menu montre', () => {
 describe('#403c : le câblage des trois écrans, épinglé sur la source', () => {
   const EVENTS = sourceSansCommentaires(readFileSync(join(RACINE, 'src/events.js'), 'utf8'));
   const SIDEBAR = sourceSansCommentaires(readFileSync(join(RACINE, 'src/sidebar.js'), 'utf8'));
-  const HTML = readFileSync(join(RACINE, 'index.html'), 'utf8');
+  const HTML = readFileSync(join(RACINE, 'src/index.html'), 'utf8');
 
   test('le menu contextuel lit la décision, il ne la refait pas', () => {
     // ⚠️ C'EST LA LEÇON DU CHANTIER DES POSES, appliquée avant le défaut plutôt qu'après : trois

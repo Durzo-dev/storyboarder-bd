@@ -6,7 +6,7 @@
  * fonctionner puisqu'il lit le dossier du dépôt ; seul l'utilisateur qui installe le .exe découvre
  * le manque, et il n'a aucun moyen de le décrire autrement que « c'est cassé ».
  *
- * CE FICHIER EXISTE À CAUSE D'UN DÉFAUT RÉEL. `style.css` est né le 28 juillet 2026, quand
+ * CE FICHIER EXISTE À CAUSE D'UN DÉFAUT RÉEL. `src/style.css` est né le 28 juillet 2026, quand
  * index.html a été scindé. La liste de packaging n'a jamais suivi. Le seul build du dépôt datant du
  * 26 juillet, deux jours avant, personne n'a rien vu : `npm run dist` aurait produit une
  * application en HTML brut, 795 lignes de CSS absentes.
@@ -37,10 +37,10 @@ const PKG = JSON.parse(lire('package.json'));
 const MOTIFS = PKG.build.files;
 const MOTIFS_POSITIFS = MOTIFS.filter(m => !m.startsWith('!'));
 const MOTIFS_NEGATIFS = MOTIFS.filter(m => m.startsWith('!')).map(m => m.slice(1));
-const INDEX = lire('index.html');
+const INDEX = lire('src/index.html');
 
 /**
- * Les assets LOCAUX chargés par index.html. On exclut les ancres (#), les URL absolues et les
+ * Les assets LOCAUX chargés par src/index.html, en chemins depuis la racine du dépôt. On exclut les ancres (#), les URL absolues et les
  * data:, seuls les chemins relatifs voyagent dans l'installeur.
  */
 function assetsLocaux(html){
@@ -48,7 +48,8 @@ function assetsLocaux(html){
   for (const m of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
     const url = m[1];
     if (url.startsWith('#') || url.startsWith('data:') || /^[a-z]+:\/\//i.test(url)) continue;
-    trouvés.add(url.replace(/^\.\//, ''));
+    // Relatif à la page, qui vit dans src/ : `../node_modules/…` désigne `node_modules/…`.
+    trouvés.add(posix.normalize(posix.join('src', url)));
   }
   return [...trouvés];
 }
@@ -97,8 +98,8 @@ const empaqueté = (chemin) => MOTIFS_POSITIFS.some(m => couvert(chemin, m))
  * Les fichiers qu'une feuille de style réclame, en SUIVANT ses `@import`.
  *
  * ⚠️ CE BALAYAGE MANQUAIT, ET C'EST LA MÊME PORTE QUE LE DÉFAUT DU 28 JUILLET. Les tests
- * ci-dessous ne regardaient que les assets cités par `index.html`. Une police citée par
- * `style.css` pouvait donc ne pas voyager dans l'installeur sans que rien ne le dise, et le
+ * ci-dessous ne regardaient que les assets cités par `src/index.html`. Une police citée par
+ * `src/style.css` pouvait donc ne pas voyager dans l'installeur sans que rien ne le dise, et le
  * symptôme aurait été le plus discret possible : des Bulles en sans-serif, chez l'utilisateur
  * seulement, sans erreur ni message.
  *
@@ -109,7 +110,7 @@ const empaqueté = (chemin) => MOTIFS_POSITIFS.some(m => couvert(chemin, m))
 /**
  * Une CSS sans ses commentaires.
  *
- * ⚠️ INDISPENSABLE ICI, et le test l'a montré tout de suite. `style.css` EXPLIQUE en commentaire
+ * ⚠️ INDISPENSABLE ICI, et le test l'a montré tout de suite. `src/style.css` EXPLIQUE en commentaire
  * pourquoi ses deux `@import` vers fonts.googleapis.com sont partis, et cite donc le domaine. Sans
  * ce nettoyage, le test « plus aucune police depuis le réseau » tombait sur sa propre
  * documentation, et la seule façon de le satisfaire aurait été d'effacer l'explication.
@@ -138,7 +139,7 @@ function assetsDeLaCss(cheminRelatif, vus = new Set()) {
 }
 
 describe('Installeur : ce que les feuilles de style réclament', () => {
-  const ASSETS_CSS = assetsDeLaCss('style.css');
+  const ASSETS_CSS = assetsDeLaCss('src/style.css');
 
   test('le garde-fou : le balayage trouve bien la feuille de polices et des .woff2', () => {
     // Sur une liste vide, les deux tests suivants sont bâtis sur `[].filter(...)` et passent en ne
@@ -165,7 +166,7 @@ describe('Installeur : ce que les feuilles de style réclament', () => {
   test('RÉGRESSION : plus aucune police n\'est chargée depuis le réseau', () => {
     // Le cœur de #408. Un seul `@import` distant qui reviendrait et le rendu redeviendrait
     // dépendant de la connexion, silencieusement, `display=swap` ne prévenant personne.
-    const feuilles = ['style.css', ...ASSETS_CSS.filter(f => f.endsWith('.css'))];
+    const feuilles = ['src/style.css', ...ASSETS_CSS.filter(f => f.endsWith('.css'))];
     assert.ok(feuilles.length >= 2, 'le balayage ne trouve plus les feuilles à inspecter');
     feuilles.forEach(f => {
       assert.ok(!/fonts\.googleapis\.com|fonts\.gstatic\.com/.test(cssSansCommentaires(lire(f))),
@@ -173,7 +174,7 @@ describe('Installeur : ce que les feuilles de style réclament', () => {
     });
     // Et le garde-fou du nettoyage : sans lui, un `@import` distant remis en place passerait
     // inaperçu si quelqu'un l'entourait de commentaires par mégarde.
-    assert.ok(/fonts\.googleapis\.com/.test(lire('style.css')),
+    assert.ok(/fonts\.googleapis\.com/.test(lire('src/style.css')),
       'style.css n\'explique plus POURQUOI les polices sont locales : l\'explication a disparu');
   });
 
@@ -341,7 +342,7 @@ describe('Le garde-fou du garde-fou', () => {
   test('l\'extraction trouve bien les assets attendus', () => {
     const trouvés = assetsLocaux(INDEX);
     assert.ok(trouvés.length >= 3, `seulement ${trouvés.length} asset(s) trouvé(s) dans index.html`);
-    assert.ok(trouvés.includes('style.css'), 'la feuille de style n\'a pas été détectée');
+    assert.ok(trouvés.includes('src/style.css'), 'la feuille de style n\'a pas été détectée');
     assert.ok(trouvés.includes('src/app.js'), 'le point d\'entrée JS n\'a pas été détecté');
   });
 
@@ -362,7 +363,7 @@ describe('Le garde-fou du garde-fou', () => {
     const faux = assetsLocaux(
       '<link href="https://fonts.googleapis.com/x"><img src="data:image/svg+xml;utf8,<svg/>">'
       + '<a href="#ancre"><script src="reel.js">');
-    assert.deepEqual(faux, ['reel.js']);
+    assert.deepEqual(faux, ['src/reel.js']);
   });
 });
 
@@ -380,7 +381,7 @@ describe('Le garde-fou du garde-fou', () => {
  *   P9 le suivi des @import coupé, la CSS de polices n'est plus explorée          ROUGE
  *
  * P9 garde le GARDE, comme P3 et P4. Sans le suivi des `@import`, le balayage ne verrait que
- * `style.css` lui-même, ne trouverait aucune police, et les trois tests bâtis sur `[].filter(...)`
+ * `src/style.css` lui-même, ne trouverait aucune police, et les trois tests bâtis sur `[].filter(...)`
  * passeraient en ne regardant rien. Exactement la forme d'échec silencieux que ce fichier existe
  * pour empêcher.
  *

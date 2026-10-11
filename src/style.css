@@ -9,7 +9,7 @@
 
    assets/fonts/ et son contenu sont GÉNÉRÉS par `node tools/fetch-fonts.mjs`. Licences et
    attributions : assets/fonts/LICENSES.md. */
-@import url('./assets/fonts/fonts.css');
+@import url('../assets/fonts/fonts.css');
 
 :root{
   /* Taille de l'interface (#410). 1 = telle qu'elle a toujours été. */

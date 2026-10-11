@@ -14,7 +14,8 @@ README, la licence, les configurations d'ESLint et de la vérification de types)
 contient les deux fichiers ci-dessus, l'écran bloquant et son pont, et les décisions pures qu'ils
 appliquent (fenêtre, dossier des Projets, mises à jour). `electron/bibliotheque/` regroupe le store
 de modèles, les vignettes et la bibliothèque des modèles importés. `main.js` y résout la racine de
-l'application (`RACINE`, le dossier parent) pour `index.html`, `assets/` et les fixtures.
+l'application (`RACINE`, le dossier parent) pour `assets/` et les fixtures. L'interface, elle, est
+entièrement dans `src/` : `src/index.html` et `src/style.css` à côté des modules qu'ils chargent.
 
 `window-state.js` est arrivé avec #407b et mérite un mot, car un fichier de plus à côté de `main.js`
 a l'air d'une fissure dans la règle sans en être une. La **géométrie** de la fenêtre figure parmi les
