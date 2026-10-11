@@ -53,6 +53,7 @@ down.
 | [imported-models-display.md](imported-models-display.md) | How imported models are displayed: the audit that followed the orange duck, the seven fixes (colours, metals, emission, the file's lights, importing a `.gltf`, compressions), and what stays ignored knowingly. |
 | [asset-store.md](asset-store.md) | The asset store: scope, what the Sketchfab API allows (checked on 5 October 2026), the common source contract, attribution, breakdown (tasks #444 to #446). |
 | [lecteur.md](lecteur.md) | The Volume or Chapter Reader: what it does, its options (one or two pages, direction, blank page, scrolling, guided view), what lives where, and what an off-screen drawing costs. |
+| [polices.md](polices.md) | Fonts: ten built in, one per use, and why complete ones; real or simulated bold and italic; the Fonts window; importing a file (what is read from it, the index, renames that rewrite no Project) (task #423). |
 | [non-visible.md](non-visible.md) | "Not visible": the ID render that tells whether an Element is out of frame or hidden, what it deliberately does not see, the doubt that favours visibility, and when it runs (task #449). |
 
 ---

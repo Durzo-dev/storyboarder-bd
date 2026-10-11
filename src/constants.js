@@ -525,17 +525,30 @@ export const BUBBLE_FONT_DEFAULT = 'Comic Neue';
 // Creepster n'existent qu'en un style, faute d'équivalent libre et complet : leurs variantes seront
 // simulées, et l'application le dira. `gras` / `italique` : 'vrai' ou 'simule'. L'ordre est celui de
 // la liste déroulante. Les fichiers sont dans assets/fonts (tools/fetch-fonts.mjs, même liste).
+// Les USAGES D'ORIGINE (revus par Valentin le 12 octobre 2026) : partagés entre les polices, comme
+// des tags. L'utilisateur les change ensuite dans « Mes polices » (src/polices-utilisateur.js).
+export const USAGES_POLICES = Object.freeze([
+  { cle: 'dialogue', fr: 'Dialogue', en: 'Dialogue' },
+  { cle: 'narration', fr: 'Narration', en: 'Narration' },
+  { cle: 'main', fr: 'Écrit à la main', en: 'Handwritten' },
+  { cle: 'cris', fr: 'Cris', en: 'Shouts' },
+  { cle: 'onomatopees', fr: 'Onomatopées', en: 'Sound effects' },
+  { cle: 'robotique', fr: 'Robotique', en: 'Robotic' },
+  { cle: 'machine', fr: 'Machine à écrire', en: 'Typewriter' },
+  { cle: 'horreur', fr: 'Horreur', en: 'Horror' },
+]);
+
 export const POLICES_BULLES = Object.freeze([
-  { nom: 'Comic Neue', usage: { fr: 'Dialogue BD', en: 'Comic dialogue' }, gras: 'vrai', italique: 'vrai' },
-  { nom: 'Shantell Sans', usage: { fr: 'Écrit à la main', en: 'Handwritten' }, gras: 'vrai', italique: 'vrai' },
-  { nom: 'Nunito', usage: { fr: 'Webtoon, lecture sur écran', en: 'Webtoon, screen reading' }, gras: 'vrai', italique: 'vrai' },
-  { nom: 'Kanit', usage: { fr: "Cris, titres d'action", en: 'Shouts, action titles' }, gras: 'vrai', italique: 'vrai' },
-  { nom: 'Grandstander', usage: { fr: 'Onomatopées cartoon', en: 'Cartoon sound effects' }, gras: 'vrai', italique: 'vrai' },
-  { nom: 'Bangers', usage: { fr: 'Onomatopées comics', en: 'Comics sound effects' }, gras: 'simule', italique: 'simule' },
-  { nom: 'Chakra Petch', usage: { fr: 'Voix robotique, écrans', en: 'Robot voice, screens' }, gras: 'vrai', italique: 'vrai' },
-  { nom: 'EB Garamond', usage: { fr: 'Narration, récitatif', en: 'Narration, captions' }, gras: 'vrai', italique: 'vrai' },
-  { nom: 'Courier Prime', usage: { fr: 'Machine à écrire', en: 'Typewriter' }, gras: 'vrai', italique: 'vrai' },
-  { nom: 'Creepster', usage: { fr: 'Horreur, monstres', en: 'Horror, monsters' }, gras: 'simule', italique: 'simule' },
+  { nom: 'Comic Neue', usages: ['dialogue', 'narration'], gras: 'vrai', italique: 'vrai' },
+  { nom: 'Shantell Sans', usages: ['main'], gras: 'vrai', italique: 'vrai' },
+  { nom: 'Nunito', usages: ['narration'], gras: 'vrai', italique: 'vrai' },
+  { nom: 'Kanit', usages: ['cris'], gras: 'vrai', italique: 'vrai' },
+  { nom: 'Grandstander', usages: ['onomatopees'], gras: 'vrai', italique: 'vrai' },
+  { nom: 'Bangers', usages: ['onomatopees'], gras: 'simule', italique: 'simule' },
+  { nom: 'Chakra Petch', usages: ['robotique'], gras: 'vrai', italique: 'vrai' },
+  { nom: 'EB Garamond', usages: ['narration'], gras: 'vrai', italique: 'vrai' },
+  { nom: 'Courier Prime', usages: ['machine'], gras: 'vrai', italique: 'vrai' },
+  { nom: 'Creepster', usages: ['horreur'], gras: 'simule', italique: 'simule' },
 ]);
 
 // ⚠️ LES POLICES RETIRÉES le 11 octobre 2026 (incomplètes), et leur remplaçante. Une Bulle d'un

@@ -16,13 +16,14 @@
  * buildSinglePageImagePdf, downloadCanvasAsPdf, exportPage, exportVolume
  */
 
+import { policeADessiner } from './polices-utilisateur.js';
 import { sondeDebut, sondeFin, sondeImageDebut, sondeImageFin } from './perf-probe.js';
 import { S, currentPage, currentPageData, isLockedScenePanel, estCaseEnRecadrage3D, panelsInPage, ensurePanelNumbers, newId, tr } from './state.js';
 import {
   WALL_TYPES, WALL_OPENING_MAGNET_TYPES, GROUND_TYPE_DEFS, GROUND_Y_DEFAULT_3D,
   BUILD_WALL_DEFAULT_HEIGHT, WALL_PX_PER_UNIT_3D,
   BUBBLE_TAIL_ANGLE_DEFAULT, BUBBLE_TAIL_LEN_DEFAULT,
-  BUBBLE_FONT_FALLBACK, BUBBLE_PADDING_DEFAULT, policeDeBulle, styleDuTexteDeBulle,
+  BUBBLE_FONT_FALLBACK, BUBBLE_PADDING_DEFAULT, styleDuTexteDeBulle,
   ROOM_PREVIEW_BASE_W, ROOM_PREVIEW_BASE_H,
   OBJECT_PREVIEW_BASE_W, OBJECT_PREVIEW_BASE_H,
   PERSONA_PREVIEW_BASE_W, PERSONA_PREVIEW_BASE_H,
@@ -1959,8 +1960,8 @@ export function drawBubble(c, o, phase = PHASE_TOUT){
     // auto-computed size based on the bubble's size.
     const fontScale = o.bulleFontScale != null ? o.bulleFontScale : 1;
     const fontSize = Math.max(11, Math.round(Math.min(o.w, o.h) * 0.16 * fontScale));
-    // Une police retirée (#423) se dessine avec sa remplaçante, sans réécrire la Bulle.
-    const fontFamily = policeDeBulle(o.bulleFont);
+    // Une police retirée ou renommée (#423) se dessine avec sa remplaçante, sans réécrire la Bulle.
+    const fontFamily = policeADessiner(o.bulleFont);
     const fontFallback = BUBBLE_FONT_FALLBACK[fontFamily] || 'Comic Sans MS';
     // Gras et italique (#423) : seulement si la police les a, vrais ou simulés (styleDuTexteDeBulle).
     c.font = `${styleDuTexteDeBulle(o).prefixe}${fontSize}px "${fontFamily}", "${fontFallback}", sans-serif`;

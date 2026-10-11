@@ -129,6 +129,14 @@ export const HELP_MANUAL_EN = [
     'A merged Bubble keeps one text area per lobe and takes on the look of the one you moved. Its lobes still move and resize, but never far enough to come apart. "Separate the bubbles", under "Mergeable bubble", detaches them.',
     'Deleting a merged Bubble separates its whole group, each one recovering the look it had before the merge. A question says so first, and a single Ctrl+Z undoes the lot.',
   ]},
+  { id: 'polices', title: 'Fonts', paragraphs: [
+    'The Aa button at the top, right of the Model editor, opens "My fonts": the ten built-in fonts, then yours, as a thumbnail grid or a list, with a filter by use.',
+    'Uses work like model tags: set them on a font from its details, create, rename or delete them there or in the filter.',
+    'Click a font to see all its characters, try a sentence of your own in its four styles, and read its licence. A style marked ~ is simulated: the font does not have it.',
+    '"Add a font" takes a .ttf, .otf, .woff or .woff2 file. Its name is the one the font gives itself; the files of one family (Regular, Bold, Italic) make a single font. Your fonts appear under "My fonts" in a bubble\'s font list.',
+    'Right-click one of your fonts to rename or delete it. Renaming changes no project: bubbles that used the old name follow.',
+    'Check that you are allowed to use a font: the window shows the licence it declares, and warns when it calls itself restricted.',
+  ]},
   { id: 'scenes', title: 'Scenes', paragraphs: [
     'Scenes let you compose a reusable 3D set (Walls, Furniture, Characters, Roads, Buildings…) and load it into any Panel of a page.',
     'Create or open a Scene from the "Scenes" menu at the top. The Scene editor shows a full-frame canvas; its Elements are placed, oriented and resized exactly as in a normal panel.',
@@ -362,6 +370,14 @@ export const HELP_MANUAL_FR = [
     "Deux Bulles peuvent être fusionnées en une seule. Cochez « Bulle fusionnable » sur les deux, décochée par défaut, puis amenez l'une contre l'autre : un contour discontinu annonce la paire, et une question est posée au relâchement.",
     "Une Bulle fusionnée garde une zone de texte par lobe et prend l'apparence de celle qu'on a déplacée. Ses lobes se déplacent et se redimensionnent encore, mais jamais assez loin pour se décoller. « Séparer les bulles », sous « Bulle fusionnable », les détache.",
     "Supprimer une Bulle fusionnée sépare tout son groupe, chacune retrouvant l'apparence qu'elle avait avant la fusion. Une question le dit d'abord, et un seul Ctrl+Z défait l'ensemble.",
+  ]},
+  { id: 'polices', title: "Polices d'écriture", paragraphs: [
+    "Le bouton Aa, en haut à droite de l'Éditeur de modèle, ouvre « Mes polices » : les dix intégrées, puis les vôtres, en grille de vignettes ou en liste, avec un filtre par usage.",
+    "Les usages se manient comme les tags des modèles : posez-en sur une police depuis son détail, créez, renommez ou supprimez-les là ou dans le filtre.",
+    "Cliquez une police pour voir tous ses caractères, essayer votre propre phrase dans ses quatre styles et lire sa licence. Un style marqué ~ est simulé : la police ne l'a pas.",
+    "« Ajouter une police » prend un fichier .ttf, .otf, .woff ou .woff2. Son nom est celui que la police se donne ; les fichiers d'une même famille (Regular, Bold, Italic) n'en font qu'une. Vos polices apparaissent sous « Mes polices » dans la liste d'une Bulle.",
+    "Clic droit sur une de vos polices pour la renommer ou la supprimer. Renommer ne change aucun Projet : les Bulles qui utilisaient l'ancien nom suivent.",
+    "Vérifiez que vous avez le droit d'utiliser une police : la fenêtre montre la licence qu'elle déclare, et prévient quand elle se dit restreinte.",
   ]},
   { id: 'scenes', title: 'Scènes', paragraphs: [
     'Les Scènes permettent de composer un décor 3D réutilisable (Murs, Mobilier, Personnages, Routes, Bâtiments…) et de le charger dans n\'importe quelle Case d\'une Planche.',

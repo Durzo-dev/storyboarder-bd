@@ -35,6 +35,16 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   listImageFiles: () => ipcRenderer.invoke('images:list'),
   deleteImageFile: (name) => ipcRenderer.invoke('images:delete', name),
   renameImageFile: (ancien, nouveau) => ipcRenderer.invoke('images:rename', ancien, nouveau),
+  // Polices de l'utilisateur (#423), rangées dans <dossier de Projets>/Polices. Même exception que
+  // les modèles et les images (docs/en/architecture.md, règle n°1). L'import se fait en deux temps :
+  // choisir et lire, puis écrire une fois les conflits de nom tranchés.
+  listFonts: () => ipcRenderer.invoke('fonts:list'),
+  readFontFile: (fichier) => ipcRenderer.invoke('fonts:read', fichier),
+  pickFonts: (integrees) => ipcRenderer.invoke('fonts:pick', integrees),
+  commitFonts: (jeton, choix, integrees) => ipcRenderer.invoke('fonts:commit', jeton, choix, integrees),
+  renameFont: (ancien, nouveau, integrees) => ipcRenderer.invoke('fonts:rename', ancien, nouveau, integrees),
+  deleteFont: (nom) => ipcRenderer.invoke('fonts:delete', nom),
+  fontUsageOperation: (op, args, depart) => ipcRenderer.invoke('fonts:usage', op, args, depart),
   readSkeletonMaps: () => ipcRenderer.invoke('skeletons:read'),
   writeSkeletonMaps: (contenu) => ipcRenderer.invoke('skeletons:write', contenu),
   // Flux de confirmation avant de quitter (cf. main.js, événement 'close' intercepté + quitConfirmModal

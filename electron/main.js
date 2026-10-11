@@ -795,6 +795,157 @@ ipcMain.handle('images:list', async () => {
   }
 });
 
+// ─── POLICES DE L'UTILISATEUR (#423) ───
+// Même exception que models:* et images:* (docs/en/architecture.md, règle n°1) : des octets choisis
+// par l'utilisateur à l'exécution, que rien ne peut générer à la construction. ICI les
+// entrées-sorties et la défense des noms ; les décisions (index, collisions, renommages) sont dans
+// electron/bibliotheque/polices.js, la lecture des fichiers dans polices-fichiers.js, tous deux
+// testés sous Node nu.
+//
+// Un dossier SÉPARÉ, <dossier de Projets>/Polices, pour la même raison que Images : ce que
+// l'utilisateur fait pour sauvegarder ses Projets couvre alors ses polices.
+const polices = require('./bibliotheque/polices');
+const policesFichiers = require('./bibliotheque/polices-fichiers');
+
+function getFontsDir() {
+  return path.join(getProjectsDir(), 'Polices');
+}
+
+async function lireIndexPolices() {
+  try { return polices.indexLu(await fs.promises.readFile(path.join(getFontsDir(), polices.INDEX), 'utf8')); }
+  catch (e) { return polices.indexLu(null); }
+}
+
+async function ecrireIndexPolices(index) {
+  fs.mkdirSync(getFontsDir(), { recursive: true });
+  const cible = path.join(getFontsDir(), polices.INDEX);
+  // Écrit à côté puis renommé : un index à moitié écrit perdrait toutes les polices d'un coup.
+  await fs.promises.writeFile(cible + '.tmp', JSON.stringify(index, null, 2), 'utf8');
+  await fs.promises.rename(cible + '.tmp', cible);
+}
+
+async function effacerFichiersPolice(noms) {
+  for (const n of noms) {
+    if (!polices.fichierPoliceAcceptable(n)) continue;
+    try { await fs.promises.unlink(path.join(getFontsDir(), n)); } catch (e) { /* déjà parti */ }
+  }
+}
+
+/** Les familles de l'index, chacune complétée par ce que ses fichiers disent d'eux-mêmes. */
+async function famillesDePolices() {
+  const index = await lireIndexPolices();
+  const familles = [];
+  for (const f of index.familles) {
+    const lus = [];
+    for (const fichier of f.fichiers) {
+      try { lus.push({ fichier, info: policesFichiers.lirePolice(await fs.promises.readFile(path.join(getFontsDir(), fichier))) }); }
+      catch (e) { /* fichier manquant : la famille garde les autres */ }
+    }
+    const lue = policesFichiers.regrouperEnFamilles(lus.filter(l => l.info).map(l => ({ ...l, info: { ...l.info, famille: f.nom } })))[0];
+    familles.push(lue ? { ...lue, nom: f.nom } : { nom: f.nom, fichiers: [], introuvable: true, gras: 'simule', italique: 'simule' });
+  }
+  return { familles, renommages: index.renommages, usages: index.usages, usagesDesPolices: index.usagesDesPolices };
+}
+
+ipcMain.handle('fonts:list', async () => {
+  try { return await famillesDePolices(); } catch (e) { return { familles: [], renommages: {}, usages: null, usagesDesPolices: {} }; }
+});
+
+// Les usages (comme les tags du store) : une opération à la fois, l'index réécrit. `depart` : les
+// usages d'origine, que l'interface fournit pour amorcer l'index au premier changement.
+ipcMain.handle('fonts:usage', async (event, op, args, depart) => {
+  try {
+    const r = polices.operationUsage(await lireIndexPolices(), op, args || {}, depart || null);
+    if (!r.erreur) await ecrireIndexPolices(r.index);
+    return { usages: r.index.usages, usagesDesPolices: r.index.usagesDesPolices, id: r.id, erreur: r.erreur };
+  } catch (err) { return { erreur: String(err) }; }
+});
+
+ipcMain.handle('fonts:read', async (event, fichier) => {
+  if (!polices.fichierPoliceAcceptable(fichier)) return { ok: false, error: 'nom de police refusé' };
+  try { return { ok: true, data: new Uint8Array(await fs.promises.readFile(path.join(getFontsDir(), fichier))) }; }
+  catch (err) { return { ok: false, error: String(err) }; }
+});
+
+// L'import se fait en DEUX TEMPS : choisir et lire (fonts:pick), puis, une fois les conflits de nom
+// tranchés par l'utilisateur, écrire (fonts:commit). Les octets restent ici entre les deux, sous un
+// jeton : inutile de les faire aller et venir.
+const importsEnAttente = new Map();
+let prochainJeton = 1;
+
+ipcMain.handle('fonts:pick', async (event, integrees) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+    filters: [{ name: 'Polices', extensions: policesFichiers.EXTENSIONS_POLICE.map(e => e.slice(1)) }],
+    properties: ['openFile', 'multiSelections'],
+  });
+  if (canceled || !filePaths || !filePaths.length) return { canceled: true };
+  const lus = [];
+  const illisibles = [];
+  for (const chemin of filePaths) {
+    try {
+      const data = await fs.promises.readFile(chemin);
+      const info = policesFichiers.lirePolice(data);
+      if (info) lus.push({ fichier: path.basename(chemin), info, data });
+      else illisibles.push(path.basename(chemin));
+    } catch (e) { illisibles.push(path.basename(chemin)); }
+  }
+  const familles = policesFichiers.regrouperEnFamilles(lus);
+  const index = await lireIndexPolices();
+  const jeton = String(prochainJeton++);
+  importsEnAttente.set(jeton, { lus });
+  const propositions = polices.propositionsDImport(index, familles, Array.isArray(integrees) ? integrees : []);
+  return {
+    canceled: false, jeton, illisibles,
+    familles: familles.map((f, i) => ({ ...f, fichiers: f.fichiers.length, conflit: propositions[i].conflit })),
+  };
+});
+
+ipcMain.handle('fonts:commit', async (event, jeton, choix, integrees) => {
+  const attente = importsEnAttente.get(jeton);
+  importsEnAttente.delete(jeton);
+  if (!attente) return { ok: false, error: 'import expiré' };
+  try {
+    fs.mkdirSync(getFontsDir(), { recursive: true });
+    const existants = new Set(fs.readdirSync(getFontsDir()));
+    const ecrits = [];
+    const decisions = choix && typeof choix === 'object' ? choix : {};
+    for (const l of attente.lus) {
+      if (decisions[l.info.famille] === 'passer') continue;
+      const nom = polices.nomDeFichierPolice(l.fichier, existants);
+      existants.add(nom);
+      await fs.promises.writeFile(path.join(getFontsDir(), nom), l.data);
+      ecrits.push({ fichier: nom, info: l.info });
+    }
+    const familles = policesFichiers.regrouperEnFamilles(ecrits);
+    const { index, retires } = polices.appliquerImport(await lireIndexPolices(), familles, decisions, Array.isArray(integrees) ? integrees : []);
+    await ecrireIndexPolices(index);
+    await effacerFichiersPolice(retires);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+});
+
+ipcMain.handle('fonts:rename', async (event, ancien, nouveau, integrees) => {
+  try {
+    const r = polices.renommer(await lireIndexPolices(), ancien, nouveau, Array.isArray(integrees) ? integrees : []);
+    if (r.erreur) return { ok: false, error: r.erreur };
+    await ecrireIndexPolices(r.index);
+    return { ok: true };
+  } catch (err) { return { ok: false, error: String(err) }; }
+});
+
+// Le renderer a DÉJÀ confirmé auprès de l'utilisateur.
+ipcMain.handle('fonts:delete', async (event, nom) => {
+  try {
+    const r = polices.supprimer(await lireIndexPolices(), nom);
+    await ecrireIndexPolices(r.index);
+    await effacerFichiersPolice(r.retires);
+    return { ok: true };
+  } catch (err) { return { ok: false, error: String(err) }; }
+});
+
 // ─── Correspondances de squelette ───
 // Un seul fichier, à CÔTÉ du dossier Modeles et non dedans : ce dossier ne contient que des `.glb`,
 // et models:list y refuse déjà tout le reste. Le mettre à l'intérieur obligerait à percer cette

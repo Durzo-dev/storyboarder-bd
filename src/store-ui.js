@@ -15,6 +15,7 @@
  * « Télécharger » en donnant le nom du fichier : pas de doublon par inadvertance. La liste vient du
  * fichier des attributions (store.js, telecharges), relue à chaque ouverture du store.
  */
+import { remplirListeEtiquettes } from './liste-etiquettes.js';
 import { S } from './state.js';
 import { rangerModele, remplacerModele, readModel } from './model-store.js';
 import { entreesLocales, filtrerEntrees, NON_CLASSE, USAGES, SQUELETTES, TRIS_LOCAUX } from './local-library.js';
@@ -704,7 +705,7 @@ let menuOuvert = null;   // { fermer } du menu flottant ouvert
  */
 // `declencheur` : le bouton qui ouvre ce menu. Recliquer dessus quand son menu est ouvert le REFERME
 // (demandé) au lieu de le rouvrir : le clic sur le bouton n'est pas « ailleurs », il ne fermait rien.
-function menuFlottant(conteneur, remplir, classe = '', quandFerme = null, declencheur = null){
+export function menuFlottant(conteneur, remplir, classe = '', quandFerme = null, declencheur = null){
   if (menuOuvert) {
     const memeBouton = declencheur && menuOuvert.declencheur === declencheur;
     menuOuvert.fermer();
@@ -799,23 +800,6 @@ function blocClassement(fichier){
   return bloc;
 }
 
-/** L'icône de corbeille, en SVG (l'émoji sortait noir sur fond sombre, signalé). */
-function iconeCorbeille(){
-  const NS = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(NS, 'svg');
-  svg.setAttribute('viewBox', '0 0 16 16');
-  svg.setAttribute('aria-hidden', 'true');
-  const trait = document.createElementNS(NS, 'path');
-  trait.setAttribute('d', 'M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.7 8.5h5.6l.7-8.5M7 7v4M9 7v4');
-  trait.setAttribute('fill', 'none');
-  trait.setAttribute('stroke', 'currentColor');
-  trait.setAttribute('stroke-width', '1.4');
-  trait.setAttribute('stroke-linecap', 'round');
-  trait.setAttribute('stroke-linejoin', 'round');
-  svg.appendChild(trait);
-  return svg;
-}
-
 /**
  * La LISTE DES TAGS, commune au menu de la fiche et au filtre (demandé : créer, renommer et
  * supprimer depuis les deux). Une ligne par tag (case à cocher, ✏️ renommer, corbeille), puis un
@@ -825,56 +809,22 @@ function iconeCorbeille(){
  */
 function remplirListeTags(menu, { estCoche, cocher, apresCreation, refaire }){
   const t = textesStore(langue());
-  const erreur = el('p', { classe: 'store-menu-erreur' });
-  const ligneTag = (tag) => {
-    const coche = el('input', { attrs: { type: 'checkbox' } });
-    coche.checked = estCoche(tag);
-    coche.onchange = async () => { await cocher(tag, coche.checked); refaire(); };
-    const libelle = el('label', { classe: 'store-tag-coche' }, [coche, el('span', { texte: tag.nom, classe: 'store-tag-nom' })]);
-    const crayon = el('button', { texte: '✏️', classe: 'store-tag-outil', attrs: { type: 'button', title: t.renommerTag } });
-    const corbeille = el('button', { classe: 'store-tag-outil store-tag-corbeille', attrs: { type: 'button', title: t.supprimerTag, 'aria-label': t.supprimerTag } }, [iconeCorbeille()]);
-    const ligne = el('div', { classe: 'store-tag-ligne' }, [libelle, crayon, corbeille]);
-    crayon.onclick = () => {
-      const champ = el('input', { classe: 'store-tag-champ', attrs: { type: 'text', maxlength: '40' } });
-      champ.value = tag.nom;
-      ligne.replaceChildren(champ);
-      champ.focus();
-      champ.select();
-      champ.onkeydown = async (ev) => {
-        if (ev.key === 'Escape') { ev.stopPropagation(); refaire(); return; }
-        if (ev.key !== 'Enter') return;
-        ev.preventDefault();
-        const r = await operer('renommerTag', { id: tag.id, nom: champ.value });
-        if (r.erreur) { erreur.textContent = t.erreursTag[r.erreur] || t.erreursTag.vide; return; }
-        refaire();
-      };
-    };
-    corbeille.onclick = async () => {
+  // La liste elle-même est commune avec les usages des polices (src/liste-etiquettes.js).
+  remplirListeEtiquettes(menu, {
+    etiquettes: tousLesTags,
+    estCoche, cocher, apresCreation, refaire,
+    creer: (nom) => operer('creerTag', { nom }),
+    renommer: (tag, nom) => operer('renommerTag', { id: tag.id, nom }),
+    supprimer: async (tag) => {
       const n = Object.values((bibliotheque && bibliotheque.tagsParModele) || {}).filter(ids => ids.includes(tag.id)).length;
       const ok = _rappels.confirmer ? await _rappels.confirmer(t.confirmerSuppressionTag(tag.nom, n)) : true;
-      if (!ok) return;
+      if (!ok) return false;
       await operer('supprimerTag', { id: tag.id });
       tagsFiltre = tagsFiltre.filter(x => x !== tag.id);
-      refaire();
-    };
-    return ligne;
-  };
-  const nouveau = el('input', { classe: 'store-tag-champ', attrs: { type: 'text', placeholder: t.nouveauTag, maxlength: '40' } });
-  nouveau.onkeydown = async (ev) => {
-    if (ev.key !== 'Enter') return;
-    ev.preventDefault();
-    const r = await operer('creerTag', { nom: nouveau.value });
-    if (!r.id) { erreur.textContent = t.erreursTag.vide; return; }
-    if (apresCreation) await apresCreation(r.id);
-    refaire();
-  };
-  const tags = tousLesTags();
-  menu.replaceChildren(
-    ...(tags.length ? tags.map(ligneTag) : [el('p', { texte: t.aucunTag, classe: 'store-menu-vide' })]),
-    nouveau,
-    erreur,
-  );
-  setTimeout(() => nouveau.focus(), 0);
+      return true;
+    },
+    textes: { nouvelle: t.nouveauTag, aucune: t.aucunTag, renommer: t.renommerTag, supprimer: t.supprimerTag, erreurs: t.erreursTag },
+  });
 }
 
 /**

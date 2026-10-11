@@ -2455,3 +2455,91 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-note:empty{ display:none; }
 .store-credit{ font-size:11.5px; color:var(--ink-soft); margin:12px 0 0; text-align:right; }
 .store-credit a{ color:inherit; }
+
+/* ── La fenêtre des POLICES (#423, src/polices-ui.js) ─────────────────────────────────────────── */
+/* Le bouton du bandeau : « Aa » en lettres, au gabarit des boutons ronds à icône. */
+.help-round-btn.polices-btn{ font-family:Georgia, serif; font-size:13px; font-weight:700; letter-spacing:-.02em; }
+#fontContextMenu{ z-index:1100; }
+.polices-box{ position:relative; }
+.polices-barre{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:8px; }
+.polices-barre[hidden], .polices-pied[hidden]{ display:none; }
+/* La rangée prend la largeur qui reste à côté de « Ajouter une police » ; les boutons et le filtre
+   gardent leur taille (flex:none), seule la phrase d'exemple s'étire. Sans cela, le champ ajouté en
+   liste écrasait les boutons d'affichage et le filtre (signalé). Tout est à 34 px de haut : la
+   hauteur du filtre, sur laquelle les boutons et le champ s'alignent. */
+.polices-vue{ display:flex; gap:4px; align-items:center; flex:1 1 auto; min-width:0; }
+.polices-vue > *{ flex:none; }
+.polices-vue .polices-vue-btn{ height:34px; width:34px; }
+.polices-vue .store-tags-zone{ margin-left:8px; position:relative; flex:none; width:190px; max-width:none; }
+/* La phrase d'exemple, en liste : toute la largeur disponible, sans les marges d'un champ de modale.
+   ⚠️ LA CAUSE DU RENDU CASSÉ : `.modal-box input[type=text]` (largeur 100 %, marge basse de 14 px)
+   pèse plus qu'une règle à deux classes. Le champ prenait toute la rangée, écrasait les boutons, et
+   sa marge basse éloignait la liste. D'où ce sélecteur, plus précis que le leur. */
+.modal-box .polices-vue input.polices-phrase{ flex:1 1 auto; min-width:120px; width:auto; height:34px; margin:0 0 0 8px; padding:0 10px;
+  box-sizing:border-box; font-size:13.5px; font-weight:500; }
+.modal-box .polices-vue input.polices-phrase[hidden]{ display:none; }
+/* « Retour », en bas du détail, hors de la zone qui défile : toujours visible (demandé). */
+.polices-pied{ display:flex; justify-content:flex-end; padding-top:10px; border-top:1px solid var(--line); margin-top:8px; }
+.polices-pied .nav-btn{ margin:0; min-width:110px; }
+.police-usages .store-classement-ligne{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.polices-vue-btn{ width:32px; height:30px; padding:0; border-radius:6px; border:1px solid var(--line-strong); background:var(--white); color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.polices-vue-btn svg{ width:16px; height:16px; stroke:currentColor; fill:none; }
+.polices-vue-btn[aria-pressed="true"]{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+.polices-ajout{ position:relative; flex:none; }
+.polices-ajout .project-modal-btn{ margin:0; width:auto; padding:7px 14px; }
+.polices-ajout-menu{ position:absolute; right:0; top:calc(100% + 4px); z-index:5; min-width:230px; padding:4px;
+  background:var(--white); border:1px solid var(--line); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.35); }
+.polices-ajout-menu[hidden]{ display:none; }
+.polices-ajout-menu button{ display:block; width:100%; text-align:left; padding:7px 10px; border:0; border-radius:6px; background:none; color:var(--ink); font:inherit; font-size:13px; cursor:pointer; }
+.polices-ajout-menu button:hover:not(:disabled){ background:var(--nav-bg); color:var(--accent); }
+.polices-ajout-menu button:disabled{ color:var(--ink-soft); cursor:default; }
+.polices-groupe{ font-family:'Inter',sans-serif; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin:14px 0 8px; }
+.polices-groupe:first-child{ margin-top:0; }
+.polices-vide{ font-size:13px; color:var(--ink-soft); margin:0; }
+.polices-grille{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
+.polices-lignes{ display:flex; flex-direction:column; gap:6px; }
+/* Une vignette : « Aa » dans la police, sur un fond de bulle clair, puis son nom et ses styles. */
+.police-carte{ display:flex; flex-direction:column; text-align:left; padding:0; cursor:pointer; overflow:hidden;
+  background:var(--white); border:1px solid var(--line); border-radius:8px; color:var(--ink); font-family:inherit; }
+.police-carte:hover{ border-color:var(--accent); }
+.police-apercu{ display:flex; align-items:center; justify-content:center; height:84px; font-size:42px; line-height:1;
+  background:#fbfaf7; color:#23242a; white-space:nowrap; overflow:hidden; }
+.police-pied{ display:flex; flex-direction:column; gap:2px; padding:7px 9px 8px; position:relative; }
+.police-nom{ font-size:12.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:44px; }
+.police-usage{ font-size:11px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.police-alerte{ color:var(--warn); }
+/* G et I CENTRÉS verticalement dans le pied de la vignette (demandé), en grille comme en liste. */
+.police-variantes{ display:inline-flex; gap:3px; position:absolute; right:8px; top:50%; transform:translateY(-50%); }
+.police-infos .police-variantes{ position:static; transform:none; }
+.police-variante{ display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 3px; border-radius:4px;
+  font-family:Georgia, serif; font-size:11px; font-weight:700; background:var(--accent-soft); color:var(--accent); }
+.police-variante + .police-variante{ font-style:italic; }
+/* Une variante simulée : un ~ après la lettre, et une pastille éteinte. */
+.police-variante.simulee{ background:var(--line); color:var(--ink-soft); }
+.police-variante.simulee::after{ content:'~'; font-family:Inter, sans-serif; font-style:normal; margin-left:1px; }
+/* En liste : la phrase d'essai à gauche, dans la police, et la fiche d'identité à droite. */
+.police-carte.en-liste{ flex-direction:row; align-items:stretch; }
+.police-carte.en-liste .police-apercu{ flex:1 1 auto; justify-content:flex-start; height:auto; min-height:46px; padding:6px 12px; font-size:22px; text-overflow:ellipsis; }
+.police-carte.en-liste .police-pied{ flex:0 0 220px; justify-content:center; border-left:1px solid var(--line); }
+/* Le détail d'une police. */
+/* ⚠️ `.store-fiche h4` (marge haute de 14 px) pesait plus que la seule classe du titre : son écart
+   s'ajoutait à celui du titre de la modale (signalé). Le sélecteur reprend donc les deux. */
+.store-fiche h4.police-fiche-titre{ font-size:34px; line-height:1.15; margin:0 0 10px; color:var(--ink); }
+.police-infos{ display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
+.police-info{ display:flex; gap:10px; align-items:baseline; }
+.police-info-cle{ flex:0 0 130px; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); }
+.police-info a{ color:var(--accent); word-break:break-all; }
+.police-sous-titre{ font-family:'Inter',sans-serif; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin:14px 0 6px; }
+.police-essai-champ{ margin:0 0 8px; box-sizing:border-box; }
+.police-essais{ background:#fbfaf7; color:#23242a; border-radius:10px; padding:10px 14px; }
+.police-essai{ display:flex; gap:12px; align-items:baseline; }
+.police-essai + .police-essai{ margin-top:6px; }
+.police-essai-style{ flex:0 0 96px; font-family:'Inter',sans-serif; font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:#77787f; }
+.police-essai-texte{ font-size:24px; line-height:1.25; overflow-wrap:anywhere; }
+.police-caracteres{ display:flex; flex-direction:column; gap:8px; }
+.police-jeu{ display:flex; flex-direction:column; gap:4px; }
+/* Le libellé d'un jeu de caractères : sa hauteur naturelle. Il partage la classe des libellés du
+   détail, qui ont une LARGEUR fixe en ligne (flex 0 0 130px) : en colonne, cette base devenait une
+   HAUTEUR de 130 px, d'où le grand vide sous « Majuscules » (signalé). */
+.police-jeu > .police-info-cle{ flex:none; }
+.police-caracteres-texte{ font-size:26px; line-height:1.3; letter-spacing:.06em; overflow-wrap:anywhere; background:#fbfaf7; color:#23242a; border-radius:8px; padding:6px 12px; }

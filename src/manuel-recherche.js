@@ -12,7 +12,7 @@
 export const GROUPES_MANUEL = Object.freeze([
   { id: 'application', en: 'Application', fr: 'Application', sections: ['projet', 'maj', 'ressources', 'raccourcis'] },
   { id: 'mise-en-page', en: 'Layout', fr: 'Mise en page', sections: ['tomes', 'cases', 'images'] },
-  { id: 'dialogues', en: 'Dialogue', fr: 'Dialogues', sections: ['bulles', 'style', 'fusion'] },
+  { id: 'dialogues', en: 'Dialogue', fr: 'Dialogues', sections: ['bulles', 'style', 'fusion', 'polices'] },
   { id: 'mise-en-scene', en: '3D staging', fr: 'Mise en scène 3D', sections: ['scenes', 'camera', 'lumiere', 'sources', 'ombres'] },
   { id: 'elements', en: 'Elements', fr: 'Éléments', sections: ['objets', 'personnages'] },
   { id: 'modeles-3d', en: '3D models', fr: 'Modèles 3D', sections: ['modeles', 'store', 'modeles_articules', 'correspondance', 'editeur'] },

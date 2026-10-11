@@ -48,7 +48,12 @@ export const I18N_TEXT = [
   ['#majBtn', 'Update', 'Mise à jour'],
   ['#openPoseEditorBtn', null, null, 'title', 'Model editor (E)', 'Éditeur de modèle (E)'],
   ['#helpSearchClear', null, null, 'title', 'Clear the search', 'Effacer la recherche'],
+  ['#policesVueGrille', null, null, 'title', 'Thumbnail grid', 'Grille de vignettes'],
+  ['#policesVueListe', null, null, 'title', 'List', 'Liste'],
+  ['#policesAjoutEnLigne', null, null, 'title', 'Soon: an online font store', 'Bientôt : un store de polices en ligne'],
+  ['#policesFermer', null, null, 'title', 'Close (Esc)', 'Fermer (Échap)'],
   ['#helpSearchInput', null, null, 'placeholder', 'Search the manual', 'Rechercher dans le manuel'],
+  ['#policesPhrase', null, null, 'placeholder', 'Sample sentence', "Phrase d'exemple"],
   ['#personaEditorStoreBtn', null, null, 'title', 'Choose the model to pose among your models', 'Choisir le modèle à poser parmi vos modèles'],
   // Fix 63 : ce bouton porte une ICÔNE : son libellé traduit va sur `title`, pas sur le texte.
   // Écrire dans textContent remplaçait l'icône par la phrase, qui débordait du bouton de 30px.
@@ -228,6 +233,8 @@ export const I18N_TRAILING = [
   ['#ctxSkeletonMap', 'Skeleton mapping…', 'Correspondance du squelette…'],
   ['#ctxRenameModel', 'Rename the file…', 'Renommer le fichier…'],
   ['#ctxDeleteModel', 'Delete from disk', 'Supprimer du disque'],
+  ['#ctxRenameFont', 'Rename the font…', 'Renommer la police…'],
+  ['#ctxDeleteFont', 'Delete the font', 'Supprimer la police'],
   ['#ctxRenameImage', 'Rename the file…', 'Renommer le fichier…'],
   ['#ctxDeleteImage', 'Delete from disk', 'Supprimer du disque'],
   ['#ctxBuildMode', 'Build a building', 'Construire un bâtiment'],
@@ -531,6 +538,15 @@ export const I18N_MODALS = [
   ['#helpCat_mise_en_scene', '3D staging', 'Mise en scène 3D'],
   ['#helpCat_elements', 'Elements', 'Éléments'],
   ['#helpCat_modeles_3d', '3D models', 'Modèles 3D'],
+  // La fenêtre des Polices (#423). « Aa » est le même dans les deux langues ; l'infobulle du bouton
+  // est posée par src/polices-ui.js (rafraichirTextesPolices).
+  ['#policesOuvrirBtn', 'Aa', 'Aa'],
+  ['#policesTitre', 'My fonts', 'Mes polices'],
+  ['#policesRetour', 'Back', 'Retour'],
+  ['#policesUsagesBtn', 'All uses', 'Tous les usages'],
+  ['#policesAjouter', '＋ Add a font', '＋ Ajouter une police'],
+  ['#policesAjoutFichier', 'From a file…', 'Depuis un fichier…'],
+  ['#policesAjoutEnLigne', 'Search online (soon)', 'Rechercher en ligne (bientôt)'],
   ['#configOngletGeneral', 'General', 'Général'],
   ['#configOngletProjets', 'Projects', 'Projets'],
   ['#configOnglet3d', '3D', '3D'],

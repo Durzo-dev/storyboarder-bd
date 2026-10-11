@@ -83,7 +83,7 @@ import {
   WALL_OPENING_MAGNET_TYPES, WALL_TYPES, TRAVERSANT_TYPES, WALL_OPENING_MARGIN_FRAC,
   OBJECT_ASPECT_RATIOS, PERSONA_REAL_HEIGHT_M, OBJECT_REAL_HEIGHT_M, ZOOM_MIN, ZOOM_MAX, PAGE_RENDER_SCALE_MAX, CANVAS_WRAP_PADDING, CURSOR_MAP,
   BUBBLE_TAIL_ANGLE_DEFAULT, BUBBLE_TAIL_LEN_DEFAULT, BUBBLE_PADDING_DEFAULT, BUBBLE_FONT_DEFAULT,
-  policeDeBulle, styleDuTexteDeBulle,
+  styleDuTexteDeBulle,
   POSE_3D, GROUND_Y_DEFAULT_3D, OBJECT_3D_W, OBJECT_3D_H, ANIMAL_TYPES, WALL_PX_PER_UNIT_3D,
   CHILD_DESIGN_SIZE_3D, PERSONA_SKELETON_3D, PERSONA_EDITOR_MODEL_ID,
   ARCHETYPES_3D,
@@ -159,6 +159,8 @@ import {
   groupeManuelOuvert, memoriserGroupeManuel,
 } from './section-memory.js';
 import { vueDeRecherche } from './manuel-recherche.js';
+import { policeADessiner, chargerPolicesUtilisateur, policesImportees, NOMS_INTEGRES } from './polices-utilisateur.js';
+import { cablerPolices, fermerPolices, rafraichirTextesPolices, renommerPolice, supprimerPolice } from './polices-ui.js';
 import {
   setSidebarCallbacks, isSceneTopDownView, homeOwningPanel, exitCameraMode, elementsInPanel,
   getRoomConnectedComponents, updateSidePanel, refreshCameraSliders, renderSideCameraGizmo,
@@ -4686,6 +4688,29 @@ document.getElementById('ctxImportModel').onclick = () => {
 // l'utilisateur a écrit dans sa fiche : les deux ne sont pas la même chose et ne se suivent pas.
 const modelContextMenu = document.getElementById('modelContextMenu');
 let _modelCtxFichier = null;
+// ── Le clic droit sur une police importée, dans la fenêtre des Polices (#423) ─────────────────
+let _fontCtxNom = null;
+const fontContextMenu = document.getElementById('fontContextMenu');
+function openFontContextMenu(e, nom){
+  _fontCtxNom = nom;
+  hideContextMenu();
+  placerMenu3D(fontContextMenu, e.clientX, e.clientY);
+}
+document.getElementById('ctxRenameFont').onclick = () => {
+  const nom = _fontCtxNom;
+  hideContextMenu();
+  if (!nom) return;
+  // La liste des noms pris (intégrées comprises) est capturée maintenant : la modale grise le bouton
+  // en cas de collision. Le renommage ne réécrit aucun Projet (renommages, cf. bibliotheque/polices.js).
+  const pris = [...NOMS_INTEGRES, ...policesImportees().map(f => f.nom)];
+  openRenameEntityModal('police', nom, nom, { pris, appliquer: (nouveau) => renommerPolice(nom, nouveau) });
+};
+document.getElementById('ctxDeleteFont').onclick = () => {
+  const nom = _fontCtxNom;
+  hideContextMenu();
+  if (nom) supprimerPolice(nom);
+};
+
 function openModelContextMenu(e, nomFichier){
   _modelCtxFichier = nomFichier;
   hideContextMenu();
@@ -8275,7 +8300,7 @@ function basculerStyleDuTexteDeBulle(champ){
   synchroniserStyleDuTexteDeBulle(S.sideDescTarget);
   drawCurrentPage();
   if (window.document && document.fonts && document.fonts.load) {
-    const fam = policeDeBulle(S.sideDescTarget.bulleFont);
+    const fam = policeADessiner(S.sideDescTarget.bulleFont);
     document.fonts.load(`${styleDuTexteDeBulle(S.sideDescTarget).prefixe}16px "${fam}"`).then(() => drawCurrentPage()).catch(() => {});
   }
 }
@@ -8656,6 +8681,7 @@ languageSelect.addEventListener('change', () => {
   rafraichirValeursGestes3D(); // « 100 % » ou « 100% »
   rafraichirTextesMaj();       // #442 : le bouton et la modale de mise à jour sont écrits par le code
   rafraichirTextesStore();     // #444b : idem pour le store
+  rafraichirTextesPolices();   // #423 : la fenêtre des Polices, écrite par le code elle aussi
   if (hasElectronAPI()) window.storyboarderAPI.setSetting('lang', S.appLang);
 });
 // "Export" section : per user request: these two settings are read by exportPage() at export
@@ -9082,6 +9108,18 @@ cablerStore({
   // Confirmer la suppression d'un tag : la fenêtre de confirmation habituelle, devant la bibliothèque.
   confirmer: (message) => confirmAction(message),
 });
+
+// #423 : la fenêtre des Polices. Une police ajoutée, renommée ou supprimée redessine les Bulles et
+// refait la liste des polices de la fiche ouverte.
+enregistrerFermeture('policesModal', fermerPolices);
+cablerPolices({
+  confirmer: (message) => confirmAction(message),
+  menuPolice: (e, nom) => openFontContextMenu(e, nom),
+  apresChangement: () => { updateSidePanel(); drawCurrentPage(); },
+});
+// Les polices de l'utilisateur sont chargées au démarrage, puis la Planche est redessinée : une
+// Bulle qui en cite une s'est d'abord dessinée en repli.
+chargerPolicesUtilisateur().then(() => { updateSidePanel(); drawCurrentPage(); }).catch(() => {});
 
 enregistrerFermeture('skeletonMapModal', () => fermerSkeletonMap(false));
 enregistrerFermeture('modelUsagesModal', () => modelUsagesModal.classList.add('hidden'));

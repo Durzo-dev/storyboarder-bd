@@ -120,6 +120,16 @@ interface StoryboarderAPI {
   deleteImageFile(name: string): Promise<{ ok: boolean; error?: string }>;
   renameImageFile(ancien: string, nouveau: string):
     Promise<{ ok: boolean; name?: string; error?: string }>;
+  // Polices de l'utilisateur (#423) : <dossier de Projets>/Polices et son index. L'import se fait en
+  // deux temps (pickFonts puis commitFonts, sous un jeton) ; `integrees` : les noms des polices
+  // intégrées, qu'une police importée ne peut pas prendre.
+  listFonts(): Promise<{ familles: any[]; renommages: Record<string, string> }>;
+  readFontFile(fichier: string): Promise<{ ok: boolean; data?: Uint8Array; error?: string }>;
+  pickFonts(integrees: string[]): Promise<{ canceled: boolean; jeton?: string; familles?: any[]; illisibles?: string[] }>;
+  commitFonts(jeton: string, choix: Record<string, string>, integrees: string[]): Promise<{ ok: boolean; error?: string }>;
+  renameFont(ancien: string, nouveau: string, integrees: string[]): Promise<{ ok: boolean; error?: string }>;
+  deleteFont(nom: string): Promise<{ ok: boolean; error?: string }>;
+  fontUsageOperation(op: string, args: any, depart: any): Promise<{ usages?: any[]; usagesDesPolices?: Record<string, string[]>; id?: string; erreur?: string }>;
   // Correspondances de squelette : un seul fichier partagé par tous les Projets, à côté du dossier
   // Modeles. `ok: false` couvre l'absence au premier usage comme le fichier illisible — les deux
   // se traitent pareil côté renderer, on repart d'une correspondance vide.

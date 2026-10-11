@@ -38,6 +38,9 @@
       <path d="M12 14.5l3.5 6.5"/>
     </svg>
   </button>
+  <!-- Les Polices (#423, demandé) : à droite de l'Éditeur de modèle. Son infobulle est écrite par le
+       code (src/polices-ui.js). -->
+  <button class="help-round-btn polices-btn" id="policesOuvrirBtn" type="button" title="Polices">Aa</button>
   <!-- Déplacé depuis le menu de gauche (sur demande utilisateur) : le bouton Annuler se trouve
        désormais en haut à gauche du bouton "?" qui ouvre le Manuel d'utilisation, plutôt que dans
        la barre latérale, sous le sélecteur de Tomes. -->
@@ -635,6 +638,8 @@
           <option value="EB Garamond" style="font-family:'EB Garamond','Georgia',sans-serif;">EB Garamond</option>
           <option value="Courier Prime" style="font-family:'Courier Prime','Courier New',sans-serif;">Courier Prime</option>
           <option value="Creepster" style="font-family:'Creepster','Chiller',sans-serif;">Creepster</option>
+          <!-- Les polices importées (#423), écrites par le code (remplirMesPolicesDuSelecteur). -->
+          <optgroup id="sideBubbleFontMesPolices" label="Mes polices" hidden></optgroup>
         </select>
         <!-- Gras et italique (#423) : deux INTERRUPTEURS, cumulables, toujours actifs. Marqué « simulé »
              quand la police n'a pas la variante et que le navigateur la fabrique (Bangers, Creepster,
@@ -735,6 +740,9 @@
             <button type="button" class="help-group" data-help="fusion">
               <span class="help-group-title">Bulles fusionnées</span><span class="help-group-compte"></span>
             </button>
+            <button type="button" class="help-group" data-help="polices">
+              <span class="help-group-title">Polices d'écriture</span><span class="help-group-compte"></span>
+            </button>
           </div>
         </div>
         <div class="help-categorie" data-categorie="mise-en-scene">
@@ -823,6 +831,12 @@
 <!-- Clic droit sur un modèle de la bibliothèque. PAS de renommage : `modelFile` est un
      identifiant persisté, le renommer casserait les Éléments des autres Projets, qu'on ne peut
      pas réparer (cf. docs/en/persisted-data.md). On renomme l'Élément, pas le fichier. -->
+<!-- Le clic droit sur une police importée, dans la fenêtre des Polices (#423). -->
+<div class="context-menu hidden" id="fontContextMenu">
+  <button id="ctxRenameFont"><span class="ctx-icon">✏️</span> Renommer la police…</button>
+  <button id="ctxDeleteFont"><span class="ctx-icon">🗑</span> Supprimer la police</button>
+</div>
+
 <div class="context-menu hidden" id="modelContextMenu">
   <!-- La correspondance vise le FICHIER, pas un Élément : ce menu est donc son point d'entrée
        naturel, et le seul qui reste atteignable pour un .glb importé comme Scène — lequel n'a aucun
@@ -1039,6 +1053,47 @@
       <div id="storeFiche" class="store-fiche" hidden></div>
     </div>
     <p id="storeCredit" class="store-credit"></p>
+  </div>
+</div>
+
+<!-- La fenêtre des POLICES (#423, demandé) : intégrées et importées, en grille ou en liste ; un clic
+     ouvre le détail d'une police À LA PLACE de la liste, comme une fiche du store. Écrite par
+     src/polices-ui.js. -->
+<div class="modal-overlay hidden" id="policesModal">
+  <div class="modal-box store-box polices-box">
+    <button class="modal-close-btn" id="policesFermer" type="button" title="Fermer (Échap)">×</button>
+    <h3 id="policesTitre">Mes polices</h3>
+    <div class="polices-barre" id="policesBarre">
+      <div class="polices-vue" role="group">
+        <button type="button" id="policesVueGrille" class="polices-vue-btn" aria-pressed="true" title="Grille de vignettes">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        </button>
+        <button type="button" id="policesVueListe" class="polices-vue-btn" aria-pressed="false" title="Liste">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>
+        </button>
+        <!-- Le filtre par usage (demandé), comme celui des tags du store : on y crée, renomme et
+             supprime aussi les usages. Libellé écrit par le code. -->
+        <span id="policesFiltreZone" class="store-tags-zone"><button type="button" id="policesUsagesBtn" class="store-tags-btn">Tous les usages</button></span>
+        <!-- En liste seulement (demandé) : la phrase d'exemple, la même que celle du détail. -->
+        <input id="policesPhrase" class="modal-input polices-phrase" type="text" spellcheck="false" placeholder="Phrase d'exemple" hidden>
+      </div>
+      <div class="polices-ajout">
+        <button type="button" id="policesAjouter" class="project-modal-btn">＋ Ajouter une police</button>
+        <div id="policesAjoutMenu" class="polices-ajout-menu" hidden>
+          <button type="button" id="policesAjoutFichier">Depuis un fichier…</button>
+          <button type="button" id="policesAjoutEnLigne" disabled title="Bientôt : un store de polices en ligne">Rechercher en ligne (bientôt)</button>
+        </div>
+      </div>
+    </div>
+    <p id="policesMessage" class="maj-message"></p>
+    <div id="policesDefilement" class="store-defilement">
+      <div id="policesListe"></div>
+      <div id="policesFiche" class="store-fiche" hidden></div>
+    </div>
+    <!-- Hors de la zone qui défile : « Retour » reste visible en bas du détail (demandé). -->
+    <div class="polices-pied" id="policesPied" hidden>
+      <button type="button" id="policesRetour" class="nav-btn">Retour</button>
+    </div>
   </div>
 </div>
 

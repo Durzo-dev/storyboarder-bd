@@ -11,6 +11,7 @@
  * getRoomConnectedComponents.
  */
 
+import { policeADessiner, variantesDeLaPolice, policesImportees, nomsDesUsagesDeLaPolice } from './polices-utilisateur.js';
 import { S, currentPage, currentPageData, isLockedScenePanel, panelsInPage, ensurePanelNumbers, tr } from './state.js';
 import { lumiereDeCase3D, projeterSurDome3D, geometrieDome3D,
   AZIMUTS_CARDINAUX } from './lighting-3d.js';
@@ -27,7 +28,7 @@ import { bibliothequeLue3D, styleCorrespondant3D, peutEnregistrerLeStyle3D } fro
 import { bulleEstFusionnable3D, groupeDeLaBulle3D } from './bubble-merge.js';
 import {
   TRACÉ_EMOJI, OBJECT_TYPE_LABELS, OBJECT_TYPE_EMOJI,
-  BUBBLE_PADDING_DEFAULT, GROUND_TYPE_DEFS, policeDeBulle, POLICES_BULLES, variantesDePolice,
+  BUBBLE_PADDING_DEFAULT, GROUND_TYPE_DEFS,
   WALL_TYPES,
 } from './constants.js';
 import { clamp, getEmotion, libelleTable3D, libelleTypeObjet3D, pxPerMm } from './utils.js';
@@ -1249,13 +1250,15 @@ function updateSidePanelImpl(){
     sideDescTitle.textContent = 'Texte';
     sideDescInput.placeholder = tr('Write the bubble content', 'Écrivez le contenu de la bulle');
     sideBubbleFontWrap.style.display = 'block';
-    // Une police retirée (#423) s'affiche sous le nom de sa remplaçante, celle qui est dessinée.
-    sideBubbleFontSelect.value = policeDeBulle(sel.bulleFont);
+    // Une police retirée ou renommée (#423) s'affiche sous le nom de celle qui est dessinée ; les
+    // polices importées sont dans le groupe « Mes polices », refait à chaque affichage.
+    remplirMesPolicesDuSelecteur();
+    sideBubbleFontSelect.value = policeADessiner(sel.bulleFont);
     synchroniserStyleDuTexteDeBulle(sel);
-    // L'USAGE de chaque police en infobulle (#423 : une police par usage), dans la langue affichée.
+    // Les USAGES de chaque police en infobulle (#423), ceux que l'utilisateur a posés dans « Mes
+    // polices », dans la langue affichée.
     [...sideBubbleFontSelect.options].forEach(opt => {
-      const p = POLICES_BULLES.find(x => x.nom === opt.value);
-      if (p) opt.title = S.appLang === 'en' ? p.usage.en : p.usage.fr;
+      opt.title = nomsDesUsagesDeLaPolice(opt.value, S.appLang === 'en' ? 'en' : 'fr').join(', ');
     });
     document.getElementById('sideBubbleTextColorWrap').style.display = 'block';
     document.getElementById('sideBubbleTextOutlineColorWrap').style.display = 'block';
@@ -1739,7 +1742,7 @@ export function dessinerDomeLumiere3D(lumiere){
  * L'infobulle dit lequel des deux cas s'applique.
  */
 export function synchroniserStyleDuTexteDeBulle(sel){
-  const v = variantesDePolice(sel && sel.bulleFont);
+  const v = variantesDeLaPolice(sel && sel.bulleFont);
   const reglages = [
     ['sideBubbleBoldBtn', 'gras', 'bulleGras', tr('Bold', 'Gras'),
       tr('Simulated bold: this font has no real bold', "Gras simulé : cette police n'a pas de vrai gras")],
@@ -1754,4 +1757,23 @@ export function synchroniserStyleDuTexteDeBulle(sel){
     b.classList.toggle('simule', etat === 'simule');
     b.title = etat === 'simule' ? simule : nom;
   }
+}
+
+/**
+ * Le groupe « Mes polices » de la liste des polices d'une Bulle (#423) : les polices importées,
+ * chacune affichée dans sa propre police, sous les intégrées. Masqué quand il n'y en a pas.
+ */
+export function remplirMesPolicesDuSelecteur(){
+  const groupe = document.getElementById('sideBubbleFontMesPolices');
+  if (!groupe) return;
+  const importees = policesImportees();
+  groupe.label = tr('My fonts', 'Mes polices');
+  groupe.hidden = !importees.length;
+  groupe.replaceChildren(...importees.map(f => {
+    const opt = document.createElement('option');
+    opt.value = f.nom;
+    opt.textContent = f.nom;
+    opt.style.fontFamily = `"${f.nom}", sans-serif`;
+    return opt;
+  }));
 }
