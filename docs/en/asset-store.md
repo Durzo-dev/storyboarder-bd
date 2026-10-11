@@ -191,7 +191,9 @@ Done for Poly Haven (#445); Sketchfab will reuse the same path once signing in e
 
 **3D preview** (Poly Haven has no embeddable viewer): "View in 3D" asks for the model at 1k
 (`store:apercu`), in memory only, and shows it in `src/store-apercu-3d.js`, through the same chain as
-the panels (GLTFLoader, `couleursPourAffichage3D`, default lighting), drawn on demand, released when
+the panels (GLTFLoader, `couleursPourAffichage3D`, default lighting), drawn on demand, with the
+gestures of Sketchfab's viewer (left drag: turn; right drag: move, `deplacement3D`; wheel: zoom),
+released when
 going back to the image or leaving the details view. The main process keeps the models loaded during
 the session (`memoireBornee`: six models, 80 MB): closing the store or switching tabs does not lose
 them, and "Download" at 1k right after reuses them without the network. Nothing is written to disk

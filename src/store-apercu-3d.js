@@ -6,7 +6,9 @@
  *
  * Même chaîne que les Cases, pour que l'aperçu ne mente pas : GLTFLoader, la préparation des modèles
  * importés (preparerModeleImporte3D : couleurs, émission, métaux), l'éclairage par défaut d'une Case (ambiante et
- * clé de lighting-3d.js). On tourne autour au glisser, on zoome à la molette.
+ * clé de lighting-3d.js). Les gestes sont ceux de la visionneuse de Sketchfab (demandé, pour que
+ * tous les aperçus du store se manient pareil) : clic gauche maintenu pour tourner autour, clic droit
+ * maintenu pour déplacer, molette pour zoomer.
  *
  * Le dessin se fait À LA DEMANDE (un geste, un redimensionnement), pas en boucle : une fiche ouverte
  * ne doit pas faire tourner la carte graphique pour une image immobile. Tout est libéré à la
@@ -52,6 +54,19 @@ export function orbite3D({ lacet, tangage }, dx, dy){
   };
 }
 
+/**
+ * Déplacer : le glisser au clic droit fait glisser le point visé dans le plan de l'écran, à la
+ * vitesse du pointeur (un pixel parcouru = un pixel de déplacement du modèle à la distance visée).
+ * Le modèle suit la souris : glisser vers la droite le pousse à droite. PURE.
+ */
+export function deplacement3D(centre, { lacet, tangage }, dx, dy, distance, hauteurPx, champDeg = CHAMP){
+  const parPixel = 2 * distance * Math.tan((champDeg * Math.PI / 180) / 2) / Math.max(1, hauteurPx);
+  // Les axes de l'écran, en monde, pour une caméra placée par positionCamera3D et visant le centre.
+  const droite = [Math.cos(lacet), 0, -Math.sin(lacet)];
+  const haut = [-Math.sin(tangage) * Math.sin(lacet), Math.cos(tangage), -Math.sin(tangage) * Math.cos(lacet)];
+  return [0, 1, 2].map(i => centre[i] - droite[i] * dx * parPixel + haut[i] * dy * parPixel);
+}
+
 /** Zoomer : la molette rapproche ou éloigne, entre deux bornes relatives au cadrage. PURE. */
 export function zoom3D(distance, deltaY, distanceCadrage){
   const d = distance * Math.exp(deltaY * 0.001);
@@ -94,8 +109,9 @@ export async function ouvrirApercu3D(conteneur, octets){
   maillagesParNom3D(modele, maillagesHorsCorps3D(modele)).forEach(m => { m.visible = false; });
   modele.traverse(n => { if (n.isMesh) n.frustumCulled = false; });
   const boite = box3FromObjectSkinAware3D(modele);
-  const { centre, distance: distanceCadrage } = cadrage3D(boite.min.toArray(), boite.max.toArray(), CHAMP,
+  const { centre: centreCadrage, distance: distanceCadrage } = cadrage3D(boite.min.toArray(), boite.max.toArray(), CHAMP,
     (conteneur.clientWidth || 1) / (conteneur.clientHeight || 1));
+  let centre = centreCadrage;
   let distance = distanceCadrage;
   let angles = { lacet: 0.6, tangage: 0.25 };
 
@@ -121,14 +137,23 @@ export async function ouvrirApercu3D(conteneur, octets){
   };
   const redessiner = () => { if (!demande) demande = requestAnimationFrame(dessiner); };
 
+  // Clic gauche : tourner. Clic droit : déplacer. Comme la visionneuse de Sketchfab.
   let glisser = null;
-  const appui = (e) => { glisser = { x: e.clientX, y: e.clientY }; rendu.domElement.setPointerCapture(e.pointerId); };
+  const appui = (e) => {
+    if (e.button !== 0 && e.button !== 2) return;
+    glisser = { x: e.clientX, y: e.clientY, deplacer: e.button === 2 };
+    rendu.domElement.setPointerCapture(e.pointerId);
+  };
   const deplacement = (e) => {
     if (!glisser) return;
-    angles = orbite3D(angles, e.clientX - glisser.x, e.clientY - glisser.y);
-    glisser = { x: e.clientX, y: e.clientY };
+    const dx = e.clientX - glisser.x, dy = e.clientY - glisser.y;
+    if (glisser.deplacer) centre = deplacement3D(centre, angles, dx, dy, distance, conteneur.clientHeight || 1);
+    else angles = orbite3D(angles, dx, dy);
+    glisser = { ...glisser, x: e.clientX, y: e.clientY };
     redessiner();
   };
+  // Le menu contextuel du navigateur volerait le glisser droit.
+  const menu = (e) => e.preventDefault();
   const relache = () => { glisser = null; };
   const molette = (e) => { e.preventDefault(); distance = zoom3D(distance, e.deltaY, distanceCadrage); redessiner(); };
   const el = rendu.domElement;
@@ -137,6 +162,7 @@ export async function ouvrirApercu3D(conteneur, octets){
   el.addEventListener('pointerup', relache);
   el.addEventListener('pointercancel', relache);
   el.addEventListener('wheel', molette, { passive: false });
+  el.addEventListener('contextmenu', menu);
   const Observateur = globalThis.ResizeObserver;
   const observateur = Observateur ? new Observateur(redessiner) : null;
   if (observateur) observateur.observe(conteneur);

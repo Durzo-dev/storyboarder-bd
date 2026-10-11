@@ -13,7 +13,7 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const { memoireBornee } = require('../store-sources.js');
-const { cadrage3D, orbite3D, zoom3D, positionCamera3D } = await import('../src/store-apercu-3d.js');
+const { cadrage3D, orbite3D, zoom3D, positionCamera3D, deplacement3D } = await import('../src/store-apercu-3d.js');
 const sans = (s) => s.split('\n').filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
 const lire = (f) => sans(readFileSync(new URL(`../${f}`, import.meta.url), 'utf8'));
 
@@ -104,5 +104,38 @@ describe('Le câblage', () => {
     assert.match(v, /rendu\.dispose\(\);/);
     assert.match(v, /m\.dispose\(\);/);
     assert.match(v, /n\.geometry\.dispose\(\)/);
+  });
+});
+
+describe('Le clic droit déplace, comme la visionneuse de Sketchfab', () => {
+  test('de face, glisser à droite pousse le modèle à droite : le point visé part à GAUCHE', () => {
+    const c = deplacement3D([0, 0, 0], { lacet: 0, tangage: 0 }, 100, 0, 10, 500);
+    assert.ok(c[0] < 0 && Math.abs(c[1]) < 1e-12 && Math.abs(c[2]) < 1e-12);
+    const bas = deplacement3D([0, 0, 0], { lacet: 0, tangage: 0 }, 0, 100, 10, 500);
+    assert.ok(bas[1] > 0, 'glisser vers le bas descend le modèle : le point visé monte');
+  });
+  test('un pixel parcouru = un pixel à l\'écran, à la distance visée', () => {
+    const d = 10, h = 500, champ = 35;
+    const c = deplacement3D([0, 0, 0], { lacet: 0, tangage: 0 }, h, 0, d, h, champ);
+    // Traverser toute la hauteur en pixels déplace d'une hauteur visible.
+    assert.ok(Math.abs(-c[0] - 2 * d * Math.tan(champ * Math.PI / 360)) < 1e-9);
+  });
+  test('le déplacement reste dans le plan de l\'écran, quelle que soit l\'orbite', () => {
+    const angles = { lacet: 0.9, tangage: 0.5 };
+    const cam = positionCamera3D([0, 0, 0], 1, angles);
+    for (const [dx, dy] of [[37, 0], [0, -23], [12, 40]]) {
+      const c = deplacement3D([0, 0, 0], angles, dx, dy, 10, 400);
+      const visee = cam.reduce((a, v, i) => a + v * c[i], 0);
+      assert.ok(Math.abs(visee) < 1e-9, 'le point visé a avancé ou reculé');
+    }
+  });
+});
+
+describe('Le branchement des gestes', () => {
+  const SRC = readFileSync(new URL('../src/store-apercu-3d.js', import.meta.url), 'utf8');
+  test('clic gauche tourne, clic droit déplace, et le menu contextuel ne vole pas le geste', () => {
+    assert.match(SRC, /glisser = \{ x: e\.clientX, y: e\.clientY, deplacer: e\.button === 2 \};/);
+    assert.match(SRC, /if \(glisser\.deplacer\) centre = deplacement3D\(/);
+    assert.match(SRC, /el\.addEventListener\('contextmenu', menu\);/);
   });
 });
