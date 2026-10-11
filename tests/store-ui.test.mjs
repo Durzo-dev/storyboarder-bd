@@ -298,7 +298,6 @@ describe('le câblage', () => {
     assert.match(UI, /\$\('storeSquelette'\)\.hidden = !local;/);
     assert.match(UI, /squelette: \$\('storeSquelette'\)\.value \|\| 'tous',/);
     assert.match(UI, /squelette: p\.squelette,/);
-    assert.match(UI, /squelette: 'storeSquelette' \};/);
     assert.match(lire('src/index.html'), /<select id="storeSquelette"><\/select>/);
   });
   test('les modules du store voyagent avec l\'application', () => {

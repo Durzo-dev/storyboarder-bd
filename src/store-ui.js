@@ -594,7 +594,7 @@ async function chercher(suite = false){
   const t = textesStore(langue());
   const moi = ++generation;
   enCours = true;
-  if (!suite) { fermerFiche(); $('storeGrille').replaceChildren(); affiches = []; suivant = null; derniereRecherche = parametres(); memoriserEtat(); }
+  if (!suite) { fermerFiche(); $('storeGrille').replaceChildren(); affiches = []; suivant = null; derniereRecherche = parametres(); }
   if (source === LOCAL) { await chercherLocal(moi); return; }
   message(t.chargement);
   $('storePlusBtn').hidden = true;
@@ -903,7 +903,6 @@ function rendreFiltreTags(){
     refaire: () => {
       rendreFiltreTags();
       if (afficherLocal) afficherLocal();
-      memoriserEtat();
       if (menuOuvert) remplir(menuOuvert.menu);
     },
   });
@@ -1089,35 +1088,16 @@ function ficheLocale(e){
 // ─────────────────────────────────────────────────────────────────────────────
 //
 // Pendant la session : l'onglet, les filtres, la position dans la liste, et la fiche ouverte, qui se
-// rouvre telle quelle (reconstruite, pour qu'un aperçu 3D ne tourne pas fenêtre fermée). D'une
-// session à l'autre : l'onglet et les filtres (localStorage), pas la fiche.
+// rouvre telle quelle (reconstruite, pour qu'un aperçu 3D ne tourne pas fenêtre fermée).
+//
+// ⚠️ RIEN D'UNE SESSION À L'AUTRE (demandé) : après un redémarrage, le store repart de son état de
+// base (« Mes modèles », aucune recherche, aucun filtre). Une version précédente retenait l'onglet
+// et les filtres dans localStorage (clé « store:etat ») ; cette clé est effacée au câblage, pour ne
+// pas laisser traîner une recherche que plus rien ne lit.
 
 let ficheCourante = null;      // le résultat dont la fiche est ouverte
 let aRouvrir = null;           // { fiche, position } à la fermeture
-const CLE_ETAT = 'store:etat';
-const CHAMPS_ETAT = { texte: 'storeTexte', categorie: 'storeCategorie', licence: 'storeLicence', faces: 'storeFaces', tri: 'storeTri', usage: 'storeUsage', squelette: 'storeSquelette' };
-
-function memoriserEtat(){
-  const etat = { source, commercial: !!$('storeCommercial').checked, tags: tagsFiltre.slice() };
-  for (const [cle, id] of Object.entries(CHAMPS_ETAT)) etat[cle] = $(id).value || '';
-  try { globalThis.localStorage.setItem(CLE_ETAT, JSON.stringify(etat)); } catch (e) { /* une préférence perdue, rien de plus */ }
-}
-function etatMemorise(){
-  try { return JSON.parse(globalThis.localStorage.getItem(CLE_ETAT) || 'null'); } catch (e) { return null; }
-}
-/** Remet les filtres retenus, une fois les listes construites (une valeur inconnue est ignorée). */
-function restaurerFiltres(etat){
-  if (!etat) return;
-  for (const [cle, id] of Object.entries(CHAMPS_ETAT)) {
-    const v = etat[cle];
-    if (typeof v !== 'string') continue;
-    const champ = $(id);
-    if (champ.tagName === 'SELECT' && ![...(champ.options || [])].some(o => o.value === v)) continue;
-    champ.value = v;
-  }
-  $('storeCommercial').checked = !!etat.commercial;
-  if (Array.isArray(etat.tags)) tagsFiltre = etat.tags.filter(x => typeof x === 'string');
-}
+const ANCIENNE_CLE_ETAT = 'store:etat';
 
 /** Ouvre la fenêtre si elle est fermée, la ferme sinon (raccourci B). */
 export function basculerStore(){
@@ -1129,18 +1109,12 @@ export async function ouvrirStore({ onglet, choisir } = {}){
   const pont = window.storyboarderAPI;
   if (!pont || !pont.storeChercher) return;
   if (typeof choisir === 'function') {
-    if (!choix) sourceAvantChoix = infos ? source : ((etatMemorise() || {}).source || null);
+    if (!choix) sourceAvantChoix = infos ? source : null;
     choix = choisir;
     onglet = LOCAL;
   } else if (choix) {
     // Le bouton du bandeau pendant un choix : on revient à la fenêtre ordinaire.
     quitterModeChoix();
-  }
-  let restaure = null;
-  if (!infos) {
-    // Première ouverture de la session : on reprend l'onglet et les filtres de la dernière fois.
-    restaure = etatMemorise();
-    if (restaure && SOURCES_STORE.includes(restaure.source)) source = restaure.source;
   }
   if (onglet && SOURCES_STORE.includes(onglet) && onglet !== source) {
     source = onglet;
@@ -1153,7 +1127,6 @@ export async function ouvrirStore({ onglet, choisir } = {}){
     infosPar[LOCAL] = infosLocales();
     infos = infosPar[source];
     rafraichirTextesStore();
-    restaurerFiltres(restaure);
   }
   // Relu à chaque ouverture : un modèle a pu être téléchargé, supprimé ou renommé entre-temps. Les
   // cartes déjà affichées sont refaites, sans nouvelle requête, pour que leur badge suive.
@@ -1191,12 +1164,10 @@ function quitterModeChoix(){
 export function fermerStore(){
   if (choix) {
     quitterModeChoix();
-    memoriserEtat();
     fermerFiche();
     $('storeModal').classList.add('hidden');
     return;
   }
-  memoriserEtat();
   const ouverte = !$('storeFiche').hidden && ficheCourante;
   aRouvrir = { fiche: ouverte ? ficheCourante : null, position: ouverte ? positionListe : $('storeDefilement').scrollTop };
   fermerFiche();
@@ -1209,6 +1180,8 @@ let _rappels = {};
 /** Le câblage, une fois. `rappels.apresTelechargement(fichier)` : un modèle vient d'être rangé. */
 export function cablerStore(rappels = {}){
   _rappels = rappels || {};
+  // L'état retenu d'une session à l'autre par une version précédente : plus rien ne le lit.
+  try { globalThis.localStorage.removeItem(ANCIENNE_CLE_ETAT); } catch (e) { /* rien à effacer */ }
   const storeModal = document.getElementById('storeModal');
   if (!storeModal) return;
   const pont = window.storyboarderAPI;

@@ -91,7 +91,7 @@ describe('Les onglets des sources', () => {
     assert.deepEqual(grille().map(c => c.title), ['polyhaven-1']);
   });
 
-  test('la fenêtre rouvre LÀ OÙ ON L\'AVAIT LAISSÉE (demandé) : onglet et filtres, même après un redémarrage', async () => {
+  test('la fenêtre rouvre là où on l\'avait laissée PENDANT LA SESSION, et repart de zéro après un redémarrage (demandé)', async () => {
     const ui = await import('../src/store-ui.js');
     const actif = () => onglets().findIndex(o => o.className.includes('actif'));
     const avant = actif();
@@ -102,9 +102,12 @@ describe('Les onglets des sources', () => {
     attentes.splice(0).forEach(l => l());
     await reouverture;
     assert.equal(actif(), avant, 'la fenêtre est revenue sur un autre onglet');
-    const etat = JSON.parse(globalThis.localStorage.getItem('store:etat'));
-    assert.equal(etat.source, SOURCES_STORE[avant], 'l\'onglet n\'est pas retenu d\'une session à l\'autre');
+    // Rien n'est écrit pour la session suivante : après un redémarrage, le store repart de son état
+    // de base (« Mes modèles », aucune recherche, aucun filtre).
+    assert.equal(globalThis.localStorage.getItem('store:etat'), null, 'la recherche est retenue d\'une session à l\'autre');
     const src = readFileSync(new URL('../src/store-ui.js', import.meta.url), 'utf8');
+    assert.doesNotMatch(src, /localStorage\.(setItem|getItem)\(ANCIENNE_CLE_ETAT/, 'l\'état du store est relu ou écrit d\'une session à l\'autre');
+    assert.match(src, /localStorage\.removeItem\(ANCIENNE_CLE_ETAT\)/, 'l\'ancien état retenu n\'est plus effacé');
     assert.match(src, /\$\('storeOuvrirBtn'\)\.onclick = \(\) => ouvrirStore\(\);/);
   });
 
