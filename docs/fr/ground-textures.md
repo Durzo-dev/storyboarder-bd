@@ -237,3 +237,14 @@ composition, pas de rendu.
 - [Réduire la répétition d'un sol, Blender](https://3dskillup.art/reduce-ground-texture-repetition-blender/)
 - [Cel shading, Wikipedia](https://en.wikipedia.org/wiki/Cel_shading)
 - [The Technical Art of Sea of Thieves, SIGGRAPH 2018](https://history.siggraph.org/wp-content/uploads/2022/09/2018-Talks-Ang_The-Technical-Art-of-Sea-of-Thieves.pdf)
+
+## Le bord du Sol au loin : une brume plutôt qu'un blocage
+
+Signalé en octobre 2026 : en dézoomant beaucoup, l'horizon se déformait (pointes, dents) et
+clignotait. Le Sol est coupé soit par le plan lointain de la caméra, soit par son propre bord ; avec
+le tampon de profondeur logarithmique, cette coupe se fait pixel par pixel sur une profondeur mal
+interpolée dans ses grands triangles, d'où un bord qui suit leurs arêtes et bouge avec la caméra.
+Plutôt que de bloquer le dézoom, le Sol se fond dans la couleur de l'horizon du ciel juste avant
+cette coupe (`brumeDuLointain3D`, `distanceAuBordDuSol3D`, scene3d.js). La brume ne commence
+qu'au-delà du contenu de la Case (jamais un Élément voilé), et elle est retirée après le rendu,
+comme le ciel.

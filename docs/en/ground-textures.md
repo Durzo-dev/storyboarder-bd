@@ -232,3 +232,13 @@ about rendering.
 - [Reduce ground texture repetition, Blender](https://3dskillup.art/reduce-ground-texture-repetition-blender/)
 - [Cel shading, Wikipedia](https://en.wikipedia.org/wiki/Cel_shading)
 - [The Technical Art of Sea of Thieves, SIGGRAPH 2018](https://history.siggraph.org/wp-content/uploads/2022/09/2018-Talks-Ang_The-Technical-Art-of-Sea-of-Thieves.pdf)
+
+## The Ground's far edge: a haze rather than a limit
+
+Reported in October 2026: when zooming far out, the horizon warped (spikes, teeth) and flickered.
+The Ground is cut either by the camera's far plane or by its own edge; with the logarithmic depth
+buffer, that cut is made per pixel on a depth badly interpolated across its large triangles, hence
+an edge that follows their sides and moves with the camera. Rather than limiting the zoom, the
+Ground blends into the sky's horizon colour just before that cut (`brumeDuLointain3D`,
+`distanceAuBordDuSol3D`, scene3d.js). The haze only starts beyond the Panel's content (no Element is
+ever veiled), and it is removed after the render, like the sky.
