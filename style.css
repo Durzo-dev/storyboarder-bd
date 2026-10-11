@@ -513,6 +513,21 @@ select, input[type=number]{
    où le réordonnancement va avoir lieu. */
 .page-row.drag-over-top{ box-shadow: 0 -3px 0 0 var(--accent); }
 .page-row.drag-over-bottom{ box-shadow: 0 3px 0 0 var(--accent); }
+/* Les Chapitres (demandé) : un titre repliable entre le Tome et ses Planches, et ses Planches en
+   retrait dessous. Le titre se glisse pour réordonner les chapitres ; une Planche déposée dessus
+   s'y range (contour plein, `drag-into`). */
+.chapter-row{
+  display:flex; align-items:center; gap:6px; margin:8px 0 4px; padding:4px 2px; cursor:pointer;
+  font-size:12px; font-weight:600; color:var(--ink); border-radius:6px; user-select:none;
+}
+.chapter-row:hover .chapter-name{ color:var(--accent); }
+.chapter-row .caret{ font-size:11px; color:var(--ink-soft); width:10px; }
+.chapter-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.chapter-count{ color:var(--ink-soft); font-weight:400; }
+.chapter-pages{ margin-left:12px; padding-left:8px; border-left:1px solid var(--line); }
+.chapter-row.drag-over-top{ box-shadow: 0 -3px 0 0 var(--accent); }
+.chapter-row.drag-over-bottom{ box-shadow: 0 3px 0 0 var(--accent); }
+.chapter-row.drag-into{ outline:2px solid var(--accent); outline-offset:1px; }
 .add-page-btn{
   width:100%; margin-bottom:6px; padding:7px 9px; border:1px dashed var(--ink-soft); background:transparent;
   color:var(--ink-soft); border-radius:6px; font-size:11.5px; cursor:pointer; text-align:left; font-weight:600;

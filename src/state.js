@@ -151,6 +151,7 @@ export const S = {
   // proposer la réparation d'un Projet qui cite encore un ancien nom (cf. model-library.js).
   modelRenames: [],
   draggedPage: null,
+  draggedChapter: null,      // le Chapitre qu'on glisse dans le menu de gauche, pour le réordonner
 
   // ── View / Zoom ──────────────────────────────────────────────────────
   zoomLevel:                1,

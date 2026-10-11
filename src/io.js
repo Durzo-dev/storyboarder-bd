@@ -12,6 +12,7 @@ import { habillerModales } from './modal-chrome.js';
 import { tomesOuverts } from './section-memory.js';
 import { verifierRessources, cablerModaleRessources, fermerModaleRessources } from './missing-resources.js';
 import { S, tr, createVolume, addPageToVolume, modeCanevasActif3D } from './state.js';
+import { normaliserChapitres } from './chapitres.js';
 import { preloadModelsFor } from './model-cache.js';
 // Les images d'une Case suivent le même chemin que les modèles, et pour la même raison : le dessin
 // est synchrone, le décodage ne l'est pas (cf. src/image-cache.js).
@@ -565,6 +566,15 @@ export function applyProjectData(data){
   S.tomes = (data && data.tomes) || [];
   S.currentTomeIndex = (data && data.currentTomeIndex) || 0;
   S.currentPageIndex = (data && data.currentPageIndex) || 0;
+  // Chapitres (cf. src/chapitres.js) : un fichier dont les Planches d'un chapitre ne seraient plus
+  // contiguës (retouché par une version qui ignore les chapitres) est remis en ordre à la lecture.
+  // Seuls les Tomes qui ONT des chapitres sont touchés ; la Planche courante est suivie par son id.
+  S.tomes.forEach((t, ti) => {
+    if (!t || !Array.isArray(t.chapitres) || !t.chapitres.length) return;
+    const courante = ti === S.currentTomeIndex && t.pages && t.pages[S.currentPageIndex] ? t.pages[S.currentPageIndex].id : null;
+    normaliserChapitres(t);
+    if (courante) S.currentPageIndex = Math.max(0, t.pages.findIndex(p => p.id === courante));
+  });
   S.scenes = (data && data.scenes) || [];
   // Fix 57 : la bibliothèque de poses appartient désormais à l'APPLICATION, pas au projet. Un
   // fichier n'en porte qu'une copie des poses qu'il utilise, pour rester lisible ailleurs : on
@@ -1158,6 +1168,9 @@ const renameEntityConfirm = document.getElementById('renameEntityConfirm');
 // [STATE→S] let S.renameModalContext = null;
 function isEntityNameTakenByOther(kind, target, name){
   const norm = name.trim().toLowerCase();
+  // Deux chapitres peuvent porter le même nom (deux « Interlude ») : rien ne les confond, chacun a
+  // son identifiant, et leur place dans le Tome les distingue.
+  if (kind === 'chapitre') return false;
   if (kind === 'tome') {
     return S.tomes.some((t, ti) => ti !== target && (t.name || '').trim().toLowerCase() === norm);
   }
@@ -1202,6 +1215,8 @@ export function openRenameEntityModal(kind, target, currentName, extra){
   S.renameModalContext = { kind, target, currentName, ...(extra || {}) };
   renameEntityTitle.textContent = kind === 'tome'
     ? tr('Rename volume', 'Renommer le tome')
+    : kind === 'chapitre'
+      ? tr('Rename chapter', 'Renommer le chapitre')
     : kind === 'modele'
       ? tr('Rename the model file', 'Renommer le fichier du modèle')
       : kind === 'image'
@@ -1225,8 +1240,10 @@ export function closeRenameEntityModal(){
 export function confirmRenameEntity(){
   if (!S.renameModalContext || renameEntityConfirm.disabled) return;
   const newName = renameEntityInput.value.trim();
-  const { kind, target } = S.renameModalContext;
+  const { kind, target, appliquer } = S.renameModalContext;
   closeRenameEntityModal();
+  // Un renommage qui apporte sa propre application (un Chapitre) : la modale n'a rien à en savoir.
+  if (typeof appliquer === 'function') { appliquer(newName); return; }
   if (kind === 'tome') { if (_applyRenameVolume) _applyRenameVolume(target, newName); }
   else if (kind === 'modele') { if (_applyRenameModel) _applyRenameModel(target, newName); }
   else if (kind === 'image') { if (_applyRenameImage) _applyRenameImage(target, newName); }

@@ -12,6 +12,12 @@ JSON fait partie du **format de fichier**, pas du code : c'est un contrat avec l
 
 Jamais renommés, jamais supprimés. Ajouter est permis ; retirer ou renommer ne l'est pas.
 
+**Chapitres** (octobre 2026, cf. `src/chapitres.js`) : `chapitres` sur un Tome (`[{ id, nom }]`, leur
+ordre) et `chapitreId` sur une Planche (absent = directement sous le Tome). Deux champs AJOUTÉS :
+`pages` reste la liste à plat dont l'ordre fait la numérotation, si bien qu'une version qui ignore
+les chapitres lit les mêmes Planches dans le même ordre. Invariant rétabli à la lecture : les
+Planches d'un chapitre sont contiguës, celles sans chapitre en tête.
+
 **Niveau projet** : `projectName`, `tomes`, `scenes`, `currentTomeIndex`, `currentPageIndex`,
 `poses` (bibliothèque de poses : `[{ id, name, skeleton, joints }]`).
 

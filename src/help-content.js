@@ -57,6 +57,7 @@ export const HELP_MANUAL_EN = [
   ]},
   { id: 'tomes', title: 'Volumes & pages', paragraphs: [
     '"New volume" and "Add a page" in the left-hand menu.',
+    'Chapters are optional: "Add a chapter" in an expanded volume, then drag pages onto it. A chapter folds with a click, reorders by dragging, and its right-click menu renames, exports or deletes it (its pages are kept). Page numbering stays continuous across the volume.',
     'Right-click a volume or a page to export it as PNG or delete it.',
     'An exported page lists under its image the credits of the 3D models downloaded from the library that can be seen in its panels: title, author, license, source and links. The licenses require it, so it is always there.',
     'Expand a volume in the left-hand menu to change its format: Franco-Belge, US comics, vertical webtoon, or custom.',
@@ -284,6 +285,7 @@ export const HELP_MANUAL_FR = [
   ]},
   { id: 'tomes', title: 'Tomes & planches', paragraphs: [
     '« Nouveau tome » et « Ajouter une planche » dans le menu de gauche.',
+    "Les chapitres sont facultatifs : « Ajouter un chapitre » dans un tome déplié, puis glissez-y des planches. Un chapitre se replie d'un clic, se réordonne en le glissant, et son clic droit le renomme, l'exporte ou le supprime (ses planches sont gardées). La numérotation des planches reste continue dans le tome.",
     "Clic droit sur un tome ou une planche pour l'exporter en PNG ou le supprimer.",
     "Une Planche exportée liste sous son image les crédits des modèles 3D téléchargés depuis la bibliothèque visibles dans ses Cases : titre, auteur, licence, source et liens. Les licences l'exigent, la section est donc toujours là.",
     "Dépliez un tome dans le menu de gauche pour changer son format : Franco-Belge, Comics US, webtoon vertical ou personnalisé.",

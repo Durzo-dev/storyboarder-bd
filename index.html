@@ -900,8 +900,16 @@
   <button id="ctxDeleteVolume"><span class="ctx-icon">🗑</span> Supprimer ce tome</button>
 </div>
 
+<!-- Menu d'un Chapitre (demandé), cf. src/chapitres.js et project-tree.js. -->
+<div class="context-menu hidden" id="chapterContextMenu">
+  <button id="ctxRenameChapter"><span class="ctx-icon">✏️</span> Renommer ce chapitre</button>
+  <button id="ctxExportChapter"><span class="ctx-icon">📤</span> Exporter les planches du chapitre</button>
+  <button id="ctxDeleteChapter"><span class="ctx-icon">🗑</span> Supprimer ce chapitre</button>
+</div>
+
 <div class="context-menu hidden" id="pageContextMenu">
   <button id="ctxDuplicatePage"><span class="ctx-icon">📋</span> Dupliquer cette planche</button>
+  <button id="ctxRemoveFromChapter"><span class="ctx-icon">↩️</span> Retirer du chapitre</button>
   <button id="ctxExportPageTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">📤</span> Exporter cette planche</span> <span class="submenu-arrow">▶</span></button>
   <button id="ctxDeletePage"><span class="ctx-icon">🗑</span> Supprimer cette planche</button>
 </div>

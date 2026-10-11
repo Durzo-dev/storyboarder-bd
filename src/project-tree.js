@@ -20,6 +20,10 @@ import { getFormat, libelleTable3D } from './utils.js';
 import { alertAction, confirmAction, openRenameEntityModal, prechargerEnCascade3D } from './io.js';
 import { renderAll } from './draw.js';
 import { memoriserTome, groupeReplie, memoriserGroupe } from './section-memory.js';
+import {
+  segmentsDuTome, creerChapitre, deplacerPlanche, deplacerChapitre, chapitrePourNouvellePlanche,
+  normaliserChapitres, nomParDefautDuChapitre,
+} from './chapitres.js';
 
 // Six upward dependencies, all of them things the left menu TRIGGERS rather than owns: what a
 // Scene is (createScene / openScene / disableSceneCameraMode), the context menus its rows open,
@@ -33,6 +37,7 @@ const disableSceneCameraMode   = (...a) => _cb.disableSceneCameraMode(...a);
 const openPageContextMenu      = (...a) => _cb.openPageContextMenu(...a);
 const openVolumeContextMenu    = (...a) => _cb.openVolumeContextMenu(...a);
 const openSceneContextMenu     = (...a) => _cb.openSceneContextMenu(...a);
+const openChapterContextMenu   = (...a) => _cb.openChapterContextMenu(...a);
 const snapshot                 = (...a) => _cb.snapshot(...a);
 
 // ---------- SCENES (work in progress, on user request) ----------
@@ -176,6 +181,10 @@ export function renderTree(){
         e.stopPropagation();
         snapshot();
         addPageToVolume(t);
+        // Ajoutée à la FIN du Tome : dans le dernier chapitre s'il y en a (sans quoi, sans chapitre,
+        // elle remonterait en tête, cf. chapitres.js).
+        const _chNouvelle = chapitrePourNouvellePlanche(t);
+        if (_chNouvelle) { t.pages[t.pages.length - 1].chapitreId = _chNouvelle; normaliserChapitres(t); }
         S.currentTomeIndex = ti;
         S.currentPageIndex = t.pages.length - 1;
         disableSceneCameraMode();
@@ -186,59 +195,141 @@ export function renderTree(){
       };
       pagesWrap.appendChild(addBtn);
 
-      t.pages.forEach((p, pi) => {
-        const pdiv = document.createElement('div');
-        pdiv.className = 'page-row' + (ti === S.currentTomeIndex && pi === S.currentPageIndex && !S.editingSceneId ? ' active' : '');
-        pdiv.textContent = `${tr('Page', 'Planche')} ${pi + 1}`;
-        pdiv.onclick = (e) => {
-          e.stopPropagation();
-          allerALaPlanche(ti, pi);
-        };
-        pdiv.oncontextmenu = (e) => {
-          e.preventDefault(); e.stopPropagation();
-          openPageContextMenu(e, ti, pi);
-        };
-        pdiv.draggable = true;
-        pdiv.addEventListener('dragstart', (e) => {
-          S.draggedPage = { volumeId: t.id, pageId: p.id };
-          e.dataTransfer.effectAllowed = 'move';
+      // Chapitres (demandé) : facultatifs, entre le Tome et ses Planches, repliables. La
+      // numérotation des Planches reste continue dans le Tome (cf. chapitres.js).
+      const addChBtn = document.createElement('button');
+      addChBtn.className = 'add-page-btn add-chapter-btn';
+      addChBtn.textContent = tr('Add a chapter', 'Ajouter un chapitre');
+      addChBtn.onclick = (e) => {
+        e.stopPropagation();
+        snapshot();
+        creerChapitre(t, nomParDefautDuChapitre(t, tr('Chapter', 'Chapitre')));
+        renderAll();
+      };
+      pagesWrap.appendChild(addChBtn);
+
+      // La Planche affichée, retrouvée PAR SON id après un déplacement (l'index est positionnel).
+      const apres = (muter) => {
+        const courante = (S.currentTomeIndex === ti && !S.editingSceneId && t.pages[S.currentPageIndex]) ? t.pages[S.currentPageIndex].id : null;
+        snapshot();
+        muter();
+        if (courante) S.currentPageIndex = t.pages.findIndex(pg => pg.id === courante);
+        renderAll();
+      };
+      const effacerSurvol = (el) => el.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-into');
+
+      segmentsDuTome(t).forEach(seg => {
+        let conteneur = pagesWrap;
+        if (seg.chapitre) {
+          const ch = seg.chapitre;
+          const cle = 'chapitre:' + t.id + ':' + ch.id;
+          const replie = groupeReplie(globalThis.localStorage, cle);
+          const tete = document.createElement('div');
+          tete.className = 'chapter-row';
+          const caret = document.createElement('span');
+          caret.className = 'caret';
+          caret.textContent = replie ? '▸' : '▾';
+          const nom = document.createElement('span');
+          nom.className = 'chapter-name';
+          nom.textContent = ch.nom;
+          const compte = document.createElement('small');
+          compte.className = 'chapter-count';
+          compte.textContent = `(${seg.pages.length})`;
+          tete.append(caret, nom, compte);
+          tete.title = tr('Click to fold, right-click for the menu, drag to reorder', 'Clic pour replier, clic droit pour le menu, glisser pour réordonner');
+          tete.onclick = (e) => {
+            e.stopPropagation();
+            memoriserGroupe(globalThis.localStorage, cle, !groupeReplie(globalThis.localStorage, cle));
+            renderTree();
+          };
+          tete.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); openChapterContextMenu(e, ti, ch.id); };
+          // Glisser un chapitre pour le réordonner ; y déposer une Planche pour l'y ranger.
+          tete.draggable = true;
+          tete.addEventListener('dragstart', (e) => { S.draggedChapter = { volumeId: t.id, id: ch.id }; e.dataTransfer.effectAllowed = 'move'; });
+          tete.addEventListener('dragend', () => { S.draggedChapter = null; });
+          tete.addEventListener('dragover', (e) => {
+            const page = S.draggedPage && S.draggedPage.volumeId === t.id;
+            const chap = S.draggedChapter && S.draggedChapter.volumeId === t.id && S.draggedChapter.id !== ch.id;
+            if (!page && !chap) return;
+            e.preventDefault();
+            if (page) { tete.classList.add('drag-into'); return; }
+            const r = tete.getBoundingClientRect();
+            const avant = (e.clientY - r.top) < r.height / 2;
+            tete.classList.toggle('drag-over-top', avant);
+            tete.classList.toggle('drag-over-bottom', !avant);
+          });
+          tete.addEventListener('dragleave', () => effacerSurvol(tete));
+          tete.addEventListener('drop', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            const r = tete.getBoundingClientRect();
+            const avant = (e.clientY - r.top) < r.height / 2;
+            effacerSurvol(tete);
+            if (S.draggedPage && S.draggedPage.volumeId === t.id) {
+              const id = S.draggedPage.pageId; S.draggedPage = null;
+              apres(() => deplacerPlanche(t, id, { chapitreId: ch.id }));
+            } else if (S.draggedChapter && S.draggedChapter.volumeId === t.id && S.draggedChapter.id !== ch.id) {
+              const id = S.draggedChapter.id; S.draggedChapter = null;
+              const cible = t.chapitres.findIndex(c => c.id === ch.id);
+              const de = t.chapitres.findIndex(c => c.id === id);
+              let vers = cible + (avant ? 0 : 1);
+              if (de < vers) vers -= 1;
+              if (vers !== de) apres(() => deplacerChapitre(t, id, vers));
+            }
+          });
+          pagesWrap.appendChild(tete);
+          if (replie) return;
+          conteneur = document.createElement('div');
+          conteneur.className = 'chapter-pages';
+          pagesWrap.appendChild(conteneur);
+        }
+        seg.pages.forEach(({ page: p, index: pi }, k) => {
+          const pdiv = document.createElement('div');
+          pdiv.className = 'page-row' + (ti === S.currentTomeIndex && pi === S.currentPageIndex && !S.editingSceneId ? ' active' : '');
+          pdiv.textContent = `${tr('Page', 'Planche')} ${pi + 1}`;
+          pdiv.onclick = (e) => {
+            e.stopPropagation();
+            allerALaPlanche(ti, pi);
+          };
+          pdiv.oncontextmenu = (e) => {
+            e.preventDefault(); e.stopPropagation();
+            openPageContextMenu(e, ti, pi);
+          };
+          pdiv.draggable = true;
+          pdiv.addEventListener('dragstart', (e) => {
+            S.draggedPage = { volumeId: t.id, pageId: p.id };
+            e.dataTransfer.effectAllowed = 'move';
+          });
+          pdiv.addEventListener('dragover', (e) => {
+            if (!S.draggedPage || S.draggedPage.volumeId !== t.id) return;
+            e.preventDefault();
+            // We visualize the GAP where the Page will be inserted (above or below the hovered Page
+            // depending on which half of its height the cursor is over), not the hovered Page itself,
+            // on user request, more readable.
+            const rect = pdiv.getBoundingClientRect();
+            const before = (e.clientY - rect.top) < rect.height / 2;
+            pdiv.classList.toggle('drag-over-top', before);
+            pdiv.classList.toggle('drag-over-bottom', !before);
+          });
+          pdiv.addEventListener('dragleave', () => effacerSurvol(pdiv));
+          pdiv.addEventListener('dragend', () => { S.draggedPage = null; });
+          pdiv.addEventListener('drop', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            const rect = pdiv.getBoundingClientRect();
+            const before = (e.clientY - rect.top) < rect.height / 2;
+            effacerSurvol(pdiv);
+            if (!S.draggedPage || S.draggedPage.volumeId !== t.id) { S.draggedPage = null; return; }
+            const id = S.draggedPage.pageId;
+            S.draggedPage = null;
+            if (id === p.id) return;
+            // La Planche déposée prend le CHAPITRE de celle qu'on survole, et se place avant elle,
+            // ou avant la suivante du même groupe (à la fin du groupe s'il n'y en a pas).
+            const suivante = seg.pages[k + 1];
+            const avantPageId = before ? p.id : (suivante ? suivante.page.id : null);
+            if (avantPageId === id) return;   // déposée là où elle est déjà
+            apres(() => deplacerPlanche(t, id, { chapitreId: p.chapitreId || null, avantPageId }));
+          });
+          conteneur.appendChild(pdiv);
         });
-        pdiv.addEventListener('dragover', (e) => {
-          if (!S.draggedPage || S.draggedPage.volumeId !== t.id) return;
-          e.preventDefault();
-          // We visualize the GAP where the Page will be inserted (above or below the hovered Page
-          // depending on which half of its height the cursor is over), not the hovered Page itself,
-          // on user request, more readable.
-          const rect = pdiv.getBoundingClientRect();
-          const before = (e.clientY - rect.top) < rect.height / 2;
-          pdiv.classList.toggle('drag-over-top', before);
-          pdiv.classList.toggle('drag-over-bottom', !before);
-        });
-        pdiv.addEventListener('dragleave', () => pdiv.classList.remove('drag-over-top', 'drag-over-bottom'));
-        pdiv.addEventListener('dragend', () => { S.draggedPage = null; });
-        pdiv.addEventListener('drop', (e) => {
-          e.preventDefault(); e.stopPropagation();
-          const rect = pdiv.getBoundingClientRect();
-          const before = (e.clientY - rect.top) < rect.height / 2;
-          pdiv.classList.remove('drag-over-top', 'drag-over-bottom');
-          if (!S.draggedPage || S.draggedPage.volumeId !== t.id) { S.draggedPage = null; return; }
-          const fromIdx = t.pages.findIndex(pg => pg.id === S.draggedPage.pageId);
-          const toIdx = t.pages.findIndex(pg => pg.id === p.id);
-          S.draggedPage = null;
-          if (fromIdx === -1 || toIdx === -1) return;
-          let insertIdx = toIdx + (before ? 0 : 1);
-          if (fromIdx < insertIdx) insertIdx -= 1; // compensate for the shift caused by removing the moved Page
-          if (insertIdx === fromIdx) return; // dropped in the gap adjacent to its own position: no change
-          snapshot();
-          // S.currentPageIndex is positional: we remember the currently displayed Page BY id before
-          // the move, to reselect its new position rather than its old index.
-          const wasCurrentPageId = (S.currentTomeIndex === ti && !S.editingSceneId && t.pages[S.currentPageIndex]) ? t.pages[S.currentPageIndex].id : null;
-          const [moved] = t.pages.splice(fromIdx, 1);
-          t.pages.splice(insertIdx, 0, moved);
-          if (wasCurrentPageId) S.currentPageIndex = t.pages.findIndex(pg => pg.id === wasCurrentPageId);
-          renderAll();
-        });
-        pagesWrap.appendChild(pdiv);
       });
       list.appendChild(pagesWrap);
     }

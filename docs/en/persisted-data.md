@@ -12,6 +12,12 @@ that JSON is part of the **file format**, not of the code: it is a contract with
 
 Never renamed, never removed. Adding is allowed; removing or renaming is not.
 
+**Chapters** (October 2026, see `src/chapitres.js`): `chapitres` on a Volume (`[{ id, nom }]`, their
+order) and `chapitreId` on a Page (absent = directly under the Volume). Two ADDED fields: `pages`
+stays the flat list whose order is the numbering, so a version that ignores chapters reads the same
+Pages in the same order. Invariant restored on reading: a chapter's Pages are contiguous, those
+without a chapter come first.
+
 **Project level**: `projectName`, `tomes`, `scenes`, `currentTomeIndex`, `currentPageIndex`,
 `poses` (pose library: `[{ id, name, skeleton, joints }]`).
 

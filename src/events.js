@@ -74,6 +74,7 @@ import {
 
   allerALaPlanche,
 } from './project-tree.js';
+import { renommerChapitre, supprimerChapitre, indexDuChapitre, deplacerPlanche } from './chapitres.js';
 import {
   grainsDuSol3D, grainsDesTraces3D,
   EMOTIONS, HAND_STATES, POSITIONS, FIXED_SHAPE, FIXED_COLOR, PANEL_CAM_REF_DIST_3D,
@@ -146,7 +147,7 @@ import {
 import {
   setDrawCallbacks, uniqueDefaultName, addRoomWallElement, stopBuildMode, buildToolCreateWallSegment,
   buildToolClose, getPanelPoints, bubbleTailVisible, getBubbleTailTip, drawCurrentPage, renderAll,
-  scheduleDrawCurrentPage, flushDrawCurrentPage, exportPage, exportVolume,
+  scheduleDrawCurrentPage, flushDrawCurrentPage, exportPage, exportVolume, exportPages,
   cadreDeRecouvrement3D, ancrageApresGlissement3D, reglagesQueueVersLePoint3D,
 } from './draw.js';
 import { setI18nCallbacks, applyI18n } from './i18n.js';
@@ -395,7 +396,7 @@ setModelImportCallbacks({
 setProjectTreeCallbacks({
   openModelContextMenu, openModelPlace, openImageContextMenu, openImageUsage,
   createScene, openScene, disableSceneCameraMode,
-  openPageContextMenu, openVolumeContextMenu, openSceneContextMenu, snapshot,
+  openPageContextMenu, openVolumeContextMenu, openSceneContextMenu, openChapterContextMenu, snapshot,
 });
 // `disableSceneCameraMode` n'est pas facultatif ici : se rendre dans une Case depuis l'éditeur de
 // Scène quitte cet éditeur, et le faire sans cet appel laisse le mode Caméra actif en arrière-plan
@@ -6158,8 +6159,68 @@ function openVolumeContextMenu(e, ti){
 function openPageContextMenu(e, ti, pi){
   S.ctxPageTarget = { ti, pi };
   hideContextMenu();
+  // « Retirer du chapitre » seulement pour une Planche rangée dans un chapitre.
+  const _pg = S.tomes[ti] && S.tomes[ti].pages[pi];
+  document.getElementById('ctxRemoveFromChapter').style.display = (_pg && _pg.chapitreId) ? '' : 'none';
   placerMenu3D(pageContextMenu, e.clientX, e.clientY);
 }
+// ── Chapitres (demandé) : renommer, exporter, supprimer. Cf. src/chapitres.js. ──
+let _ctxChapitre = null;   // { ti, id }
+function openChapterContextMenu(e, ti, id){
+  _ctxChapitre = { ti, id };
+  hideContextMenu();
+  placerMenu3D(document.getElementById('chapterContextMenu'), e.clientX, e.clientY);
+}
+document.getElementById('ctxRenameChapter').onclick = () => {
+  hideContextMenu();
+  if (!_ctxChapitre) return;
+  const { ti, id } = _ctxChapitre;
+  const t = S.tomes[ti];
+  const ch = t && (t.chapitres || []).find(c => c.id === id);
+  if (!ch) return;
+  openRenameEntityModal('chapitre', id, ch.nom, {
+    appliquer: (nom) => { snapshot(); if (renommerChapitre(t, id, nom)) renderAll(); },
+  });
+};
+document.getElementById('ctxExportChapter').onclick = () => {
+  hideContextMenu();
+  if (!_ctxChapitre) return;
+  const { ti, id } = _ctxChapitre;
+  if (S.tomes[ti]) exportPages(ti, indexDuChapitre(S.tomes[ti], id));
+};
+document.getElementById('ctxDeleteChapter').onclick = async () => {
+  hideContextMenu();
+  if (!_ctxChapitre) return;
+  const { ti, id } = _ctxChapitre;
+  const t = S.tomes[ti];
+  const ch = t && (t.chapitres || []).find(c => c.id === id);
+  if (!ch) return;
+  const n = indexDuChapitre(t, id).length;
+  // Ses Planches ne sont PAS supprimées : elles remontent sous le Tome. On le dit.
+  const ok = await confirmAction(n
+    ? tr(`Delete the chapter "${ch.nom}"? Its ${n} page(s) are kept, directly under the volume.`,
+      `Supprimer le chapitre « ${ch.nom} » ? Ses ${n} planche(s) sont conservées, directement sous le tome.`)
+    : tr(`Delete the chapter "${ch.nom}"?`, `Supprimer le chapitre « ${ch.nom} » ?`));
+  if (!ok) return;
+  const courante = (S.currentTomeIndex === ti && t.pages[S.currentPageIndex]) ? t.pages[S.currentPageIndex].id : null;
+  snapshot();
+  supprimerChapitre(t, id);
+  if (courante) S.currentPageIndex = t.pages.findIndex(p => p.id === courante);
+  renderAll();
+};
+document.getElementById('ctxRemoveFromChapter').onclick = () => {
+  hideContextMenu();
+  if (S.ctxPageTarget === null) return;
+  const { ti, pi } = S.ctxPageTarget;
+  const t = S.tomes[ti];
+  const pg = t && t.pages[pi];
+  if (!pg || !pg.chapitreId) return;
+  const courante = (S.currentTomeIndex === ti && t.pages[S.currentPageIndex]) ? t.pages[S.currentPageIndex].id : null;
+  snapshot();
+  deplacerPlanche(t, pg.id, { chapitreId: null });
+  if (courante) S.currentPageIndex = t.pages.findIndex(p => p.id === courante);
+  renderAll();
+};
 function openSceneContextMenu(e, sceneId){
   S.ctxSceneTarget = sceneId;
   hideContextMenu();

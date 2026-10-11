@@ -3361,8 +3361,15 @@ export async function exportPage(volumeIdx, pageIdx, format = 'png'){
 
 export function exportVolume(ti){
   const t = S.tomes[ti];
+  exportPages(ti, t.pages.map((p, pi) => pi));
+}
+
+// Exporte une liste de Planches d'un Tome (par index), une à la fois : le Tome entier, ou les
+// Planches d'un Chapitre (demandé). Même cadence qu'avant, pour que le navigateur accepte la suite
+// de téléchargements.
+export function exportPages(ti, indices){
   let delay = 0;
-  t.pages.forEach((p, pi) => {
+  (indices || []).forEach(pi => {
     setTimeout(() => exportPage(ti, pi), delay);
     delay += 350;
   });
