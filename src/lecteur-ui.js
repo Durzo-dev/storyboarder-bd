@@ -187,18 +187,51 @@ async function afficher(){
     vue.replaceChildren(ligne);
     vue.scrollTop = 0;
   }
-  // Les miniatures suivent la page lue, et le défilement automatique repart pour une étape.
+  // Les miniatures suivent la page lue, les bords se recollent à elle, et le défilement automatique
+  // repart pour une étape.
+  placerBords();
   marquerMiniature();
   clearTimeout(L.minuterie);
   if (options.auto) L.minuterie = setTimeout(() => aller(1), options.vitesse * 1000);
 }
 
+// « Planche 1 · 1&2/9 » (demandé) : le numéro de la première Planche montrée, puis les RANGS des
+// Planches à l'écran dans ce qu'on lit (deux en double page, sans la page blanche), sur le total.
 function majPosition(){
   const n = L.pages.length;
-  const page = pageCourante();
-  const rang = L.pages.indexOf(page) + 1;
+  let montrees;
+  if (options.guide) { const e = etapes()[L.index]; montrees = e ? [e.page] : []; }
+  else {
+    const e = etalementsCourants()[L.index];
+    // Dans l'ordre de LECTURE, pas de gauche à droite (en manga, la droite se lit d'abord).
+    montrees = e ? (options.sens === 'rtl' ? [e.droite, e.gauche] : [e.gauche, e.droite]).filter(p => p != null) : [];
+  }
+  if (!montrees.length) { $('lecteurPosition').textContent = ''; return; }
+  const rangs = montrees.map(p => L.pages.indexOf(p) + 1).sort((a, b) => a - b);
   const etape = options.guide ? ` · ${tr('panel', 'case')} ${L.index + 1}/${total()}` : '';
-  $('lecteurPosition').textContent = `${tr('Page', 'Planche')} ${page + 1} · ${rang}/${n}${etape}`;
+  $('lecteurPosition').textContent = `${tr('Page', 'Planche')} ${Math.min(...montrees) + 1} · ${rangs.join('&')}/${n}${etape}`;
+}
+
+/**
+ * Les bords cliquables : COLLÉS à la page montrée (signalé : en simple page ils restaient aux bords
+ * de la scène, loin de la page), et ABSENTS du côté où il n'y a plus rien (début ou fin).
+ */
+function placerBords(){
+  const g = $('lecteurBordGauche'), d = $('lecteurBordDroite');
+  const scene = g.parentNode.getBoundingClientRect();
+  const page = !options.guide && $('lecteurVue').querySelector('.lecteur-etalement');
+  const r = page ? page.getBoundingClientRect() : null;
+  const large = 64;
+  if (r && r.width) {
+    g.style.left = `${Math.max(0, r.left - scene.left - large)}px`;
+    d.style.left = `${Math.min(scene.width - large, r.right - scene.left)}px`;
+    d.style.right = 'auto';
+  } else {
+    g.style.left = '0px'; d.style.left = 'auto'; d.style.right = '0px';
+  }
+  const n = total();
+  g.hidden = avancer(L.index, pasDuCote('gauche', options.sens), n).fin;
+  d.hidden = avancer(L.index, pasDuCote('droite', options.sens), n).fin;
 }
 
 // ── Les miniatures ─────────────────────────────────────────────────────────────────────────────
@@ -336,9 +369,11 @@ function construirePanneau(){
       caseACocher('guide', tr('Guided view, panel by panel', 'Vue guidée, case par case')),
     ]),
     section(tr('Reading direction', 'Sens de lecture'), [
-      choix('sens', [['ltr', tr('To the right (comics)', 'Vers la droite (BD)')], ['rtl', tr('To the left (manga)', 'Vers la gauche (manga)')]]),
+      // « Vers la gauche » à gauche, « Vers la droite » à droite (demandé).
+      choix('sens', [['rtl', tr('To the left', 'Vers la gauche')], ['ltr', tr('To the right', 'Vers la droite')]]),
     ]),
-    section(tr('Automatic scrolling', 'Défilement automatique'), [lecture, vitesse]),
+    // Le bouton de lecture SOUS le réglage de la vitesse (demandé).
+    section(tr('Automatic scrolling', 'Défilement automatique'), [vitesse, lecture]),
     section(tr('Look', 'Apparence'), [
       choix('fond', [['sombre', tr('Dark', 'Sombre')], ['gris', tr('Grey', 'Gris')], ['clair', tr('Light', 'Clair')]]),
       caseACocher('miniatures', tr('Thumbnail strip', 'Bandeau de miniatures')),

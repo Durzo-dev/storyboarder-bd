@@ -101,4 +101,15 @@ describe('Le branchement', () => {
     assert.match(UI, /if \(fait\) \{ e\.preventDefault\(\); e\.stopImmediatePropagation\(\); \}/);
     assert.match(UI, /window\.addEventListener\('keydown', clavier, true\);/);
   });
+  test('retours : titre dans le menu, position « 1&2/9 », bords collés et absents au bout', () => {
+    const UI = lire('src/lecteur-ui.js');
+    assert.match(UI, /\$\{rangs\.join\('&'\)\}\/\$\{n\}/);
+    assert.match(UI, /g\.hidden = avancer\(L\.index, pasDuCote\('gauche', options\.sens\), n\)\.fin;/);
+    assert.match(UI, /g\.style\.left = `\$\{Math\.max\(0, r\.left - scene\.left - large\)\}px`;/);
+    assert.match(UI, /choix\('sens', \[\['rtl', tr\('To the left', 'Vers la gauche'\)\], \['ltr', tr\('To the right', 'Vers la droite'\)\]\]\)/);
+    assert.match(UI, /\[vitesse, lecture\]/);
+    const HTML = lire('index.html');
+    assert.doesNotMatch(HTML, /lecteur-bar/);
+    assert.match(HTML, /<div class="menu-header lecteur-entete">/);
+  });
 });

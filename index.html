@@ -145,11 +145,6 @@
        son menu à droite. Construit et piloté par src/lecteur-ui.js ; ouvert par le clic droit sur un
        Tome ou un Chapitre. Même emprise que l'Éditeur de modèle. -->
   <div id="lecteurOverlay" class="lecteur hidden" data-fond="sombre">
-    <div class="lecteur-bar">
-      <span class="lecteur-titre" id="lecteurTitre"></span>
-      <span class="lecteur-position" id="lecteurPosition"></span>
-      <button id="lecteurFermerBtn" class="menu-close-btn" type="button" title="Fermer le lecteur (Échap)">&times;</button>
-    </div>
     <div class="lecteur-body">
       <div class="lecteur-scene">
         <div class="lecteur-vue" id="lecteurVue"></div>
@@ -157,7 +152,16 @@
         <button id="lecteurBordDroite" class="lecteur-bord lecteur-bord-droite" type="button" title="Page suivante ou précédente, selon le sens de lecture">›</button>
         <div class="lecteur-miniatures" id="lecteurMiniatures"></div>
       </div>
-      <aside class="lecteur-panneau" id="lecteurPanneau"></aside>
+      <!-- Le menu du Lecteur : son titre (le Tome, le Chapitre, la position) en tête, comme les
+           autres menus de droite (demandé, il était dans une barre en haut à gauche). -->
+      <aside class="lecteur-panneau">
+        <div class="menu-header lecteur-entete">
+          <span></span>
+          <span class="menu-title"><span id="lecteurTitre"></span><span id="lecteurPosition" class="lecteur-position"></span></span>
+          <button id="lecteurFermerBtn" class="menu-close-btn" type="button" title="Fermer le lecteur (Échap)">&times;</button>
+        </div>
+        <div id="lecteurPanneau"></div>
+      </aside>
     </div>
   </div>
 
