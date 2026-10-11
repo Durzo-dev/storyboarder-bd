@@ -8463,7 +8463,26 @@ async function refreshProjectsDirDisplay(){
     projectsDirDisplay.textContent = '?';
   }
 }
+// Les onglets de la Configuration (demandé) : Général, Projets, 3D. Le dernier ouvert est retenu
+// pendant la session, comme l'onglet du store ; la modale rouvre dessus.
+let ongletConfig = 'general';
+function choisirOngletConfig(onglet){
+  const pages = [...document.querySelectorAll('#settingsModal .config-page')];
+  if (!pages.some(p => p.dataset.onglet === onglet)) onglet = 'general';
+  ongletConfig = onglet;
+  pages.forEach(p => { p.hidden = p.dataset.onglet !== onglet; });
+  document.querySelectorAll('#configOnglets .config-onglet').forEach(b => {
+    const actif = b.dataset.onglet === onglet;
+    b.classList.toggle('actif', actif);
+    b.setAttribute('aria-selected', String(actif));
+  });
+}
+document.querySelectorAll('#configOnglets .config-onglet').forEach(b => {
+  b.addEventListener('click', () => choisirOngletConfig(b.dataset.onglet));
+});
+
 function openSettingsModal(){
+  choisirOngletConfig(ongletConfig);
   autosaveIntervalSelect.value = String(S.autosaveIntervalMs);
   themeSelect.value = S.appTheme;
   contrastCheckbox.checked = S.appContrast;

@@ -1204,122 +1204,140 @@
   <div class="modal-box">
     <button class="modal-close-btn" id="settingsModalCornerClose" type="button" title="Fermer (Échap)">×</button>
     <h3>Configuration</h3>
-    <label class="modal-field-label">Délai de sauvegarde automatique</label>
-    <select id="autosaveIntervalSelect">
-      <option value="30000">Toutes les 30 secondes</option>
-      <option value="60000">Toutes les minutes</option>
-      <option value="120000">Toutes les 2 minutes</option>
-      <option value="300000">Toutes les 5 minutes</option>
-      <option value="600000">Toutes les 10 minutes</option>
-      <option value="0">Désactivée</option>
-    </select>
-    <label class="modal-field-label">Dossier des Projets</label>
-    <p id="projectsDirDisplay" style="font-size:11.5px; color:var(--ink-soft); word-break:break-all; margin:0 0 8px; padding:7px 8px; border:1px solid var(--line); border-radius:6px; background:var(--white);"></p>
-    <div style="display:flex; gap:8px;">
-      <button class="project-modal-btn nav-btn" id="projectsDirBrowse" type="button" style="margin-top:0; flex:1;">📂 Choisir...</button>
-      <button class="project-modal-btn nav-btn" id="projectsDirReset" type="button" style="margin-top:0; flex:1;">↺ Dossier par défaut</button>
+    <!-- TROIS ONGLETS (demandé, la modale dépassait la hauteur d'un écran) : Général (ce qui règle
+         l'application elle-même), Projets (où sont les fichiers, quand ils s'enregistrent, comment ils
+         s'exportent), 3D (manipuler les modèles). Le style est celui des onglets du store. Les pages
+         ont la hauteur de la plus longue (grille superposée, cf. .config-pages) : la modale ne change
+         pas de taille d'un onglet à l'autre. Le dernier onglet ouvert est retenu pendant la session. -->
+    <div class="config-onglets" id="configOnglets" role="tablist">
+      <button type="button" class="config-onglet actif" role="tab" data-onglet="general" id="configOngletGeneral">Général</button>
+      <button type="button" class="config-onglet" role="tab" data-onglet="projets" id="configOngletProjets">Projets</button>
+      <button type="button" class="config-onglet" role="tab" data-onglet="3d" id="configOnglet3d">3D</button>
     </div>
-    <!-- Contraste renforcé (#409c) : une case à cocher INDÉPENDANTE de la liste, et non deux
-         entrées de plus dedans. Quatre entrées auraient suffi alors, mais la palette daltonienne
-         envisagée en aurait demandé quatre autres : une base et des modificateurs se combinent au
-         lieu de se multiplier, et chaque réglage se nomme par ce qu'il fait.
-         Posée à DROITE de la liste, sur la même rangée, sur demande utilisateur : les deux règlent
-         la même chose, les séparer verticalement les faisait lire comme deux sujets.
-
-         ⚠️ LE LIBELLÉ RESTE LE FRÈRE PRÉCÉDENT DU <select>, et c'est ce qui dicte cette structure.
-         `I18N_PREV_LABEL` traduit « Thème de l'interface » via `previousElementSibling` : mettre le
-         select en premier enfant d'une rangée aurait laissé ce libellé en français sous une
-         interface anglaise, sans que rien ne le signale. D'où une GRILLE, qui place les trois
-         éléments sans toucher à leur ordre dans le DOM (cf. `.modal-field-row` dans style.css).
-
-         Le centrage de la case est porté par le CSS, et il se fait sur la boîte de la liste, pas
-         sur une colonne : deux versions précédentes mesuraient la colonne et tombaient trop bas. -->
-    <div class="modal-field-row" style="margin-top:14px;">
-      <label class="modal-field-label">Thème de l'interface</label>
-      <select id="themeSelect">
-        <option value="dark">🌑 Sombre</option>
-        <option value="light">☀️ Clair</option>
+    <div class="config-pages">
+    <div class="config-page" data-onglet="general" role="tabpanel">
+      <!-- Section "Langue" (cf. appLang/applyI18n) — sur demande utilisateur : Anglais par défaut, Français
+           disponible (langue d'origine de l'application). -->
+      <label class="modal-field-label">Langue de l'interface</label>
+      <select id="languageSelect">
+        <option value="en">English</option>
+        <option value="fr">Français</option>
       </select>
-      <label class="modal-field-aside">
-        <input type="checkbox" id="contrastCheckbox"> <span id="contrastCheckboxLabel">Contraste renforcé</span>
+      <!-- Contraste renforcé (#409c) : une case à cocher INDÉPENDANTE de la liste, et non deux
+           entrées de plus dedans. Quatre entrées auraient suffi alors, mais la palette daltonienne
+           envisagée en aurait demandé quatre autres : une base et des modificateurs se combinent au
+           lieu de se multiplier, et chaque réglage se nomme par ce qu'il fait.
+           Posée à DROITE de la liste, sur la même rangée, sur demande utilisateur : les deux règlent
+           la même chose, les séparer verticalement les faisait lire comme deux sujets.
+
+           ⚠️ LE LIBELLÉ RESTE LE FRÈRE PRÉCÉDENT DU <select>, et c'est ce qui dicte cette structure.
+           `I18N_PREV_LABEL` traduit « Thème de l'interface » via `previousElementSibling` : mettre le
+           select en premier enfant d'une rangée aurait laissé ce libellé en français sous une
+           interface anglaise, sans que rien ne le signale. D'où une GRILLE, qui place les trois
+           éléments sans toucher à leur ordre dans le DOM (cf. `.modal-field-row` dans style.css).
+
+           Le centrage de la case est porté par le CSS, et il se fait sur la boîte de la liste, pas
+           sur une colonne : deux versions précédentes mesuraient la colonne et tombaient trop bas. -->
+      <div class="modal-field-row">
+        <label class="modal-field-label">Thème de l'interface</label>
+        <select id="themeSelect">
+          <option value="dark">🌑 Sombre</option>
+          <option value="light">☀️ Clair</option>
+        </select>
+        <label class="modal-field-aside">
+          <input type="checkbox" id="contrastCheckbox"> <span id="contrastCheckboxLabel">Contraste renforcé</span>
+        </label>
+      </div>
+      <!-- Taille de l'interface (#410). Elle ne touche PAS à la Planche, qui garde son propre zoom :
+           grossir l'interface ne doit pas grossir le dessin. -->
+      <label class="modal-field-label">Taille de l'interface</label>
+      <select id="uiScaleSelect">
+        <option value="compacte">Compacte</option>
+        <option value="normale">Normale</option>
+        <option value="grande">Grande</option>
+        <option value="tres-grande">Très grande</option>
+      </select>
+      <!-- Mémoire du cache d'images de Case (#411l). Un curseur et non une liste : la valeur est un
+           NOMBRE de mégaoctets, ordonné, dont les crans n'ont pas de nom naturel. Sa valeur s'affiche
+           à côté, sans quoi un curseur ne dit pas ce qu'il règle.
+           Le zéro à gauche n'est pas une désactivation à part : la Planche affichée reste toujours en
+           cache, donc zéro rend exactement le comportement d'avant ce réglage. -->
+      <label class="modal-field-label" id="cacheMoLabel">Planches en mémoire</label>
+      <div class="curseur-gradue">
+        <div class="curseur-gradue-ligne">
+          <input type="range" id="cacheMoRange" min="0" max="900" step="150" value="300">
+          <span id="cacheMoValue">300 Mo</span>
+        </div>
+        <!-- Les crans, écrits en clair plutôt que confiés au <datalist> natif : celui-ci ne dessine
+             que de petits traits, et la question posée était de VOIR les niveaux possibles.
+             `aria-hidden` : ce sont les valeurs du curseur, que le lecteur d'écran annonce déjà en
+             parcourant le champ ; les répéter ferait dire deux fois la même chose. -->
+        <div class="curseur-gradue-crans" aria-hidden="true">
+          <span style="--i:0">0</span><span style="--i:1">150</span><span style="--i:2">300</span><span style="--i:3">450</span><span style="--i:4">600</span><span style="--i:5">750</span><span style="--i:6">900</span>
+        </div>
+      </div>
+    </div>
+    <div class="config-page" data-onglet="projets" role="tabpanel" hidden>
+      <label class="modal-field-label">Délai de sauvegarde automatique</label>
+      <select id="autosaveIntervalSelect">
+        <option value="30000">Toutes les 30 secondes</option>
+        <option value="60000">Toutes les minutes</option>
+        <option value="120000">Toutes les 2 minutes</option>
+        <option value="300000">Toutes les 5 minutes</option>
+        <option value="600000">Toutes les 10 minutes</option>
+        <option value="0">Désactivée</option>
+      </select>
+      <label class="modal-field-label">Dossier des Projets</label>
+      <p id="projectsDirDisplay" style="font-size:11.5px; color:var(--ink-soft); word-break:break-all; margin:0 0 8px; padding:7px 8px; border:1px solid var(--line); border-radius:6px; background:var(--white);"></p>
+      <div style="display:flex; gap:8px;">
+        <button class="project-modal-btn nav-btn" id="projectsDirBrowse" type="button" style="margin-top:0; flex:1;">📂 Choisir...</button>
+        <button class="project-modal-btn nav-btn" id="projectsDirReset" type="button" style="margin-top:0; flex:1;">↺ Dossier par défaut</button>
+      </div>
+      <!-- Section "Exportation" (cf. exportShowCaseBadges/exportShowCaseDescriptions, persistés via
+           window.storyboarderAPI.setSetting comme autosaveIntervalMs) — sur demande utilisateur, pilote
+           exportPage() : badges numérotés sur les Cases et/ou section nom+description sous la Planche. -->
+      <label class="modal-field-label" style="margin-top:14px;">Exportation</label>
+      <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin:2px 0 8px; cursor:pointer;">
+        <input type="checkbox" id="exportShowPanelBadgesCheckbox" checked> Afficher le badge numéro sur les Cases
+      </label>
+      <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin:2px 0 8px; cursor:pointer;">
+        <input type="checkbox" id="exportShowPanelDescriptionsCheckbox" checked> Afficher la description des Cases sous la Planche
       </label>
     </div>
-    <!-- Taille de l'interface (#410). Elle ne touche PAS à la Planche, qui garde son propre zoom :
-         grossir l'interface ne doit pas grossir le dessin. -->
-    <label class="modal-field-label">Taille de l'interface</label>
-    <select id="uiScaleSelect">
-      <option value="compacte">Compacte</option>
-      <option value="normale">Normale</option>
-      <option value="grande">Grande</option>
-      <option value="tres-grande">Très grande</option>
-    </select>
-    <!-- Mémoire du cache d'images de Case (#411l). Un curseur et non une liste : la valeur est un
-         NOMBRE de mégaoctets, ordonné, dont les crans n'ont pas de nom naturel. Sa valeur s'affiche
-         à côté, sans quoi un curseur ne dit pas ce qu'il règle.
-         Le zéro à gauche n'est pas une désactivation à part : la Planche affichée reste toujours en
-         cache, donc zéro rend exactement le comportement d'avant ce réglage. -->
-    <label class="modal-field-label" id="cacheMoLabel">Planches en mémoire</label>
-    <div class="curseur-gradue">
-      <div class="curseur-gradue-ligne">
-        <input type="range" id="cacheMoRange" min="0" max="900" step="150" value="300">
-        <span id="cacheMoValue">300 Mo</span>
+    <div class="config-page" data-onglet="3d" role="tabpanel" hidden>
+      <!-- Gestes 3D (demandé) : la vitesse du clic gauche (tourner) et du clic droit (déplacer), la
+           même partout (store, Éditeur de modèle, Scènes, Cases en mode Caméra). En pourcentage des
+           vitesses de base (utils.js) : « 0,0025 rad par pixel » ne parle à personne. Huit crans,
+           d'où --crans-moins-un:7. -->
+      <label class="modal-field-label" id="gestesRotationLabel">Vitesse de rotation 3D</label>
+      <div class="curseur-gradue" style="--crans-moins-un:7;">
+        <div class="curseur-gradue-ligne">
+          <input type="range" id="gestesRotationRange" min="25" max="200" step="25" value="100">
+          <span id="gestesRotationValue">100 %</span>
+        </div>
+        <div class="curseur-gradue-crans" aria-hidden="true">
+          <span style="--i:0">25</span><span style="--i:1">50</span><span style="--i:2">75</span><span style="--i:3">100</span><span style="--i:4">125</span><span style="--i:5">150</span><span style="--i:6">175</span><span style="--i:7">200</span>
+        </div>
       </div>
-      <!-- Les crans, écrits en clair plutôt que confiés au <datalist> natif : celui-ci ne dessine
-           que de petits traits, et la question posée était de VOIR les niveaux possibles.
-           `aria-hidden` : ce sont les valeurs du curseur, que le lecteur d'écran annonce déjà en
-           parcourant le champ ; les répéter ferait dire deux fois la même chose. -->
-      <div class="curseur-gradue-crans" aria-hidden="true">
-        <span style="--i:0">0</span><span style="--i:1">150</span><span style="--i:2">300</span><span style="--i:3">450</span><span style="--i:4">600</span><span style="--i:5">750</span><span style="--i:6">900</span>
+      <label class="modal-field-label" id="gestesDeplacementLabel">Vitesse de déplacement 3D</label>
+      <div class="curseur-gradue" style="--crans-moins-un:7;">
+        <div class="curseur-gradue-ligne">
+          <input type="range" id="gestesDeplacementRange" min="25" max="200" step="25" value="100">
+          <span id="gestesDeplacementValue">100 %</span>
+        </div>
+        <div class="curseur-gradue-crans" aria-hidden="true">
+          <span style="--i:0">25</span><span style="--i:1">50</span><span style="--i:2">75</span><span style="--i:3">100</span><span style="--i:4">125</span><span style="--i:5">150</span><span style="--i:6">175</span><span style="--i:7">200</span>
+        </div>
       </div>
+      <button class="project-modal-btn nav-btn" id="gestesResetBtn" type="button" style="margin-top:0; margin-bottom:14px; width:100%;">↺ Vitesses par défaut</button>
+      <!-- Bibliothèque de poses : réglage de l'Application (cf. settings.json, clé poseLibrary), d'où
+           sa place ici. Le bouton ne réajoute que les poses de base MANQUANTES — il ne touche ni aux
+           poses personnelles, ni à une pose de base renommée (présente, donc pas manquante). -->
+      <label class="modal-field-label">Bibliothèque de poses</label>
+      <button class="project-modal-btn" id="restoreBuiltinPosesBtn" type="button" style="margin-top:0; width:100%;">↺ Restaurer les poses de base</button>
+      <p id="restoreBuiltinPosesHint" style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;"></p>
     </div>
-    <!-- Gestes 3D (demandé) : la vitesse du clic gauche (tourner) et du clic droit (déplacer), la
-         même partout (store, Éditeur de modèle, Scènes, Cases en mode Caméra). En pourcentage des
-         vitesses de base (utils.js) : « 0,0025 rad par pixel » ne parle à personne. Huit crans,
-         d'où --crans-moins-un:7. -->
-    <label class="modal-field-label" id="gestesRotationLabel">Vitesse de rotation 3D</label>
-    <div class="curseur-gradue" style="--crans-moins-un:7;">
-      <div class="curseur-gradue-ligne">
-        <input type="range" id="gestesRotationRange" min="25" max="200" step="25" value="100">
-        <span id="gestesRotationValue">100 %</span>
-      </div>
-      <div class="curseur-gradue-crans" aria-hidden="true">
-        <span style="--i:0">25</span><span style="--i:1">50</span><span style="--i:2">75</span><span style="--i:3">100</span><span style="--i:4">125</span><span style="--i:5">150</span><span style="--i:6">175</span><span style="--i:7">200</span>
-      </div>
     </div>
-    <label class="modal-field-label" id="gestesDeplacementLabel">Vitesse de déplacement 3D</label>
-    <div class="curseur-gradue" style="--crans-moins-un:7;">
-      <div class="curseur-gradue-ligne">
-        <input type="range" id="gestesDeplacementRange" min="25" max="200" step="25" value="100">
-        <span id="gestesDeplacementValue">100 %</span>
-      </div>
-      <div class="curseur-gradue-crans" aria-hidden="true">
-        <span style="--i:0">25</span><span style="--i:1">50</span><span style="--i:2">75</span><span style="--i:3">100</span><span style="--i:4">125</span><span style="--i:5">150</span><span style="--i:6">175</span><span style="--i:7">200</span>
-      </div>
-    </div>
-    <button class="project-modal-btn nav-btn" id="gestesResetBtn" type="button" style="margin-top:0; width:100%;">↺ Vitesses par défaut</button>
-    <!-- Section "Langue" (cf. appLang/applyI18n) — sur demande utilisateur : Anglais par défaut, Français
-         disponible (langue d'origine de l'application). -->
-    <label class="modal-field-label">Langue de l'interface</label>
-    <select id="languageSelect">
-      <option value="en">English</option>
-      <option value="fr">Français</option>
-    </select>
-    <!-- Section "Exportation" (cf. exportShowCaseBadges/exportShowCaseDescriptions, persistés via
-         window.storyboarderAPI.setSetting comme autosaveIntervalMs) — sur demande utilisateur, pilote
-         exportPage() : badges numérotés sur les Cases et/ou section nom+description sous la Planche. -->
-    <label class="modal-field-label">Exportation</label>
-    <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin:2px 0 8px; cursor:pointer;">
-      <input type="checkbox" id="exportShowPanelBadgesCheckbox" checked> Afficher le badge numéro sur les Cases
-    </label>
-    <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin:2px 0 8px; cursor:pointer;">
-      <input type="checkbox" id="exportShowPanelDescriptionsCheckbox" checked> Afficher la description des Cases sous la Planche
-    </label>
-    <!-- Bibliothèque de poses : réglage de l'Application (cf. settings.json, clé poseLibrary), d'où
-         sa place ici. Le bouton ne réajoute que les poses de base MANQUANTES — il ne touche ni aux
-         poses personnelles, ni à une pose de base renommée (présente, donc pas manquante). -->
-    <label class="modal-field-label" style="margin-top:14px;">Bibliothèque de poses</label>
-    <button class="project-modal-btn" id="restoreBuiltinPosesBtn" type="button" style="margin-top:0; width:100%;">↺ Restaurer les poses de base</button>
-    <p id="restoreBuiltinPosesHint" style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;"></p>
     <div class="modal-actions">
       <button class="nav-btn" id="settingsModalClose" type="button">Fermer</button>
     </div>

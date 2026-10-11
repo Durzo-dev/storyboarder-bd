@@ -515,6 +515,10 @@ export const I18N_MODALS = [
   ['#cacheMoRange', null],   // sa valeur est écrite par le code, unité comprise
   ['#cacheMoValue', null],
   // Les vitesses des gestes 3D : même forme que le curseur de mémoire, valeurs écrites par le code.
+  // Les onglets de la Configuration.
+  ['#configOngletGeneral', 'General', 'Général'],
+  ['#configOngletProjets', 'Projects', 'Projets'],
+  ['#configOnglet3d', '3D', '3D'],
   ['#gestesRotationLabel', '3D rotation speed', 'Vitesse de rotation 3D'],
   ['#gestesRotationRange', null],
   ['#gestesRotationValue', null],
