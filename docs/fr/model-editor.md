@@ -189,9 +189,15 @@ la bibliothèque en place.
   plafonnée.
 - **1.3** Caméra de l'éditeur (orbite, zoom) en réutilisant la logique existante. ✅ *(Fix 65/66)*
 
-  État final : **clic droit maintenu** pour orbiter, **molette** pour zoomer, et rien d'autre. Pas
-  de déplacement latéral : une figure seule est déjà centrée, la déplacer ne fait que la perdre de
-  vue. Le Fix 65 avait ajouté une section « Caméra » dépliable par la touche `C`, avec rotations
+  **Revu en octobre 2026 (demandé)** : l'Éditeur prend les gestes des aperçus 3D du store, eux-mêmes
+  ceux de la visionneuse de Sketchfab. **Clic gauche maintenu dans le vide** pour tourner (sur une
+  poignée, le gauche règle toujours l'articulation ; un clic sans glisser désélectionne),
+  **clic droit maintenu** pour déplacer la vue (`deplacement3D`, utils.js, partagée avec le store ;
+  `frameCameraToBox` accepte pour cela un `pan.z`), **molette** pour zoomer.
+
+  État d'avant : **clic droit maintenu** pour orbiter, **molette** pour zoomer, et rien d'autre.
+  Pas de déplacement latéral : une figure seule est déjà centrée, la déplacer ne fait que la perdre
+  de vue. Le Fix 65 avait ajouté une section « Caméra » dépliable par la touche `C`, avec rotations
   numériques, sensibilité du glisser et bouton « Recadrer » ; le Fix 66 l'a **retirée** à la
   demande : le clic droit suffit, et trois curseurs pour ce qu'un glisser fait mieux ne payaient pas
   leur place à l'écran. La leçon retenue : un raccourci clavier dans un mode qui en RECOUVRE un

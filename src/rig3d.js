@@ -1255,6 +1255,9 @@ export const personaRigCache3D = new Map(); // persona id -> { figureGroup, face
 // units, used for the "grip" drag of the persona preview in the modal (see personaPreviewPan).
 // The camera never rolls/yaws here (only the figure rotates), so offsetting world X/Y really does
 // shift the on-screen view, without rotating it or changing the zoom.
+/** La caméra des aperçus, pour qui doit traduire un geste en pixels (le déplacement de l'Éditeur). */
+export function cameraDesApercus3D(){ return personaCamera3D; }
+
 export function frameCameraToFigure(camera, figureGroup, zoom, pan, orbit){
   figureGroup.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(figureGroup);
@@ -1300,13 +1303,16 @@ export function frameCameraToBox(camera, box, zoom, pan, orbit){
   const distForHeight = (size.y / 2 * margin) / Math.tan(vFovHalf);
   const distForWidth = (size.x / 2 * margin) / Math.tan(hFovHalf);
   const dist = Math.max(distForHeight, distForWidth, 0.8) / (zoom || 1);
-  const panX = (pan && pan.x) || 0, panY = (pan && pan.y) || 0;
-  // Le point visé, autour duquel la caméra tourne.
-  const cx = center.x + panX, cy = center.y + panY, cz = center.z;
+  const panX = (pan && pan.x) || 0, panY = (pan && pan.y) || 0, panZ = (pan && pan.z) || 0;
+  // Le point visé, autour duquel la caméra tourne. `pan.z` : un déplacement dans le plan de l'écran
+  // d'une caméra en orbite a aussi une composante en profondeur du monde (cf. deplacement3D).
+  const cx = center.x + panX, cy = center.y + panY, cz = center.z + panZ;
   const p = orbitCameraPosition3D({ x: cx, y: cy, z: cz }, dist + size.z / 2,
     (orbit && orbit.rotX) || 0, (orbit && orbit.rotY) || 0);
   camera.position.set(p.x, p.y, p.z);
   camera.lookAt(cx, cy, cz);
+  // La distance au point visé : de quoi traduire un glisser en pixels en déplacement dans le monde.
+  if (camera.userData) camera.userData.distanceVisee = dist + size.z / 2;
   // LES PLANS DE COUPE SUIVENT LA BOÎTE, ils ne sont plus figés à la construction de la caméra.
   //
   // Ils valaient 0,05 et 2000 une fois pour toutes, des valeurs taillées pour le Personnage

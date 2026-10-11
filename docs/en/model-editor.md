@@ -183,7 +183,13 @@ place.
 - **1.2** Editing canvas fed by the shared renderer (render → `drawImage`), capped resolution.
 - **1.3** Editor camera (orbit, zoom) reusing the existing logic. ✅ *(Fix 65/66)*
 
-  Final state: **hold right-click** to orbit, **wheel** to zoom, and nothing else. No lateral
+  **Revised in October 2026 (requested)**: the Editor takes the gestures of the store's 3D
+  previews, themselves those of Sketchfab's viewer. **Hold left-click in an empty spot** to turn (on
+  a handle, left still sets the joint; a click without dragging deselects), **hold right-click** to
+  move the view (`deplacement3D`, utils.js, shared with the store; `frameCameraToBox` accepts a
+  `pan.z` for it), **wheel** to zoom.
+
+  Previous state: **hold right-click** to orbit, **wheel** to zoom, and nothing else. No lateral
   panning: a lone figure is already centred, moving it only loses it from view. Fix 65 had added a
   "Camera" section, expandable with the `C` key, with numeric rotations, drag sensitivity and a
   "Reframe" button; Fix 66 **removed** it on request: right-click is enough, and three sliders for

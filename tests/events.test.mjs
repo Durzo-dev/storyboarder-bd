@@ -2517,6 +2517,16 @@ describe('éditeur de Personnage : quitter par le menu de gauche', () => {
     assert.match(EV, /btn\.onclick = \(\) => \{ if \(!isPersonaEditorOpen\(\)\) showPersonaEditor\(null, false\); \};/);
   });
 
+  test('Éditeur : les gestes des aperçus du store (gauche tourne, droit déplace, clic sans glisser désélectionne)', () => {
+    const ED = readFileSync(new URL('../src/persona-editor.js', import.meta.url), 'utf8');
+    assert.match(ED, /if \(e\.button === 2\) \{\n        panning = \{ x: e\.clientX, y: e\.clientY \};/);
+    assert.match(ED, /orbiting = \{ x: e\.clientX, y: e\.clientY, rotX: S\.personaEditorCamRotX, rotY: S\.personaEditorCamRotY, bouge: false \};/);
+    assert.match(ED, /const \[x, y, z\] = deplacement3D\(/, 'le déplacement partage la fonction des aperçus du store');
+    assert.match(ED, /if \(orbiting && !orbiting\.bouge && S\.personaEditorOpen && S\.personaEditorHandleId\) \{\n        selectPersonaEditorHandle/);
+    const RIG = readFileSync(new URL('../src/rig3d.js', import.meta.url), 'utf8');
+    assert.match(RIG, /const cx = center\.x \+ panX, cy = center\.y \+ panY, cz = center\.z \+ panZ;/);
+  });
+
   test('une classe n\'est pas reconnue par simple préfixe', () => {
     // `className` est une chaîne : chercher 'page-row' dedans par indexOf ferait répondre oui à
     // 'page-row-header' ou à 'sous-page-rows'.

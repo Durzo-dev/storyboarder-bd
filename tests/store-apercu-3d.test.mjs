@@ -109,9 +109,9 @@ describe('Le câblage', () => {
 
 describe('Le clic droit déplace, comme la visionneuse de Sketchfab', () => {
   test('de face, glisser à droite pousse le modèle à droite : le point visé part à GAUCHE', () => {
-    const c = deplacement3D([0, 0, 0], { lacet: 0, tangage: 0 }, 100, 0, 10, 500);
+    const c = deplacement3D([0, 0, 0], { lacet: 0, tangage: 0 }, 100, 0, 10, 500, 35);
     assert.ok(c[0] < 0 && Math.abs(c[1]) < 1e-12 && Math.abs(c[2]) < 1e-12);
-    const bas = deplacement3D([0, 0, 0], { lacet: 0, tangage: 0 }, 0, 100, 10, 500);
+    const bas = deplacement3D([0, 0, 0], { lacet: 0, tangage: 0 }, 0, 100, 10, 500, 35);
     assert.ok(bas[1] > 0, 'glisser vers le bas descend le modèle : le point visé monte');
   });
   test('un pixel parcouru = un pixel à l\'écran, à la distance visée', () => {
@@ -124,7 +124,7 @@ describe('Le clic droit déplace, comme la visionneuse de Sketchfab', () => {
     const angles = { lacet: 0.9, tangage: 0.5 };
     const cam = positionCamera3D([0, 0, 0], 1, angles);
     for (const [dx, dy] of [[37, 0], [0, -23], [12, 40]]) {
-      const c = deplacement3D([0, 0, 0], angles, dx, dy, 10, 400);
+      const c = deplacement3D([0, 0, 0], angles, dx, dy, 10, 400, 35);
       const visee = cam.reduce((a, v, i) => a + v * c[i], 0);
       assert.ok(Math.abs(visee) < 1e-9, 'le point visé a avancé ou reculé');
     }

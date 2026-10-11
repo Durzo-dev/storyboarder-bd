@@ -20,6 +20,7 @@ import { CLE_ACTUELLE, AMBIANTE_ACTUELLE } from './lighting-3d.js';
 import { preparerModeleImporte3D } from './model-cache.js';
 import { box3FromObjectSkinAware3D } from './skinned-box-3d.js';
 import { maillagesHorsCorps3D, maillagesParNom3D } from './stray-meshes-3d.js';
+import { deplacement3D } from './utils.js';
 
 /** L'angle de vue de la caméra, en degrés. */
 const CHAMP = 35;
@@ -54,18 +55,9 @@ export function orbite3D({ lacet, tangage }, dx, dy){
   };
 }
 
-/**
- * Déplacer : le glisser au clic droit fait glisser le point visé dans le plan de l'écran, à la
- * vitesse du pointeur (un pixel parcouru = un pixel de déplacement du modèle à la distance visée).
- * Le modèle suit la souris : glisser vers la droite le pousse à droite. PURE.
- */
-export function deplacement3D(centre, { lacet, tangage }, dx, dy, distance, hauteurPx, champDeg = CHAMP){
-  const parPixel = 2 * distance * Math.tan((champDeg * Math.PI / 180) / 2) / Math.max(1, hauteurPx);
-  // Les axes de l'écran, en monde, pour une caméra placée par positionCamera3D et visant le centre.
-  const droite = [Math.cos(lacet), 0, -Math.sin(lacet)];
-  const haut = [-Math.sin(tangage) * Math.sin(lacet), Math.cos(tangage), -Math.sin(tangage) * Math.cos(lacet)];
-  return [0, 1, 2].map(i => centre[i] - droite[i] * dx * parPixel + haut[i] * dy * parPixel);
-}
+// Déplacer au clic droit : la fonction PURE vit dans utils.js, partagée avec l'Éditeur de modèle
+// (mêmes gestes partout, demandé). Réexportée pour les tests de ce module.
+export { deplacement3D };
 
 /** Zoomer : la molette rapproche ou éloigne, entre deux bornes relatives au cadrage. PURE. */
 export function zoom3D(distance, deltaY, distanceCadrage){
@@ -147,7 +139,7 @@ export async function ouvrirApercu3D(conteneur, octets){
   const deplacement = (e) => {
     if (!glisser) return;
     const dx = e.clientX - glisser.x, dy = e.clientY - glisser.y;
-    if (glisser.deplacer) centre = deplacement3D(centre, angles, dx, dy, distance, conteneur.clientHeight || 1);
+    if (glisser.deplacer) centre = deplacement3D(centre, angles, dx, dy, distance, conteneur.clientHeight || 1, CHAMP);
     else angles = orbite3D(angles, dx, dy);
     glisser = { ...glisser, x: e.clientX, y: e.clientY };
     redessiner();

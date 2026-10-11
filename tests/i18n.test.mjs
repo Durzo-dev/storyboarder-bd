@@ -395,10 +395,10 @@ describe('Manuel d\'utilisation — le HTML et les tables ne peuvent plus diverg
     assert.ok(fr && en, 'l\'éditeur doit avoir sa propre section');
     const couvre = (table, motifs) => motifs.forEach(([re, quoi]) =>
       assert.ok(table.paragraphs.some(p => re.test(p)), `geste non documenté : ${quoi}`));
-    couvre(fr, [[/clic DROIT/i, 'orbiter'], [/glissez/i, 'glisser une articulation'],
+    couvre(fr, [[/clic gauche maintenu/i, 'tourner'], [/clic droit maintenu/i, 'déplacer'], [/glissez/i, 'glisser une articulation'],
                 [/molette/i, 'la molette'], [/Enregistrer/, 'enregistrer une pose'],
                 [/Appliquer/, 'appliquer au Personnage']]);
-    couvre(en, [[/RIGHT mouse/i, 'orbiter'], [/drag/i, 'glisser une articulation'],
+    couvre(en, [[/left button/i, 'tourner'], [/right button/i, 'déplacer'], [/drag/i, 'glisser une articulation'],
                 [/wheel/i, 'la molette'], [/Save/, 'enregistrer une pose'],
                 [/Apply/, 'appliquer au Personnage']]);
   });

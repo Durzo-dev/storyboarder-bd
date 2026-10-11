@@ -26,13 +26,13 @@ import {
   renamePose3D, resolvePoseLabel3D, straightDragDegrees3D, straightDragDirection3D, wrapAngle,
   writePoseSliderDeg3D, axeDePose3D, modelAxisVector3D, squelettePourAnimal3D,
 
-  orbiteDeFace3D,
+  orbiteDeFace3D, deplacement3D,
 } from './utils.js';
 import {
   cloneJoints, figuresDeLaBibliotheque3D,
   getEffectiveJoints, objectRigCache3D, poseOsPourModeleImporte, repereDuCorpsPourFichier3D,
   groupesDeCurseurs3D, morphologiePourModele,
-  resolveStyle3D, squelettePourPose3D,
+  resolveStyle3D, squelettePourPose3D, cameraDesApercus3D,
 } from './rig3d.js';
 import { jointsDepuisOsMappes } from './pose-bridge.js';
 import { memesAngles3D, lireAngleDeg, ecrireAngleDeg, chainesAPlat3D, poigneesParDefaut3D,
@@ -2045,23 +2045,23 @@ export function wirePersonaEditor(){
       courant: { x: e.clientX, y: e.clientY },
     } : null);
 
-    // Fix 65 : le glisser ne DÉPLACE plus la vue, il l'ORBITE, et seulement au clic droit.
-    //
-    // Le déplacement latéral a été retiré : une figure seule est déjà cadrée au centre, la déplacer
-    // ne fait que la perdre de vue. Ce qui manquait vraiment, c'était de pouvoir en faire le tour.
-    //
-    // Bouton DROIT plutôt que gauche : le gauche reste entièrement dédié aux poignées
-    // d'articulation, qui couvrent la figure. Les faire cohabiter obligerait à distinguer un clic
-    // d'un glisser sur la même cible, source d'articulations bougées par accident.
+    // LES GESTES DE LA VISIONNEUSE DE SKETCHFAB, comme les aperçus du store (demandé) :
+    //   — clic GAUCHE maintenu dans le vide : tourner autour de la figure. Sur une poignée, le gauche
+    //     reste le réglage de l'articulation : la poignée est testée d'abord ;
+    //   — clic DROIT maintenu : déplacer la vue, la figure suit la souris ;
+    //   — un clic gauche dans le vide SANS glisser désélectionne la poignée, comme avant.
+    // (Fix 65 avait mis l'orbite au clic droit et retiré le déplacement ; c'est revu ici.)
     let orbiting = null;
+    let panning = null;
+    // Au-delà de ce glisser (en pixels), un clic dans le vide est une orbite, pas une désélection.
+    const SEUIL_CLIC_PX = 3;
   // Fix 71 (ESSAI) : session de glisser d'articulation. Exclusive de `orbiting` par construction :
   // l'une naît du bouton droit, l'autre du gauche sur une poignée.
   let jointDrag = null;
     cnv.addEventListener('mousedown', (e) => {
       if (!S.personaEditorOpen) return;
       if (e.button === 2) {
-        orbiting = { x: e.clientX, y: e.clientY,
-                     rotX: S.personaEditorCamRotX, rotY: S.personaEditorCamRotY };
+        panning = { x: e.clientX, y: e.clientY };
         e.preventDefault();
         return;
       }
@@ -2081,14 +2081,16 @@ export function wirePersonaEditor(){
         e.preventDefault();
         return;
       }
-      // Clic gauche dans le vide : désélectionne la poignée courante, et rien d'autre.
-      if (S.personaEditorHandleId) selectPersonaEditorHandle(S.personaEditorHandleId);
+      // Clic gauche dans le vide : une orbite commence. Relâché sans avoir bougé, c'était un clic :
+      // il désélectionne la poignée courante (cf. mouseup).
+      orbiting = { x: e.clientX, y: e.clientY, rotX: S.personaEditorCamRotX, rotY: S.personaEditorCamRotY, bouge: false };
+      e.preventDefault();
     });
     // Le menu contextuel du navigateur volerait le glisser droit dès le relâchement.
     cnv.addEventListener('contextmenu', (e) => { if (S.personaEditorOpen) e.preventDefault(); });
     // Curseur « main » sur une poignée, pour signaler qu'elle est cliquable.
     cnv.addEventListener('mousemove', (e) => {
-      if (!S.personaEditorOpen || orbiting) return;
+      if (!S.personaEditorOpen || orbiting || panning) return;
       if (jointDrag) { cnv.style.cursor = 'grabbing'; return; }
       const { px, py } = editorCoords(e);
       const surUnPoint = pickPoseHandleAt(px, py, personaEditorHandlePos, rayonSaisie(),
@@ -2117,7 +2119,7 @@ export function wirePersonaEditor(){
       // système) laissait la session ouverte : la poignée suivait alors la souris SANS bouton
       // enfoncé. `e.buttons` dit ce qui est réellement pressé maintenant, pas ce qu'on a cru voir
       // passer, c'est le seul état digne de foi ici.
-      if ((jointDrag || orbiting) && e.buttons === 0) { jointDrag = null; orbiting = null; return; }
+      if ((jointDrag || orbiting || panning) && e.buttons === 0) { jointDrag = null; orbiting = null; panning = null; return; }
       if (jointDrag && S.personaEditorOpen) {
         const dx = e.clientX - jointDrag.x;
         const dy = e.clientY - jointDrag.y;
@@ -2131,7 +2133,22 @@ export function wirePersonaEditor(){
         dessinerALaProchaineImage();
         return;
       }
+      if (panning && S.personaEditorOpen) {
+        // Le point visé glisse dans le plan de l'écran, à la vitesse du pointeur à cette distance.
+        const cam = cameraDesApercus3D();
+        const distance = (cam && cam.userData.distanceVisee) || 1;
+        const p = S.personaEditorPan || { x: 0, y: 0 };
+        const [x, y, z] = deplacement3D([p.x || 0, p.y || 0, p.z || 0],
+          { lacet: S.personaEditorCamRotY || 0, tangage: S.personaEditorCamRotX || 0 },
+          e.clientX - panning.x, e.clientY - panning.y, distance, cnv.clientHeight || 1, (cam && cam.fov) || 36);
+        S.personaEditorPan = { x, y, z };
+        panning = { x: e.clientX, y: e.clientY };
+        dessinerALaProchaineImage();
+        return;
+      }
       if (!orbiting || !S.personaEditorOpen) return;
+      if (!orbiting.bouge && Math.hypot(e.clientX - orbiting.x, e.clientY - orbiting.y) < SEUIL_CLIC_PX) return;
+      orbiting.bouge = true;
       // La sensibilité NE dépend pas du zoom, contrairement à l'ancien déplacement : une rotation
       // est un angle, pas une distance, la même traversée d'écran doit faire le même tour, qu'on
       // soit près ou loin du Personnage.
@@ -2140,7 +2157,13 @@ export function wirePersonaEditor(){
                             orbiting.rotY + (e.clientX - orbiting.x) * k);
       dessinerALaProchaineImage();
     });
-    window.addEventListener('mouseup', () => { orbiting = null; jointDrag = null; });
+    window.addEventListener('mouseup', () => {
+      // Un clic gauche dans le vide, sans glisser : il désélectionne, comme avant.
+      if (orbiting && !orbiting.bouge && S.personaEditorOpen && S.personaEditorHandleId) {
+        selectPersonaEditorHandle(S.personaEditorHandleId);
+      }
+      orbiting = null; jointDrag = null; panning = null;
+    });
   }
   // Échap ferme l'éditeur, comme partout ailleurs dans l'application.
   //

@@ -227,7 +227,7 @@ export const HELP_MANUAL_EN = [
   ]},
   { id: 'editeur', title: 'Model editor', paragraphs: [
     'Open the editor with the pencil button in the corner of a 3D preview, from the "Model editor" button at the top (or "Editor" in a model\'s details) to compose a pose with no target; in that case there is no "Apply" button. Its title names the figure posed.',
-    'Hold the RIGHT mouse button to orbit, scroll wheel to zoom. The figure is always shown facing front, imported models and animals included; its orientation in the scene or panel is left untouched.',
+    'Hold the left button in an empty spot to turn, the right button to move, scroll wheel to zoom. The figure is always shown facing front, imported models and animals included; its orientation in the scene or panel is left untouched.',
     'Click a point to select it: the other points disappear, and the orange area shows where you can click without losing the selection. A creature only shows its archetype\'s joints, in bright blue; hovering a limb, or its chain title, reveals that chain\'s other bones in pale blue.',
     'Hold the left button on a point and drag to adjust the joint. The orange guide shows the expected gesture: a double arrow to drag along its direction, a ring to turn around the point.',
     'Only one field moves at a time, the one the panel highlights most. The scroll wheel switches from one to the next while a joint is selected; deselect to get the zoom back.',
@@ -433,12 +433,12 @@ export const HELP_MANUAL_FR = [
   ]},
   { id: 'editeur', title: 'Éditeur de modèle', paragraphs: [
     "Ouvrez l'éditeur par le crayon d'un aperçu, ou par « Éditeur de modèle » en haut (« Éditeur » dans la fiche d'un modèle) pour une pose sans cible, sans « Appliquer ». Son titre nomme la figure posée.",
-    "Clic DROIT maintenu pour orbiter, molette pour zoomer. La figure est toujours présentée de face, modèles et Animaux compris ; son orientation dans la Scène ou la Case n'est pas modifiée.",
+    "Clic gauche maintenu dans le vide : tourner ; clic droit maintenu : déplacer ; molette : zoomer. La figure est toujours présentée de face, modèles et Animaux compris ; son orientation dans la Scène ou la Case n'est pas modifiée.",
     "Cliquez un point pour le sélectionner : les autres disparaissent, et la zone orange montre où cliquer sans le désélectionner. Une créature ne montre que les articulations de son archétype, en bleu vif ; survoler un membre, ou le titre de sa chaîne, révèle les autres os, en bleu pâle.",
     "Maintenez le clic gauche sur un point et glissez pour régler l'articulation. Le repère orange indique le geste attendu : une double flèche pour glisser dans sa direction, un anneau pour tourner autour du point.",
     "Un seul champ bouge à la fois, celui que le panneau surligne le plus. La molette passe de l'un à l'autre tant qu'une articulation est sélectionnée ; désélectionnez pour retrouver le zoom.",
     "Section « Pose » : cliquez une pose pour l'appliquer, ou saisissez un nom puis Enregistrer pour ajouter celle en cours. « Enregistrer » s'éteint tant que rien n'est tourné : une pose qui ne fait rien se proposerait comme les autres. Renommer et Supprimer valent pour toute pose ; Configuration restaure les poses de base supprimées. Bibliothèque partagée par tous vos Projets.",
-    "Une pose qui n'est plus proposée s'affiche toujours correctement : ses angles sont conservés en dernier recours.",
+    "Une pose qui n'est plus proposée s'affiche toujours : ses angles sont conservés.",
     "« Réinitialiser la pose » revient à la pose d'ouverture. « Appliquer les modifications », le même bouton pour toutes les figures, renvoie la pose vers la modale d'où l'on vient : rien n'y est écrit tant que vous n'avez pas enregistré. Fermer sans appliquer ne change rien.",
     "L'éditeur n'occupe que la zone centrale, le menu de gauche reste utilisable. Cliquer une Planche ou une Scène le quitte, sans rouvrir la fiche d'où vous veniez.",
   ]},

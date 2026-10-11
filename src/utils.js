@@ -1018,6 +1018,22 @@ export function orbiteDeFace3D(avantDuCorps){
   return a > Math.PI ? a - 2 * Math.PI : a;
 }
 
+/**
+ * Déplacer : le glisser au clic droit fait glisser le point visé dans le plan de l'écran, à la
+ * vitesse du pointeur (un pixel parcouru = un pixel de déplacement du modèle à la distance visée).
+ * Le modèle suit la souris : glisser vers la droite le pousse à droite. PURE.
+ *
+ * Les angles sont ceux d'orbitCameraPosition3D (lacet = rotY, tangage = rotX) : la même caméra pour
+ * l'aperçu du store et pour l'Éditeur de modèle, qui partagent ce geste (demandé).
+ */
+export function deplacement3D(centre, { lacet, tangage }, dx, dy, distance, hauteurPx, champDeg){
+  const parPixel = 2 * distance * Math.tan((champDeg * Math.PI / 180) / 2) / Math.max(1, hauteurPx);
+  // Les axes de l'écran, en monde, pour une caméra placée par positionCamera3D et visant le centre.
+  const droite = [Math.cos(lacet), 0, -Math.sin(lacet)];
+  const haut = [-Math.sin(tangage) * Math.sin(lacet), Math.cos(tangage), -Math.sin(tangage) * Math.cos(lacet)];
+  return [0, 1, 2].map(i => centre[i] - droite[i] * dx * parPixel + haut[i] * dy * parPixel);
+}
+
 export function orbitCameraPosition3D(center, dist, rotX, rotY){
   const c = center || { x: 0, y: 0, z: 0 };
   const d = dist || 0;
