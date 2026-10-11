@@ -16,10 +16,26 @@
        texte est écrit par le code, dans la langue choisie (cf. src/update-texts.js). -->
   <button id="majBtn" class="maj-btn" type="button" hidden></button>
   <!-- La bibliothèque de modèles et l'Éditeur, dans le bandeau (demandé) : ils avaient chacun une
-       section du menu de gauche, réduite à un seul bouton. Texte du premier écrit par le code
-       (src/store-texts.js), celui du second par l'i18n. Les Images restent à gauche pour l'instant. -->
-  <button class="nav-btn header-outil-btn" id="storeOuvrirBtn" type="button"></button>
-  <button class="nav-btn header-outil-btn" type="button" id="openPoseEditorBtn">Éditeur de modèle</button>
+       section du menu de gauche, réduite à un seul bouton. Ronds et à icône, comme les boutons de
+       droite (demandé). Leur infobulle est écrite par le code : src/store-texts.js pour le premier,
+       l'i18n pour le second. Les Images restent à gauche pour l'instant. -->
+  <button class="help-round-btn" id="storeOuvrirBtn" type="button" title="Bibliothèque de modèles (B)">
+    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2.5 20.5 7v10L12 21.5 3.5 17V7Z"/>
+      <path d="M3.5 7 12 11.5 20.5 7"/>
+      <path d="M12 11.5v10"/>
+    </svg>
+  </button>
+  <button class="help-round-btn" type="button" id="openPoseEditorBtn" title="Éditeur de modèle">
+    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="4.5" r="2"/>
+      <path d="M12 7.5v7"/>
+      <path d="M12 9.5 7 12.5"/>
+      <path d="M12 9.5l5 3"/>
+      <path d="M12 14.5 8.5 21"/>
+      <path d="M12 14.5l3.5 6.5"/>
+    </svg>
+  </button>
   <!-- Déplacé depuis le menu de gauche (sur demande utilisateur) : le bouton Annuler se trouve
        désormais en haut à gauche du bouton "?" qui ouvre le Manuel d'utilisation, plutôt que dans
        la barre latérale, sous le sélecteur de Tomes. -->

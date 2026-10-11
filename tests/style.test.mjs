@@ -582,7 +582,6 @@ describe('#398 : la classe d\'un bouton correspond à son libellé', () => {
     // reste se déduit du texte.
     const doitEtreGris = {
       personaEditorMapBtn: 'ouvre le tableau de correspondance : il navigue, il n\'ajoute rien',
-      openPoseEditorBtn: 'ouvre l\'Éditeur depuis le menu de gauche',
       helpModalClose: 'referme le Manuel',
       personaEditorResetBtn: 'défait la pose en cours, il ne valide ni n\'ajoute',
     };

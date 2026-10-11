@@ -40,6 +40,7 @@ export const I18N_TEXT = [
   ['#undoBtn', null, null, 'title', 'Undo (Ctrl+Z)', "Annuler (Ctrl+Z)"],
   ['#headerSaveBtn', null, null, 'title', 'Save project (Ctrl+S)', "Sauvegarder le projet (Ctrl+S)"],
   ['#settingsBtn', null, null, 'title', 'Settings (Ctrl+,)', 'Configuration (Ctrl+,)'],
+  ['#openPoseEditorBtn', null, null, 'title', 'Model editor', 'Éditeur de modèle'],
   // Fix 63 : ce bouton porte une ICÔNE : son libellé traduit va sur `title`, pas sur le texte.
   // Écrire dans textContent remplaçait l'icône par la phrase, qui débordait du bouton de 30px.
   //
@@ -438,7 +439,6 @@ export const I18N_LEADING = [
   ['#treeTrigger', 'Volumes', 'Tomes'],
   ['#sceneTrigger', 'Scenes', 'Scènes'],
   ['#imageTrigger', 'Images', 'Images'],
-  ['#openPoseEditorBtn', 'Model editor', 'Éditeur de modèle'],
   ['#pageMenuHeader .menu-title', 'Page', 'Planche'],
   // ⚠️ DEUX LIBELLÉS À POURCENTAGE, ET ILS NE POUVAIENT PAS PASSER PAR I18N_TEXT. Ils encadrent un
   // `<span>` que le code réécrit à chaque mouvement du curseur : `textContent` l'effacerait avec le

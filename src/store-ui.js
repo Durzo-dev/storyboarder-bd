@@ -77,7 +77,8 @@ function options(select, liste){
 export function rafraichirTextesStore(){
   const t = textesStore(langue());
   const btn = $('storeOuvrirBtn');
-  if (btn) btn.textContent = '🔎 ' + t.ouvrir;
+  // Un bouton rond à icône, dans le bandeau : le libellé (et son raccourci B) est son infobulle.
+  if (btn) { btn.title = t.ouvrir + ' (B)'; btn.setAttribute('aria-label', t.ouvrir); }
   if (!infos) return;
   $('storeTitre').textContent = t.titre;
   rendreOnglets();
