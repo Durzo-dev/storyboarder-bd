@@ -42,4 +42,11 @@ describe('Le branchement', () => {
     assert.match(SC, /retirerCiel3D\(personaScene3D\);\n  personaScene3D\.fog = null;/);
     assert.match(SC, /personaCamera3D\.userData\.lointainDuContenu = 0;/);
   });
+  test('le plan lointain recule au-delà du coin le plus lointain du Sol : il ne le coupe plus', () => {
+    assert.match(SC, /if \(_coin \* 1\.01 > personaCamera3D\.far\) \{ personaCamera3D\.far = _coin \* 1\.01;/);
+    assert.match(SC, /_brume = brumeDuLointain3D\(_bordDuSol, personaCamera3D\.userData\.lointainDuContenu \|\| 0\);/);
+    // Jusqu'au bord du Sol, et le plus proche dans le champ (pas la bande pâle de la 1re version).
+    assert.doesNotMatch(SC, /_lointainAvant/);
+    assert.match(SC, /for \(const _da of \[-_demiChamp, 0, _demiChamp\]\)/);
+  });
 });

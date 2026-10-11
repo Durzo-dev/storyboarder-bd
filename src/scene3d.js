@@ -3120,6 +3120,37 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
   // donc reculer ce plan ne coûte pas de précision ; on ne le recule que si le contenu l'exige.
   personaCamera3D.userData.lointainDuContenu = 0;   // celui de la Case précédente ne vaut rien ici
   allongerPlanLointain3D(personaCamera3D, personaScene3D, [groundMesh3D]);
+  // ⚠️ LE PLAN LOINTAIN NE COUPE PLUS JAMAIS LE SOL (signalé : l'horizon se déformait et clignotait
+  // en dézoomant, AVANT même que la brume n'apparaisse). La cause : avec le tampon logarithmique, la
+  // profondeur est réécrite par sommet ; la coupe d'un triangle par le plan lointain se fait donc sur
+  // une profondeur non linéaire entre ses sommets, et dans les grands triangles du Sol elle suit
+  // leurs arêtes au lieu d'être droite. On recule le plan au-delà du coin le plus lointain du Sol
+  // (ce qui ne coûte pas de précision, cf. #439), et c'est la BRUME qui fait disparaître le Sol au loin.
+  let _brume = null, _bordDuSol = Infinity;
+  if (groundMesh3D && groundMesh3D.visible) {
+    const _demi = GROUND_PLANE_SIZE_3D / 2;
+    const _cp = personaCamera3D.position, _gp = groundMesh3D.position;
+    const _h = _cp.y - _gp.y;
+    const _coin = Math.hypot(Math.abs(_cp.x - _gp.x) + _demi, Math.abs(_cp.z - _gp.z) + _demi, _h);
+    if (_coin * 1.01 > personaCamera3D.far) { personaCamera3D.far = _coin * 1.01; personaCamera3D.updateProjectionMatrix(); }
+    personaCamera3D.updateMatrixWorld();
+    const _vise = personaCamera3D.getWorldDirection(new THREE.Vector3());
+    // ⚠️ LA BRUME VA JUSQU'AU BORD DU SOL, PAS JUSQU'À L'ANCIEN PLAN LOINTAIN. Une première version
+    // la finissait là où le plan lointain coupait autrefois : le Sol, devenu tout entier couleur
+    // d'horizon au-delà, faisait une large bande pâle entre l'herbe et le ciel (signalé, « vraiment
+    // moche »). Le Sol s'étend donc jusqu'à son vrai bord, et ne s'efface que juste avant.
+    //
+    // Et le bord le plus PROCHE dans le champ, pas seulement droit devant : sur les côtés de l'image,
+    // le carré du Sol peut finir bien plus près (ses coins se voyaient en dézoomant).
+    const _demiChamp = Math.atan(Math.tan((personaCamera3D.fov * Math.PI / 180) / 2) * personaCamera3D.aspect) + 0.05;
+    const _lacet = Math.atan2(_vise.x, _vise.z);
+    let _bordH = Infinity;
+    for (const _da of [-_demiChamp, 0, _demiChamp]) {
+      _bordH = Math.min(_bordH, distanceAuBordDuSol3D(_cp.x, _cp.z, Math.sin(_lacet + _da), Math.cos(_lacet + _da), _gp.x, _gp.z, _demi));
+    }
+    _bordDuSol = Math.hypot(Math.min(_bordH, _coin), _h);
+    _brume = brumeDuLointain3D(_bordDuSol, personaCamera3D.userData.lointainDuContenu || 0);
+  }
   jalon('  5b. plan lointain');
   if (_ombresDeLaCase) marquerProjectionDOmbre3D();
   // ⚠️ LE FOND EST UN CIEL DEPUIS #429, ET IL L'EST AVEC LA MÊME LIGNE. L'opacité forcée reste
@@ -3140,20 +3171,15 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
   if (groundMesh3D && groundMesh3D.visible) {
     personaCamera3D.updateMatrixWorld();
     const _visee = personaCamera3D.getWorldDirection(new THREE.Vector3());
+    // Le Sol finit là où la brume l'a rendu à la couleur de l'horizon (ou à son propre bord sans
+    // brume) : c'est là que l'horizon du ciel doit descendre, plus au plan lointain.
     _abaisseCiel = abaissementDeLHorizon3D(personaCamera3D.position.y - groundMesh3D.position.y,
-      personaCamera3D.far, Math.asin(Math.max(-1, Math.min(1, -_visee.y))));
+      _brume ? _brume.loin : Math.min(personaCamera3D.far, _bordDuSol), Math.asin(Math.max(-1, Math.min(1, -_visee.y))));
   }
   const _ciel = poserCiel3D(personaScene3D, _eclairage, _abaisseCiel);
   // La brume du lointain (cf. brumeDuLointain3D), à la couleur de l'horizon du ciel : le bord du Sol
   // ne se voit plus. Retirée après le rendu, comme le ciel : la scène est partagée.
-  if (groundMesh3D && groundMesh3D.visible && _ciel) {
-    const _vise = personaCamera3D.getWorldDirection(new THREE.Vector3());
-    const _bord = distanceAuBordDuSol3D(personaCamera3D.position.x, personaCamera3D.position.z,
-      _vise.x, _vise.z, groundMesh3D.position.x, groundMesh3D.position.z, GROUND_PLANE_SIZE_3D / 2);
-    const _brume = brumeDuLointain3D(Math.min(personaCamera3D.far, _bord),
-      personaCamera3D.userData.lointainDuContenu || 0);
-    if (_brume) personaScene3D.fog = new THREE.Fog(_ciel.material.uniforms.uHorizon.value.clone(), _brume.pres, _brume.loin);
-  }
+  if (_brume && _ciel) personaScene3D.fog = new THREE.Fog(_ciel.material.uniforms.uHorizon.value.clone(), _brume.pres, _brume.loin);
   // #438 : ce que contient la scène partagée, et ce que coûte la seule mise à jour de ses matrices,
   // que three refait sur TOUT l'arbre à chaque rendu, rigs masqués des autres Cases compris. Mesuré
   // à part, sonde allumée seulement : la mise à jour faite ici rend celle du rendu presque gratuite,

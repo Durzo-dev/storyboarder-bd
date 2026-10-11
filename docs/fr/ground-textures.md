@@ -245,6 +245,16 @@ clignotait. Le Sol est coupé soit par le plan lointain de la caméra, soit par 
 le tampon de profondeur logarithmique, cette coupe se fait pixel par pixel sur une profondeur mal
 interpolée dans ses grands triangles, d'où un bord qui suit leurs arêtes et bouge avec la caméra.
 Plutôt que de bloquer le dézoom, le Sol se fond dans la couleur de l'horizon du ciel juste avant
-cette coupe (`brumeDuLointain3D`, `distanceAuBordDuSol3D`, scene3d.js). La brume ne commence
+cette coupe (`brumeDuLointain3D`, `distanceAuBordDuSol3D`, scene3d.js).
+
+**Correction en deux temps.** La brume seule ne suffisait pas (signalé : l'horizon se déformait
+avant qu'elle n'apparaisse). La vraie cause est la coupe par le PLAN LOINTAIN : le tampon
+logarithmique réécrit la profondeur par sommet, donc un triangle est coupé sur une profondeur non
+linéaire, et le bord suit ses arêtes. Le plan lointain est désormais reculé au-delà du coin le plus
+lointain du Sol (sans coût de précision, cf. #439) : il ne le coupe plus jamais. La brume va
+jusqu'au BORD du Sol, le plus proche dans le champ de la caméra (droit devant et sur les côtés), et
+l'horizon du ciel descend jusqu'à la fin de la brume. Une version intermédiaire la finissait là où
+le plan lointain coupait autrefois : au-delà, le Sol entièrement couleur d'horizon faisait une large
+bande pâle entre l'herbe et le ciel. Rejetée à l'usage. La brume ne commence
 qu'au-delà du contenu de la Case (jamais un Élément voilé), et elle est retirée après le rendu,
 comme le ciel.

@@ -240,5 +240,14 @@ The Ground is cut either by the camera's far plane or by its own edge; with the 
 buffer, that cut is made per pixel on a depth badly interpolated across its large triangles, hence
 an edge that follows their sides and moves with the camera. Rather than limiting the zoom, the
 Ground blends into the sky's horizon colour just before that cut (`brumeDuLointain3D`,
-`distanceAuBordDuSol3D`, scene3d.js). The haze only starts beyond the Panel's content (no Element is
+`distanceAuBordDuSol3D`, scene3d.js).
+
+**Fixed in two steps.** The haze alone was not enough (reported: the horizon warped before it showed).
+The real cause is the cut by the FAR PLANE: the logarithmic buffer rewrites depth per vertex, so a
+triangle is clipped on a non-linear depth and the edge follows its sides. The far plane is now moved
+beyond the Ground's farthest corner (no precision cost, see #439): it never cuts it anymore. The
+haze runs to the Ground's EDGE, the nearest one within the camera's field (straight ahead and on the
+sides), and the sky's horizon comes down to the end of the haze. An intermediate version ended it
+where the far plane used to cut: beyond that, the Ground, all horizon-coloured, made a wide pale
+band between the grass and the sky. Rejected in use. The haze only starts beyond the Panel's content (no Element is
 ever veiled), and it is removed after the render, like the sky.

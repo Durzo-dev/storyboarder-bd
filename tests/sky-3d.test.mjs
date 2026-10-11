@@ -250,7 +250,9 @@ describe('Ciel : le fil jusqu’au rendu d’une Case', () => {
 
   test('⚠️ LE RENDU D’UNE CASE CALCULE L’ABAISSEMENT DEPUIS SA CAMÉRA ET SON SOL', () => {
     assert.ok(scene.includes('abaissementDeLHorizon3D(personaCamera3D.position.y - groundMesh3D.position.y,'));
-    assert.ok(scene.includes('personaCamera3D.far, Math.asin('));
+    // Le Sol finit là où la brume l'a rendu à l'horizon (le plan lointain ne le coupe plus, cf.
+    // brume-lointain.test.mjs) ; sans brume, à son bord ou au plan lointain.
+    assert.ok(scene.includes('_brume ? _brume.loin : Math.min(personaCamera3D.far, _bordDuSol), Math.asin('));
     assert.ok(scene.includes('if (groundMesh3D && groundMesh3D.visible) {'), 'sans Sol, l’horizon doit rester le vrai');
   });
 
