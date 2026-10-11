@@ -26,7 +26,7 @@ import {
   renamePose3D, resolvePoseLabel3D, straightDragDegrees3D, straightDragDirection3D, wrapAngle,
   writePoseSliderDeg3D, axeDePose3D, modelAxisVector3D, squelettePourAnimal3D,
 
-  orbiteDeFace3D, deplacement3D,
+  orbiteDeFace3D, deplacement3D, VITESSE_ROTATION_3D,
 } from './utils.js';
 import {
   cloneJoints, figuresDeLaBibliotheque3D,
@@ -469,12 +469,9 @@ export function personaEditorHasChanges(){
 // rotY, lui, n'est pas borné mais RAMENÉ dans ]-π, π] : on doit pouvoir faire des tours complets
 // sans que la valeur parte à l'infini, ni que le curseur (-180..180) se retrouve hors de sa plage.
 export const PERSONA_EDITOR_ROT_X_MAX = 85 * Math.PI / 180;
-// Deux fois plus lente qu'à l'origine (0,008, demandé) : un glisser d'un tiers de l'écran faisait
-// presque un demi-tour, trop pour ajuster un angle de vue au jugé.
-export const PERSONA_EDITOR_ORBIT_RAD_PER_PX = 0.004;
-// Le DÉPLACEMENT au clic droit, deux fois plus lent que la vitesse du pointeur (demandé : le modèle
-// filait trop vite pour se recadrer finement). Un facteur sur les pixels passés à deplacement3D.
-export const PERSONA_EDITOR_PAN_FACTEUR = 0.5;
+// Les vitesses de rotation et de déplacement ne sont plus propres à l'Éditeur : ce sont celles de
+// l'aperçu du store, communes à tous les gestes 3D (VITESSE_ROTATION_3D, VITESSE_DEPLACEMENT_3D,
+// utils.js, demandé). Elles avaient été ralenties ici à la demande ; l'homogénéité l'a emporté.
 
 export function setPersonaEditorOrbit(rotX, rotY){
   S.personaEditorCamRotX = clamp(rotX || 0, -PERSONA_EDITOR_ROT_X_MAX, PERSONA_EDITOR_ROT_X_MAX);
@@ -2123,15 +2120,14 @@ export function wirePersonaEditor(){
         return;
       }
       if (panning && S.personaEditorOpen) {
-        // Le point visé glisse dans le plan de l'écran, à la moitié de la vitesse du pointeur à
-        // cette distance (PERSONA_EDITOR_PAN_FACTEUR).
+        // Le point visé glisse dans le plan de l'écran, à la vitesse commune (deplacement3D lit
+        // VITESSE_DEPLACEMENT_3D).
         const cam = cameraDesApercus3D();
         const distance = (cam && cam.userData.distanceVisee) || 1;
         const p = S.personaEditorPan || { x: 0, y: 0 };
         const [x, y, z] = deplacement3D([p.x || 0, p.y || 0, p.z || 0],
           { lacet: S.personaEditorCamRotY || 0, tangage: S.personaEditorCamRotX || 0 },
-          (e.clientX - panning.x) * PERSONA_EDITOR_PAN_FACTEUR, (e.clientY - panning.y) * PERSONA_EDITOR_PAN_FACTEUR,
-          distance, cnv.clientHeight || 1, (cam && cam.fov) || 36);
+          e.clientX - panning.x, e.clientY - panning.y, distance, cnv.clientHeight || 1, (cam && cam.fov) || 36);
         S.personaEditorPan = { x, y, z };
         panning = { x: e.clientX, y: e.clientY };
         dessinerALaProchaineImage();
@@ -2143,7 +2139,7 @@ export function wirePersonaEditor(){
       // La sensibilité NE dépend pas du zoom, contrairement à l'ancien déplacement : une rotation
       // est un angle, pas une distance, la même traversée d'écran doit faire le même tour, qu'on
       // soit près ou loin du Personnage.
-      const k = PERSONA_EDITOR_ORBIT_RAD_PER_PX;
+      const k = VITESSE_ROTATION_3D;
       setPersonaEditorOrbit(orbiting.rotX - (e.clientY - orbiting.y) * k,
                             orbiting.rotY + (e.clientX - orbiting.x) * k);
       dessinerALaProchaineImage();

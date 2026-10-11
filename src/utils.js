@@ -1019,15 +1019,36 @@ export function orbiteDeFace3D(avantDuCorps){
 }
 
 /**
+ * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ * LES VITESSES DES GESTES 3D : UNE SEULE SOURCE (demandé)
+ * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ *
+ * Clic gauche pour tourner, clic droit pour déplacer : le geste vient de la visionneuse de Sketchfab
+ * (l'aperçu du store) et s'est étendu à l'Éditeur de modèle et aux Scènes. Pour que la sensation
+ * soit la MÊME partout, les trois lisent ces deux valeurs, réglées sur l'aperçu du store ; en changer
+ * une change tous les endroits à la fois.
+ *
+ *   VITESSE_ROTATION_3D    radians par pixel D'ÉCRAN glissé (0,0025 : 100 px font environ 14° ; 0,01
+ *                          au départ, celle de Sketchfab, divisée par deux deux fois à l'usage)
+ *   VITESSE_DEPLACEMENT_3D 1 = le point visé suit exactement le pointeur ; 0,5 (retenu à l'usage) =
+ *                          deux fois moins vite
+ *
+ * Le réglage de sensibilité d'une Case (camRotSensitivity, camPanSensitivity) reste un
+ * multiplicateur par-dessus, à 1 par défaut.
+ */
+export const VITESSE_ROTATION_3D = 0.0025;
+export const VITESSE_DEPLACEMENT_3D = 0.5;
+
+/**
  * Déplacer : le glisser au clic droit fait glisser le point visé dans le plan de l'écran, à la
- * vitesse du pointeur (un pixel parcouru = un pixel de déplacement du modèle à la distance visée).
+ * vitesse du pointeur multipliée par VITESSE_DEPLACEMENT_3D (un pixel parcouru = un pixel de déplacement du modèle à la distance visée).
  * Le modèle suit la souris : glisser vers la droite le pousse à droite. PURE.
  *
  * Les angles sont ceux d'orbitCameraPosition3D (lacet = rotY, tangage = rotX) : la même caméra pour
  * l'aperçu du store et pour l'Éditeur de modèle, qui partagent ce geste (demandé).
  */
 export function deplacement3D(centre, { lacet, tangage }, dx, dy, distance, hauteurPx, champDeg){
-  const parPixel = 2 * distance * Math.tan((champDeg * Math.PI / 180) / 2) / Math.max(1, hauteurPx);
+  const parPixel = VITESSE_DEPLACEMENT_3D * 2 * distance * Math.tan((champDeg * Math.PI / 180) / 2) / Math.max(1, hauteurPx);
   // Les axes de l'écran, en monde, pour une caméra placée par positionCamera3D et visant le centre.
   const droite = [Math.cos(lacet), 0, -Math.sin(lacet)];
   const haut = [-Math.sin(tangage) * Math.sin(lacet), Math.cos(tangage), -Math.sin(tangage) * Math.cos(lacet)];

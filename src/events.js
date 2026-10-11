@@ -114,6 +114,7 @@ import {
   hauteurBase3D, hauteurDepuisPourcentage3D, pourcentageDepuisHauteur3D,
 
   pageVoisine3D, nomNumeroteLibre3D, libelleTypeObjet3D, libelleTable3D, positionInfobulle3D,
+  VITESSE_ROTATION_3D, VITESSE_DEPLACEMENT_3D,
 } from './utils.js';
 import {
   S, currentPageData, currentPage, newId, createVolume, addPageToVolume, tr, isLockedScenePanel,
@@ -2395,6 +2396,17 @@ canvasWrap.addEventListener('wheel', (e) => {
   scheduleSharpRender();
 }, { passive: false });
 
+/**
+ * Combien de pixels d'écran couvre une unité de Page, à l'affichage actuel. Les gestes de caméra
+ * reçoivent leurs glissers en unités de Page (getCoords) ; la vitesse commune des gestes 3D est en
+ * pixels d'écran (VITESSE_ROTATION_3D) : c'est le facteur entre les deux, mesuré comme getCoords.
+ */
+function pixelsEcranParUnitePage(){
+  const page = currentPage();
+  const largeur = canvas.getBoundingClientRect().width;
+  return (page && page.w > 0 && largeur > 0) ? largeur / page.w : (S.zoomLevel || 1);
+}
+
 function getCoords(e){
   // Coordinates in PAGE units (same units as page.w/h and o.x/y/w/h). We derive the display ratio
   // DIRECTLY from the actually measured CSS size (rect.width/height) rather than from the
@@ -3839,30 +3851,16 @@ window.addEventListener('mousemove', (e) => {
     if (!obj) return;
     const dx = x - S.dragStart.x, dy = y - S.dragStart.y;
     const camRotSens = obj.camRotSensitivity != null ? obj.camRotSensitivity : 1;
-    // Phase 9: sensitivity proportional to distance (Blender/Maya style).
-    // Close = slow = precise; far = fast = large repositioning.
-    // Factor √(camDist / D_ref): at D_ref (30 u) = 1×; at 270 u = 3× faster.
-    // Fix 23: floor at 0.09 (√0.09 = 0.30) instead of 0.01 (√0.01 = 0.10), at very low camDist
-    // (< 1 u), sensitivity no longer drops below 30% of normal, avoiding the "stuck" feeling
-    // experienced when rotating after a strong zoom-in.
-    // Captured on mousedown to stay stable during the drag.
-    const _distF9 = Math.sqrt(clamp((S.dragOrig.camDist || PANEL_CAM_DEFAULT_DIST_3D) / PANEL_CAM_DEFAULT_DIST_3D, 0.09, 9));
-    const _effSens9 = camRotSens * _distF9;
-    // Phase 10 : two turntable improvements:
-    //
-    // A) Clamp pitch ±85°: prevents passing the orbit sphere's poles (camRotX ≥ ±90°).
-    //    Beyond that, the camera "flips to the other side" → the scene inverts and yaw becomes a
-    //    twist. 85° already allows very extreme low-angle/high-angle shots in a storyboard.
-    //
-    // B) Adaptive yaw cos(pitch): at zero angle, horizontal sensitivity is full; approaching the
-    //    pole, cos(rotX) → 0 → yaw progressively slows down, which maintains a consistent
-    //    APPARENT angular movement (same visible arc per dragged pixel) regardless of tilt,
-    //    exactly the fix used by Blender/Maya.
-    //    Floor at 0.05 to keep a minimal response if the 85° limit is reached.
+    // LA VITESSE COMMUNE À TOUS LES GESTES 3D (demandé) : celle de l'aperçu du store,
+    // VITESSE_ROTATION_3D radians par pixel D'ÉCRAN (utils.js), multipliée par le réglage de la Case.
+    // `dx`/`dy` sont en unités de Page : ramenés en pixels d'écran, le zoom de la vue ne change plus
+    // la vitesse. Ce qui l'adaptait avant a été retiré pour la même raison : la distance de la caméra
+    // (Phase 9, jusqu'à 3 fois plus vite de loin) et le ralenti du lacet près des pôles (Phase 10 B).
+    // Le tangage reste borné à ±85° (Phase 10 A) : au-delà, la caméra passerait de l'autre côté.
+    const _k9 = VITESSE_ROTATION_3D * camRotSens * pixelsEcranParUnitePage();
     const _CAM_PITCH_MAX = 85 * Math.PI / 180;   // ±1.4835 rad
-    const _cosP10 = Math.max(0.05, Math.cos(S.dragOrig.camRotX || 0));
-    obj.camRotYTarget = wrapAngle(S.dragOrig.camRotY + dx * 0.01 * _effSens9 * _cosP10);
-    obj.camRotXTarget = clamp(S.dragOrig.camRotX - dy * 0.01 * _effSens9, -_CAM_PITCH_MAX, _CAM_PITCH_MAX);
+    obj.camRotYTarget = wrapAngle(S.dragOrig.camRotY + dx * _k9);
+    obj.camRotXTarget = clamp(S.dragOrig.camRotX - dy * _k9, -_CAM_PITCH_MAX, _CAM_PITCH_MAX);
     // Fix 13: rotation is IMMEDIATE (current value = target) to avoid any jitter.
     // The orbit center (camWx/Wy/Wz) is in world coordinates: it naturally stays fixed during
     // rotation (we don't touch it), with no reprojection needed.
@@ -3898,7 +3896,10 @@ window.addEventListener('mousemove', (e) => {
       const _dx9 = x - S.dragStart.x, _dy9 = y - S.dragStart.y;
       const _K9     = WALL_PX_PER_UNIT_3D * PANEL_CAM_DEFAULT_DIST_3D;
       const _pSens9 = _pObj9.camPanSensitivity != null ? _pObj9.camPanSensitivity : 1;
-      const _pScale = (S.dragOrig.camDist || PANEL_CAM_DEFAULT_DIST_3D) * _pSens9 / _K9;
+      // Le point visé suit le pointeur (en unités de Page, le cadrage d'une Case est calibré sur la
+      // hauteur de la Page, cf. framePanelCamera3D), à la vitesse commune VITESSE_DEPLACEMENT_3D
+      // (utils.js, celle de l'aperçu du store, demandé), multipliée par le réglage de la Case.
+      const _pScale = VITESSE_DEPLACEMENT_3D * (S.dragOrig.camDist || PANEL_CAM_DEFAULT_DIST_3D) * _pSens9 / _K9;
       const _pLim9  = Math.max(PANEL_CAM_REF_DIST_3D * 20, (S.dragOrig.camDist || PANEL_CAM_DEFAULT_DIST_3D) * 4);
       // Fix 13: pan in world coordinates (camWx/Wy/Wz stable across rotation).
       // drag right (dx>0) → orbit center moves back along -right → scene follows right ✓
@@ -7674,8 +7675,10 @@ window.addEventListener('mousemove', (e) => {
   const panel = S.camGizmoDrag.panel;
   const dx = e.clientX - S.camGizmoDrag.x, dy = e.clientY - S.camGizmoDrag.y;
   const camRotSens = panel.camRotSensitivity != null ? panel.camRotSensitivity : 1;
-  panel.camRotYTarget = wrapAngle(S.camGizmoDrag.camRotY + dx * 0.01 * camRotSens);
-  panel.camRotXTarget = wrapAngle(S.camGizmoDrag.camRotX - dy * 0.01 * camRotSens);
+  // La vitesse commune à tous les gestes 3D (VITESSE_ROTATION_3D, utils.js, demandé) ; ici déjà en
+  // pixels d'écran.
+  panel.camRotYTarget = wrapAngle(S.camGizmoDrag.camRotY + dx * VITESSE_ROTATION_3D * camRotSens);
+  panel.camRotXTarget = wrapAngle(S.camGizmoDrag.camRotX - dy * VITESSE_ROTATION_3D * camRotSens);
   // Fix 13c (gizmo): freeze the orbit center at its CURRENT value on every frame of the drag.
   // Fix 13d: the snap is applied on EVERY mousemove (no more one-shot _snapped flag) because
   // framePanelCamera3D can rewrite camWxTarget between two animation frames (notably via the

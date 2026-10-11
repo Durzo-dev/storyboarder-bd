@@ -3202,12 +3202,3 @@ describe('#402c : une créature n\'a pas de repère de corps, et c\'est la réco
     _viderCacheCorrespondances();
   });
 });
-
-describe('Éditeur : le déplacement au clic droit est ralenti (demandé)', () => {
-  test('les pixels passés à deplacement3D sont multipliés par PERSONA_EDITOR_PAN_FACTEUR, inférieur à 1', async () => {
-    const { PERSONA_EDITOR_PAN_FACTEUR } = await import('../src/persona-editor.js');
-    assert.ok(PERSONA_EDITOR_PAN_FACTEUR > 0 && PERSONA_EDITOR_PAN_FACTEUR < 1);
-    const src = readFileSync(new URL('../src/persona-editor.js', import.meta.url), 'utf8');
-    assert.match(src, /\(e\.clientX - panning\.x\) \* PERSONA_EDITOR_PAN_FACTEUR, \(e\.clientY - panning\.y\) \* PERSONA_EDITOR_PAN_FACTEUR/);
-  });
-});

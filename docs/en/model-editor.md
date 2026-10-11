@@ -268,7 +268,15 @@ to maintain.
   button, which opens the store in **choice mode** (`ouvrirStore({ choisir })`: only the "My models"
   tab, a thumbnail chooses instead of opening its details, a static model is inactive, the previous
   tab comes back on closing). A "Built-in character" button was tried then removed, deemed
-  useless. Right-drag panning runs at half the pointer's speed (`PERSONA_EDITOR_PAN_FACTEUR`).
+  useless.
+- **6.3** The rotation and panning speeds are no longer the editor's own. They had been slowed down
+  here on request, then aligned with the store preview, like Scenes and panels in Camera mode:
+  `VITESSE_ROTATION_3D` (radians per screen pixel) and `VITESSE_DEPLACEMENT_3D` (1 = the aimed point
+  follows the pointer), in `src/utils.js`, are the single source. Changing one changes every place at
+  once, which is the point: the same feel everywhere. A panel's sensitivity setting stays a
+  multiplier. In Scenes, rotation no longer depends on the camera distance or the view zoom
+  (`tests/vitesses-3d.test.mjs`). Then tuned in use, store included: rotation at
+  0.0025 rad per pixel (a quarter of Sketchfab's), panning at half the pointer's speed.
 
 ### Phase 7 — Finishing touches
 

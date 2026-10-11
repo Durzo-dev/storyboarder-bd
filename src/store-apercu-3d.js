@@ -20,7 +20,7 @@ import { CLE_ACTUELLE, AMBIANTE_ACTUELLE } from './lighting-3d.js';
 import { preparerModeleImporte3D } from './model-cache.js';
 import { box3FromObjectSkinAware3D } from './skinned-box-3d.js';
 import { maillagesHorsCorps3D, maillagesParNom3D } from './stray-meshes-3d.js';
-import { deplacement3D } from './utils.js';
+import { deplacement3D, VITESSE_ROTATION_3D } from './utils.js';
 
 /** L'angle de vue de la caméra, en degrés. */
 const CHAMP = 35;
@@ -50,8 +50,8 @@ export function cadrage3D(min, max, champDeg = CHAMP, aspect = 1){
 /** Tourner autour : le glisser horizontal fait le tour, le vertical incline, borné. PURE. */
 export function orbite3D({ lacet, tangage }, dx, dy){
   return {
-    lacet: lacet - dx * 0.01,
-    tangage: Math.max(-INCLINAISON_MAX, Math.min(INCLINAISON_MAX, tangage + dy * 0.01)),
+    lacet: lacet - dx * VITESSE_ROTATION_3D,
+    tangage: Math.max(-INCLINAISON_MAX, Math.min(INCLINAISON_MAX, tangage + dy * VITESSE_ROTATION_3D)),
   };
 }
 

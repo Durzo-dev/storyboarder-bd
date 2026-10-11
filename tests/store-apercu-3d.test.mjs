@@ -14,6 +14,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { memoireBornee } = require('../electron/bibliotheque/store-sources.js');
 const { cadrage3D, orbite3D, zoom3D, positionCamera3D, deplacement3D } = await import('../src/store-apercu-3d.js');
+const { VITESSE_DEPLACEMENT_3D } = await import('../src/utils.js');
 const sans = (s) => s.split('\n').filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
 const lire = (f) => sans(readFileSync(new URL(`../${f}`, import.meta.url), 'utf8'));
 
@@ -114,11 +115,12 @@ describe('Le clic droit déplace, comme la visionneuse de Sketchfab', () => {
     const bas = deplacement3D([0, 0, 0], { lacet: 0, tangage: 0 }, 0, 100, 10, 500, 35);
     assert.ok(bas[1] > 0, 'glisser vers le bas descend le modèle : le point visé monte');
   });
-  test('un pixel parcouru = un pixel à l\'écran, à la distance visée', () => {
+  test('un pixel parcouru = VITESSE_DEPLACEMENT_3D pixel à l\'écran, à la distance visée', () => {
     const d = 10, h = 500, champ = 35;
     const c = deplacement3D([0, 0, 0], { lacet: 0, tangage: 0 }, h, 0, d, h, champ);
-    // Traverser toute la hauteur en pixels déplace d'une hauteur visible.
-    assert.ok(Math.abs(-c[0] - 2 * d * Math.tan(champ * Math.PI / 360)) < 1e-9);
+    // Traverser toute la hauteur en pixels déplace d'une hauteur visible, fois la vitesse commune
+    // (utils.js : 0,5, réglée à l'usage).
+    assert.ok(Math.abs(-c[0] - VITESSE_DEPLACEMENT_3D * 2 * d * Math.tan(champ * Math.PI / 360)) < 1e-9);
   });
   test('le déplacement reste dans le plan de l\'écran, quelle que soit l\'orbite', () => {
     const angles = { lacet: 0.9, tangage: 0.5 };

@@ -276,8 +276,16 @@ l'éditeur touche à un Personnage ; le nom se déduit alors de `S.personaEditor
   bouton « Mes modèles », qui ouvre le store en **mode choix** (`ouvrirStore({ choisir })` : seul
   l'onglet « Mes modèles », une vignette choisit au lieu d'ouvrir sa fiche, un modèle statique est
   inactif, l'onglet d'avant revient à la fermeture). Un bouton « Personnage intégré » a été essayé
-  puis retiré, jugé inutile. Le déplacement au clic droit va à la moitié de la vitesse du pointeur
-  (`PERSONA_EDITOR_PAN_FACTEUR`).
+  puis retiré, jugé inutile.
+- **6.3** Les vitesses de rotation et de déplacement ne sont plus propres à l'Éditeur. Elles avaient
+  été ralenties ici à la demande, puis alignées sur l'aperçu du store, comme les Scènes et les Cases
+  en mode Caméra : `VITESSE_ROTATION_3D` (radians par pixel d'écran) et `VITESSE_DEPLACEMENT_3D` (1 =
+  le point visé suit le pointeur), dans `src/utils.js`, sont la seule source. Changer l'une change
+  tous les endroits à la fois, ce qui est le but : la même sensation partout. Le réglage de
+  sensibilité d'une Case reste un multiplicateur. Dans les Scènes, la rotation ne dépend plus ni de
+  la distance de la caméra ni du zoom de la vue (`tests/vitesses-3d.test.mjs`). Réglées ensuite à l'usage,
+  store compris : rotation à 0,0025 rad par pixel (le quart de Sketchfab), déplacement à la moitié de
+  la vitesse du pointeur.
 
 ### Phase 7 — Finitions
 
