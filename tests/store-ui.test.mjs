@@ -7,8 +7,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { textesStore, PLAFONDS_FACES, SEUIL_LOURD, nombreCourt, poidsLisible, estLourd, phrasesLicence, lignesDetails } from '../src/store-texts.js';
-import sources from '../store-sources.js';
-import sketchfab from '../store-sketchfab.js';
+import sources from '../electron/bibliotheque/store-sources.js';
+import sketchfab from '../electron/bibliotheque/store-sketchfab.js';
 
 const lire = (f) => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
 const sans = (s) => s.split('\n').filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
@@ -25,7 +25,7 @@ describe('les textes', () => {
   });
   test('chaque erreur que store.js peut rendre a son texte', () => {
     // Tous les codes entre apostrophes des lignes qui posent une erreur, ternaires compris.
-    const lignes = lire('store.js').split('\n').filter(l => /erreur: /.test(l) && !/^\s*(\/\/|\*)/.test(l));
+    const lignes = lire('electron/bibliotheque/store.js').split('\n').filter(l => /erreur: /.test(l) && !/^\s*(\/\/|\*)/.test(l));
     const codes = new Set(lignes.flatMap(l => [...l.slice(l.indexOf('erreur: ')).matchAll(/'(\w+)'/g)].map(m => m[1])));
     assert.deepEqual([...codes].sort(), ['corrompu', 'quota', 'reponse', 'reseau', 'simulation', 'source', 'tropLourd']);
     for (const c of codes) { assert.ok(textesStore('fr').erreurs[c], c); assert.ok(textesStore('en').erreurs[c], c); }
@@ -80,7 +80,7 @@ describe('les mises en forme', () => {
 
 describe('le câblage', () => {
   const UI = sans(lire('src/store-ui.js'));
-  const MAIN = sans(lire('main.js'));
+  const MAIN = sans(lire('electron/main.js'));
   test('⚠️ rien de ce qui vient du réseau ne passe par innerHTML', () => {
     assert.ok(!/innerHTML/.test(UI));
   });
@@ -100,18 +100,18 @@ describe('le câblage', () => {
   });
   test('main.js : la simulation n\'existe qu\'en développement', () => {
     assert.match(MAIN, /const SIMULATION_STORE = !app\.isPackaged && !!process\.env\.STORYBOARD_SIMULER_STORE;/);
-    assert.match(MAIN, /store\.chercher\(sourceId, params, SIMULATION_STORE \? __dirname : null\)/);
+    assert.match(MAIN, /store\.chercher\(sourceId, params, SIMULATION_STORE \? RACINE : null\)/);
   });
   test('le pont n\'expose que les sept appels du store (et deux écoutes)', () => {
-    const pre = lire('preload.js');
+    const pre = lire('electron/preload.js');
     assert.equal((pre.match(/ipcRenderer\.invoke\('store:/g) || []).length, 7);
     assert.match(pre, /storeTelecharges: \(\) => ipcRenderer\.invoke\('store:telecharges'\)/);
-    assert.match(MAIN, /store\.telecharges\(getProjectsDir\(\), SIMULATION_STORE \? __dirname : null\)/);
+    assert.match(MAIN, /store\.telecharges\(getProjectsDir\(\), SIMULATION_STORE \? RACINE : null\)/);
     assert.match(pre, /storeInfos: \(sourceId\) => ipcRenderer\.invoke\('store:infos', sourceId\)/);
     assert.match(pre, /storeChercher: \(sourceId, params\) => ipcRenderer\.invoke\('store:chercher', sourceId, params\)/);
   });
   test('store.js : les paramètres sont nettoyés AVANT de construire l\'adresse', () => {
-    const s = sans(lire('store.js'));
+    const s = sans(lire('electron/bibliotheque/store.js'));
     const c = s.slice(s.indexOf('async function chercher'));
     assert.ok(c.indexOf('sources.rechercheNormalisee(params)') < c.indexOf('module.urlRecherche(recherche)'));
     assert.match(c, /return sources\.pageAffichable\(module\.pageNormalisee\(json\), recherche\);/);
@@ -178,13 +178,13 @@ describe('le câblage', () => {
     assert.match(css, /\.store-box \.maj-message:empty\{ display:none; \}/);
   });
   test('store.js : chaque fichier téléchargé est vérifié, la simulation ne range rien, le poids est borné', () => {
-    const s = sans(lire('store.js'));
+    const s = sans(lire('electron/bibliotheque/store.js'));
     const f = s.slice(s.indexOf('async function telecharger('));
     assert.match(f, /if \(f\.md5 && md5\(r\.octets\) !== f\.md5\) return \{ erreur: 'corrompu' \};/);
     assert.ok(f.indexOf("if (simulation) return { erreur: 'simulation' };") < f.indexOf('lireJson(url)'));
     assert.match(f, /if \(plan\.total > POIDS_MAX\) return \{ erreur: 'tropLourd' \};/);
     // Le renommage d'un modèle fait suivre son attribution.
-    assert.match(sans(lire('main.js')), /await fs\.promises\.rename\(src, dst\);\n\s+await store\.renommerAttribution\(getProjectsDir\(\), ancien, nouveau\);/);
+    assert.match(sans(lire('electron/main.js')), /await fs\.promises\.rename\(src, dst\);\n\s+await store\.renommerAttribution\(getProjectsDir\(\), ancien, nouveau\);/);
   });
   test('« Mes modèles » : la bibliothèque passe SOUS les fenêtres qu\'elle ouvre, et le clic droit devant elle', () => {
     const html = lire('index.html');
@@ -303,6 +303,6 @@ describe('le câblage', () => {
   });
   test('les modules du store voyagent avec l\'application', () => {
     const pkg = JSON.parse(lire('package.json'));
-    for (const f of ['store.js', 'store-sources.js', 'store-sketchfab.js', 'store-polyhaven.js', 'gltf-glb.js', 'store-categories.js']) assert.ok(pkg.build.files.includes(f), f);
+    for (const f of ['electron/bibliotheque/store.js', 'electron/bibliotheque/store-sources.js', 'electron/bibliotheque/store-sketchfab.js', 'electron/bibliotheque/store-polyhaven.js', 'electron/bibliotheque/gltf-glb.js', 'electron/bibliotheque/store-categories.js']) assert.ok(((files, f) => files.includes(f) || files.some(m => m.endsWith('/**/*') && f.startsWith(m.slice(0, -4))))(pkg.build.files, f), f);
   });
 });

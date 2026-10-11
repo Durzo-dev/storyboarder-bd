@@ -28,8 +28,8 @@ import {
 } from '../src/model-store.js';
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
-const MAIN = readFileSync(join(RACINE, 'main.js'), 'utf8');
-const PRELOAD = readFileSync(join(RACINE, 'preload.js'), 'utf8');
+const MAIN = readFileSync(join(RACINE, 'electron/main.js'), 'utf8');
+const PRELOAD = readFileSync(join(RACINE, 'electron/preload.js'), 'utf8');
 
 const octets = (...v) => new Uint8Array(v);
 

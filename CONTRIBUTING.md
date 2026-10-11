@@ -30,7 +30,7 @@ values — `'tracé'` with its accent, `'cloture'` without. Renaming one makes e
 project unreadable, and nothing signals it. This is the most important rule here:
 [`docs/en/persisted-data.md`](docs/en/persisted-data.md), guarded by `tests/persisted-format.test.mjs`.
 
-**2. `main.js` and `preload.js` are never touched for an application feature.** They are the
+**2. `electron/main.js` and `electron/preload.js` are never touched for an application feature.** They are the
 Electron process files. Application code lives in `src/*.js`. See
 [`docs/en/architecture.md`](docs/en/architecture.md), which lists the few accepted exceptions (disk
 access for models and images, built-in updates) and the criterion they meet.

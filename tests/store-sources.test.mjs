@@ -9,8 +9,8 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import sources from '../store-sources.js';
-import sketchfab from '../store-sketchfab.js';
+import sources from '../electron/bibliotheque/store-sources.js';
+import sketchfab from '../electron/bibliotheque/store-sketchfab.js';
 
 const { LICENCES, SOURCES, TRIS, PAR_PAGE, licence, rechercheNormalisee, resultatValide, pageAffichable, ligneDeCredit } = sources;
 const { CODES_PAR_LIBELLE, CATEGORIES, urlRecherche, urlDemandeTelechargement, vignette, modeleNormalise, pageNormalisee } = sketchfab;

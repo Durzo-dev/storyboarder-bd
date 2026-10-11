@@ -1,7 +1,7 @@
 /**
  * tests/electron-bridge.test.mjs, le pont Electron et sa déclaration ne doivent pas diverger.
  *
- * `preload.js` expose au renderer la SEULE porte de l'application vers le disque. Sa surface est
+ * `electron/preload.js` expose au renderer la SEULE porte de l'application vers le disque. Sa surface est
  * décrite deux fois : dans preload.js, qui l'implémente, et dans types/globals.d.ts, que lit la
  * vérification de types. Deux descriptions de la même chose, donc deux descriptions qui peuvent
  * dériver, c'est la classe de bug numéro un de ce dépôt.
@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
-const PRELOAD = readFileSync(join(RACINE, 'preload.js'), 'utf8');
+const PRELOAD = readFileSync(join(RACINE, 'electron/preload.js'), 'utf8');
 const DECL = readFileSync(join(RACINE, 'types', 'globals.d.ts'), 'utf8');
 
 // Les clés du littéral passé à contextBridge.exposeInMainWorld.

@@ -8,10 +8,10 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const cats = require('../store-categories.js');
-const sketchfab = require('../store-sketchfab.js');
-const ph = require('../store-polyhaven.js');
-const sources = require('../store-sources.js');
+const cats = require('../electron/bibliotheque/store-categories.js');
+const sketchfab = require('../electron/bibliotheque/store-sketchfab.js');
+const ph = require('../electron/bibliotheque/store-polyhaven.js');
+const sources = require('../electron/bibliotheque/store-sources.js');
 
 describe('La liste commune', () => {
   test('chaque catégorie Sketchfab relevée a SA catégorie commune, une seule ; aucune n\'est écartée', () => {

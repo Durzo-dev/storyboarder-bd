@@ -15,7 +15,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { empaqueterGlb, ressourcesExternes, extensionsNonPrisesEnCharge, jsonDuModele } = require('../gltf-glb.js');
+const { empaqueterGlb, ressourcesExternes, extensionsNonPrisesEnCharge, jsonDuModele } = require('../electron/bibliotheque/gltf-glb.js');
 const { GLTFLoader } = await import('../src/vendor/GLTFLoader.js');
 const { preparerModeleImporte3D } = await import('../src/model-cache.js');
 const T = globalThis.THREE;
@@ -144,7 +144,7 @@ describe('L\'import d\'un .gltf et des fichiers qu\'on ne sait pas lire', () => 
   });
   test('main.js : un .gltf est empaqueté avec ses voisins, sans lire hors de son dossier, et la compression est vérifiée', () => {
     const { readFileSync } = require('node:fs');
-    const m = readFileSync(new URL('../main.js', import.meta.url), 'utf8');
+    const m = readFileSync(new URL('../electron/main.js', import.meta.url), 'utf8');
     const f = m.slice(m.indexOf('async function modeleAImporter('));
     assert.match(f, /if \(!voisin\.startsWith\(dossier \+ path\.sep\)\) return \{ error:/);
     assert.match(f, /data = gltfGlb\.empaqueterGlb\(json, ressources\);/);

@@ -1,7 +1,7 @@
 // eslint.config.mjs — configuration « flat » (ESLint 9+).
 //
 // Extension .mjs et non .js : le fichier est un module ES, alors que package.json ne déclare pas
-// `"type": "module"` — et ne peut pas le faire, main.js et preload.js étant du CommonJS. Sans
+// `"type": "module"` — et ne peut pas le faire, electron/ étant du CommonJS. Sans
 // le .mjs, Node reparse le fichier à chaque exécution en le signalant.
 //
 // ⚠️ CETTE CONFIGURATION N'A JAMAIS ÉTÉ EXÉCUTÉE au moment où elle est écrite : le registre npm
@@ -89,16 +89,19 @@ export default [
     },
   },
   {
-    // Processus principal Electron : Node, pas navigateur. `require` y est légitime. Trois
-    // fichiers et non deux depuis #407b : window-state.js est la décision pure que main.js
-    // applique à la géométrie de la fenêtre, et il est CommonJS comme ses deux voisins.
-    files: ['main.js', 'preload.js', 'window-state.js'],
+    // Processus principal Electron : Node, pas navigateur. `require` y est légitime. Tout ce
+    // code vit dans electron/ (le store et la bibliothèque de modèles dans electron/bibliotheque/),
+    // CommonJS de bout en bout.
+    files: ['electron/**/*.js'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'commonjs',
       globals: { require: 'readonly', module: 'writable', __dirname: 'readonly',
                  process: 'readonly', console: 'readonly', URL: 'readonly',
-                 setTimeout: 'readonly', Buffer: 'readonly' },
+                 setTimeout: 'readonly', Buffer: 'readonly',
+                 // Les modules du store et des mises à jour, linté depuis qu'ils sont dans electron/ :
+                 // des globales de Node (v15 et plus), comme URL.
+                 clearTimeout: 'readonly', AbortController: 'readonly', URLSearchParams: 'readonly' },
     },
     rules: {
       'no-unused-vars': ['error', { args: 'none', caughtErrors: 'none' }],

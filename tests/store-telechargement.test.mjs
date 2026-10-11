@@ -13,9 +13,9 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { empaqueterGlb, lireGlb } = require('../gltf-glb.js');
-const ph = require('../store-polyhaven.js');
-const sources = require('../store-sources.js');
+const { empaqueterGlb, lireGlb } = require('../electron/bibliotheque/gltf-glb.js');
+const ph = require('../electron/bibliotheque/store-polyhaven.js');
+const sources = require('../electron/bibliotheque/store-sources.js');
 const FICHIERS = JSON.parse(readFileSync(new URL('./fixtures/polyhaven-fichiers.json', import.meta.url), 'utf8'));
 
 /** Un glTF minimal mais complet : deux buffers externes, une image externe, des vues décalées. */

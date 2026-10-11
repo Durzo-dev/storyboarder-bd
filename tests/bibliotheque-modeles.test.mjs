@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const b = require('../bibliotheque-modeles.js');
+const b = require('../electron/bibliotheque/bibliotheque-modeles.js');
 const { entreesLocales, filtrerEntrees, NON_CLASSE } = await import('../src/local-library.js');
 
 describe('Les tags', () => {
@@ -109,7 +109,7 @@ describe('« Mes modèles » : catégorie choisie et filtre par tags', () => {
 });
 
 describe('Le câblage', () => {
-  const MAIN = readFileSync(new URL('../main.js', import.meta.url), 'utf8');
+  const MAIN = readFileSync(new URL('../electron/main.js', import.meta.url), 'utf8');
   test('un nom de modèle venu de l\'interface est vérifié ; les opérations passent l\'une après l\'autre', () => {
     assert.match(MAIN, /if \(args && args\.fichier !== undefined && !nomDeModeleAcceptable\(args\.fichier\)\) return \{ refus: 'nom' \};/);
     assert.match(MAIN, /_fileBiblio = suite\.catch/);
@@ -119,6 +119,8 @@ describe('Le câblage', () => {
     assert.match(MAIN, /biblio\.oublierModele\(b, name\)/);
   });
   test('le module voyage avec l\'application', () => {
-    assert.ok(JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).build.files.includes('bibliotheque-modeles.js'));
+    // Embarqué nommément ou par un motif de dossier (electron/**/*).
+    const files = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).build.files;
+    assert.ok(((files, f) => files.includes(f) || files.some(m => m.endsWith('/**/*') && f.startsWith(m.slice(0, -4))))(files, 'electron/bibliotheque/bibliotheque-modeles.js'));
   });
 });

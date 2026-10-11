@@ -9,7 +9,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import dossiers from '../projects-dir.js';
+import dossiers from '../electron/projects-dir.js';
 
 const {
   ANCIENS_NOMS, DONNEES_A_RECOPIER, donneesARecuperer, anciensDossiersDocuments, DOSSIER_RECUPERE, dossierParDefaut, ancienDossierParDefaut, dansLeDossier, relocaliser, planMigration,
@@ -112,7 +112,7 @@ describe('le renommage (#448)', () => {
     assert.deepEqual(anciensDossiersDocuments('C:\\Users\\v\\Documents'), ['C:\\Users\\v\\Documents\\Storyboard BD\\Projets']);
   });
   test('main.js : les données sont récupérées AVANT la première lecture des réglages', () => {
-    const main = lire('main.js');
+    const main = lire('electron/main.js');
     assert.ok(main.indexOf('recupererDonneesAncienNom();') < main.indexOf("const settingsFilePath = path.join(app.getPath('userData')"));
     assert.match(main, /if \(!app\.isPackaged\) return;\n  try \{\n    const appData/);
     assert.match(main, /anciens\.push\(\.\.\.dossiersProjets\.anciensDossiersDocuments\(app\.getPath\('documents'\)\)\)/);
@@ -129,7 +129,7 @@ describe('le renommage (#448)', () => {
 describe('le câblage', () => {
   const sans = (s) => s.split('\n').filter(l => !/^\s*(\/\/|;)/.test(l)).join('\n');
   test('main.js : le défaut vient de projects-dir.js, et le déménagement précède tout le reste', () => {
-    const main = sans(lire('main.js'));
+    const main = sans(lire('electron/main.js'));
     assert.match(main, /const defaultProjectsDir = dossiersProjets\.dossierParDefaut\(\{/);
     assert.match(main, /documents: app\.getPath\('documents'\), nomApp: app\.getName\(\)/);
     const pret = main.slice(main.indexOf('app.whenReady()'));
@@ -157,6 +157,7 @@ describe('le câblage', () => {
   });
   test('le module voyage avec l\'application', () => {
     const pkg = JSON.parse(lire('package.json'));
-    assert.ok(pkg.build.files.includes('projects-dir.js'));
+    // Embarqué nommément ou par un motif de dossier (electron/**/*).
+    assert.ok(((files, f) => files.includes(f) || files.some(m => m.endsWith('/**/*') && f.startsWith(m.slice(0, -4))))(pkg.build.files, 'electron/projects-dir.js'));
   });
 });

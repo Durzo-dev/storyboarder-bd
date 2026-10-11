@@ -2,7 +2,7 @@
 
 > 🇫🇷 [Version française](README.fr.md)
 
-**Version 1.10.75**
+**Version 1.10.76**
 
 **Comic book storyboarding application**: a desktop tool to create, organize and visualize comic book pages with real-time 3D scene rendering.
 
@@ -97,10 +97,9 @@ Node's built-in test runner, no framework, no browser. What is covered and what 
 ```
 storyboarder-bd/
 ├── index.html, style.css   # The interface: page structure, modals, styles
-├── main.js, preload.js     # Electron main process and its bridge to the interface
-├── *.js (root)             # Main-process decisions, tested under plain Node: window, updates,
-│                           # Projects folder
-├── blocage.html            # Full-screen update / connection-required screen
+├── electron/               # Electron main process (CommonJS): main.js, preload.js, window,
+│   │                       # updates, Projects folder, blocking screen
+│   └── bibliotheque/       # Model store, thumbnails and the imported-model library
 ├── src/                    # Application logic (ES modules); src/events.js is the real entry point
 ├── assets/                 # Bundled fonts and textures, with their licences
 ├── build/                  # Installer customisation (NSIS)

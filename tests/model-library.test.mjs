@@ -114,7 +114,7 @@ import { dirname, join } from 'node:path';
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
 const HTML = readFileSync(join(RACINE, 'index.html'), 'utf8');
 const EVENTS = readFileSync(join(RACINE, 'src/events.js'), 'utf8');
-const MAIN = readFileSync(join(RACINE, 'main.js'), 'utf8');
+const MAIN = readFileSync(join(RACINE, 'electron/main.js'), 'utf8');
 const IO = readFileSync(join(RACINE, 'src/io.js'), 'utf8');
 
 // Le corps de `_renommerModele`, COMMENTAIRES RETIRÉS. Sans ce filtrage, le test « aucun

@@ -256,7 +256,7 @@ describe('#399 : supprimer un Projet', () => {
   test('⚠️ les MODÈLES et les CORRESPONDANCES ne sont pas emportés', () => {
     // Ils vivent À CÔTÉ du dossier de Projets, partagés par TOUS les Projets : les supprimer avec
     // celui-ci amputerait les autres, en silence. Le passe-plat n'efface qu'un fichier nommé.
-    const principal = readFileSync(new URL('../main.js', import.meta.url), 'utf8');
+    const principal = readFileSync(new URL('../electron/main.js', import.meta.url), 'utf8');
     const i = principal.indexOf("ipcMain.handle('project:delete'");
     assert.ok(i > 0, 'le canal de suppression a disparu');
     const corps = principal.slice(i, principal.indexOf('\n});', i));

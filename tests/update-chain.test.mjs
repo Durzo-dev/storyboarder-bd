@@ -12,7 +12,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { generateKeyPairSync } from 'node:crypto';
 
-import politique from '../update-policy.js';
+import politique from '../electron/update-policy.js';
 import {
   VERSIONS_MAX, NOTE_PAR_DEFAUT, versionsPubliees, versionsObligatoires, notesPourUtilisateur,
   construireCharge, signer,
@@ -109,7 +109,7 @@ describe('npm run obligatoire', () => {
 });
 
 describe('le câblage du processus principal', () => {
-  const MAIN = sansCommentaires(lire('main.js'));
+  const MAIN = sansCommentaires(lire('electron/main.js'));
   test('la décision précède la fenêtre : on attend la vérification avant d\'en ouvrir une', () => {
     const pret = MAIN.slice(MAIN.indexOf('app.whenReady()'));
     assert.ok(pret.indexOf('await preparerMaj()') > 0);
@@ -125,7 +125,7 @@ describe('le câblage du processus principal', () => {
   });
   test('sans clé publique, aucune vérification ne bloque', () => {
     assert.match(MAIN, /if \(!CLE_PUBLIQUE\) return \{ decision: \{ etat: 'libre' \}, latest: r\.latest \};/);
-    assert.match(lire('attestation-cle.js'), /module\.exports = \{ CLE_PUBLIQUE: /);
+    assert.match(lire('electron/attestation-cle.js'), /module\.exports = \{ CLE_PUBLIQUE: /);
   });
   test('en développement, rien n\'est vérifié, sauf simulation demandée', () => {
     const p = MAIN.slice(MAIN.indexOf('async function preparerMaj()'));
@@ -141,13 +141,13 @@ describe('le câblage du processus principal', () => {
     assert.match(r, /if \(!ecranBloquant\(etatMaj\) && fenetreBlocage\) \{[\s\S]*createWindow\('app'\);[\s\S]*ancienne\.destroy\(\);/);
   });
   test('le pont bloquant n\'expose QUE les mises à jour', () => {
-    const p = sansCommentaires(lire('preload-blocage.js'));
+    const p = sansCommentaires(lire('electron/preload-blocage.js'));
     assert.ok(!/storyboarderAPI/.test(p));
     const canaux = [...p.matchAll(/ipcRenderer\.(?:invoke|on)\('([^']+)'/g)].map(m => m[1]);
     assert.deepEqual(canaux.sort(), ['maj:etat', 'maj:installer', 'maj:progression', 'maj:reessayer']);
   });
   test('l\'installeur téléchargé est vérifié contre l\'empreinte de latest.yml', () => {
-    const u = sansCommentaires(lire('updater.js'));
+    const u = sansCommentaires(lire('electron/updater.js'));
     assert.match(u, /crypto\.createHash\('sha512'\)/);
     assert.match(u, /if \(empreinte\.digest\('base64'\) !== latest\.sha512\)/);
     assert.match(u, /if \(enLigne\) ecrireJson\(cheminAttestation, fichierEnLigne\);/);
@@ -201,11 +201,14 @@ describe('la publication', () => {
     });
   });
   test('les fichiers du processus principal et l\'écran bloquant partent dans l\'installeur', () => {
-    for (const f of ['update-policy.js', 'updater.js', 'attestation-cle.js', 'preload-blocage.js', 'blocage.html']) {
-      assert.ok(PKG.build.files.includes(f), f);
+    // Embarqué nommément ou par un motif de dossier (electron/**/*).
+    const embarque = (f) => ((files, f) => files.includes(f) || files.some(m => m.endsWith('/**/*') && f.startsWith(m.slice(0, -4))))(PKG.build.files, f);
+    for (const f of ['electron/update-policy.js', 'electron/updater.js', 'electron/attestation-cle.js', 'electron/preload-blocage.js', 'electron/blocage.html']) {
+      assert.ok(embarque(f), f);
     }
-    const requis = [...lire('main.js').matchAll(/require\('\.\/([^']+)'\)/g)].map(m => m[1] + '.js');
-    for (const f of requis) assert.ok(PKG.build.files.includes(f), f);
+    const requis = [...lire('electron/main.js').matchAll(/require\('\.\/([^']+)'\)/g)].map(m => 'electron/' + m[1] + '.js');
+    assert.ok(requis.length > 3);
+    for (const f of requis) assert.ok(embarque(f), f);
   });
   test('l\'attestation : historique complet, chaque nuit, après chaque release, et jamais sans clé', () => {
     assert.match(ATTESTATION, /fetch-depth: 0/);

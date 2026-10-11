@@ -1,14 +1,14 @@
 /**
  * tests/update-policy.test.mjs, ce que l'application décide de ses mises à jour (#442).
  *
- * `update-policy.js` se charge sous Node nu : on l'exécute pour de vrai, signatures comprises, avec
+ * `electron/update-policy.js` se charge sous Node nu : on l'exécute pour de vrai, signatures comprises, avec
  * une paire de clés Ed25519 générée pour le test. La clé de production n'apparaît nulle part ici.
  */
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { generateKeyPairSync, sign } from 'node:crypto';
 
-import politique from '../update-policy.js';
+import politique from '../electron/update-policy.js';
 
 const {
   JOUR_MS, BAIL_HORS_LIGNE_MS, TOLERANCE_HORLOGE_MS, ARGUMENTS_INSTALLEUR, SIMULATIONS,

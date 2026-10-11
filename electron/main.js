@@ -2,6 +2,11 @@ const { app, BrowserWindow, Menu, ipcMain, dialog, screen, shell } = require('el
 const path = require('path');
 const fs = require('fs');
 
+// Ce fichier vit dans electron/ : la RACINE de l'application (index.html, assets/, tests/fixtures, et
+// en développement le dossier Projets) est le dossier parent. Les preloads et l'écran de blocage,
+// eux, sont à côté de ce fichier (__dirname).
+const RACINE = path.join(__dirname, '..');
+
 // Géométrie de la fenêtre : la DÉCISION est dans window-state.js, testable sous Node nu, ce
 // fichier-ci n'en fait que l'entrée-sortie (cf. docs/en/architecture.md, règle n°1).
 const {
@@ -20,7 +25,7 @@ const { CLE_PUBLIQUE } = require('./attestation-cle');
 // démarrage (migrerAncienDossierProjets, plus bas). La décision vit dans projects-dir.js.
 const dossiersProjets = require('./projects-dir');
 const defaultProjectsDir = dossiersProjets.dossierParDefaut({
-  packaged: app.isPackaged, documents: app.getPath('documents'), nomApp: app.getName(), appDir: __dirname,
+  packaged: app.isPackaged, documents: app.getPath('documents'), nomApp: app.getName(), appDir: RACINE,
 });
 const ancienDefaultProjectsDir = dossiersProjets.ancienDossierParDefaut({
   packaged: app.isPackaged, exeDir: path.dirname(app.getPath('exe')),
@@ -233,7 +238,7 @@ function createWindow(mode = 'app') {
     // #443 : en développement, STORYBOARD_SIMULER_RESSOURCES montre la modale des ressources
     // introuvables avec des données factices (cf. src/missing-resources.js, simulationRessources).
     const simulerRessources = !app.isPackaged && process.env.STORYBOARD_SIMULER_RESSOURCES;
-    win.loadFile(path.join(__dirname, 'index.html'), simulerRessources ? { query: { simulerRessources: '1' } } : undefined);
+    win.loadFile(path.join(RACINE, 'index.html'), simulerRessources ? { query: { simulerRessources: '1' } } : undefined);
   }
   return win;
 }
@@ -448,7 +453,7 @@ ipcMain.handle('models:pick', async (event) => {
  * avec son nom, plutôt que rangé pour rien.
  */
 async function modeleAImporter(chemin){
-  const gltfGlb = require('./gltf-glb');
+  const gltfGlb = require('./bibliotheque/gltf-glb');
   let data = await fs.promises.readFile(chemin);
   let name = path.basename(chemin);
   if (/\.gltf$/i.test(name)) {
@@ -503,7 +508,7 @@ ipcMain.handle('models:read', async (event, name) => {
 // ─── Vignettes des modèles (bibliothèque « Mes modèles ») ───
 // Même exception de règle que `models:*` : de l'accès disque. Ce qui DÉCIDE (signature, à refaire,
 // suivi des renommages) est dans vignettes-modeles.js, testé sous Node.
-const vignettes = require('./vignettes-modeles');
+const vignettes = require('./bibliotheque/vignettes-modeles');
 const getVignettesDir = () => path.join(getProjectsDir(), vignettes.DOSSIER);
 async function lireIndexVignettes(){
   try { return JSON.parse(await fs.promises.readFile(path.join(getVignettesDir(), vignettes.INDEX), 'utf8')); }
@@ -587,7 +592,7 @@ async function suivreVignette(ancien, nouveau){
 // ─── La catégorie choisie et les tags des modèles (bibliothèque « Mes modèles ») ───
 // Ce qui décide est dans bibliotheque-modeles.js (pur, testé sous Node) ; ici, lire et écrire, une
 // opération à la fois (deux clics rapides liraient le même état et le second effacerait le premier).
-const biblio = require('./bibliotheque-modeles');
+const biblio = require('./bibliotheque/bibliotheque-modeles');
 const cheminBiblio = () => path.join(getProjectsDir(), biblio.FICHIER);
 async function lireBiblio(){
   try { return biblio.normaliser(JSON.parse(await fs.promises.readFile(cheminBiblio(), 'utf8'))); } catch (e) { return biblio.normaliser(null); }
@@ -897,25 +902,25 @@ ipcMain.handle('maj:etat', async () => etatPourAffichage());
 // Même exception documentée que les mises à jour (architecture.md, règle n°1) : le réseau, et bientôt
 // le jeton de connexion, vivent ici. store-sources.js et le module de chaque site DÉCIDENT ;
 // store.js fait les requêtes. En développement, STORYBOARD_SIMULER_STORE rend une réponse enregistrée.
-const store = require('./store');
+const store = require('./bibliotheque/store');
 const SIMULATION_STORE = !app.isPackaged && !!process.env.STORYBOARD_SIMULER_STORE;
 ipcMain.handle('store:infos', async (event, sourceId) => ({ ...store.infos(sourceId), simulation: SIMULATION_STORE }));
 ipcMain.handle('store:chercher', async (event, sourceId, params) =>
-  store.chercher(sourceId, params, SIMULATION_STORE ? __dirname : null));
-ipcMain.handle('store:telecharges', async () => store.telecharges(getProjectsDir(), SIMULATION_STORE ? __dirname : null));
+  store.chercher(sourceId, params, SIMULATION_STORE ? RACINE : null));
+ipcMain.handle('store:telecharges', async () => store.telecharges(getProjectsDir(), SIMULATION_STORE ? RACINE : null));
 // #445 : le téléchargement. Le .glb revient au renderer, qui le RANGE par le chemin de l'import
 // (src/model-store.js : nom libre, doublon à l'identique) ; puis il demande l'attribution.
-ipcMain.handle('store:poids', async (event, sourceId, id) => store.poids(sourceId, id, SIMULATION_STORE ? __dirname : null));
+ipcMain.handle('store:poids', async (event, sourceId, id) => store.poids(sourceId, id, SIMULATION_STORE ? RACINE : null));
 ipcMain.handle('store:telecharger', async (event, sourceId, id, resolution) =>
   store.telecharger(sourceId, id, resolution, (recus, total) => {
     if (!event.sender.isDestroyed()) event.sender.send('store:progression', recus, total);
-  }, SIMULATION_STORE ? __dirname : null));
+  }, SIMULATION_STORE ? RACINE : null));
 // L'aperçu 3D d'une fiche : un .glb en mémoire, rien sur le disque. Sa progression a son canal, pour
 // ne pas se mêler à celle d'un téléchargement en cours.
 ipcMain.handle('store:apercu', async (event, sourceId, id) =>
   store.apercu(sourceId, id, (recus, total) => {
     if (!event.sender.isDestroyed()) event.sender.send('store:apercuProgression', sourceId, id, recus, total);
-  }, SIMULATION_STORE ? __dirname : null));
+  }, SIMULATION_STORE ? RACINE : null));
 ipcMain.handle('store:attribuer', async (event, resultat, fichier, resolution) => {
   const r = await store.attribuer(getProjectsDir(), resultat, fichier, resolution);
   // La vignette de la source devient celle du modèle local : déjà belle, et sans rien à rendre.

@@ -18,7 +18,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const RACINE = fileURLToPath(new URL('..', import.meta.url));
-const FICHIER_PUBLIC = join(RACINE, 'attestation-cle.js');
+const FICHIER_PUBLIC = join(RACINE, 'electron/attestation-cle.js');
 
 /** Le contenu d'attestation-cle.js pour une clé publique PEM. */
 export function fichierClePublique(pem){

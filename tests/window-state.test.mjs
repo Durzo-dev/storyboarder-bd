@@ -5,7 +5,7 @@
  * CE QUI A FAIT NAÎTRE CE FICHIER
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  *
- * Une mesure, pas une intuition. `main.js` créait la fenêtre en dur à 1280 × 860 ; l'utilisateur la
+ * Une mesure, pas une intuition. `electron/main.js` créait la fenêtre en dur à 1280 × 860 ; l'utilisateur la
  * maximisait à la main dans la seconde qui suivait ; la zone de dessin passait de 791 à 1316 pixels
  * de haut ; le renderer recalculait son échelle et redessinait TOUTE la Planche, en plein pendant
  * le chargement. Trois campagnes de mesure ont cherché un défaut là où il n'y en avait pas : le
@@ -15,9 +15,9 @@
  * DEUX MOITIÉS, DEUX FAÇONS DE LES TENIR
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  *
- * `window-state.js` DÉCIDE, et se charge sous Node nu : on l'exécute pour de vrai.
+ * `electron/window-state.js` DÉCIDE, et se charge sous Node nu : on l'exécute pour de vrai.
  *
- * `main.js` fait l'entrée-sortie et ne peut PAS être chargé ici, il `require('electron')`
+ * `electron/main.js` fait l'entrée-sortie et ne peut PAS être chargé ici, il `require('electron')`
  * (cf. la règle n°1 d'architecture.md, et le même aveu en tête de electron-bridge.test.mjs). On
  * l'inspecte donc comme du TEXTE. Un test de texte se contente trop facilement de constater qu'un
  * identifiant APPARAÎT, alors que la question est de savoir s'il GOUVERNE : c'est le défaut qui est
@@ -30,7 +30,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import etat3D from '../window-state.js';
+import etat3D from '../electron/window-state.js';
 
 const {
   LARGEUR_DEFAUT, HAUTEUR_DEFAUT, LARGEUR_MINI, HAUTEUR_MINI, VISIBLE_MINI,
@@ -40,7 +40,7 @@ const {
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
 const sansCommentaires = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '')
   .split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');
-const MAIN = sansCommentaires(readFileSync(join(RACINE, 'main.js'), 'utf8'));
+const MAIN = sansCommentaires(readFileSync(join(RACINE, 'electron/main.js'), 'utf8'));
 
 // Un écran unique de 1920 × 1040, la zone de travail typique d'un 1080p barre des tâches déduite.
 const UN_ECRAN = [{ x: 0, y: 0, width: 1920, height: 1040 }];
@@ -275,7 +275,7 @@ describe('main.js : la décision est vraiment BRANCHÉE', () => {
  *   W8  `getNormalBounds()` remplacé par `getBounds()`                             ROUGE
  *   W9  l'enregistrement déplacé après le `return` de la garde isQuitting          ROUGE
  *   W10 le cadre restauré retiré des options, 1280 × 860 remis en dur              ROUGE (2 tests)
- *   W11 `window-state.js` retiré de build.files                                    ROUGE (packaging)
+ *   W11 `electron/window-state.js` retiré de build.files                                    ROUGE (packaging)
  *
  * W6 est celle qui a demandé le plus de soin à écrire. `assezVisible` pourrait très bien prendre
  * le meilleur chevauchement horizontal sur un écran et le meilleur vertical sur un autre : le code

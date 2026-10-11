@@ -8,9 +8,9 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const v = require('../vignettes-modeles.js');
+const v = require('../electron/bibliotheque/vignettes-modeles.js');
 const sans = (s) => s.split('\n').filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
-const MAIN = sans(readFileSync(new URL('../main.js', import.meta.url), 'utf8'));
+const MAIN = sans(readFileSync(new URL('../electron/main.js', import.meta.url), 'utf8'));
 
 describe('Ce qui décide', () => {
   test('la signature change avec la taille OU la date du fichier', () => {
@@ -94,7 +94,7 @@ describe('Le câblage de main.js', () => {
   });
   test('un modèle téléchargé reçoit la vignette de sa source', () => {
     assert.match(MAIN, /const image = await store\.vignetteSource\(resultat\);\n\s+if \(image\) await ecrireVignette\(fichier, image, 'source'\);/);
-    const s = sans(readFileSync(new URL('../store.js', import.meta.url), 'utf8'));
+    const s = sans(readFileSync(new URL('../electron/bibliotheque/store.js', import.meta.url), 'utf8'));
     assert.match(s, /const HOTES_VIGNETTES = \/\^https:/);
   });
 });

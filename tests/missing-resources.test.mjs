@@ -121,7 +121,7 @@ describe('la simulation', () => {
     assert.ok(m.images.length > NOMS_MONTRES);
   });
   test('main.js ne la transmet qu\'en développement', () => {
-    const main = lire('main.js');
+    const main = lire('electron/main.js');
     assert.match(main, /const simulerRessources = !app\.isPackaged && process\.env\.STORYBOARD_SIMULER_RESSOURCES;/);
     assert.match(main, /simulerRessources \? \{ query: \{ simulerRessources: '1' \} \} : undefined/);
   });

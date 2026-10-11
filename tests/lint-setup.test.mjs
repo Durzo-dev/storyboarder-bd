@@ -46,7 +46,7 @@ describe('Analyse statique : les quatre pièces se tiennent', () => {
     // dans le processus principal, la frontière que pose la règle n°1 d'architecture.md.
     const conf = (await import('file://' + join(RACINE, 'eslint.config.mjs'))).default;
     const cibles = conf.flatMap(b => b.files || []).join(' ');
-    ['src/', 'main.js', 'tests/'].forEach(c =>
+    ['src/', 'electron/', 'tests/'].forEach(c =>
       assert.ok(cibles.includes(c), `aucun bloc ne cible ${c}`));
   });
 

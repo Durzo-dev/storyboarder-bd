@@ -12,8 +12,8 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const ph = require('../store-polyhaven.js');
-const sources = require('../store-sources.js');
+const ph = require('../electron/bibliotheque/store-polyhaven.js');
+const sources = require('../electron/bibliotheque/store-sources.js');
 
 const lire = (n) => JSON.parse(readFileSync(new URL(`./fixtures/${n}`, import.meta.url), 'utf8'));
 const CATALOGUE = lire('polyhaven-catalogue.json');

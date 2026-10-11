@@ -23,7 +23,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname as dirnameFs, join } from 'node:path';
+import { dirname as dirnameFs, join, posix } from 'node:path';
 
 // `dirname` est utilisé ici sur des chemins RELATIFS au dépôt, toujours écrits avec des `/`.
 // Sous Windows, `path.dirname` rend un séparateur `\` : on normalise pour que la comparaison avec
@@ -227,13 +227,17 @@ describe('Installeur : tout ce que l\'application charge est embarqué', () => {
   });
 
   test('RÉGRESSION : chaque require local du processus principal est embarqué', () => {
-    // Même famille que le défaut de style.css, autre porte d'entrée. `main.js` a cessé d'être seul
+    // Même famille que le défaut de style.css, autre porte d'entrée. `electron/main.js` a cessé d'être seul
     // en #407b : il require désormais `./window-state.js`. Absent de la liste blanche, ce fichier
     // ne voyagerait pas, et l'application installée s'arrêterait à la PREMIÈRE ligne de main.js,
     // avant même d'ouvrir une fenêtre. Panne totale, invisible en développement.
-    const locaux = ['main.js', 'preload.js'].flatMap(f =>
-      [...lire(f).matchAll(/require\(['"]\.\/([^'"]+)['"]\)/g)]
-        .map(m => (m[1].endsWith('.js') ? m[1] : m[1] + '.js')));
+    // Le processus principal vit dans electron/ (et electron/bibliotheque/) : chaque require relatif
+    // est résolu depuis le dossier du fichier qui le fait. package.json, lu par le store pour sa
+    // version, en fait partie.
+    const locaux = ['electron/main.js', 'electron/preload.js', 'electron/bibliotheque/store.js'].flatMap(f =>
+      [...lire(f).matchAll(/require\(['"](\.\.?\/[^'"]+)['"]\)/g)]
+        .map(m => posix.normalize(posix.join(posix.dirname(f), m[1])))
+        .map(c => (/\.(js|json)$/.test(c) ? c : c + '.js')));
     assert.ok(locaux.length >= 1, 'aucun require local trouvé : le test ne regarde plus rien');
     const manquants = locaux.filter(f => !empaqueté(f));
     assert.deepEqual(manquants, [], `require par le processus principal mais absent de build.files : ${manquants}`);
@@ -349,7 +353,7 @@ describe('Le garde-fou du garde-fou', () => {
     assert.equal(couvert('src/a/b/c.js', 'src/**/*'), true);
     assert.equal(couvert('style.css', 'src/**/*'), false, 'le matcher accepte tout');
     assert.equal(couvert('autre.css', 'style.css'), false);
-    assert.equal(couvert('src/app.js', 'main.js'), false);
+    assert.equal(couvert('src/app.js', 'electron/main.js'), false);
   });
 
   test('les URL distantes et les data: sont bien ignorées', () => {

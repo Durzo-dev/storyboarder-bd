@@ -97,7 +97,7 @@ gets the new state back.
 
 ## The source contract
 
-Two modules at the root, in CommonJS, tested under plain Node:
+Three modules in `electron/bibliotheque/`, in CommonJS, tested under plain Node:
 
 - `store-sources.js`: the **common format** of a result, the **license** table (what each one
   allows: attribution, commercial use, modification), the known **sources**, search parameters

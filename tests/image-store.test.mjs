@@ -388,7 +388,7 @@ describe('listImages : une liste, ou rien, jamais une exception', () => {
 });
 
 describe('Le pont : main.js se défend, il ne fait pas confiance', () => {
-  const MAIN = readFileSync(join(RACINE, 'main.js'), 'utf8');
+  const MAIN = readFileSync(join(RACINE, 'electron/main.js'), 'utf8');
 
   test('les six canaux existent', () => {
     ['pick', 'write', 'read', 'list', 'delete', 'rename'].forEach(c => {

@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { JOURS_HORS_LIGNE, textesMaj, contenuDuBlocage, pourcentage, notesEnHtml, nouveautesEnHtml } from '../src/update-texts.js';
-import politique from '../update-policy.js';
+import politique from '../electron/update-policy.js';
 
 const base = {
   etat: 'obligatoire', raison: null, jours: null, enLigne: true, versionMinimale: '1.9.0',
@@ -69,7 +69,7 @@ describe('les deux langues', () => {
     assert.equal(textesMaj('de'), textesMaj('fr'));
   });
   test('chaque erreur que main.js peut renvoyer a son texte, dans les deux langues', () => {
-    const main = readFileSync(new URL('../main.js', import.meta.url), 'utf8');
+    const main = readFileSync(new URL('../electron/main.js', import.meta.url), 'utf8');
     const codes = new Set([...main.matchAll(/erreur: '(\w+)'/g)].map(m => m[1]));
     for (const m of main.matchAll(/includes\('empreinte'\) \? '(\w+)' : '(\w+)'/g)) { codes.add(m[1]); codes.add(m[2]); }
     assert.deepEqual([...codes].sort(), ['aucune', 'empreinte', 'enCours', 'reseau', 'simulation']);
@@ -93,7 +93,7 @@ describe('le bandeau de simulation', () => {
     assert.match(ecran, /\$\('blocageSimulation'\)\.hidden = !e\.simulation;/);
     const bouton = readFileSync(new URL('../src/update-button.js', import.meta.url), 'utf8');
     assert.match(bouton, /if \(etat\.simulation\) paragraphes\.unshift\(t\.bandeauSimulation\(etat\.simulation\)\);/);
-    const main = readFileSync(new URL('../main.js', import.meta.url), 'utf8');
+    const main = readFileSync(new URL('../electron/main.js', import.meta.url), 'utf8');
     assert.match(main, /simulation: politiqueMaj\.simulation\(SIMULATION_MAJ, version, Date\.now\(\)\) \? SIMULATION_MAJ : null/);
   });
 });

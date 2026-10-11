@@ -25,7 +25,7 @@ import { createRequire } from 'node:module';
 import { extractChangelogSection } from './release-notes.mjs';
 
 const require = createRequire(import.meta.url);
-const { comparerVersions, versionValide, chargeValide } = require('../update-policy.js');
+const { comparerVersions, versionValide, chargeValide } = require('../electron/update-policy.js');
 
 /** Combien de versions récentes portent leurs notes. Au-delà, personne ne les lit. */
 export const VERSIONS_MAX = 15;

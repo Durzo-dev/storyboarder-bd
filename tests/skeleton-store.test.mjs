@@ -794,8 +794,8 @@ import { fileURLToPath as _chemin } from 'node:url';
 import { dirname as _dossier, join as _joindre } from 'node:path';
 
 const _RACINE = _joindre(_dossier(_chemin(import.meta.url)), '..');
-const MAIN = _lire(_joindre(_RACINE, 'main.js'), 'utf8');
-const PRELOAD = _lire(_joindre(_RACINE, 'preload.js'), 'utf8');
+const MAIN = _lire(_joindre(_RACINE, 'electron/main.js'), 'utf8');
+const PRELOAD = _lire(_joindre(_RACINE, 'electron/preload.js'), 'utf8');
 const TYPES = _lire(_joindre(_RACINE, 'types/globals.d.ts'), 'utf8');
 
 describe('Câblage des correspondances vers le processus principal', () => {

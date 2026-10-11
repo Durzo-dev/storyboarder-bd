@@ -5,11 +5,19 @@
 
 ## Règle n°1 — tout le code applicatif vit dans `src/*.js`
 
-`main.js`, `preload.js` et `window-state.js` sont les fichiers de processus Electron : fenêtre,
+`electron/main.js` et `electron/preload.js` sont les fichiers de processus Electron : fenêtre,
 accès disque, IPC. **On ne les touche jamais pour une fonctionnalité de l'application.**
 
-`window-state.js` est arrivé avec #407b et mérite un mot, car un troisième fichier à la racine a
-l'air d'une fissure dans la règle sans en être une. La **géométrie** de la fenêtre figure parmi les
+Tout le code du processus principal (CommonJS, chargé par Node et jamais par le renderer) vit dans
+`electron/`, et la racine du dépôt ne garde que ce que les outils y cherchent (`package.json`, les
+README, la licence, les configurations d'ESLint et de la vérification de types). `electron/`
+contient les deux fichiers ci-dessus, l'écran bloquant et son pont, et les décisions pures qu'ils
+appliquent (fenêtre, dossier des Projets, mises à jour). `electron/bibliotheque/` regroupe le store
+de modèles, les vignettes et la bibliothèque des modèles importés. `main.js` y résout la racine de
+l'application (`RACINE`, le dossier parent) pour `index.html`, `assets/` et les fixtures.
+
+`window-state.js` est arrivé avec #407b et mérite un mot, car un fichier de plus à côté de `main.js`
+a l'air d'une fissure dans la règle sans en être une. La **géométrie** de la fenêtre figure parmi les
 attributions propres du processus principal, dans la phrase ci-dessus : la retenir d'un lancement à
 l'autre ne demande donc aucune exception. Le fichier ne contient que la **décision pure** (cette
 géométrie enregistrée est-elle encore utilisable ? qu'écrit-on en retour ?), afin de se charger sous

@@ -6,7 +6,7 @@
 import './helpers/dom-stub.mjs';
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import sources from '../store-sources.js';
+import sources from '../electron/bibliotheque/store-sources.js';
 
 const { telechargesPresents, FICHIER_ATTRIBUTIONS } = sources;
 

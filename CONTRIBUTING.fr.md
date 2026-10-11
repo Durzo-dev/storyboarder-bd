@@ -33,7 +33,7 @@ tout projet déjà enregistré, et rien ne le signale. C'est la règle la plus i
 [`docs/fr/persisted-data.md`](docs/fr/persisted-data.md), gardée par
 `tests/persisted-format.test.mjs`.
 
-**2. `main.js` et `preload.js` ne se touchent jamais pour une fonctionnalité.** Ce sont les fichiers
+**2. `electron/main.js` et `electron/preload.js` ne se touchent jamais pour une fonctionnalité.** Ce sont les fichiers
 de processus Electron. Le code applicatif vit dans `src/*.js`. Voir
 [`docs/fr/architecture.md`](docs/fr/architecture.md), qui liste les quelques exceptions admises
 (accès disque des modèles et des images, mises à jour intégrées) et le critère qu'elles remplissent.

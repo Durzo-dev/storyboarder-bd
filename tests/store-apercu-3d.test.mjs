@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { memoireBornee } = require('../store-sources.js');
+const { memoireBornee } = require('../electron/bibliotheque/store-sources.js');
 const { cadrage3D, orbite3D, zoom3D, positionCamera3D, deplacement3D } = await import('../src/store-apercu-3d.js');
 const sans = (s) => s.split('\n').filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
 const lire = (f) => sans(readFileSync(new URL(`../${f}`, import.meta.url), 'utf8'));
@@ -73,7 +73,7 @@ describe('La mémoire des modèles chargés pendant la session', () => {
 });
 
 describe('Le câblage', () => {
-  const STORE = lire('store.js');
+  const STORE = lire('electron/bibliotheque/store.js');
   const UI = lire('src/store-ui.js');
   test('l\'aperçu et le téléchargement partagent la mémoire : « Télécharger » juste après ne refait pas le réseau', () => {
     const f = STORE.slice(STORE.indexOf('async function telecharger('));

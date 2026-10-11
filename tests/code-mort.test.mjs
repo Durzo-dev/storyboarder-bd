@@ -33,7 +33,7 @@ const sansCommentaires = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '')
 const FICHIERS = readdirSync(new URL('../src', import.meta.url))
   .filter(f => f.endsWith('.js')).map(f => 'src/' + f);
 const SOURCE = Object.fromEntries(FICHIERS.map(f => [f, sansCommentaires(readFileSync(url(f), 'utf8'))]));
-const DEHORS = ['main.js', 'preload.js', 'index.html']
+const DEHORS = ['electron/main.js', 'electron/preload.js', 'index.html']
   .map(f => sansCommentaires(readFileSync(url(f), 'utf8'))).join('\n');
 
 /**

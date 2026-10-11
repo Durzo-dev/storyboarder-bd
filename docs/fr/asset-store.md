@@ -96,7 +96,7 @@ opération (`bibliotheque:operation`) et reçoit le nouvel état.
 
 ## Le contrat des sources
 
-Deux modules à la racine, en CommonJS, testés sous Node nu :
+Trois modules dans `electron/bibliotheque/`, en CommonJS, testés sous Node nu :
 
 - `store-sources.js` : le **format commun** d'un résultat, la table des **licences** (ce que chacune
   permet : attribution, usage commercial, modification), les **sources** connues, les paramètres de

@@ -31,7 +31,7 @@ let _agent = null;
 function agent(){
   if (!_agent) {
     let v = '';
-    try { v = require('./package.json').version; } catch (e) { /* version inconnue : on s'en passe */ }
+    try { v = require('../../package.json').version; } catch (e) { /* version inconnue : on s'en passe */ }
     _agent = `StoryboarderBD/${v || '0'} (+https://github.com/val66/storyboarder-bd)`;
   }
   return _agent;

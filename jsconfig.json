@@ -42,5 +42,5 @@
   // diagnostics, zéro défaut réel — avec quatre mille lignes qu'on ne corrigera jamais, puisque la
   // règle n°5 dit déjà de ne pas faire le ménage dans ces diagnostics. Un repère qu'on ne peut plus
   // comparer ne sert à rien.
-  "exclude": ["node_modules", "dist", "tests", "tools", "main.js", "preload.js", "src/vendor"]
+  "exclude": ["node_modules", "dist", "tests", "tools", "electron", "src/vendor"]
 }
