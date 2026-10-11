@@ -1,4 +1,5 @@
 import { sectionDuManuel } from './help-content.js';
+import { morceauxSurlignes } from './manuel-recherche.js';
 /**
  * @file modals.js
  * Persona / 3D Object / Room / Building / Path / Terrain modals.
@@ -2464,18 +2465,31 @@ const helpModalBody = document.getElementById('helpModalBody');
 // La section ouverte, pour pouvoir la re-rendre si la langue change pendant la lecture.
 let sectionManuelOuverte = null;
 
-export function openHelpModal(id, lang){
+/** La recherche dont les mots sont surlignés dans la section ouverte (vide : aucun). */
+let rechercheManuelOuverte = '';
+
+export function openHelpModal(id, lang, requete = ''){
   if (!helpModal || !helpModalTitle || !helpModalBody) return false;
   const section = sectionDuManuel(id, lang || S.appLang);
   // Clé inconnue : on n'ouvre RIEN. Une modale vide se lirait comme une section sans contenu, alors
   // que c'est un défaut d'appariement, le même que celui qui avait décalé tous les groupes.
   if (!section) return false;
   sectionManuelOuverte = section.id;
+  rechercheManuelOuverte = requete || '';
   helpModalTitle.textContent = section.title;
   helpModalBody.innerHTML = '';
+  // Les mots cherchés dans le Manuel sont SURLIGNÉS (demandé) : on repère le bon paragraphe d'un
+  // coup d'œil. Construit nœud par nœud, jamais en HTML : le texte reste du texte.
   section.paragraphs.forEach(texte => {
     const p = document.createElement('p');
-    p.textContent = texte;
+    const morceaux = morceauxSurlignes(texte, rechercheManuelOuverte);
+    if (morceaux.length === 1 && !morceaux[0].surligne) { p.textContent = texte; helpModalBody.appendChild(p); return; }
+    for (const m of morceaux) {
+      if (!m.surligne) { p.appendChild(document.createTextNode(m.texte)); continue; }
+      const mark = document.createElement('mark');
+      mark.textContent = m.texte;
+      p.appendChild(mark);
+    }
     helpModalBody.appendChild(p);
   });
   helpModal.classList.remove('hidden');
@@ -2499,5 +2513,5 @@ export function rafraichirManuelOuvert(lang){
   // suite au vert, alors qu'elle fait rouvrir tout seul, au changement de langue, un manuel que
   // l'utilisateur venait de fermer.
   if (!sectionManuelOuverte) return false;
-  return openHelpModal(sectionManuelOuverte, lang);
+  return openHelpModal(sectionManuelOuverte, lang, rechercheManuelOuverte);
 }

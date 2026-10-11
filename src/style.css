@@ -935,6 +935,42 @@ button.context-menu-submenu-trigger{ display:flex; align-items:center; justify-c
 }
 .help-group:hover .help-group-title{ color:var(--accent); }
 #sideHelpSection .help-text{ width:auto; padding:0; }
+/* La recherche du Manuel (demandé) : le champ de recherche du store (.modal-input), sans ses marges
+   de modale, en plus petit (le panneau est étroit, « Rechercher dans le manuel » était coupé), et
+   sa croix d'effacement à droite. */
+.help-recherche{ position:relative; margin-bottom:12px; }
+.help-recherche input.modal-input{ margin:0; box-sizing:border-box; padding-right:28px; font-size:12.5px; font-weight:500; }
+.help-recherche input::-webkit-search-cancel-button{ display:none; }
+.help-recherche-effacer{ position:absolute; right:6px; top:50%; transform:translateY(-50%); width:20px; height:20px;
+  border:0; border-radius:50%; background:none; color:var(--ink-soft); font-size:15px; line-height:1; cursor:pointer; padding:0; }
+.help-recherche-effacer:hover{ color:var(--accent); }
+.help-recherche-effacer[hidden], .help-recherche-vide[hidden]{ display:none; }
+.help-recherche-vide{ margin:4px 0 0; font-size:12px; color:var(--ink-soft); }
+/* Les GROUPES du Manuel, repliables : un titre comme ceux des sections du menu de droite (point
+   orange, majuscules, chevron), et ses sections dessous. */
+/* Un DÉLIMITEUR entre deux groupes (demandé) : un trait, et le même air de part et d'autre. */
+.help-categorie + .help-categorie{ border-top:1px solid var(--line); padding-top:8px; margin-top:8px; }
+.help-categorie[hidden]{ display:none; }
+.help-categorie-titre{
+  display:flex; align-items:center; gap:6px; width:100%; padding:4px 2px; margin:0 0 8px;
+  border:0; background:none; cursor:pointer; text-align:left;
+  font-family:'Inter',sans-serif; font-size:11px; font-weight:600; color:var(--ink-soft);
+  text-transform:uppercase; letter-spacing:.05em;
+}
+.help-categorie-titre::before{ content:''; width:5px; height:5px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+.help-categorie-titre::after{ content:'▾'; margin-left:auto; font-size:10px; transition:transform .18s ease; }
+.help-categorie-titre:hover{ color:var(--ink); }
+.help-categorie.repliee > .help-categorie-titre::after{ transform:rotate(-90deg); }
+.help-categorie.repliee > .help-categorie-titre{ margin-bottom:0; }
+.help-categorie.repliee > .help-categorie-corps{ display:none; }
+.help-group[hidden]{ display:none; }
+/* Le nombre de correspondances d'une section, pendant une recherche. */
+.help-group-compte{ flex:0 0 auto; font-size:11px; font-weight:600; color:var(--accent); }
+.help-group-compte:empty{ display:none; }
+/* Les mots cherchés, surlignés dans la section ouverte. */
+/* Un aplat d'accent PLEIN (demandé, l'accent translucide se voyait mal), et le libellé du jeton
+   `--sur-accent`, comme les boutons orange : lisible dans les quatre palettes. */
+.help-modal-body mark{ background:var(--accent); color:var(--sur-accent); font-weight:600; border-radius:3px; padding:0 2px; }
 
 /* La modale du manuel : une largeur de lecture, pas la largeur par défaut d'une modale de saisie.
    `ch` plutôt que `px` — c'est la longueur de LIGNE qui fatigue l'œil, pas la largeur en pixels, et

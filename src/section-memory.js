@@ -13,6 +13,8 @@
  *   - Dans la liste des Éléments, à droite, les groupes Pièce et Bâtiment : `groupeReplie:{clé}`,
  *     '1' replié. Absente, déplié. La clé d'un Bâtiment est la liste de ses Pièces : en ajouter une
  *     en fait un autre Bâtiment, qui repart déplié.
+ *   - Dans le MANUEL, chaque groupe de sections : `manuelOuvert:{id}`, '1' ouvert, '0' replié.
+ *     Absente, replié (demandé : au départ, on ne voit que les groupes).
  *
  * ⚠️ LE STOCKAGE PEUT ÉCHOUER (quota, contexte sans stockage) : chaque accès est protégé, et un
  * échec, stockage absent compris, rend l'état par défaut sans rien casser.
@@ -22,6 +24,7 @@ export const PREFIXE_GAUCHE = 'menuGauche:';
 export const PREFIXE_TOME = 'tomeOuvert:';
 export const PREFIXE_DROITE = 'sc:';
 export const PREFIXE_GROUPE = 'groupeReplie:';
+export const PREFIXE_MANUEL = 'manuelOuvert:';
 
 function lire(stockage, cle){
   try { return stockage.getItem(cle); } catch (e) { return null; }
@@ -78,4 +81,13 @@ export function groupeReplie(stockage, cle){
 
 export function memoriserGroupe(stockage, cle, replie){
   ecrire(stockage, PREFIXE_GROUPE + cle, replie ? '1' : '0');
+}
+
+/** Le groupe `id` du Manuel est-il ouvert ? Replié si rien n'est mémorisé. */
+export function groupeManuelOuvert(stockage, id){
+  return booleen(lire(stockage, PREFIXE_MANUEL + id), false);
+}
+
+export function memoriserGroupeManuel(stockage, id, ouvert){
+  ecrire(stockage, PREFIXE_MANUEL + id, ouvert ? '1' : '0');
 }

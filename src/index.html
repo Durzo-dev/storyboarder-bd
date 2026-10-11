@@ -675,72 +675,112 @@
              le titre ET le contenu de tous les groupes suivants.
              Le panneau latéral est ÉTROIT : y déplier des paragraphes donnait des colonnes de texte
              de quelques mots de large. La modale leur rend la largeur d'une page. -->
-        <button type="button" class="help-group" data-help="projet">
-          <span class="help-group-title">Projet</span>
-        </button>
-        <button type="button" class="help-group" data-help="maj">
-          <span class="help-group-title">Mises à jour</span>
-        </button>
-        <button type="button" class="help-group" data-help="ressources">
-          <span class="help-group-title">Fichiers introuvables</span>
-        </button>
-        <button type="button" class="help-group" data-help="tomes">
-          <span class="help-group-title">Tomes &amp; planches</span>
-        </button>
-        <button type="button" class="help-group" data-help="bulles">
-          <span class="help-group-title">Bulles de dialogue</span>
-        </button>
-        <button type="button" class="help-group" data-help="style">
-          <span class="help-group-title">Styles de bulle</span>
-        </button>
-        <button type="button" class="help-group" data-help="fusion">
-          <span class="help-group-title">Bulles fusionnées</span>
-        </button>
-        <button type="button" class="help-group" data-help="cases">
-          <span class="help-group-title">Cases</span>
-        </button>
-        <button type="button" class="help-group" data-help="images">
-          <span class="help-group-title">Images de case</span>
-        </button>
-        <button type="button" class="help-group" data-help="scenes">
-          <span class="help-group-title">Scènes</span>
-        </button>
-        <button type="button" class="help-group" data-help="camera">
-          <span class="help-group-title">Caméra</span>
-        </button>
-        <button type="button" class="help-group" data-help="lumiere">
-          <span class="help-group-title">Lumière</span>
-        </button>
-        <button type="button" class="help-group" data-help="sources">
-          <span class="help-group-title">Sources de lumière</span>
-        </button>
-        <button type="button" class="help-group" data-help="ombres">
-          <span class="help-group-title">Ombres portées</span>
-        </button>
-        <button type="button" class="help-group" data-help="objets">
-          <span class="help-group-title">Objets &amp; décor</span>
-        </button>
-        <button type="button" class="help-group" data-help="personnages">
-          <span class="help-group-title">Personnages</span>
-        </button>
-        <button type="button" class="help-group" data-help="modeles">
-          <span class="help-group-title">Modèles 3D importés</span>
-        </button>
-        <button type="button" class="help-group" data-help="store">
-          <span class="help-group-title">Modèles en ligne</span>
-        </button>
-        <button type="button" class="help-group" data-help="modeles_articules">
-          <span class="help-group-title">Modèles articulés</span>
-        </button>
-        <button type="button" class="help-group" data-help="correspondance">
-          <span class="help-group-title">Tableau de correspondance</span>
-        </button>
-        <button type="button" class="help-group" data-help="editeur">
-          <span class="help-group-title">Éditeur de modèle</span>
-        </button>
-        <button type="button" class="help-group" data-help="raccourcis">
-          <span class="help-group-title">Raccourcis clavier</span>
-        </button>
+        <!-- RECHERCHE ET GROUPES (demandé, 22 sections à plat devenaient longues à parcourir). La
+             recherche filtre les sections sur leurs titres et leurs paragraphes, sans tenir compte
+             des accents ni des majuscules ; les groupes se replient, et leur état est retenu. Les
+             groupes et la recherche sont décidés dans src/manuel-recherche.js (GROUPES_MANUEL) ; un
+             test vérifie que ce HTML range les sections exactement comme cette table. -->
+        <div class="help-recherche">
+          <input id="helpSearchInput" class="modal-input" type="search" placeholder="Rechercher dans le manuel" autocomplete="off" spellcheck="false">
+          <button type="button" id="helpSearchClear" class="help-recherche-effacer" title="Effacer la recherche" hidden>&times;</button>
+        </div>
+        <p id="helpSearchEmpty" class="help-recherche-vide" hidden>Aucune section ne correspond.</p>
+        <div class="help-categorie" data-categorie="application">
+          <button type="button" class="help-categorie-titre" id="helpCat_application" aria-expanded="false">Application</button>
+          <div class="help-categorie-corps">
+            <button type="button" class="help-group" data-help="projet">
+              <span class="help-group-title">Projet</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="maj">
+              <span class="help-group-title">Mises à jour</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="ressources">
+              <span class="help-group-title">Fichiers introuvables</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="raccourcis">
+              <span class="help-group-title">Raccourcis clavier</span><span class="help-group-compte"></span>
+            </button>
+          </div>
+        </div>
+        <div class="help-categorie" data-categorie="mise-en-page">
+          <button type="button" class="help-categorie-titre" id="helpCat_mise_en_page" aria-expanded="false">Mise en page</button>
+          <div class="help-categorie-corps">
+            <button type="button" class="help-group" data-help="tomes">
+              <span class="help-group-title">Tomes &amp; planches</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="cases">
+              <span class="help-group-title">Cases</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="images">
+              <span class="help-group-title">Images de case</span><span class="help-group-compte"></span>
+            </button>
+          </div>
+        </div>
+        <div class="help-categorie" data-categorie="dialogues">
+          <button type="button" class="help-categorie-titre" id="helpCat_dialogues" aria-expanded="false">Dialogues</button>
+          <div class="help-categorie-corps">
+            <button type="button" class="help-group" data-help="bulles">
+              <span class="help-group-title">Bulles de dialogue</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="style">
+              <span class="help-group-title">Styles de bulle</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="fusion">
+              <span class="help-group-title">Bulles fusionnées</span><span class="help-group-compte"></span>
+            </button>
+          </div>
+        </div>
+        <div class="help-categorie" data-categorie="mise-en-scene">
+          <button type="button" class="help-categorie-titre" id="helpCat_mise_en_scene" aria-expanded="false">Mise en scène 3D</button>
+          <div class="help-categorie-corps">
+            <button type="button" class="help-group" data-help="scenes">
+              <span class="help-group-title">Scènes</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="camera">
+              <span class="help-group-title">Caméra</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="lumiere">
+              <span class="help-group-title">Lumière</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="sources">
+              <span class="help-group-title">Sources de lumière</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="ombres">
+              <span class="help-group-title">Ombres portées</span><span class="help-group-compte"></span>
+            </button>
+          </div>
+        </div>
+        <div class="help-categorie" data-categorie="elements">
+          <button type="button" class="help-categorie-titre" id="helpCat_elements" aria-expanded="false">Éléments</button>
+          <div class="help-categorie-corps">
+            <button type="button" class="help-group" data-help="objets">
+              <span class="help-group-title">Objets &amp; décor</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="personnages">
+              <span class="help-group-title">Personnages</span><span class="help-group-compte"></span>
+            </button>
+          </div>
+        </div>
+        <div class="help-categorie" data-categorie="modeles-3d">
+          <button type="button" class="help-categorie-titre" id="helpCat_modeles_3d" aria-expanded="false">Modèles 3D</button>
+          <div class="help-categorie-corps">
+            <button type="button" class="help-group" data-help="modeles">
+              <span class="help-group-title">Modèles 3D importés</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="store">
+              <span class="help-group-title">Modèles en ligne</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="modeles_articules">
+              <span class="help-group-title">Modèles articulés</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="correspondance">
+              <span class="help-group-title">Tableau de correspondance</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="editeur">
+              <span class="help-group-title">Éditeur de modèle</span><span class="help-group-compte"></span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

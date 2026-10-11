@@ -47,6 +47,8 @@ export const I18N_TEXT = [
   // update-texts.js) : masqué, il garde sa place dans le bandeau, à la largeur de ce libellé.
   ['#majBtn', 'Update', 'Mise à jour'],
   ['#openPoseEditorBtn', null, null, 'title', 'Model editor (E)', 'Éditeur de modèle (E)'],
+  ['#helpSearchClear', null, null, 'title', 'Clear the search', 'Effacer la recherche'],
+  ['#helpSearchInput', null, null, 'placeholder', 'Search the manual', 'Rechercher dans le manuel'],
   ['#personaEditorStoreBtn', null, null, 'title', 'Choose the model to pose among your models', 'Choisir le modèle à poser parmi vos modèles'],
   // Fix 63 : ce bouton porte une ICÔNE : son libellé traduit va sur `title`, pas sur le texte.
   // Écrire dans textContent remplaçait l'icône par la phrase, qui débordait du bouton de 30px.
@@ -516,6 +518,15 @@ export const I18N_MODALS = [
   ['#cacheMoValue', null],
   // Les vitesses des gestes 3D : même forme que le curseur de mémoire, valeurs écrites par le code.
   // Les onglets de la Configuration.
+  // Le Manuel : la croix de la recherche, le message sans résultat, et les titres des groupes (les
+  // mêmes que GROUPES_MANUEL, src/manuel-recherche.js ; un test tient l'accord).
+  ['#helpSearchEmpty', 'No section matches.', 'Aucune section ne correspond.'],
+  ['#helpCat_application', 'Application', 'Application'],
+  ['#helpCat_mise_en_page', 'Layout', 'Mise en page'],
+  ['#helpCat_dialogues', 'Dialogue', 'Dialogues'],
+  ['#helpCat_mise_en_scene', '3D staging', 'Mise en scène 3D'],
+  ['#helpCat_elements', 'Elements', 'Éléments'],
+  ['#helpCat_modeles_3d', '3D models', 'Modèles 3D'],
   ['#configOngletGeneral', 'General', 'Général'],
   ['#configOngletProjets', 'Projects', 'Projets'],
   ['#configOnglet3d', '3D', '3D'],

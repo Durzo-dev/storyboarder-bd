@@ -104,7 +104,7 @@ import {
   figureImporteeDeLEditeur, oublierChainesDeLEditeur3D, buildPersonaEditorJointSlidersUI,
   syncPersonaEditorSliders, drawPersonaEditor, ouvrirEditeurSurModele, poserFigureChoisie, hidePersonaEditor,
 } from './persona-editor.js';
-import { BUBBLE_FONT_PRELOAD_LIST } from './help-content.js';
+import { BUBBLE_FONT_PRELOAD_LIST, HELP_MANUAL_EN, HELP_MANUAL_FR } from './help-content.js';
 import { grainsAPrecharger3D } from './bubble-texture.js';
 import { prechargerGrains3D } from './bubble-grain.js';
 import {
@@ -155,7 +155,9 @@ import {
 import { setI18nCallbacks, applyI18n } from './i18n.js';
 import {
   menuGaucheOuvert, memoriserMenuGauche, sectionDroitePliee, memoriserSectionDroite,
+  groupeManuelOuvert, memoriserGroupeManuel,
 } from './section-memory.js';
+import { vueDeRecherche } from './manuel-recherche.js';
 import {
   setSidebarCallbacks, isSceneTopDownView, homeOwningPanel, exitCameraMode, elementsInPanel,
   getRoomConnectedComponents, updateSidePanel, refreshCameraSliders, renderSideCameraGizmo,
@@ -8629,6 +8631,7 @@ languageSelect.addEventListener('change', () => {
   // resterait donc en français sous une interface repassée en anglais, sans que rien à l'écran
   // n'indique qu'il faut la refermer pour en sortir.
   rafraichirManuelOuvert(S.appLang);
+  rafraichirMenuManuel();      // la recherche porte sur les textes de la langue affichée
   rafraichirValeurCacheMo();   // l'unité change avec la langue, et la modale est ouverte
   rafraichirValeursGestes3D(); // « 100 % » ou « 100% »
   rafraichirTextesMaj();       // #442 : le bouton et la modale de mise à jour sont écrits par le code
@@ -8955,11 +8958,74 @@ function restoreSectionCollapseStates() {
 const sideHelpSection = document.getElementById('sideHelpSection');
 if (sideHelpSection) {
   sideHelpSection.addEventListener('click', (e) => {
+    const titre = e.target && e.target.closest ? e.target.closest('.help-categorie-titre') : null;
+    if (titre) { basculerGroupeManuel(titre.closest('.help-categorie')); return; }
     const bouton = e.target && e.target.closest ? e.target.closest('.help-group') : null;
     if (!bouton || !bouton.dataset || !bouton.dataset.help) return;
-    openHelpModal(bouton.dataset.help, S.appLang);
+    // Les mots cherchés suivent dans la section ouverte, où ils sont surlignés.
+    openHelpModal(bouton.dataset.help, S.appLang, helpSearchInput ? helpSearchInput.value : '');
   });
 }
+
+// ── Manuel : groupes repliables et recherche (demandé) ────────────────────────────────────────────
+//
+// Les groupes et la recherche sont décidés dans src/manuel-recherche.js ; ici, le DOM seulement.
+// Sans recherche, chaque groupe est ouvert ou replié comme on l'a laissé (section-memory.js,
+// replié par défaut). Pendant une recherche, seuls les groupes qui contiennent un résultat restent,
+// OUVERTS, avec leurs seules sections trouvées et leur nombre de correspondances ; l'état mémorisé
+// n'est pas touché, il revient quand la recherche est vidée.
+const helpSearchInput = document.getElementById('helpSearchInput');
+const helpSearchClear = document.getElementById('helpSearchClear');
+const helpSearchEmpty = document.getElementById('helpSearchEmpty');
+
+function basculerGroupeManuel(groupe){
+  if (!groupe) return;
+  const ouvert = groupe.classList.contains('repliee');
+  groupe.classList.toggle('repliee', !ouvert);
+  const titre = groupe.querySelector('.help-categorie-titre');
+  if (titre) titre.setAttribute('aria-expanded', String(ouvert));
+  // Pendant une recherche, le geste ne vaut que pour l'affichage du moment.
+  if (!(helpSearchInput && helpSearchInput.value.trim())) memoriserGroupeManuel(localStorage, groupe.dataset.categorie, ouvert);
+}
+
+function rafraichirMenuManuel(){
+  if (!sideHelpSection) return;
+  const requete = helpSearchInput ? helpSearchInput.value : '';
+  const vue = vueDeRecherche(S.appLang === 'en' ? HELP_MANUAL_EN : HELP_MANUAL_FR, requete);
+  if (helpSearchClear) helpSearchClear.hidden = !requete;
+  if (helpSearchEmpty) helpSearchEmpty.hidden = !vue || vue.groupes.length > 0;
+  sideHelpSection.querySelectorAll('.help-categorie').forEach(groupe => {
+    const id = groupe.dataset.categorie;
+    const ouvert = vue ? vue.groupes.includes(id) : groupeManuelOuvert(localStorage, id);
+    groupe.hidden = !!vue && !vue.groupes.includes(id);
+    groupe.classList.toggle('repliee', !ouvert);
+    const titre = groupe.querySelector('.help-categorie-titre');
+    if (titre) titre.setAttribute('aria-expanded', String(ouvert));
+    groupe.querySelectorAll('.help-group').forEach(bouton => {
+      const n = vue ? vue.sections.get(bouton.dataset.help) : null;
+      bouton.hidden = !!vue && !n;
+      const compte = bouton.querySelector('.help-group-compte');
+      if (compte) compte.textContent = n ? String(n) : '';
+    });
+  });
+}
+
+if (helpSearchInput) {
+  helpSearchInput.addEventListener('input', rafraichirMenuManuel);
+  // Échap vide la recherche, et elle seule : sans cela, il remonterait jusqu'à fermer le panneau.
+  helpSearchInput.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || !helpSearchInput.value) return;
+    e.preventDefault(); e.stopPropagation();
+    helpSearchInput.value = '';
+    rafraichirMenuManuel();
+  });
+}
+if (helpSearchClear) helpSearchClear.addEventListener('click', () => {
+  helpSearchInput.value = '';
+  rafraichirMenuManuel();
+  helpSearchInput.focus();
+});
+rafraichirMenuManuel();
 const helpModalCloseBtn = document.getElementById('helpModalClose');
 if (helpModalCloseBtn) helpModalCloseBtn.onclick = () => closeHelpModal();
 const helpModalOverlay = document.getElementById('helpModal');
