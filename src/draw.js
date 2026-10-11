@@ -22,7 +22,7 @@ import {
   WALL_TYPES, WALL_OPENING_MAGNET_TYPES, GROUND_TYPE_DEFS, GROUND_Y_DEFAULT_3D,
   BUILD_WALL_DEFAULT_HEIGHT, WALL_PX_PER_UNIT_3D,
   BUBBLE_TAIL_ANGLE_DEFAULT, BUBBLE_TAIL_LEN_DEFAULT,
-  BUBBLE_FONT_FALLBACK, BUBBLE_PADDING_DEFAULT, policeDeBulle,
+  BUBBLE_FONT_FALLBACK, BUBBLE_PADDING_DEFAULT, policeDeBulle, styleDuTexteDeBulle,
   ROOM_PREVIEW_BASE_W, ROOM_PREVIEW_BASE_H,
   OBJECT_PREVIEW_BASE_W, OBJECT_PREVIEW_BASE_H,
   PERSONA_PREVIEW_BASE_W, PERSONA_PREVIEW_BASE_H,
@@ -1962,7 +1962,8 @@ export function drawBubble(c, o, phase = PHASE_TOUT){
     // Une police retirée (#423) se dessine avec sa remplaçante, sans réécrire la Bulle.
     const fontFamily = policeDeBulle(o.bulleFont);
     const fontFallback = BUBBLE_FONT_FALLBACK[fontFamily] || 'Comic Sans MS';
-    c.font = `${fontSize}px "${fontFamily}", "${fontFallback}", sans-serif`;
+    // Gras et italique (#423) : seulement si la police les a, vrais ou simulés (styleDuTexteDeBulle).
+    c.font = `${styleDuTexteDeBulle(o).prefixe}${fontSize}px "${fontFamily}", "${fontFallback}", sans-serif`;
     const paddingRatio = o.bullePadding != null ? o.bullePadding : BUBBLE_PADDING_DEFAULT;
     // ⚠️ LE TEXTE SUIT LA FORME, PAS LA BOÎTE ENGLOBANTE (#425e). Sur une étoile, la boîte
     // englobante est très supérieure à la surface utile : y couper les lignes les fait dépasser

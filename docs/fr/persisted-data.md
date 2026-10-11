@@ -80,6 +80,9 @@ italique). Une Bulle enregistrée avec l'une d'elles GARDE ce nom dans le fichie
 lecture que `policeDeBulle` (`src/constants.js`, table `POLICES_BULLES_RETIREES`) la dessine et
 l'affiche avec sa remplaçante. Le nom n'est remplacé que si l'utilisateur choisit une autre police.
 
+Deux champs AJOUTÉS avec eux, `bulleGras` et `bulleItalique` (booléens, absents = faux). Toujours
+dessinés : en vrai si la police a la variante, simulé sinon.
+
 ### `modelFile` — un nom, et le fichier qu'il désigne
 
 Un modèle 3D importé est un `objet3d` ordinaire portant `objType: 'modele'` et un champ de plus,

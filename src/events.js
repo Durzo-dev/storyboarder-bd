@@ -83,6 +83,7 @@ import {
   WALL_OPENING_MAGNET_TYPES, WALL_TYPES, TRAVERSANT_TYPES, WALL_OPENING_MARGIN_FRAC,
   OBJECT_ASPECT_RATIOS, PERSONA_REAL_HEIGHT_M, OBJECT_REAL_HEIGHT_M, ZOOM_MIN, ZOOM_MAX, PAGE_RENDER_SCALE_MAX, CANVAS_WRAP_PADDING, CURSOR_MAP,
   BUBBLE_TAIL_ANGLE_DEFAULT, BUBBLE_TAIL_LEN_DEFAULT, BUBBLE_PADDING_DEFAULT, BUBBLE_FONT_DEFAULT,
+  policeDeBulle, styleDuTexteDeBulle,
   POSE_3D, GROUND_Y_DEFAULT_3D, OBJECT_3D_W, OBJECT_3D_H, ANIMAL_TYPES, WALL_PX_PER_UNIT_3D,
   CHILD_DESIGN_SIZE_3D, PERSONA_SKELETON_3D, PERSONA_EDITOR_MODEL_ID,
   ARCHETYPES_3D,
@@ -166,6 +167,7 @@ import {
   manuelEstAffiche, rafraichirSectionLumiere,
   majAffichageReglagesTraitBulle3D,
   definirBibliothequeStyles3D, bibliothequeStyles3D, majSectionStyleBulle3D,
+  synchroniserStyleDuTexteDeBulle,
 } from './sidebar.js';
 import {
   toggleModalSection, legendeDoitSeReplier3D, updatePersonaSizeDisplay, updateObjectSizeDisplay, recomputeModalDirty,
@@ -8254,13 +8256,31 @@ sideBubbleFontSelect.addEventListener('change', () => {
   snapshot();
   const fam = sideBubbleFontSelect.value;
   S.sideDescTarget.bulleFont = fam;
+  // Les interrupteurs G et I suivent la police : une variante absente se grise (#423).
+  synchroniserStyleDuTexteDeBulle(S.sideDescTarget);
   drawCurrentPage();
   // The font may not yet be loaded by the browser on first choice: force its loading then redraw
   // once ready, so the Bubble's Text updates properly.
   if (window.document && document.fonts && document.fonts.load) {
-    document.fonts.load(`16px "${fam}"`).then(() => drawCurrentPage()).catch(() => {});
+    document.fonts.load(`${styleDuTexteDeBulle(S.sideDescTarget).prefixe}16px "${fam}"`).then(() => drawCurrentPage()).catch(() => {});
   }
 });
+
+// Gras et italique (#423) : un clic bascule le champ, l'annulation reçoit un instantané. La variante
+// peut ne pas être encore chargée : on la demande, et on redessine quand elle arrive.
+function basculerStyleDuTexteDeBulle(champ){
+  if (!S.sideDescTarget || S.sideDescTarget.type !== 'bulle') return;
+  snapshot();
+  S.sideDescTarget[champ] = !S.sideDescTarget[champ];
+  synchroniserStyleDuTexteDeBulle(S.sideDescTarget);
+  drawCurrentPage();
+  if (window.document && document.fonts && document.fonts.load) {
+    const fam = policeDeBulle(S.sideDescTarget.bulleFont);
+    document.fonts.load(`${styleDuTexteDeBulle(S.sideDescTarget).prefixe}16px "${fam}"`).then(() => drawCurrentPage()).catch(() => {});
+  }
+}
+document.getElementById('sideBubbleBoldBtn').addEventListener('click', () => basculerStyleDuTexteDeBulle('bulleGras'));
+document.getElementById('sideBubbleItalicBtn').addEventListener('click', () => basculerStyleDuTexteDeBulle('bulleItalique'));
 
 // [STATE→S] let S.sideBubblePaddingSnapshotTaken = false;
 // [STATE→S] let S.sideBubbleFontSizeSnapshotTaken = false;
@@ -8843,7 +8863,10 @@ loadAppSettings().then(lireCorrespondances).then(initStartupProject);
 
 // ↳ src/help-content.js
 if (window.document && document.fonts && document.fonts.load) {
-  Promise.all(BUBBLE_FONT_PRELOAD_LIST.map(f => document.fonts.load(`16px "${f}"`).catch(() => {})))
+  // Les quatre styles de chaque police (#423) : un gras ou un italique pas encore chargé se
+  // dessinerait d'abord en repli, sur un canevas qui ne se redessine pas tout seul.
+  const STYLES = ['', 'bold ', 'italic ', 'italic bold '];
+  Promise.all(BUBBLE_FONT_PRELOAD_LIST.flatMap(f => STYLES.map(st => document.fonts.load(`${st}16px "${f}"`).catch(() => {}))))
     .then(() => drawCurrentPage());
 }
 

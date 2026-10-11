@@ -852,6 +852,23 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 .side-bulle-tail input{ cursor:pointer; }
 .side-bulle-font{ margin-bottom:12px; }
 .side-bulle-font select{ font-size:13px; }
+/* Gras et italique du texte d'une Bulle (#423) : deux interrupteurs sous la police, cumulables.
+   Enfoncé = accent ; « simulé » (la police n'a pas la variante, le navigateur la fabrique) se
+   signale par un ~ orange dans le coin, et l'infobulle le dit en toutes lettres. */
+.bulle-style-texte{ display:flex; gap:6px; margin-top:6px; }
+.interrupteur-style{
+  position:relative; width:30px; height:26px; padding:0; border-radius:6px; cursor:pointer;
+  border:1px solid var(--line-strong); background:var(--white); color:var(--ink);
+  font-family:Georgia, serif; font-size:14px; line-height:1;
+}
+.interrupteur-gras{ font-weight:700; }
+.interrupteur-italique{ font-style:italic; }
+.interrupteur-style:hover{ border-color:var(--accent); }
+.interrupteur-style[aria-pressed="true"]{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
+.interrupteur-style.simule::after{
+  content:'~'; position:absolute; top:-3px; right:2px; font-family:Inter, sans-serif; font-style:normal;
+  font-weight:700; font-size:11px; color:var(--accent);
+}
 .side-bulle-appearance{ margin-bottom:8px; }
 .side-bulle-appearance .side-bulle-tail{ margin-left:0; }
 /* ⚠️ ET CETTE RÈGLE-CI NE GARDE QUE CE QUI LUI EST PROPRE : la marge haute. Elle portait aussi

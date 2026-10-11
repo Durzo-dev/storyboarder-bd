@@ -91,6 +91,9 @@ bubble saved with one of them KEEPS that name in the file: it is at read time th
 (`src/constants.js`, table `POLICES_BULLES_RETIREES`) draws and displays it with its replacement.
 The name is only replaced if the user picks another font.
 
+Two fields were ADDED alongside, `bulleGras` and `bulleItalique` (booleans, absent = false). Always
+drawn: for real if the font has the style, simulated otherwise.
+
 ### `modelFile` — a name, and the file it points at
 
 An imported 3D model is an ordinary `objet3d` carrying `objType: 'modele'` and one extra field,

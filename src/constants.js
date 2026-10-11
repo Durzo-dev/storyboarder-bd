@@ -558,6 +558,29 @@ export function policeDeBulle(nom){
   return POLICES_BULLES_RETIREES[n] || n;
 }
 
+/**
+ * Ce qu'une police sait faire en gras et en italique : 'vrai' (dessiné par son auteur) ou 'simule'
+ * (le navigateur l'épaissit ou le penche, et l'application le DIT). Il n'y a pas de troisième cas :
+ * une variante manquante est SIMULÉE, jamais refusée (décidé par Valentin). Une police inconnue de
+ * la table (importée, #423) : simulée tant qu'on ne sait rien d'elle. PURE.
+ */
+export function variantesDePolice(nom){
+  const p = POLICES_BULLES.find(x => x.nom === policeDeBulle(nom));
+  return p ? { gras: p.gras, italique: p.italique } : { gras: 'simule', italique: 'simule' };
+}
+
+/**
+ * Le style du texte d'une Bulle, tel qu'il se DESSINE (#423, deux interrupteurs G et I).
+ * `bulleGras` / `bulleItalique` : deux champs AJOUTÉS, absents = faux. Toujours dessinés : en vrai
+ * si la police a la variante, simulé sinon (cf. variantesDePolice).
+ * `prefixe` se place devant la taille dans `ctx.font` (« italic bold 24px … »). PURE.
+ */
+export function styleDuTexteDeBulle(o){
+  const gras = !!(o && o.bulleGras);
+  const italique = !!(o && o.bulleItalique);
+  return { gras, italique, prefixe: `${italique ? 'italic ' : ''}${gras ? 'bold ' : ''}` };
+}
+
 export const BUBBLE_FONT_FALLBACK = {
   'Comic Neue': 'Comic Sans MS',
   'Shantell Sans': 'Segoe Print',

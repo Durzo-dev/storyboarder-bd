@@ -331,6 +331,10 @@ export const I18N_TRAILING = [
   ['#personaEditorPoseDeleteBtn', 'Delete', 'Supprimer'],
   ['#personaEditorResetBtn', 'Reset pose', 'Réinitialiser la pose'],
   ['#personaEditorStoreBtn', 'My models', 'Mes modèles'],
+  // Gras et italique d'une Bulle (#423) : « B » en anglais (Bold), « G » en français ; leurs
+  // infobulles dépendent de la police et sont écrites par le code (synchroniserStyleDuTexteDeBulle).
+  ['#sideBubbleBoldBtn', 'B', 'G'],
+  ['#sideBubbleItalicBtn', 'I', 'I'],
   ['#sideMesureEffacer', '✖ Finish', '✖ Terminer'],
   ['#skeletonMapCancel', 'Cancel', 'Annuler'],
   ['#skeletonMapReset', 'Reset', 'Réinitialiser'],

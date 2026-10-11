@@ -115,7 +115,7 @@ export const HELP_MANUAL_EN = [
     '"Bubble look" sets the inner padding, the fill colour and opacity, and the texture: old paper, ice, lava or starry night. A texture suggests its own tint until a colour is picked. At 0% opacity only the outline and the text remain.',
     'The Bubble has its own "Border" section, separate from a Panel\'s: visibility, width, colour, pattern (Solid, Dotted, Dashed, Thorns) and regularity (Clean, or Shaky for a hand-drawn outline). Hiding the border hides those settings.',
     'The "Text" section sets the font, size and colour of the letters, plus an outline that draws a halo behind them so they stay legible on a dark or busy background.',
-    'Ten fonts, one per use: dialogue, handwriting, webtoon, shouts, sound effects, robot voice, narration, typewriter, horror. Hover one in the list to see its use.',
+    'Ten fonts, one per use: dialogue, handwriting, webtoon, shouts, sound effects, robot voice, narration, typewriter, horror. Hover one in the list to see its use. B and I, under the list, set bold and italic; marked ~ when the font lacks the style and it is simulated.',
   ]},
   { id: 'style', title: 'Bubble styles', paragraphs: [
     'The "Style" section, between "Border" and "Text", keeps a Bubble\'s look under a name so you can reapply it elsewhere. "Save" asks for that name.',
@@ -349,7 +349,7 @@ export const HELP_MANUAL_FR = [
     "« Apparence de la bulle » règle l'écart intérieur, la couleur et l'opacité du fond, ainsi que sa texture : vieux papier, glace, lave ou nuit étoilée. Une texture propose sa propre teinte tant qu'aucune couleur n'a été choisie. À 0 % d'opacité, seuls le contour et le texte subsistent.",
     "La Bulle a sa propre section « Bordure », distincte de celle des Cases : affichage, épaisseur, couleur, motif (Plein, Pointillé, Tirets, Épines) et régularité (Net, ou Tremblé pour un contour tracé à la main). Masquer la bordure masque ces réglages.",
     "La section « Texte » règle la police, la taille et la couleur des lettres, ainsi qu'un contour qui dessine un halo derrière elles pour qu'elles restent lisibles sur un fond sombre ou chargé.",
-    "Dix polices, une par usage : dialogue, écrit à la main, webtoon, cris, onomatopées, voix robotique, narration, machine à écrire, horreur. Survolez-en une dans la liste pour voir son usage.",
+    "Dix polices, une par usage : dialogue, écrit à la main, webtoon, cris, onomatopées, voix robotique, narration, machine à écrire, horreur. Survolez-en une dans la liste pour voir son usage. G et I, sous la liste, mettent le texte en gras et en italique ; marqués ~ quand la police n'a pas la variante et qu'elle est simulée.",
   ]},
   { id: 'style', title: 'Styles de bulle', paragraphs: [
     "La section « Style », entre « Bordure » et « Texte », garde l'apparence d'une Bulle sous un nom pour la réappliquer ailleurs. « Enregistrer » demande ce nom.",

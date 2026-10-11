@@ -636,6 +636,13 @@
           <option value="Courier Prime" style="font-family:'Courier Prime','Courier New',sans-serif;">Courier Prime</option>
           <option value="Creepster" style="font-family:'Creepster','Chiller',sans-serif;">Creepster</option>
         </select>
+        <!-- Gras et italique (#423) : deux INTERRUPTEURS, cumulables, toujours actifs. Marqué « simulé »
+             quand la police n'a pas la variante et que le navigateur la fabrique (Bangers, Creepster,
+             polices importées incomplètes). -->
+        <div class="bulle-style-texte">
+          <button type="button" id="sideBubbleBoldBtn" class="interrupteur-style interrupteur-gras" aria-pressed="false" title="Gras">G</button>
+          <button type="button" id="sideBubbleItalicBtn" class="interrupteur-style interrupteur-italique" aria-pressed="false" title="Italique">I</button>
+        </div>
       </div>
       <div id="sideBubbleTextColorWrap" class="tome-format side-border-color side-bulle-font" style="display:none;">
         <label for="sideBubbleTextColorInput">Couleur du texte</label>

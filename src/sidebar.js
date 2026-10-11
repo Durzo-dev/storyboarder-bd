@@ -27,7 +27,7 @@ import { bibliothequeLue3D, styleCorrespondant3D, peutEnregistrerLeStyle3D } fro
 import { bulleEstFusionnable3D, groupeDeLaBulle3D } from './bubble-merge.js';
 import {
   TRACÉ_EMOJI, OBJECT_TYPE_LABELS, OBJECT_TYPE_EMOJI,
-  BUBBLE_PADDING_DEFAULT, GROUND_TYPE_DEFS, policeDeBulle, POLICES_BULLES,
+  BUBBLE_PADDING_DEFAULT, GROUND_TYPE_DEFS, policeDeBulle, POLICES_BULLES, variantesDePolice,
   WALL_TYPES,
 } from './constants.js';
 import { clamp, getEmotion, libelleTable3D, libelleTypeObjet3D, pxPerMm } from './utils.js';
@@ -1251,6 +1251,7 @@ function updateSidePanelImpl(){
     sideBubbleFontWrap.style.display = 'block';
     // Une police retirée (#423) s'affiche sous le nom de sa remplaçante, celle qui est dessinée.
     sideBubbleFontSelect.value = policeDeBulle(sel.bulleFont);
+    synchroniserStyleDuTexteDeBulle(sel);
     // L'USAGE de chaque police en infobulle (#423 : une police par usage), dans la langue affichée.
     [...sideBubbleFontSelect.options].forEach(opt => {
       const p = POLICES_BULLES.find(x => x.nom === opt.value);
@@ -1730,4 +1731,27 @@ export function dessinerDomeLumiere3D(lumiere){
   ctx.restore();
 
   if (p.devant) dessinerSoleil(1);
+}
+
+/**
+ * Les interrupteurs G et I d'une Bulle (#423) : enfoncés selon ses champs, toujours actifs, et
+ * marqués « simulé » quand la police n'a pas la variante et que le navigateur la fabrique.
+ * L'infobulle dit lequel des deux cas s'applique.
+ */
+export function synchroniserStyleDuTexteDeBulle(sel){
+  const v = variantesDePolice(sel && sel.bulleFont);
+  const reglages = [
+    ['sideBubbleBoldBtn', 'gras', 'bulleGras', tr('Bold', 'Gras'),
+      tr('Simulated bold: this font has no real bold', "Gras simulé : cette police n'a pas de vrai gras")],
+    ['sideBubbleItalicBtn', 'italique', 'bulleItalique', tr('Italic', 'Italique'),
+      tr('Simulated italic: this font has no real italic', "Italique simulé : cette police n'a pas de vrai italique")],
+  ];
+  for (const [id, cle, champ, nom, simule] of reglages) {
+    const b = document.getElementById(id);
+    if (!b) continue;
+    const etat = v[cle];
+    b.setAttribute('aria-pressed', String(!!(sel && sel[champ])));
+    b.classList.toggle('simule', etat === 'simule');
+    b.title = etat === 'simule' ? simule : nom;
+  }
 }
