@@ -17,7 +17,8 @@ import { dirname, join } from 'node:path';
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
 const lire = (f) => readFileSync(join(RACINE, f), 'utf8');
 const pkg = JSON.parse(lire('package.json'));
-const FICHIERS = ['CONTRIBUTING.md', 'CONTRIBUTING.fr.md'];
+// Dans .github/ : GitHub les y trouve (lien « Contribuer »), et la racine du dépôt reste courte.
+const FICHIERS = ['.github/CONTRIBUTING.md', '.github/CONTRIBUTING.fr.md'];
 
 describe('CONTRIBUTING : la charpente tient', () => {
   test('les deux langues existent, comme pour le README', () => {
@@ -25,8 +26,8 @@ describe('CONTRIBUTING : la charpente tient', () => {
   });
 
   test('chacun renvoie vers l\'autre langue', () => {
-    assert.match(lire('CONTRIBUTING.md'), /\(CONTRIBUTING\.fr\.md\)/);
-    assert.match(lire('CONTRIBUTING.fr.md'), /\(CONTRIBUTING\.md\)/);
+    assert.match(lire('.github/CONTRIBUTING.md'), /\(CONTRIBUTING\.fr\.md\)/);
+    assert.match(lire('.github/CONTRIBUTING.fr.md'), /\(CONTRIBUTING\.md\)/);
   });
 
   test('RÉGRESSION : toute commande npm citée existe dans package.json', () => {
@@ -44,8 +45,11 @@ describe('CONTRIBUTING : la charpente tient', () => {
     // Neuf documents de docs/ ont déjà été renommés en une fois ; un lien oublié ne casse rien et
     // ne se voit qu'en cliquant.
     FICHIERS.forEach(f => {
-      [...lire(f).matchAll(/\]\((docs\/[^)]+|[A-Z][^)]*\.md)\)/g)].map(m => m[1]).forEach(cible => {
-        assert.ok(existsSync(join(RACINE, cible.split('#')[0])),
+      // Les liens sont relatifs au fichier (.github/), pas à la racine du dépôt.
+      const liens = [...lire(f).matchAll(/\]\(((?:\.\.\/)?docs\/[^)]+|[A-Z][^)]*\.md)\)/g)].map(m => m[1]);
+      assert.ok(liens.length >= 5, `${f} : presque aucun lien trouvé, le test ne regarde plus rien`);
+      liens.forEach(cible => {
+        assert.ok(existsSync(join(RACINE, '.github', cible.split('#')[0])),
           `${f} pointe vers « ${cible} », qui n'existe pas`);
       });
     });
@@ -72,7 +76,7 @@ describe('CONTRIBUTING : la charpente tient', () => {
   test('les README renvoient vers CONTRIBUTING', () => {
     // Sans ce lien, le fichier n'existe que pour GitHub, qui l'affiche à l'ouverture d'une pull
     // request, trop tard pour la mise en route.
-    assert.match(lire('README.md'), /CONTRIBUTING\.md/);
-    assert.match(lire('README.fr.md'), /CONTRIBUTING\.fr\.md/);
+    assert.match(lire('README.md'), /\]\(\.github\/CONTRIBUTING\.md/);
+    assert.match(lire('README.fr.md'), /\]\(\.github\/CONTRIBUTING\.fr\.md/);
   });
 });

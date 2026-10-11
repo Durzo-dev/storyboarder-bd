@@ -2,7 +2,7 @@
 
 > 🇬🇧 [English version](README.md)
 
-**Version 1.10.78**
+**Version 1.10.79**
 
 **Application de découpage de Bandes Dessinées** : outil de storyboard pour créer, organiser et visualiser des planches de BD avec rendu 3D des scènes.
 
@@ -80,7 +80,7 @@ d'elle-même : voir [docs/fr/updates.md](docs/fr/updates.md).
 ### Contribuer
 
 Mise en route, les trois règles qui font refuser une modification, et ce qu'on attend d'un test :
-**[CONTRIBUTING.fr.md](CONTRIBUTING.fr.md)**. Une étape compte plus que les autres :
+**[CONTRIBUTING.fr.md](.github/CONTRIBUTING.fr.md)**. Une étape compte plus que les autres :
 `npm run setup-hooks`, que git ne peut pas transmettre au clonage.
 
 ### Lancer les tests unitaires
@@ -88,7 +88,7 @@ Mise en route, les trois règles qui font refuser une modification, et ce qu'on 
 npm test
 ```
 Le test runner natif de Node, sans framework ni navigateur. Ce qui est couvert et ce qui ne l'est
-pas : [CONTRIBUTING.fr.md](CONTRIBUTING.fr.md#tests).
+pas : [CONTRIBUTING.fr.md](.github/CONTRIBUTING.fr.md#tests).
 
 ---
 

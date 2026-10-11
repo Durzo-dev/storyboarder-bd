@@ -2,7 +2,7 @@
 
 *[Version française](CONTRIBUTING.fr.md)*
 
-Thanks for looking. This file is deliberately short; the reasoning lives in [`docs/`](docs/en/README.md).
+Thanks for looking. This file is deliberately short; the reasoning lives in [`docs/`](../docs/en/README.md).
 
 ## Setup
 
@@ -28,11 +28,11 @@ commit and touches nothing. Escape hatch for a work-in-progress commit: `git com
 **1. Never rename anything that is written to a project file.** Field names, type discriminator
 values — `'tracé'` with its accent, `'cloture'` without. Renaming one makes every already-saved
 project unreadable, and nothing signals it. This is the most important rule here:
-[`docs/en/persisted-data.md`](docs/en/persisted-data.md), guarded by `tests/persisted-format.test.mjs`.
+[`docs/en/persisted-data.md`](../docs/en/persisted-data.md), guarded by `tests/persisted-format.test.mjs`.
 
 **2. `electron/main.js` and `electron/preload.js` are never touched for an application feature.** They are the
 Electron process files. Application code lives in `src/*.js`. See
-[`docs/en/architecture.md`](docs/en/architecture.md), which lists the few accepted exceptions (disk
+[`docs/en/architecture.md`](../docs/en/architecture.md), which lists the few accepted exceptions (disk
 access for models and images, built-in updates) and the criterion they meet.
 
 **3. A user-visible change updates four things in the same commit:** `README.md`, `README.fr.md`,
@@ -49,7 +49,7 @@ the code it defends and check it goes red. This repository has been bitten repea
 were green for the wrong reason: one satisfied by a *comment* rather than code, one asserting on a
 value the DOM stub never stores, one whose mutation silently did not apply. Each of those looked
 like a passing test and proved nothing. See
-[`docs/en/testing-method.md`](docs/en/testing-method.md).
+[`docs/en/testing-method.md`](../docs/en/testing-method.md).
 
 Anything needing real WebGL is out of reach (`THREE.WebGLRenderer` cannot be built under Node), as
 is event wiring — there is no real DOM. Those parts are checked by source inspection, and each test
@@ -61,11 +61,11 @@ Some screens only appear in an installed application, or when something is missi
 development, an environment variable shows them with fake data, flagged by a yellow banner:
 
 - `STORYBOARD_SIMULER_MAJ`: the update screens, see
-  [`docs/en/updates.md`](docs/en/updates.md#seeing-the-screens-without-publishing);
+  [`docs/en/updates.md`](../docs/en/updates.md#seeing-the-screens-without-publishing);
 - `STORYBOARD_SIMULER_RESSOURCES`: the missing-resources dialog, see
-  [`docs/en/missing-resources.md`](docs/en/missing-resources.md);
+  [`docs/en/missing-resources.md`](../docs/en/missing-resources.md);
 - `STORYBOARD_SIMULER_STORE`: the model store, on a recorded Sketchfab response, see
-  [`docs/en/asset-store.md`](docs/en/asset-store.md).
+  [`docs/en/asset-store.md`](../docs/en/asset-store.md).
 
 In PowerShell, the variable stays set in the terminal while it is open: `Remove-Item Env:NAME`
 removes it.
@@ -73,11 +73,11 @@ removes it.
 ## Things you do not need to do
 
 **Do not bump the version by hand.** The pre-commit hook does it. `package.json`, `src/version.js`
-and both READMEs must agree, and a test enforces it — [`docs/en/versioning.md`](docs/en/versioning.md).
+and both READMEs must agree, and a test enforces it — [`docs/en/versioning.md`](../docs/en/versioning.md).
 
 **Do not fix type-checker diagnostics.** `npm run typecheck` reports around 400 of them, of which
 **zero** were real defects when measured. It is not wired into any gate for that reason
-([`docs/en/architecture.md`](docs/en/architecture.md), rule #5). If you are about to "clean them up",
+([`docs/en/architecture.md`](../docs/en/architecture.md), rule #5). If you are about to "clean them up",
 read that section first.
 
 ## Language

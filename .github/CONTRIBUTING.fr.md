@@ -3,7 +3,7 @@
 *[English version](CONTRIBUTING.md)*
 
 Merci d'être passé. Ce fichier est volontairement court ; le raisonnement est dans
-[`docs/`](docs/fr/README.md).
+[`docs/`](../docs/fr/README.md).
 
 ## Mise en route
 
@@ -30,12 +30,12 @@ le commit sans rien toucher. Échappatoire pour un commit en cours de travail : 
 **1. Ne jamais renommer ce qui est écrit dans un fichier projet.** Noms de champs, valeurs
 discriminantes — `'tracé'` avec son accent, `'cloture'` sans le sien. En renommer un rend illisible
 tout projet déjà enregistré, et rien ne le signale. C'est la règle la plus importante ici :
-[`docs/fr/persisted-data.md`](docs/fr/persisted-data.md), gardée par
+[`docs/fr/persisted-data.md`](../docs/fr/persisted-data.md), gardée par
 `tests/persisted-format.test.mjs`.
 
 **2. `electron/main.js` et `electron/preload.js` ne se touchent jamais pour une fonctionnalité.** Ce sont les fichiers
 de processus Electron. Le code applicatif vit dans `src/*.js`. Voir
-[`docs/fr/architecture.md`](docs/fr/architecture.md), qui liste les quelques exceptions admises
+[`docs/fr/architecture.md`](../docs/fr/architecture.md), qui liste les quelques exceptions admises
 (accès disque des modèles et des images, mises à jour intégrées) et le critère qu'elles remplissent.
 
 **3. Une modification visible par l'utilisateur met à jour quatre choses dans le même commit :**
@@ -53,7 +53,7 @@ de lui faire confiance, cassez le code qu'il défend et vérifiez qu'il passe au
 fait avoir plusieurs fois par des tests verts pour de mauvaises raisons : l'un satisfait par un
 *commentaire* plutôt que par du code, un autre affirmant sur une valeur que le stub DOM ne conserve
 pas, un troisième dont la mutation ne s'appliquait pas. Chacun ressemblait à un test qui passe et ne
-prouvait rien. Voir [`docs/fr/testing-method.md`](docs/fr/testing-method.md).
+prouvait rien. Voir [`docs/fr/testing-method.md`](../docs/fr/testing-method.md).
 
 Tout ce qui exige un vrai WebGL est hors de portée (`THREE.WebGLRenderer` ne se construit pas sous
 Node), de même que le câblage des événements — il n'y a pas de vrai DOM. Ces parties sont contrôlées
@@ -66,11 +66,11 @@ En développement, une variable d'environnement les montre avec des données fac
 par un bandeau jaune :
 
 - `STORYBOARD_SIMULER_MAJ` : les écrans de mise à jour, voir
-  [`docs/fr/updates.md`](docs/fr/updates.md#voir-les-écrans-sans-publier) ;
+  [`docs/fr/updates.md`](../docs/fr/updates.md#voir-les-écrans-sans-publier) ;
 - `STORYBOARD_SIMULER_RESSOURCES` : la modale des ressources introuvables, voir
-  [`docs/fr/missing-resources.md`](docs/fr/missing-resources.md) ;
+  [`docs/fr/missing-resources.md`](../docs/fr/missing-resources.md) ;
 - `STORYBOARD_SIMULER_STORE` : le store de modèles, sur une réponse enregistrée de Sketchfab, voir
-  [`docs/fr/asset-store.md`](docs/fr/asset-store.md).
+  [`docs/fr/asset-store.md`](../docs/fr/asset-store.md).
 
 Sous PowerShell, la variable reste posée dans le terminal tant qu'il est ouvert :
 `Remove-Item Env:NOM` la retire.
@@ -79,11 +79,11 @@ Sous PowerShell, la variable reste posée dans le terminal tant qu'il est ouvert
 
 **Ne pas incrémenter la version à la main.** Le hook pre-commit s'en charge. `package.json`,
 `src/version.js` et les deux README doivent concorder, et un test l'exige —
-[`docs/fr/versioning.md`](docs/fr/versioning.md).
+[`docs/fr/versioning.md`](../docs/fr/versioning.md).
 
 **Ne pas corriger les diagnostics du vérificateur de types.** `npm run typecheck` en signale environ
 400, dont **zéro** était un défaut réel à la mesure. C'est pour cette raison qu'il n'est branché à
-aucune barrière ([`docs/fr/architecture.md`](docs/fr/architecture.md), règle n°5). Si vous vous
+aucune barrière ([`docs/fr/architecture.md`](../docs/fr/architecture.md), règle n°5). Si vous vous
 apprêtez à « faire le ménage », lisez cette section d'abord.
 
 ## Langue

@@ -2,7 +2,7 @@
 
 > 🇫🇷 [Version française](README.fr.md)
 
-**Version 1.10.78**
+**Version 1.10.79**
 
 **Comic book storyboarding application**: a desktop tool to create, organize and visualize comic book pages with real-time 3D scene rendering.
 
@@ -80,7 +80,7 @@ see [docs/en/updates.md](docs/en/updates.md).
 ### Contributing
 
 Setup, the three rules that will get a change rejected, and what is expected of a test:
-**[CONTRIBUTING.md](CONTRIBUTING.md)**. One step matters more than the rest: `npm run setup-hooks`,
+**[CONTRIBUTING.md](.github/CONTRIBUTING.md)**. One step matters more than the rest: `npm run setup-hooks`,
 which git cannot carry over on clone.
 
 ### Run the unit tests
@@ -88,7 +88,7 @@ which git cannot carry over on clone.
 npm test
 ```
 Node's built-in test runner, no framework, no browser. What is covered and what is not:
-[CONTRIBUTING.md](CONTRIBUTING.md#tests).
+[CONTRIBUTING.md](.github/CONTRIBUTING.md#tests).
 
 ---
 
