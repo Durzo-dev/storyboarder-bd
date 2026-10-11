@@ -2527,6 +2527,26 @@ describe('éditeur de Personnage : quitter par le menu de gauche', () => {
     assert.match(RIG, /const cx = center\.x \+ panX, cy = center\.y \+ panY, cz = center\.z \+ panZ;/);
   });
 
+  test('Scènes : plus de mode Caméra, les gestes des aperçus (gauche tourne, droit déplace, clic inchangé)', () => {
+    const EV = readFileSync(new URL('../src/events.js', import.meta.url), 'utf8');
+    // Le clic gauche dans le vide d'une Scène prépare une rotation ; sans glisser, l'effet d'avant.
+    assert.match(EV, /commencerOrbiteDeScene\(hit, x, y, null, \(\) => \{\n      exitCameraModeOnDeselect\(hit\.id, page\);/);
+    assert.match(EV, /commencerOrbiteDeScene\(ownerPanel, x, y, centreMondeDElement3D\(sel, page, ownerPanel\), \(\) => \{/);
+    assert.match(EV, /if \(S\.dragMode === 'panelCamRotate' && S\.dragOrig && S\.dragOrig\.enAttente\) \{\n    const auClic = S\.dragOrig\.auClic;/);
+    // Le clic droit maintenu déplace la caméra ; bougé, il empêche le menu ; immobile, il le laisse.
+    assert.match(EV, /S\.dragMode = 'panelCamPan'; S\.dragStart = \{ x: _tx, y: _ty \};/);
+    assert.match(EV, /if \(S\.dragOrig\.boutonDroit\) S\.panMoved = true;/);
+    // Molette et flèches sur la toile sans mode Caméra ; C et le menu « Caméra » n'y font plus rien.
+    assert.match(EV, /: \(\(!sel \|\| isLockedScenePanel\(sel\)\) \? toileDeSceneOuverte\(page\) : null\);/);
+    assert.match(EV, /if \(panel && isLockedScenePanel\(panel\)\) return;/);
+    assert.match(EV, /!isLockedScenePanel\(hit\) && elementsInPanel\(hit, page\)\.length > 0/);
+    const SC = readFileSync(new URL('../src/scene3d.js', import.meta.url), 'utf8');
+    assert.match(SC, /if \(repereDOrbiteVisible3D\(panel\)\) \{/, 'le repère pendant la rotation');
+    assert.match(SC, /repere: repereDOrbiteVisible3D\(panel\),/, 'et dans la signature, sans quoi le cache le garderait');
+    const SB = readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8');
+    assert.match(SB, /if \(isSceneCanvas\) \{\n      S\.sideCameraTarget = sel;\n      sideCameraSection\.style\.display = 'block';/);
+  });
+
   test('une classe n\'est pas reconnue par simple préfixe', () => {
     // `className` est une chaîne : chercher 'page-row' dedans par indexOf ferait répondre oui à
     // 'page-row-header' ou à 'sous-page-rows'.

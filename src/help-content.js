@@ -108,6 +108,8 @@ export const HELP_MANUAL_EN = [
   { id: 'scenes', title: 'Scenes', paragraphs: [
     'Scenes let you compose a reusable 3D set (Walls, Furniture, Characters, Roads, Buildings…) and load it into any Panel of a page.',
     'Create or open a Scene from the "Scenes" menu at the top. The Scene editor shows a full-frame canvas; its Elements are placed, oriented and resized exactly as in a normal panel.',
+    'A Scene has no Camera mode: hold the left button in an empty spot to turn the view (around the selected Element, if any), the right button to move it, the wheel to zoom when no Element is selected.',
+    'A click without dragging still selects, and a right-click still opens the menu. The 3D gizmo shows while turning; the camera settings stay under the Scene menu.',
     'To load a Scene into a panel: right-click the panel → "Load a scene" → pick the Scene. The content is copied into the panel at its real size (Characters at 1.75 m, and so on); the camera is automatically pulled back to frame the whole set.',
     'After loading, use the mouse wheel in Camera mode to zoom in on a detail. Characters and Objects added afterwards match the same scale as the rest of the Scene.',
     'Editing the source Scene after loading does not affect the panels that already embedded it: the copy is independent.',
@@ -333,6 +335,8 @@ export const HELP_MANUAL_FR = [
   { id: 'scenes', title: 'Scènes', paragraphs: [
     'Les Scènes permettent de composer un décor 3D réutilisable (Murs, Mobilier, Personnages, Routes, Bâtiments…) et de le charger dans n\'importe quelle Case d\'une Planche.',
     'Créez ou ouvrez une Scène via le menu « Scènes » en haut. L\'éditeur de Scène affiche un canevas plein cadre ; ses Éléments se placent, s\'orientent et se redimensionnent comme dans une Case normale.',
+    "Une Scène n'a pas de mode Caméra : clic gauche maintenu dans le vide pour tourner la vue (autour de l'Élément sélectionné s'il y en a un), clic droit maintenu pour la déplacer, molette pour zoomer quand aucun Élément n'est sélectionné.",
+    "Un clic sans glisser sélectionne toujours, un clic droit ouvre toujours le menu. Le repère 3D s'affiche pendant la rotation ; les réglages de caméra restent sous le menu de la Scène.",
     'Pour charger une Scène dans une Case : clic droit sur la Case → « Charger une scène » → choisissez la Scène. Le contenu est copié dans la Case à sa taille réelle (Personnages à 1,75 m, etc.) ; la caméra est automatiquement reculée pour englober l\'ensemble.',
     'Après chargement, molette de la souris en mode Caméra pour zoomer sur un détail. Les Personnages et Objets ajoutés ensuite s\'intègrent à la même échelle que le reste de la Scène.',
     'Modifier la Scène source après chargement n\'affecte pas les Cases qui l\'ont déjà intégrée (la copie est indépendante).',

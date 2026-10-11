@@ -1509,8 +1509,12 @@ window.addEventListener('keydown', (e) => {
   if ((e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
        e.key === 'w' || e.key === 'a' || e.key === 's' || e.key === 'd') &&
       tag !== 'INPUT' && tag !== 'TEXTAREA') {
-    const selPanel = currentPageData().objects.find(o => o.id === S.selectedId);
-    if (selPanel && selPanel.type === 'panel' && selPanel.cameraMode) {
+    const _selFl = currentPageData().objects.find(o => o.id === S.selectedId);
+    // Dans une Scène, les flèches et WASD déplacent la caméra sans mode Caméra, tant qu'aucun Élément
+    // n'est sélectionné (demandé : le mode Caméra n'existe plus dans les Scènes).
+    const selPanel = (_selFl && _selFl.type === 'panel' && _selFl.cameraMode) ? _selFl
+      : ((!_selFl || isLockedScenePanel(_selFl)) ? toileDeSceneOuverte(currentPageData()) : null);
+    if (selPanel) {
       e.preventDefault();
       // The pan step is proportional to camDist: same gesture → same apparent movement, regardless
       // of distance. Like Blender/Maya: step ∝ camera distance ÷ orbit.
@@ -1577,6 +1581,8 @@ window.addEventListener('keydown', (e) => {
         }
       }
     }
+    // Plus de mode Caméra dans une Scène (demandé) : C n'y fait rien, les gestes y suffisent.
+    if (panel && isLockedScenePanel(panel)) return;
     if (panel) {
       e.preventDefault();
       snapshot();
@@ -2208,7 +2214,12 @@ canvasWrap.addEventListener('wheel', (e) => {
     }
   }
 
-  if (sel && sel.type === 'panel' && sel.cameraMode) {
+  // Dans une Scène (plus de mode Caméra, demandé), la molette zoome la caméra quand aucun Élément
+  // n'est sélectionné ; un Élément sélectionné garde la molette pour sa profondeur (branche suivante).
+  const _camSel = (sel && sel.type === 'panel' && sel.cameraMode) ? sel
+    : ((!sel || isLockedScenePanel(sel)) ? toileDeSceneOuverte(page) : null);
+  if (_camSel) {
+    const sel = _camSel;
     // In Camera mode (cf. ctxToggleCamera), the scroll wheel moves the Panel's camera forward/back
     // along its CURRENT viewing axis (panel.camRotX/camRotY preserved, cf.
     // panelCamBasis3D/framePanelCamera3D), a real camera tracking shot, distinct from the depth
@@ -2407,6 +2418,67 @@ function updateContextualControls(){
 // ════════════════════════════════════════════════════════════
 // EVENT HANDLING
 // ════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+// SCÈNES : LES GESTES DES APERÇUS DU STORE (demandé)
+// ════════════════════════════════════════════════════════════
+// Dans une Scène, plus de mode Caméra : clic GAUCHE maintenu dans le vide pour tourner (autour de
+// l'Élément sélectionné s'il y en a un), clic DROIT maintenu pour déplacer la caméra, molette pour
+// zoomer. Un clic sans glisser garde son effet d'avant (sélectionner la Scène, désélectionner un
+// Élément ; au clic droit, ouvrir le menu). Les Cases des Planches gardent leur mode Caméra.
+// Déplacer un Élément ne change pas pour l'instant (sélectionné, il se tire au clic gauche).
+
+/** La toile de la Scène ouverte, ou null hors d'une Scène. */
+function toileDeSceneOuverte(page){
+  return S.editingSceneId ? ((page && page.objects || []).find(o => o.type === 'panel') || null) : null;
+}
+
+/** Au-delà de ce glisser (en pixels), un clic devient un geste de caméra. */
+const SEUIL_GESTE_SCENE_PX = 3;
+
+/** Le centre MONDE d'un Élément, autour duquel tourner : la même règle que le raccourci F. */
+function centreMondeDElement3D(selObj, page, panel){
+  const hote = (selObj.magnetWallId && WALL_OPENING_MAGNET_TYPES.includes(selObj.objType))
+    ? page.objects.find(w => w.id === selObj.magnetWallId && WALL_TYPES.includes(w.objType)) : null;
+  const src = hote || selObj;
+  if (isFinite(src.wxFloor) && isFinite(src.wzFloor)) {
+    return { x: src.wxFloor, y: isFinite(src.wyFloor) ? src.wyFloor : (GROUND_Y_DEFAULT_3D + BUILD_WALL_DEFAULT_HEIGHT / 2), z: src.wzFloor };
+  }
+  const p = ensureElementWorldPos3D(src, panel);
+  return { x: p.x, y: p.y, z: getElementDepth(src) };
+}
+
+/**
+ * Prépare une rotation de la caméra de la Scène. Rien ne bouge avant que la souris ne bouge : un
+ * simple clic rend la main à `auClic` (cf. mouseup), sans instantané d'annulation ni recadrage.
+ */
+function commencerOrbiteDeScene(toile, x, y, pivot, auClic){
+  S.dragMode = 'panelCamRotate'; S.dragStart = { x, y };
+  S.dragOrig = { panelId: toile.id, enAttente: true, pivot, auClic };
+}
+
+/** Le premier vrai mouvement d'une rotation de Scène : on fige alors ce que fige le mode Caméra. */
+function demarrerOrbiteDeScene(toile, page, x, y){
+  snapshot();
+  getCamOrbitWorld(toile, panelCamBasis3D(toile));
+  const pivot = S.dragOrig.pivot;
+  if (pivot) {
+    // Tourner autour de l'Élément sélectionné : il devient le centre d'orbite (la vue se recentre
+    // sur lui au premier mouvement, une seule fois tant qu'il le reste).
+    toile.camWx = pivot.x; toile.camWy = pivot.y; toile.camWz = pivot.z;
+  } else {
+    panelAutoDepthPivot3D(toile, page);
+  }
+  toile.camWxTarget = toile.camWx || 0; toile.camWyTarget = toile.camWy || 0; toile.camWzTarget = toile.camWz || 0;
+  toile.camDistTarget = toile.camDist || PANEL_CAM_DEFAULT_DIST_3D;
+  S.dragStart = { x, y };
+  S.dragOrig = {
+    panelId: toile.id, enAttente: false,
+    camRotX: toile.camRotX || 0, camRotY: toile.camRotY || 0,
+    camDist: toile.camDist || PANEL_CAM_DEFAULT_DIST_3D,
+    camWx: toile.camWx || 0, camWy: toile.camWy || 0, camWz: toile.camWz || 0,
+  };
+}
+
 canvas.addEventListener('mousedown', (e) => {
   // ---- Measure tool: right-click = stop
   if (e.button === 2 && S.measureTool) {
@@ -2455,6 +2527,21 @@ canvas.addEventListener('mousedown', (e) => {
         // de s'ouvrir au relâchement, et seulement si l'on a vraiment bougé.
         S.dragOrig = { ancrage: ancrageDeLImage3D(_selD), panelId: _selD.id, boutonDroit: true };
         canvas.style.cursor = 'grabbing';
+        return;
+      }
+    }
+    // Dans une Scène : le clic droit maintenu DÉPLACE LA CAMÉRA (demandé), il ne fait plus défiler
+    // la Planche. Sans bouger, le menu contextuel s'ouvre au relâchement, comme avant.
+    {
+      const _toile = toileDeSceneOuverte(currentPage());
+      const { x: _tx, y: _ty } = getCoords(e);
+      if (_toile && _tx >= _toile.x && _tx <= _toile.x + _toile.w && _ty >= _toile.y && _ty <= _toile.y + _toile.h) {
+        S.panMoved = false;
+        getCamOrbitWorld(_toile, panelCamBasis3D(_toile));
+        S.dragMode = 'panelCamPan'; S.dragStart = { x: _tx, y: _ty };
+        S.dragOrig = { panelId: _toile.id, enAttente: true, boutonDroit: true,
+          camWx: _toile.camWx || 0, camWy: _toile.camWy || 0, camWz: _toile.camWz || 0,
+          camDist: _toile.camDist || PANEL_CAM_DEFAULT_DIST_3D };
         return;
       }
     }
@@ -3139,6 +3226,15 @@ canvas.addEventListener('mousedown', (e) => {
         drawCurrentPage();
         return;
       }
+      // Dans une Scène : glisser à côté de l'Élément TOURNE autour de lui ; un simple clic le
+      // désélectionne, comme avant.
+      if (isLockedScenePanel(ownerPanel)) {
+        commencerOrbiteDeScene(ownerPanel, x, y, centreMondeDElement3D(sel, page, ownerPanel), () => {
+          S.selectedId = null; S.selectedRoomId = null; S.selectedBuildingKey = null;
+          drawCurrentPage();
+        });
+        return;
+      }
       // Click outside the Element's visual bounding box (inside its Panel) → deselect.
       S.selectedId = null; S.selectedRoomId = null; S.selectedBuildingKey = null;
       drawCurrentPage();
@@ -3148,9 +3244,13 @@ canvas.addEventListener('mousedown', (e) => {
   const hit = hitTestForDrag(page, x, y);
   if (hit && isLockedScenePanel(hit)) {
     // Selectable (for the context menu/side panel), but not draggable: cf. isLockedScenePanel.
-    exitCameraModeOnDeselect(hit.id, page); // Fix 15
-    S.selectedId = hit.id; S.selectedRoomId = null; S.selectedBuildingKey = null;
-    drawCurrentPage();
+    // Glisser dans le vide d'une Scène TOURNE la caméra ; un simple clic sélectionne la Scène,
+    // comme avant.
+    commencerOrbiteDeScene(hit, x, y, null, () => {
+      exitCameraModeOnDeselect(hit.id, page); // Fix 15
+      S.selectedId = hit.id; S.selectedRoomId = null; S.selectedBuildingKey = null;
+      drawCurrentPage();
+    });
     return;
   }
   if (hit) {
@@ -3714,13 +3814,22 @@ window.addEventListener('mousemove', (e) => {
     Object.assign(obj, reglagesQueueVersLePoint3D(obj, x, y));
   } else if (S.dragMode === 'create') {
     S.tempBox.w = x - S.dragStart.x; S.tempBox.h = y - S.dragStart.y;
+  } else if (S.dragMode === 'panelCamRotate' && S.dragOrig && S.dragOrig.enAttente) {
+    // Une rotation de Scène qui n'a pas encore commencé : elle commence au-delà du seuil.
+    if (Math.hypot(x - S.dragStart.x, y - S.dragStart.y) >= SEUIL_GESTE_SCENE_PX) {
+      const _toileR = page.objects.find(o => o.id === S.dragOrig.panelId);
+      if (_toileR) { demarrerOrbiteDeScene(_toileR, page, x, y); scheduleDrawCurrentPage(); }
+    }
   } else if (S.dragMode === 'panelCamRotate') {
     // Empirical sensitivity: a drag across the whole width/height of the Panel makes about a
     // quarter turn, which stays manageable without having to zigzag on large Panels.
     // NOT bounded rotation (full turn possible, pitch included): panelCamBasis3D stays valid for
     // any angle (sin/cos periodic), only the Ground constraint (cf. camY clamp in
     // framePanelCamera3D) limits the camera's final position, not the angle itself.
-    const obj = page.objects.find(o => o.id === S.selectedId);
+    // La Case en mode Caméra est la sélection ; dans une Scène, c'est la toile, désignée par le geste
+    // (un Élément peut rester sélectionné pendant qu'on tourne autour de lui).
+    const obj = page.objects.find(o => o.id === ((S.dragOrig && S.dragOrig.panelId) || S.selectedId));
+    if (!obj) return;
     const dx = x - S.dragStart.x, dy = y - S.dragStart.y;
     const camRotSens = obj.camRotSensitivity != null ? obj.camRotSensitivity : 1;
     // Phase 9: sensitivity proportional to distance (Blender/Maya style).
@@ -3769,7 +3878,15 @@ window.addEventListener('mousemove', (e) => {
     //   drag right (dx > 0) → panX decreases → orbit moves left → scene follows right ✓
     //   drag down  (dy > 0) → panY increases → orbit moves up   → scene follows down  ✓
     // Immediate pan (no smoothing) so the scene sticks exactly to the cursor.
-    const _pObj9 = page.objects.find(o => o.id === S.selectedId);
+    const _pObj9 = page.objects.find(o => o.id === ((S.dragOrig && S.dragOrig.panelId) || S.selectedId));
+    // Clic droit dans une Scène : rien ne bouge en deçà du seuil (c'est peut-être un clic, qui ouvrira
+    // le menu) ; au-delà, le menu est empêché (S.panMoved) et l'annulation reçoit un instantané.
+    if (_pObj9 && S.dragOrig && S.dragOrig.enAttente) {
+      if (Math.hypot(x - S.dragStart.x, y - S.dragStart.y) < SEUIL_GESTE_SCENE_PX) return;
+      S.dragOrig.enAttente = false;
+      if (S.dragOrig.boutonDroit) S.panMoved = true;
+      snapshot();
+    }
     if (_pObj9) {
       const _dx9 = x - S.dragStart.x, _dy9 = y - S.dragStart.y;
       const _K9     = WALL_PX_PER_UNIT_3D * PANEL_CAM_DEFAULT_DIST_3D;
@@ -3855,6 +3972,16 @@ window.addEventListener('mousemove', (e) => {
 });
 
 window.addEventListener('mouseup', () => {
+  // Une rotation de Scène qui n'a jamais commencé était un CLIC : il garde son effet d'avant.
+  if (S.dragMode === 'panelCamRotate' && S.dragOrig && S.dragOrig.enAttente) {
+    const auClic = S.dragOrig.auClic;
+    S.dragMode = null; S.dragOrig = null;
+    if (auClic) auClic();
+    return;
+  }
+  // Fin d'une rotation de Scène : le repère s'efface (il ne vit que pendant le geste).
+  const _finOrbiteScene = S.dragMode === 'panelCamRotate' && S.editingSceneId;
+  if (_finOrbiteScene) setTimeout(() => drawCurrentPage(), 0);
   // ---- Terrain Zone tool: mouseup finalizes the rectangle ----
   if (S.traceTool && S.traceTool.type === 'terrain' && S.traceTool.drawing) {
     stopTraceTool(true);
@@ -4213,7 +4340,8 @@ canvas.addEventListener('contextmenu', (e) => {
   // The Camera option only makes sense if there's at least one Element to frame in the Panel (cf.
   // elementsInPanel), per user request ("I don't want Camera to appear if there isn't at least
   // one Element in the Panel").
-  ctxToggleCamera.style.display = (hit.type === 'panel' && elementsInPanel(hit, page).length > 0) ? '' : 'none';
+  // Pas d'entrée « Caméra » sur la toile d'une Scène : elle n'a plus de mode Caméra (demandé).
+  ctxToggleCamera.style.display = (hit.type === 'panel' && !isLockedScenePanel(hit) && elementsInPanel(hit, page).length > 0) ? '' : 'none';
   // "Build a Building" + "Trace" + "Zone": only visible on a Scene canvas in top-down view.
   const ctxBuildModeBtn = document.getElementById('ctxBuildMode');
   if (ctxBuildModeBtn) ctxBuildModeBtn.style.display = isSceneTopDownView(hit) ? '' : 'none';

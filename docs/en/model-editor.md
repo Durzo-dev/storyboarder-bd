@@ -189,6 +189,15 @@ place.
   move the view (`deplacement3D`, utils.js, shared with the store; `frameCameraToBox` accepts a
   `pan.z` for it), **wheel** to zoom.
 
+  **And Scenes, afterwards (requested)**: no more Camera mode in the Scene editor. Hold left-click
+  in an empty spot to turn (around the selected Element, which becomes the orbit centre on the first
+  move), hold right-click to move the camera (it no longer scrolls the Page), wheel to zoom with no
+  Element selected (otherwise its depth), arrows and WASD likewise. A gesture only starts beyond
+  3 px: below that, the click keeps its former effect (select the Scene, deselect an Element, open
+  the menu on right-click). The orbit gizmo shows while turning (`repereDOrbiteVisible3D`, in the
+  panel signature). The camera settings stay under the Scene menu. Panels keep their Camera mode,
+  and moving an Element does not change (to be decided later).
+
   Previous state: **hold right-click** to orbit, **wheel** to zoom, and nothing else. No lateral
   panning: a lone figure is already centred, moving it only loses it from view. Fix 65 had added a
   "Camera" section, expandable with the `C` key, with numeric rotations, drag sensitivity and a

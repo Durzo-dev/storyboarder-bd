@@ -195,6 +195,16 @@ la bibliothèque en place.
   **clic droit maintenu** pour déplacer la vue (`deplacement3D`, utils.js, partagée avec le store ;
   `frameCameraToBox` accepte pour cela un `pan.z`), **molette** pour zoomer.
 
+  **Et les Scènes, ensuite (demandé)** : plus de mode Caméra dans l'éditeur de Scène. Clic gauche
+  maintenu dans le vide pour tourner (autour de l'Élément sélectionné, qui devient le centre
+  d'orbite au premier mouvement), clic droit maintenu pour déplacer la caméra (il ne fait plus
+  défiler la Planche), molette pour zoomer sans Élément sélectionné (sinon sa profondeur), flèches
+  et WASD idem. Un geste ne commence qu'au-delà de 3 px : en deçà, le clic garde son effet d'avant
+  (sélectionner la Scène, désélectionner un Élément, ouvrir le menu au clic droit). Le repère
+  d'orbite s'affiche pendant la rotation (`repereDOrbiteVisible3D`, dans la signature de Case). Les
+  réglages de caméra restent sous le menu de la Scène. Les Cases gardent leur mode Caméra, et
+  déplacer un Élément ne change pas (point à trancher plus tard).
+
   État d'avant : **clic droit maintenu** pour orbiter, **molette** pour zoomer, et rien d'autre.
   Pas de déplacement latéral : une figure seule est déjà centrée, la déplacer ne fait que la perdre
   de vue. Le Fix 65 avait ajouté une section « Caméra » dépliable par la touche `C`, avec rotations

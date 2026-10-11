@@ -1060,6 +1060,7 @@ function updateSidePanelImpl(){
     sideDescSection.style.display = 'none';
     sideHelpSection.style.display = 'none';
     sideCameraSection.style.display = 'block';
+    { const fermer = document.getElementById('sideCameraCloseBtn'); if (fermer) fermer.style.display = ''; }
     refreshCameraSliders(sel);
     renderSideCameraGizmo(sel);
     refreshSceneTopDownBtn(sel);
@@ -1211,6 +1212,17 @@ function updateSidePanelImpl(){
     sideBubbleAppearanceSection.style.display = 'none';
     sideBubbleBorderSection.style.display = 'none';
     sideBubbleStyleSection.style.display = 'none';
+    // Une Scène n'a plus de mode Caméra (demandé) : ses réglages de caméra (repère, rotations,
+    // sensibilités, vue de dessus) sont TOUJOURS là, sous son menu. Sans bouton « Quitter le mode ».
+    if (isSceneCanvas) {
+      S.sideCameraTarget = sel;
+      sideCameraSection.style.display = 'block';
+      const fermer = document.getElementById('sideCameraCloseBtn');
+      if (fermer) fermer.style.display = 'none';
+      refreshCameraSliders(sel);
+      renderSideCameraGizmo(sel);
+      refreshSceneTopDownBtn(sel);
+    }
   } else if (sel && sel.type === 'bulle') {
     // A speech Bubble has neither border dimensions nor contained Elements: only its text
     // (description) is edited here, like for a Panel, plus the option to show/hide its

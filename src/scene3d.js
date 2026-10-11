@@ -1935,6 +1935,9 @@ function computePanelSceneSignature3D(panel, page, styleKey){
     groundType: panel.groundType || 'herbe',
     // Phase 12: cameraMode in the signature so activation/deactivation invalidates the cache.
     cameraMode: panel.cameraMode || false,
+    // Le repère pendant une rotation dans une Scène (qui n'a plus de mode Caméra) : il apparaît et
+    // disparaît avec le geste, l'image doit donc changer avec lui.
+    repere: repereDOrbiteVisible3D(panel),
     // Fix 12.7: when cameraMode is active, the orbit center depends on camOrbitTargetId and on
     // S.selectedId (selected element = dynamic orbit). Including them in the signature guarantees
     // that the sphere repositions correctly as soon as the orbit target changes.
@@ -2999,7 +3002,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
   // (Blender's "3D cursor" behavior). The axes (AxesHelper: X red, Y green, Z blue) rotate
   // with the camera and indicate the current world orientation (Blender/Maya-style viewport gizmo).
   let _orbitGroup3D = null;
-  if (panel.cameraMode) {
+  if (repereDOrbiteVisible3D(panel)) {
     // Fix 12.7: use the exact orbit center computed by framePanelCamera3D
     // (stored in panel._orbitCx/Cy/Cz just before calling personaRenderer3D.render).
     // This covers all cases: free orbit (camPanX/Y), camOrbitTargetId, and selected element.
@@ -3218,6 +3221,18 @@ export function elementNonVisible3D(o, panel, page, demander = true){
 // "Draw onto the page's 2D canvas" variant of renderPanelScene3D, with the same call signature as
 // drawPersona3D/drawObject3D (which it replaces, for Elements owned by a Panel, in
 // drawContent): a single combined render per Panel rather than an independent render per Element.
+/**
+ * Le repère du centre d'orbite (sphère et axes) est-il affiché ? En mode Caméra d'une Case, comme
+ * avant ; dans une Scène, qui n'a plus de mode Caméra, PENDANT une rotation (demandé) : il dit
+ * autour de quoi l'on tourne, et s'efface une fois le geste fini.
+ */
+export function repereDOrbiteVisible3D(panel){
+  if (!panel) return false;
+  if (panel.cameraMode) return true;
+  const g = S.dragOrig;
+  return !!S.editingSceneId && S.dragMode === 'panelCamRotate' && !!g && g.panelId === panel.id && !g.enAttente;
+}
+
 export function drawPanelScene3D(c, panel, page, styleKey, scale = 1){
   if (typeof THREE === 'undefined') return;
   const style = resolveStyle3D(styleKey);
