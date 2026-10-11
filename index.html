@@ -21,9 +21,11 @@
        l'i18n pour le second. Les Images restent à gauche pour l'instant. -->
   <button class="help-round-btn" id="storeOuvrirBtn" type="button" title="Bibliothèque de modèles (B)">
     <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 2.5 20.5 7v10L12 21.5 3.5 17V7Z"/>
-      <path d="M3.5 7 12 11.5 20.5 7"/>
-      <path d="M12 11.5v10"/>
+      <!-- Une grille de vignettes (choisie parmi six) : l'écran qu'on ouvre. -->
+      <rect x="3" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/>
     </svg>
   </button>
   <button class="help-round-btn" type="button" id="openPoseEditorBtn" title="Éditeur de modèle">
