@@ -2511,6 +2511,12 @@ describe('éditeur de Personnage : quitter par le menu de gauche', () => {
       assert.equal(clicQuitteLEditeur3D(noeud({ className: c })), true, `classe « ${c} » non reconnue`));
   });
 
+  test('déjà dans l\'Éditeur, son bouton du bandeau ne fait RIEN (il remettait la figure de base)', () => {
+    assert.equal(clicQuitteLEditeur3D(noeud({ id: 'openPoseEditorBtn' })), false);
+    const EV = readFileSync(new URL('../src/events.js', import.meta.url), 'utf8');
+    assert.match(EV, /btn\.onclick = \(\) => \{ if \(!isPersonaEditorOpen\(\)\) showPersonaEditor\(null, false\); \};/);
+  });
+
   test('une classe n\'est pas reconnue par simple préfixe', () => {
     // `className` est une chaîne : chercher 'page-row' dedans par indexOf ferait répondre oui à
     // 'page-row-header' ou à 'sous-page-rows'.

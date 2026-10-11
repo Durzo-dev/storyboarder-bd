@@ -534,7 +534,9 @@ setupDropdown('imageTrigger', 'imagePanel');
 // a rien derrière à alimenter, et « Appliquer » est donc absent (cf. syncPersonaEditorDom).
 {
   const btn = document.getElementById('openPoseEditorBtn');
-  if (btn) btn.onclick = () => showPersonaEditor(null, false);
+  // Déjà dans l'Éditeur : rien (demandé). Le rouvrir remettait la figure de base par-dessus le
+  // modèle qu'on venait de choisir.
+  if (btn) btn.onclick = () => { if (!isPersonaEditorOpen()) showPersonaEditor(null, false); };
 }
 
 
