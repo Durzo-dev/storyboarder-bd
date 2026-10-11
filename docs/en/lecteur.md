@@ -14,7 +14,9 @@ hidden), Home and End go to the ends, Esc leaves (full screen first). While read
 shortcuts are swallowed, so as not to act on what is hidden underneath.
 
 The menu: one or two pages; reading to the right (comics) or to the left (manga); in two-page mode,
-first page on the right or on the left (a blank page fills the gap); automatic scrolling and its
+first page on the right or on the left (a blank page fills the gap); book view (ticked by default:
+the page turns around the binding, with a drop shadow and a binding shadow in two-page mode;
+unticked, the pages sit flat against each other, with no effect); automatic scrolling and its
 speed (seconds per page, or per panel in guided view); guided view panel by panel (in the manner of
 Comixology's "Guided View", in Panel number order); whole page or fit width; dark, grey or light
 background; thumbnail strip. The options are remembered (`lecteur:options`).

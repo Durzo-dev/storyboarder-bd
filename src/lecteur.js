@@ -19,6 +19,7 @@ export const OPTIONS_LECTEUR = Object.freeze({
   auto: false,              // défilement automatique
   vitesse: 6,               // secondes par étape du défilement automatique
   guide: false,             // vue guidée case par case
+  livre: true,              // « vue livre » : pages qui se tournent, reliure en double page ; sinon à plat
   ajustement: 'hauteur',    // 'hauteur' : la page entière tient ; 'largeur' : elle remplit la largeur
   fond: 'sombre',           // 'sombre' | 'gris' | 'clair'
   miniatures: true,         // le bandeau de miniatures
@@ -35,6 +36,7 @@ export function optionsValides(brut){
   if (typeof b.auto === 'boolean') o.auto = b.auto;
   if (Number.isFinite(Number(b.vitesse))) o.vitesse = Math.max(VITESSE_MIN, Math.min(VITESSE_MAX, Math.round(Number(b.vitesse))));
   if (typeof b.guide === 'boolean') o.guide = b.guide;
+  if (typeof b.livre === 'boolean') o.livre = b.livre;
   if (b.ajustement === 'hauteur' || b.ajustement === 'largeur') o.ajustement = b.ajustement;
   if (['sombre', 'gris', 'clair'].includes(b.fond)) o.fond = b.fond;
   if (typeof b.miniatures === 'boolean') o.miniatures = b.miniatures;
@@ -116,6 +118,16 @@ export function cadrageDansLaVue(cadre, page, vue, marge = 0.06){
     x: vue.w / 2 - (r.x + r.w / 2) * echelle,
     y: vue.h / 2 - (r.y + r.h / 2) * echelle,
   };
+}
+
+/**
+ * La page qui TOURNE en vue livre : le côté de l'étalement qui pivote autour de la reliure. Avancer
+ * en lecture vers la droite tourne la page de DROITE vers la gauche ; reculer, celle de gauche vers
+ * la droite ; en manga, l'inverse. PURE.
+ */
+export function coteQuiTourne(pas, sens){
+  if (!pas) return null;
+  return (pas > 0) === (sens !== 'rtl') ? 'droite' : 'gauche';
 }
 
 /** L'étape suivante ou précédente, bornée ; `fin` dit si l'on est arrivé au bout dans ce sens. */

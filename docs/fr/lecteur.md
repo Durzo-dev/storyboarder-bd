@@ -15,7 +15,9 @@ d'abord). Pendant la lecture, les raccourcis de la Planche sont avalés, pour ne
 est caché dessous.
 
 Le menu : une ou deux pages ; lecture vers la droite (BD) ou vers la gauche (manga) ; en double page,
-première page à droite ou à gauche (une page blanche comble le vide) ; défilement automatique et sa
+première page à droite ou à gauche (une page blanche comble le vide) ; vue livre (cochée par
+défaut : la page se tourne autour de la reliure, ombre portée et ombre de reliure en double page ;
+décochée, les pages sont collées à plat, sans effet) ; défilement automatique et sa
 vitesse (secondes par page, ou par case en vue guidée) ; vue guidée case par case (à la manière du
 « Guided View » de Comixology, dans l'ordre des numéros de Case) ; page entière ou largeur ; fond
 sombre, gris ou clair ; bandeau de miniatures. Les options sont retenues (`lecteur:options`).

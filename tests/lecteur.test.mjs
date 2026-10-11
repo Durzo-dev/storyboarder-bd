@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   optionsValides, OPTIONS_LECTEUR, etalements, etalementDeLaPage, pasDuCote, etapesGuidees,
-  etapeDeLaPage, cadrageDansLaVue, avancer, VITESSE_MAX,
+  etapeDeLaPage, cadrageDansLaVue, avancer, VITESSE_MAX, coteQuiTourne,
 } from '../src/lecteur.js';
 
 const paires = (l) => l.map(e => [e.gauche, e.droite]);
@@ -116,5 +116,19 @@ describe('Le branchement', () => {
     const HTML = lire('index.html');
     assert.doesNotMatch(HTML, /lecteur-bar/);
     assert.match(HTML, /<div class="menu-header lecteur-entete">/);
+  });
+  test('vue livre : cochée par défaut, la bonne page tourne, à plat sans effet', () => {
+    assert.equal(OPTIONS_LECTEUR.livre, true);
+    assert.equal(coteQuiTourne(1, 'ltr'), 'droite', 'avancer vers la droite tourne la page de droite');
+    assert.equal(coteQuiTourne(-1, 'ltr'), 'gauche');
+    assert.equal(coteQuiTourne(1, 'rtl'), 'gauche', 'en manga, l\'inverse');
+    assert.equal(coteQuiTourne(0, 'ltr'), null, 'un saut ne tourne rien');
+    const UI = lire('src/lecteur-ui.js');
+    assert.match(UI, /const cote = options\.livre && L\.pas \? coteQuiTourne\(L\.pas, options\.sens\) : null;/);
+    assert.match(UI, /caseACocher\('livre', tr\('Book view', 'Vue livre'\), options\.guide\)/);
+    const CSS = lire('style.css');
+    assert.match(CSS, /\.lecteur-bord-gauche \{ left: 0; justify-content: flex-end; padding-right: 32px; \}/);
+    assert.match(CSS, /\.lecteur-bord-droite \{ right: 0; justify-content: flex-start; padding-left: 32px; \}/);
+    assert.doesNotMatch(CSS, /\.lecteur-page \{[^}]*box-shadow/, 'à plat, aucune ombre');
   });
 });

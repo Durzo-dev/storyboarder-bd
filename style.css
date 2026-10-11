@@ -1519,10 +1519,27 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
                justify-content: center; }
 .lecteur-vue.lecteur-largeur { overflow-y: auto; align-items: flex-start; }
 .lecteur-etalement { display: flex; gap: 0; margin: auto; }
-/* L'ombre sur chaque PAGE et non sur l'étalement : la page blanche qui comble un vide prend la
-   couleur du fond du Lecteur, sans ombre, et ne se voit donc pas (demandé). */
-.lecteur-page { display: block; background: #fff; box-shadow: 0 6px 24px rgba(0,0,0,.45); }
+/* Une FEUILLE par page, le canevas dedans. À plat (vue livre décochée) : les pages collées, sans
+   aucun effet (demandé). La page blanche qui comble un vide prend la couleur du fond, sans ombre. */
+.lecteur-page { display: block; position: relative; background: #fff; flex: none; }
+.lecteur-page > canvas { display: block; width: 100%; height: 100%; }
 .lecteur-page.lecteur-page-blanche { background: transparent; box-shadow: none; }
+/* VUE LIVRE : une ombre portée, et en double page l'ombre de la reliure au creux des deux pages. */
+.lecteur-etalement.livre > .lecteur-page:not(.lecteur-page-blanche) { box-shadow: 0 8px 26px rgba(0,0,0,.5); }
+.lecteur-etalement.livre > .lecteur-page:not(.lecteur-page-blanche)::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; }
+.lecteur-etalement.livre.double > .lecteur-page:first-child:not(.lecteur-page-blanche)::after { box-shadow: inset -28px 0 32px -20px rgba(0,0,0,.55); }
+.lecteur-etalement.livre.double > .lecteur-page:last-child:not(.lecteur-page-blanche)::after { box-shadow: inset 28px 0 32px -20px rgba(0,0,0,.55); }
+.lecteur-etalement.livre:not(.double) > .lecteur-page:not(.lecteur-page-blanche)::after { box-shadow: inset 10px 0 14px -10px rgba(0,0,0,.35); }
+/* La feuille qui tourne : deux faces dos à dos, en perspective. */
+.lecteur-vue { perspective: 2200px; }
+.lecteur-feuille-tournante { position: absolute; z-index: 1; pointer-events: none; transform-style: preserve-3d; }
+.lecteur-face { position: absolute; inset: 0; backface-visibility: hidden; background: #fff; box-shadow: 0 6px 20px rgba(0,0,0,.45); }
+.lecteur-face > canvas, .lecteur-cache-page > canvas { display: block; width: 100%; height: 100%; }
+.lecteur-face-dos { transform: rotateY(180deg); }
+.lecteur-face-blanche { background: transparent; box-shadow: none; }
+.lecteur-cache-page { position: absolute; z-index: 1; pointer-events: none; background: #fff; }
+.lecteur-case.desactive { opacity: .45; }
 .lecteur-vue.lecteur-guide { display: block; }
 .lecteur-page-guidee { position: absolute; left: 0; top: 0; transform-origin: 0 0; background: #fff;
                        transition: transform .35s ease, width .35s ease, height .35s ease;
@@ -1531,9 +1548,9 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .lecteur-bord { position: absolute; top: 0; bottom: 0; width: 64px; display: flex; align-items: center; padding: 0 14px; border: 0; background: transparent;
                 color: rgba(255,255,255,0); font-size: 46px; cursor: pointer; z-index: 2; }
 .lecteur-bord:hover { color: rgba(255,255,255,.8); }
-.lecteur-bord-gauche { left: 0; justify-content: flex-end; padding-right: 2px; }
-.lecteur-bord-droite { right: 0; justify-content: flex-start; padding-left: 26px; }
-/* Les flèches décalées vers la droite (demandé) : contre la page à gauche, éloignées d'elle à droite. */
+.lecteur-bord-gauche { left: 0; justify-content: flex-end; padding-right: 32px; }
+.lecteur-bord-droite { right: 0; justify-content: flex-start; padding-left: 32px; }
+/* Les deux flèches au MÊME écart de la page, et plus loin d'elle (demandé). */
 .lecteur[data-fond="clair"] .lecteur-bord:hover { color: rgba(0,0,0,.6); }
 .lecteur-miniatures { flex: none; display: flex; gap: 6px; padding: 8px 10px; overflow-x: auto; background: #101113; z-index: 3; }
 .lecteur-miniatures[hidden] { display: none; }

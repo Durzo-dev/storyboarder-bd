@@ -15,7 +15,7 @@ import { S, tr, panelsInPage } from './state.js';
 import { rendrePlancheEnImage } from './draw.js';
 import {
   optionsValides, etalements, etalementDeLaPage, pasDuCote, etapesGuidees, etapeDeLaPage,
-  cadrageDansLaVue, avancer, VITESSE_MIN, VITESSE_MAX,
+  cadrageDansLaVue, avancer, coteQuiTourne, VITESSE_MIN, VITESSE_MAX,
 } from './lecteur.js';
 
 const CLE_OPTIONS = 'lecteur:options';
@@ -94,9 +94,10 @@ function aller(pas){
   if (!L) return;
   const r = avancer(L.index, pas, total());
   if (r.fin && pas > 0 && options.auto) { options.auto = false; memoriserOptions(); construirePanneau(); }
-  if (r.index !== L.index) { L.index = r.index; afficher(); }
+  if (r.index !== L.index) { L.index = r.index; L.pas = pas; afficher(); }
 }
-function allerA(index){ if (!L) return; L.index = Math.max(0, Math.min(total() - 1, index)); afficher(); }
+// Un saut (miniature, Origine, Fin) ne tourne pas de page : il n'a pas de sens de lecture.
+function allerA(index){ if (!L) return; L.index = Math.max(0, Math.min(total() - 1, index)); L.pas = 0; afficher(); }
 
 /** Change une option en gardant la Planche qu'on regarde. */
 function changer(cle, valeur){
@@ -218,19 +219,26 @@ async function afficher(){
     const parPage = hauteurParPage(zone, slots.length, t);
     const rendus = await Promise.all(slots.map(pi => (pi == null ? null : planche(pi, parPage * dpr))));
     if (!L || gen !== L.generation) return;
+    if (L.animation) L.animation.finish();
     const ligne = document.createElement('div');
-    ligne.className = 'lecteur-etalement';
+    ligne.className = 'lecteur-etalement' + (options.livre ? ' livre' : '') + (options.double ? ' double' : '');
     slots.forEach((pi, k) => {
-      const c = rendus[k];
-      let el;
-      if (c) { el = c.cloneNode(false); el.getContext('2d').drawImage(c, 0, 0); el.className = 'lecteur-page'; }
-      else { el = document.createElement('div'); el.className = 'lecteur-page lecteur-page-blanche'; }
+      // Une FEUILLE par page : elle porte l'ombre et l'ombre de reliure (vue livre), le canevas dedans.
+      const el = document.createElement('div');
+      el.className = 'lecteur-page' + (rendus[k] ? '' : ' lecteur-page-blanche');
+      if (rendus[k]) el.appendChild(copieCanevas(rendus[k]));
       el.style.height = `${parPage}px`;
       el.style.width = `${parPage * t.w / t.h}px`;
       ligne.appendChild(el);
     });
+    const ancienne = vue.querySelector('.lecteur-etalement');
     vue.replaceChildren(ligne);
     vue.scrollTop = 0;
+    // Vue livre : la page se tourne, comme dans un album (demandé). Seulement en avançant ou en
+    // reculant d'un cran, et seulement si la disposition n'a pas changé (même nombre de pages).
+    const cote = options.livre && L.pas ? coteQuiTourne(L.pas, options.sens) : null;
+    if (cote && ancienne && ancienne.children.length === ligne.children.length) tournerLaPage(vue, ancienne, ligne, cote);
+    L.pas = 0;
   }
   // Les miniatures suivent la page lue, les bords se recollent à elle, et le défilement automatique
   // repart pour une étape.
@@ -238,6 +246,70 @@ async function afficher(){
   marquerMiniature();
   clearTimeout(L.minuterie);
   if (options.auto) L.minuterie = setTimeout(() => aller(1), options.vitesse * 1000);
+}
+
+function copieCanevas(c){
+  const k = c.cloneNode(false);
+  k.getContext('2d').drawImage(c, 0, 0);
+  return k;
+}
+/** Le contenu d'une feuille, recopié (un canevas ne se partage pas entre deux places du DOM). */
+function copieContenu(feuille){
+  const c = feuille && feuille.querySelector('canvas');
+  return c ? copieCanevas(c) : null;
+}
+
+/**
+ * L'ANIMATION DE PAGE TOURNÉE (vue livre). Le nouvel étalement est déjà en place ; par-dessus, une
+ * feuille à deux faces pivote autour de la reliure : recto, l'ancienne page qui part ; verso, la page
+ * qui arrive de l'autre côté. Tant qu'elle n'est pas retombée, l'autre côté montre encore l'ancienne
+ * page (un cache). En simple page, l'ancienne page s'envole et découvre la nouvelle.
+ */
+function tournerLaPage(vue, ancienne, nouvelle, cote){
+  const anciens = [...ancienne.children], nouveaux = [...nouvelle.children];
+  const double = nouveaux.length === 2;
+  const iTourne = double ? (cote === 'droite' ? 1 : 0) : 0;
+  const iAutre = double ? 1 - iTourne : -1;
+  const base = vue.getBoundingClientRect();
+  const placer = (el, cible) => {
+    const r = cible.getBoundingClientRect();
+    el.style.left = `${r.left - base.left + vue.scrollLeft}px`;
+    el.style.top = `${r.top - base.top + vue.scrollTop}px`;
+    el.style.width = `${r.width}px`;
+    el.style.height = `${r.height}px`;
+  };
+  const face = (contenu, dos) => {
+    const f = document.createElement('div');
+    f.className = 'lecteur-face' + (dos ? ' lecteur-face-dos' : '') + (contenu ? '' : ' lecteur-face-blanche');
+    if (contenu) f.appendChild(contenu);
+    return f;
+  };
+  const feuille = document.createElement('div');
+  feuille.className = 'lecteur-feuille-tournante';
+  feuille.style.transformOrigin = cote === 'droite' ? 'left center' : 'right center';
+  feuille.append(face(copieContenu(anciens[iTourne]), false), face(double ? copieContenu(nouveaux[iAutre]) : null, true));
+  placer(feuille, nouveaux[iTourne]);
+  let cache = null;
+  if (double) {
+    cache = document.createElement('div');
+    cache.className = 'lecteur-cache-page' + (anciens[iAutre].querySelector('canvas') ? '' : ' lecteur-face-blanche');
+    const contenu = copieContenu(anciens[iAutre]);
+    if (contenu) cache.appendChild(contenu);
+    placer(cache, nouveaux[iAutre]);
+    vue.appendChild(cache);
+  }
+  vue.appendChild(feuille);
+  const angle = cote === 'droite' ? -180 : 180;
+  const anim = feuille.animate(
+    [{ transform: 'rotateY(0deg)' }, { transform: `rotateY(${angle}deg)` }],
+    { duration: 650, easing: 'cubic-bezier(.45,.05,.35,1)', fill: 'forwards' });
+  // Le cache disparaît quand la feuille passe la verticale : à partir de là, c'est son verso qui
+  // recouvre ce côté.
+  const caches = cache ? setTimeout(() => { if (cache) cache.remove(); }, 325) : null;
+  const nettoyer = () => { clearTimeout(caches); feuille.remove(); if (cache) cache.remove(); if (L && L.animation === anim) L.animation = null; };
+  anim.onfinish = nettoyer;
+  anim.oncancel = nettoyer;
+  L.animation = anim;
 }
 
 // « Planche 1 · 1&2/9 » (demandé) : le numéro de la première Planche montrée, puis les RANGS des
@@ -373,11 +445,11 @@ function choix(cle, valeurs, desactive = false){
   });
   return g;
 }
-function caseACocher(cle, libelle){
+function caseACocher(cle, libelle, desactive = false){
   const l = document.createElement('label');
-  l.className = 'modal-checkbox-line lecteur-case';
+  l.className = 'modal-checkbox-line lecteur-case' + (desactive ? ' desactive' : '');
   const i = document.createElement('input');
-  i.type = 'checkbox'; i.checked = !!options[cle];
+  i.type = 'checkbox'; i.checked = !!options[cle]; i.disabled = desactive;
   i.onchange = () => changer(cle, i.checked);
   l.append(i, document.createTextNode(' ' + libelle));
   return l;
@@ -415,6 +487,7 @@ function construirePanneau(){
       choix('double', [[false, tr('One page', 'Une page')], [true, tr('Two pages', 'Deux pages')]], options.guide),
       choix('debut', [['droite', tr('First page on the right', 'Première page à droite')], ['gauche', tr('First page on the left', 'Première page à gauche')]], options.guide || !options.double),
       choix('ajustement', [['hauteur', tr('Whole page', 'Page entière')], ['largeur', tr('Fit width', 'Largeur')]], options.guide),
+      caseACocher('livre', tr('Book view', 'Vue livre'), options.guide),
       caseACocher('guide', tr('Guided view, panel by panel', 'Vue guidée, case par case')),
     ]),
     section(tr('Reading direction', 'Sens de lecture'), [

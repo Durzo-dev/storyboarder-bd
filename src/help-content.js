@@ -58,7 +58,7 @@ export const HELP_MANUAL_EN = [
   { id: 'tomes', title: 'Volumes & pages', paragraphs: [
     '"New volume" and "Add a page" in the left-hand menu.',
     'Right-click a volume or a chapter → "Read" opens the Reader in place of the page: click the left or right edge, or use the arrow keys, to turn pages; Space starts or stops automatic scrolling, F goes full screen, Esc leaves.',
-    'The Reader menu, on the right: one or two pages, reading to the right or to the left (manga), first page on the left or right (a blank page fills the gap), automatic scrolling and its speed, guided view panel by panel, thumbnail strip, whole page or fit width, background.',
+    'The Reader menu, on the right: one or two pages, reading to the right or to the left (manga), first page on the left or right (a blank page fills the gap), book view (pages that turn) or flat, automatic scrolling and its speed, guided view panel by panel, thumbnail strip, whole page or fit width, background.',
     'Chapters are optional: "Add a chapter" in an expanded volume, then drag pages onto it. A chapter folds with a click, reorders by dragging, and its right-click menu renames, exports or deletes it (its pages are kept). Page numbering stays continuous across the volume.',
     'Right-click a volume or a page to export it as PNG or delete it.',
     'An exported page lists under its image the credits of the 3D models downloaded from the library that can be seen in its panels: title, author, license, source and links. The licenses require it, so it is always there.',
@@ -288,7 +288,7 @@ export const HELP_MANUAL_FR = [
   { id: 'tomes', title: 'Tomes & planches', paragraphs: [
     '« Nouveau tome » et « Ajouter une planche » dans le menu de gauche.',
     "Clic droit sur un tome ou un chapitre → « Lire » ouvre le Lecteur à la place de la planche : clic sur le bord gauche ou droit, ou flèches du clavier, pour tourner les pages ; Espace lance ou arrête le défilement automatique, F passe en plein écran, Échap sort.",
-    "Le menu du Lecteur, à droite : une ou deux pages, lecture vers la droite ou vers la gauche (manga), première page à gauche ou à droite (une page blanche comble le vide), défilement automatique et sa vitesse, vue guidée case par case, miniatures, page entière ou largeur, fond.",
+    "Le menu du Lecteur, à droite : une ou deux pages, lecture vers la droite ou vers la gauche (manga), première page à gauche ou à droite (une page blanche comble le vide), vue livre (pages qui se tournent) ou à plat, défilement automatique et sa vitesse, vue guidée case par case, miniatures, page entière ou largeur, fond.",
     "Les chapitres sont facultatifs : « Ajouter un chapitre » dans un tome déplié, puis glissez-y des planches. Un chapitre se replie d'un clic, se réordonne en le glissant, et son clic droit le renomme, l'exporte ou le supprime (ses planches sont gardées). La numérotation des planches reste continue dans le tome.",
     "Clic droit sur un tome ou une planche pour l'exporter en PNG ou le supprimer.",
     "Une Planche exportée liste sous son image les crédits des modèles 3D téléchargés depuis la bibliothèque visibles dans ses Cases : titre, auteur, licence, source et liens. Les licences l'exigent, la section est donc toujours là.",
