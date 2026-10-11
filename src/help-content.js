@@ -185,7 +185,7 @@ export const HELP_MANUAL_EN = [
     'Import models made in Blender, Maya or elsewhere, in glTF format (.glb or .gltf). The format guarantees the unit (the metre), so a model arrives at its real size.',
     'Right-click a panel or a Scene → "Import a model" places the model where you clicked. To make a reusable set out of a file: create a Scene, then import the model into it.',
     'Files are copied into a "Modeles" folder next to your projects. One moved or deleted outside the application can no longer be read: its Elements become placeholder boxes, and the library marks it "file not found".',
-    '"Model library", in the Models section, opens "My models": your files as cards, searchable, filtered by category, by use in the open project (by Scenes, in Panels, unused) and by skeleton (joint icon: can be posed). Other projects are not checked.',
+    '"Model library", at the top next to the version, opens "My models": your files as cards, searchable, filtered by category, by use in the open project (by Scenes, in Panels, unused) and by skeleton (joint icon: can be posed). Other projects are not checked.',
     'A model\'s details list where it is used: click a Scene or a Panel to go there ("×2": two Elements in the same place, you pick one).',
     'Right-click a model, or use the buttons of its details → "Rename the file…" or "Delete from disk". Renaming updates the Elements of the OPEN project, its undo history and the skeleton mapping. Other projects using that model cannot be repaired from here: they will show placeholder boxes until the name is put back.',
     'Renaming the file does not rename your Elements: the name shown in a card is yours.',
@@ -197,7 +197,7 @@ export const HELP_MANUAL_EN = [
   { id: 'store', title: 'Online models', paragraphs: [
     'Next to "My models", one tab per source of free models: Sketchfab, and Poly Haven, all in CC0 (free for any use, no credit required). Keywords, category (the same for every source), license, maximum size, sorting.',
     'Click a model for its details: author, license and what it allows, size, and "View in 3D" to turn it around (drag, wheel). Heavy models are flagged before downloading. On Poly Haven, the preview loads the model in memory without saving it: downloading it right after is instant.',
-    '"Download" on a Poly Haven model puts it in your models, as a single .glb; it then appears in the Models section.',
+    '"Download" on a Poly Haven model puts it in your models, as a single .glb; it then appears in "My models".',
     'The arrow on the button picks the texture quality: 1k by default, 2k or 4k for a close-up. Another resolution replaces the file, and its panels follow. From Sketchfab, downloading will require signing in to an account: it is coming in a future version.',
     'A model you already downloaded carries a tick at the top right of its thumbnail, and its details give the file name instead of downloading it twice.',
     'In "My models", the category under the source opens a list to change it. "+ Tags" adds your own tags (several per model), and renames or deletes them. The "Tags" filter, next to the categories, does the same and keeps the models that have all the ticked ones.',
@@ -214,7 +214,7 @@ export const HELP_MANUAL_EN = [
     '"Show detached parts", in the model\'s card, brings them back. Your file is never modified: the fix belongs in the 3D software it came from.',
   ]},
   { id: 'correspondance', title: 'Mapping table', paragraphs: [
-    'It says which bone in the file plays which role. Open it from the editor, at the bottom of Joint settings, or by right-clicking in the Models section. It holds for the FILE, so for every Element wearing it, in all your projects.',
+    'It says which bone in the file plays which role. Open it from the editor, at the bottom of Joint settings, or by right-clicking a model in "My models". It holds for the FILE, so for every Element wearing it, in all your projects.',
     'It starts with the MORPHOLOGY: humanoid, quadruped, winged biped, centaur, arachnid, radial, serpentine. Correct it if it is wrong, that is what the dropdown is for.',
     'Only serpentine, radial and arachnid are recognised for certain, their structure looking like nothing else. The others carry "to confirm", which blocks nothing: the model can be used straight away, and the badge stays visible until you decide.',
     'The proposal is mostly wrong when a file names its bones poorly: a quadruped whose FRONT legs are called "arm" is proposed as humanoid, and a model with numbered bones says nothing at all.',
@@ -226,7 +226,7 @@ export const HELP_MANUAL_EN = [
     'A file you have already set up, with the SAME bones, is offered at the top: taking its mapping saves redoing it, morphology included. Rows taken this way say so, and nothing is written before Save.',
   ]},
   { id: 'editeur', title: 'Model editor', paragraphs: [
-    'Open the editor with the pencil button in the corner of a 3D preview, or from the "Editor" section of the left menu to compose a pose with no target; in that case there is no "Apply" button. Its title names the figure posed.',
+    'Open the editor with the pencil button in the corner of a 3D preview, from the "Model editor" button at the top (or "Editor" in a model\'s details) to compose a pose with no target; in that case there is no "Apply" button. Its title names the figure posed.',
     'Hold the RIGHT mouse button to orbit, scroll wheel to zoom. The figure is always shown facing front, imported models and animals included; its orientation in the scene or panel is left untouched.',
     'Click a point to select it: the other points disappear, and the orange area shows where you can click without losing the selection. A creature only shows its archetype\'s joints, in bright blue; hovering a limb, or its chain title, reveals that chain\'s other bones in pale blue.',
     'Hold the left button on a point and drag to adjust the joint. The orange guide shows the expected gesture: a double arrow to drag along its direction, a ring to turn around the point.',
@@ -391,7 +391,7 @@ export const HELP_MANUAL_FR = [
     'Importez des modèles faits dans Blender, Maya ou ailleurs, au format glTF (.glb ou .gltf). Ce format garantit l\'unité, le mètre : un modèle arrive à sa taille réelle.',
     'Clic droit sur une Case ou dans une Scène → « Importer un modèle » pose le modèle là où vous avez cliqué. Pour un décor réutilisable : créez une Scène, puis importez-y le modèle.',
     'Les fichiers sont copiés dans un dossier « Modeles », près de vos projets. Déplacé ou supprimé hors de l\'application, un fichier devient illisible : ses Éléments deviennent des boîtes « fichier introuvable ».',
-    "« Bibliothèque de modèles », section Modèles, ouvre « Mes modèles » : vos fichiers en vignettes, avec recherche, catégorie, usage dans le Projet ouvert (Scènes, Cases, non utilisés) et squelette (icône d'articulation : se pose).",
+    "« Bibliothèque de modèles », en haut à côté de la version, ouvre « Mes modèles » : vos fichiers en vignettes, avec recherche, catégorie, usage dans le Projet ouvert (Scènes, Cases, non utilisés) et squelette (icône d'articulation : se pose).",
     'La fiche d\'un modèle liste où il sert : cliquez une Scène ou une Case pour y aller (« ×2 » : deux Éléments au même endroit, à choisir).',
     'Clic droit sur un modèle, ou boutons de sa fiche → « Renommer le fichier… » ou « Supprimer du disque ». Le renommage met à jour les Éléments du Projet OUVERT, son historique d\'annulation et la correspondance de squelette. Les autres Projets qui l\'utilisent ne peuvent pas être réparés d\'ici : ils afficheront des boîtes de remplacement jusqu\'à ce que le nom soit remis.',
     'Renommer le fichier ne renomme pas vos Éléments : le nom d\'une fiche est le vôtre.',
@@ -403,7 +403,7 @@ export const HELP_MANUAL_FR = [
   { id: 'store', title: 'Modèles en ligne', paragraphs: [
     "À côté de « Mes modèles », un onglet par source de modèles gratuits : Sketchfab, et Poly Haven, tout en CC0 (libre pour tout usage, sans crédit obligatoire). Mots-clés, catégorie (la même pour toutes les sources), licence, taille maximale, tri.",
     "Cliquez un modèle pour sa fiche : auteur, licence et ce qu'elle permet, poids, et « Voir en 3D » pour le faire tourner (glisser, molette). Les modèles lourds sont signalés avant le téléchargement. Chez Poly Haven, l'aperçu charge le modèle en mémoire, sans le ranger : le télécharger juste après est immédiat.",
-    "« Télécharger », sur un modèle Poly Haven, le range dans vos modèles, en un seul .glb ; il apparaît aussitôt dans la section Modèles.",
+    "« Télécharger », sur un modèle Poly Haven, le range dans vos modèles, en un seul .glb ; il apparaît aussitôt dans « Mes modèles ».",
     "La flèche du bouton choisit la qualité des textures : 1k par défaut, 2k ou 4k pour un gros plan. Une autre résolution remplace le fichier, et ses Cases suivent. Depuis Sketchfab, le téléchargement demandera de se connecter à un compte : il arrive dans une prochaine version.",
     "Un modèle déjà téléchargé porte une coche en haut à droite de sa vignette, et sa fiche donne le nom du fichier au lieu de le télécharger une seconde fois.",
     "Dans « Mes modèles », la catégorie sous la source s'ouvre pour la changer. « + Tags » ajoute vos propres tags (plusieurs par modèle), et les renomme ou les supprime. Le filtre « Tags », à côté des catégories, en fait autant et garde les modèles qui portent tous les tags cochés.",
@@ -420,7 +420,7 @@ export const HELP_MANUAL_FR = [
     '« Afficher les morceaux détachés », dans la fiche du modèle, les rend. Votre fichier n\'est jamais modifié : la correction se fait dans le logiciel 3D d\'origine.',
   ]},
   { id: 'correspondance', title: 'Tableau de correspondance', paragraphs: [
-    'Il dit quel os du fichier joue quel rôle. Ouvrez-le depuis l\'Éditeur, en bas des Réglages des articulations, ou par un clic droit dans la section Modèles. Il vaut pour le FICHIER, donc pour tous les Éléments qui le portent.',
+    'Il dit quel os du fichier joue quel rôle. Ouvrez-le depuis l\'Éditeur, en bas des Réglages des articulations, ou par un clic droit sur un modèle dans « Mes modèles ». Il vaut pour le FICHIER, donc pour tous les Éléments qui le portent.',
     'Il commence par la MORPHOLOGIE : humanoïde, quadrupède, bipède ailé, centaure, arachnide, radial, serpentin. Corrigez-la si elle est fausse, la liste déroulante est là pour ça.',
     'Seuls serpentin, radial et arachnide se reconnaissent à coup sûr, leur structure ne ressemblant à aucune autre. Les autres portent « à confirmer », qui ne bloque rien : le modèle s\'utilise aussitôt.',
     'La proposition se trompe surtout quand le fichier nomme mal ses os : un quadrupède dont les pattes AVANT s\'appellent « bras » est proposé humanoïde.',
@@ -432,7 +432,7 @@ export const HELP_MANUAL_FR = [
     'Un fichier déjà réglé aux MÊMES os est proposé en haut : le reprendre évite de tout refaire, morphologie comprise. Les lignes reprises le disent, rien n\'est écrit avant Enregistrer.',
   ]},
   { id: 'editeur', title: 'Éditeur de modèle', paragraphs: [
-    "Ouvrez l'éditeur par le crayon d'un aperçu 3D, ou par la section « Éditeur » du menu de gauche pour composer une pose sans cible ; dans ce second cas, « Appliquer » est absent. Son titre nomme la figure posée.",
+    "Ouvrez l'éditeur par le crayon d'un aperçu, ou par « Éditeur de modèle » en haut (« Éditeur » dans la fiche d'un modèle) pour une pose sans cible, sans « Appliquer ». Son titre nomme la figure posée.",
     "Clic DROIT maintenu pour orbiter, molette pour zoomer. La figure est toujours présentée de face, modèles et Animaux compris ; son orientation dans la Scène ou la Case n'est pas modifiée.",
     "Cliquez un point pour le sélectionner : les autres disparaissent, et la zone orange montre où cliquer sans le désélectionner. Une créature ne montre que les articulations de son archétype, en bleu vif ; survoler un membre, ou le titre de sa chaîne, révèle les autres os, en bleu pâle.",
     "Maintenez le clic gauche sur un point et glissez pour régler l'articulation. Le repère orange indique le geste attendu : une double flèche pour glisser dans sa direction, un anneau pour tourner autour du point.",

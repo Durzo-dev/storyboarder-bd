@@ -886,7 +886,7 @@ describe('Un bouton-ICÔNE ne doit jamais afficher « null » (#371)', () => {
   });
 });
 
-describe('#397 : la section « Éditeur » du menu de gauche', () => {
+describe('#397 : le bouton « Éditeur de modèle », désormais dans le bandeau', () => {
   // Renommée à l'usage : elle s'appelait « Personnages », et son bouton « Éditeur de Personnage ».
   // Elle ne mène plus à un Personnage mais à un écran qui pose TOUTE figure articulée — Personnage
   // intégré comme modèle importé — et qui porte en plus la bibliothèque de poses et le tableau de
@@ -906,14 +906,14 @@ describe('#397 : la section « Éditeur » du menu de gauche', () => {
   };
 
   test('le nom choisi, dans les deux langues', () => {
-    assert.deepEqual(entree('personaTrigger'), { en: 'Editor', fr: 'Éditeur' });
+    // La section « Éditeur » du menu de gauche a disparu (demandé) : le bouton est dans le bandeau.
+    assert.doesNotMatch(I18N, /#personaTrigger|#personaPanelHint/);
     assert.deepEqual(entree('openPoseEditorBtn'), { en: 'Model editor', fr: 'Éditeur de modèle' });
   });
 
   test('et index.html porte le MÊME texte français', () => {
     // Sans quoi le libellé changerait au démarrage, le temps qu'applyI18n passe.
-    assert.match(HTML, /id="personaTrigger">Éditeur /,
-      'le déclencheur de section a divergé de sa table');
+    assert.doesNotMatch(HTML, /id="personaTrigger"/, 'la section du menu de gauche est revenue');
     assert.match(HTML, /id="openPoseEditorBtn">Éditeur de modèle</,
       'le bouton a divergé de sa table');
   });

@@ -62,8 +62,8 @@ l'attribution au téléchargement. Changer d'onglet garde la catégorie choisie.
 
 ## « Mes modèles », la bibliothèque locale
 
-Premier onglet de la même fenêtre, ouvert par le bouton « Bibliothèque de modèles » du menu de gauche
-(qui a perdu sa longue liste). Les entrées (`src/local-library.js`, pur) : le fichier, un titre (celui
+Premier onglet de la même fenêtre, ouvert par le bouton « Bibliothèque de modèles » du bandeau, à
+côté de la version (le menu de gauche n'en a plus de section). Les entrées (`src/local-library.js`, pur) : le fichier, un titre (celui
 de la source s'il vient du store), la catégorie commune (« Non classé » pour un import à la main),
 l'attribution complète, et les usages dans le Projet ouvert (`modelUsageLocations`). Un fichier cité
 mais absent apparaît, marqué. Filtres : texte (titre, fichier, auteur, Scènes), catégorie, usage,
@@ -80,7 +80,8 @@ Case, photographiées de trois quarts, libérées ; gardées dans `Vignettes-mod
 du fichier (`vignettes-modeles.js`). Un modèle du store reçoit la vignette de sa source.
 
 La fiche reprend les gestes du reste de l'application, injectés par events.js : aller à un endroit
-(ferme la fenêtre), Squelette…, Renommer…, Supprimer, et le clic droit sur une carte. La fenêtre est
+(ferme la fenêtre), Éditeur (ouvre l'Éditeur autonome sur ce modèle, à la place de l'ancien
+Squelette…), Renommer…, Supprimer, et le clic droit sur une carte. La fenêtre est
 placée AVANT les autres modales dans le document : celles qu'elle ouvre passent devant elle.
 
 ## Catégorie choisie et tags
@@ -138,8 +139,8 @@ le nom du fichier. En simulation, les deux premiers résultats passent pour déj
 fournis par Sketchfab » figure dans le store.
 
 **Où la voir.** La fiche d'un modèle dans « Mes modèles » montre sa source, son auteur et sa licence
-avec leurs liens (#444e). Le menu de gauche n'a plus de liste de modèles, seulement le bouton qui
-ouvre la bibliothèque : c'est donc la fiche qui porte l'attribution.
+avec leurs liens (#444e). Le menu de gauche ne liste plus les modèles (la bibliothèque s'ouvre par un
+bouton du bandeau) : c'est donc la fiche qui porte l'attribution.
 
 **Dans les exports (#444f).** Une Planche exportée, en PNG comme en PDF, porte sous son image (et
 sous la liste des Cases si elle est affichée) une section « Crédits des modèles 3D » : pour chaque

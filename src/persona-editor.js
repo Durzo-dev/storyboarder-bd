@@ -1786,6 +1786,17 @@ function syncPersonaEditorDom(){
   }
 }
 
+/**
+ * Ouvre l'Éditeur AUTONOME sur un modèle importé donné : le bouton « Éditeur » de la fiche d'un
+ * modèle dans « Mes modèles » (demandé, à la place de « Squelette »). Pas de cible : rien à appliquer
+ * derrière, on compose des poses pour la bibliothèque en regardant CE modèle.
+ */
+export function ouvrirEditeurSurModele(fichier){
+  showPersonaEditor(null, false);
+  choisirFigureDeLEditeur(fichier);
+  syncPersonaEditorDom();
+}
+
 export function showPersonaEditor(target, fromModal){
   openPersonaEditor(target, fromModal);
   syncPersonaEditorDom();

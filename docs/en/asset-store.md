@@ -62,8 +62,8 @@ the chosen category.
 
 ## "My models", the local library
 
-First tab of the same window, opened by the "Model library" button of the left menu (which lost its
-long list). The entries (`src/local-library.js`, pure): the file, a title (the source's one if it
+First tab of the same window, opened by the "Model library" button of the top bar, next to the
+version (the left menu no longer has a section for it). The entries (`src/local-library.js`, pure): the file, a title (the source's one if it
 came from the store), the common category ("Uncategorised" for a hand import), the full attribution,
 and the uses in the open project (`modelUsageLocations`). A file that is referred to but missing
 shows up, flagged. Filters: text (title, file, author, Scenes), category, use, skeleton; sorted by name
@@ -80,7 +80,8 @@ photographed at three quarters, released; kept in `Vignettes-modeles/` with the 
 (`vignettes-modeles.js`). A model from the store gets its source's thumbnail.
 
 The details reuse the gestures of the rest of the application, injected by events.js: go to a place
-(closes the window), Skeleton…, Rename…, Delete, and right-click on a card. The window sits BEFORE the
+(closes the window), Editor (opens the standalone Editor on this model, instead of the former
+Skeleton…), Rename…, Delete, and right-click on a card. The window sits BEFORE the
 other modals in the document: the ones it opens come in front of it.
 
 ## Chosen category and tags
@@ -139,8 +140,8 @@ file name. In simulation, the first two results count as already downloaded. The
 Sketchfab".
 
 **Where to see it.** The details of a model in "My models" show its source, author and license
-with their links (#444e). The left menu no longer has a list of models, only the button that opens
-the library: the details view is therefore what carries the attribution.
+with their links (#444e). The left menu no longer lists models (the library opens from a top-bar
+button): the details view is therefore what carries the attribution.
 
 **In exports (#444f).** An exported Page, PNG or PDF alike, carries under its image (and under the
 list of Panels if shown) a "3D model credits" section: for each VISIBLE model of the Page that has an

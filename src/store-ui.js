@@ -1029,8 +1029,9 @@ function ficheLocale(e){
   const actions = e.introuvable
     ? [retour]
     // Couleurs demandées : Renommer en jaune, Supprimer en rouge, texte blanc sur les deux.
-    // « Squelette » seulement pour un modèle qui en a un (ou dont on ne sait pas encore).
-    : [retour, e.os === 0 ? null : action(t.squelette, 'squeletteModele'), action(t.renommer, 'renommerModele', 'full-btn edit-btn store-action-blanc'),
+    // « Éditeur » (il remplace « Squelette », demandé) seulement pour un modèle qui a un squelette
+    // (ou dont on ne sait pas encore) : un modèle statique n'a rien à poser.
+    : [retour, e.os === 0 ? null : action(t.editeur, 'editeurModele'), action(t.renommer, 'renommerModele', 'full-btn edit-btn store-action-blanc'),
       action(t.supprimer, 'supprimerModele', 'full-btn delete-btn store-action-blanc')];
   fiche.replaceChildren(
     el('div', { classe: 'store-fiche-corps' }, [

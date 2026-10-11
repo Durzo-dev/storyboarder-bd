@@ -129,9 +129,17 @@ function corpsDuRenommage(){
 }
 
 describe('Section Modèles : le câblage', () => {
-  test('la section et son menu contextuel existent', () => {
-    ['modelTrigger', 'modelPanel', 'modelContextMenu', 'ctxDeleteModel', 'ctxRenameModel']
+  test('le menu contextuel des modèles existe ; la section du menu de gauche, plus (demandé)', () => {
+    ['modelContextMenu', 'ctxDeleteModel', 'ctxRenameModel']
       .forEach(id => assert.match(HTML, new RegExp(`id="${id}"`), `absent : ${id}`));
+    // La bibliothèque s'ouvre par un bouton du bandeau, à côté de la version.
+    assert.doesNotMatch(HTML, /id="modelTrigger"|id="modelPanel"/);
+    const header = HTML.slice(HTML.indexOf('<header>'), HTML.indexOf('</header>'));
+    assert.match(header, /id="storeOuvrirBtn"/);
+    assert.match(header, /id="openPoseEditorBtn"/);
+    assert.ok(header.indexOf('id="majBtn"') < header.indexOf('id="storeOuvrirBtn"')
+      && header.indexOf('id="storeOuvrirBtn"') < header.indexOf('id="openPoseEditorBtn"'),
+      'ordre voulu : version, mise à jour, bibliothèque, Éditeur');
   });
 
   // CE TEST DISAIT L'INVERSE. Il épinglait « le menu n'offre AUCUN renommage », au nom d'une

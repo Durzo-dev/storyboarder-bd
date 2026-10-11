@@ -437,11 +437,7 @@ export const I18N_TRAILING = [
 export const I18N_LEADING = [
   ['#treeTrigger', 'Volumes', 'Tomes'],
   ['#sceneTrigger', 'Scenes', 'Scènes'],
-  ['#personaTrigger', 'Editor', 'Éditeur'],
-  ['#modelTrigger', 'Models', 'Modèles'],
   ['#imageTrigger', 'Images', 'Images'],
-  ['#personaPanelHint', 'Compose a pose and save it to your library, shared by all your projects.',
-   'Composez une pose et enregistrez-la dans votre bibliothèque, partagée par tous vos Projets.'],
   ['#openPoseEditorBtn', 'Model editor', 'Éditeur de modèle'],
   ['#pageMenuHeader .menu-title', 'Page', 'Planche'],
   // ⚠️ DEUX LIBELLÉS À POURCENTAGE, ET ILS NE POUVAIENT PAS PASSER PAR I18N_TEXT. Ils encadrent un

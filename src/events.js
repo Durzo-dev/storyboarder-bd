@@ -100,7 +100,7 @@ import {
   buildPersonaEditorPosesUI, isPersonaEditorOpen, setPersonaEditorCallbacks, showPersonaEditor,
   syncPersonaEditorPoseLabel, wirePersonaEditor,
   figureImporteeDeLEditeur, oublierChainesDeLEditeur3D, buildPersonaEditorJointSlidersUI,
-  syncPersonaEditorSliders, drawPersonaEditor,
+  syncPersonaEditorSliders, drawPersonaEditor, ouvrirEditeurSurModele,
 } from './persona-editor.js';
 import { BUBBLE_FONT_PRELOAD_LIST } from './help-content.js';
 import { grainsAPrecharger3D } from './bubble-texture.js';
@@ -526,11 +526,10 @@ function setupDropdown(triggerId, panelId){
 }
 setupDropdown('treeTrigger', 'treePanel');
 setupDropdown('sceneTrigger', 'scenePanel');
-setupDropdown('personaTrigger', 'personaPanel');
-setupDropdown('modelTrigger', 'modelPanel');
 setupDropdown('imageTrigger', 'imagePanel');
 
-// Fix 64 : entrée AUTONOME de l'éditeur : aucune cible, Personnage par défaut. Sert à composer des
+// Fix 64 : entrée AUTONOME de l'éditeur : aucune cible, Personnage par défaut. Le bouton est dans le
+// bandeau (il avait une section du menu de gauche, demandé). Sert à composer des
 // poses pour la bibliothèque sans passer par un Personnage d'une Case. `fromModal` à false : il n'y
 // a rien derrière à alimenter, et « Appliquer » est donc absent (cf. syncPersonaEditorDom).
 {
@@ -8678,7 +8677,14 @@ cablerStore({
   ouvrirEndroitModele: (fichier, groupe) => openModelPlace(fichier, groupe),
   renommerModele: (fichier) => demanderRenommageModele(fichier),
   supprimerModele: (fichier) => supprimerModeleAvecConfirmation(fichier),
-  squeletteModele: (fichier) => openSkeletonMapModal(fichier),
+  // « Éditeur » (à la place de « Squelette », demandé) : la bibliothèque se ferme, le modèle est
+  // décodé s'il ne l'est pas encore, et l'Éditeur s'ouvre dessus. Le tableau de correspondance
+  // reste joignable depuis l'Éditeur et par le clic droit.
+  editeurModele: async (fichier) => {
+    fermerStore();
+    await preloadModels([fichier]);
+    ouvrirEditeurSurModele(fichier);
+  },
   // Confirmer la suppression d'un tag : la fenêtre de confirmation habituelle, devant la bibliothèque.
   confirmer: (message) => confirmAction(message),
 });

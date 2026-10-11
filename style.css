@@ -295,6 +295,9 @@ header span{ font-size:12px; color:var(--ink-soft); }
    même style rond que le bouton "?" du Manuel d'utilisation (cf. .help-round-btn) plutôt que le
    .tool-btn générique de la barre latérale. */
 .header-btn{ margin-left:auto; }
+/* La bibliothèque de modèles et l'Éditeur, dans le bandeau, juste après la version : des boutons de
+   navigation (gris), à leur taille, sur une ligne. */
+header .header-outil-btn{ width:auto; margin:0; padding:5px 12px; align-self:center; white-space:nowrap; }
 
 /* `position:relative` : c'est le bloc de référence de l'Éditeur de Personnage, positionné en
    absolu à l'intérieur. Le calage vertical vient donc de .app lui-même, qui commence déjà sous

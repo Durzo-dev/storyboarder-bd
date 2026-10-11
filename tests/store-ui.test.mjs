@@ -196,13 +196,21 @@ describe('le câblage', () => {
   });
   test('« Mes modèles » : les actions de la fiche sont celles de l\'application, injectées', () => {
     const ev = sans(lire('src/events.js'));
-    for (const r of ['menuModele', 'ouvrirEndroitModele', 'renommerModele', 'supprimerModele', 'squeletteModele']) {
-      assert.match(ev, new RegExp(`${r}: \\(`), `rappel absent : ${r}`);
+    for (const r of ['menuModele', 'ouvrirEndroitModele', 'renommerModele', 'supprimerModele', 'editeurModele']) {
+      assert.match(ev, new RegExp(`${r}: (async )?\\(`), `rappel absent : ${r}`);
     }
     const f = UI.slice(UI.indexOf('function ficheLocale'));
     assert.match(f, /b\.onclick = \(\) => \{ fermerStore\(\); if \(_rappels\.ouvrirEndroitModele\)/, 'aller à un endroit doit fermer la fenêtre');
   });
-  test('« Squelette » décode le modèle AVANT de lire ses os (il ne s\'ouvrait jamais depuis « Mes modèles »)', () => {
+  test('« Éditeur » remplace « Squelette » dans la fiche : il ferme la bibliothèque, décode le modèle, puis ouvre l\'Éditeur dessus', () => {
+    const ev = sans(lire('src/events.js'));
+    assert.match(ev, /editeurModele: async \(fichier\) => \{\n    fermerStore\(\);\n    await preloadModels\(\[fichier\]\);\n    ouvrirEditeurSurModele\(fichier\);/);
+    assert.doesNotMatch(UI, /squeletteModele/);
+    assert.match(UI, /e\.os === 0 \? null : action\(t\.editeur, 'editeurModele'\)/);
+    const ED = lire('src/persona-editor.js');
+    assert.match(ED, /export function ouvrirEditeurSurModele\(fichier\)\{\n  showPersonaEditor\(null, false\);\n  choisirFigureDeLEditeur\(fichier\);/);
+  });
+  test('le tableau de correspondance décode le modèle AVANT de lire ses os', () => {
     const ev = sans(lire('src/events.js'));
     const f = ev.slice(ev.indexOf('async function openSkeletonMapModal('));
     assert.ok(f.indexOf('await preloadModels([nomFichier]);') >= 0 && f.indexOf('await preloadModels([nomFichier]);') < f.indexOf('osDuModele(nomFichier)'));
