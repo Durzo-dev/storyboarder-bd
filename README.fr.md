@@ -2,7 +2,7 @@
 
 > 🇬🇧 [English version](README.md)
 
-**Version 1.10.69**
+**Version 1.10.70**
 
 **Application de découpage de Bandes Dessinées** : outil de storyboard pour créer, organiser et visualiser des planches de BD avec rendu 3D des scènes.
 
@@ -46,6 +46,7 @@ Versions précédentes et notes de version : [toutes les releases](https://githu
 
 ### Projet & application
 - 💾 Projets **JSON** lisibles dans **Documents\Storyboarder BD\Projets**, sauvegarde automatique, annulation sur 50 actions
+- 📖 **Lecteur** : lire un tome ou un chapitre à la suite, en une ou deux pages, vers la droite ou la gauche, en défilement automatique ou case par case
 - 🖼️ Export des planches en **PNG** ou **PDF**
 - ⬆️ **Mises à jour intégrées**, et **fonctionne hors ligne** jusqu'à 14 jours
 - 🌗 **Thèmes sombre et clair**, contraste renforcé, quatre tailles d'interface

@@ -44,6 +44,7 @@ import { enregistrerFermeture, pileOuverte } from './modal-stack.js';
 import { initialiserMiseAJour, rafraichirTextesMaj, fermerModaleMaj } from './update-button.js';
 import { verifierRessources, rafraichirApresChangementDeDossier, simulationRessources } from './missing-resources.js';
 import { cablerStore, rafraichirTextesStore, fermerStore, rafraichirBibliothequeLocale, basculerStore } from './store-ui.js';
+import { initLecteur, cablerLecteur, ouvrirLecteur, fermerLecteur, lecteurOuvert } from './lecteur-ui.js';
 import { oublierVignette } from './model-thumbnails.js';
 import { definirLumiereDeCase3D, effacerLumiereDeCase3D, directionDepuisDome3D,
   geometrieDome3D } from './lighting-3d.js';
@@ -101,7 +102,7 @@ import {
   buildPersonaEditorPosesUI, isPersonaEditorOpen, setPersonaEditorCallbacks, showPersonaEditor,
   syncPersonaEditorPoseLabel, wirePersonaEditor,
   figureImporteeDeLEditeur, oublierChainesDeLEditeur3D, buildPersonaEditorJointSlidersUI,
-  syncPersonaEditorSliders, drawPersonaEditor, ouvrirEditeurSurModele,
+  syncPersonaEditorSliders, drawPersonaEditor, ouvrirEditeurSurModele, hidePersonaEditor,
 } from './persona-editor.js';
 import { BUBBLE_FONT_PRELOAD_LIST } from './help-content.js';
 import { grainsAPrecharger3D } from './bubble-texture.js';
@@ -6233,6 +6234,39 @@ document.getElementById('ctxRenameScene').onclick = () => {
 document.getElementById('ctxDeleteScene').onclick = () => {
   if (S.ctxSceneTarget !== null) deleteScene(S.ctxSceneTarget);
   hideContextMenu();
+};
+// ── Le Lecteur (demandé) : lire un Tome ou un Chapitre, cf. src/lecteur-ui.js. ──
+initLecteur();
+cablerLecteur({
+  // Un seul écran à la fois au centre : l'Éditeur se ferme s'il était ouvert.
+  avantOuverture: () => { if (isPersonaEditorOpen()) hidePersonaEditor(); },
+  apresFermeture: () => renderAll(),
+});
+// Ce qui, dans le menu de gauche et le bandeau, mène AILLEURS ferme le Lecteur (une Planche, une
+// Scène, un ajout, l'Éditeur) ; déplier un Tome ou un Chapitre, non.
+document.addEventListener('click', (e) => {
+  if (!lecteurOuvert()) return;
+  const cible = e.target && e.target.closest && e.target.closest('.page-row, #sceneList, #addVolumeBtn, #addSceneBtn, .add-page-btn, #openPoseEditorBtn, #projectNameHeader');
+  if (cible) fermerLecteur();
+}, true);
+document.getElementById('ctxReadVolume').onclick = () => {
+  hideContextMenu();
+  const ti = S.ctxVolumeTarget;
+  const t = ti !== null ? S.tomes[ti] : null;
+  if (!t) return;
+  const depart = ti === S.currentTomeIndex ? S.currentPageIndex : null;
+  ouvrirLecteur(ti, t.pages.map((p, i) => i), t.name, depart);
+};
+document.getElementById('ctxReadChapter').onclick = () => {
+  hideContextMenu();
+  if (!_ctxChapitre) return;
+  const { ti, id } = _ctxChapitre;
+  const t = S.tomes[ti];
+  const ch = t && (t.chapitres || []).find(c => c.id === id);
+  if (!ch) return;
+  const pages = indexDuChapitre(t, id);
+  const depart = ti === S.currentTomeIndex && pages.includes(S.currentPageIndex) ? S.currentPageIndex : null;
+  ouvrirLecteur(ti, pages, `${t.name} · ${ch.nom}`, depart);
 };
 document.getElementById('ctxRenameVolume').onclick = () => {
   if (S.ctxVolumeTarget !== null) renameVolume(S.ctxVolumeTarget);

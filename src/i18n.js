@@ -40,6 +40,9 @@ export const I18N_TEXT = [
   ['#undoBtn', null, null, 'title', 'Undo (Ctrl+Z)', "Annuler (Ctrl+Z)"],
   ['#headerSaveBtn', null, null, 'title', 'Save project (Ctrl+S)', "Sauvegarder le projet (Ctrl+S)"],
   ['#settingsBtn', null, null, 'title', 'Settings (Ctrl+,)', 'Configuration (Ctrl+,)'],
+  ['#lecteurFermerBtn', null, null, 'title', 'Close the reader (Esc)', 'Fermer le lecteur (Échap)'],
+  ['#lecteurBordGauche', null, null, 'title', 'Previous or next page, depending on the reading direction', 'Page précédente ou suivante, selon le sens de lecture'],
+  ['#lecteurBordDroite', null, null, 'title', 'Next or previous page, depending on the reading direction', 'Page suivante ou précédente, selon le sens de lecture'],
   // Le libellé du bouton de mise à jour, aussi posé par src/update-button.js (mêmes mots, cf.
   // update-texts.js) : masqué, il garde sa place dans le bandeau, à la largeur de ce libellé.
   ['#majBtn', 'Update', 'Mise à jour'],
@@ -303,6 +306,8 @@ export const I18N_TRAILING = [
   ['#ctxDuplicatePage', 'Duplicate this page', 'Dupliquer cette planche'],
   ['#ctxRemoveFromChapter', 'Remove from the chapter', 'Retirer du chapitre'],
   ['#ctxRenameChapter', 'Rename this chapter', 'Renommer ce chapitre'],
+  ['#ctxReadChapter', 'Read this chapter', 'Lire ce chapitre'],
+  ['#ctxReadVolume', 'Read this volume', 'Lire ce tome'],
   ['#ctxExportChapter', 'Export the chapter\'s pages', 'Exporter les planches du chapitre'],
   ['#ctxDeleteChapter', 'Delete this chapter', 'Supprimer ce chapitre'],
   ['#ctxExportPageTrigger > span:first-child', 'Export this page', 'Exporter cette planche'],

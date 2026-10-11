@@ -141,6 +141,26 @@
 </div>
 
 
+  <!-- Le LECTEUR (demandé) : lire un Tome ou un Chapitre à la suite, à la place de la Planche, avec
+       son menu à droite. Construit et piloté par src/lecteur-ui.js ; ouvert par le clic droit sur un
+       Tome ou un Chapitre. Même emprise que l'Éditeur de modèle. -->
+  <div id="lecteurOverlay" class="lecteur hidden" data-fond="sombre">
+    <div class="lecteur-bar">
+      <span class="lecteur-titre" id="lecteurTitre"></span>
+      <span class="lecteur-position" id="lecteurPosition"></span>
+      <button id="lecteurFermerBtn" class="menu-close-btn" type="button" title="Fermer le lecteur (Échap)">&times;</button>
+    </div>
+    <div class="lecteur-body">
+      <div class="lecteur-scene">
+        <div class="lecteur-vue" id="lecteurVue"></div>
+        <button id="lecteurBordGauche" class="lecteur-bord lecteur-bord-gauche" type="button" title="Page précédente ou suivante, selon le sens de lecture">‹</button>
+        <button id="lecteurBordDroite" class="lecteur-bord lecteur-bord-droite" type="button" title="Page suivante ou précédente, selon le sens de lecture">›</button>
+        <div class="lecteur-miniatures" id="lecteurMiniatures"></div>
+      </div>
+      <aside class="lecteur-panneau" id="lecteurPanneau"></aside>
+    </div>
+  </div>
+
   <div class="sidebar">
   <div class="sidebar-scroll">
     <!-- Nom du Projet (ensemble de Tomes/Planches/Cases en cours, cf. projectName) : affiché au-dessus
@@ -895,6 +915,7 @@
 </div>
 
 <div class="context-menu hidden" id="volumeContextMenu">
+  <button id="ctxReadVolume"><span class="ctx-icon">📖</span> Lire ce tome</button>
   <button id="ctxRenameVolume"><span class="ctx-icon">✏️</span> Renommer ce tome</button>
   <button id="ctxExportVolume"><span class="ctx-icon">📤</span> Exporter toutes les planches</button>
   <button id="ctxDeleteVolume"><span class="ctx-icon">🗑</span> Supprimer ce tome</button>
@@ -902,6 +923,7 @@
 
 <!-- Menu d'un Chapitre (demandé), cf. src/chapitres.js et project-tree.js. -->
 <div class="context-menu hidden" id="chapterContextMenu">
+  <button id="ctxReadChapter"><span class="ctx-icon">📖</span> Lire ce chapitre</button>
   <button id="ctxRenameChapter"><span class="ctx-icon">✏️</span> Renommer ce chapitre</button>
   <button id="ctxExportChapter"><span class="ctx-icon">📤</span> Exporter les planches du chapitre</button>
   <button id="ctxDeleteChapter"><span class="ctx-icon">🗑</span> Supprimer ce chapitre</button>

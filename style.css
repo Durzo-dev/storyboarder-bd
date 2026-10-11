@@ -1501,6 +1501,60 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
                   z-index: 900; background: var(--paper);
                   color: var(--ink); display: flex; flex-direction: column; }
 .persona-editor.hidden { display: none; }
+/* LE LECTEUR (demandé, src/lecteur-ui.js) : même emprise que l'Éditeur de modèle, la page au centre
+   sur un fond choisi, son menu à droite, les miniatures en bas. Les couleurs de la scène sont des
+   valeurs PLEINES et non des superpositions translucides : son fond est un choix du Lecteur
+   (sombre, gris, clair), pas le thème, et rien dessous ne doit transparaître (cf. #409e). Les bords cliquables tournent les
+   pages ; en plein écran, la barre et le menu disparaissent. */
+.lecteur { position: absolute; top: 0; right: 0; bottom: 0; left: var(--sidebar-w); z-index: 900;
+           background: var(--paper); color: var(--ink); display: flex; flex-direction: column; }
+.lecteur.hidden { display: none; }
+.lecteur-bar { display: flex; align-items: center; gap: 14px; padding: 10px 16px; background: var(--paper-dark);
+               border-bottom: 1px solid var(--line); zoom: var(--echelle-ui); }
+.lecteur-titre { font-weight: 600; }
+.lecteur-position { color: var(--ink-soft); font-size: 12px; margin-right: auto; }
+.lecteur-body { flex: 1; min-height: 0; display: flex; }
+.lecteur-scene { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; position: relative;
+                 background: #17181b; }
+.lecteur[data-fond="gris"] .lecteur-scene { background: #5b5e64; }
+.lecteur[data-fond="clair"] .lecteur-scene { background: #ecebe7; }
+.lecteur-vue { flex: 1; min-height: 0; position: relative; overflow: hidden; display: flex; align-items: center;
+               justify-content: center; }
+.lecteur-vue.lecteur-largeur { overflow-y: auto; align-items: flex-start; }
+.lecteur-etalement { display: flex; gap: 0; margin: auto; box-shadow: 0 6px 24px rgba(0,0,0,.45); }
+.lecteur-page { display: block; background: #fff; }
+.lecteur-page-blanche { background: #fafafa; }
+.lecteur-vue.lecteur-guide { display: block; }
+.lecteur-page-guidee { position: absolute; left: 0; top: 0; transform-origin: 0 0; background: #fff;
+                       transition: transform .35s ease, width .35s ease, height .35s ease;
+                       box-shadow: 0 6px 24px rgba(0,0,0,.45); }
+.lecteur-page-guidee.sans-transition { transition: none; }
+.lecteur-bord { position: absolute; top: 0; bottom: 0; width: 12%; min-width: 48px; border: 0; background: transparent;
+                color: rgba(255,255,255,0); font-size: 46px; cursor: pointer; z-index: 2; }
+.lecteur-bord:hover { color: rgba(255,255,255,.8); }
+.lecteur-bord-gauche { left: 0; }
+.lecteur-bord-droite { right: 0; }
+.lecteur[data-fond="clair"] .lecteur-bord:hover { color: rgba(0,0,0,.6); }
+.lecteur-miniatures { flex: none; display: flex; gap: 6px; padding: 8px 10px; overflow-x: auto; background: #101113; z-index: 3; }
+.lecteur-miniatures[hidden] { display: none; }
+.lecteur-miniature { flex: none; position: relative; height: 112px; min-width: 60px; padding: 4px; border-radius: 6px; cursor: pointer;
+                     border: 2px solid transparent; background: #2b2d31; color: #ddd; font-size: 11px;
+                     display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.lecteur-miniature canvas { height: 90px; width: auto; display: block; background: #fff; }
+.lecteur-miniature.actif { border-color: var(--accent); }
+.lecteur-panneau { width: 300px; flex-shrink: 0; overflow-y: auto; padding: 14px 16px; background: var(--paper-dark);
+                   border-left: 1px solid var(--line); zoom: var(--echelle-ui); }
+.lecteur-panneau .lecteur-section { margin-bottom: 14px; }
+.lecteur-panneau h2 { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; color: var(--ink-soft); margin: 0 0 8px;
+                      text-transform: uppercase; letter-spacing: .05em; }
+.lecteur-choix { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.lecteur-choix-btn { flex: 1 1 0; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line-strong); background: var(--white);
+                     color: var(--ink); font-size: 12px; cursor: pointer; }
+.lecteur-choix-btn.actif { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.lecteur-choix-btn:disabled { opacity: .45; cursor: default; }
+.lecteur-vitesse { margin-top: 8px; font-size: 12px; }
+.lecteur-vitesse input { width: 100%; }
+.lecteur-plein-ecran .lecteur-bar, .lecteur-plein-ecran .lecteur-panneau { display: none; }
 .persona-editor-bar { display: flex; align-items: center; justify-content: space-between;
                       padding: 10px 16px; background: var(--paper-dark);
                       border-bottom: 1px solid var(--line); }

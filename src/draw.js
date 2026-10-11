@@ -64,7 +64,8 @@ import {
   imageDeLaCase3D, casePorteUneImage3D, ancrageDeLImage3D, ancrageValide3D,
   zoomDeLImage3D, zoomValide3D,
 } from './image-store.js';
-import { getLoadedImage, imageState } from './image-cache.js';
+import { getLoadedImage, imageState, preloadImagesFor } from './image-cache.js';
+import { preloadModelsFor } from './model-cache.js';
 // L'apparence d'une Bulle : opacité du fond, motif et régularité du trait. Décidée dans un module
 // pur (#425a), appliquée ici. Les décalages du tremblé s'ajoutent au TRACÉ, jamais au contour rendu
 // par `bubbleEdgePoint` — d'où la queue et le hit-test qui restent d'aplomb.
@@ -3362,6 +3363,27 @@ export async function exportPage(volumeIdx, pageIdx, format = 'png'){
 export function exportVolume(ti){
   const t = S.tomes[ti];
   exportPages(ti, t.pages.map((p, pi) => pi));
+}
+
+/**
+ * Une Planche dessinée dans un canevas à part, à la hauteur demandée (en pixels) : ce que montre le
+ * Lecteur (src/lecteur-ui.js). Le même dessin que l'export (drawContent, sans sélection ni pastilles
+ * de numéro), après avoir chargé ce que la Planche affiche : un Lecteur qui saute d'une Planche à
+ * l'autre ne peut pas compter sur le préchargement en cascade pour l'avoir déjà fait.
+ */
+export async function rendrePlancheEnImage(ti, pi, hauteurPx){
+  const t = S.tomes[ti];
+  const pd = t && t.pages[pi];
+  if (!pd) return null;
+  await Promise.all([preloadModelsFor(pd.objects || []), preloadImagesFor(pd.objects || [])]);
+  const page = { w: t.w, h: t.h, scale: t.scale, style3d: t.style3d, objects: pd.objects, bgColor: pd.bgColor };
+  ensurePanelNumbers(page);
+  const echelle = Math.max(0.05, hauteurPx / page.h);
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(page.w * echelle));
+  c.height = Math.max(1, Math.round(page.h * echelle));
+  drawContent(c.getContext('2d'), page, echelle, false, false);
+  return c;
 }
 
 // Exporte une liste de Planches d'un Tome (par index), une à la fois : le Tome entier, ou les
