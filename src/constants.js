@@ -520,17 +520,55 @@ export const BUBBLE_FONT_DEFAULT = 'Comic Neue';
 // on Windows and visually close, rather than falling back to the same generic font for every
 // choice. Once the original font files are added locally to the project, this fallback
 // becomes unnecessary and the real font displays automatically.
+// ⚠️ LES POLICES DES BULLES, UNE PAR USAGE (#423, choisies avec Valentin le 11 octobre 2026). Huit
+// sont COMPLÈTES : normal, gras, italique et gras italique dessinés par leur auteur. Bangers et
+// Creepster n'existent qu'en un style, faute d'équivalent libre et complet : leurs variantes seront
+// simulées, et l'application le dira. `gras` / `italique` : 'vrai' ou 'simule'. L'ordre est celui de
+// la liste déroulante. Les fichiers sont dans assets/fonts (tools/fetch-fonts.mjs, même liste).
+export const POLICES_BULLES = Object.freeze([
+  { nom: 'Comic Neue', usage: { fr: 'Dialogue BD', en: 'Comic dialogue' }, gras: 'vrai', italique: 'vrai' },
+  { nom: 'Shantell Sans', usage: { fr: 'Écrit à la main', en: 'Handwritten' }, gras: 'vrai', italique: 'vrai' },
+  { nom: 'Nunito', usage: { fr: 'Webtoon, lecture sur écran', en: 'Webtoon, screen reading' }, gras: 'vrai', italique: 'vrai' },
+  { nom: 'Kanit', usage: { fr: "Cris, titres d'action", en: 'Shouts, action titles' }, gras: 'vrai', italique: 'vrai' },
+  { nom: 'Grandstander', usage: { fr: 'Onomatopées cartoon', en: 'Cartoon sound effects' }, gras: 'vrai', italique: 'vrai' },
+  { nom: 'Bangers', usage: { fr: 'Onomatopées comics', en: 'Comics sound effects' }, gras: 'simule', italique: 'simule' },
+  { nom: 'Chakra Petch', usage: { fr: 'Voix robotique, écrans', en: 'Robot voice, screens' }, gras: 'vrai', italique: 'vrai' },
+  { nom: 'EB Garamond', usage: { fr: 'Narration, récitatif', en: 'Narration, captions' }, gras: 'vrai', italique: 'vrai' },
+  { nom: 'Courier Prime', usage: { fr: 'Machine à écrire', en: 'Typewriter' }, gras: 'vrai', italique: 'vrai' },
+  { nom: 'Creepster', usage: { fr: 'Horreur, monstres', en: 'Horror, monsters' }, gras: 'simule', italique: 'simule' },
+]);
+
+// ⚠️ LES POLICES RETIRÉES le 11 octobre 2026 (incomplètes), et leur remplaçante. Une Bulle d'un
+// Projet existant garde son nom de police tel qu'il est écrit (règle n°1 de persisted-data.md : on
+// ne réécrit pas un fichier) ; c'est À LA LECTURE que la remplaçante est dessinée et affichée.
+export const POLICES_BULLES_RETIREES = Object.freeze({
+  'Permanent Marker': 'Shantell Sans',
+  'Patrick Hand': 'Shantell Sans',
+  'Caveat': 'Shantell Sans',
+  'Kalam': 'Shantell Sans',
+  'Fredoka': 'Nunito',
+  'Bubblegum Sans': 'Nunito',
+  'Anton': 'Kanit',
+  'Luckiest Guy': 'Kanit',
+});
+
+/** La police à DESSINER pour un nom lu dans une Bulle : la remplaçante d'une police retirée. PURE. */
+export function policeDeBulle(nom){
+  const n = nom || BUBBLE_FONT_DEFAULT;
+  return POLICES_BULLES_RETIREES[n] || n;
+}
+
 export const BUBBLE_FONT_FALLBACK = {
-  'Bangers': 'Impact',
   'Comic Neue': 'Comic Sans MS',
-  'Permanent Marker': 'Segoe Print',
-  'Luckiest Guy': 'Franklin Gothic Heavy',
-  'Anton': 'Impact',
-  'Patrick Hand': 'Segoe Print',
-  'Caveat': 'Segoe Script',
-  'Fredoka': 'Gabriola',
-  'Bubblegum Sans': 'Comic Sans MS',
-  'Kalam': 'Brush Script MT',
+  'Shantell Sans': 'Segoe Print',
+  'Nunito': 'Segoe UI',
+  'Kanit': 'Impact',
+  'Grandstander': 'Comic Sans MS',
+  'Bangers': 'Impact',
+  'Chakra Petch': 'Consolas',
+  'EB Garamond': 'Georgia',
+  'Courier Prime': 'Courier New',
+  'Creepster': 'Chiller',
 };
 
 

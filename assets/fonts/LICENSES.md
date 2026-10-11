@@ -11,15 +11,15 @@ own folder.
 | Family | Designer | Licence | Copyright |
 | --- | --- | --- | --- |
 | Inter | Rasmus Andersson | SIL OFL 1.1 | Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter) |
-| Bangers | Vernon Adams | SIL OFL 1.1 | Copyright 2010 The Bangers Project Authors (https://github.com/googlefonts/bangers) |
 | Comic Neue | Craig Rozynski, Hrant Papazian | SIL OFL 1.1 | Copyright 2014 The Comic Neue Project Authors (https://github.com/crozynski/comicneue) |
-| Permanent Marker | Font Diner | Apache 2.0 | Copyright (c) 2010 by Font Diner, Inc. All rights reserved. |
-| Luckiest Guy | Astigmatic | Apache 2.0 | Copyright (c) 2010 by Brian J. Bonislawsky DBA Astigmatic (AOETI). All rights reserved. Available under the Apache 2.0 licence. http://www.apache.org/licenses/LICENSE-2.0.html |
-| Anton | Vernon Adams | SIL OFL 1.1 | Copyright 2020 The Anton Project Authors (https://github.com/googlefonts/AntonFont.git) |
-| Patrick Hand | Patrick Wagesreiter | SIL OFL 1.1 | Copyright (c) 2010-2012 Patrick Wagesreiter (mail@patrickwagesreiter.at) |
-| Caveat | Impallari Type | SIL OFL 1.1 | Copyright 2014 The Caveat Project Authors (https://github.com/googlefonts/caveat) |
-| Fredoka | Milena Brandão, Hafontia | SIL OFL 1.1 | Copyright 2016 The Fredoka Project Authors (https://github.com/hafontia/Fredoka-One) |
-| Bubblegum Sans | Sudtipos | SIL OFL 1.1 | Copyright (c) 2011 Angel Koziupa (sudtipos@sudtipos.com), Copyright (c) 2011 Alejandro Paul (sudtipos@sudtipos.com), with Reserved Font Name \ |
-| Kalam | Indian Type Foundry | SIL OFL 1.1 | Copyright (c) 2014 Indian Type Foundry (info@indiantypefoundry.com) |
+| Shantell Sans | Shantell Martin, Arrow Type, Anya Danilova | SIL OFL 1.1 | Copyright 2022 The Shantell Sans Project Authors (https://github.com/arrowtype/shantell-sans) |
+| Nunito | Vernon Adams, Cyreal, Jacques Le Bailly | SIL OFL 1.1 | Copyright 2014 The Nunito Project Authors (https://github.com/googlefonts/nunito) |
+| Kanit | Cadson Demak | SIL OFL 1.1 | Copyright 2020 The Kanit Project Authors (https://github.com/cadsondemak/kanit) |
+| Grandstander | Tyler Finck, ETC | SIL OFL 1.1 | Copyright 2020 The Grandstander Project Authors (https://github.com/Etcetera-Type-Co/Grandstander) |
+| Bangers | Vernon Adams | SIL OFL 1.1 | Copyright 2010 The Bangers Project Authors (https://github.com/googlefonts/bangers) |
+| Chakra Petch | Cadson Demak | SIL OFL 1.1 | Copyright 2018 The Chakra Petch Project Authors (https://github.com/m4rc1e/Chakra-Petch.git) |
+| EB Garamond | Georg Duffner, Octavio Pardo | SIL OFL 1.1 | Copyright 2017 The EB Garamond Project Authors (https://github.com/octaviopardo/EBGaramond12) |
+| Courier Prime | Alan Dague-Greene | SIL OFL 1.1 | Copyright 2015 The Courier Prime Project Authors (https://github.com/quoteunquoteapps/CourierPrime). |
+| Creepster | Sideshow | SIL OFL 1.1 | Copyright (c) 2011, Font Diner, Inc DBA Sideshow (diner@fontdiner.com), with Reserved Font Names "Creepster" |
 
 Full licence texts: `<family>/LICENSE.txt` in this folder.

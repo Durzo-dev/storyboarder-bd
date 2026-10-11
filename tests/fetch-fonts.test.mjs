@@ -28,9 +28,10 @@ import { dirname, join } from 'node:path';
 import {
   FAMILLES, SOUS_ENSEMBLES, AFFICHAGE_POLICE,
   urlCss3D, blocsDeLaCss3D, nomDeFichier3D, fichiersParUrl3D, fichiersPerimes3D, feuilleLocale3D,
-  recapitulatifLicences3D,
+  recapitulatifLicences3D, copyrightDeMetadonnee3D,
 } from '../tools/fetch-fonts.mjs';
 import { BUBBLE_FONT_PRELOAD_LIST } from '../src/help-content.js';
+import { POLICES_BULLES, POLICES_BULLES_RETIREES, policeDeBulle } from '../src/constants.js';
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -303,6 +304,16 @@ describe('L\'URL demandée à Google', () => {
       'https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
   });
 
+  test('#423 : avec italiques, la syntaxe ital,wght, les droits d\'abord', () => {
+    assert.equal(urlCss3D([{ nom: 'Comic Neue', graisses: [400, 700], italique: true }]),
+      'https://fonts.googleapis.com/css2?family=Comic+Neue:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+  });
+
+  test('#423 : un fichier italique porte -italic, un droit garde son nom', () => {
+    assert.equal(nomDeFichier3D({ famille: 'Comic Neue', graisse: '700', style: 'italic', sousEnsemble: 'latin' }), 'ComicNeue-700-italic-latin.woff2');
+    assert.equal(nomDeFichier3D({ famille: 'Comic Neue', graisse: '700', style: 'normal', sousEnsemble: 'latin' }), 'ComicNeue-700-latin.woff2');
+  });
+
   test('toutes les familles voyagent dans une SEULE requête', () => {
     const url = urlCss3D(FAMILLES);
     assert.equal((url.match(/family=/g) || []).length, FAMILLES.length);
@@ -341,15 +352,46 @@ describe('La liste des familles, et ses accords', () => {
     });
   });
 
-  test('les deux familles sous Apache sont NOMMÉMENT celles-là', () => {
-    // Épinglé, parce que c'est une affirmation de licence et qu'elle doit se relire. Toutes les
-    // autres sont sous OFL 1.1.
+  test('aucune famille sous Apache depuis le remplacement des polices de Bulles (#423)', () => {
+    // Épinglé, parce que c'est une affirmation de licence et qu'elle doit se relire : Permanent
+    // Marker et Luckiest Guy, les deux seules sous Apache, sont parties ; toutes sont sous OFL 1.1.
     const apache = FAMILLES.filter(f => f.repertoire === 'apache').map(f => f.nom).sort();
-    assert.deepEqual(apache, ['Luckiest Guy', 'Permanent Marker']);
+    assert.deepEqual(apache, []);
+  });
+
+  test('#423 : les polices de Bulles complètes ont leurs italiques, et la même liste partout', () => {
+    for (const p of POLICES_BULLES) {
+      const f = FAMILLES.find(x => x.nom === p.nom);
+      assert.ok(f, `${p.nom} n'est pas téléchargée`);
+      assert.equal(!!f.italique, p.italique === 'vrai', `${p.nom} : italiques annoncés et téléchargés en désaccord`);
+      assert.equal(f.graisses.includes(700), p.gras === 'vrai', `${p.nom} : gras annoncé et téléchargé en désaccord`);
+    }
+    assert.deepEqual(BUBBLE_FONT_PRELOAD_LIST, POLICES_BULLES.map(p => p.nom));
+    const html = readFileSync(join(RACINE, 'src/index.html'), 'utf8');
+    const select = html.slice(html.indexOf('<select id="sideBubbleFontSelect">'), html.indexOf('</select>', html.indexOf('<select id="sideBubbleFontSelect">')));
+    assert.deepEqual([...select.matchAll(/<option value="([^"]+)"/g)].map(m => m[1]), POLICES_BULLES.map(p => p.nom));
+  });
+
+  test('#423 : une police retirée se dessine avec sa remplaçante, qui est proposée', () => {
+    const noms = new Set(POLICES_BULLES.map(p => p.nom));
+    for (const [ancienne, nouvelle] of Object.entries(POLICES_BULLES_RETIREES)) {
+      assert.ok(noms.has(nouvelle), `${ancienne} → ${nouvelle}, qui n'est pas proposée`);
+      assert.ok(!noms.has(ancienne));
+      assert.equal(policeDeBulle(ancienne), nouvelle);
+    }
+    assert.equal(policeDeBulle('Bangers'), 'Bangers');
+    assert.equal(policeDeBulle(undefined), 'Comic Neue');
   });
 });
 
 describe('Le récapitulatif de licences', () => {
+  test('RÉGRESSION : une mention de copyright avec des guillemets échappés est lue en entier', () => {
+    const pb = 'fonts {\n  copyright: "Copyright (c) 2011, Font Diner, with Reserved Font Names \\"Creepster\\""\n}';
+    assert.equal(copyrightDeMetadonnee3D(pb), 'Copyright (c) 2011, Font Diner, with Reserved Font Names "Creepster"');
+    const lu = readFileSync(join(RACINE, 'assets/fonts/LICENSES.md'), 'utf8');
+    assert.ok(!/\\ \|/.test(lu), 'une mention de copyright est tronquée dans LICENSES.md');
+  });
+
   const fiches = [
     { nom: 'Inter', designer: 'Rasmus Andersson', licence: 'SIL OFL 1.1', copyright: 'Copyright x' },
     { nom: 'Luckiest Guy', designer: 'Astigmatic', licence: 'Apache 2.0', copyright: 'Copyright y' },

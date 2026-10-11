@@ -73,6 +73,13 @@ wallSide  : 'avant' | 'arriere'
 Noter `'tracé'` avec son accent, `'cloture'` et `'barriere'` sans les leurs, `'fermee'` sans accent :
 ces irrégularités sont dans les fichiers enregistrés. Les « corriger » les casserait.
 
+### `bulleFont` — les polices retirées se lisent, elles ne se réécrivent pas
+
+Huit polices de Bulles ont été retirées le 11 octobre 2026 (#423, elles n'avaient ni gras ni
+italique). Une Bulle enregistrée avec l'une d'elles GARDE ce nom dans le fichier : c'est à la
+lecture que `policeDeBulle` (`src/constants.js`, table `POLICES_BULLES_RETIREES`) la dessine et
+l'affiche avec sa remplaçante. Le nom n'est remplacé que si l'utilisateur choisit une autre police.
+
 ### `modelFile` — un nom, et le fichier qu'il désigne
 
 Un modèle 3D importé est un `objet3d` ordinaire portant `objType: 'modele'` et un champ de plus,

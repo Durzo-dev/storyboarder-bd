@@ -972,8 +972,8 @@ describe('#403n : un libellé porte UNE majuscule, la première', () => {
   const ACRONYMES = new Set(['3D', 'PNG', 'JPG', 'JPEG', 'WebP', 'PDF', 'JSON', 'Ctrl', 'Maj',
     'Alt', 'Échap', 'A4', 'A5', 'A3', 'B4']);
   // Les polices d'écriture proposées pour les Bulles : des noms propres, ils gardent leur casse.
-  const NOMS_PROPRES = new Set(['Bubblegum Sans', 'Comic Neue', 'Luckiest Guy', 'Patrick Hand',
-    'Permanent Marker']);
+  const NOMS_PROPRES = new Set(['Comic Neue', 'Shantell Sans', 'Chakra Petch', 'EB Garamond',
+    'Courier Prime']);
   const AVEC_LETTRE = /[A-Za-zÀ-ÿ]/;
   const nu = (mot) => mot.replace(/^[^A-Za-zÀ-ÿ0-9]+|[^A-Za-zÀ-ÿ0-9]+$/g, '');
 

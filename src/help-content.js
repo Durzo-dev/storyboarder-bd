@@ -115,6 +115,7 @@ export const HELP_MANUAL_EN = [
     '"Bubble look" sets the inner padding, the fill colour and opacity, and the texture: old paper, ice, lava or starry night. A texture suggests its own tint until a colour is picked. At 0% opacity only the outline and the text remain.',
     'The Bubble has its own "Border" section, separate from a Panel\'s: visibility, width, colour, pattern (Solid, Dotted, Dashed, Thorns) and regularity (Clean, or Shaky for a hand-drawn outline). Hiding the border hides those settings.',
     'The "Text" section sets the font, size and colour of the letters, plus an outline that draws a halo behind them so they stay legible on a dark or busy background.',
+    'Ten fonts, one per use: dialogue, handwriting, webtoon, shouts, sound effects, robot voice, narration, typewriter, horror. Hover one in the list to see its use.',
   ]},
   { id: 'style', title: 'Bubble styles', paragraphs: [
     'The "Style" section, between "Border" and "Text", keeps a Bubble\'s look under a name so you can reapply it elsewhere. "Save" asks for that name.',
@@ -348,6 +349,7 @@ export const HELP_MANUAL_FR = [
     "« Apparence de la bulle » règle l'écart intérieur, la couleur et l'opacité du fond, ainsi que sa texture : vieux papier, glace, lave ou nuit étoilée. Une texture propose sa propre teinte tant qu'aucune couleur n'a été choisie. À 0 % d'opacité, seuls le contour et le texte subsistent.",
     "La Bulle a sa propre section « Bordure », distincte de celle des Cases : affichage, épaisseur, couleur, motif (Plein, Pointillé, Tirets, Épines) et régularité (Net, ou Tremblé pour un contour tracé à la main). Masquer la bordure masque ces réglages.",
     "La section « Texte » règle la police, la taille et la couleur des lettres, ainsi qu'un contour qui dessine un halo derrière elles pour qu'elles restent lisibles sur un fond sombre ou chargé.",
+    "Dix polices, une par usage : dialogue, écrit à la main, webtoon, cris, onomatopées, voix robotique, narration, machine à écrire, horreur. Survolez-en une dans la liste pour voir son usage.",
   ]},
   { id: 'style', title: 'Styles de bulle', paragraphs: [
     "La section « Style », entre « Bordure » et « Texte », garde l'apparence d'une Bulle sous un nom pour la réappliquer ailleurs. « Enregistrer » demande ce nom.",
@@ -481,7 +483,8 @@ export const HELP_MANUAL_FR = [
 // Précharge les polices "BD" du sélecteur de la Bulle dès le démarrage : sans ça, le canevas peut
 // continuer à afficher la police de repli (sans-serif) tant que le navigateur n'a pas effectivement
 // chargé la police choisie, même après avoir changé la valeur du sélecteur.
-export const BUBBLE_FONT_PRELOAD_LIST = ['Bangers', 'Comic Neue', 'Permanent Marker', 'Luckiest Guy', 'Anton', 'Patrick Hand', 'Caveat', 'Fredoka', 'Bubblegum Sans', 'Kalam'];
+// La même liste que POLICES_BULLES (constants.js), dans le même ordre : un test tient l'accord.
+export const BUBBLE_FONT_PRELOAD_LIST = ['Comic Neue', 'Shantell Sans', 'Nunito', 'Kanit', 'Grandstander', 'Bangers', 'Chakra Petch', 'EB Garamond', 'Courier Prime', 'Creepster'];
 
 
 

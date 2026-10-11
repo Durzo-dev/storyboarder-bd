@@ -76,20 +76,25 @@ const DOSSIER = join(RACINE, 'assets', 'fonts');
  *
  * `repertoire` est le dossier du dépôt google/fonts, et il ENCODE la licence : `ofl/` pour la SIL
  * Open Font License 1.1, `apache/` pour Apache 2.0. Vérifié famille par famille sur le listing du
- * dépôt ; seules Permanent Marker et Luckiest Guy sont sous Apache.
+ * dépôt (METADATA.pb, octobre 2026) : toutes sont aujourd'hui sous OFL.
+ *
+ * `italique` : la famille a de VRAIS italiques, téléchargés avec elle (#423, demandé : une police de
+ * Bulle doit être complète, normal, gras, italique et gras italique dessinés par son auteur). Les
+ * polices de Bulles ont été choisies pour ça, une par usage, avec Valentin le 11 octobre 2026 ;
+ * Bangers et Creepster, sans équivalent complet, n'existent qu'en un style.
  */
 export const FAMILLES = [
   { nom: 'Inter', graisses: [400, 500, 600, 700], slug: 'inter', repertoire: 'ofl' },
+  { nom: 'Comic Neue', graisses: [400, 700], italique: true, slug: 'comicneue', repertoire: 'ofl' },
+  { nom: 'Shantell Sans', graisses: [400, 700], italique: true, slug: 'shantellsans', repertoire: 'ofl' },
+  { nom: 'Nunito', graisses: [400, 700], italique: true, slug: 'nunito', repertoire: 'ofl' },
+  { nom: 'Kanit', graisses: [400, 700], italique: true, slug: 'kanit', repertoire: 'ofl' },
+  { nom: 'Grandstander', graisses: [400, 700], italique: true, slug: 'grandstander', repertoire: 'ofl' },
   { nom: 'Bangers', graisses: [400], slug: 'bangers', repertoire: 'ofl' },
-  { nom: 'Comic Neue', graisses: [400, 700], slug: 'comicneue', repertoire: 'ofl' },
-  { nom: 'Permanent Marker', graisses: [400], slug: 'permanentmarker', repertoire: 'apache' },
-  { nom: 'Luckiest Guy', graisses: [400], slug: 'luckiestguy', repertoire: 'apache' },
-  { nom: 'Anton', graisses: [400], slug: 'anton', repertoire: 'ofl' },
-  { nom: 'Patrick Hand', graisses: [400], slug: 'patrickhand', repertoire: 'ofl' },
-  { nom: 'Caveat', graisses: [400, 700], slug: 'caveat', repertoire: 'ofl' },
-  { nom: 'Fredoka', graisses: [400, 600], slug: 'fredoka', repertoire: 'ofl' },
-  { nom: 'Bubblegum Sans', graisses: [400], slug: 'bubblegumsans', repertoire: 'ofl' },
-  { nom: 'Kalam', graisses: [400, 700], slug: 'kalam', repertoire: 'ofl' },
+  { nom: 'Chakra Petch', graisses: [400, 700], italique: true, slug: 'chakrapetch', repertoire: 'ofl' },
+  { nom: 'EB Garamond', graisses: [400, 700], italique: true, slug: 'ebgaramond', repertoire: 'ofl' },
+  { nom: 'Courier Prime', graisses: [400, 700], italique: true, slug: 'courierprime', repertoire: 'ofl' },
+  { nom: 'Creepster', graisses: [400], slug: 'creepster', repertoire: 'ofl' },
 ];
 
 /**
@@ -112,8 +117,11 @@ const UA_CHROME = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 
   + '(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
 export function urlCss3D(familles) {
-  const params = familles.map(f =>
-    `family=${f.nom.replace(/ /g, '+')}:wght@${f.graisses.join(';')}`);
+  // Avec italiques, la syntaxe de l'API devient `ital,wght@0,400;0,700;1,400;1,700` : chaque couple
+  // dit (italique ?, graisse), droits d'abord, comme l'API l'exige.
+  const params = familles.map(f => (f.italique
+    ? `family=${f.nom.replace(/ /g, '+')}:ital,wght@${[...f.graisses.map(g => `0,${g}`), ...f.graisses.map(g => `1,${g}`)].join(';')}`
+    : `family=${f.nom.replace(/ /g, '+')}:wght@${f.graisses.join(';')}`));
   return `https://fonts.googleapis.com/css2?${params.join('&')}&display=swap`;
 }
 
@@ -166,13 +174,18 @@ function slugFamille(famille) {
   return famille.replace(/[^A-Za-z0-9]/g, '');
 }
 
+/** `-italic` pour un fichier italique ; rien pour un droit, dont les noms ne changent donc pas. */
+function suffixeStyle(bloc) {
+  return bloc.style === 'italic' ? '-italic' : '';
+}
+
 export function nomDeFichier3D(bloc) {
-  return `${slugFamille(bloc.famille)}-${bloc.graisse}-${bloc.sousEnsemble}.woff2`;
+  return `${slugFamille(bloc.famille)}-${bloc.graisse}${suffixeStyle(bloc)}-${bloc.sousEnsemble}.woff2`;
 }
 
 /** Le nom d'un fichier de police VARIABLE : sans graisse, puisqu'il les sert toutes. */
 export function nomDeFichierVariable3D(bloc) {
-  return `${slugFamille(bloc.famille)}-${bloc.sousEnsemble}.woff2`;
+  return `${slugFamille(bloc.famille)}${suffixeStyle(bloc)}-${bloc.sousEnsemble}.woff2`;
 }
 
 /**
@@ -298,6 +311,17 @@ export function recapitulatifLicences3D(fiches) {
   return lignes.join('\n');
 }
 
+/**
+ * La première mention de copyright d'un METADATA.pb. ⚠️ ELLE PEUT CONTENIR DES GUILLEMETS ÉCHAPPÉS :
+ * Creepster cite ses « Reserved Font Names \"Creepster\" ». Une première lecture s'arrêtait au
+ * premier guillemet et tronquait la mention dans LICENSES.md, alors que c'est elle que la licence
+ * exige de faire voyager.
+ */
+export function copyrightDeMetadonnee3D(pb) {
+  const m = /copyright:\s*"((?:[^"\\]|\\.)*)"/.exec(pb);
+  return m ? m[1].replace(/\\(.)/g, '$1') : undefined;
+}
+
 // ── À partir d'ici, l'entrée-sortie. Rien de testable sans réseau, rien de décisif non plus. ────
 
 async function texte(url, entetes = {}) {
@@ -367,7 +391,7 @@ async function main() {
       nom: f.nom,
       designer: champMetadonnee(pb, 'designer'),
       licence: f.repertoire === 'apache' ? 'Apache 2.0' : 'SIL OFL 1.1',
-      copyright: (/copyright:\s*"([^"]*)"/.exec(pb) || [])[1],
+      copyright: copyrightDeMetadonnee3D(pb),
     });
   }
 
@@ -382,8 +406,12 @@ async function main() {
 
   console.log(`\nÉcrit dans assets/fonts/ : ${noms.size} woff2 (${Math.round(octets / 1024)} ko),`
     + ` ${FAMILLES.length} licences, fonts.css, LICENSES.md.`);
-  console.log('Étape suivante : remplacer les deux @import de style.css par');
-  console.log("  @import url('./assets/fonts/fonts.css');");
+  // Les sous-dossiers de licence des familles RETIRÉES restent : ils ne se balaient pas d'office
+  // (cf. fichiersPerimes3D). Signalés, pour qu'on les retire à la main.
+  const slugs = new Set(FAMILLES.map(f => f.slug));
+  const orphelins = readdirSync(DOSSIER, { withFileTypes: true })
+    .filter(d => d.isDirectory() && !slugs.has(d.name)).map(d => d.name);
+  if (orphelins.length) console.log(`Dossiers de licence sans famille (à retirer) : ${orphelins.join(', ')}`);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {

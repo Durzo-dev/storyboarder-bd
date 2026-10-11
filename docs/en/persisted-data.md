@@ -84,6 +84,13 @@ door/window state : 'gauche' | 'droite' | 'fermee'
 Note `'tracé'` with its accent, `'cloture'` and `'barriere'` without theirs, `'fermee'` without an
 accent: these irregularities are in the saved files. "Fixing" them would break them.
 
+### `bulleFont` — retired fonts are read, never rewritten
+
+Eight bubble fonts were retired on 11 October 2026 (#423, they had neither bold nor italic). A
+bubble saved with one of them KEEPS that name in the file: it is at read time that `policeDeBulle`
+(`src/constants.js`, table `POLICES_BULLES_RETIREES`) draws and displays it with its replacement.
+The name is only replaced if the user picks another font.
+
 ### `modelFile` — a name, and the file it points at
 
 An imported 3D model is an ordinary `objet3d` carrying `objType: 'modele'` and one extra field,

@@ -27,7 +27,7 @@ import { bibliothequeLue3D, styleCorrespondant3D, peutEnregistrerLeStyle3D } fro
 import { bulleEstFusionnable3D, groupeDeLaBulle3D } from './bubble-merge.js';
 import {
   TRACÉ_EMOJI, OBJECT_TYPE_LABELS, OBJECT_TYPE_EMOJI,
-  BUBBLE_PADDING_DEFAULT, BUBBLE_FONT_DEFAULT, GROUND_TYPE_DEFS,
+  BUBBLE_PADDING_DEFAULT, GROUND_TYPE_DEFS, policeDeBulle, POLICES_BULLES,
   WALL_TYPES,
 } from './constants.js';
 import { clamp, getEmotion, libelleTable3D, libelleTypeObjet3D, pxPerMm } from './utils.js';
@@ -1249,7 +1249,13 @@ function updateSidePanelImpl(){
     sideDescTitle.textContent = 'Texte';
     sideDescInput.placeholder = tr('Write the bubble content', 'Écrivez le contenu de la bulle');
     sideBubbleFontWrap.style.display = 'block';
-    sideBubbleFontSelect.value = sel.bulleFont || BUBBLE_FONT_DEFAULT;
+    // Une police retirée (#423) s'affiche sous le nom de sa remplaçante, celle qui est dessinée.
+    sideBubbleFontSelect.value = policeDeBulle(sel.bulleFont);
+    // L'USAGE de chaque police en infobulle (#423 : une police par usage), dans la langue affichée.
+    [...sideBubbleFontSelect.options].forEach(opt => {
+      const p = POLICES_BULLES.find(x => x.nom === opt.value);
+      if (p) opt.title = S.appLang === 'en' ? p.usage.en : p.usage.fr;
+    });
     document.getElementById('sideBubbleTextColorWrap').style.display = 'block';
     document.getElementById('sideBubbleTextOutlineColorWrap').style.display = 'block';
     sideBubbleFontSizeWrap.style.display = 'block';
