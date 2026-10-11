@@ -193,8 +193,6 @@ export function renderTree(){
         S.pageSelected = true;
         renderAll();
       };
-      pagesWrap.appendChild(addBtn);
-
       // Chapitres (demandé) : facultatifs, entre le Tome et ses Planches, repliables. La
       // numérotation des Planches reste continue dans le Tome (cf. chapitres.js).
       const addChBtn = document.createElement('button');
@@ -206,7 +204,9 @@ export function renderTree(){
         creerChapitre(t, nomParDefautDuChapitre(t, tr('Chapter', 'Chapitre')));
         renderAll();
       };
+      // « Ajouter un chapitre » AU-DESSUS de « Ajouter une planche » (demandé).
       pagesWrap.appendChild(addChBtn);
+      pagesWrap.appendChild(addBtn);
 
       // La Planche affichée, retrouvée PAR SON id après un déplacement (l'index est positionnel).
       const apres = (muter) => {

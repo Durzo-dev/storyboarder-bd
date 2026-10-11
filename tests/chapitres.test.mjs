@@ -115,6 +115,7 @@ describe('Le branchement', () => {
     assert.match(PT, /apres\(\(\) => deplacerPlanche\(t, id, \{ chapitreId: p\.chapitreId \|\| null, avantPageId \}\)\);/);
     assert.match(PT, /apres\(\(\) => deplacerChapitre\(t, id, vers\)\);/);
     assert.match(PT, /const _chNouvelle = chapitrePourNouvellePlanche\(t\);/);
+    assert.match(PT, /pagesWrap\.appendChild\(addChBtn\);\n      pagesWrap\.appendChild\(addBtn\);/, '« Ajouter un chapitre » au-dessus');
   });
   test('menu du chapitre (renommer, exporter, supprimer) et « Retirer du chapitre »', () => {
     const EV = lire('src/events.js');
