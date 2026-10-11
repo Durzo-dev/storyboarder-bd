@@ -904,13 +904,13 @@ describe('#397 : le bouton « Éditeur de modèle », désormais dans le bandeau
     // La section « Éditeur » du menu de gauche a disparu (demandé) : le bouton est dans le bandeau.
     assert.doesNotMatch(I18N, /#personaTrigger|#personaPanelHint/);
     // Un bouton ROND à icône dans le bandeau (demandé) : le libellé est son infobulle.
-    assert.match(I18N, /\['#openPoseEditorBtn', null, null, 'title', 'Model editor', 'Éditeur de modèle'\]/);
+    assert.match(I18N, /\['#openPoseEditorBtn', null, null, 'title', 'Model editor \(E\)', 'Éditeur de modèle \(E\)'\]/);
   });
 
   test('et index.html porte le MÊME texte français', () => {
     // Sans quoi le libellé changerait au démarrage, le temps qu'applyI18n passe.
     assert.doesNotMatch(HTML, /id="personaTrigger"/, 'la section du menu de gauche est revenue');
-    assert.match(HTML, /id="openPoseEditorBtn" title="Éditeur de modèle">/,
+    assert.match(HTML, /id="openPoseEditorBtn" title="Éditeur de modèle \(E\)">/,
       'le bouton a divergé de sa table');
   });
 });
@@ -946,8 +946,10 @@ describe('#397a : « Éditeur de Personnage » ne se dit plus nulle part', () =>
     assert.match(html, /id="personaEditorTitle">Éditeur de modèle</);
     assert.match(html, /help-group-title">Éditeur de modèle</);
     const i18n = readFileSync(new URL('../src/i18n.js', import.meta.url), 'utf8');
-    assert.equal((i18n.match(/'Model editor', 'Éditeur de modèle'/g) || []).length, 3,
-      'attendu : les deux crayons et le bouton du menu de gauche');
+    assert.equal((i18n.match(/'Model editor', 'Éditeur de modèle'/g) || []).length, 2,
+      'attendu : les deux crayons');
+    // Le bouton du bandeau porte le même nom, avec son raccourci.
+    assert.match(i18n, /'Model editor \(E\)', 'Éditeur de modèle \(E\)'/);
   });
 });
 
