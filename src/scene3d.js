@@ -400,6 +400,23 @@ function panelOwnedElements3D(panel, page){
 // ↳ src/constants.js
 // ↳ src/constants.js
 // ↳ src/constants.js
+/**
+ * La caméra de cette Case bouge-t-elle EN CE MOMENT ? Un glisser de caméra en cours (rotation,
+ * déplacement), ou un lissage qui converge (molette, flèches, fin de glisser).
+ *
+ * Pendant ce temps, la liste des Éléments du menu de droite garde son classement (signalé : les
+ * lignes changeaient de place et clignotaient à chaque image), et la mesure « Non visible » n'est pas
+ * refaite à chaque image (une passe de rendu de plus par image, pour un résultat aussitôt périmé).
+ * Tout est remis à jour par la dernière image du mouvement.
+ */
+export function cameraEnMouvement3D(panel){
+  if (!panel) return false;
+  if (panel._camAnimating) return true;
+  const g = S.dragOrig;
+  const glisser = (S.dragMode === 'panelCamRotate' || S.dragMode === 'panelCamPan') && !!g && !g.enAttente;
+  return glisser && (g.panelId === panel.id || (!g.panelId && S.selectedId === panel.id));
+}
+
 export function startCamSmoothing(panel){
   if (panel._camAnimating) return;
   panel._camAnimating = true;
@@ -441,7 +458,12 @@ export function startCamSmoothing(panel){
       if (S.sideCameraTarget === panel && _refreshCameraSliders) { _refreshCameraSliders(panel); _renderSideCameraGizmo(panel); }
     } catch(err) { console.error('[camSmoothing] step error:', err); }
     if (stillMoving) requestAnimationFrame(step);
-    else panel._camAnimating = false;
+    else {
+      panel._camAnimating = false;
+      // UNE IMAGE DE PLUS, À L'ARRÊT : la liste des Éléments et la mesure « Non visible » sont
+      // gelées pendant le mouvement (cf. cameraEnMouvement3D) ; c'est ce dessin qui les remet à jour.
+      try { if (_drawCurrentPage) _drawCurrentPage(); } catch(err) { console.error('[camSmoothing] end error:', err); }
+    }
   }
   requestAnimationFrame(step);
 }
@@ -2094,7 +2116,10 @@ function renderPanelScene3D(panel, page, styleKey, scale = 1){
   const cached = panelSceneCache3D.get(panel.id);
   // #449 : une image en cache SANS la mesure de visibilité qu'on attend d'elle ne suffit pas ; la
   // Case est rendue de nouveau, une fois, pour l'obtenir.
-  const _mesureManquante = _mesurerCase3D(panel.id) && !(cached && cached.visibilites && cached.visibilites.sig === sig);
+  // Pas pendant un mouvement de caméra (cf. cameraEnMouvement3D) : la mesure serait périmée à
+  // l'image suivante ; elle est faite par la dernière image du mouvement.
+  const _mesureManquante = _mesurerCase3D(panel.id) && !cameraEnMouvement3D(panel)
+    && !(cached && cached.visibilites && cached.visibilites.sig === sig);
   if (cached && cached.sig === sig && !_mesureManquante) { sondeCompter('Case servie par le cache'); return cached; }
   // Budget épuisé : on REMET À PLUS TARD plutôt que de bloquer. La Case garde son image précédente
   // si elle en a une — périmée d'une frame, ce qui ne se voit pas — et n'affiche rien si elle est
@@ -3151,7 +3176,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
   // qui l'ont demandée (liste latérale) ou toutes pendant un export (crédits). Un échec est NOTÉ,
   // pas réessayé : réessayer redemanderait un rendu à chaque image.
   entryCache.visibilites = null;
-  if (_mesurerCase3D(panel.id)) {
+  if (_mesurerCase3D(panel.id) && (_mesurerToutes || !cameraEnMouvement3D(panel))) {
     const _restaurer = sansLesEnfantsMasques3D(personaScene3D);
     try {
       entryCache.visibilites = { sig, ...mesurerVisibilites3D({

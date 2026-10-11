@@ -36,7 +36,7 @@ import { groupeReplie, memoriserGroupe } from './section-memory.js';
 import {
   findOwningPanel, centerSceneCameraOnElement, centerSceneCameraOnRoom,
   drawAxisGizmoAt, panelSceneCache3D,
-  elementNonVisible3D,
+  elementNonVisible3D, cameraEnMouvement3D,
 } from './scene3d.js';
 import { getPanelPoints, drawCurrentPage, queueEffectiveDeLaBulle } from './draw.js';
 import { stackRankLabel, noDescriptionLabel } from './i18n.js';
@@ -611,7 +611,15 @@ export function getRoomConnectedComponents(panel, page){
  */
 // #449 : « Non visible » remplace « Hors champ » : hors du cadre OU caché derrière autre chose
 // (elementNonVisible3D, rendu d'identifiants). Le paramètre garde son nom, il reste injectable.
-export function renderSidePersonas(panel, page, horsChampFn = elementNonVisible3D){
+// LA LISTE NE BOUGE PAS PENDANT QUE LA CAMÉRA BOUGE (signalé : pendant une rotation, les lignes
+// passaient d'un bloc à l'autre et clignotaient, la liste étant refaite et reclassée à chaque image).
+// Tant que la caméra de CETTE Case bouge, la liste déjà affichée pour elle est laissée telle quelle ;
+// la dernière image du mouvement la refait (cf. cameraEnMouvement3D, startCamSmoothing).
+let _listeAfficheePour = null;   // l'identifiant de la Case dont la liste est à l'écran
+
+export function renderSidePersonas(panel, page, horsChampFn = elementNonVisible3D, enMouvement = cameraEnMouvement3D){
+  if (panel && _listeAfficheePour === panel.id && enMouvement(panel)) return;
+  _listeAfficheePour = panel ? panel.id : null;
   sidePersonas.innerHTML = '';
   const list = elementsInPanel(panel, page);
   // Tracés (Roads, Paths, Zones) attached to this panel.

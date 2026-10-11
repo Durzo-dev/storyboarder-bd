@@ -62,13 +62,13 @@ describe('Les branchements', () => {
   const SC = lire('src/scene3d.js');
   test('la passe suit le rendu de la Case, sur la même scène, et un échec est noté sans réessai', () => {
     const f = SC.slice(SC.indexOf('function renderPanelSceneUncached3D'), SC.indexOf('// #449 : « NON VISIBLE »'));
-    assert.match(f, /entryCache\.visibilites = null;\n  if \(_mesurerCase3D\(panel\.id\)\) \{/);
+    assert.match(f, /entryCache\.visibilites = null;\n  if \(_mesurerCase3D\(panel\.id\) && \(_mesurerToutes \|\| !cameraEnMouvement3D\(panel\)\)\) \{/);
     assert.match(f, /groupes: _groupesVisibilite, cadre: cadreDeMesure\(rw, rh, panel, page\),/);
     assert.match(f, /entryCache\.visibilites = \{ sig, echec: true \};/);
     assert.match(f, /_groupesVisibilite\.set\(o\.id, entry\.figureGroup\)/);
   });
   test('le cache n\'est pas servi tant que la mesure attendue manque', () => {
-    assert.match(SC, /const _mesureManquante = _mesurerCase3D\(panel\.id\) && !\(cached && cached\.visibilites && cached\.visibilites\.sig === sig\);/);
+    assert.match(SC, /const _mesureManquante = _mesurerCase3D\(panel\.id\) && !cameraEnMouvement3D\(panel\)\n    && !\(cached && cached\.visibilites && cached\.visibilites\.sig === sig\);/);
     assert.match(SC, /if \(cached && cached\.sig === sig && !_mesureManquante\)/);
   });
   test('non visible = hors champ géométrique, sinon la mesure ; sans mesure, on la demande', () => {
@@ -86,8 +86,18 @@ describe('Les branchements', () => {
   });
   test('la liste latérale dit « Non visible » et s\'appuie sur la nouvelle décision', () => {
     const SB = lire('src/sidebar.js');
-    assert.match(SB, /export function renderSidePersonas\(panel, page, horsChampFn = elementNonVisible3D\)\{/);
+    assert.match(SB, /export function renderSidePersonas\(panel, page, horsChampFn = elementNonVisible3D, enMouvement = cameraEnMouvement3D\)\{/);
     assert.match(SB, /tr\(`Not visible \(\$\{horsChamp\.length\}\)`, `Non visible \(\$\{horsChamp\.length\}\)`\)/);
     assert.doesNotMatch(SB, /Hors champ \(/);
+  });
+  test('pendant un mouvement de caméra, la liste ne bouge pas et la mesure attend la fin', () => {
+    const SB = lire('src/sidebar.js');
+    assert.match(SB, /if \(panel && _listeAfficheePour === panel\.id && enMouvement\(panel\)\) return;/);
+    const f = SC.slice(SC.indexOf('export function cameraEnMouvement3D'), SC.indexOf('export function startCamSmoothing'));
+    assert.match(f, /if \(panel\._camAnimating\) return true;/);
+    assert.match(f, /S\.dragMode === 'panelCamRotate' \|\| S\.dragMode === 'panelCamPan'/);
+    // Et une image de plus à l'arrêt, qui remet tout à jour.
+    assert.match(SC, /panel\._camAnimating = false;\n      \/\/ UNE IMAGE DE PLUS, À L'ARRÊT/);
+    assert.match(lire('src/events.js'), /const _finGesteCamera = S\.dragMode === 'panelCamRotate' \|\| S\.dragMode === 'panelCamPan';\n  if \(_finGesteCamera\) setTimeout\(\(\) => drawCurrentPage\(\), 0\);/);
   });
 });

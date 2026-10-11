@@ -3979,9 +3979,11 @@ window.addEventListener('mouseup', () => {
     if (auClic) auClic();
     return;
   }
-  // Fin d'une rotation de Scène : le repère s'efface (il ne vit que pendant le geste).
-  const _finOrbiteScene = S.dragMode === 'panelCamRotate' && S.editingSceneId;
-  if (_finOrbiteScene) setTimeout(() => drawCurrentPage(), 0);
+  // Fin d'un geste de caméra : une image de plus, une fois le geste terminé. Le repère d'une Scène
+  // s'efface (il ne vit que pendant la rotation), et la liste des Éléments, gelée pendant le geste
+  // (cf. cameraEnMouvement3D), est remise à jour.
+  const _finGesteCamera = S.dragMode === 'panelCamRotate' || S.dragMode === 'panelCamPan';
+  if (_finGesteCamera) setTimeout(() => drawCurrentPage(), 0);
   // ---- Terrain Zone tool: mouseup finalizes the rectangle ----
   if (S.traceTool && S.traceTool.type === 'terrain' && S.traceTool.drawing) {
     stopTraceTool(true);
