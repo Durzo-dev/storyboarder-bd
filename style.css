@@ -1518,9 +1518,11 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .lecteur-vue { flex: 1; min-height: 0; position: relative; overflow: hidden; display: flex; align-items: center;
                justify-content: center; }
 .lecteur-vue.lecteur-largeur { overflow-y: auto; align-items: flex-start; }
-.lecteur-etalement { display: flex; gap: 0; margin: auto; box-shadow: 0 6px 24px rgba(0,0,0,.45); }
-.lecteur-page { display: block; background: #fff; }
-.lecteur-page-blanche { background: #fafafa; }
+.lecteur-etalement { display: flex; gap: 0; margin: auto; }
+/* L'ombre sur chaque PAGE et non sur l'étalement : la page blanche qui comble un vide prend la
+   couleur du fond du Lecteur, sans ombre, et ne se voit donc pas (demandé). */
+.lecteur-page { display: block; background: #fff; box-shadow: 0 6px 24px rgba(0,0,0,.45); }
+.lecteur-page.lecteur-page-blanche { background: transparent; box-shadow: none; }
 .lecteur-vue.lecteur-guide { display: block; }
 .lecteur-page-guidee { position: absolute; left: 0; top: 0; transform-origin: 0 0; background: #fff;
                        transition: transform .35s ease, width .35s ease, height .35s ease;
@@ -1529,8 +1531,9 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .lecteur-bord { position: absolute; top: 0; bottom: 0; width: 64px; display: flex; align-items: center; padding: 0 14px; border: 0; background: transparent;
                 color: rgba(255,255,255,0); font-size: 46px; cursor: pointer; z-index: 2; }
 .lecteur-bord:hover { color: rgba(255,255,255,.8); }
-.lecteur-bord-gauche { left: 0; justify-content: flex-end; }
-.lecteur-bord-droite { right: 0; justify-content: flex-start; }
+.lecteur-bord-gauche { left: 0; justify-content: flex-end; padding-right: 2px; }
+.lecteur-bord-droite { right: 0; justify-content: flex-start; padding-left: 26px; }
+/* Les flèches décalées vers la droite (demandé) : contre la page à gauche, éloignées d'elle à droite. */
 .lecteur[data-fond="clair"] .lecteur-bord:hover { color: rgba(0,0,0,.6); }
 .lecteur-miniatures { flex: none; display: flex; gap: 6px; padding: 8px 10px; overflow-x: auto; background: #101113; z-index: 3; }
 .lecteur-miniatures[hidden] { display: none; }
