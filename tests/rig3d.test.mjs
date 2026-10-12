@@ -413,7 +413,7 @@ describe('buildWindowRig3D : encombrement du dormant (Fix 31d)', () => {
 describe('Fix 63 : l\'aperçu d\'un Élément seul n\'affiche que lui', () => {
   const source = readFileSync(new URL('../src/rig3d.js', import.meta.url), 'utf8');
   const corps = (() => {
-    const i = source.indexOf('export function showOnlyFigure3D');
+    const i = source.indexOf('function showOnlyFigure3D');
     assert.ok(i > 0, 'showOnlyFigure3D introuvable — renommée ?');
     return source.slice(i, source.indexOf('\nexport ', i + 10));
   })();
@@ -427,6 +427,21 @@ describe('Fix 63 : l\'aperçu d\'un Élément seul n\'affiche que lui', () => {
     // Les masquer donnerait un aperçu entièrement noir, panne spectaculaire, mais qu'aucun test
     // sous Node ne peut voir.
     assert.match(corps, /isLight/, 'le balayage doit exclure les lumières');
+  });
+
+  test('#428 : une seule porte pour dessiner un aperçu, et elle isole toujours', () => {
+    // La garantie est STRUCTURELLE : isoler et dessiner ne font plus qu'un (rendreApercu3D), et
+    // `showOnlyFigure3D` n'est plus exportée. Reste à interdire le contournement : dessiner la scène
+    // partagée directement. Permis à deux endroits seulement, la porte et le rendu d'une Case.
+    const scene = readFileSync(new URL('../src/scene3d.js', import.meta.url), 'utf8');
+    const dessinsDirects = (s) => (s.match(/personaRenderer3D\.render\(/g) || []).length;
+    assert.equal(dessinsDirects(source), 1, 'rig3d.js dessine la scène partagée hors de rendreApercu3D : passer par elle');
+    assert.equal(dessinsDirects(scene), 1, 'scene3d.js dessine la scène partagée hors du rendu d\'une Case : un aperçu doit passer par rendreApercu3D');
+    const porte = source.slice(source.indexOf('export function rendreApercu3D'), source.indexOf('\n}\n', source.indexOf('export function rendreApercu3D')));
+    assert.match(porte, /showOnlyFigure3D\(kind, id\);\n {2}personaRenderer3D\.render\(personaScene3D, camera\);/, 'la porte isole AVANT de dessiner');
+    assert.doesNotMatch(source, /export function showOnlyFigure3D/, 'exportée, elle redeviendrait une étape qu\'on peut oublier');
+    // Le rendu d'une Case est bien le seul dessin direct de scene3d.js : celui qui suit la pose du décor.
+    assert.match(scene, /const _restaurerArbre = sansLesEnfantsMasques3D\(personaScene3D\);[\s\S]{0,900}personaRenderer3D\.render\(personaScene3D, personaCamera3D\);/);
   });
 
   test('le rig ciblé est rendu visible APRÈS le masquage', () => {

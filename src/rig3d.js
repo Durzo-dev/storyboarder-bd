@@ -2059,14 +2059,12 @@ export function renderPersonaToCanvas3D(o, zoom, pan, styleKey, resScale = 1, si
   useFigureFormat3D(resScale, sizeOverride);
   const style = resolveStyle3D(styleKey);
   const entry = ensurePersonaRigEntry3D(o, style);
-  showOnlyFigure3D('persona', o.id);
   entry.figureGroup.rotation.y = o.rotY || 0;
   entry.figureGroup.rotation.x = o.rotX || 0;
   entry.figureGroup.rotation.z = o.rotZ || 0;
   applyStyle3DLighting(style);
   frameCameraToFigure(personaCamera3D, entry.figureGroup, zoom, pan, orbit);
-  personaRenderer3D.render(personaScene3D, personaCamera3D);
-  return personaRenderer3D.domElement;
+  return rendreApercu3D('persona', o.id, personaCamera3D);
 }
 
 export function drawPersona3D(c, o, styleKey){
@@ -4352,7 +4350,8 @@ export const objectRigCache3D = new Map(); // object id -> { figureGroup, objTyp
 
 // Caches a figure kind ('persona' or 'objet3d') and a given id, hiding all other
 // figures from both caches: necessary because both pipelines share the same 3D scene.
-export function showOnlyFigure3D(kind, id){
+// ⚠️ PAS EXPORTÉE (#428) : on ne l'appelle qu'à travers rendreApercu3D, juste en dessous.
+function showOnlyFigure3D(kind, id){
   // Fix 63 : on masque D'ABORD tout ce que la scène partagée contient, quoi que ce soit.
   //
   // Cette fonction n'énumérait que les trois caches de rigs. Or personaScene3D est PARTAGÉE avec le
@@ -4374,6 +4373,25 @@ export function showOnlyFigure3D(kind, id){
   // A standalone preview of a single Element (Persona/Object/Wall modal) should never show the Ground
   // (see the groundMesh3D declaration): it only makes sense in a Panel's combined scene.
   if (groundMesh3D) groundMesh3D.visible = false;
+}
+
+/**
+ * #428 : LA SEULE PORTE PAR LAQUELLE UN APERÇU SE DESSINE.
+ *
+ * La scène 3D est PARTAGÉE entre le rendu des Cases (tout le décor) et les aperçus d'un seul
+ * Élément (fiches Personnage, Objet, Mur, éditeur de modèle). Un aperçu doit donc tout masquer sauf
+ * son Élément avant de dessiner, sinon le décor de la dernière Case réapparaît derrière lui (le
+ * défaut corrigé par « Fix 63 »). Chaque aperçu appelait `showOnlyFigure3D` puis dessinait de son
+ * côté, et une branche qui l'oubliait passait les tests (mutant M172).
+ *
+ * Isoler et dessiner ne font plus qu'UN : il n'y a plus de branche qui puisse dessiner sans isoler.
+ * Le dessin direct de la scène partagée n'est permis qu'ici et dans le rendu d'une Case, ce que
+ * tient tests/rig3d.test.mjs.
+ */
+export function rendreApercu3D(kind, id, camera){
+  showOnlyFigure3D(kind, id);
+  personaRenderer3D.render(personaScene3D, camera);
+  return personaRenderer3D.domElement;
 }
 
 /**

@@ -125,6 +125,15 @@ dizaines de paramètres passés de main en main.
 Contrepartie assumée : une modification de `S` est invisible dans les signatures. Quand une fonction
 dépend de `S`, le dire dans son commentaire.
 
+### La scène 3D partagée : un aperçu passe par `rendreApercu3D`
+
+Le rendu des Cases et les aperçus d'un seul Élément (fiches, Éditeur de modèle) partagent la même
+scène et le même renderer (`personaScene3D`, `personaRenderer3D`, `src/rig3d.js`). Un aperçu ne
+dessine donc **jamais** la scène directement : il appelle `rendreApercu3D(type, id, caméra)`, qui
+masque tout sauf son Élément puis dessine, d'un seul geste. Sinon le décor de la dernière Case
+réapparaît derrière lui. Seuls cette fonction et le rendu d'une Case dessinent la scène partagée,
+ce que tient `tests/rig3d.test.mjs` (#428).
+
 ## Nomenclature
 
 Les règles ci-dessous portent sur le **code**. Elles ne s'appliquent pas aux données persistées, qui

@@ -846,7 +846,7 @@ describe('⚠️ LES OMBRES REPARTENT ÉTEINTES APRÈS UNE CASE (#422k)', () => 
     // La propriété qui dit que l'inversion a bien eu lieu : hors du rendu d'une Case, plus aucun
     // chemin ne touche aux drapeaux d'ombre. S'il fallait de nouveau y penser quelque part, c'est
     // que la garantie serait redevenue « tous les chemins pensent à appeler ».
-    const i = RIG.indexOf('export function showOnlyFigure3D');
+    const i = RIG.indexOf('function showOnlyFigure3D');
     const corps = RIG.slice(i, RIG.indexOf('\n}\n', i));
     assert.ok(!/shadowMap|castShadow|OmbresPartagees/.test(corps),
       'un aperçu manipule à nouveau les ombres : la garantie repose de nouveau sur chaque chemin');
@@ -1629,6 +1629,11 @@ describe('⚠️ CE QUI AFFLEURE LE SOL REÇOIT MAIS NE PROJETTE PAS (#422f)', (
  * rien ne la tient. Consigné en #428 plutôt que couvert ici par un test faible : la propriété juste
  * est « tout rendu hors Case est DOMINÉ par un `showOnlyFigure3D` », c'est-à-dire que toutes les
  * branches y mènent, ce qu'une recherche de sous-chaîne ne sait pas dire.
+ *
+ * ⚠️ #428 CLOSE (12 octobre 2026), PAR LA MÊME LEÇON : pas un test plus fin, une garantie inversée.
+ * Isoler et dessiner ne font plus qu'un (`rendreApercu3D`, rig3d.js), `showOnlyFigure3D` n'est
+ * plus exportée, et tests/rig3d.test.mjs interdit tout autre dessin direct de la scène partagée
+ * que la porte et le rendu d'une Case. M172 n'a plus de branche où s'appliquer.
  *
  * ⚠️ ET M171 TIENT L'ORDRE, qui est la moitié facile à casser en déplaçant une ligne : reposer les
  * ombres AVANT le rendu les retire de la Case elle-même. Le défaut serait « les ombres ne marchent

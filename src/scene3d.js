@@ -63,7 +63,7 @@ import {
   ensurePersonaRigEntry3D,
   ensureWallRenderEntry3D,
   resolveStyle3D,
-  showOnlyFigure3D,
+  rendreApercu3D,
   useFigureFormat3D,
   useObjectFormat3D,
   useObjectBoxFormat3D,
@@ -3791,7 +3791,7 @@ function cadrageAjusteModele3D(o, boite){
   let ajuste = false;
   try {
     for (let passe = 0; passe < 3; passe++) {
-      personaRenderer3D.render(personaScene3D, cam);
+      rendreApercu3D('objet3d', o.id, cam);
       const f = Math.min(1, 160 / Math.max(dom.width, dom.height));
       const w = Math.max(1, Math.round(dom.width * f)), h = Math.max(1, Math.round(dom.height * f));
       petit.width = w; petit.height = h;
@@ -3832,11 +3832,9 @@ export function renderObjectToCanvas3D(o, zoom, styleKey, page, resScale = 1, aj
   if (page && WALL_TYPES.includes(o.objType)) {
     const children = page.objects.filter(c => c.type === 'objet3d' && c.magnetWallId === o.id && WALL_OPENING_MAGNET_TYPES.includes(c.objType));
     entry = ensureWallRenderEntry3D(o, children);
-    showOnlyFigure3D('wall', o.id);
     isWall = true;
   } else {
     entry = ensureObjectRigEntry3D(o);
-    showOnlyFigure3D('objet3d', o.id);
   }
   applyStyle3DLighting(resolveStyle3D(styleKey));
   if (isWall && (entry.wallMeshA || entry.wallMeshB)) {
@@ -3851,8 +3849,7 @@ export function renderObjectToCanvas3D(o, zoom, styleKey, page, resScale = 1, aj
     expandBoxByMeshOnly3D(wallOnlyBox, entry.wallMeshA);
     expandBoxByMeshOnly3D(wallOnlyBox, entry.wallMeshB);
     frameOrthoCameraToBox(personaCameraOrtho3D, wallOnlyBox, zoom);
-    personaRenderer3D.render(personaScene3D, personaCameraOrtho3D);
-    return personaRenderer3D.domElement;
+    return rendreApercu3D('wall', o.id, personaCameraOrtho3D);
   }
   // Un modèle importé articulé (SkinnedMesh) a une géométrie brute qui ne représente pas sa pose
   // réellement affichée : frameCameraToFigure (Box3.setFromObject standard) cadrait alors sur une
@@ -3877,8 +3874,7 @@ export function renderObjectToCanvas3D(o, zoom, styleKey, page, resScale = 1, aj
   } else {
     frameCameraToFigure(personaCamera3D, entry.figureGroup, zoom);
   }
-  personaRenderer3D.render(personaScene3D, personaCamera3D);
-  return personaRenderer3D.domElement;
+  return rendreApercu3D('objet3d', o.id, personaCamera3D);
 }
 
 /**
@@ -3897,12 +3893,10 @@ export function renderObjectToCanvas3D(o, zoom, styleKey, page, resScale = 1, aj
 export function renderModelForEditor3D(o, zoom, pan, styleKey, sizeOverride, orbit){
   useFigureFormat3D(1, sizeOverride);
   const entry = ensureObjectRigEntry3D(o);
-  showOnlyFigure3D('objet3d', o.id);
   applyStyle3DLighting(resolveStyle3D(styleKey));
   entry.figureGroup.updateMatrixWorld(true);
   frameCameraToBox(personaCamera3D, boiteDeCadrageModele3D(entry), zoom, pan, orbit);
-  personaRenderer3D.render(personaScene3D, personaCamera3D);
-  return personaRenderer3D.domElement;
+  return rendreApercu3D('objet3d', o.id, personaCamera3D);
 }
 
 export function drawObject3D(c, o, styleKey, page){

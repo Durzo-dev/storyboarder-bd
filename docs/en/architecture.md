@@ -119,6 +119,15 @@ parameters passed from hand to hand.
 Accepted trade-off: a modification of `S` is invisible in the signatures. When a function depends on
 `S`, say so in its comment.
 
+### The shared 3D scene: a preview goes through `rendreApercu3D`
+
+Panel rendering and the previews of a single Element (sheets, Model editor) share the same scene and
+the same renderer (`personaScene3D`, `personaRenderer3D`, `src/rig3d.js`). A preview therefore
+**never** draws the scene directly: it calls `rendreApercu3D(kind, id, camera)`, which hides
+everything but its Element and then draws, in one step. Otherwise the scenery of the last Panel
+shows up behind it. Only this function and Panel rendering draw the shared scene, which
+`tests/rig3d.test.mjs` enforces (#428).
+
 ## Naming
 
 The rules below concern the **code**. They do not apply to persisted data, which follows its own
