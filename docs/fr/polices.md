@@ -108,5 +108,6 @@ choisis par l'utilisateur à l'exécution. Chaque police est chargée dans le na
 ## Ce qui reste
 
 - Le store de polices en ligne (tâche à part).
-- Une police importée absente (fichier supprimé, Projet envoyé à quelqu'un) n'est pas encore
-  signalée dans « Fichiers introuvables » : la Bulle s'affiche dans une police de secours.
+- Une police importée absente (fichier supprimé, Projet envoyé à quelqu'un) est signalée dans
+  « Fichiers introuvables » ([missing-resources.md](missing-resources.md)) ; la Bulle s'affiche
+  dans une police de secours en attendant.

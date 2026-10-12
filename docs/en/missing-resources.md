@@ -5,6 +5,11 @@
 Task #443. What the application does when an opened Project uses 3D models or panel images it
 cannot find, and how to see it without breaking a real Project.
 
+Since #423, **added fonts** are part of it: a bubble whose font is neither built in nor in `Polices`
+(renames followed, see [polices.md](polices.md)) is counted, and the window says it can be added
+again from "My fonts". A font is not a file named by the Project but a family name;
+`policeDisponible` (`src/missing-resources.js`) decides.
+
 ## Why it happens
 
 Models and images are not stored next to the Project file, but in the `Modeles` and `Images`

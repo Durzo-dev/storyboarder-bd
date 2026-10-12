@@ -104,5 +104,6 @@ by the user at run time. Each font is loaded into the browser by `FontFace`
 ## What remains
 
 - The online font store (separate task).
-- A missing imported font (file deleted, Project sent to someone) is not yet reported under
-  "Missing files": the bubble shows in a fallback font.
+- A missing imported font (file deleted, Project sent to someone) is reported under "Missing
+  files" ([missing-resources.md](missing-resources.md)); the bubble shows in a fallback font
+  meanwhile.

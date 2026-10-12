@@ -164,3 +164,42 @@ describe('le câblage', () => {
     }
   });
 });
+
+describe('#423 : les polices importées introuvables', () => {
+  const bulle = (bulleFont) => ({ type: 'bulle', bulleFont });
+  test('les polices citées par les Bulles, sans doublon', async () => {
+    const { policesCitees } = await import('../src/missing-resources.js');
+    assert.deepEqual(policesCitees([bulle('Komika'), bulle('Komika'), { type: 'panel', bulleFont: 'X' }, bulle('')]), ['Komika']);
+  });
+
+  test('disponible : intégrée, retirée (remplaçante), importée, ou renommée vers une importée', async () => {
+    const { policeDisponible } = await import('../src/missing-resources.js');
+    const presentes = { importees: ['Komika 2'], renommages: { Komika: 'Komika 2' } };
+    assert.equal(policeDisponible('Bangers', presentes), true);
+    assert.equal(policeDisponible('Kalam', presentes), true, 'une intégrée retirée a sa remplaçante');
+    assert.equal(policeDisponible('Komika', presentes), true, 'renommée vers une importée');
+    assert.equal(policeDisponible('Wild Words', presentes), false);
+  });
+
+  test('la modale les compte, dit où chercher, et comment les rajouter', async () => {
+    const { ressourcesManquantes, contenuRessources } = await import('../src/missing-resources.js');
+    const t = (en, fr) => fr;
+    const m = ressourcesManquantes({ objets: [bulle('Wild Words'), bulle('Comic Neue')], modelesPresents: [], imagesPresentes: [],
+      policesPresentes: { importees: [], renommages: {} } });
+    assert.deepEqual(m.polices, ['Wild Words']);
+    const c = contenuRessources({ manquantes: m, dossierProjets: 'C:\\P', cheminProjet: 'C:\\P\\a.json', t });
+    assert.match(c.intro, /^1 police\(s\) utilisé\(s\)/);
+    assert.match(c.intro, /les Bulles une police de secours/);
+    assert.deepEqual(c.cherche, [{ libelle: 'Polices', chemin: 'C:\\P\\Polices' }]);
+    assert.deepEqual(c.manquants, [{ libelle: 'Polices manquantes', noms: ['Wild Words'] }]);
+    assert.ok(c.correctifs.some(x => /Mes polices/.test(x)));
+    // Hors de l'application (pas de liste de polices) : rien n'est signalé.
+    assert.deepEqual(ressourcesManquantes({ objets: [bulle('Wild Words')], modelesPresents: [], imagesPresentes: [] }).polices, []);
+  });
+
+  test('trois sortes : « A, B et C »', async () => {
+    const { contenuRessources } = await import('../src/missing-resources.js');
+    const c = contenuRessources({ manquantes: { modeles: ['a.glb'], images: ['b.png'], polices: ['C'] }, dossierProjets: 'C:\\P', cheminProjet: null, t: (en, fr) => fr });
+    assert.match(c.intro, /^1 modèle\(s\) 3D, 1 image\(s\) et 1 police\(s\)/);
+  });
+});

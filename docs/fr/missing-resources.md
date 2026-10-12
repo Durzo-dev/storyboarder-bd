@@ -5,6 +5,11 @@
 Tâche #443. Ce que fait l'application quand un Projet ouvert cite des modèles 3D ou des images de
 Case qu'elle ne trouve pas, et comment le voir sans casser un vrai Projet.
 
+Depuis #423, les **polices ajoutées** en font partie : une Bulle dont la police n'est ni intégrée ni
+dans `Polices` (renommages suivis, cf. [polices.md](polices.md)) est comptée, et la fenêtre dit
+qu'on peut la rajouter depuis « Mes polices ». Une police n'est pas un fichier nommé par le Projet
+mais un nom de famille ; `policeDisponible` (`src/missing-resources.js`) en décide.
+
 ## Pourquoi cela arrive
 
 Les modèles et les images ne sont pas rangés à côté du fichier du Projet, mais dans les dossiers
