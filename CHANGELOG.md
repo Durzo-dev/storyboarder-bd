@@ -13,6 +13,76 @@ version coûterait plus qu'il ne rapporte.
 
 ---
 
+## v1.11.0
+
+**Une bibliothèque de modèles et de polices, des Chapitres, et un Lecteur pour relire vos Tomes.**
+Les modèles 3D se cherchent en ligne et se rangent avec des tags, les polices des Bulles sont
+complètes et extensibles, et un Tome se lit désormais comme un album.
+
+### Ce qui change pour vous
+
+**Bibliothèque de modèles.** Un bouton du bandeau (B) ouvre la bibliothèque. « Mes modèles »
+montre vos modèles en vignettes, avec catégorie, tags, articulé ou statique, et les endroits où
+chacun sert. Les onglets Sketchfab et Poly Haven cherchent en ligne, avec un aperçu 3D (clic gauche
+pour tourner, clic droit pour déplacer, molette pour zoomer) ; Poly Haven se télécharge en un clic,
+dans la qualité de textures choisie. La liste se charge au fil du défilement.
+
+**Crédits dans les exports.** Les modèles venus d'une source en ligne et VISIBLES dans une Planche
+sont crédités sous l'image exportée (PNG et PDF), licence comprise.
+
+**« Non visible ».** Un Élément caché derrière un autre, ou hors du cadre, est signalé comme « Non
+visible » dans la liste des Éléments, et n'est pas crédité dans les exports.
+
+**Chapitres.** Facultatifs, entre les Tomes et les Planches, avec une numérotation qui reste
+continue. On les crée, renomme, supprime (les Planches restent), réordonne et exporte ; on y glisse
+des Planches.
+
+**Le Lecteur.** Clic droit sur un Tome ou un Chapitre, puis « Lire » : une ou deux pages, sens de
+lecture BD ou manga, première page à gauche ou à droite, vue livre où les pages se tournent,
+défilement automatique, vue guidée case par case, miniatures et plein écran (F).
+
+**Polices des Bulles.** Dix polices, une par usage, dont huit complètes : le gras et l'italique
+sont dessinés par leur auteur. Deux interrupteurs, G et I, sous la police d'une Bulle ; une variante
+qu'une police n'a pas est simulée, et marquée d'un ~. Les Bulles qui utilisaient une police retirée
+s'affichent avec sa remplaçante, sans que vos fichiers changent.
+
+**Mes polices.** Le bouton Aa ouvre vos polices, en grille ou en liste : leur détail (tous les
+caractères, une phrase d'essai, la licence), des usages qui se gèrent comme des tags, et un filtre.
+On en ajoute depuis un fichier (.ttf, .otf, .woff, .woff2), ou depuis l'onglet « En ligne », un
+store de polices libres (Fontsource) avec un filtre « Complètes seulement ». Une police manquante
+est signalée dans « Fichiers introuvables ».
+
+**Gestes 3D.** Dans les Scènes, plus de mode Caméra : clic gauche maintenu pour tourner, clic droit
+pour déplacer, molette pour zoomer, comme dans l'aperçu du store et l'Éditeur de modèle. Les
+vitesses sont les mêmes partout, et se règlent dans la Configuration.
+
+**Éditeur de modèle.** Bouton du bandeau, tout à gauche (E). La figure posée se choisit parmi vos
+modèles, depuis la bibliothèque ; « Éditeur » dans la fiche d'un modèle l'ouvre directement.
+
+**Configuration et Manuel.** La Configuration passe en trois onglets (Général, Projets, 3D). Le
+Manuel range ses sections en groupes repliables, et une recherche trouve les mots tapés et les
+surligne.
+
+**Horizon.** Le bord du Sol ne se coupe plus au loin quand on dézoome : une brume à la couleur de
+l'horizon l'efface.
+
+### Sous le capot
+
+- La racine du dépôt est rangée : le processus principal dans `electron/` (le store et la
+  bibliothèque dans `electron/bibliotheque/`), `index.html` et `style.css` dans `src/`,
+  CONTRIBUTING dans `.github/`.
+- Nouvelles exceptions documentées pour le processus principal : `fonts:*` (les polices de
+  l'utilisateur, lues jusque dans les WOFF2) et `fontstore:*` (Fontsource), sur le modèle de
+  `models:*` et `images:*`.
+- « Non visible » repose sur un rendu d'identifiants (`src/visibilite-3d.js`), qui voit
+  l'occultation et pas seulement le cadre.
+- Les vitesses des gestes 3D viennent d'une seule source (`src/utils.js`), lue par le store,
+  l'Éditeur et les Scènes.
+- Notes de conception nouvelles ou mises à jour : `lecteur.md`, `polices.md`, `non-visible.md`,
+  `asset-store.md`, `architecture.md`, `missing-resources.md`.
+
+---
+
 ## v1.10.0
 
 **L'application devient Storyboarder BD, et vos Projets sont à l'abri des mises à jour.** Un nom
