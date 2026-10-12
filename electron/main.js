@@ -844,11 +844,11 @@ async function famillesDePolices() {
     const lue = policesFichiers.regrouperEnFamilles(lus.filter(l => l.info).map(l => ({ ...l, info: { ...l.info, famille: f.nom } })))[0];
     familles.push(lue ? { ...lue, nom: f.nom } : { nom: f.nom, fichiers: [], introuvable: true, gras: 'simule', italique: 'simule' });
   }
-  return { familles, renommages: index.renommages, usages: index.usages, usagesDesPolices: index.usagesDesPolices };
+  return { familles, renommages: index.renommages, usages: index.usages, usagesDesPolices: index.usagesDesPolices, policesVues: index.policesVues };
 }
 
 ipcMain.handle('fonts:list', async () => {
-  try { return await famillesDePolices(); } catch (e) { return { familles: [], renommages: {}, usages: null, usagesDesPolices: {} }; }
+  try { return await famillesDePolices(); } catch (e) { return { familles: [], renommages: {}, usages: null, usagesDesPolices: {}, policesVues: null }; }
 });
 
 // Les usages (comme les tags du store) : une opération à la fois, l'index réécrit. `depart` : les
@@ -857,7 +857,7 @@ ipcMain.handle('fonts:usage', async (event, op, args, depart) => {
   try {
     const r = polices.operationUsage(await lireIndexPolices(), op, args || {}, depart || null);
     if (!r.erreur) await ecrireIndexPolices(r.index);
-    return { usages: r.index.usages, usagesDesPolices: r.index.usagesDesPolices, id: r.id, erreur: r.erreur };
+    return { usages: r.index.usages, usagesDesPolices: r.index.usagesDesPolices, policesVues: r.index.policesVues, id: r.id, erreur: r.erreur };
   } catch (err) { return { erreur: String(err) }; }
 });
 

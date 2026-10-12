@@ -56,8 +56,12 @@ folder per font, with its `LICENSE.txt`, a `dafont.css` sheet and a `LICENSES.md
 Morning Breeze); the others only have the styles their designer drew, the rest is simulated. A test
 keeps the tool, the repository and the bubble list in agreement (`tests/import-dafont.test.mjs`).
 
-One limit: the original uses of the new fonts only apply as long as the user has never changed the
-uses. After that, they arrive without a use, and the user files them in "My fonts".
+**If the user has already changed the uses**, the added fonts receive their original uses
+**translated into the user's own** (`traductionDesUsages`, `src/polices-utilisateur.js`): by name
+("Shouts", ignoring case and accents), otherwise by the use the user gave to the Google fonts that
+carried the same one. Without a single answer, no use is guessed. The index records the built-in
+fonts already seen (`policesVues`, operation `completer`): this happens only once, and a font the
+user emptied stays empty.
 
 ## Bold and italic
 

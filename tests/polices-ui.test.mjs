@@ -27,6 +27,54 @@ describe('les décisions', () => {
     assert.deepEqual(U.variantesDeLaPolice('Disparue'), { gras: 'simule', italique: 'simule' });
   });
 
+  describe('#423 : les usages des polices ajoutées, traduits dans ceux de l\'utilisateur', () => {
+    // Le classement réel de Valentin (12 octobre 2026) : ses ids ne suivent plus l'ordre d'origine.
+    const valentin = {
+      usages: [{ id: 'u1', nom: 'Dialogue' }, { id: 'u2', nom: 'Écrit à la main' }, { id: 'u4', nom: 'Cris' },
+        { id: 'u5', nom: 'Onomatopées' }, { id: 'u7', nom: 'Robotique' }, { id: 'u8', nom: 'Narration' },
+        { id: 'u9', nom: 'Machine à écrire' }, { id: 'u10', nom: 'Horreur' }],
+      usagesDesPolices: { 'Comic Neue': ['u1', 'u8'], 'Shantell Sans': ['u2'], Nunito: ['u8'], Kanit: ['u4'],
+        Grandstander: ['u5'], Bangers: ['u5'], 'Chakra Petch': ['u7'], 'EB Garamond': ['u8'],
+        'Courier Prime': ['u9'], Creepster: ['u10'] },
+    };
+
+    test('par le nom, sans casse ni accents', () => {
+      const t = U.traductionDesUsages({ ...valentin, usages: valentin.usages.map(u => ({ ...u, nom: u.nom.toUpperCase().replace('É', 'E') })) });
+      assert.deepEqual(t.main, ['u2']);
+      assert.deepEqual(t.machine, ['u9']);
+    });
+
+    test('un usage renommé se retrouve par les polices de Google qui le portent', () => {
+      const renomme = { ...valentin, usages: valentin.usages.map(u => (u.nom === 'Cris' ? { ...u, nom: 'Hurlements' } : u.nom === 'Dialogue' ? { ...u, nom: 'Bulles' } : u)) };
+      const t = U.traductionDesUsages(renomme);
+      assert.deepEqual(t.cris, ['u4'], 'Kanit seule le portait');
+      assert.deepEqual(t.dialogue, ['u1'], 'Comic Neue, une fois la Narration expliquée');
+    });
+
+    test('sans réponse unique, pas d\'usage deviné', () => {
+      const t = U.traductionDesUsages({ usages: [{ id: 'a', nom: 'X' }, { id: 'b', nom: 'Y' }], usagesDesPolices: { Creepster: ['a', 'b'] } });
+      assert.equal(t.horreur, undefined);
+    });
+
+    test('seules les polices jamais vues reçoivent des usages ; un index ancien a vu celles de Google', () => {
+      const { attributions, vues } = U.usagesProposes(valentin, null);
+      assert.equal(vues.length, 55);
+      assert.ok(!vues.includes('Kanit'));
+      assert.deepEqual(attributions.Gargle, ['u1', 'u8']);
+      assert.deepEqual(attributions.Tippa, ['u9']);
+      assert.deepEqual(attributions['Green Fuz'], ['u10']);
+      // Après la complétion, l'index les a toutes vues (celles de Google comprises, cf. operationUsage).
+      const ensuite = U.usagesProposes(valentin, [...Object.keys(valentin.usagesDesPolices), ...vues]);
+      assert.deepEqual(ensuite.vues, []);
+    });
+
+    test('le câblage : au chargement, et les usages d\'origine marquent toutes les polices vues', () => {
+      assert.match(lire('src/polices-utilisateur.js'), /definirPolicesImportees\(await pont\.listFonts\(\)\);\n {2}try \{ await completerLesUsages\(\); \}/);
+      assert.equal(U.usagesDOrigine('fr').policesVues.length, 65);
+      assert.match(lire('electron/main.js'), /policesVues: r\.index\.policesVues/);
+    });
+  });
+
   test('une liste mal formée ne casse rien', () => {
     U.definirPolicesImportees(null);
     assert.deepEqual(U.policesImportees(), []);

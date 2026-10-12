@@ -59,8 +59,12 @@ Morning Breeze) ; les autres ont seulement les variantes que leur auteur a dessi
 simulé. Un test tient l'accord entre l'outil, le dépôt et la liste des Bulles
 (`tests/import-dafont.test.mjs`).
 
-Une limite : les usages d'origine des nouvelles polices ne s'appliquent que tant que l'utilisateur
-n'a jamais modifié les usages. Après, elles arrivent sans usage, et il les range dans « Mes polices ».
+**Si l'utilisateur a déjà modifié ses usages**, les polices ajoutées reçoivent leurs usages d'origine
+**traduits dans les siens** (`traductionDesUsages`, `src/polices-utilisateur.js`) : par le nom
+(« Cris », sans casse ni accents), sinon par l'usage qu'il a donné aux polices de Google qui
+portaient le même. Sans réponse unique, pas d'usage deviné. L'index note les polices intégrées déjà
+vues (`policesVues`, opération `completer`) : cela ne se fait qu'une fois, et une police que
+l'utilisateur a vidée le reste.
 
 ## Le gras et l'italique
 

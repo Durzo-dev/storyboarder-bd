@@ -13,7 +13,7 @@
  * testées sous Node ; le chargement touche `document.fonts`, hors de portée des tests.
  */
 
-import { POLICES_BULLES, USAGES_POLICES, policeDeBulle, variantesDePolice } from './constants.js';
+import { POLICES_BULLES, POLICES_GOOGLE, USAGES_POLICES, policeDeBulle, variantesDePolice } from './constants.js';
 
 /** Les familles importées : { nom, fichiers: [{ fichier, graisse, italique, graisses }], gras, italique, licence, url, copyright, auteur, droits }. */
 let familles = [];
@@ -21,6 +21,8 @@ let renommages = {};
 /** Les usages (comme les tags du store) : null tant que l'utilisateur n'y a jamais touché. */
 let usages = null;
 let usagesDesPolices = {};
+/** Les polices intégrées que le classement a déjà vues ; null pour un index d'avant cette liste. */
+let policesVues = null;
 /** Les FontFace ajoutées, pour pouvoir les retirer au rechargement. */
 let chargees = [];
 
@@ -42,6 +44,75 @@ export function definirPolicesImportees(etat){
 function definirUsages(etat){
   usages = Array.isArray(etat && etat.usages) ? etat.usages.filter(u => u && u.id && u.nom) : null;
   usagesDesPolices = (etat && etat.usagesDesPolices && typeof etat.usagesDesPolices === 'object') ? { ...etat.usagesDesPolices } : {};
+  policesVues = Array.isArray(etat && etat.policesVues) ? etat.policesVues.slice() : null;
+}
+
+const normaliser = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+
+/**
+ * Ce que devient chaque usage D'ORIGINE (clé de USAGES_POLICES) dans le classement de l'utilisateur :
+ * `{ cle: [id] }` (#423, demandé : « te baser sur mes modifications »). Deux indices, dans l'ordre :
+ *
+ *   1. le NOM : un usage qui s'appelle encore « Cris » ou « Shouts » (sans casse ni accents) ;
+ *   2. sinon, les polices de Google, que l'utilisateur a classées : l'usage qu'il a donné à TOUTES
+ *      celles qui avaient la clé d'origine, une fois retirés ceux qu'expliquent leurs autres clés.
+ *      C'est ce qui retrouve un usage renommé (« Cris » devenu « Hurlements »).
+ *
+ * Une clé sans réponse UNIQUE n'est pas traduite : mieux vaut une police sans usage qu'un usage
+ * deviné de travers. PURE.
+ */
+export function traductionDesUsages(classement){
+  const trad = {};
+  for (const u of USAGES_POLICES) {
+    const memeNom = classement.usages.filter(x => [normaliser(u.fr), normaliser(u.en)].includes(normaliser(x.nom)));
+    if (memeNom.length === 1) trad[u.cle] = [memeNom[0].id];
+  }
+  for (const u of USAGES_POLICES) {
+    if (trad[u.cle]) continue;
+    const references = POLICES_GOOGLE.filter(p => p.usages.includes(u.cle) && classement.usagesDesPolices[p.nom]);
+    if (!references.length) continue;
+    let communs = null;
+    for (const p of references) {
+      const expliques = new Set(p.usages.filter(c => c !== u.cle).flatMap(c => trad[c] || []));
+      const reste = classement.usagesDesPolices[p.nom].filter(id => !expliques.has(id));
+      communs = communs ? communs.filter(id => reste.includes(id)) : reste;
+    }
+    if (communs && communs.length === 1) trad[u.cle] = communs;
+  }
+  return trad;
+}
+
+/**
+ * Les usages à proposer aux polices intégrées que le classement n'a JAMAIS VUES (celles qu'une mise
+ * à jour ajoute) : leurs usages d'origine, traduits dans ceux de l'utilisateur. Une police déjà
+ * classée n'est pas touchée. `vues` absent (index d'avant la liste) : les polices de Google, les
+ * seules qui existaient alors. Rend `{ attributions, vues }`, `vues` = les polices nouvellement vues. PURE.
+ */
+export function usagesProposes(classement, vues, polices = POLICES_BULLES){
+  const deja = new Set(vues || POLICES_GOOGLE.map(p => p.nom));
+  const trad = traductionDesUsages(classement);
+  const nouvelles = polices.filter(p => !deja.has(p.nom));
+  const attributions = {};
+  for (const p of nouvelles) {
+    if (classement.usagesDesPolices[p.nom]) continue;
+    const ids = [...new Set(p.usages.flatMap(c => trad[c] || []))];
+    if (ids.length) attributions[p.nom] = ids;
+  }
+  return { attributions, vues: nouvelles.map(p => p.nom) };
+}
+
+/**
+ * Au chargement : si l'utilisateur a déjà classé ses polices, les intégrées nouvelles reçoivent leurs
+ * usages, traduits dans les siens, et l'index s'en souvient. Rien à faire tant qu'il n'y a jamais
+ * touché : les usages d'origine s'appliquent alors à toutes.
+ */
+async function completerLesUsages(){
+  if (!usages) return;
+  const { attributions, vues } = usagesProposes(classementDesUsages('fr'), policesVues);
+  if (!vues.length) return;
+  // TOUTES les intégrées deviennent vues, pas seulement les nouvelles : un index d'avant la liste
+  // n'avait encore rien noté, et une police de Google vidée par l'utilisateur doit le rester.
+  await operationUsage('completer', { attributions, vues: POLICES_BULLES.map(p => p.nom) }, 'fr');
 }
 
 /**
@@ -54,6 +125,7 @@ export function usagesDOrigine(lang){
   return {
     usages: USAGES_POLICES.map(u => ({ id: ids[u.cle], nom: lang === 'en' ? u.en : u.fr })),
     usagesDesPolices: Object.fromEntries(POLICES_BULLES.map(p => [p.nom, p.usages.map(c => ids[c])])),
+    policesVues: POLICES_BULLES.map(p => p.nom),
   };
 }
 
@@ -136,6 +208,7 @@ export async function chargerPolicesUtilisateur(){
   const pont = globalThis.window && window.storyboarderAPI;
   if (!pont || !pont.listFonts) return [];
   definirPolicesImportees(await pont.listFonts());
+  try { await completerLesUsages(); } catch (e) { /* des usages non proposés : rien d'autre ne dépend d'eux */ }
   const doc = globalThis.document;
   if (!doc || !doc.fonts || typeof globalThis.FontFace !== 'function') return policesImportees();
   for (const face of chargees) { try { doc.fonts.delete(face); } catch (e) { /* déjà retirée */ } }

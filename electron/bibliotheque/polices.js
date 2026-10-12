@@ -63,9 +63,20 @@ function indexLu(json){
   return { familles, renommages, ...classementLu(brut) };
 }
 
+/**
+ * Les polices intégrées que le classement a déjà VUES (#423, polices DaFont) : une police intégrée
+ * ajoutée par une mise à jour, absente de cette liste, reçoit une fois des usages proposés
+ * (opération `completer`) ; une police vue que l'utilisateur a vidée de ses usages reste vide.
+ * `null` : un index d'avant cette liste. PURE.
+ */
+function policesVuesLues(brut){
+  const v = brut && brut.policesVues;
+  return Array.isArray(v) ? [...new Set(v.filter(n => typeof n === 'string' && n))] : null;
+}
+
 /** Les usages et leurs attributions, ramenés à leur forme ; `usages: null` = jamais amorcés. */
 function classementLu(brut){
-  if (!brut || !Array.isArray(brut.usages)) return { usages: null, usagesDesPolices: {} };
+  if (!brut || !Array.isArray(brut.usages)) return { usages: null, usagesDesPolices: {}, policesVues: policesVuesLues(brut) };
   const usages = [];
   const ids = new Set();
   for (const u of brut.usages) {
@@ -81,7 +92,7 @@ function classementLu(brut){
       if (propres.length) usagesDesPolices[police] = propres;
     }
   }
-  return { usages, usagesDesPolices };
+  return { usages, usagesDesPolices, policesVues: policesVuesLues(brut) };
 }
 
 const nomPropreUsage = (nom) => String(nom || '').replace(/\s+/g, ' ').trim().slice(0, 40);
@@ -90,19 +101,22 @@ const nomPropreUsage = (nom) => String(nom || '').replace(/\s+/g, ' ').trim().sl
 function amorce(index, depart){
   if (Array.isArray(index.usages)) return index;
   const c = classementLu(depart || { usages: [] });
-  return { ...index, usages: c.usages || [], usagesDesPolices: c.usagesDesPolices };
+  return { ...index, usages: c.usages || [], usagesDesPolices: c.usagesDesPolices, policesVues: c.policesVues };
 }
 
 /**
  * Une opération sur les usages, comme celles des tags du store. `depart` : les usages d'origine, à
  * amorcer si besoin. Rend `{ index, id?, erreur? }` ; l'index reçu n'est pas modifié.
  *   creer { nom } · renommer { id, nom } · supprimer { id } · poser { police, id, actif }
+ *   completer { attributions: { police: [id…] }, vues: [police…] } : les usages proposés aux
+ *     polices intégrées jamais vues, sans toucher à une police déjà classée ; elles deviennent vues.
  */
 function operationUsage(index0, op, args = {}, depart = null){
   const index = amorce(index0, depart);
   const usages = index.usages.map(u => ({ ...u }));
   const attr = Object.fromEntries(Object.entries(index.usagesDesPolices).map(([k, v]) => [k, [...v]]));
-  const fin = (extra = {}) => ({ index: { ...index, usages, usagesDesPolices: attr }, ...extra });
+  let vues = index.policesVues || null;
+  const fin = (extra = {}) => ({ index: { ...index, usages, usagesDesPolices: attr, policesVues: vues }, ...extra });
   const nomme = (nom) => usages.find(u => u.nom.toLowerCase() === nom.toLowerCase());
   switch (op) {
     case 'creer': {
@@ -138,6 +152,18 @@ function operationUsage(index0, op, args = {}, depart = null){
       const s = new Set(attr[args.police] || []);
       if (args.actif) s.add(args.id); else s.delete(args.id);
       if (s.size) attr[args.police] = [...s]; else delete attr[args.police];
+      return fin();
+    }
+    case 'completer': {
+      const dejaVues = new Set(vues || []);
+      const ids = new Set(usages.map(u => u.id));
+      const a = (args.attributions && typeof args.attributions === 'object') ? args.attributions : {};
+      for (const [police, liste] of Object.entries(a)) {
+        if (dejaVues.has(police) || attr[police]) continue;
+        const propres = [...new Set((Array.isArray(liste) ? liste : []).filter(id => ids.has(id)))];
+        if (propres.length) attr[police] = propres;
+      }
+      vues = [...new Set([...dejaVues, ...(Array.isArray(args.vues) ? args.vues.filter(n => typeof n === 'string' && n) : [])])];
       return fin();
     }
     default: return fin({ erreur: 'operation' });

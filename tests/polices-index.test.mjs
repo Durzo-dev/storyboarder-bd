@@ -15,7 +15,7 @@ const vide = () => P.indexLu(null);
 
 describe('l\'index', () => {
   test('absent, illisible ou édité à la main : jamais d\'exception, seulement ce qui a la bonne forme', () => {
-    const neuf = { familles: [], renommages: {}, usages: null, usagesDesPolices: {} };
+    const neuf = { familles: [], renommages: {}, usages: null, usagesDesPolices: {}, policesVues: null };
     assert.deepEqual(vide(), neuf, 'usages null : jamais amorcés');
     assert.deepEqual(P.indexLu('{pas du json'), neuf);
     const i = P.indexLu({
@@ -142,6 +142,22 @@ describe('les usages (comme les tags du store)', () => {
     const base = { familles: [{ nom: 'A', fichiers: ['a.ttf'] }], renommages: {}, usages: [{ id: 'u1', nom: 'Z' }], usagesDesPolices: { A: ['u1'] } };
     assert.deepEqual(P.renommer(base, 'A', 'B').index.usagesDesPolices, { B: ['u1'] });
     assert.deepEqual(P.supprimer(base, 'A').index.usagesDesPolices, {});
+  });
+
+  test('#423 compléter : les polices jamais vues reçoivent leurs usages, une seule fois', () => {
+    const base = P.indexLu({ usages: [{ id: 'u1', nom: 'Cris' }], usagesDesPolices: { Kanit: ['u1'] } });
+    assert.equal(base.policesVues, null, 'un index d\'avant la liste');
+    let i = P.operationUsage(base, 'completer', { attributions: { Kaph: ['u1', 'u9'], Kanit: ['u1'] }, vues: ['Kaph'] }).index;
+    assert.deepEqual(i.usagesDesPolices, { Kanit: ['u1'], Kaph: ['u1'] }, 'un id inconnu écarté');
+    assert.deepEqual(i.policesVues, ['Kaph']);
+    // Vidée par l'utilisateur, une police vue ne se remplit plus.
+    i = P.operationUsage(i, 'poser', { police: 'Kaph', id: 'u1', actif: false }).index;
+    i = P.operationUsage(i, 'completer', { attributions: { Kaph: ['u1'] }, vues: ['Kaph'] }).index;
+    assert.equal(i.usagesDesPolices.Kaph, undefined);
+    // Une police déjà classée n'est pas touchée, même jamais vue.
+    i = P.operationUsage(i, 'completer', { attributions: { Kanit: ['u1', 'u2'] }, vues: ['Kanit'] }).index;
+    assert.deepEqual(i.usagesDesPolices.Kanit, ['u1']);
+    assert.deepEqual(P.indexLu(JSON.stringify(i)).policesVues, ['Kaph', 'Kanit'], 'relue du disque');
   });
 
   test('relu du disque : forme vérifiée, ids inconnus écartés', () => {
