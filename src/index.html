@@ -240,6 +240,17 @@
       <span class="menu-title">Planche<span id="pageMenuNumber" class="case-menu-number"></span></span>
       <button id="pageMenuCloseBtn" class="menu-close-btn" type="button" title="Fermer">&times;</button>
     </div>
+    <!-- Le cadrage d'une Planche IMPORTÉE (cf. planche-importee.js) : le même réglage que celui d'une
+         image de Case, pour l'image entière. Déplacer se fait en tirant sur la Planche. -->
+    <div id="sidePageCadrageSection" class="side-section" style="display:none;">
+      <h2 id="sidePageCadrageTitle">Cadrage</h2>
+      <div class="tome-format">
+        <label for="sidePageZoomInput">Zoom (<span id="sidePageZoomValue">1,0</span>×)</label>
+        <input type="range" id="sidePageZoomInput" min="1" max="4" step="0.1" value="1">
+      </div>
+      <p id="sidePageCadrageHint" class="side-aide">Tirez sur la Planche pour déplacer l'image.</p>
+      <button id="sidePageResetBtn" type="button" class="nav-btn" style="display:none;">Recentrer</button>
+    </div>
     <div id="sidePageBgSection" class="side-section" style="display:none;">
       <h2>Arrière-plan</h2>
       <div id="sidePlancheBgColorWrap" class="tome-format side-border-color">
@@ -1060,6 +1071,7 @@
 
 <div class="context-menu hidden" id="pageContextMenu">
   <button id="ctxDuplicatePage"><span class="ctx-icon">📋</span> Dupliquer cette planche</button>
+  <button id="ctxImportPage"><span class="ctx-icon">🖼️</span> Importer une planche</button>
   <button id="ctxRemoveFromChapter"><span class="ctx-icon">↩️</span> Retirer du chapitre</button>
   <button id="ctxExportPageTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">📤</span> Exporter cette planche</span> <span class="submenu-arrow">▶</span></button>
   <button id="ctxDeletePage"><span class="ctx-icon">🗑</span> Supprimer cette planche</button>
@@ -1532,6 +1544,26 @@
     <div id="ressourcesCorps" class="ressources-corps"></div>
     <button class="full-btn" id="ressourcesConfiguration" type="button"></button>
     <button class="nav-btn" id="ressourcesFermer" type="button" style="margin-top:6px;"></button>
+  </div>
+</div>
+
+<!-- Importer une planche (demandé le 12 octobre 2026) : la VÉRIFICATION des Cases détectées, avant
+     de rien créer. Tout le texte est écrit par le code (src/import-planche-ui.js). -->
+<div class="modal-overlay hidden" id="importPlancheModal">
+  <div class="modal-box import-planche-box">
+    <h3 id="importPlancheTitre"></h3>
+    <p id="importPlancheAide" class="import-planche-aide"></p>
+    <div class="import-planche-outils">
+      <label for="importPlancheTolerance" id="importPlancheToleranceLabel"></label>
+      <input type="range" id="importPlancheTolerance" min="5" max="120" step="5" value="40">
+      <span id="importPlancheCompte" class="import-planche-compte"></span>
+      <button id="importPlancheSupprimer" type="button" class="nav-btn"></button>
+    </div>
+    <div class="import-planche-zone"><canvas id="importPlancheToile"></canvas></div>
+    <div class="import-planche-pied">
+      <button id="importPlancheAnnuler" type="button" class="nav-btn"></button>
+      <button id="importPlancheValider" type="button" class="full-btn"></button>
+    </div>
   </div>
 </div>
 

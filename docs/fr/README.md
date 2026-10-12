@@ -43,6 +43,7 @@ régression difficile à retrouver.
 | [creature-rigs.md](creature-rigs.md) | Rigs non humanoïdes : corpus, défauts mesurés, hypothèses démenties, archétypes, plan (tâches #358 à #377). |
 | [archetype-roles.md](archetype-roles.md) | Rôles de chaînes : ce qu'une pose peut viser, listes par archétype, décisions arrêtées (tâches #378 et #375). |
 | [archetype-poses.md](archetype-poses.md) | Poses par archétype : les trois vocabulaires, ce qui a été mesuré, ce qui a été infirmé, décisions prises (tâches #375 à #402). |
+| [planche-importee.md](planche-importee.md) | Les Planches importées : une image de planche, ses Cases détectées puis vérifiées, le cadrage de l'ensemble, ce qui est verrouillé, les champs ajoutés. |
 | [panel-images.md](panel-images.md) | Une image dans une Case à la place d'une scène 3D : décisions arrêtées, ce que le code fournit déjà, ce qui reste à mesurer (tâches #403a à #403d). |
 | [colour-accessibility.md](colour-accessibility.md) | La couleur qui dépeint contre celle qui signale, collisions mesurées par déficience, pourquoi un thème n'est pas le remède principal (tâches #409a à #409d). |
 | [lighting.md](lighting.md) | Éclairage d'une Case et d'une Scène : ce que « désactivé » doit vouloir dire, le modèle de données, pourquoi soleil et ambiance bougent ensemble, le hors-périmètre (tâches #414a à #414g). |
@@ -53,7 +54,7 @@ régression difficile à retrouver.
 | [imported-models-display.md](imported-models-display.md) | L'affichage des modèles importés : l'audit qui a suivi le canard orange, les sept corrections (couleurs, métaux, émission, lumières du fichier, import d'un `.gltf`, compressions), et ce qui reste ignoré en connaissance de cause. |
 | [asset-store.md](asset-store.md) | Le store de ressources : périmètre, ce que l'API Sketchfab permet (relevé le 5 octobre 2026), le contrat commun des sources, l'attribution, le découpage (tâches #444 à #446). |
 | [lecteur.md](lecteur.md) | Le Lecteur d'un Tome ou d'un Chapitre : ce qu'il fait, ses options (une ou deux pages, sens, page blanche, défilement, vue guidée), où vit quoi, et ce que coûte un dessin hors écran. |
-| [polices.md](polices.md) | Les polices : dix intégrées, une par usage, et pourquoi complètes ; le gras et l'italique, vrais ou simulés ; la fenêtre des Polices ; l'import d'un fichier (ce qu'on y lit, l'index, les renommages qui ne réécrivent aucun Projet) (tâche #423). |
+| [polices.md](polices.md) | Les polices : soixante-cinq intégrées (dont cinquante-cinq de DaFont, choisies par licence), et pourquoi complètes ; le gras et l'italique, vrais ou simulés ; la fenêtre des Polices ; l'import d'un fichier (ce qu'on y lit, l'index, les renommages qui ne réécrivent aucun Projet) (tâche #423). |
 | [non-visible.md](non-visible.md) | « Non visible » : le rendu d'identifiants qui dit si un Élément est hors du cadre ou caché, ce qu'il ne voit pas exprès, le doute qui profite à la visibilité, et quand il a lieu (tâche #449). |
 
 ---

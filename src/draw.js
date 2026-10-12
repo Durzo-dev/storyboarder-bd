@@ -66,6 +66,7 @@ import {
   zoomDeLImage3D, zoomValide3D,
 } from './image-store.js';
 import { getLoadedImage, imageState, preloadImagesFor } from './image-cache.js';
+import { estPlancheImportee, estCaseImportee, placerCasesImportees, imageDeLaPlanche } from './planche-importee.js';
 import { preloadModelsFor } from './model-cache.js';
 // L'apparence d'une Bulle : opacité du fond, motif et régularité du trait. Décidée dans un module
 // pur (#425a), appliquée ici. Les décalages du tremblé s'ajoutent au TRACÉ, jamais au contour rendu
@@ -848,6 +849,9 @@ export function drawContent(c, page, scale, withSelection, exportBadges){
   // Volume page's background color (cf. "Background" section of the Page menu, page.bgColor), white
   // by default, including for Pages already created before this field was introduced.
   c.fillStyle = page.bgColor || '#fff'; c.fillRect(0, 0, page.w, page.h);
+  // Une Planche IMPORTÉE : son image d'abord, sous tout le reste, et ses Cases posées d'après elle
+  // (cf. planche-importee.js). Le fond reste dessous : il colore les bandes laissées par le cadrage.
+  if (estPlancheImportee(page)) dessinerImageDePlanche(c, page);
   c.strokeStyle = '#ccc'; c.lineWidth = 1; c.strokeRect(0.5, 0.5, page.w - 1, page.h - 1);
   // A Panel already rendered as a single combined block (cf. drawPanelScene3D, Phase 2 #79) during
   // this call: avoids re-rendering it for each Element it owns (a single combined render per
@@ -886,6 +890,13 @@ export function drawContent(c, page, scale, withSelection, exportBadges){
     // position in page.objects, independent of the internal order (with no visual effect) of its
     // own Elements.
     if (o.type === 'panel') {
+      // La Case d'une Planche importée ne dessine RIEN : son contenu, sa bordure et son fond sont
+      // dans l'image de la Planche, déjà peinte dessous (cf. dessinerImageDePlanche). Seul son
+      // numéro, à l'export, se pose dessus.
+      if (estCaseImportee(o)) {
+        if (exportBadges) drawPanelNumberBadge(c, o);
+        return;
+      }
       // ⚠️ UNE IMAGE EXCLUT LA 3D, ET C'EST VÉRIFIÉ ICI PLUTÔT QUE SUPPOSÉ (#403b). L'interface
       // interdit d'ajouter un Élément à une Case qui porte une image (#403c), mais un fichier de
       // Projet peut porter les deux — édité à la main, ou écrit par une version future. Le dessin ne
@@ -1354,6 +1365,25 @@ function dessinerAbsenceDImage3D(c, o){
   c.fillText(titre, o.x + o.w / 2, o.y + o.h / 2 - 8, Math.max(10, o.w - 12));
   if (manquante && nom) c.fillText(nom, o.x + o.w / 2, o.y + o.h / 2 + 10, Math.max(10, o.w - 12));
   c.restore();
+}
+
+/**
+ * L'image d'une Planche importée, à la place que dit son cadrage, découpée sur la Planche. Ses Cases
+ * sont reposées au passage : leur place se DÉDUIT, à chaque dessin (cf. placerCasesImportees).
+ * Absente ou en chargement, la Planche le dit, comme une Case à image.
+ */
+function dessinerImageDePlanche(c, page){
+  const pose = placerCasesImportees(page);
+  const nom = imageDeLaPlanche(page);
+  const image = nom ? getLoadedImage(nom) : null;
+  if (pose && image) {
+    c.save();
+    c.beginPath(); c.rect(0, 0, page.w, page.h); c.clip();
+    c.drawImage(image.bitmap, pose.x, pose.y, pose.w, pose.h);
+    c.restore();
+    return;
+  }
+  dessinerAbsenceDImage3D(c, { type: 'panel', imageFile: nom, x: 0, y: 0, w: page.w, h: page.h });
 }
 
 export function drawObject(c, o, styleKey, page){
@@ -2906,7 +2936,8 @@ export function drawSelection(c, o, page){
       c.closePath(); c.stroke();
       c.setLineDash([]);
     }
-    if (!isLockedScenePanel(o)) {
+    // Ni poignées ni milieux sur une Case importée : rien ne s'y redimensionne.
+    if (!isLockedScenePanel(o) && !estCaseImportee(o)) {
       c.fillStyle = SIGNAL_SELECTION; c.strokeStyle = SIGNAL_SELECTION_LISERE; c.lineWidth = 1;
       o.pts.forEach(p => { c.fillRect(p.x - 5, p.y - 5, 10, 10); c.strokeRect(p.x - 5, p.y - 5, 10, 10); });
       c.fillStyle = SIGNAL_SELECTION_LISERE; c.strokeStyle = SIGNAL_SELECTION; c.lineWidth = 1.5;
@@ -3230,7 +3261,7 @@ export async function exportPage(volumeIdx, pageIdx, format = 'png'){
   const attributions = await attributionsPourExport();
   const t = S.tomes[volumeIdx];
   const pd = t.pages[pageIdx];
-  const page = { w: t.w, h: t.h, scale: t.scale, style3d: t.style3d, objects: pd.objects, bgColor: pd.bgColor };
+  const page = { w: t.w, h: t.h, scale: t.scale, style3d: t.style3d, objects: pd.objects, bgColor: pd.bgColor, importee: pd.importee };
   // The exported Page is drawn SMALLER than its usual editing size (EXPORT_PLANCHE_SCALE
   // < 1), and the text of the Panels section below it is BIGGER, per user request ("shrink the
   // page size [...] and increase the size of the text below the page").
@@ -3379,7 +3410,7 @@ export async function rendrePlancheEnImage(ti, pi, hauteurPx){
   const pd = t && t.pages[pi];
   if (!pd) return null;
   await Promise.all([preloadModelsFor(pd.objects || []), preloadImagesFor(pd.objects || [])]);
-  const page = { w: t.w, h: t.h, scale: t.scale, style3d: t.style3d, objects: pd.objects, bgColor: pd.bgColor };
+  const page = { w: t.w, h: t.h, scale: t.scale, style3d: t.style3d, objects: pd.objects, bgColor: pd.bgColor, importee: pd.importee };
   ensurePanelNumbers(page);
   const echelle = Math.max(0.05, hauteurPx / page.h);
   const c = document.createElement('canvas');

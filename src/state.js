@@ -321,7 +321,8 @@ export function currentPageData() {
 export function currentPage() {
   const t = currentVolume();
   const p = currentPageData();
-  return { w: t.w, h: t.h, scale: t.scale, format: t.format, style3d: t.style3d, objects: p.objects, bgColor: p.bgColor };
+  // `importee` : une Planche importée (cf. planche-importee.js), son cadrage et les dimensions de l'image.
+  return { w: t.w, h: t.h, scale: t.scale, format: t.format, style3d: t.style3d, objects: p.objects, bgColor: p.bgColor, importee: p.importee };
 }
 
 // ── IDs ──────────────────────────────────────────────────────────────────────

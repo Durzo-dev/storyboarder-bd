@@ -18,6 +18,7 @@ import { lumiereDeCase3D, projeterSurDome3D, geometrieDome3D,
 import { isImportedModel } from './model-store.js';
 import { modelState } from './model-cache.js';
 import { casePorteUneImage3D, imageDeLaCase3D, zoomDeLImage3D, cadrageParDefaut3D } from './image-store.js';
+import { estPlancheImportee, estCaseImportee, cadrageLu, cadragePlancheParDefaut } from './planche-importee.js';
 import { TRAIT_PLEIN, TRAIT_NET, opaciteRemplissageBulle } from './bubble-style.js';
 import { formeDeLaBulle } from './bubble-shape.js';
 import { textureDeLaBulle, teinteParDefautDeLaTexture,
@@ -81,6 +82,10 @@ const helpMenuHeader = document.getElementById('helpMenuHeader');
 const pageMenuHeader = document.getElementById('pageMenuHeader');
 const sidePagePanelsSection = document.getElementById('sidePagePanelsSection');
 const sidePageBgSection = document.getElementById('sidePageBgSection');
+const sidePageCadrageSection = document.getElementById('sidePageCadrageSection');
+const sidePageZoomInput = document.getElementById('sidePageZoomInput');
+const sidePageZoomValue = document.getElementById('sidePageZoomValue');
+const sidePageResetBtn = document.getElementById('sidePageResetBtn');
 const sideDimsSection = document.getElementById('sideDimsSection');
 const sideStackSection = document.getElementById('sideStackSection');
 const sideBubbleStackSection = document.getElementById('sideBubbleStackSection');
@@ -959,7 +964,48 @@ export function renderTracéSideRow(t, panel, page){
   return row;
 }
 
+/**
+ * Une ligne de la liste des Cases d'une Planche IMPORTÉE : le numéro (un clic sélectionne la Case),
+ * et sa description, qui se tape ICI (demandé : « décrire chaque Case dans le menu de la Planche »).
+ * C'est le même champ que celui du menu de la Case : les deux ne peuvent pas se contredire.
+ */
+function ligneDeCaseImportee(p){
+  const row = document.createElement('div');
+  row.className = 'planche-case-row' + (S.selectedId === p.id ? ' active' : '');
+  const num = document.createElement('span');
+  num.className = 'planche-case-num';
+  num.textContent = String(p.caseNumber || '?');
+  num.title = tr('Select this panel', 'Sélectionner cette Case');
+  num.addEventListener('click', () => { S.selectedId = p.id; S.selectedRoomId = null; drawCurrentPage(); });
+  const saisie = document.createElement('textarea');
+  saisie.className = 'planche-case-saisie';
+  saisie.dataset.caseId = p.id;
+  saisie.value = p.description || '';
+  saisie.placeholder = tr('Describe what happens in this panel...', 'Décrivez ce qui se passe dans cette case...');
+  let pris = false;
+  saisie.addEventListener('focus', () => { pris = false; });
+  saisie.addEventListener('input', () => {
+    if (!pris) { _snapshot(); pris = true; }
+    p.description = saisie.value;
+    S.projectDirty = true;
+  });
+  row.append(num, saisie);
+  return row;
+}
+
 export function renderSidePagePanels(page){
+  // ⚠️ UNE SAISIE EN COURS N'EST PAS REFAITE : la liste se reconstruit à chaque dessin, et chaque
+  // relâchement de souris redessine. Sans cette garde, cliquer dans une description la ferait
+  // disparaître sous le curseur.
+  const enSaisie = document.activeElement && document.activeElement.classList
+    && document.activeElement.classList.contains('planche-case-saisie') && sidePagePanels.contains(document.activeElement);
+  if (enSaisie && estPlancheImportee(page)) {
+    sidePagePanels.querySelectorAll('.planche-case-row').forEach(r => {
+      const t = r.querySelector('.planche-case-saisie');
+      r.classList.toggle('active', !!t && t.dataset.caseId === S.selectedId);
+    });
+    return;
+  }
   sidePagePanels.innerHTML = '';
   const panels = panelsInPage(page).slice().sort((a, b) => (a.caseNumber || 0) - (b.caseNumber || 0));
   if (panels.length === 0) {
@@ -967,6 +1013,10 @@ export function renderSidePagePanels(page){
     hint.className = 'empty-hint';
     hint.textContent = tr('No panel on this page.', 'Aucune Case dans cette planche.');
     sidePagePanels.appendChild(hint);
+    return;
+  }
+  if (estPlancheImportee(page)) {
+    panels.forEach(p => sidePagePanels.appendChild(ligneDeCaseImportee(p)));
     return;
   }
   panels.forEach(p => {
@@ -1031,6 +1081,8 @@ export function renderSidePagePanels(page){
 // updateSidePanel() regardless of its exit point (several `return`s below).
 function updateSidePanelImpl(){
   const page = currentPage();
+  // Le cadrage d'une Planche importée n'appartient qu'au menu Planche, qui la remontre plus bas.
+  sidePageCadrageSection.style.display = 'none';
   const selRaw = page.objects.find(o => o.id === S.selectedId);
   // The right-hand panel (Dimensions / Elements / Description) must stay displayed as long as we're
   // "inside" a panel, even when the selected object is an Element (persona/object) of
@@ -1146,6 +1198,15 @@ function updateSidePanelImpl(){
       } else {
         sideStackSection.style.display = 'none';
       }
+    }
+    // ⚠️ LA CASE D'UNE PLANCHE IMPORTÉE : Dimensions et Description, rien d'autre (demandé). Ni
+    // niveau (les Cases d'une même image ne se recouvrent pas), ni bordure, ni sol, ni lumière, ni
+    // Éléments : elle n'a ni 3D ni rien de modifiable.
+    if (estCaseImportee(sel)) {
+      [sideStackSection, sideBubbleStackSection, sideBorderSection, sideImageSection, sideCadrageSection,
+        sideGroundSection, sideLightSection, sidePersonasSection, sideBubbleAppearanceSection,
+        sideBubbleBorderSection, sideBubbleStyleSection].forEach(x => { x.style.display = 'none'; });
+      return;
     }
     // "Border" section (cf. o.borderVisible/o.borderColor), per user request, right after
     // Dimensions/Stacking level, before the Elements list. Doesn't make sense for a Scene's
@@ -1406,6 +1467,14 @@ function updateSidePanelImpl(){
       // (synthetic, cf. currentPage()) since it's the actually persisted object that needs modifying.
       sidePageBgColorInput.value = page.bgColor || '#ffffff';
       sidePageBgSection.style.display = 'block';
+      // Planche importée : son cadrage, en tête (cf. planche-importee.js).
+      if (estPlancheImportee(page)) {
+        const z = cadrageLu(page.importee).zoom;
+        sidePageZoomInput.value = String(z);
+        sidePageZoomValue.textContent = S.appLang === 'en' ? z.toFixed(1) : z.toFixed(1).replace('.', ',');
+        sidePageResetBtn.style.display = cadragePlancheParDefaut(page.importee) ? 'none' : 'block';
+        sidePageCadrageSection.style.display = 'block';
+      }
       rightPanel.classList.remove('collapsed');
       return;
     }

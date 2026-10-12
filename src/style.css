@@ -2575,3 +2575,18 @@ button.store-chip:hover{ border-color:var(--accent); }
    HAUTEUR de 130 px, d'où le grand vide sous « Majuscules » (signalé). */
 .police-jeu > .police-info-cle{ flex:none; }
 .police-caracteres-texte{ font-size:26px; line-height:1.3; letter-spacing:.06em; overflow-wrap:anywhere; background:#fbfaf7; color:#23242a; border-radius:8px; padding:6px 12px; }
+
+/* Importer une planche : la vérification des Cases détectées (src/import-planche-ui.js). */
+.modal-box.import-planche-box{ width:min(920px, 94vw); }
+.import-planche-aide{ font-size:12px; color:var(--ink-soft); margin:0 0 10px; line-height:1.45; }
+.import-planche-outils{ display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:12px; }
+.import-planche-outils input[type=range]{ width:140px; }
+.import-planche-compte{ flex:1; color:var(--ink-soft); }
+.import-planche-outils .nav-btn{ width:auto; margin:0; padding:5px 12px; }
+.import-planche-zone{ display:flex; justify-content:center; background:var(--creux); border-radius:6px; padding:8px; }
+.import-planche-zone canvas{ display:block; cursor:crosshair; }
+.import-planche-pied{ display:flex; gap:8px; margin-top:12px; }
+.import-planche-pied > button{ flex:1; margin:0; }
+.right-panel .side-aide{ font-size:12px; color:var(--sepia); line-height:1.5; margin:6px 0; }
+/* Planche importée : la description de chaque Case se tape dans la liste des Cases du menu Planche. */
+.planche-case-row textarea.planche-case-saisie{ flex:1; min-height:38px; resize:vertical; font:inherit; font-size:12px; }

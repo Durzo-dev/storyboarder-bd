@@ -43,6 +43,7 @@ down.
 | [creature-rigs.md](creature-rigs.md) | Non-humanoid rigs: corpus, measured defects, disproved hypotheses, archetypes, plan (tasks #358 to #377). |
 | [archetype-roles.md](archetype-roles.md) | Chain roles: what a pose can aim at, lists per archetype, settled decisions (tasks #378 and #375). |
 | [archetype-poses.md](archetype-poses.md) | Archetype poses: the three vocabularies, what was measured, what was disproved, decisions taken (tasks #375 to #402). |
+| [planche-importee.md](planche-importee.md) | Imported pages: a page image, its Panels detected then checked, the framing of the whole, what is locked, the added fields. |
 | [panel-images.md](panel-images.md) | An image in a panel instead of a 3D scene: settled decisions, what the code already provides, what is left to measure (tasks #403a to #403d). |
 | [colour-accessibility.md](colour-accessibility.md) | Colour that depicts against colour that signals, measured collisions per deficiency, why a theme is not the main remedy (tasks #409a to #409d). |
 | [lighting.md](lighting.md) | Lighting a panel and a Scene: what "off" must mean, the data model, why sun and ambient move together, what is out of scope (tasks #414a to #414g). |
@@ -53,7 +54,7 @@ down.
 | [imported-models-display.md](imported-models-display.md) | How imported models are displayed: the audit that followed the orange duck, the seven fixes (colours, metals, emission, the file's lights, importing a `.gltf`, compressions), and what stays ignored knowingly. |
 | [asset-store.md](asset-store.md) | The asset store: scope, what the Sketchfab API allows (checked on 5 October 2026), the common source contract, attribution, breakdown (tasks #444 to #446). |
 | [lecteur.md](lecteur.md) | The Volume or Chapter Reader: what it does, its options (one or two pages, direction, blank page, scrolling, guided view), what lives where, and what an off-screen drawing costs. |
-| [polices.md](polices.md) | Fonts: ten built in, one per use, and why complete ones; real or simulated bold and italic; the Fonts window; importing a file (what is read from it, the index, renames that rewrite no Project) (task #423). |
+| [polices.md](polices.md) | Fonts: sixty-five built in (fifty-five from DaFont, chosen by licence), and why complete ones; real or simulated bold and italic; the Fonts window; importing a file (what is read from it, the index, renames that rewrite no Project) (task #423). |
 | [non-visible.md](non-visible.md) | "Not visible": the ID render that tells whether an Element is out of frame or hidden, what it deliberately does not see, the doubt that favours visibility, and when it runs (task #449). |
 
 ---

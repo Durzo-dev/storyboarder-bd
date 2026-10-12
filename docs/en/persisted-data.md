@@ -18,6 +18,12 @@ stays the flat list whose order is the numbering, so a version that ignores chap
 Pages in the same order. Invariant restored on reading: a chapter's Pages are contiguous, those
 without a chapter come first.
 
+**Imported pages** (October 2026, see [planche-importee.md](planche-importee.md)): `importee` on a
+Page (`{ largeur, hauteur }`, plus `imageAnchorX`, `imageAnchorY`, `imageZoom` for the framing of
+the whole) and `regionImage` on its Panels (`{ x, y, w, h }` as fractions of the image), which also
+carry `imageFile`. ADDED fields: a Panel's place (`x`, `y`, `w`, `h`, `pts`) is recomputed at every
+draw and stays written, so a version that ignores them reads ordinary Panels.
+
 **Project level**: `projectName`, `tomes`, `scenes`, `currentTomeIndex`, `currentPageIndex`,
 `poses` (pose library: `[{ id, name, skeleton, joints }]`).
 

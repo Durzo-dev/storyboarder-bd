@@ -35,6 +35,7 @@
  */
 
 import { memeContenu } from './utils.js';
+import { estCaseImportee } from './planche-importee.js';
 
 /**
  * Les extensions acceptées.
@@ -148,7 +149,11 @@ export function imageDeLaCase3D(o){
  * revenu trois fois pendant le chantier des poses (cf. docs/en/archetype-poses.md).
  */
 export function casePorteUneImage3D(o){
-  return imageDeLaCase3D(o) !== null;
+  // ⚠️ LA CASE D'UNE PLANCHE IMPORTÉE PORTE L'IMAGE DE LA PLANCHE SANS ÊTRE UNE « CASE À IMAGE » :
+  // elle ne se recadre pas, n'a ni section Image ni Cadrage, et ne dessine rien (cf.
+  // planche-importee.js). `imageDeLaCase3D` la voit, pour que le préchargement, la section Images et
+  // les Fichiers introuvables la comptent ; cette question-ci, qui gouverne les menus, non.
+  return imageDeLaCase3D(o) !== null && !estCaseImportee(o);
 }
 
 /**
@@ -380,14 +385,33 @@ export async function listImages(){
  *   { ok: false, error }             rien n'a été écrit, et on dit pourquoi
  */
 export async function importImage(){
+  const choisi = await choisirImage();
+  if (!choisi.ok) return choisi;
+  return rangerImageChoisie(choisi);
+}
+
+/**
+ * Ouvre le sélecteur et LIT le fichier, sans rien ranger. Rend `{ ok: true, name, data }`,
+ * `{ canceled: true }` ou `{ ok: false, error }`.
+ *
+ * Séparé de `rangerImageChoisie` pour l'import d'une Planche : l'image n'est rangée qu'une fois la
+ * vérification des Cases VALIDÉE. Renoncer à la vérification ne doit pas laisser un fichier de plus
+ * dans le dossier Images.
+ */
+export async function choisirImage(){
   const p = pont();
   if (!p || !p.pickImageFile) return { ok: false, error: 'indisponible hors de l\'application' };
-
   const choisi = await p.pickImageFile();
   if (!choisi || choisi.canceled) return { canceled: true };
   if (choisi.error) return { ok: false, error: choisi.error };
   if (!choisi.data || !choisi.data.length) return { ok: false, error: 'fichier vide' };
+  return { ok: true, name: choisi.name, data: choisi.data };
+}
 
+/** Range dans le dossier Images une image déjà lue par `choisirImage`. Mêmes résultats que `importImage`. */
+export async function rangerImageChoisie(choisi){
+  const p = pont();
+  if (!p || !p.writeImageFile) return { ok: false, error: 'indisponible hors de l\'application' };
   const candidat = sanitizeImageName(choisi.name);
   // Le sélecteur filtre déjà sur l'extension ; cette garde couvre ce qu'un filtre de dialogue ne
   // couvre pas, un utilisateur qui saisit un nom à la main dans le champ du sélecteur.

@@ -18,6 +18,13 @@ ordre) et `chapitreId` sur une Planche (absent = directement sous le Tome). Deux
 les chapitres lit les mêmes Planches dans le même ordre. Invariant rétabli à la lecture : les
 Planches d'un chapitre sont contiguës, celles sans chapitre en tête.
 
+**Planches importées** (octobre 2026, cf. [planche-importee.md](planche-importee.md)) : `importee`
+sur une Planche (`{ largeur, hauteur }`, plus `imageAnchorX`, `imageAnchorY`, `imageZoom` pour le
+cadrage de l'ensemble) et `regionImage` sur ses Cases (`{ x, y, w, h }` en fractions de l'image),
+qui portent aussi `imageFile`. Champs AJOUTÉS : la place d'une Case (`x`, `y`, `w`, `h`, `pts`) est
+recalculée à chaque dessin et reste écrite, si bien qu'une version qui les ignore lit des Cases
+ordinaires.
+
 **Niveau projet** : `projectName`, `tomes`, `scenes`, `currentTomeIndex`, `currentPageIndex`,
 `poses` (bibliothèque de poses : `[{ id, name, skeleton, joints }]`).
 

@@ -54,6 +54,8 @@ import { clicDeselectionne3D } from './deselection.js';
 import { champsLumierePosee3D, estUneLumiere3D, OBJ_TYPE_LUMIERE } from './light-source-3d.js';
 import { setModelCacheCallbacks, clearModelCache, getLoadedModel, preloadModels } from './model-cache.js';
 import { setImageCacheCallbacks, preloadImagesFor, clearImageCache, getLoadedImage } from './image-cache.js';
+import { ouvrirImportPlanche, fermerImportPlanche, setImportPlancheCallbacks } from './import-planche-ui.js';
+import { estPlancheImportee, estCaseImportee, cadrageLu, poseDeLImage, ancrageApresGlisserPlanche, recentrerPlanche } from './planche-importee.js';
 import {
   importImage, imageDeLaCase3D, casePorteUneImage3D, entreesImageDuMenu3D, CHAMP_IMAGE_CASE,
   listImages, renameImage, deleteImage, sanitizeImageName,
@@ -394,6 +396,8 @@ setCanvasToolsCallbacks({ snapshot });
 setModelCacheCallbacks({ onChange: () => renderAll(), getMaxAnisotropy: getMaxAnisotropy3D });
 // Une image qui finit d'arriver remplace son signalement par le dessin, sans clic (#403b).
 setImageCacheCallbacks({ onChange: () => renderAll() });
+// « Importer une planche » : même injection que l'import de modèle, pour la même raison.
+setImportPlancheCallbacks({ snapshot, renderAll, alerter: alertAction });
 // L'import pose un point d'annulation et parle à l'utilisateur : les deux lui sont injectés,
 // plutôt qu'importés, pour qu'il ne dépende ni de la pile d'annulation ni des modales.
 // `confirmer` : la question « redimensionner ce modèle manifestement trop grand ? » (cf.
@@ -1597,6 +1601,8 @@ window.addEventListener('keydown', (e) => {
     }
     // Plus de mode Caméra dans une Scène (demandé) : C n'y fait rien, les gestes y suffisent.
     if (panel && isLockedScenePanel(panel)) return;
+    // Ni dans une Case de Planche importée, qui n'a pas de 3D.
+    if (estCaseImportee(panel)) return;
     if (panel) {
       e.preventDefault();
       snapshot();
@@ -1973,6 +1979,8 @@ async function supprimerLaSelection3D(){
     const pageData = currentPageData();
     if (!pageData) return;
     const deleted = pageData.objects.find(o => o.id === S.selectedId);
+    // La Case d'une Planche importée ne se supprime pas : rien ne s'y modifie (demandé).
+    if (estCaseImportee(deleted)) return;
     // If the deleted Element belongs to a Panel (Persona, Object, Wall/Opening, Bubble...), we
     // remember that Panel BEFORE deletion to reselect it afterward: ending up with nothing
     // selected after a deletion is confusing, when we were just working in that Panel. If we
@@ -2604,6 +2612,20 @@ canvas.addEventListener('mousedown', (e) => {
 
   const { x, y } = getCoords(e);
   const page = currentPage();
+
+  // ---- Planche IMPORTÉE : rien ne s'y édite (demandé). Un clic sélectionne une Case (pour sa
+  // description) ; tirer cadre l'ENSEMBLE de l'image, Cases comprises. Avant tout le reste, pour
+  // qu'aucun des gestes d'édition plus bas ne puisse s'y appliquer. Cf. planche-importee.js.
+  if (e.button === 0 && estPlancheImportee(page)) {
+    const hitImp = hitTestPanelOrBubble(page, x, y);
+    S.selectedId = hitImp ? hitImp.id : null; S.selectedRoomId = null;
+    S.pageSelected = true;   // comme partout ailleurs : cliquer dans la Planche ouvre son menu
+    const imp = page.importee;
+    S.dragMode = 'plancheCadrage'; S.dragStart = { x, y };
+    S.dragOrig = { ancrage: cadrageLu(imp).ancrage, pose: poseDeLImage(page.w, page.h, imp.largeur, imp.hauteur, imp), bouge: false };
+    drawCurrentPage();
+    return;
+  }
 
   // ---- Measure tool: left-click = place a point ----
   if (S.measureTool && e.button === 0) {
@@ -3703,6 +3725,18 @@ window.addEventListener('mousemove', (e) => {
       obj.x = retenue.x;
       obj.y = retenue.y;
     }
+  } else if (S.dragMode === 'plancheCadrage') {
+    // Le cadrage d'une Planche importée : l'image ET ses Cases suivent (elles se reposent au dessin).
+    // En deçà de 3 pixels c'est un clic, qui ne doit ni recadrer ni poser de point d'annulation.
+    const dx = x - S.dragStart.x, dy = y - S.dragStart.y;
+    if (!S.dragOrig.bouge && Math.abs(dx) <= 3 && Math.abs(dy) <= 3) return;
+    if (!S.dragOrig.bouge) { snapshot(); S.dragOrig.bouge = true; canvas.style.cursor = 'grabbing'; }
+    const imp = currentPageData().importee;
+    if (imp) {
+      const a = ancrageApresGlisserPlanche(S.dragOrig.ancrage, { x: dx, y: dy }, page.w, page.h, S.dragOrig.pose);
+      imp.imageAnchorX = a.x; imp.imageAnchorY = a.y;
+      S.projectDirty = true;
+    }
   } else if (S.dragMode === 'imageAnchor') {
     // Le calcul est dans draw.js, pur et testé (`ancrageApresGlissement3D`) ; ici on ne fait que
     // lui donner ce qu'il demande.
@@ -4208,6 +4242,8 @@ canvas.addEventListener('mousemove', (e) => {
     const hName = hitHandle(sel, x, y);
     if (hName) { canvas.style.cursor = CURSOR_MAP[hName]; return; }
   }
+  // Une Planche importée ne se manipule que d'un bloc : la main dit qu'on peut la cadrer.
+  if (estPlancheImportee(page)) { canvas.style.cursor = 'grab'; return; }
   const hit = hitTestPanelOrBubble(page, x, y);
   canvas.style.cursor = (hit && isLockedScenePanel(hit)) ? 'default' : (hit ? 'move' : 'crosshair');
 });
@@ -4323,6 +4359,9 @@ canvas.addEventListener('contextmenu', (e) => {
   if (S.buildTool) return;
   const { x, y } = getCoords(e);
   const page = currentPage();
+  // Une Planche importée n'a rien à ajouter ni à modifier (demandé) : pas de menu, ni sur une Case
+  // ni dans le vide. Le clic droit garde son défilement de la Planche.
+  if (estPlancheImportee(page)) { hideContextMenu(); return; }
   // Right-click on the canvas no longer ever hits an Element (perso/objet3d), only Panels and
   // Dialogue Bubbles (which are manipulated like Panels). A perso/objet3d Element no longer has
   // its own context menu since #81 (its depth replaces Bring Forward/Send Backward, and is set via
@@ -6320,6 +6359,12 @@ document.getElementById('ctxDuplicatePage').onclick = () => {
   if (S.ctxPageTarget !== null) duplicatePage(S.ctxPageTarget.ti, S.ctxPageTarget.pi);
   hideContextMenu();
 };
+// Importer une planche (demandé le 12 octobre 2026) : une image, ses Cases vérifiées, une Planche
+// de plus juste après celle du clic. Cf. src/import-planche-ui.js.
+document.getElementById('ctxImportPage').onclick = () => {
+  hideContextMenu();
+  if (S.ctxPageTarget !== null) ouvrirImportPlanche(S.ctxPageTarget.ti, S.ctxPageTarget.pi);
+};
 // "Export this page" submenu (PNG/PDF): same hover behavior as the other submenus (Vehicles,
 // Furniture, etc.), opens to the right of the trigger, with a small delay before closing to
 // leave time to cross diagonally to the submenu.
@@ -7674,6 +7719,27 @@ sidePageBgColorInput.addEventListener('input', () => {
   drawCurrentPage();
 });
 sidePageBgColorInput.addEventListener('change', () => { S.sidePageBgColorSnapshotTaken = false; });
+// Le cadrage d'une Planche importée (cf. planche-importee.js) : le zoom au curseur, et Recentrer.
+// Mêmes conventions que celui d'une image de Case : un point d'annulation par geste.
+const sidePageZoomInput = document.getElementById('sidePageZoomInput');
+let _zoomPlanchePris = false;
+sidePageZoomInput.addEventListener('input', () => {
+  const imp = currentPageData().importee;
+  if (!imp || S.editingSceneId) return;
+  if (!_zoomPlanchePris) { snapshot(); _zoomPlanchePris = true; }
+  imp.imageZoom = cadrageLu({ imageZoom: sidePageZoomInput.value }).zoom;
+  S.projectDirty = true;
+  updateSidePanel();
+  drawCurrentPage();
+});
+sidePageZoomInput.addEventListener('change', () => { _zoomPlanchePris = false; });
+document.getElementById('sidePageResetBtn').onclick = () => {
+  const imp = currentPageData().importee;
+  if (!imp) return;
+  snapshot();
+  if (recentrerPlanche(imp)) S.projectDirty = true;
+  renderAll();
+};
 // Closing the User Manual is a special case: nothing is selected in this state (so
 // closeRightPanelMenu would have no visible effect), and the explicit request is for the
 // right-hand panel to disappear entirely rather than let the Manual reappear in it (cf.
@@ -9122,6 +9188,7 @@ cablerPolices({
 chargerPolicesUtilisateur().then(() => { updateSidePanel(); drawCurrentPage(); }).catch(() => {});
 
 enregistrerFermeture('skeletonMapModal', () => fermerSkeletonMap(false));
+enregistrerFermeture('importPlancheModal', fermerImportPlanche);
 enregistrerFermeture('modelUsagesModal', () => modelUsagesModal.classList.add('hidden'));
 // ⚠️ ÉCHAP FERME LA MODALE DE NOMMAGE, ET SANS CELA IL OUVRIRAIT LE MENU PROJET DERRIÈRE ELLE. Le
 // test de complétude des modales l'a signalé dès l'ajout : c'est la garde qui tient cette

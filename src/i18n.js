@@ -78,6 +78,10 @@ export const I18N_TEXT = [
   ['#sidePageBgSection > h2', 'Background', 'Arrière-plan'],
   ['label[for="sidePageBgColorInput"]', 'Page color', 'Couleur de la Planche'],
   ['#sidePagePanelsSection > h2', 'Panels', 'Cases'],
+  // Planche importée : le cadrage de l'ensemble (cf. planche-importee.js).
+  ['#sidePageCadrageTitle', 'Framing', 'Cadrage'],
+  ['#sidePageCadrageHint', 'Drag the page to move the image.', 'Tirez sur la Planche pour déplacer l\'image.'],
+  ['#sidePageResetBtn', 'Recentre', 'Recentrer'],
   // Case menu
   ['#panelMenuHeader .menu-close-btn', null, null, 'title', 'Close', 'Fermer'],
   ['#sideDimsTitle', 'Dimensions', 'Dimensions'],
@@ -315,6 +319,7 @@ export const I18N_TRAILING = [
   ['#ctxExportVolume', 'Export all pages', 'Exporter toutes les planches'],
   ['#ctxDeleteVolume', 'Delete this volume', 'Supprimer ce tome'],
   ['#ctxDuplicatePage', 'Duplicate this page', 'Dupliquer cette planche'],
+  ['#ctxImportPage', 'Import a page', 'Importer une planche'],
   ['#ctxRemoveFromChapter', 'Remove from the chapter', 'Retirer du chapitre'],
   ['#ctxRenameChapter', 'Rename this chapter', 'Renommer ce chapitre'],
   ['#ctxReadChapter', 'Read this chapter', 'Lire ce chapitre'],
