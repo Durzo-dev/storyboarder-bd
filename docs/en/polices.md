@@ -37,6 +37,28 @@ it in agreement with the tool, the bubble list and `BUBBLE_FONT_PRELOAD_LIST`.
 **Retired fonts rewrite no Project.** A bubble keeps the name written in its file; `policeDeBulle`
 draws it with its replacement (`POLICES_BULLES_RETIREES`). See [persisted-data.md](persisted-data.md).
 
+## Fifty-five fonts from DaFont
+
+Added on 12 October 2026, with Valentin. DaFont has no API and its licence label is "only an
+indication": the zips were downloaded by hand into `apercus/dafont/` (outside the repository), and
+the licence of **each** font was read in its zip and in its metadata. Only those whose written
+licence allows redistribution **without asking the author** were kept (CC0, public domain, SIL OFL
+1.1, GPL 2, CC BY-SA 4.0), with no missing French character, then a single one per group of
+look-alike fonts, and none that duplicates a Google font.
+
+**The files are bundled as they are**, neither converted nor trimmed (about fifteen MB): under the
+OFL, a conversion or a subset is a modified version, which loses the right to carry a reserved
+name.
+
+`node tools/import-dafont.mjs` (the list lives in the tool) writes `assets/fonts/dafont/` (one
+folder per font, with its `LICENSE.txt`, a `dafont.css` sheet and a `LICENSES.md`) and
+`src/polices-dafont.js`, which joins `POLICES_BULLES`. Three are complete (Gargle, Just Breathe,
+Morning Breeze); the others only have the styles their designer drew, the rest is simulated. A test
+keeps the tool, the repository and the bubble list in agreement (`tests/import-dafont.test.mjs`).
+
+One limit: the original uses of the new fonts only apply as long as the user has never changed the
+uses. After that, they arrive without a use, and the user files them in "My fonts".
+
 ## Bold and italic
 
 Two toggles, **B** and **I**, combinable, under a bubble's font. Two added fields, `bulleGras` and

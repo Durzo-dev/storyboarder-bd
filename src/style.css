@@ -8,8 +8,10 @@
    veille. Accessoirement, chaque lancement signalait le démarrage à un tiers.
 
    assets/fonts/ et son contenu sont GÉNÉRÉS par `node tools/fetch-fonts.mjs`. Licences et
-   attributions : assets/fonts/LICENSES.md. */
+   attributions : assets/fonts/LICENSES.md. Les polices venues de DaFont (#423) ont leur propre
+   dossier, généré par `node tools/import-dafont.mjs` : assets/fonts/dafont/ et son LICENSES.md. */
 @import url('../assets/fonts/fonts.css');
+@import url('../assets/fonts/dafont/dafont.css');
 
 :root{
   /* Taille de l'interface (#410). 1 = telle qu'elle a toujours été. */

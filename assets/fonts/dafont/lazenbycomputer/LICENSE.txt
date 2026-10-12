@@ -1,0 +1,24 @@
+Lazenby Computer
+Source: DaFont, https://dl.dafont.com/dl/?f=lazenby_computer (archive as downloaded on 12 October 2026).
+Files: lazenbycomputer-400.ttf (unmodified).
+Designer: Andrew Young
+Copyright notice in the font: © 2014 Andrew Young, disasterfonts.co.uk
+
+------------------------------------------------------------
+
+Licensed under Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
+https://creativecommons.org/licenses/by-sa/4.0/
+
+LAZENBY COMPUTER
+----------------
+
+From-scratch redraw, and massive character expansion of a famous font face with many names.
+
+Created 2014 by Andrew Young, Disaster Fonts.
+
+Licenced under Creative Commons Attribution-ShareAlike 4.0 International License. 
+
+This means you can use this font freely for any project, commercial or not.
+You may produce derivative work based on this font but must always share the results and attribute back to me.
+
+More futuristic fonts at disasterfonts.co.uk

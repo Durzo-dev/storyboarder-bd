@@ -7,6 +7,9 @@
  * Consumed by: src/app.js (and future feature modules)
  */
 
+// La seule importation : une table de données, générée (cf. POLICES_BULLES plus bas).
+import { POLICES_DAFONT } from './polices-dafont.js';
+
 // ══════════════════════════════════════════════════════════════
 // PAGE FORMATS & RENDER STYLES
 // ══════════════════════════════════════════════════════════════
@@ -538,18 +541,33 @@ export const USAGES_POLICES = Object.freeze([
   { cle: 'horreur', fr: 'Horreur', en: 'Horror' },
 ]);
 
-export const POLICES_BULLES = Object.freeze([
-  { nom: 'Comic Neue', usages: ['dialogue', 'narration'], gras: 'vrai', italique: 'vrai' },
-  { nom: 'Shantell Sans', usages: ['main'], gras: 'vrai', italique: 'vrai' },
-  { nom: 'Nunito', usages: ['narration'], gras: 'vrai', italique: 'vrai' },
-  { nom: 'Kanit', usages: ['cris'], gras: 'vrai', italique: 'vrai' },
-  { nom: 'Grandstander', usages: ['onomatopees'], gras: 'vrai', italique: 'vrai' },
-  { nom: 'Bangers', usages: ['onomatopees'], gras: 'simule', italique: 'simule' },
-  { nom: 'Chakra Petch', usages: ['robotique'], gras: 'vrai', italique: 'vrai' },
-  { nom: 'EB Garamond', usages: ['narration'], gras: 'vrai', italique: 'vrai' },
-  { nom: 'Courier Prime', usages: ['machine'], gras: 'vrai', italique: 'vrai' },
-  { nom: 'Creepster', usages: ['horreur'], gras: 'simule', italique: 'simule' },
+// ⚠️ DEUX SOURCES, UNE TABLE. Les dix premières viennent de Google Fonts (tools/fetch-fonts.mjs,
+// assets/fonts/) ; les suivantes de DaFont (#423, choisies avec Valentin le 12 octobre 2026 :
+// tools/import-dafont.mjs, assets/fonts/dafont/, src/polices-dafont.js qu'il génère). `licence` :
+// une clé de LICENCES_POLICES.
+export const POLICES_GOOGLE = Object.freeze([
+  { nom: 'Comic Neue', usages: ['dialogue', 'narration'], gras: 'vrai', italique: 'vrai', licence: 'ofl' },
+  { nom: 'Shantell Sans', usages: ['main'], gras: 'vrai', italique: 'vrai', licence: 'ofl' },
+  { nom: 'Nunito', usages: ['narration'], gras: 'vrai', italique: 'vrai', licence: 'ofl' },
+  { nom: 'Kanit', usages: ['cris'], gras: 'vrai', italique: 'vrai', licence: 'ofl' },
+  { nom: 'Grandstander', usages: ['onomatopees'], gras: 'vrai', italique: 'vrai', licence: 'ofl' },
+  { nom: 'Bangers', usages: ['onomatopees'], gras: 'simule', italique: 'simule', licence: 'ofl' },
+  { nom: 'Chakra Petch', usages: ['robotique'], gras: 'vrai', italique: 'vrai', licence: 'ofl' },
+  { nom: 'EB Garamond', usages: ['narration'], gras: 'vrai', italique: 'vrai', licence: 'ofl' },
+  { nom: 'Courier Prime', usages: ['machine'], gras: 'vrai', italique: 'vrai', licence: 'ofl' },
+  { nom: 'Creepster', usages: ['horreur'], gras: 'simule', italique: 'simule', licence: 'ofl' },
 ]);
+
+export const POLICES_BULLES = Object.freeze([...POLICES_GOOGLE, ...POLICES_DAFONT]);
+
+/** Les licences des polices intégrées : leur libellé (FR, EN) et leur texte de référence. */
+export const LICENCES_POLICES = Object.freeze({
+  ofl: { label: 'SIL Open Font License 1.1', labelEn: 'SIL Open Font License 1.1', url: 'https://openfontlicense.org' },
+  cc0: { label: 'CC0 1.0 (domaine public)', labelEn: 'CC0 1.0 (public domain)', url: 'https://creativecommons.org/publicdomain/zero/1.0/' },
+  dp: { label: 'Domaine public', labelEn: 'Public domain', url: null },
+  gpl2: { label: 'GNU GPL 2', labelEn: 'GNU GPL 2', url: 'https://www.gnu.org/licenses/old-licenses/gpl-2.0.html' },
+  ccbysa4: { label: 'CC BY-SA 4.0', labelEn: 'CC BY-SA 4.0', url: 'https://creativecommons.org/licenses/by-sa/4.0/' },
+});
 
 // ⚠️ LES POLICES RETIRÉES le 11 octobre 2026 (incomplètes), et leur remplaçante. Une Bulle d'un
 // Projet existant garde son nom de police tel qu'il est écrit (règle n°1 de persisted-data.md : on

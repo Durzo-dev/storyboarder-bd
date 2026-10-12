@@ -408,7 +408,8 @@ async function main() {
     + ` ${FAMILLES.length} licences, fonts.css, LICENSES.md.`);
   // Les sous-dossiers de licence des familles RETIRÉES restent : ils ne se balaient pas d'office
   // (cf. fichiersPerimes3D). Signalés, pour qu'on les retire à la main.
-  const slugs = new Set(FAMILLES.map(f => f.slug));
+  // `dafont/` n'est pas un dossier de licence : c'est celui de tools/import-dafont.mjs.
+  const slugs = new Set([...FAMILLES.map(f => f.slug), 'dafont']);
   const orphelins = readdirSync(DOSSIER, { withFileTypes: true })
     .filter(d => d.isDirectory() && !slugs.has(d.name)).map(d => d.name);
   if (orphelins.length) console.log(`Dossiers de licence sans famille (à retirer) : ${orphelins.join(', ')}`);

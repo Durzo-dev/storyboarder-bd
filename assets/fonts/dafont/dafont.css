@@ -1,0 +1,567 @@
+/* assets/fonts/dafont/dafont.css
+ *
+ * FICHIER GÉNÉRÉ PAR tools/import-dafont.mjs, NE PAS MODIFIER À LA MAIN.
+ *
+ * Les polices choisies sur DaFont (#423), embarquées telles quelles.
+ * Licences et attributions : voir LICENSES.md dans ce dossier.
+ */
+
+@font-face {
+  font-family: 'Bubble Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./bubblesans/bubblesans-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Prime Minister of Canada';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./primeminister/primeminister-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Correction Brush';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./correctionbrush/correctionbrush-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Mister Brush';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./misterbrush/misterbrush-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Zero Cool';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./zerocool/zerocool-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Ruthless Sketch';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./ruthlesssketch/ruthlesssketch-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Ruthless Sketch';
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+  src: url(./ruthlesssketch/ruthlesssketch-400-italic.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Pinzelan';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./pinzelan/pinzelan-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Pinzelan';
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+  src: url(./pinzelan/pinzelan-400-italic.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Unutterable';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./unutterable/unutterable-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Unutterable';
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+  src: url(./unutterable/unutterable-400-italic.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Kaph';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./kaph/kaph-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Kaph';
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+  src: url(./kaph/kaph-400-italic.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Foo';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./foo/foo-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Baveuse';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./baveuse/baveuse-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Ghostmeat';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./ghostmeat/ghostmeat-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Degrassi';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./degrassi/degrassi-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Hawkeye';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./hawkeye/hawkeye-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Planet Benson 2';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./planetbenson/planetbenson-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Huxtable';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./huxtable/huxtable-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Snidely';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./snidely/snidely-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'LT Cowboy';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./ltcowboy/ltcowboy-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Wanders';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./wanders/wanders-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Some Time Later';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./sometimelater/sometimelater-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'LT Makeup';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./ltmakeup/ltmakeup-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Birdland Aeroplane';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./birdlandaeroplane/birdlandaeroplane-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Birdland Aeroplane';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url(./birdlandaeroplane/birdlandaeroplane-700.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Green Fuz';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./greenfuz/greenfuz-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Riot Act 2';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./riotact/riotact-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Biometric Joe';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./biometricjoe/biometricjoe-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Blackcraft';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./blackcraft/blackcraft-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'So Run Down';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./sorundown/sorundown-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Razor Keen';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./razorkeen/razorkeen-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Astron Boy';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./astronboy/astronboy-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Astron Boy';
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+  src: url(./astronboy/astronboy-400-italic.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Xirod';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./xirod/xirod-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Saved by Zero';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./savedbyzero/savedbyzero-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Xolonium';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./xolonium/xolonium-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Xolonium';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url(./xolonium/xolonium-700.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Wintermute';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./wintermute/wintermute-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Droid';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./droid/droid-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Zorque';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./zorque/zorque-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Lazenby Computer';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./lazenbycomputer/lazenbycomputer-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Mainframe';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./mainframe/mainframe-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Supercomputer';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./supercomputer/supercomputer-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Retro Gaming';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./retrogaming/retrogaming-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Gargle';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./gargle/gargle-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Gargle';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url(./gargle/gargle-700.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Gargle';
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+  src: url(./gargle/gargle-400-italic.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Gargle';
+  font-style: italic;
+  font-weight: 700;
+  font-display: block;
+  src: url(./gargle/gargle-700-italic.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Bromine';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./bromine/bromine-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Just Breathe';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./justbreathe/justbreathe-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Just Breathe';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url(./justbreathe/justbreathe-700.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Just Breathe';
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+  src: url(./justbreathe/justbreathe-400-italic.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Just Breathe';
+  font-style: italic;
+  font-weight: 700;
+  font-display: block;
+  src: url(./justbreathe/justbreathe-700-italic.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Thin Pencil Handwriting';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./thinpencil/thinpencil-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Levorotary';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./levorotary/levorotary-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Your Highschool Crush';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./yourhighschoolcrush/yourhighschoolcrush-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Domestic Manners';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./domesticmanners/domesticmanners-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Morning Breeze';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./morningbreeze/morningbreeze-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Morning Breeze';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url(./morningbreeze/morningbreeze-700.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Morning Breeze';
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+  src: url(./morningbreeze/morningbreeze-400-italic.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Lemon Tuesday';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./lemontuesday/lemontuesday-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Ode an Erik';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./odeanerik/odeanerik-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Arkipelago';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./arkipelago/arkipelago-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Beth Ellen';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./bethellen/bethellen-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Pecita';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./pecita/pecita-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Bristol';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./bristol/bristol-400.otf) format('opentype');
+}
+
+@font-face {
+  font-family: 'Tippa';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./tippa/tippa-400.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Minya';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(./minya/minya-400.otf) format('opentype');
+}

@@ -39,6 +39,29 @@ tient l'accord avec l'outil, la liste des Bulles et `BUBBLE_FONT_PRELOAD_LIST`.
 `policeDeBulle` la dessine avec sa remplaçante (`POLICES_BULLES_RETIREES`). Cf.
 [persisted-data.md](persisted-data.md).
 
+## Cinquante-cinq polices venues de DaFont
+
+Ajoutées le 12 octobre 2026, avec Valentin. DaFont n'a pas d'API et son libellé de licence n'est
+« qu'une indication » : les zips ont été téléchargés à la main dans `apercus/dafont/` (hors dépôt),
+et la licence de **chaque** police lue dans son zip et dans ses métadonnées. N'ont été gardées que
+celles dont la licence écrite permet la redistribution **sans demander l'accord de l'auteur** (CC0,
+domaine public, SIL OFL 1.1, GPL 2, CC BY-SA 4.0), sans caractère français manquant, puis une seule
+par groupe de polices trop ressemblantes, et aucune qui double une police de Google.
+
+**Les fichiers sont embarqués tels quels**, ni convertis ni allégés (une quinzaine de Mo) : pour
+l'OFL, une conversion ou un sous-ensemble est une version modifiée, qui perd le droit de porter un
+nom réservé.
+
+`node tools/import-dafont.mjs` (la liste est dans l'outil) écrit `assets/fonts/dafont/` (un dossier
+par police, avec son `LICENSE.txt`, une feuille `dafont.css` et un `LICENSES.md`) et
+`src/polices-dafont.js`, qui rejoint `POLICES_BULLES`. Trois sont complètes (Gargle, Just Breathe,
+Morning Breeze) ; les autres ont seulement les variantes que leur auteur a dessinées, le reste est
+simulé. Un test tient l'accord entre l'outil, le dépôt et la liste des Bulles
+(`tests/import-dafont.test.mjs`).
+
+Une limite : les usages d'origine des nouvelles polices ne s'appliquent que tant que l'utilisateur
+n'a jamais modifié les usages. Après, elles arrivent sans usage, et il les range dans « Mes polices ».
+
 ## Le gras et l'italique
 
 Deux interrupteurs, **G** et **I**, cumulables, sous la police d'une Bulle. Deux champs ajoutés,

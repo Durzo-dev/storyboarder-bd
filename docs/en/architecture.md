@@ -36,7 +36,8 @@ as a generated file, not to open a channel.
 
 `assets/fonts/` is **generated**, by `node tools/fetch-fonts.mjs`. It holds the eleven font
 families the application displays, plus their licences, and `style.css` imports it instead of
-reaching for fonts.googleapis.com.
+reaching for fonts.googleapis.com. Its subfolder `assets/fonts/dafont/` is generated too, by
+`node tools/import-dafont.mjs`, from DaFont zips kept outside the repository (see [polices.md](polices.md)).
 
 The alternative was to download the fonts at first launch and keep them. It fails the criterion
 above at its **second** point: that remedy demands the "push it down as a generated file" answer be

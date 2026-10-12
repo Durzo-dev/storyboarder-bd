@@ -40,7 +40,8 @@ describe('les décisions', () => {
   });
 
   test('les noms intégrés, que l\'import ne peut pas prendre', () => {
-    assert.ok(U.NOMS_INTEGRES.includes('Bangers') && U.NOMS_INTEGRES.length === 10);
+    // Dix de Google, cinquante-cinq de DaFont (#423).
+    assert.ok(U.NOMS_INTEGRES.includes('Bangers') && U.NOMS_INTEGRES.includes('Gargle') && U.NOMS_INTEGRES.length === 65);
   });
 
   test('le détail montre tous les caractères (demandé)', () => {

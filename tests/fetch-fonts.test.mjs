@@ -31,7 +31,8 @@ import {
   recapitulatifLicences3D, copyrightDeMetadonnee3D,
 } from '../tools/fetch-fonts.mjs';
 import { BUBBLE_FONT_PRELOAD_LIST } from '../src/help-content.js';
-import { POLICES_BULLES, POLICES_BULLES_RETIREES, policeDeBulle } from '../src/constants.js';
+import { POLICES_DAFONT } from '../src/polices-dafont.js';
+import { POLICES_BULLES, POLICES_GOOGLE, POLICES_BULLES_RETIREES, policeDeBulle } from '../src/constants.js';
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -327,7 +328,8 @@ describe('La liste des familles, et ses accords', () => {
     // L'accord qui compte. `BUBBLE_FONT_PRELOAD_LIST` alimente la liste déroulante du texte des
     // Bulles. Une famille proposée mais absente d'ici serait une police fantôme : choisissable,
     // jamais dessinée, et retombant en sans-serif sans le moindre message.
-    const telechargees = new Set(FAMILLES.map(f => f.nom));
+    // Les polices de DaFont (#423) sont embarquées par tools/import-dafont.mjs : tenues par son test.
+    const telechargees = new Set([...FAMILLES.map(f => f.nom), ...POLICES_DAFONT.map(p => p.nom)]);
     const fantomes = BUBBLE_FONT_PRELOAD_LIST.filter(n => !telechargees.has(n));
     assert.deepEqual(fantomes, [], `proposées aux Bulles mais jamais embarquées : ${fantomes}`);
     assert.ok(BUBBLE_FONT_PRELOAD_LIST.length >= 5, 'la liste des Bulles est devenue trop courte pour mesurer');
@@ -360,7 +362,8 @@ describe('La liste des familles, et ses accords', () => {
   });
 
   test('#423 : les polices de Bulles complètes ont leurs italiques, et la même liste partout', () => {
-    for (const p of POLICES_BULLES) {
+    // Celles de Google seulement : celles de DaFont ont leur outil et leur test (import-dafont).
+    for (const p of POLICES_GOOGLE) {
       const f = FAMILLES.find(x => x.nom === p.nom);
       assert.ok(f, `${p.nom} n'est pas téléchargée`);
       assert.equal(!!f.italique, p.italique === 'vrai', `${p.nom} : italiques annoncés et téléchargés en désaccord`);

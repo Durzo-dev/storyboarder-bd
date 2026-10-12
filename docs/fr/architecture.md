@@ -37,7 +37,8 @@ réponse est le plus souvent de la faire descendre sous forme de fichier génér
 
 `assets/fonts/` est **généré**, par `node tools/fetch-fonts.mjs`. Il contient les onze familles de
 polices que l'application affiche, plus leurs licences, et `style.css` l'importe au lieu d'aller
-chercher fonts.googleapis.com.
+chercher fonts.googleapis.com. Son sous-dossier `assets/fonts/dafont/` l'est aussi, par
+`node tools/import-dafont.mjs`, à partir de zips DaFont gardés hors dépôt (cf. [polices.md](polices.md)).
 
 L'autre voie était de télécharger les polices au premier lancement et de les garder. Elle échoue
 sur le **deuxième** point du critère ci-dessus, qui exige que le remède habituel, faire descendre

@@ -16,7 +16,7 @@
  */
 
 import { S, tr } from './state.js';
-import { POLICES_BULLES, BUBBLE_FONT_FALLBACK } from './constants.js';
+import { POLICES_BULLES, BUBBLE_FONT_FALLBACK, LICENCES_POLICES } from './constants.js';
 import {
   policesImportees, chargerPolicesUtilisateur, NOMS_INTEGRES, JEUX_DE_CARACTERES, PHRASE_D_ESSAI,
   classementDesUsages, tousLesUsages, usagesDeLaPolice, filtrerParUsages, operationUsage, nomsDesUsagesDeLaPolice,
@@ -62,10 +62,10 @@ const nomsDesUsages = (nom) => nomsDesUsagesDeLaPolice(nom, langue());
 
 /** Une police à montrer : intégrée ou importée, sous une seule forme. */
 function toutesLesPolices(){
-  const integrees = POLICES_BULLES.map(p => ({
-    nom: p.nom, integree: true, gras: p.gras, italique: p.italique,
-    licence: 'SIL Open Font License 1.1', url: 'https://openfontlicense.org', droits: 'installable',
-  }));
+  const integrees = POLICES_BULLES.map(p => {
+    const l = LICENCES_POLICES[p.licence] || LICENCES_POLICES.ofl;
+    return { nom: p.nom, integree: true, gras: p.gras, italique: p.italique, licence: tr(l.labelEn, l.label), url: l.url, droits: 'installable' };
+  });
   const importees = policesImportees().map(f => ({ ...f, integree: false }));
   return { integrees, importees };
 }

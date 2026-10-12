@@ -20,7 +20,10 @@ describe('la décision', () => {
     assert.deepEqual(variantesDePolice('Une police inconnue'), { gras: 'simule', italique: 'simule' });
     // Une police retirée répond pour sa remplaçante, qui est celle qu'on dessine.
     assert.deepEqual(variantesDePolice('Kalam'), variantesDePolice('Shantell Sans'));
-    assert.equal(POLICES_BULLES.filter(p => p.gras === 'vrai' && p.italique === 'vrai').length, 8);
+    // Huit de Google, puis trois de DaFont (#423) : Gargle, Just Breathe, Morning Breeze.
+    assert.equal(POLICES_BULLES.filter(p => p.gras === 'vrai' && p.italique === 'vrai').length, 11);
+    assert.deepEqual(variantesDePolice('Gargle'), { gras: 'vrai', italique: 'vrai' });
+    assert.deepEqual(variantesDePolice('Ruthless Sketch'), { gras: 'simule', italique: 'vrai' });
   });
 
   test('les deux cumulables, absents = normal', () => {

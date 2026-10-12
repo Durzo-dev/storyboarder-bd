@@ -18,6 +18,7 @@ import { applyTextEntry, setLeadingText, setTrailingText, stackRankLabel, noDesc
          I18N_TEXT, I18N_TRAILING, I18N_LEADING, I18N_MODALS, I18N_PREV_LABEL } from '../src/i18n.js';
 import { HELP_MANUAL_EN, HELP_MANUAL_FR , sectionDuManuel} from '../src/help-content.js';
 import { S } from '../src/state.js';
+import { POLICES_DAFONT } from '../src/polices-dafont.js';
 import { OBJECT_TYPE_LABELS, OBJECT_TYPE_LABELS_EN,
          ANIMAL_JOINT_DEFS, ANIMAL_LABELS_EN, EMOTIONS, FORMATS, GROUND_TYPE_DEFS, HAND_STATES,
          JOINT_GROUPS, JOINT_LABELS, JOINT_LABELS_EN, POSE_HANDLES, POSITIONS, STYLES_3D } from '../src/constants.js';
@@ -972,8 +973,9 @@ describe('#403n : un libellé porte UNE majuscule, la première', () => {
   const ACRONYMES = new Set(['3D', 'PNG', 'JPG', 'JPEG', 'WebP', 'PDF', 'JSON', 'Ctrl', 'Maj',
     'Alt', 'Échap', 'A4', 'A5', 'A3', 'B4']);
   // Les polices d'écriture proposées pour les Bulles : des noms propres, ils gardent leur casse.
+  // Celles de DaFont (#423) sont lues dans leur table générée : toutes, sans en recopier aucune.
   const NOMS_PROPRES = new Set(['Comic Neue', 'Shantell Sans', 'Chakra Petch', 'EB Garamond',
-    'Courier Prime']);
+    'Courier Prime', ...POLICES_DAFONT.map(p => p.nom)]);
   const AVEC_LETTRE = /[A-Za-zÀ-ÿ]/;
   const nu = (mot) => mot.replace(/^[^A-Za-zÀ-ÿ0-9]+|[^A-Za-zÀ-ÿ0-9]+$/g, '');
 
