@@ -15,12 +15,12 @@ l'ensemble se règle.
 
 ## Le geste
 
-Clic droit sur une Planche, dans le menu de gauche, **« Importer une planche »**. On choisit une
+Clic droit dans un espace vide de la Planche affichée, **« Importer une planche »** (sous « Créer une case » et « Créer une bulle de dialogue », et nulle part ailleurs). On choisit une
 image (PNG, JPG, WebP), l'application **détecte les Cases**, puis une fenêtre de **vérification**
 les montre sur l'image : on les déplace, les redimensionne par un coin, en trace de nouvelles dans
 le vide, en retire (Suppr). Le curseur « Sensibilité » relance la détection, et remplace les
 retouches. **Rien n'est écrit avant « Importer la planche »** : ni la Planche, ni l'image dans le
-dossier Images. La nouvelle Planche se place juste après celle du clic, dans le même Chapitre.
+dossier Images. La nouvelle Planche se place juste après celle affichée, dans le même Chapitre.
 
 ## La détection
 

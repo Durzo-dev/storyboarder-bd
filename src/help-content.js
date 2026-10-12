@@ -95,7 +95,7 @@ export const HELP_MANUAL_EN = [
     'Clicking outside the page canvas (in an empty area with no panel or bubble) deselects the active panel.',
     'The "Dimensions" section gives the length of each side of the panel in millimetres, worked out from the page format. It is read, not typed: a panel is resized by dragging its sides or its corners.',
     'The "Border" section drives the panel outline: the "Show border" tick, its thickness (Thin, Medium, Thick) and its colour. Unticking leaves the panel with no outline at all.',
-    'Right-click a page → "Import a page" turns an image of an already drawn page into a new page: its panels are detected, you check them (move, resize, add, Delete), then import. Nothing in it can be edited; drag it to frame the image, set the zoom in the page menu, where each panel\'s description is typed.',
+    'Right-click an empty area of the page → "Import a page" turns an image of an already drawn page into a new page: its panels are detected, you check them (move, resize, add, Delete), then import. Nothing in it can be edited; drag it to frame the image, set the zoom in the page menu, where each panel\'s description is typed.',
   ]},
   { id: 'images', title: 'Panel images', paragraphs: [
     'Right-click a panel → "Insert an image" to place a drawing or a photo there instead of the 3D scene. PNG, JPG and WebP are accepted; the image is cropped and centred to fill the panel.',
@@ -339,7 +339,7 @@ export const HELP_MANUAL_FR = [
     "Cliquer en dehors de la Planche (dans une zone sans Case ni Bulle) désélectionne la Case active.",
     "La section « Dimensions » donne la longueur de chaque côté de la Case en millimètres, calculée d'après le format de la Planche. Elle se lit, elle ne se saisit pas : une Case se redimensionne en faisant glisser ses côtés ou ses coins.",
     "La section « Bordure » commande le trait de la Case : la coche « Afficher la bordure », son épaisseur (Fine, Moyenne, Épaisse) et sa couleur. Décocher laisse la Case sans aucun contour.",
-    "Clic droit sur une planche → « Importer une planche » fait d'une image de planche déjà dessinée une nouvelle Planche : ses Cases sont détectées, vous les vérifiez (déplacer, redimensionner, ajouter, Suppr), puis importez. Rien ne s'y modifie ; tirez dessus pour cadrer l'image, réglez le zoom dans le menu de la Planche, où se tape la description de chaque Case.",
+    "Clic droit dans un espace vide de la planche → « Importer une planche » fait d'une image de planche déjà dessinée une nouvelle Planche : ses Cases sont détectées, vous les vérifiez (déplacer, redimensionner, ajouter, Suppr), puis importez. Rien ne s'y modifie ; tirez dessus pour cadrer l'image, réglez le zoom dans le menu de la Planche, où se tape la description de chaque Case.",
   ]},
   { id: 'images', title: 'Images de case', paragraphs: [
     "Clic droit sur une Case → « Insérer une image » pour y placer un dessin ou une photo à la place de la scène 3D. PNG, JPG et WebP sont acceptés ; l'image est recadrée et centrée pour remplir la Case.",

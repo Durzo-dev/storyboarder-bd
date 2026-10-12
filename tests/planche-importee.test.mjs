@@ -201,7 +201,7 @@ describe('Le câblage (inspecté : le DOM et le dessin sont hors de portée)', (
   test('les menus : une Case importée n\'a que Dimensions et Description ; la Planche a son cadrage', () => {
     assert.match(SIDE, /if \(estCaseImportee\(sel\)\) \{/);
     assert.match(SIDE, /if \(estPlancheImportee\(page\)\) \{\n {8}const z = cadrageLu\(page\.importee\)\.zoom;/);
-    assert.match(lire('src/index.html'), /<button id="ctxImportPage">/);
+    assert.match(lire('src/index.html'), /<button id="ctxImportPageCanvas">/);
   });
 
   test('une Case importée n\'est pas une « Case à image » pour les menus, mais son image est comptée', async () => {
@@ -209,5 +209,17 @@ describe('Le câblage (inspecté : le DOM et le dessin sont hors de portée)', (
     const c = { type: 'panel', imageFile: 'p.png', regionImage: { x: 0, y: 0, w: 1, h: 1 } };
     assert.equal(casePorteUneImage3D(c), false);
     assert.equal(imageDeLaCase3D(c), 'p.png');
+  });
+});
+
+describe('L\'entrée « Importer une planche »', () => {
+  test('SEULEMENT au clic droit dans le vide de la Planche, sous « Créer une case » et « Créer une bulle » (demandé)', () => {
+    const lire = (f) => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
+    const html = lire('src/index.html'), ev = lire('src/events.js');
+    const menu = (id) => html.slice(html.indexOf(`id="${id}"`), html.indexOf('</div>', html.indexOf(`id="${id}"`)));
+    assert.doesNotMatch(menu('pageContextMenu'), /Import/, 'retirée du menu de gauche (demandé)');
+    assert.match(menu('dblclickChoiceMenu'), /id="ctxCreatePanel"[\s\S]*id="ctxCreateBubble"[\s\S]*id="ctxImportPageCanvas"/);
+    assert.equal((html.match(/Importer une planche<\/button>/g) || []).length, 1, 'une seule entrée');
+    assert.match(ev, /getElementById\('ctxImportPageCanvas'\)\.onclick[\s\S]{0,200}ouvrirImportPlanche\(S\.currentTomeIndex, S\.currentPageIndex\)/);
   });
 });

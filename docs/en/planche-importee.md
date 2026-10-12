@@ -14,12 +14,12 @@ in it can be changed**: neither the Panels nor the drawing. Only the framing of 
 
 ## The gesture
 
-Right-click a Page in the left menu, **"Import a page"**. Pick an image (PNG, JPG, WebP); the
+Right-click an empty area of the displayed Page, **"Import a page"** (under "Create a panel" and "Create a speech bubble", and nowhere else). Pick an image (PNG, JPG, WebP); the
 application **detects the Panels**, then a **check** window shows them on the image: move them,
 resize them by a corner, draw new ones in an empty area, remove them (Delete). The "Sensitivity"
 slider runs the detection again, and replaces the changes. **Nothing is written before "Import the
-page"**: neither the Page nor the image in the Images folder. The new Page goes right after the one
-clicked, in the same Chapter.
+page"**: neither the Page nor the image in the Images folder. The new Page goes right after the
+displayed one, in the same Chapter.
 
 ## The detection
 

@@ -4374,6 +4374,9 @@ canvas.addEventListener('contextmenu', (e) => {
     // (cf. canvas.dblclick below, which now does nothing on empty space).
     hideContextMenu();
     S.pendingCreatePos = { x, y };
+    // « Importer une planche » aussi ici : c'est sur la Planche affichée qu'on la cherche d'abord
+    // (signalé à l'usage). Pas dans une Scène, qui n'a pas de Planches.
+    document.getElementById('ctxImportPageCanvas').style.display = S.editingSceneId ? 'none' : '';
     placerMenu3D(dblclickChoiceMenu, e.clientX, e.clientY);
     return;
   }
@@ -6360,10 +6363,12 @@ document.getElementById('ctxDuplicatePage').onclick = () => {
   hideContextMenu();
 };
 // Importer une planche (demandé le 12 octobre 2026) : une image, ses Cases vérifiées, une Planche
-// de plus juste après celle du clic. Cf. src/import-planche-ui.js.
-document.getElementById('ctxImportPage').onclick = () => {
+// de plus juste après celle affichée. Cf. src/import-planche-ui.js. SEULEMENT au clic droit dans le
+// vide de la Planche, sous « Créer une case » et « Créer une bulle » (demandé), nulle part ailleurs.
+document.getElementById('ctxImportPageCanvas').onclick = () => {
   hideContextMenu();
-  if (S.ctxPageTarget !== null) ouvrirImportPlanche(S.ctxPageTarget.ti, S.ctxPageTarget.pi);
+  S.pendingCreatePos = null;
+  if (!S.editingSceneId) ouvrirImportPlanche(S.currentTomeIndex, S.currentPageIndex);
 };
 // "Export this page" submenu (PNG/PDF): same hover behavior as the other submenus (Vehicles,
 // Furniture, etc.), opens to the right of the trigger, with a small delay before closing to
