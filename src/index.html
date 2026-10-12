@@ -19,15 +19,6 @@
        section du menu de gauche, réduite à un seul bouton. Ronds et à icône, comme les boutons de
        droite (demandé). Leur infobulle est écrite par le code : src/store-texts.js pour le premier,
        l'i18n pour le second. Les Images restent à gauche pour l'instant. -->
-  <button class="help-round-btn" id="storeOuvrirBtn" type="button" title="Bibliothèque de modèles (B)">
-    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <!-- Une grille de vignettes (choisie parmi six) : l'écran qu'on ouvre. -->
-      <rect x="3" y="3" width="7" height="7" rx="1"/>
-      <rect x="14" y="3" width="7" height="7" rx="1"/>
-      <rect x="3" y="14" width="7" height="7" rx="1"/>
-      <rect x="14" y="14" width="7" height="7" rx="1"/>
-    </svg>
-  </button>
   <button class="help-round-btn" type="button" id="openPoseEditorBtn" title="Éditeur de modèle (E)">
     <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="4.5" r="2"/>
@@ -38,7 +29,16 @@
       <path d="M12 14.5l3.5 6.5"/>
     </svg>
   </button>
-  <!-- Les Polices (#423, demandé) : à droite de l'Éditeur de modèle. Son infobulle est écrite par le
+  <button class="help-round-btn" id="storeOuvrirBtn" type="button" title="Bibliothèque de modèles (B)">
+    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Une grille de vignettes (choisie parmi six) : l'écran qu'on ouvre. -->
+      <rect x="3" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+  </button>
+  <!-- Les Polices (#423, demandé) : à droite de la bibliothèque de modèles, elle-même à droite de l'Éditeur. Son infobulle est écrite par le
        code (src/polices-ui.js). -->
   <button class="help-round-btn polices-btn" id="policesOuvrirBtn" type="button" title="Polices">Aa</button>
   <!-- Déplacé depuis le menu de gauche (sur demande utilisateur) : le bouton Annuler se trouve
@@ -1049,7 +1049,6 @@
          modèle y REMPLACE la grille (demandé). -->
     <div id="storeDefilement" class="store-defilement">
       <div id="storeGrille" class="store-grille"></div>
-      <button id="storePlusBtn" class="nav-btn store-plus" type="button" hidden></button>
       <div id="storeFiche" class="store-fiche" hidden></div>
     </div>
     <p id="storeCredit" class="store-credit"></p>
@@ -1063,6 +1062,12 @@
   <div class="modal-box store-box polices-box">
     <button class="modal-close-btn" id="policesFermer" type="button" title="Fermer (Échap)">×</button>
     <h3 id="policesTitre">Mes polices</h3>
+    <!-- Deux onglets (#423), au style de ceux du store de modèles : les polices qu'on a, et le store
+         de polices en ligne (src/polices-store-ui.js). -->
+    <div class="store-onglets" id="policesOnglets" role="tablist">
+      <button type="button" class="store-onglet actif" role="tab" data-mode="local" id="policesOngletLocal">Mes polices</button>
+      <button type="button" class="store-onglet" role="tab" data-mode="enLigne" id="policesOngletEnLigne">En ligne</button>
+    </div>
     <div class="polices-barre" id="policesBarre">
       <div class="polices-vue" role="group">
         <button type="button" id="policesVueGrille" class="polices-vue-btn" aria-pressed="true" title="Grille de vignettes">
@@ -1073,15 +1078,24 @@
         </button>
         <!-- Le filtre par usage (demandé), comme celui des tags du store : on y crée, renomme et
              supprime aussi les usages. Libellé écrit par le code. -->
-        <span id="policesFiltreZone" class="store-tags-zone"><button type="button" id="policesUsagesBtn" class="store-tags-btn">Tous les usages</button></span>
+        <span id="policesFiltreZone" class="store-tags-zone polices-local"><button type="button" id="policesUsagesBtn" class="store-tags-btn">Tous les usages</button></span>
+        <!-- En ligne seulement : la recherche dans le store, ses filtres et son tri. -->
+        <input id="policesEnLigneTexte" class="modal-input polices-enligne-texte polices-enligne" type="search" autocomplete="off" placeholder="Rechercher une police" hidden>
+        <select id="policesEnLigneCategorie" class="polices-enligne" hidden></select>
+        <select id="policesEnLigneTri" class="polices-enligne" hidden>
+          <option value="nom">Nom</option>
+          <option value="recent">Récentes</option>
+        </select>
+        <!-- Tout à droite (demandé). -->
+        <label class="store-case polices-enligne polices-completes" hidden><input type="checkbox" id="policesEnLigneCompletes" checked> <span id="policesEnLigneCompletesLibelle">Complètes seulement</span></label>
         <!-- En liste seulement (demandé) : la phrase d'exemple, la même que celle du détail. -->
         <input id="policesPhrase" class="modal-input polices-phrase" type="text" spellcheck="false" placeholder="Phrase d'exemple" hidden>
       </div>
-      <div class="polices-ajout">
+      <div class="polices-ajout polices-local">
         <button type="button" id="policesAjouter" class="project-modal-btn">＋ Ajouter une police</button>
         <div id="policesAjoutMenu" class="polices-ajout-menu" hidden>
           <button type="button" id="policesAjoutFichier">Depuis un fichier…</button>
-          <button type="button" id="policesAjoutEnLigne" disabled title="Bientôt : un store de polices en ligne">Rechercher en ligne (bientôt)</button>
+          <button type="button" id="policesAjoutEnLigne">Rechercher en ligne…</button>
         </div>
       </div>
     </div>
@@ -1092,7 +1106,9 @@
     </div>
     <!-- Hors de la zone qui défile : « Retour » reste visible en bas du détail (demandé). -->
     <div class="polices-pied" id="policesPied" hidden>
+      <!-- Retour à gauche, « Ajouter à mes polices » à droite, en orange, à parts égales (demandé). -->
       <button type="button" id="policesRetour" class="nav-btn">Retour</button>
+      <button type="button" id="policesAjouterEnLigne" class="full-btn" hidden>Ajouter à mes polices</button>
     </div>
   </div>
 </div>

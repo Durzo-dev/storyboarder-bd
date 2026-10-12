@@ -890,15 +890,37 @@ ipcMain.handle('fonts:pick', async (event, integrees) => {
       else illisibles.push(path.basename(chemin));
     } catch (e) { illisibles.push(path.basename(chemin)); }
   }
+  return { canceled: false, illisibles, ...(await preparerImportDePolices(lus, integrees)) };
+});
+
+/** Des fichiers lus, gardés sous un jeton jusqu'à fonts:commit ; les familles et leurs conflits de nom. */
+async function preparerImportDePolices(lus, integrees) {
   const familles = policesFichiers.regrouperEnFamilles(lus);
   const index = await lireIndexPolices();
   const jeton = String(prochainJeton++);
   importsEnAttente.set(jeton, { lus });
   const propositions = polices.propositionsDImport(index, familles, Array.isArray(integrees) ? integrees : []);
-  return {
-    canceled: false, jeton, illisibles,
-    familles: familles.map((f, i) => ({ ...f, fichiers: f.fichiers.length, conflit: propositions[i].conflit })),
-  };
+  return { jeton, familles: familles.map((f, i) => ({ ...f, fichiers: f.fichiers.length, conflit: propositions[i].conflit })) };
+}
+
+// ─── Le STORE DE POLICES (#423), source Fontsource ───
+// Les requêtes sont dans bibliotheque/store-polices.js, les décisions dans store-fontsource.js. Un
+// téléchargement suit le MÊME chemin qu'un import de fichiers : lu, gardé sous un jeton, puis écrit
+// par fonts:commit une fois les conflits de nom tranchés. Simulation : STORYBOARD_SIMULER_STORE.
+const storePolices = require('./bibliotheque/store-polices');
+ipcMain.handle('fontstore:infos', async () => ({ ...storePolices.infos(), simulation: SIMULATION_STORE }));
+ipcMain.handle('fontstore:chercher', async (event, params) => storePolices.chercher(params, SIMULATION_STORE ? RACINE : null));
+ipcMain.handle('fontstore:apercu', async (event, id, graisse, italique) => {
+  const r = await storePolices.apercu(String(id || ''), SIMULATION_STORE ? RACINE : null, Number(graisse) || null, !!italique);
+  return r.erreur ? r : { data: new Uint8Array(r.data) };
+});
+ipcMain.handle('fontstore:ajouter', async (event, id, integrees) => {
+  const r = await storePolices.telecharger(String(id || ''), SIMULATION_STORE ? RACINE : null);
+  if (r.erreur) return r;
+  const lus = r.fichiers.map(f => ({ fichier: f.fichier, data: f.data, info: policesFichiers.lirePolice(f.data) })).filter(l => l.info);
+  // Aucun fichier lisible : la même erreur que le store de polices rend pour une réponse inattendue.
+  if (!lus.length) return { erreur: storePolices.ERREUR_REPONSE };
+  return preparerImportDePolices(lus, integrees);
 });
 
 ipcMain.handle('fonts:commit', async (event, jeton, choix, integrees) => {

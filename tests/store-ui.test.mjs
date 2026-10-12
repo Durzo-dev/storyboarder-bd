@@ -119,11 +119,11 @@ describe('le câblage', () => {
   test('retours de Valentin (6 octobre 2026) : une seule zone défile, la fiche remplace la liste, une ligne par licence', () => {
     const css = lire('src/style.css');
     const html = lire('src/index.html');
-    assert.match(css, /\.store-grille\[hidden\], \.store-fiche\[hidden\], \.store-plus\[hidden\]/);
+    assert.match(css, /\.store-grille\[hidden\], \.store-fiche\[hidden\], \.store-filtres\[hidden\]/);
     assert.match(css, /display:flex; flex-direction:column; overflow:hidden;/);
     assert.match(css, /\.store-box > \.store-defilement\{ flex:1 1 auto; min-height:0; overflow-y:auto;/);
     const zone = html.slice(html.indexOf('id="storeDefilement"'), html.indexOf('id="storeCredit"'));
-    for (const id of ['storeGrille', 'storePlusBtn', 'storeFiche']) assert.ok(zone.includes(`id="${id}"`), id);
+    for (const id of ['storeGrille', 'storeFiche']) assert.ok(zone.includes(`id="${id}"`), id);
     assert.match(css, /\.store-badge\{ min-width:0;[^}]*white-space:nowrap;/);
     assert.match(css, /\.modal-box \.store-filtres select\{ flex:1 1 180px; max-width:260px; width:auto; margin:0; \}/);
     assert.equal(textesStore('fr').ouvrir, 'Bibliothèque de modèles');
@@ -331,5 +331,27 @@ describe('le mode choix (l\'Éditeur de modèle choisit sa figure dans « Mes mo
     const quitter = ui.slice(ui.indexOf('function quitterModeChoix'), ui.indexOf('export function fermerStore'));
     assert.match(quitter, /choix = null;/);
     assert.match(quitter, /source = sourceAvantChoix;/);
+  });
+});
+
+describe('le défilement infini (demandé, à la place de « Charger plus »)', () => {
+  test('la suite est demandée près du bas, une seule fois, jamais sans suite ni sur une fiche', async () => {
+    // store-ui.js tire l'aperçu 3D (THREE) : le faux DOM, qui le fournit, est chargé d'abord.
+    await import('./helpers/dom-stub.mjs');
+    const { suiteADemander, MARGE_DEFILEMENT_PX } = await import('../src/store-ui.js');
+    const zone = (reste) => ({ scrollTop: 1000, clientHeight: 500, scrollHeight: 1500 + reste });
+    assert.equal(suiteADemander({ zone: zone(MARGE_DEFILEMENT_PX - 1), suivant: 'x', enCours: false, ficheOuverte: false }), true);
+    assert.equal(suiteADemander({ zone: zone(MARGE_DEFILEMENT_PX + 50), suivant: 'x', enCours: false, ficheOuverte: false }), false);
+    assert.equal(suiteADemander({ zone: zone(0), suivant: null, enCours: false, ficheOuverte: false }), false);
+    assert.equal(suiteADemander({ zone: zone(0), suivant: 'x', enCours: true, ficheOuverte: false }), false);
+    assert.equal(suiteADemander({ zone: zone(0), suivant: 'x', enCours: false, ficheOuverte: true }), false);
+    assert.equal(suiteADemander({ zone: zone(0), suivant: 0, enCours: false, ficheOuverte: false }), true, 'un curseur 0 est une suite');
+  });
+  test('les deux stores, modèles et polices, suivent le défilement ; plus de bouton', () => {
+    const ui = lire('src/store-ui.js');
+    assert.match(ui, /\$\('storeDefilement'\)\.addEventListener\('scroll', chargerLaSuiteSiBesoin, \{ passive: true \}\);/);
+    assert.match(lire('src/polices-store-ui.js'), /\$\('policesDefilement'\)\.addEventListener\('scroll', \(\) => chargerLaSuiteSiBesoin\(message\), \{ passive: true \}\);/);
+    const html = lire('src/index.html');
+    assert.ok(!html.includes('storePlusBtn') && !html.includes('policesEnLignePlus'));
   });
 });

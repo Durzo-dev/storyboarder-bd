@@ -2220,7 +2220,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .store-grille{ display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:12px; }
 /* ⚠️ `hidden` ne l'emporte pas sur un `display` posé par une classe : sans ces règles, la grille
    restait affichée sous la fiche au lieu d'être remplacée. */
-.store-grille[hidden], .store-fiche[hidden], .store-plus[hidden], .store-filtres[hidden]{ display:none; }
+.store-grille[hidden], .store-fiche[hidden], .store-filtres[hidden]{ display:none; }
 /* Un filtre sans objet pour la source affichée (licence, usage commercial chez Poly Haven). */
 .store-filtres [hidden]{ display:none; }
 /* Les onglets des sources (#445) : un soulignement, pas des boutons pleins, pour ne pas rivaliser
@@ -2273,7 +2273,6 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 }
 .store-articule svg{ width:15px; height:15px; display:block; }
 .store-carte-possedee img, .store-carte-possedee .store-sans-vignette{ opacity:.7; }
-.store-plus{ display:block; margin:12px auto 0; }
 .store-fiche{ font-size:13px; line-height:1.45; }
 .store-fiche h4{ margin:14px 0 4px; font-size:20px; line-height:1.25; }
 .store-fiche p{ margin:0 0 6px; }
@@ -2478,9 +2477,34 @@ button.store-chip:hover{ border-color:var(--accent); }
 .modal-box .polices-vue input.polices-phrase{ flex:1 1 auto; min-width:120px; width:auto; height:34px; margin:0 0 0 8px; padding:0 10px;
   box-sizing:border-box; font-size:13.5px; font-weight:500; }
 .modal-box .polices-vue input.polices-phrase[hidden]{ display:none; }
+/* L'onglet « En ligne » : la recherche s'étire comme la phrase d'exemple, les listes et la case
+   gardent leur taille. Mêmes précautions de sélecteur que la phrase (largeur 100 % et marge basse
+   des champs de modale). */
+.modal-box .polices-vue input.polices-enligne-texte{ flex:1 1 auto; min-width:140px; width:auto; height:34px; margin:0 0 0 8px; padding:0 10px;
+  box-sizing:border-box; font-size:13.5px; font-weight:500; }
+.modal-box .polices-vue select.polices-enligne{ width:auto; height:34px; margin:0 0 0 8px; padding:0 8px; }
+.polices-vue .store-case.polices-enligne{ margin-left:8px; white-space:nowrap; font-size:13px; }
+/* En ligne : « Complètes seulement » tout à droite, et la phrase d'exemple SOUS les filtres, sur
+   toute la largeur (demandé). */
+.polices-vue .polices-completes{ margin-left:auto !important; }
+.polices-barre.en-ligne .polices-vue{ flex-wrap:wrap; row-gap:8px; }
+.modal-box .polices-barre.en-ligne .polices-vue input.polices-phrase{ order:10; flex:1 1 100%; margin-left:0; }
+#policesMessage[hidden]{ display:none; }
+/* Le nombre de polices (ou l'état de la recherche) : collé aux filtres, de l'air avant la grille
+   (demandé). La barre a déjà sa marge basse ; .maj-message en ajoutait une au-dessus. */
+#policesMessage{ margin:0 0 6px; }
+.modal-box .polices-vue .polices-enligne[hidden], .polices-barre .polices-local[hidden]{ display:none; }
+#policesOnglets[hidden]{ display:none; }
+/* Déjà dans « Mes polices » : une coche sur la vignette, comme le store de modèles. */
+.police-apercu{ position:relative; }
+.police-carte.en-liste .police-possedee{ top:50%; right:10px; transform:translateY(-50%); }
+.police-possedee{ position:absolute; top:6px; right:6px; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:var(--accent); color:var(--sur-accent); font-size:12px; font-weight:700; box-shadow:0 1px 3px rgba(0,0,0,.35); }
 /* « Retour », en bas du détail, hors de la zone qui défile : toujours visible (demandé). */
-.polices-pied{ display:flex; justify-content:flex-end; padding-top:10px; border-top:1px solid var(--line); margin-top:8px; }
-.polices-pied .nav-btn{ margin:0; min-width:110px; }
+.polices-pied{ display:flex; gap:8px; padding-top:10px; border-top:1px solid var(--line); margin-top:8px; }
+/* Les deux boutons se partagent la largeur à parts égales ; seul, « Retour » la prend toute. */
+.polices-pied > button{ flex:1 1 0; margin:0; min-width:0; }
+.polices-pied > button[hidden]{ display:none; }
 .police-usages .store-classement-ligne{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
 .polices-vue-btn{ width:32px; height:30px; padding:0; border-radius:6px; border:1px solid var(--line-strong); background:var(--white); color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; }
 .polices-vue-btn svg{ width:16px; height:16px; stroke:currentColor; fill:none; }
@@ -2504,9 +2528,12 @@ button.store-chip:hover{ border-color:var(--accent); }
 .police-carte:hover{ border-color:var(--accent); }
 .police-apercu{ display:flex; align-items:center; justify-content:center; height:84px; font-size:42px; line-height:1;
   background:#fbfaf7; color:#23242a; white-space:nowrap; overflow:hidden; }
-.police-pied{ display:flex; flex-direction:column; gap:2px; padding:7px 9px 8px; position:relative; }
+.police-pied{ display:flex; flex-direction:column; gap:4px; padding:7px 9px 8px; position:relative; }
 .police-nom{ font-size:12.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:44px; }
 .police-usage{ font-size:11px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* Quand le texte sous le nom passerait sous G et I, ils remontent en haut, à la hauteur du nom
+   (classe posée après mesure, cf. placerVariantes, src/polices-ui.js). */
+.police-pied.variantes-en-haut .police-variantes{ top:7px; transform:none; }
 .police-alerte{ color:var(--warn); }
 /* G et I CENTRÉS verticalement dans le pied de la vignette (demandé), en grille comme en liste. */
 .police-variantes{ display:inline-flex; gap:3px; position:absolute; right:8px; top:50%; transform:translateY(-50%); }
@@ -2520,7 +2547,10 @@ button.store-chip:hover{ border-color:var(--accent); }
 /* En liste : la phrase d'essai à gauche, dans la police, et la fiche d'identité à droite. */
 .police-carte.en-liste{ flex-direction:row; align-items:stretch; }
 .police-carte.en-liste .police-apercu{ flex:1 1 auto; justify-content:flex-start; height:auto; min-height:46px; padding:6px 12px; font-size:22px; text-overflow:ellipsis; }
-.police-carte.en-liste .police-pied{ flex:0 0 220px; justify-content:center; border-left:1px solid var(--line); }
+/* La fiche d'identité a une largeur FIXE, et elle ne grandit pas avec un long nom ou une licence
+   (min-width:0) : le cadre blanc de l'aperçu finit donc au même endroit sur toutes les lignes. */
+.police-carte.en-liste .police-apercu{ min-width:0; }
+.police-carte.en-liste .police-pied{ flex:0 0 260px; width:260px; min-width:0; justify-content:center; border-left:1px solid var(--line); }
 /* Le détail d'une police. */
 /* ⚠️ `.store-fiche h4` (marge haute de 14 px) pesait plus que la seule classe du titre : son écart
    s'ajoutait à celui du titre de la modale (signalé). Le sélecteur reprend donc les deux. */

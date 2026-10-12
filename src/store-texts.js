@@ -58,7 +58,6 @@ const T = {
     erreursTag: { vide: 'Un tag a besoin d\'un nom.', pris: 'Un autre tag porte déjà ce nom.', inconnu: 'Ce tag n\'existe plus.' },
     tousLesTags: 'Tous les tags',
     tagsChoisis: (n) => `${n} tag(s)`,
-    plus: 'Charger plus',
     chargement: 'Recherche…',
     aucun: 'Aucun modèle ne correspond à cette recherche.',
     erreurs: {
@@ -157,7 +156,6 @@ const T = {
     erreursTag: { vide: 'A tag needs a name.', pris: 'Another tag already has this name.', inconnu: 'This tag no longer exists.' },
     tousLesTags: 'All tags',
     tagsChoisis: (n) => `${n} tag(s)`,
-    plus: 'Load more',
     chargement: 'Searching…',
     aucun: 'No model matches this search.',
     erreurs: {

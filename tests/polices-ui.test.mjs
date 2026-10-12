@@ -54,8 +54,8 @@ describe('le câblage', () => {
   const ui = lire('src/polices-ui.js');
   const ev = lire('src/events.js');
 
-  test('le bouton « Aa » à droite de l\'Éditeur de modèle (demandé)', () => {
-    const i = html.indexOf('id="openPoseEditorBtn"');
+  test('le bouton « Aa » à droite du store de modèles, lui-même à droite de l\'Éditeur (demandé)', () => {
+    const i = html.indexOf('id="storeOuvrirBtn"');
     const j = html.indexOf('id="policesOuvrirBtn"');
     assert.ok(i > 0 && j > i && j - i < 1200, 'le bouton des Polices doit suivre celui de l\'Éditeur');
     assert.match(ui, /\$\('policesOuvrirBtn'\)\.onclick/);
@@ -64,13 +64,13 @@ describe('le câblage', () => {
   test('grille ou liste, retenue ; un clic ouvre la fiche, un clic droit le menu (importées seulement)', () => {
     assert.match(ui, /globalThis\.localStorage\.setItem\(CLE_VUE, v\)/);
     assert.match(ui, /c\.onclick = \(\) => ouvrirFiche\(p\);/);
-    assert.match(ui, /if \(!p\.integree\) \{\n\s+c\.addEventListener\('contextmenu'/);
+    assert.match(ui, /if \(!p\.integree && !p\.enLigne\) \{\n\s+c\.addEventListener\('contextmenu'/);
     assert.match(ev, /menuPolice: \(e, nom\) => openFontContextMenu\(e, nom\)/);
   });
 
-  test('l\'ajout : depuis un fichier ; en ligne, annoncé mais pas encore là', () => {
+  test('l\'ajout : depuis un fichier, ou en ligne (l\'onglet du store)', () => {
     assert.match(ui, /\$\('policesAjoutFichier'\)\.onclick = ajouterDepuisFichiers;/);
-    assert.match(html, /<button type="button" id="policesAjoutEnLigne" disabled/);
+    assert.match(ui, /\$\('policesAjoutEnLigne'\)\.onclick = \(\) => \{ fermerMenuAjout\(\); choisirMode\('enLigne'\); \};/);
     assert.match(ui, /await pont\.pickFonts\(NOMS_INTEGRES\)/);
     assert.match(ui, /await pont\.commitFonts\(r\.jeton, choix, NOMS_INTEGRES\)/);
   });
@@ -99,7 +99,7 @@ describe('retours à l\'écran (12 octobre 2026)', () => {
   });
 
   test('le détail cache la barre, et « Retour » reste en bas, hors de la zone qui défile', () => {
-    assert.match(ui, /\$\('policesBarre'\)\.hidden = true;\n\s+\$\('policesPied'\)\.hidden = false;/);
+    assert.match(ui, /\$\('policesBarre'\)\.hidden = true;\n\s+\$\('policesOnglets'\)\.hidden = true;\n\s+\$\('policesMessage'\)\.hidden = true;[^\n]*\n\s+\$\('policesPied'\)\.hidden = false;/);
     const pied = html.indexOf('id="policesPied"');
     assert.ok(pied > html.indexOf('id="policesDefilement"') && html.slice(html.indexOf('id="policesDefilement"'), pied).includes('</div>\n    </div>'), 'le pied doit être hors de la zone qui défile');
     assert.match(html, /<button type="button" id="policesRetour" class="nav-btn">Retour<\/button>/);
@@ -166,5 +166,62 @@ describe('retouches du détail et des pastilles', () => {
   });
   test('G et I centrés verticalement dans la vignette', () => {
     assert.match(css, /\.police-variantes\{ display:inline-flex; gap:3px; position:absolute; right:8px; top:50%; transform:translateY\(-50%\); \}/);
+  });
+});
+
+describe('retouches de l\'onglet « En ligne » et du pied du détail', () => {
+  const html = lire('src/index.html');
+  const css = lire('src/style.css');
+  const ui = lire('src/polices-ui.js');
+  test('l\'ordre des filtres : recherche, catégorie, tri, puis « Complètes seulement » tout à droite', () => {
+    const i = (id) => html.indexOf(id);
+    assert.ok(i('id="policesEnLigneTexte"') < i('id="policesEnLigneCategorie"'));
+    assert.ok(i('id="policesEnLigneCategorie"') < i('id="policesEnLigneTri"'));
+    assert.ok(i('id="policesEnLigneTri"') < i('id="policesEnLigneCompletes"'));
+    assert.match(css, /\.polices-vue \.polices-completes\{ margin-left:auto !important; \}/);
+  });
+  test('en ligne, la phrase d\'exemple passe sous les filtres', () => {
+    assert.match(css, /\.modal-box \.polices-barre\.en-ligne \.polices-vue input\.polices-phrase\{ order:10; flex:1 1 100%; margin-left:0; \}/);
+    assert.match(ui, /\$\('policesBarre'\)\.classList\.toggle\('en-ligne', mode === 'enLigne'\);/);
+  });
+  test('en liste, la fiche d\'identité a une largeur fixe : les cadres blancs finissent au même endroit', () => {
+    assert.match(css, /\.police-carte\.en-liste \.police-pied\{ flex:0 0 260px; width:260px; min-width:0;/);
+  });
+  test('G et I remontent quand le texte passerait dessous', () => {
+    assert.match(ui, /pied\.classList\.toggle\('variantes-en-haut', deborde\);/);
+    assert.match(css, /\.police-pied\.variantes-en-haut \.police-variantes\{ top:7px; transform:none; \}/);
+  });
+  test('le pied du détail : Retour à gauche, « Ajouter » à droite en orange, à parts égales', () => {
+    assert.ok(html.indexOf('id="policesRetour"') < html.indexOf('id="policesAjouterEnLigne"'));
+    assert.match(html, /<button type="button" id="policesAjouterEnLigne" class="full-btn" hidden>/);
+    assert.match(css, /\.polices-pied > button\{ flex:1 1 0; margin:0; min-width:0; \}/);
+  });
+  test('chaque catégorie s\'explique en infobulle', async () => {
+    const { explicationCategorie } = await import('../src/polices-store-ui.js');
+    for (const c of ['handwriting', 'display', 'sans-serif', 'serif', 'monospace']) assert.ok(explicationCategorie(c).length > 20, c);
+  });
+});
+
+describe('retouches des vignettes (13 octobre 2026)', () => {
+  const ui = lire('src/polices-ui.js');
+  const css = lire('src/style.css');
+  test('rien sous le nom quand une police n\'a pas d\'usage', () => {
+    assert.match(ui, /: \(nomsDesUsages\(p\.nom\)\.length \? el\('span', \{ texte: nomsDesUsages\(p\.nom\)\.join\(', '\), classe: 'police-usage' \}\) : null\);/);
+    assert.doesNotMatch(ui, /\|\| '—'/);
+  });
+  test('un peu plus d\'air entre le nom et la ligne dessous', () => {
+    assert.match(css, /\.police-pied\{ display:flex; flex-direction:column; gap:4px;/);
+  });
+  test('en liste, la coche « déjà là » à droite du cadre blanc', () => {
+    assert.match(css, /\.police-carte\.en-liste \.police-possedee\{ top:50%; right:10px; transform:translateY\(-50%\); \}/);
+  });
+  test('« Ajouter à mes polices » sans « + »', () => {
+    assert.match(lire('src/index.html'), /id="policesAjouterEnLigne" class="full-btn" hidden>Ajouter à mes polices</);
+  });
+});
+
+describe('le nombre de polices', () => {
+  test('moins d\'écart au-dessus, plus en dessous', () => {
+    assert.match(lire('src/style.css'), /#policesMessage\{ margin:0 0 6px; \}/);
   });
 });

@@ -94,7 +94,6 @@ export function rafraichirTextesStore(){
   const local = source === LOCAL;
   $('storeTexte').placeholder = local ? t.placeholderLocal : t.placeholder;
   $('storeCommercialLibelle').textContent = t.commercial;
-  $('storePlusBtn').textContent = t.plus;
   const garder = (id, f) => { const v = $(id).value; f(); if ([...$(id).options].some(o => o.value === v)) $(id).value = v; };
   garder('storeCategorie', () => options($('storeCategorie'), [['', t.toutesCategories], ...infos.categories.map(c => [c.slug, c[langue()]]),
     ...(local ? [[NON_CLASSE, t.nonClasse]] : [])]));
@@ -322,7 +321,6 @@ function ouvrirFiche(r){
   // La fiche REMPLACE la liste (demandé) ; on garde la position dans la liste pour le retour.
   positionListe = $('storeDefilement').scrollTop;
   $('storeGrille').hidden = true;
-  $('storePlusBtn').hidden = true;
   // Ni recherche ni filtres sur une fiche (demandé) : ils ne s'appliquent pas à un seul modèle.
   $('storeFormulaire').hidden = true;
   message('');
@@ -574,7 +572,6 @@ function fermerFiche(){
   $('storeFiche').hidden = true;
   $('storeFiche').replaceChildren();   // arrête un aperçu 3D en cours
   $('storeGrille').hidden = false;
-  $('storePlusBtn').hidden = !suivant;
   $('storeFormulaire').hidden = false;
   // Une catégorie ou un tag changé dans la fiche : la grille suit (sans relire le disque).
   if (listePerimee && source === LOCAL && afficherLocal) { listePerimee = false; afficherLocal(); rendreFiltreTags(); }
@@ -590,6 +587,25 @@ function fermerFiche(){
  * l'onglet de l'autre. Seul « Charger plus » attend : deux suites ensemble doubleraient la page.
  */
 let generation = 0;
+
+/** À moins de cette distance du bas de la liste, la page suivante est demandée. */
+export const MARGE_DEFILEMENT_PX = 400;
+
+/**
+ * Le défilement INFINI (demandé, à la place de « Charger plus ») : décide s'il faut demander la
+ * suite. PURE. `zone` : { scrollTop, clientHeight, scrollHeight }.
+ */
+export function suiteADemander({ zone, suivant: s, enCours: occupe, ficheOuverte }){
+  if (s == null || occupe || ficheOuverte) return false;
+  return zone.scrollTop + zone.clientHeight >= zone.scrollHeight - MARGE_DEFILEMENT_PX;
+}
+
+function chargerLaSuiteSiBesoin(){
+  const zone = $('storeDefilement');
+  if (!zone || $('storeModal').classList.contains('hidden')) return;
+  if (suiteADemander({ zone, suivant, enCours, ficheOuverte: !$('storeFiche').hidden })) chercher(true);
+}
+
 async function chercher(suite = false){
   if (suite && enCours) return;
   const t = textesStore(langue());
@@ -598,15 +614,15 @@ async function chercher(suite = false){
   if (!suite) { fermerFiche(); $('storeGrille').replaceChildren(); affiches = []; suivant = null; derniereRecherche = parametres(); }
   if (source === LOCAL) { await chercherLocal(moi); return; }
   message(t.chargement);
-  $('storePlusBtn').hidden = true;
   const page = await window.storyboarderAPI.storeChercher(source, suite ? { ...derniereRecherche, curseur: suivant } : derniereRecherche);
   if (moi !== generation) return;   // une recherche plus récente a pris la main
   enCours = false;
   if (!page || page.erreur) { message(t.erreurs[page && page.erreur] || t.erreurs.reponse, true); return; }
   page.resultats.forEach(r => { affiches.push(r); $('storeGrille').appendChild(carte(r)); });
   suivant = page.suivant;
-  $('storePlusBtn').hidden = !suivant;
   message($('storeGrille').children.length ? '' : t.aucun);
+  // La page ne remplit pas la fenêtre : la suite vient aussitôt (sinon rien ne défilerait jamais).
+  chargerLaSuiteSiBesoin();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -658,7 +674,6 @@ async function chercherLocal(moi){
     cartesLocales.clear();
     affiches = entreesAffichees.map(e => ({ ...e, local: true }));
     $('storeGrille').replaceChildren(...affiches.map(carte));
-    $('storePlusBtn').hidden = true;
     message(toutes.length ? (affiches.length ? '' : t.aucunLocal) : t.videLocal);
   };
   afficher();
@@ -1014,7 +1029,6 @@ function ficheLocale(e){
   );
   positionListe = $('storeDefilement').scrollTop;
   $('storeGrille').hidden = true;
-  $('storePlusBtn').hidden = true;
   $('storeFormulaire').hidden = true;
   message('');
   fiche.hidden = false;
@@ -1150,7 +1164,8 @@ export function cablerStore(rappels = {}){
   for (const id of ['storeCategorie', 'storeLicence', 'storeFaces', 'storeTri', 'storeCommercial', 'storeUsage', 'storeSquelette']) {
     $(id).addEventListener('change', () => chercher());
   }
-  $('storePlusBtn').onclick = () => chercher(true);
+  // Plus de bouton « Charger plus » (demandé) : la suite se charge au fil du défilement.
+  $('storeDefilement').addEventListener('scroll', chargerLaSuiteSiBesoin, { passive: true });
   storeModal.addEventListener('mousedown', (e) => { if (e.target === storeModal) fermerStore(); });
   rafraichirTextesStore();
 }

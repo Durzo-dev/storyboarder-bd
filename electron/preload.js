@@ -45,6 +45,12 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   renameFont: (ancien, nouveau, integrees) => ipcRenderer.invoke('fonts:rename', ancien, nouveau, integrees),
   deleteFont: (nom) => ipcRenderer.invoke('fonts:delete', nom),
   fontUsageOperation: (op, args, depart) => ipcRenderer.invoke('fonts:usage', op, args, depart),
+  // Le store de polices (#423, Fontsource) : chercher, l'aperçu d'une police, et la télécharger,
+  // ce qui rend un jeton pour commitFonts, comme un import de fichiers.
+  fontStoreInfos: () => ipcRenderer.invoke('fontstore:infos'),
+  fontStoreChercher: (params) => ipcRenderer.invoke('fontstore:chercher', params),
+  fontStoreApercu: (id, graisse, italique) => ipcRenderer.invoke('fontstore:apercu', id, graisse, italique),
+  fontStoreAjouter: (id, integrees) => ipcRenderer.invoke('fontstore:ajouter', id, integrees),
   readSkeletonMaps: () => ipcRenderer.invoke('skeletons:read'),
   writeSkeletonMaps: (contenu) => ipcRenderer.invoke('skeletons:write', contenu),
   // Flux de confirmation avant de quitter (cf. main.js, événement 'close' intercepté + quitConfirmModal

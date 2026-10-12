@@ -52,7 +52,7 @@ every font are preloaded at start-up.
 
 ## The Fonts window
 
-"My fonts", opened by the **Aa** button in the header, right of the Model editor
+"My fonts", opened by the **Aa** button in the header, right of the model library
 (`src/polices-ui.js`):
 
 - the built-in fonts, then the added ones (both groups are only named when some are added), as a
@@ -67,8 +67,7 @@ every font are preloaded at start-up.
   `usagesDesPolices`, channel `fonts:usage`); until the user touches them, they are the original
   ones (one per built-in font), seeded in their language at the first change;
 - a right click on an imported font renames or deletes it;
-- "Add a font": from a file; online search will come with a font store, in a separate task (leads:
-  Google Fonts, Fontsource).
+- "Add a font": from a file, or "Search online", which opens the "Online" tab (below).
 
 ## Importing a file
 
@@ -101,9 +100,34 @@ one: yours under another name, or skip); `fonts:commit` writes.
 by the user at run time. Each font is loaded into the browser by `FontFace`
 (`chargerPolicesUtilisateur`), with its weight range when variable.
 
+## The font store
+
+The "Online" tab of "My fonts". Source: **Fontsource** (checked on 12 October 2026): a public API
+with no key, all of Google Fonts plus other free fonts, and for every font, before any download, its
+category, licence, weights and styles. Ruled out: the Google Fonts API (key required, same
+catalogue), DaFont and 1001 Fonts (no API, varying licences).
+
+- **Search** in the catalogue, kept one hour in memory: text (accent and case insensitive),
+  category, **"Complete only"** (real bold and real italic, ticked by default), sort by name or
+  date. Pages of 48; the rest loads as you scroll (`suiteADemander`, `src/store-ui.js`, the same
+  rule as the model stores).
+- **Previews** are downloaded when the thumbnail becomes visible (`IntersectionObserver`), under a
+  family name of the store's own ("SB apercu <id>"); the details load the real styles.
+- **A font already there** carries a tick, and its add button is greyed out.
+- **"Add to my fonts"** downloads the regular, bold, italic and bold italic that exist, in Latin
+  (French and English included), then follows the path of a file import: read, kept under a token,
+  name conflicts settled, written by `fonts:commit`.
+- The code: `electron/bibliotheque/store-fontsource.js` (decisions, tested under plain Node),
+  `store-polices.js` (requests and caches), `src/polices-store-ui.js` (the tab). Channels
+  `fontstore:infos`, `fontstore:chercher`, `fontstore:apercu`, `fontstore:ajouter`.
+- **Simulation**: `STORYBOARD_SIMULER_STORE`, like the model store; a recorded extract of the
+  catalogue (`tests/fixtures/fontsource-catalogue.json`), and the built-in fonts' files when a font
+  of the extract is one of them.
+
 ## What remains
 
-- The online font store (separate task).
+- Other sources, as a second tab if needed (Fontshare: about a hundred fonts, a foundry licence of
+  its own).
 - A missing imported font (file deleted, Project sent to someone) is reported under "Missing
   files" ([missing-resources.md](missing-resources.md)); the bubble shows in a fallback font
   meanwhile.

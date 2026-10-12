@@ -1,0 +1,256 @@
+[
+ {
+  "id": "amatic-sc",
+  "family": "Amatic SC",
+  "subsets": [
+   "cyrillic",
+   "hebrew",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "weights": [
+   400,
+   700
+  ],
+  "styles": [
+   "normal"
+  ],
+  "defSubset": "latin",
+  "variable": false,
+  "lastModified": "2025-09-16",
+  "category": "handwriting",
+  "license": "OFL-1.1",
+  "type": "google"
+ },
+ {
+  "id": "architects-daughter",
+  "family": "Architects Daughter",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "weights": [
+   400
+  ],
+  "styles": [
+   "normal"
+  ],
+  "defSubset": "latin",
+  "variable": false,
+  "lastModified": "2025-09-16",
+  "category": "handwriting",
+  "license": "OFL-1.1",
+  "type": "google"
+ },
+ {
+  "id": "baloo-2",
+  "family": "Baloo 2",
+  "subsets": [
+   "devanagari",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "weights": [
+   400,
+   500,
+   600,
+   700,
+   800
+  ],
+  "styles": [
+   "normal"
+  ],
+  "defSubset": "latin",
+  "variable": true,
+  "lastModified": "2025-09-16",
+  "category": "display",
+  "license": "OFL-1.1",
+  "type": "google"
+ },
+ {
+  "id": "bangers",
+  "family": "Bangers",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "weights": [
+   400
+  ],
+  "styles": [
+   "normal"
+  ],
+  "defSubset": "latin",
+  "variable": false,
+  "lastModified": "2025-09-08",
+  "category": "display",
+  "license": "OFL-1.1",
+  "type": "google"
+ },
+ {
+  "id": "barlow-condensed",
+  "family": "Barlow Condensed",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "weights": [
+   100,
+   200,
+   300,
+   400,
+   500,
+   600,
+   700,
+   800,
+   900
+  ],
+  "styles": [
+   "italic",
+   "normal"
+  ],
+  "defSubset": "latin",
+  "variable": false,
+  "lastModified": "2025-09-08",
+  "category": "sans-serif",
+  "license": "OFL-1.1",
+  "type": "google"
+ },
+ {
+  "id": "bebas-neue",
+  "family": "Bebas Neue",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "weights": [
+   400
+  ],
+  "styles": [
+   "normal"
+  ],
+  "defSubset": "latin",
+  "variable": false,
+  "lastModified": "2025-09-16",
+  "category": "sans-serif",
+  "license": "OFL-1.1",
+  "type": "google"
+ },
+ {
+  "id": "bowlby-one",
+  "family": "Bowlby One",
+  "subsets": [
+   "latin"
+  ],
+  "weights": [
+   400
+  ],
+  "styles": [
+   "normal"
+  ],
+  "defSubset": "latin",
+  "variable": false,
+  "lastModified": "2025-09-02",
+  "category": "display",
+  "license": "OFL-1.1",
+  "type": "google"
+ },
+ {
+  "id": "bubblegum-sans",
+  "family": "Bubblegum Sans",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "weights": [
+   400
+  ],
+  "styles": [
+   "normal"
+  ],
+  "defSubset": "latin",
+  "variable": false,
+  "lastModified": "2025-09-02",
+  "category": "display",
+  "license": "OFL-1.1",
+  "type": "google"
+ },
+ {
+  "id": "caveat",
+  "family": "Caveat",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext"
+  ],
+  "weights": [
+   400,
+   500,
+   600,
+   700
+  ],
+  "styles": [
+   "normal"
+  ],
+  "defSubset": "latin",
+  "variable": true,
+  "lastModified": "2025-09-05",
+  "category": "handwriting",
+  "license": "OFL-1.1",
+  "type": "google"
+ },
+ {
+  "id": "chakra-petch",
+  "family": "Chakra Petch",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "thai",
+   "vietnamese"
+  ],
+  "weights": [
+   300,
+   400,
+   500,
+   600,
+   700
+  ],
+  "styles": [
+   "italic",
+   "normal"
+  ],
+  "defSubset": "latin",
+  "variable": false,
+  "lastModified": "2025-09-16",
+  "category": "sans-serif",
+  "license": "OFL-1.1",
+  "type": "google"
+ },
+ {
+  "id": "comic-neue",
+  "family": "Comic Neue",
+  "subsets": [
+   "latin"
+  ],
+  "weights": [
+   300,
+   400,
+   700
+  ],
+  "styles": [
+   "italic",
+   "normal"
+  ],
+  "defSubset": "latin",
+  "variable": false,
+  "lastModified": "2025-09-16",
+  "category": "handwriting",
+  "license": "OFL-1.1",
+  "type": "google"
+ }
+]

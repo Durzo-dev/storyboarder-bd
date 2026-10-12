@@ -137,9 +137,10 @@ describe('Section Modèles : le câblage', () => {
     const header = HTML.slice(HTML.indexOf('<header>'), HTML.indexOf('</header>'));
     assert.match(header, /id="storeOuvrirBtn"/);
     assert.match(header, /id="openPoseEditorBtn"/);
-    assert.ok(header.indexOf('id="majBtn"') < header.indexOf('id="storeOuvrirBtn"')
-      && header.indexOf('id="storeOuvrirBtn"') < header.indexOf('id="openPoseEditorBtn"'),
-      'ordre voulu : version, mise à jour, bibliothèque, Éditeur');
+    // L'ordre du bandeau (demandé) : la mise à jour, puis l'Éditeur de modèle, le store de modèles
+    // et les Polices.
+    const ordre = ['majBtn', 'openPoseEditorBtn', 'storeOuvrirBtn', 'policesOuvrirBtn'].map(id => header.indexOf(`id="${id}"`));
+    assert.ok(ordre.every((x, k) => x >= 0 && (k === 0 || x > ordre[k - 1])), `ordre du bandeau : ${ordre}`);
     // Masqué, le bouton de mise à jour garde sa place : les deux boutons ne bougent pas (demandé).
     assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /#majBtn\[hidden\]\{ display:inline-block; visibility:hidden; \}/);
     assert.match(HTML, /<button id="majBtn" class="maj-btn" type="button" hidden>Mise à jour<\/button>/);

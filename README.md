@@ -2,7 +2,7 @@
 
 > 🇫🇷 [Version française](README.fr.md)
 
-**Version 1.10.99**
+**Version 1.10.106**
 
 **Comic book storyboarding application**: a desktop tool to create, organize and visualize comic book pages with real-time 3D scene rendering.
 
@@ -24,7 +24,7 @@ Previous versions and release notes: [all releases](https://github.com/val66/sto
 ### Storyboard
 - 📖 **Volume → Chapter → Page → Panel** organization (optional chapters) with automatic numbering, duplication and drag-and-drop reordering
 - 📝 Per-panel summaries and descriptions
-- 💬 **Speech bubbles**: eight shapes, five tails, photographed textures, ten fonts (one per use) plus your own, bold and italic, saved styles, and merging two bubbles into one
+- 💬 **Speech bubbles**: eight shapes, five tails, photographed textures, ten fonts (one per use) plus your own, from a file or an online store, bold and italic, saved styles, and merging two bubbles into one
 - 🖼️ **Panel images** (PNG, JPG, WebP), with adjustable framing and zoom
 - 🎨 Page background colour, adjustable panel and bubble borders
 

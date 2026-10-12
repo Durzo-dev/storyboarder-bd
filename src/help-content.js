@@ -130,9 +130,10 @@ export const HELP_MANUAL_EN = [
     'Deleting a merged Bubble separates its whole group, each one recovering the look it had before the merge. A question says so first, and a single Ctrl+Z undoes the lot.',
   ]},
   { id: 'polices', title: 'Fonts', paragraphs: [
-    'The Aa button at the top, right of the Model editor, opens "My fonts": the ten built-in fonts, then yours, as a thumbnail grid or a list, with a filter by use.',
+    'The Aa button at the top, right of the model library, opens "My fonts": the ten built-in fonts, then yours, as a thumbnail grid or a list, with a filter by use.',
     'Uses work like model tags: set them on a font from its details, create, rename or delete them there or in the filter.',
     'Click a font to see all its characters, try a sentence of your own in its four styles, and read its licence. A style marked ~ is simulated: the font does not have it.',
+    '"Search online" opens the font store: search, filter by category, "Complete only" for real bold and italic, then "Add to my fonts". A tick marks the fonts you already have.',
     '"Add a font" takes a .ttf, .otf, .woff or .woff2 file. Its name is the one the font gives itself; the files of one family (Regular, Bold, Italic) make a single font. Your fonts appear under "My fonts" in a bubble\'s font list.',
     'Right-click one of your fonts to rename or delete it. Renaming changes no project: bubbles that used the old name follow.',
     'Check that you are allowed to use a font: the window shows the licence it declares, and warns when it calls itself restricted.',
@@ -372,9 +373,10 @@ export const HELP_MANUAL_FR = [
     "Supprimer une Bulle fusionnée sépare tout son groupe, chacune retrouvant l'apparence qu'elle avait avant la fusion. Une question le dit d'abord, et un seul Ctrl+Z défait l'ensemble.",
   ]},
   { id: 'polices', title: "Polices d'écriture", paragraphs: [
-    "Le bouton Aa, en haut à droite de l'Éditeur de modèle, ouvre « Mes polices » : les dix intégrées, puis les vôtres, en grille de vignettes ou en liste, avec un filtre par usage.",
+    "Le bouton Aa, en haut, à droite de la bibliothèque de modèles, ouvre « Mes polices » : les dix intégrées, puis les vôtres, en grille de vignettes ou en liste, avec un filtre par usage.",
     "Les usages se manient comme les tags des modèles : posez-en sur une police depuis son détail, créez, renommez ou supprimez-les là ou dans le filtre.",
     "Cliquez une police pour voir tous ses caractères, essayer votre propre phrase dans ses quatre styles et lire sa licence. Un style marqué ~ est simulé : la police ne l'a pas.",
+    "« Rechercher en ligne » ouvre le store de polices : recherche, filtre par catégorie, « Complètes seulement » pour un vrai gras et un vrai italique, puis « Ajouter à mes polices ». Une coche marque celles que vous avez déjà.",
     "« Ajouter une police » prend un fichier .ttf, .otf, .woff ou .woff2. Son nom est celui que la police se donne ; les fichiers d'une même famille (Regular, Bold, Italic) n'en font qu'une. Vos polices apparaissent sous « Mes polices » dans la liste d'une Bulle.",
     "Clic droit sur une de vos polices pour la renommer ou la supprimer. Renommer ne change aucun Projet : les Bulles qui utilisaient l'ancien nom suivent.",
     "Vérifiez que vous avez le droit d'utiliser une police : la fenêtre montre la licence qu'elle déclare, et prévient quand elle se dit restreinte.",

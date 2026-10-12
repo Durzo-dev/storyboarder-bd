@@ -23,12 +23,20 @@ import {
 } from './polices-utilisateur.js';
 import { remplirListeEtiquettes } from './liste-etiquettes.js';
 import { menuFlottant } from './store-ui.js';
+import {
+  familleDApercu, libelleCategorie, explicationCategorie, texteErreur, chercherEnLigne, resultatsEnLigne, chargerVariantes,
+  observerVignette, cablerStorePolices, rafraichirFiltresEnLigne,
+} from './polices-store-ui.js';
 
 const $ = (id) => document.getElementById(id);
 const CLE_VUE = 'polices:vue';
 let _rappels = {};
 let phrase = null;   // la phrase d'essai tapée, gardée d'une fiche à l'autre pendant la session
 let usagesFiltre = [];   // les usages du filtre (ids) : une police en porte au moins un
+/** L'onglet affiché : 'local' (Mes polices) ou 'enLigne' (le store de polices, #423). */
+let mode = 'local';
+let ficheOuverte = null;   // la police du détail ouvert
+let categoriesEnLigne = [];
 
 function el(tag, { texte, classe, attrs } = {}, enfants = []){
   const n = document.createElement(tag);
@@ -116,6 +124,12 @@ function rendreFiltreUsages(){
   bouton.onclick = () => { ouvert = menuFlottant($('policesFiltreZone'), remplir, 'store-menu-tags', null, bouton); };
 }
 
+/** Une police du store est-elle déjà là (intégrée ou ajoutée) ? Sans la casse. */
+function dejaPossedee(nom){
+  const n = String(nom).toLowerCase();
+  return [...NOMS_INTEGRES, ...policesImportees().map(f => f.nom)].some(x => x.toLowerCase() === n);
+}
+
 function pileDePolices(nom){
   return `"${nom}", "${BUBBLE_FONT_FALLBACK[nom] || 'Comic Sans MS'}", sans-serif`;
 }
@@ -136,18 +150,29 @@ function pastillesVariantes(p){
 function carte(p){
   const liste = vue() === 'liste';
   const apercu = el('span', { texte: liste ? phraseDExemple() : 'Aa', classe: 'police-apercu' });
-  apercu.style.fontFamily = pileDePolices(p.nom);
+  // Une police du store s'affiche dans son APERÇU, chargé quand la vignette devient visible.
+  apercu.style.fontFamily = p.enLigne ? `"${familleDApercu(p.id)}", sans-serif` : pileDePolices(p.nom);
+  const sousTitre = p.enLigne
+    ? el('span', { texte: [libelleCategorie(p.categorie), p.licence].filter(Boolean).join(' · '), classe: 'police-usage', attrs: { title: explicationCategorie(p.categorie) } })
+    : p.introuvable ? el('span', { texte: tr('files missing', 'fichiers introuvables'), classe: 'police-usage police-alerte' })
+      // Sans usage, rien sous le nom (demandé : le tiret n'apportait rien).
+      : (nomsDesUsages(p.nom).length ? el('span', { texte: nomsDesUsages(p.nom).join(', '), classe: 'police-usage' }) : null);
   const c = el('button', { classe: 'police-carte' + (liste ? ' en-liste' : ''), attrs: { type: 'button', title: p.nom } }, [
     apercu,
     el('span', { classe: 'police-pied' }, [
       el('span', { texte: p.nom, classe: 'police-nom' }),
-      p.introuvable ? el('span', { texte: tr('files missing', 'fichiers introuvables'), classe: 'police-usage police-alerte' })
-        : el('span', { texte: nomsDesUsages(p.nom).join(', ') || '—', classe: 'police-usage' }),
+      sousTitre,
       pastillesVariantes(p),
     ]),
   ]);
+  // Déjà dans « Mes polices » : une coche, comme le store de modèles. Posée DANS l'aperçu : en
+  // grille, dans son coin ; en liste, à droite du cadre blanc (demandé), pas sur la fiche d'identité.
+  if (p.enLigne && dejaPossedee(p.nom)) apercu.appendChild(el('span', { texte: '✓', classe: 'police-possedee', attrs: { title: tr('Already in my fonts', 'Déjà dans mes polices') } }));
+  if (p.enLigne) observerVignette(c, p);
   c.onclick = () => ouvrirFiche(p);
-  if (!p.integree) {
+  // Renommer et supprimer : seulement les polices AJOUTÉES, dans « Mes polices » (signalé : le menu
+  // s'ouvrait aussi sur les polices du store en ligne).
+  if (!p.integree && !p.enLigne) {
     c.addEventListener('contextmenu', (ev) => {
       ev.preventDefault();
       if (_rappels.menuPolice) _rappels.menuPolice(ev, p.nom);
@@ -156,7 +181,74 @@ function carte(p){
   return c;
 }
 
+/** L'onglet « En ligne » : les résultats du store, et « Charger plus » s'il y a une suite. */
+function rendreEnLigne(){
+  const { resultats } = resultatsEnLigne();
+  const zone = $('policesListe');
+  zone.replaceChildren(...(resultats.length ? [el('div', { classe: vue() === 'liste' ? 'polices-lignes' : 'polices-grille' }, resultats.map(r => carte({ ...r, enLigne: true })))] : []));
+  placerVariantes();
+}
+
+/**
+ * G et I sont centrés verticalement dans le pied d'une vignette ; quand le texte sous le nom
+ * passerait dessous, ils remontent en haut pour lui laisser la place (demandé). Ça ne se sait qu'une
+ * fois le texte mesuré : après le rendu, à l'image suivante.
+ */
+function placerVariantes(){
+  const raf = globalThis.requestAnimationFrame || ((f) => setTimeout(f, 0));
+  raf(() => {
+    for (const pied of document.querySelectorAll('#policesListe .police-pied')) {
+      const texte = pied.querySelector('.police-usage');
+      const variantes = pied.querySelector('.police-variantes');
+      if (!texte || !variantes) continue;
+      const deborde = texte.offsetLeft + texte.scrollWidth > variantes.offsetLeft - 4;
+      pied.classList.toggle('variantes-en-haut', deborde);
+    }
+  });
+}
+
+/** Les éléments de la barre selon l'onglet ; l'onglet marqué. */
+function majOnglets(){
+  document.querySelectorAll('#policesOnglets .store-onglet').forEach(b => {
+    const actif = b.dataset.mode === mode;
+    b.classList.toggle('actif', actif);
+    b.setAttribute('aria-selected', String(actif));
+  });
+  document.querySelectorAll('#policesBarre .polices-local').forEach(n => { n.hidden = mode !== 'local'; });
+  $('policesBarre').classList.toggle('en-ligne', mode === 'enLigne');
+  document.querySelectorAll('#policesBarre .polices-enligne').forEach(n => { n.hidden = mode !== 'enLigne'; });
+}
+
+/** Passer d'un onglet à l'autre. Le premier passage en ligne lance une recherche. */
+async function choisirMode(m){
+  if (m === mode) return;
+  mode = m;
+  fermerFiche();
+  majOnglets();
+  message('');
+  if (mode === 'enLigne') {
+    const pont = window.storyboarderAPI;
+    if (!categoriesEnLigne.length && pont && pont.fontStoreInfos) {
+      const i = await pont.fontStoreInfos();
+      categoriesEnLigne = (i && i.categories) || [];
+      rafraichirFiltresEnLigne(categoriesEnLigne);
+    }
+    if (!resultatsEnLigne().resultats.length) await chercherEnLigne(false, message);
+  }
+  rendreListe();
+}
+
 function rendreListe(){
+  $('policesVueGrille').setAttribute('aria-pressed', String(vue() === 'grille'));
+  $('policesVueListe').setAttribute('aria-pressed', String(vue() === 'liste'));
+  // Le champ de la phrase d'exemple, en liste seulement (demandé). Réécrit seulement s'il n'a pas le
+  // focus : sinon on déplacerait le curseur sous les doigts de l'utilisateur.
+  const champ = $('policesPhrase');
+  if (champ) {
+    champ.hidden = vue() !== 'liste';
+    if (globalThis.document.activeElement !== champ) champ.value = phraseDExemple();
+  }
+  if (mode === 'enLigne') { rendreEnLigne(); return; }
   const { integrees: toutesIntegrees, importees: toutesImportees } = toutesLesPolices();
   const attributions = classementDesUsages(langue()).usagesDesPolices;
   const integrees = filtrerParUsages(toutesIntegrees, usagesFiltre, attributions);
@@ -173,15 +265,7 @@ function rendreListe(){
     importees.length ? grille(importees) : null,
     !integrees.length && !importees.length ? el('p', { texte: tr('No font has these uses.', 'Aucune police n\'a ces usages.'), classe: 'polices-vide' }) : null,
   ].filter(Boolean));
-  $('policesVueGrille').setAttribute('aria-pressed', String(vue() === 'grille'));
-  $('policesVueListe').setAttribute('aria-pressed', String(vue() === 'liste'));
-  // Le champ de la phrase d'exemple, en liste seulement (demandé). Réécrit seulement s'il n'a pas le
-  // focus : sinon on déplacerait le curseur sous les doigts de l'utilisateur.
-  const champ = $('policesPhrase');
-  if (champ) {
-    champ.hidden = vue() !== 'liste';
-    if (globalThis.document.activeElement !== champ) champ.value = phraseDExemple();
-  }
+  placerVariantes();
 }
 
 /** La phrase d'exemple tapée en liste : les aperçus suivent sans refaire la liste (le focus reste). */
@@ -202,7 +286,10 @@ function texteDesDroits(droits){
 
 function ouvrirFiche(p){
   const fiche = $('policesFiche');
-  const pile = pileDePolices(p.nom);
+  const pile = p.enLigne ? `"${familleDApercu(p.id)}", sans-serif` : pileDePolices(p.nom);
+  ficheOuverte = p;
+  // Une police du store : ses vraies variantes sont chargées pour l'essai ; le reste sera simulé.
+  if (p.enLigne) chargerVariantes(p);
   const ligne = (etiquette, valeur) => (valeur ? el('div', { classe: 'police-info' }, [el('span', { texte: etiquette, classe: 'police-info-cle' }), valeur]) : null);
   const lien = (url) => el('a', { texte: url, attrs: { href: url, target: '_blank', rel: 'noopener' } });
   const essai = el('input', { classe: 'modal-input police-essai-champ', attrs: { type: 'text', spellcheck: 'false' } });
@@ -241,13 +328,15 @@ function ouvrirFiche(p){
   fiche.replaceChildren(
     titre,
     el('div', { classe: 'police-infos' }, [
-      ligne(tr('Uses', 'Usages'), blocUsages(p.nom)),
-      ligne(tr('Origin', 'Origine'), document.createTextNode(p.integree ? tr('Built into the application', 'Intégrée à l\'application') : tr('Added by you', 'Ajoutée par vous'))),
+      p.enLigne ? null : ligne(tr('Uses', 'Usages'), blocUsages(p.nom)),
+      p.enLigne ? ligne(tr('Category', 'Catégorie'), document.createTextNode(libelleCategorie(p.categorie))) : null,
+      ligne(tr('Origin', 'Origine'), document.createTextNode(p.enLigne ? tr('Fontsource (Google Fonts and other free fonts)', 'Fontsource (Google Fonts et d\'autres polices libres)')
+        : p.integree ? tr('Built into the application', 'Intégrée à l\'application') : tr('Added by you', 'Ajoutée par vous'))),
       ligne(tr('Designer', 'Créateur'), p.auteur ? document.createTextNode(p.auteur) : null),
       ligne(tr('Licence', 'Licence'), document.createTextNode(p.licence || tr('not stated in the file', 'non indiquée dans le fichier'))),
       ligne(tr('Licence link', 'Lien de la licence'), p.url ? lien(p.url) : null),
       ligne(tr('Copyright', 'Copyright'), p.copyright ? document.createTextNode(p.copyright) : null),
-      ligne(tr('Rights', 'Droits'), el('span', { texte: texteDesDroits(p.droits), classe: p.droits === 'restreinte' || p.droits === 'apercu' ? 'police-alerte' : '' })),
+      p.enLigne ? null : ligne(tr('Rights', 'Droits'), el('span', { texte: texteDesDroits(p.droits), classe: p.droits === 'restreinte' || p.droits === 'apercu' ? 'police-alerte' : '' })),
       ligne(tr('Styles', 'Styles'), pastillesVariantes(p)),
     ]),
     el('h5', { texte: tr('Try it', 'Essai'), classe: 'police-sous-titre' }),
@@ -261,7 +350,14 @@ function ouvrirFiche(p){
   // « Retour » reste en bas, toujours visible, hors de la zone qui défile (demandé).
   $('policesListe').hidden = true;
   $('policesBarre').hidden = true;
+  $('policesOnglets').hidden = true;
+  $('policesMessage').hidden = true;   // « 353 police(s) » n'a rien à faire dans le détail
   $('policesPied').hidden = false;
+  // En ligne : « Ajouter à mes polices », à côté de « Retour » ; grisé si on l'a déjà.
+  const ajout = $('policesAjouterEnLigne');
+  ajout.hidden = !p.enLigne;
+  ajout.disabled = !!p.enLigne && dejaPossedee(p.nom);
+  ajout.title = ajout.disabled ? tr('Already in my fonts', 'Déjà dans mes polices') : '';
   fiche.hidden = false;
   $('policesDefilement').scrollTop = 0;
 }
@@ -271,7 +367,10 @@ function fermerFiche(){
   $('policesFiche').replaceChildren();
   $('policesListe').hidden = false;
   $('policesBarre').hidden = false;
+  $('policesOnglets').hidden = false;
+  $('policesMessage').hidden = false;
   $('policesPied').hidden = true;
+  ficheOuverte = null;
   rendreListe();
 }
 
@@ -321,6 +420,16 @@ async function ajouterDepuisFichiers(){
   if (!pont || !pont.pickFonts) return;
   const r = await pont.pickFonts(NOMS_INTEGRES);
   if (!r || r.canceled) return;
+  await trancherEtEcrire(r);
+}
+
+/**
+ * Des polices lues (fichiers ou store), gardées sous un jeton par le pont : les conflits de nom
+ * sont tranchés ici (une police ajoutée du même nom : remplacer ou garder les deux ; une intégrée :
+ * la vôtre sous un autre nom, ou passer), puis le pont écrit. Rend le nombre de polices ajoutées.
+ */
+async function trancherEtEcrire(r){
+  const pont = window.storyboarderAPI;
   const choix = {};
   for (const f of r.familles || []) {
     if (!f.conflit) continue;
@@ -337,7 +446,7 @@ async function ajouterDepuisFichiers(){
     }
   }
   const c = await pont.commitFonts(r.jeton, choix, NOMS_INTEGRES);
-  if (!c || !c.ok) { message(tr('The fonts could not be added: ', 'Les polices n\'ont pas pu être ajoutées : ') + ((c && c.error) || '?'), true); return; }
+  if (!c || !c.ok) { message(tr('The fonts could not be added: ', 'Les polices n\'ont pas pu être ajoutées : ') + ((c && c.error) || '?'), true); return 0; }
   await chargerPolicesUtilisateur();
   rendreListe();
   if (_rappels.apresChangement) _rappels.apresChangement();
@@ -347,6 +456,21 @@ async function ajouterDepuisFichiers(){
     n ? tr(`${n} font(s) added.`, `${n} police(s) ajoutée(s).`) : '',
     illisibles ? tr(`${illisibles} file(s) could not be read as fonts: ${r.illisibles.join(', ')}.`, `${illisibles} fichier(s) illisible(s) comme police : ${r.illisibles.join(', ')}.`) : '',
   ].filter(Boolean).join(' '), illisibles > 0 && !n);
+  return n;
+}
+
+/** « Ajouter à mes polices », depuis le détail d'une police du store. */
+async function ajouterDepuisLeStore(){
+  const p = ficheOuverte;
+  const pont = window.storyboarderAPI;
+  if (!p || !p.enLigne || !pont || !pont.fontStoreAjouter) return;
+  const bouton = $('policesAjouterEnLigne');
+  bouton.disabled = true;
+  message(tr('Downloading…', 'Téléchargement…'));
+  const r = await pont.fontStoreAjouter(p.id, NOMS_INTEGRES);
+  if (!r || r.erreur) { message(texteErreur(r && r.erreur), true); bouton.disabled = false; return; }
+  const n = await trancherEtEcrire({ ...r, illisibles: [] });
+  bouton.disabled = n > 0 || dejaPossedee(p.nom);
 }
 
 function basculerMenuAjout(){
@@ -384,6 +508,7 @@ export function rafraichirTextesPolices(){
   const btn = $('policesOuvrirBtn');
   if (btn) { btn.title = tr('My fonts', 'Mes polices'); btn.setAttribute('aria-label', tr('My fonts', 'Mes polices')); }
   if (!$('policesModal') || $('policesModal').classList.contains('hidden')) return;
+  rafraichirFiltresEnLigne(categoriesEnLigne);
   rendreListe();
   rendreFiltreUsages();
 }
@@ -391,6 +516,7 @@ export function rafraichirTextesPolices(){
 export async function ouvrirPolices(){
   message('');
   fermerFiche();
+  majOnglets();
   rendreListe();
   rendreFiltreUsages();
   $('policesModal').classList.remove('hidden');
@@ -420,6 +546,11 @@ export function cablerPolices(rappels = {}){
   };
   $('policesFermer').onclick = fermerPolices;
   $('policesRetour').onclick = fermerFiche;
+  $('policesAjouterEnLigne').onclick = ajouterDepuisLeStore;
+  $('policesAjoutEnLigne').onclick = () => { fermerMenuAjout(); choisirMode('enLigne'); };
+  document.querySelectorAll('#policesOnglets .store-onglet').forEach(b => { b.onclick = () => choisirMode(b.dataset.mode); });
+  cablerStorePolices(() => { if (mode === 'enLigne' && $('policesFiche').hidden) rendreListe(); }, message,
+    () => mode === 'enLigne' && $('policesFiche').hidden && !$('policesModal').classList.contains('hidden'));
   $('policesPhrase').addEventListener('input', majPhraseDExemple);
   $('policesVueGrille').onclick = () => { memoriserVue('grille'); rendreListe(); };
   $('policesVueListe').onclick = () => { memoriserVue('liste'); rendreListe(); };

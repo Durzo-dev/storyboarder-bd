@@ -129,6 +129,10 @@ interface StoryboarderAPI {
   commitFonts(jeton: string, choix: Record<string, string>, integrees: string[]): Promise<{ ok: boolean; error?: string }>;
   renameFont(ancien: string, nouveau: string, integrees: string[]): Promise<{ ok: boolean; error?: string }>;
   deleteFont(nom: string): Promise<{ ok: boolean; error?: string }>;
+  fontStoreInfos(): Promise<{ categories: string[]; simulation: boolean }>;
+  fontStoreChercher(params: any): Promise<{ resultats?: any[]; suivant?: number | null; total?: number; simulation?: boolean; erreur?: string }>;
+  fontStoreApercu(id: string, graisse?: number | null, italique?: boolean): Promise<{ data?: Uint8Array; erreur?: string }>;
+  fontStoreAjouter(id: string, integrees: string[]): Promise<{ jeton?: string; familles?: any[]; erreur?: string }>;
   fontUsageOperation(op: string, args: any, depart: any): Promise<{ usages?: any[]; usagesDesPolices?: Record<string, string[]>; id?: string; erreur?: string }>;
   // Correspondances de squelette : un seul fichier partagé par tous les Projets, à côté du dossier
   // Modeles. `ok: false` couvre l'absence au premier usage comme le fichier illisible — les deux

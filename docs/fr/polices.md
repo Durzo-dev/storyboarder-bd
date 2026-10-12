@@ -55,7 +55,7 @@ ou simulée. Les quatre styles de chaque police sont préchargés au démarrage.
 
 ## La fenêtre des Polices
 
-« Mes polices », ouverte par le bouton **Aa** du bandeau, à droite de l'Éditeur de modèle
+« Mes polices », ouverte par le bouton **Aa** du bandeau, à droite de la bibliothèque de modèles
 (`src/polices-ui.js`) :
 
 - les intégrées, puis les ajoutées (les deux groupes ne sont nommés que s'il y a des ajoutées), en
@@ -71,8 +71,8 @@ ou simulée. Les quatre styles de chaque police sont préchargés au démarrage.
   l'utilisateur n'y a pas touché, ce sont ceux d'origine (un par police intégrée), amorcés dans sa
   langue au premier changement ;
 - un clic droit sur une police importée la renomme ou la supprime ;
-- « Ajouter une police » : depuis un fichier ; la recherche en ligne viendra avec un store de
-  polices, dans une tâche à part (pistes : Google Fonts, Fontsource).
+- « Ajouter une police » : depuis un fichier, ou « Rechercher en ligne », qui ouvre l'onglet
+  « En ligne » (ci-dessous).
 
 ## Importer un fichier
 
@@ -105,9 +105,34 @@ deux ; une intégrée : la vôtre sous un autre nom, ou passer) ; `fonts:commit`
 choisis par l'utilisateur à l'exécution. Chaque police est chargée dans le navigateur par `FontFace`
 (`chargerPolicesUtilisateur`), avec sa plage de graisses si elle est variable.
 
+## Le store de polices
+
+L'onglet « En ligne » de « Mes polices ». Source : **Fontsource** (vérifié le 12 octobre 2026) :
+une API publique sans clé, tout Google Fonts et d'autres polices libres, et pour chaque police, avant
+tout téléchargement, sa catégorie, sa licence, ses graisses et ses styles. Écartées : l'API Google
+Fonts (clé obligatoire, même catalogue), DaFont et 1001 Fonts (aucune API, licences variables).
+
+- **Recherche** dans le catalogue, gardé une heure en mémoire : texte (sans accents ni majuscules),
+  catégorie, **« Complètes seulement »** (vrai gras et vrai italique, cochée par défaut), tri par nom
+  ou par date. Par pages de 48 ; la suite se charge au fil du défilement (`suiteADemander`,
+  `src/store-ui.js`, la même règle que les stores de modèles).
+- **Les aperçus** sont téléchargés quand la vignette devient visible (`IntersectionObserver`), sous
+  un nom de famille propre au store (« SB apercu <id> ») ; le détail charge les vraies variantes.
+- **Une police déjà là** porte une coche, et son bouton d'ajout est grisé.
+- **« Ajouter à mes polices »** télécharge le normal, le gras, l'italique et le gras italique qui
+  existent, en latin (français et anglais compris), puis suit le chemin d'un import de fichiers :
+  lu, gardé sous un jeton, conflits de nom tranchés, écrit par `fonts:commit`.
+- Le code : `electron/bibliotheque/store-fontsource.js` (décisions, testées sous Node nu),
+  `store-polices.js` (requêtes et caches), `src/polices-store-ui.js` (l'onglet). Canaux
+  `fontstore:infos`, `fontstore:chercher`, `fontstore:apercu`, `fontstore:ajouter`.
+- **Simulation** : `STORYBOARD_SIMULER_STORE`, comme le store de modèles ; un extrait enregistré du
+  catalogue (`tests/fixtures/fontsource-catalogue.json`), et les fichiers des polices intégrées quand
+  une police de l'extrait en est une.
+
 ## Ce qui reste
 
-- Le store de polices en ligne (tâche à part).
+- D'autres sources, en second onglet si besoin (Fontshare : une centaine de polices, licence propre
+  à la fonderie).
 - Une police importée absente (fichier supprimé, Projet envoyé à quelqu'un) est signalée dans
   « Fichiers introuvables » ([missing-resources.md](missing-resources.md)) ; la Bulle s'affiche
   dans une police de secours en attendant.
