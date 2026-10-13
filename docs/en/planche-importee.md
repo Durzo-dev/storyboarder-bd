@@ -23,19 +23,26 @@ displayed one, in the same Chapter.
 
 ## The detection
 
-A recursive cut ("XY-cut"): the background colour is read around the edge of the image, a gutter is
-a band of lines almost entirely of that colour, and the image is cut along the horizontal bands then
-the vertical ones, as long as there are any. The remaining pieces, trimmed of their margins, are the
-Panels; the too small ones (page number, signature) are dropped. Reading order (rows, then left to
-right) gives the numbers.
+Rewritten on 13 October 2026 on fifteen real pages provided by Valentin (manga, Franco-Belgian,
+comics, double spreads, screenshots with their frame), kept outside the repository in
+`apercus/planches-test/`. The first version (a cut on full lines of paper only) found a single
+Panel on most of them.
 
-**What it cannot do**, which is why there is a check: a bubble or a drawing that crosses a gutter
-blocks it (two Panels become one); a borderless Panel on a white background loses its empty
-margins; a slanted Panel is returned as its rectangle. Its thresholds (`DETECTION`) were set on
-synthetic pages, not measured on a corpus.
+1. **The paper** is the light (else dark) grey level of the image's long uniform runs; the **frame**
+   of a screenshot or a viewer is removed.
+2. **The outside paper**: what can be reached from the edge without crossing ink (margins and
+   gutters). Everything else belongs to the Panels, including the white inside of a manga Panel.
+3. Its **components**, after a slight erosion that cuts thin strokes crossing a gutter.
+4. Each is **cut again** along its separators: a band of outside paper closed by an overflow, a
+   thin band of a uniform colour (dark gutter), or, in a box with almost no paper, a straight
+   **inked edge** (adjoining Panels of a full-bleed comic).
+5. Reading order gives the numbers; a **double spread** is read page by page.
 
-**Bubbles are not detected** (decided with Valentin): nothing could be done with them, since they
-cannot be changed; reading their text would be another piece of work.
+**What it cannot do**, hence the check: a full-page illustration under Panels laid on top, slanted
+Panels (returned as their rectangle), a Panel inset in another, borderless Panels on white paper
+(they break up).
+
+**Bubbles are not detected** (decided with Valentin).
 
 ## What is persisted
 

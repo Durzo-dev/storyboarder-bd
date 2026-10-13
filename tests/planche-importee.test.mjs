@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import {
-  detecterCases, couleurDuFond, niveauxDeGris, poseDeLImage, ancrageApresGlisserPlanche,
+  detecterCases, niveauxDeGris, poseDeLImage, ancrageApresGlisserPlanche,
   placerCasesImportees, creerPlancheImportee, estPlancheImportee, estCaseImportee, imageDeLaPlanche,
   cadrageLu, cadragePlancheParDefaut, recentrerPlanche, regionValide, ordreDeLecture, retoucherRegion, regionTracee, REGION_MIN,
 } from '../src/planche-importee.js';
@@ -43,10 +43,26 @@ describe('La détection des Cases', () => {
     r.forEach((c, i) => assert.deepEqual(enPixels(c, W, H), CASES[i], `Case ${i + 1}`));
   });
 
-  test('un fond sombre (planche « nuit ») : le fond se lit sur le pourtour, pas en dur', () => {
-    const g = planche(W, H, CASES, { fond: 20, dedans: 220, bord: 0 });
-    assert.equal(couleurDuFond(g, W, H), 20);
+  test('une capture d\'écran : son cadre sombre n\'est pas pris pour le papier (planches réelles, 13 octobre 2026)', () => {
+    const g = planche(W, H, CASES);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (x < 20 || x >= W - 20 || y < 15 || y >= H - 15) g[y * W + x] = 25;
     assert.equal(detecterCases(g, W, H).length, 6);
+  });
+
+  test('un manga : l\'intérieur blanc d\'une Case, enfermé par son cadre, reste à la Case', () => {
+    const g = planche(W, H, CASES, { dedans: 255 });
+    const r = detecterCases(g, W, H);
+    assert.equal(r.length, 6);
+    r.forEach((c, i) => assert.deepEqual(enPixels(c, W, H), CASES[i]));
+  });
+
+  test('deux Cases JOINTIVES d\'un fond perdu, séparées par leur seul trait encré', () => {
+    // Une page sans gouttière : deux aplats différents, un trait noir de 3 px entre eux.
+    const g = new Uint8Array(W * H).fill(255);
+    for (let y = 30; y < 770; y++) for (let x = 30; x < 570; x++) g[y * W + x] = y < 398 ? 120 : (y < 401 ? 10 : 170);
+    const r = detecterCases(g, W, H);
+    assert.equal(r.length, 2);
+    assert.ok(Math.abs(r[0].y + r[0].h - 398 / H) < 0.01);
   });
 
   test('un peu de poussière dans une gouttière ne la bouche pas', () => {
@@ -55,12 +71,11 @@ describe('La détection des Cases', () => {
     assert.equal(detecterCases(g, W, H).length, 6);
   });
 
-  test('une bulle qui enjambe une gouttière la bouche : les deux Cases n\'en font qu\'une', () => {
-    // C'est la limite connue, et la raison de l'étape de vérification.
+  test('une bulle qui enjambe une gouttière ne soude plus les deux Cases (planches réelles, 13 octobre 2026)', () => {
+    // La gouttière reste du « papier du dehors » de part et d'autre de la bulle : la boîte soudée est recoupée.
     const g = planche(W, H, CASES);
     for (let y = 200; y < 300; y++) for (let x = 250; x < 350; x++) g[y * W + x] = 0;
-    const r = detecterCases(g, W, H);
-    assert.ok(r.length < 6 && r.length >= 2, `${r.length} Cases`);
+    assert.equal(detecterCases(g, W, H).length, 6);
   });
 
   test('les petits restes (numéro de page, signature) ne deviennent pas des Cases', () => {

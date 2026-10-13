@@ -150,120 +150,272 @@ export function placerCasesImportees(page){
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Les réglages de la détection. La TOLÉRANCE est le seul que l'utilisateur voit (le curseur de la
- * vérification) : l'écart de gris en deçà duquel un pixel compte comme du fond.
+ * Les réglages de la détection. La TOLÉRANCE est le seul que l'utilisateur voit (le curseur
+ * « Sensibilité » de la vérification) : l'écart de gris en deçà duquel un pixel compte comme du papier.
  *
- * ⚠️ AUCUN DE CES SEUILS N'EST MESURÉ SUR UN CORPUS, et c'est écrit : ils ont été posés sur des
- * planches synthétiques et quelques cas d'école (gouttières blanches, bordures noires, Case pleine
- * page). La vérification à l'import est précisément ce qui rend cette approximation acceptable :
- * une erreur de détection se corrige avant de valider, jamais après.
+ * ⚠️ CES SEUILS ONT ÉTÉ RÉGLÉS SUR QUINZE PLANCHES RÉELLES fournies par Valentin le 13 octobre 2026
+ * (manga, BD franco-belge, comics, doubles pages, captures d'écran avec leur cadre), gardées hors
+ * dépôt dans `apercus/planches-test/`. C'est peu : la vérification à l'import reste ce qui rend la
+ * détection acceptable, une erreur se corrige avant de valider.
  */
 export const DETECTION = Object.freeze({
-  tolerance: 40,          // écart de gris (0 à 255) toléré autour de la couleur du fond
-  bruitLigne: 0.01,       // part d'encre tolérée dans une ligne de gouttière (poussière, trait de scan)
-  gouttiereMin: 0.004,    // épaisseur minimale d'une gouttière, en part du petit côté de l'image
-  caseMin: 0.03,          // côté minimal d'une Case, en part du côté correspondant de l'image
+  tolerance: 40,          // écart de gris (0 à 255) toléré autour de la couleur du papier
+  erosion: 0.0025,        // rayon d'érosion, en part du petit côté : coupe les traits fins qui enjambent une gouttière
+  gouttiere: 0.006,       // épaisseur minimale d'une gouttière, en part du petit côté
+  caseMin: 0.04,          // côté minimal d'une Case, en part du côté correspondant
   surfaceMin: 0.006,      // surface minimale d'une Case, en part de l'image
+  partDehors: 0.6,        // part de « papier du dehors » qui fait d'une ligne un morceau de gouttière
+  bandeUniformeMax: 0.035, // épaisseur maximale d'une gouttière de couleur (au-delà : un aplat du dessin)
+  papierArete: 0.3,       // au-delà de cette part de papier dans une boîte, on n'y coupe pas sur une arête
 });
 
-/** La médiane d'une liste de nombres. PURE. */
-function mediane(v){
-  if (!v.length) return 255;
-  const t = v.slice().sort((a, b) => a - b);
-  return t[Math.floor(t.length / 2)];
+/**
+ * La couleur du PAPIER (marges et gouttières), en niveau de gris. PURE.
+ *
+ * On ne lit plus le pourtour, qui est souvent le CADRE d'une capture d'écran ou le fond noir d'une
+ * visionneuse : on compte, à l'intérieur de l'image, les longues plages uniformes de chaque niveau, et
+ * on préfère le clair, puis le sombre, pourvu qu'ils pèsent assez. Un grand aplat coloré du dessin ne
+ * doit pas passer pour du papier.
+ */
+function couleurDuPapier(g, w, h){
+  const hist = new Float64Array(64);
+  const x0 = Math.floor(w * 0.02), x1 = Math.ceil(w * 0.98), y0 = Math.floor(h * 0.02), y1 = Math.ceil(h * 0.98);
+  const plageMin = Math.max(8, Math.round(w * 0.02));
+  for (let y = y0; y < y1; y += 2) {
+    let debut = x0, ref = g[y * w + x0];
+    for (let x = x0 + 1; x <= x1; x++) {
+      const v = x < x1 ? g[y * w + x] : -999;
+      if (Math.abs(v - ref) > 6) {
+        if (x - debut >= plageMin) hist[ref >> 2] += x - debut;
+        debut = x; ref = v;
+      }
+    }
+  }
+  let total = 0; for (let i = 0; i < 64; i++) total += hist[i];
+  // Le papier est le PLUS CLAIR des niveaux qui pèsent assez (un gris clair d'aplat peut peser plus
+  // lourd que les gouttières, il n'est pas plus clair qu'elles) ; à défaut, le plus sombre.
+  const pese = (i) => hist[i] + (i > 0 ? hist[i - 1] : 0) + (i < 63 ? hist[i + 1] : 0) >= total * 0.03;
+  for (let i = 63; i >= 56; i--) if (hist[i] > 0 && pese(i)) return i * 4 + 2;
+  for (let i = 0; i <= 12; i++) if (hist[i] > 0 && pese(i)) return i * 4 + 2;
+  let k = 0; for (let i = 0; i < 64; i++) if (hist[i] > hist[k]) k = i;
+  return k * 4 + 2;
 }
 
 /**
- * La couleur du FOND : la médiane des pixels du pourtour. Les planches ont presque toujours une
- * marge, et les gouttières sont de la même couleur qu'elle. PURE.
+ * Le CADRE à retirer : les bandes uniformes du bord qui ne sont pas du papier (cadre d'une capture
+ * d'écran, fond d'une visionneuse). Rend la zone utile `{ x0, y0, x1, y1 }`. PURE.
  */
-export function couleurDuFond(gris, w, h){
-  const bord = [];
-  for (let x = 0; x < w; x++) { bord.push(gris[x], gris[(h - 1) * w + x]); }
-  for (let y = 0; y < h; y++) { bord.push(gris[y * w], gris[y * w + w - 1]); }
-  return mediane(bord);
+function zoneUtile(g, w, h, papier, tolerance){
+  const uniforme = (vals) => {
+    const t = vals.slice().sort((a, b) => a - b); const m = t[t.length >> 1];
+    let n = 0; for (const v of vals) if (Math.abs(v - m) <= 14) n++;
+    return n / vals.length > 0.9 && Math.abs(m - papier) > tolerance;
+  };
+  const ligne = (y) => { const v = []; for (let x = 0; x < w; x += 2) v.push(g[y * w + x]); return v; };
+  const colonne = (x, a, b) => { const v = []; for (let y = a; y < b; y += 2) v.push(g[y * w + x]); return v; };
+  let t = 0, b = h, l = 0, r = w;
+  while (t < h * 0.25 && uniforme(ligne(t))) t++;
+  while (b > h * 0.75 && uniforme(ligne(b - 1))) b--;
+  while (l < w * 0.25 && uniforme(colonne(l, t, b))) l++;
+  while (r > w * 0.75 && uniforme(colonne(r - 1, t, b))) r--;
+  return { x0: l, y0: t, x1: r, y1: b };
 }
 
 /**
  * Les Cases d'une image en niveaux de gris (`gris` : un octet par pixel, `w` × `h`), en FRACTIONS de
- * l'image, dans l'ordre de lecture (de haut en bas, puis de gauche à droite). PURE.
+ * l'image, dans l'ordre de lecture. PURE.
  *
- * LA MÉTHODE : la découpe récursive « XY-cut ». Une gouttière est une bande de lignes (ou de
- * colonnes) presque entièrement de la couleur du fond ; on coupe la zone le long des bandes
- * horizontales, puis chaque morceau le long des verticales, et ainsi de suite tant qu'une coupe
- * existe. Ce qui reste, rogné de ses marges, est une Case.
+ * LA MÉTHODE, en trois temps (la première version, une découpe XY sur les seules lignes de papier
+ * pleines, échouait sur la plupart des vraies planches : cadre de capture, fonds perdus, bulles
+ * qui débordent) :
  *
- * ⚠️ CE QU'ELLE NE SAIT PAS FAIRE, et la vérification est là pour ça : une bulle ou un dessin qui
- * enjambe une gouttière la bouche (les deux Cases n'en font qu'une) ; une Case sans bordure sur fond
- * blanc perd ses marges vides ; les Cases inclinées ou qui se chevauchent sont rendues par leur
- * rectangle englobant.
+ *   1. le PAPIER DU DEHORS : le papier qu'on atteint depuis le bord sans traverser d'encre, c'est-à-
+ *      dire les marges et les gouttières. Tout le reste appartient aux Cases, y compris l'intérieur
+ *      blanc d'une Case de manga, que son cadre enferme ;
+ *   2. les COMPOSANTES de ce reste, après une légère érosion qui coupe les traits fins enjambant une
+ *      gouttière (queue de bulle, trait de vitesse). Chacune est une Case, ou plusieurs Cases soudées ;
+ *   3. chaque composante est RECOUPÉE le long des séparateurs qu'elle contient encore : bande de papier
+ *      du dehors qu'un débord a refermée, bande mince d'une couleur uniforme (gouttière sombre), ou,
+ *      dans une boîte presque sans papier, ARÊTE droite encrée qui la traverse (Cases jointives d'un
+ *      comics à fond perdu). Une boîte bien cadrée n'est pas recoupée : c'est une Case.
+ *
+ * ⚠️ CE QU'ELLE NE SAIT TOUJOURS PAS FAIRE : une illustration pleine page où des Cases se posent par-
+ * dessus, des Cases inclinées (rendues par leur rectangle), une Case incrustée dans une autre (elle
+ * s'y fond), et des Cases sans bordure sur papier blanc (elles s'émiettent).
  */
 export function detecterCases(gris, w, h, options = {}){
   const o = { ...DETECTION, ...options };
   if (!gris || !(w > 0) || !(h > 0) || gris.length < w * h) return [];
-  const fond = couleurDuFond(gris, w, h);
-  const encre = new Uint8Array(w * h);
-  for (let i = 0; i < w * h; i++) encre[i] = Math.abs(gris[i] - fond) > o.tolerance ? 1 : 0;
-  const gouttiere = Math.max(2, Math.round(Math.min(w, h) * o.gouttiereMin));
+  const papier = couleurDuPapier(gris, w, h);
+  const z = zoneUtile(gris, w, h, papier, o.tolerance);
+  const W = z.x1 - z.x0, H = z.y1 - z.y0;
+  if (W < 10 || H < 10) return [];
+  const gv = (x, y) => gris[(y + z.y0) * w + x + z.x0];
+  const estPapier = (x, y) => Math.abs(gv(x, y) - papier) <= o.tolerance;
 
-  // Les lignes (sens 'h') ou colonnes ('v') de la zone qui sont du FOND.
-  const lignesDeFond = (r, sens) => {
-    const n = sens === 'h' ? r.y1 - r.y0 : r.x1 - r.x0;
-    const long = sens === 'h' ? r.x1 - r.x0 : r.y1 - r.y0;
-    const max = Math.floor(long * o.bruitLigne);
-    const res = new Uint8Array(n);
-    for (let k = 0; k < n; k++) {
-      let s = 0;
-      if (sens === 'h') { const y = r.y0 + k; for (let x = r.x0; x < r.x1 && s <= max; x++) s += encre[y * w + x]; }
-      else { const x = r.x0 + k; for (let y = r.y0; y < r.y1 && s <= max; y++) s += encre[y * w + x]; }
-      res[k] = s <= max ? 1 : 0;
-    }
-    return res;
-  };
-  // La zone sans ses marges de fond ; null si elle est vide.
-  const rogner = (r) => {
-    const lh = lignesDeFond(r, 'h'), lv = lignesDeFond(r, 'v');
-    let a = 0, b = lh.length; while (a < b && lh[a]) a++; while (b > a && lh[b - 1]) b--;
-    let c = 0, d = lv.length; while (c < d && lv[c]) c++; while (d > c && lv[d - 1]) d--;
-    if (a >= b || c >= d) return null;
-    return { x0: r.x0 + c, x1: r.x0 + d, y0: r.y0 + a, y1: r.y0 + b };
-  };
-  // Les morceaux de la zone séparés par une bande de fond d'au moins `gouttiere` lignes.
-  const couper = (r, sens) => {
-    const l = lignesDeFond(r, sens);
-    const debut = sens === 'h' ? r.y0 : r.x0;
-    const morceaux = [];
-    let ouvert = null, vides = 0;
-    for (let k = 0; k < l.length; k++) {
-      if (!l[k]) {
-        if (ouvert === null) ouvert = k;
-        else if (vides >= gouttiere) { morceaux.push([ouvert, k - vides]); ouvert = k; }
-        vides = 0;
-      } else if (ouvert !== null) vides++;
-    }
-    if (ouvert !== null) morceaux.push([ouvert, l.length - vides]);
-    return morceaux.map(([p, q]) => (sens === 'h'
-      ? { x0: r.x0, x1: r.x1, y0: debut + p, y1: debut + q }
-      : { x0: debut + p, x1: debut + q, y0: r.y0, y1: r.y1 }));
-  };
-  const feuilles = [];
-  const decouper = (r0, profondeur) => {
-    const r = rogner(r0);
-    if (!r) return;
-    if (profondeur < 12) {
-      for (const sens of ['h', 'v']) {
-        const m = couper(r, sens);
-        if (m.length > 1) { m.forEach(x => decouper(x, profondeur + 1)); return; }
+  // 1. Le papier du dehors, par remplissage depuis le bord.
+  const dehors = new Uint8Array(W * H);
+  const pile = new Int32Array(W * H);
+  let sp = 0;
+  const pousser = (p) => { if (!dehors[p] && estPapier(p % W, (p / W) | 0)) { dehors[p] = 1; pile[sp++] = p; } };
+  for (let x = 0; x < W; x++) { pousser(x); pousser((H - 1) * W + x); }
+  for (let y = 0; y < H; y++) { pousser(y * W); pousser(y * W + W - 1); }
+  while (sp) {
+    const p = pile[--sp], x = p % W;
+    if (x > 0) pousser(p - 1);
+    if (x < W - 1) pousser(p + 1);
+    if (p >= W) pousser(p - W);
+    if (p < W * (H - 1)) pousser(p + W);
+  }
+
+  // 2. Le reste, érodé, puis ses composantes.
+  const r = Math.max(1, Math.round(Math.min(W, H) * o.erosion));
+  const tmp = new Uint8Array(W * H), erode = new Uint8Array(W * H);
+  const somme = new Int32Array(Math.max(W, H) + 1);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) somme[x + 1] = somme[x] + (dehors[y * W + x] ? 0 : 1);
+    for (let x = 0; x < W; x++) { const a = Math.max(0, x - r), b = Math.min(W, x + r + 1); tmp[y * W + x] = somme[b] - somme[a] === b - a ? 1 : 0; }
+  }
+  for (let x = 0; x < W; x++) {
+    for (let y = 0; y < H; y++) somme[y + 1] = somme[y] + tmp[y * W + x];
+    for (let y = 0; y < H; y++) { const a = Math.max(0, y - r), b = Math.min(H, y + r + 1); erode[y * W + x] = somme[b] - somme[a] === b - a ? 1 : 0; }
+  }
+  const etiquette = new Int32Array(W * H);
+  let boites = [];
+  for (let i = 0; i < W * H; i++) {
+    if (!erode[i] || etiquette[i]) continue;
+    const id = boites.length + 1;
+    let xa = W, xb = 0, ya = H, yb = 0;
+    sp = 0; pile[sp++] = i; etiquette[i] = id;
+    while (sp) {
+      const p = pile[--sp], x = p % W, y = (p / W) | 0;
+      if (x < xa) xa = x; if (x > xb) xb = x; if (y < ya) ya = y; if (y > yb) yb = y;
+      for (const q of [x > 0 ? p - 1 : -1, x < W - 1 ? p + 1 : -1, y > 0 ? p - W : -1, y < H - 1 ? p + W : -1]) {
+        if (q >= 0 && erode[q] && !etiquette[q]) { etiquette[q] = id; pile[sp++] = q; }
       }
     }
-    feuilles.push(r);
-  };
-  decouper({ x0: 0, x1: w, y0: 0, y1: h }, 0);
+    boites.push({ x0: Math.max(0, xa - r), y0: Math.max(0, ya - r), x1: Math.min(W, xb + r + 1), y1: Math.min(H, yb + r + 1) });
+  }
+  const assez = (b) => (b.x1 - b.x0) >= W * o.caseMin && (b.y1 - b.y0) >= H * o.caseMin
+    && (b.x1 - b.x0) * (b.y1 - b.y0) >= W * H * o.surfaceMin;
+  boites = boites.filter(assez);
 
-  return feuilles
-    .filter(r => (r.x1 - r.x0) >= w * o.caseMin && (r.y1 - r.y0) >= h * o.caseMin
-      && (r.x1 - r.x0) * (r.y1 - r.y0) >= w * h * o.surfaceMin)
-    .map(r => ({ x: r.x0 / w, y: r.y0 / h, w: (r.x1 - r.x0) / w, h: (r.y1 - r.y0) / h }));
+  // 3. Recouper chaque boîte le long de ses séparateurs.
+  const gout = Math.max(2, Math.round(Math.min(W, H) * o.gouttiere));
+  // Une ligne : 1 papier du dehors, 2 bande uniforme d'une autre couleur que le papier, 0 rien.
+  const ligne = (b, sens, k) => {
+    const v = []; let n = 0;
+    if (sens === 'h') for (let x = b.x0; x < b.x1; x += 2) { v.push(gv(x, k)); if (dehors[k * W + x]) n++; }
+    else for (let y = b.y0; y < b.y1; y += 2) { v.push(gv(k, y)); if (dehors[y * W + k]) n++; }
+    if (n / v.length >= o.partDehors) return 1;
+    const t = v.slice().sort((p, q) => p - q), m = t[t.length >> 1];
+    let u = 0; for (const x of v) if (Math.abs(x - m) <= 12) u++;
+    return u / v.length >= 0.9 && Math.abs(m - papier) > o.tolerance ? 2 : 0;
+  };
+  // La part d'une ligne où l'image change franchement de part et d'autre (une arête droite).
+  const arete = (b, sens, k) => {
+    const lim = sens === 'h' ? H : W;
+    if (k < 1 || k >= lim - 1) return 0;
+    let n = 0, t = 0;
+    for (let i = (sens === 'h' ? b.x0 : b.y0); i < (sens === 'h' ? b.x1 : b.y1); i += 2) {
+      t++;
+      const d = sens === 'h' ? gv(i, k + 1) - gv(i, k - 1) : gv(k + 1, i) - gv(k - 1, i);
+      if (Math.abs(d) > 28) n++;
+    }
+    return t ? n / t : 0;
+  };
+  // … et cette arête est un TRAIT encré sur au moins la moitié de sa longueur : le bord d'une Case
+  // l'est, une ligne d'horizon ou la limite d'un aplat ne l'est pas.
+  const trait = (b, sens, k) => {
+    const lim = sens === 'h' ? H : W;
+    let n = 0, t = 0;
+    for (let i = (sens === 'h' ? b.x0 : b.y0); i < (sens === 'h' ? b.x1 : b.y1); i += 2) {
+      t++;
+      let m = 255;
+      for (let d = -2; d <= 2; d++) {
+        const kk = k + d;
+        if (kk >= 0 && kk < lim) m = Math.min(m, sens === 'h' ? gv(i, kk) : gv(kk, i));
+      }
+      if (m < 90) n++;
+    }
+    return t ? n / t : 0;
+  };
+  const partDePapier = (b) => {
+    let n = 0, t = 0;
+    for (let y = b.y0; y < b.y1; y += 6) for (let x = b.x0; x < b.x1; x += 6) { t++; if (estPapier(x, y)) n++; }
+    return t ? n / t : 0;
+  };
+  const couper = (b, sens, seulementTraits = false) => {
+    const a0 = sens === 'h' ? b.y0 : b.x0, a1 = sens === 'h' ? b.y1 : b.x1;
+    const maxUni = Math.round((sens === 'h' ? H : W) * o.bandeUniformeMax);
+    const f = [];
+    for (let k = a0; k < a1; k++) f.push(ligne(b, sens, k));
+    const coupes = [];
+    for (let k = 0; k < f.length && !seulementTraits;) {
+      if (!f[k]) { k++; continue; }
+      let e = k, n1 = 0;
+      while (e < f.length && f[e]) { if (f[e] === 1) n1++; e++; }
+      if (k > 0 && e < f.length && e - k >= gout && (n1 * 2 >= e - k || e - k <= maxUni)) coupes.push([k, e]);
+      k = e;
+    }
+    if (partDePapier(b) < o.papierArete) {
+      const marge = Math.round((a1 - a0) * 0.15);
+      let dernier = -1e9;
+      for (let k = a0 + marge; k < a1 - marge; k++) {
+        const v = arete(b, sens, k);
+        if (v >= 0.6 && v >= arete(b, sens, k - 1) && v >= arete(b, sens, k + 1) && k - a0 - dernier > gout
+          && !coupes.some(([p, q]) => k - a0 >= p - gout && k - a0 <= q + gout) && trait(b, sens, k) >= (seulementTraits ? 0.85 : 0.5)) {
+          coupes.push([k - a0, k - a0 + 1]);
+          dernier = k - a0;
+        }
+      }
+      coupes.sort((p, q) => p[0] - q[0]);
+    }
+    if (!coupes.length) return [b];
+    const morceaux = [];
+    let debut = 0;
+    for (const [p, q] of coupes) { morceaux.push([debut, p]); debut = q; }
+    morceaux.push([debut, f.length]);
+    return morceaux.map(([p, q]) => (sens === 'h' ? { ...b, y0: a0 + p, y1: a0 + q } : { ...b, x0: a0 + p, x1: a0 + q }));
+  };
+  // Une boîte BIEN CADRÉE : son pourtour intérieur est encré, son pourtour extérieur est du papier.
+  const tour = (b, d, test) => {
+    let n = 0, t = 0;
+    for (let x = b.x0; x < b.x1; x += 2) for (const y of [b.y0 + d, b.y1 - 1 - d]) { if (y < 0 || y >= H) continue; t++; if (test(x, y)) n++; }
+    for (let y = b.y0; y < b.y1; y += 2) for (const x of [b.x0 + d, b.x1 - 1 - d]) { if (x < 0 || x >= W) continue; t++; if (test(x, y)) n++; }
+    return t ? n / t : 1;
+  };
+  const bienCadree = (b) => tour(b, 2, (x, y) => !estPapier(x, y)) >= 0.85 && tour(b, -3, estPapier) >= 0.5;
+  // Un morceau sans ses bords de papier du dehors (ce qui reste d'une gouttière coupée).
+  const rogner = (b) => {
+    const vide = (sens, k) => {
+      let n = 0, t = 0;
+      if (sens === 'h') for (let x = b.x0; x < b.x1; x += 3) { t++; if (dehors[k * W + x]) n++; }
+      else for (let y = b.y0; y < b.y1; y += 3) { t++; if (dehors[y * W + k]) n++; }
+      return t > 0 && n / t >= 0.9;
+    };
+    const c = { ...b };
+    while (c.y1 - c.y0 > 2 && vide('h', c.y0)) c.y0++;
+    while (c.y1 - c.y0 > 2 && vide('h', c.y1 - 1)) c.y1--;
+    while (c.x1 - c.x0 > 2 && vide('v', c.x0)) c.x0++;
+    while (c.x1 - c.x0 > 2 && vide('v', c.x1 - 1)) c.x1--;
+    return c;
+  };
+  const decouper = (b0, profondeur) => {
+    const b = profondeur ? rogner(b0) : b0;
+    if (profondeur >= 8) return [b];
+    // Bien cadrée, ce peut être une Case… ou plusieurs Cases jointives sous un même cadre : on n'y
+    // coupe alors que sur un trait encré presque continu.
+    const cadree = bienCadree(b);
+    for (const sens of ['h', 'v']) {
+      const m = couper(b, sens, cadree).filter(assez);
+      if (m.length > 1) return m.flatMap(x => decouper(x, profondeur + 1));
+    }
+    return [b];
+  };
+  const cases = boites.flatMap(b => decouper(b, 0)).filter(assez)
+    .map(b => ({ x: (b.x0 + z.x0) / w, y: (b.y0 + z.y0) / h, w: (b.x1 - b.x0) / w, h: (b.y1 - b.y0) / h }));
+  return ordreDeLecture(cases, { double: w / h > 1.15 });
 }
 
 /**
@@ -271,7 +423,14 @@ export function detecterCases(gris, w, h, options = {}){
  * dont les hauteurs se recouvrent de moitié au moins sont sur la même rangée), puis de gauche à
  * droite. Sert après la vérification, où l'utilisateur a pu ajouter une Case n'importe où. PURE.
  */
-export function ordreDeLecture(regions){
+export function ordreDeLecture(regions, { double = false } = {}){
+  // Une DOUBLE PAGE se lit page par page : toute la page de gauche, puis celle de droite. Une Case
+  // à cheval va du côté de son centre.
+  if (double) {
+    const liste = (regions || []).map(regionValide).filter(Boolean);
+    const gauche = liste.filter(r => r.x + r.w / 2 < 0.5), droite = liste.filter(r => r.x + r.w / 2 >= 0.5);
+    return [...ordreDeLecture(gauche), ...ordreDeLecture(droite)];
+  }
   const reste = (regions || []).map(regionValide).filter(Boolean).sort((a, b) => a.y - b.y || a.x - b.x);
   const rangees = [];
   for (const r of reste) {

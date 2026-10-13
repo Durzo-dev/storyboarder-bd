@@ -24,19 +24,26 @@ dossier Images. La nouvelle Planche se place juste après celle affichée, dans 
 
 ## La détection
 
-Une découpe récursive (« XY-cut ») : la couleur du fond est lue sur le pourtour de l'image, une
-gouttière est une bande de lignes presque entièrement de cette couleur, et l'image est coupée le
-long des bandes horizontales puis verticales, tant qu'il y en a. Les morceaux restants, rognés de
-leurs marges, sont les Cases ; les trop petits (numéro de page, signature) sont écartés. L'ordre de
-lecture (rangées, puis de gauche à droite) donne les numéros.
+Réécrite le 13 octobre 2026 sur quinze planches réelles fournies par Valentin (manga, BD
+franco-belge, comics, doubles pages, captures d'écran avec leur cadre), gardées hors dépôt dans
+`apercus/planches-test/`. La première version (une découpe sur les seules lignes de papier pleines)
+ne trouvait qu'une Case sur la plupart d'entre elles.
 
-**Ce qu'elle ne sait pas faire**, et c'est la raison de la vérification : une bulle ou un dessin qui
-enjambe une gouttière la bouche (deux Cases n'en font qu'une) ; une Case sans bordure sur fond
-blanc perd ses marges vides ; une Case inclinée est rendue par son rectangle. Ses seuils
-(`DETECTION`) ont été posés sur des planches synthétiques, pas mesurés sur un corpus.
+1. **Le papier** est le niveau de gris clair (à défaut sombre) des longues plages uniformes de
+   l'image ; le **cadre** d'une capture d'écran ou d'une visionneuse est retiré.
+2. **Le papier du dehors** : celui qu'on atteint depuis le bord sans traverser d'encre (marges et
+   gouttières). Tout le reste appartient aux Cases, y compris l'intérieur blanc d'une Case de manga.
+3. Ses **composantes**, après une légère érosion qui coupe les traits fins enjambant une gouttière.
+4. Chacune est **recoupée** le long de ses séparateurs : bande de papier du dehors refermée par un
+   débord, bande mince d'une couleur uniforme (gouttière sombre), ou, dans une boîte presque sans
+   papier, **arête encrée** droite (Cases jointives d'un comics à fond perdu).
+5. L'ordre de lecture donne les numéros ; une **double page** se lit page par page.
 
-**Les bulles ne sont pas détectées** (décidé avec Valentin) : on ne pourrait rien en faire, faute de
-pouvoir les modifier ; lire leur texte serait un autre chantier.
+**Ce qu'elle ne sait pas faire**, d'où la vérification : une illustration pleine page sous des
+Cases posées dessus, des Cases inclinées (rendues par leur rectangle), une Case incrustée dans une
+autre, des Cases sans bordure sur papier blanc (elles s'émiettent).
+
+**Les bulles ne sont pas détectées** (décidé avec Valentin).
 
 ## Ce qui est persisté
 
