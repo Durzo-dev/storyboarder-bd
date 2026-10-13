@@ -6,6 +6,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import './helpers/dom-stub.mjs';
 
 import {
   detecterCases, niveauxDeGris, poseDeLImage, ancrageApresGlisserPlanche,
@@ -287,10 +288,17 @@ describe('Retours suivants (13 octobre 2026) : correction', () => {
     assert.match(ui, /edition = null;\n {2}surbrillance = null;\n {2}S\.selectedId = null;/);
     assert.match(ui, /edition\.sel = null;\n {4}surbrillance = null;/);
   });
-  test('un seul trait de 1,5 (comme une sélection), tirets orange, blanc, noir en alternance', () => {
+  test('tirets orange de 1,5 ; la Case sélectionnée clignote orange, blanc, noir', async () => {
     const d = lire('src/draw.js');
-    assert.match(d, /c\.lineCap = 'butt'; c\.lineWidth = 1\.5;/);
-    assert.match(d, /\[SIGNAL_SELECTION, '#fff', '#000'\]\.forEach\(\(couleur, k\) => \{\n {6}c\.lineDashOffset = -k \* \(TIRET \+ ESPACE\);/);
+    assert.match(d, /\(choisie && enEdition\) \? \[SIGNAL_SELECTION, '#fff', '#000'\]\[phaseDuClignotement\(\)\] : SIGNAL_SELECTION/);
+    const { phaseDuClignotement, CLIGNOTEMENT_MS } = await import('../src/import-planche-ui.js');
+    assert.deepEqual([0, 1, 2, 3].map(k => phaseDuClignotement(k * CLIGNOTEMENT_MS)), [0, 1, 2, 0]);
+  });
+  test('les bords se tirent par leur milieu, comme une Case ordinaire, avec les mêmes curseurs', () => {
+    const ui = lire('src/import-planche-ui.js');
+    assert.match(ui, /const milieux = \{ n: \[/);
+    assert.match(ui, /if \(t\.poignee === 'n' \|\| t\.poignee === 's'\) return 'ns-resize';/);
+    assert.match(lire('src/draw.js'), /Les milieux des bords, ronds/);
   });
   test('un clic hors de la Planche quitte la correction ; l\'aide a une commande par ligne', () => {
     assert.match(lire('src/events.js'), /if \(e\.target === canvas\) return;\n[^\n]*\n {2}if \(editionDesCasesActive\(\)\) sortirEditionDesCases\(\);/);

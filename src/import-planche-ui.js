@@ -28,12 +28,29 @@ const ANALYSE_MAX_PX = 1400;
 /** La distance, en unités de Planche, à laquelle un coin se saisit. */
 const POIGNEE = 8;
 
-let _rappels = { snapshot: () => {}, renderAll: () => {}, alerter: async () => {}, confirmer: async () => false };
+let _rappels = { snapshot: () => {}, renderAll: () => {}, redessiner: () => {}, alerter: async () => {}, confirmer: async () => false };
 /** Les rappels de events.js (règle n°2 : pas d'import circulaire). */
 export function setImportPlancheCallbacks(r){ _rappels = { ..._rappels, ...r }; }
 
 /** L'édition en cours : la Planche (par son id), la Case sélectionnée, le geste. */
 let edition = null;   // { pageId, sel, geste }
+
+/**
+ * LE CLIGNOTEMENT de la Case sélectionnée en correction (demandé) : sa bordure passe d'orange à
+ * blanc puis à noir, en boucle. Un minuteur ne redessine que tant qu'une Case est sélectionnée.
+ */
+export const CLIGNOTEMENT_MS = 350;
+let _minuteur = null;
+function suivreLeClignotement(){
+  const actif = editionDesCasesActive() && !!edition.sel;
+  if (actif && !_minuteur) _minuteur = setInterval(() => {
+    if (!editionDesCasesActive() || !edition.sel) { clearInterval(_minuteur); _minuteur = null; return; }
+    _rappels.redessiner();
+  }, CLIGNOTEMENT_MS);
+  if (!actif && _minuteur) { clearInterval(_minuteur); _minuteur = null; }
+}
+/** La phase du clignotement : 0 orange, 1 blanc, 2 noir. */
+export function phaseDuClignotement(t = Date.now()){ return Math.floor(t / CLIGNOTEMENT_MS) % 3; }
 
 /** La Planche affichée est-elle en édition des Cases ? */
 export function editionDesCasesActive(){
@@ -84,7 +101,7 @@ function compacter(){
 let surbrillance = null;
 export function mettreEnSurbrillance(id){
   surbrillance = id || null;
-  if (editionDesCasesActive()) edition.sel = id;
+  if (editionDesCasesActive()) { edition.sel = id || null; suivreLeClignotement(); }
 }
 export function caseEnSurbrillance(){
   if (editionDesCasesActive()) return edition.sel;
@@ -100,6 +117,12 @@ function cible(p, po){
     const coins = { nw: [r.x, r.y], ne: [r.x + r.w, r.y], sw: [r.x, r.y + r.h], se: [r.x + r.w, r.y + r.h] };
     for (const [nom, [cx, cy]] of Object.entries(coins)) {
       if (Math.abs(po.x + cx * po.w - p.x) <= POIGNEE && Math.abs(po.y + cy * po.h - p.y) <= POIGNEE) return { o: sel, poignee: nom };
+    }
+    // Les MILIEUX des bords (demandé, comme une Case ordinaire, cf. hitPanelEdge) : tirer l'un
+    // déplace ce seul côté.
+    const milieux = { n: [r.x + r.w / 2, r.y], s: [r.x + r.w / 2, r.y + r.h], w: [r.x, r.y + r.h / 2], e: [r.x + r.w, r.y + r.h / 2] };
+    for (const [nom, [cx, cy]] of Object.entries(milieux)) {
+      if (Math.hypot(po.x + cx * po.w - p.x, po.y + cy * po.h - p.y) <= POIGNEE) return { o: sel, poignee: nom };
     }
   }
   const f = enFraction(p, po);
@@ -117,7 +140,11 @@ export function curseurEdition(p){
   if (!editionDesCasesActive()) return null;
   const t = cible(p, pose());
   if (!t) return 'crosshair';
-  return t.poignee === 'deplacer' ? 'move' : (t.poignee === 'nw' || t.poignee === 'se' ? 'nwse-resize' : 'nesw-resize');
+  // Les mêmes curseurs qu'une Case ordinaire : la main sur un coin, une double flèche sur un bord.
+  if (t.poignee === 'deplacer') return 'move';
+  if (t.poignee === 'n' || t.poignee === 's') return 'ns-resize';
+  if (t.poignee === 'e' || t.poignee === 'w') return 'ew-resize';
+  return 'pointer';
 }
 
 /** Le début d'un geste sur la Planche (bouton gauche). Rend true s'il est pris. */
@@ -126,7 +153,7 @@ export function debutGesteEdition(p){
   const po = pose();
   const t = cible(p, po);
   if (t) {
-    edition.sel = t.o.id;
+    edition.sel = t.o.id; suivreLeClignotement();
     edition.geste = { o: t.o, poignee: t.poignee, depart: enFraction(p, po), r0: { ...t.o.regionImage }, pris: false };
   } else {
     // Un clic hors de toute Case désélectionne (demandé). On ne trace plus au bouton gauche : une
@@ -134,6 +161,7 @@ export function debutGesteEdition(p){
     edition.sel = null;
     surbrillance = null;
   }
+  suivreLeClignotement();
   return true;
 }
 
@@ -172,6 +200,7 @@ export function creerCaseAuPoint(p){
   const o = { id: newId(), type: 'panel', x: 0, y: 0, w: 1, h: 1, text: '', shape: 'rect', imageFile: imageDeLaPlanche(pd), regionImage: r, caseNumber: 1e9 };
   pd.objects.push(o);
   edition.sel = o.id;
+  suivreLeClignotement();
   compacter();
   S.projectDirty = true;
   _rappels.renderAll();

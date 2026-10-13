@@ -22,7 +22,7 @@ affichée, dans le même Chapitre, **en correction des Cases**.
 
 **La correction se fait sur la Planche** (demandé le 13 octobre 2026, la première version passait
 par une modale) : un clic sélectionne une Case (hors des Cases : désélectionne), la tirer la déplace,
-tirer un coin la redimensionne, un **clic droit sans glisser en crée une** (le seul moyen), Suppr la
+tirer un coin ou le milieu d'un bord la redimensionne (comme une Case ordinaire), la Case sélectionnée clignote orange, blanc, noir, un **clic droit sans glisser en crée une** (le seul moyen), Suppr la
 retire, Échap ou un clic hors de la Planche termine ; en sortant, plus rien n'est sélectionné. Le menu de la Planche porte
 la section **« Cases détectées »** : « Modifier les cases » y ramène à tout moment, « Terminer » en
 sort (le curseur de sensibilité a été retiré : la correction suffit). Les numéros suivent l'ordre de

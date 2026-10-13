@@ -21,7 +21,7 @@ the Panels detected, and the new Page opens right after the displayed one, in th
 
 **Correction happens on the Page** (requested on 13 October 2026, the first version used a modal):
 a click selects a Panel (outside the Panels: deselects), dragging it moves it, dragging a corner
-resizes it, a **right-click without dragging creates one** (the only way), Delete removes it, Esc or a click outside the Page
+or the middle of a side resizes it (as with an ordinary Panel), the selected Panel blinks orange, white, black, a **right-click without dragging creates one** (the only way), Delete removes it, Esc or a click outside the Page
 finishes; on leaving, nothing stays selected. The Page menu carries the **"Detected
 panels"** section: "Edit the panels" goes back to it at any time, "Done" leaves (the sensitivity
 slider was removed: correction is enough). Numbers follow reading order at import; afterwards they

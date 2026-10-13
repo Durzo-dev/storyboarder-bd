@@ -67,7 +67,7 @@ import {
 } from './image-store.js';
 import { getLoadedImage, imageState, preloadImagesFor } from './image-cache.js';
 import { estPlancheImportee, estCaseImportee, placerCasesImportees, imageDeLaPlanche } from './planche-importee.js';
-import { editionDesCasesActive, caseEnSurbrillance } from './import-planche-ui.js';
+import { editionDesCasesActive, caseEnSurbrillance, phaseDuClignotement } from './import-planche-ui.js';
 import { preloadModelsFor } from './model-cache.js';
 // L'apparence d'une Bulle : opacité du fond, motif et régularité du trait. Décidée dans un module
 // pur (#425a), appliquée ici. Les décalages du tremblé s'ajoutent au TRACÉ, jamais au contour rendu
@@ -1206,18 +1206,15 @@ function dessinerEditionDesCases(c, page){
   // Hors correction, seule la Case en surbrillance (choisie dans le menu de la Planche) se montre.
   page.objects.filter(o => estCaseImportee(o) && (enEdition || o.id === sel)).forEach(o => {
     const choisie = o.id === sel;
-    // UN SEUL TRAIT, de l'épaisseur d'une sélection ordinaire (1,5, cf. drawSelection), lisible sur
-    // n'importe quel dessin (demandé) : une ALTERNANCE de tirets orange, blanc, noir, orange…
-    // Trois passes du même pointillé, décalées d'un tiers de période.
-    const TIRET = 6, ESPACE = 3, PERIODE = 3 * (TIRET + ESPACE);
+    // Tirets ORANGE, de l'épaisseur d'une sélection ordinaire (1,5, cf. drawSelection). La Case
+    // sélectionnée en correction CLIGNOTE (demandé) : orange, blanc, noir, en boucle
+    // (cf. phaseDuClignotement), ce qui la fait ressortir sur n'importe quel dessin.
+    const couleur = (choisie && enEdition) ? [SIGNAL_SELECTION, '#fff', '#000'][phaseDuClignotement()] : SIGNAL_SELECTION;
     c.lineCap = 'butt'; c.lineWidth = 1.5;
-    c.setLineDash([TIRET, PERIODE - TIRET]);
-    [SIGNAL_SELECTION, '#fff', '#000'].forEach((couleur, k) => {
-      c.lineDashOffset = -k * (TIRET + ESPACE);
-      c.strokeStyle = couleur;
-      c.strokeRect(o.x, o.y, o.w, o.h);
-    });
-    c.setLineDash([]); c.lineDashOffset = 0;
+    c.setLineDash([6, 4]);
+    c.strokeStyle = couleur;
+    c.strokeRect(o.x, o.y, o.w, o.h);
+    c.setLineDash([]);
     const t = String(o.caseNumber || '?');
     c.font = '600 12px system-ui, sans-serif';
     const lw = c.measureText(t).width + 10;
@@ -1227,6 +1224,11 @@ function dessinerEditionDesCases(c, page){
       c.strokeStyle = SIGNAL_SELECTION_LISERE; c.lineWidth = 1;
       [[o.x, o.y], [o.x + o.w, o.y], [o.x, o.y + o.h], [o.x + o.w, o.y + o.h]].forEach(([px, py]) => {
         c.fillStyle = SIGNAL_SELECTION; c.fillRect(px - 5, py - 5, 10, 10); c.strokeRect(px - 5, py - 5, 10, 10);
+      });
+      // Les milieux des bords, ronds, comme ceux d'une Case ordinaire (cf. drawSelection).
+      c.fillStyle = SIGNAL_SELECTION_LISERE; c.strokeStyle = SIGNAL_SELECTION; c.lineWidth = 1.5;
+      [[o.x + o.w / 2, o.y], [o.x + o.w / 2, o.y + o.h], [o.x, o.y + o.h / 2], [o.x + o.w, o.y + o.h / 2]].forEach(([mx, my]) => {
+        c.beginPath(); c.arc(mx, my, 5, 0, Math.PI * 2); c.fill(); c.stroke();
       });
     }
   });
