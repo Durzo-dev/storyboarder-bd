@@ -7,8 +7,8 @@
  * L'import range l'image, crée la Planche avec les Cases détectées juste après la Planche affichée,
  * et l'ouvre en ÉDITION DES CASES. Dans ce mode, sur la Planche : un clic sélectionne une Case, la
  * tirer la déplace, tirer un coin la redimensionne, tirer dans le vide en trace une nouvelle, Suppr
- * la retire, Échap termine. Le menu de la Planche porte « Modifier les Cases » / « Terminer » et le
- * curseur de sensibilité, qui relance la détection (et remplace les retouches).
+ * la retire, Échap termine. Le menu de la Planche porte « Modifier les cases » / « Terminer » (la
+ * sensibilité a été retirée, demandé : la correction suffit).
  *
  * Un import se défait d'un Ctrl+Z, comme tout le reste : un point d'annulation est pris avant.
  * Les décisions (détection, retouches, ordre de lecture) sont dans planche-importee.js.
@@ -16,10 +16,10 @@
 
 import { S, tr, newId, currentPageData, currentPage } from './state.js';
 import { choisirImage, rangerImageChoisie } from './image-store.js';
-import { preloadImagesFor, getLoadedImage } from './image-cache.js';
+import { preloadImagesFor } from './image-cache.js';
 import {
-  detecterCases, niveauxDeGris, ordreDeLecture, retoucherRegion, regionTracee, creerPlancheImportee,
-  estPlancheImportee, estCaseImportee, imageDeLaPlanche, poseDeLImage, DETECTION,
+  detecterCases, niveauxDeGris, retoucherRegion, regionTracee, creerPlancheImportee,
+  estPlancheImportee, estCaseImportee, imageDeLaPlanche, poseDeLImage,
 } from './planche-importee.js';
 
 /** La plus grande dimension de l'image ANALYSÉE : au-delà, la détection ralentit sans rien gagner. */
@@ -54,8 +54,6 @@ export function sortirEditionDesCases(){
   _rappels.renderAll();
 }
 
-/** La Case sélectionnée dans l'édition (son id), pour le dessin. */
-export function caseEnEdition(){ return editionDesCasesActive() ? edition.sel : null; }
 /** Le rectangle tracé en cours (unités de Planche), pour le dessin. */
 export function traceEnCours(){
   if (!editionDesCasesActive() || !edition.geste || !edition.geste.trace) return null;
@@ -71,17 +69,28 @@ function pose(){
 const enFraction = (p, po) => ({ x: (p.x - po.x) / po.w, y: (p.y - po.y) / po.h });
 const casesImportees = () => currentPageData().objects.filter(estCaseImportee);
 
-/** Renumérote les Cases dans l'ordre de lecture (une double page se lit page par page). */
-function renumeroter(){
-  const pd = currentPageData();
-  const cases = casesImportees();
-  const double = pd.importee.largeur / pd.importee.hauteur > 1.15;
-  const ordre = ordreDeLecture(cases.map(o => ({ ...o.regionImage, id: o.id })), { double });
-  // ordreDeLecture rend des régions neuves : on les retrouve par position.
-  ordre.forEach((r, i) => {
-    const o = cases.find(c => c.regionImage.x === r.x && c.regionImage.y === r.y && c.regionImage.w === r.w && c.regionImage.h === r.h);
-    if (o) o.caseNumber = i + 1;
-  });
+/**
+ * Les numéros, compactés de 1 à N dans l'ORDRE COURANT : celui de la détection à l'import, puis
+ * celui que l'utilisateur a choisi en glissant les Cases dans le menu de la Planche. Une Case
+ * ajoutée prend le dernier numéro ; une Case retirée laisse les autres dans leur ordre.
+ */
+function compacter(){
+  casesImportees().slice().sort((a, b) => (a.caseNumber || 1e9) - (b.caseNumber || 1e9))
+    .forEach((o, i) => { o.caseNumber = i + 1; });
+}
+
+/**
+ * La Case MISE EN SURBRILLANCE depuis le menu de la Planche (demandé) : un clic sur sa ligne la
+ * désigne sur la Planche sans quitter le menu. En correction, c'est aussi la Case sélectionnée.
+ */
+let surbrillance = null;
+export function mettreEnSurbrillance(id){
+  surbrillance = id;
+  if (editionDesCasesActive()) edition.sel = id;
+}
+export function caseEnSurbrillance(){
+  if (editionDesCasesActive()) return edition.sel;
+  return surbrillance && casesImportees().some(o => o.id === surbrillance) ? surbrillance : null;
 }
 
 /** Ce qui est sous le pointeur (unités de Planche) : un coin de la Case sélectionnée, une Case, ou rien. */
@@ -151,13 +160,13 @@ export function finGesteEdition(){
       _rappels.snapshot();
       const pd = currentPageData();
       const nom = imageDeLaPlanche(pd);
-      const o = { id: newId(), type: 'panel', x: 0, y: 0, w: 1, h: 1, text: '', shape: 'rect', imageFile: nom, regionImage: r };
+      const o = { id: newId(), type: 'panel', x: 0, y: 0, w: 1, h: 1, text: '', shape: 'rect', imageFile: nom, regionImage: r, caseNumber: 1e9 };
       pd.objects.push(o);
       edition.sel = o.id;
       S.projectDirty = true;
     }
   }
-  renumeroter();
+  compacter();
   return true;
 }
 
@@ -170,7 +179,7 @@ export function supprimerCaseEnEdition(){
   _rappels.snapshot();
   pd.objects = pd.objects.filter(o => o.id !== edition.sel);
   edition.sel = null;
-  renumeroter();
+  compacter();
   S.projectDirty = true;
   _rappels.renderAll();
   return true;
@@ -185,24 +194,6 @@ function grisDe(bitmap){
   const c = toile.getContext('2d', { willReadFrequently: true });
   c.drawImage(bitmap, 0, 0, aw, ah);
   return { aw, ah, gris: niveauxDeGris(c.getImageData(0, 0, aw, ah).data, aw, ah) };
-}
-
-/** Relance la détection sur la Planche en édition ; remplace ses Cases (les descriptions sont perdues). */
-export function redetecter(tolerance){
-  if (!editionDesCasesActive()) return;
-  const pd = currentPageData();
-  const nom = imageDeLaPlanche(pd);
-  const image = nom ? getLoadedImage(nom) : null;
-  if (!image) return;
-  const { aw, ah, gris } = grisDe(image.bitmap);
-  const regions = detecterCases(gris, aw, ah, { tolerance: Number(tolerance) || DETECTION.tolerance });
-  _rappels.snapshot();
-  const neuve = creerPlancheImportee({ nomImage: nom, largeur: pd.importee.largeur, hauteur: pd.importee.hauteur, regions, newId });
-  pd.objects = [...pd.objects.filter(o => !estCaseImportee(o)), ...neuve.objects];
-  edition.sel = null;
-  renumeroter();
-  S.projectDirty = true;
-  _rappels.renderAll();
 }
 
 // Suppr et Échap pendant l'édition. EN CAPTURE, et ils s'arrêtent là : sans cela, Suppr atteindrait
@@ -241,7 +232,6 @@ export async function ouvrirImportPlanche(ti, pi){
   S.currentPageIndex = pi + 1;
   S.selectedId = null; S.selectedRoomId = null;
   S.projectDirty = true;
-  renumeroter();
   await preloadImagesFor(pd.objects);
   // Elle s'ouvre directement en correction des Cases.
   entrerEditionDesCases();

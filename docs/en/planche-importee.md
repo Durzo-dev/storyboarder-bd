@@ -22,9 +22,10 @@ the Panels detected, and the new Page opens right after the displayed one, in th
 **Correction happens on the Page** (requested on 13 October 2026, the first version used a modal):
 a click selects a Panel, dragging it moves it, dragging a corner resizes it, dragging in an empty
 area draws a new one, Delete removes it, Esc finishes. The Page menu carries the **"Detected
-panels"** section: "Edit the panels" goes back to it at any time, "Done" leaves, and the
-"Sensitivity" slider runs the detection again (it replaces the Panels). Numbers follow reading
-order. An import is undone with Ctrl+Z.
+panels"** section: "Edit the panels" goes back to it at any time, "Done" leaves (the sensitivity
+slider was removed: correction is enough). Numbers follow reading order at import; afterwards they
+are changed by **dragging** the Panels (by their number) in the Page menu list, and a click on a row
+**highlights the Panel** on the Page. An import is undone with Ctrl+Z.
 
 ## The detection
 
@@ -73,8 +74,8 @@ reads ordinary Panels, in their place, without the image.
 
 At 1×, the image is **whole** ("contain"), not "cover" like a Panel image: a page almost never has
 the exact proportions of the Volume's format, and covering would crop the edge Panels. The bands
-left over take the Page's background colour. Zoom goes from 1 to 4; **dragging the Page** moves the
-image (a click, under 3 pixels, only selects); "Recentre" removes the three fields.
+left over take the Page's background colour. Zoom goes from 1 to 4; **holding the right button** on the Page
+moves the image, the Panel outlines hiding during the gesture; "Recentre" removes the three fields.
 
 ## What is locked
 

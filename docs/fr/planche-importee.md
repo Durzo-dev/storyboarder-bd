@@ -24,8 +24,10 @@ affichée, dans le même Chapitre, **en correction des Cases**.
 par une modale) : un clic sélectionne une Case, la tirer la déplace, tirer un coin la redimensionne,
 tirer dans le vide en trace une nouvelle, Suppr la retire, Échap termine. Le menu de la Planche porte
 la section **« Cases détectées »** : « Modifier les cases » y ramène à tout moment, « Terminer » en
-sort, et le curseur « Sensibilité » relance la détection (il remplace les Cases). Les numéros suivent
-l'ordre de lecture. Un import se défait d'un Ctrl+Z.
+sort (le curseur de sensibilité a été retiré : la correction suffit). Les numéros suivent l'ordre de
+lecture à l'import ; ensuite, on les change en **glissant** les Cases (par leur numéro) dans la liste
+du menu de la Planche, et un clic sur une ligne **met la Case en surbrillance** sur la Planche. Un
+import se défait d'un Ctrl+Z.
 
 ## La détection
 
@@ -75,8 +77,8 @@ tout cela lit des Cases ordinaires, à leur place, sans image.
 À 1×, l'image est **entière** (« contenir »), et non « couvrir » comme une image de Case : une
 planche n'a presque jamais les proportions exactes du format du Tome, et couvrir rognerait les
 Cases du bord. Les bandes qui restent prennent la couleur de fond de la Planche. Le zoom va de 1 à
-4 ; **tirer sur la Planche** déplace l'image (un clic, en deçà de 3 pixels, ne fait que
-sélectionner) ; « Recentrer » supprime les trois champs.
+4 ; **maintenir le clic droit** sur la Planche déplace l'image, les bordures des Cases s'effaçant le
+temps du geste ; « Recentrer » supprime les trois champs.
 
 ## Ce qui est verrouillé
 

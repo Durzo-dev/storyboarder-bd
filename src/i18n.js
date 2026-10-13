@@ -82,8 +82,7 @@ export const I18N_TEXT = [
   ['#sidePageCadrageTitle', 'Framing', 'Cadrage'],
   ['#sidePageEditionTitle', 'Detected panels', 'Cases détectées'],
   ['#sidePageEditionBtn', 'Edit the panels', 'Modifier les cases'],
-  ['#sidePageToleranceLabel', 'Sensitivity', 'Sensibilité'],
-  ['#sidePageCadrageHint', 'Drag the page to move the image.', 'Tirez sur la Planche pour déplacer l\'image.'],
+  ['#sidePageCadrageHint', 'Hold the right button on the page to move the image.', 'Maintenez le clic droit sur la Planche pour déplacer l\'image.'],
   ['#sidePageResetBtn', 'Recentre', 'Recentrer'],
   // Case menu
   ['#panelMenuHeader .menu-close-btn', null, null, 'title', 'Close', 'Fermer'],

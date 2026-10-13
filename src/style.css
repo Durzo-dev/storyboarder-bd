@@ -2578,4 +2578,5 @@ button.store-chip:hover{ border-color:var(--accent); }
 
 .right-panel .side-aide{ font-size:12px; color:var(--sepia); line-height:1.5; margin:6px 0; }
 /* Planche importée : la description de chaque Case se tape dans la liste des Cases du menu Planche. */
-.planche-case-row textarea.planche-case-saisie{ flex:1; min-height:38px; resize:vertical; font:inherit; font-size:12px; }
+.planche-case-row textarea.planche-case-saisie{ flex:1; width:auto; min-height:46px; padding:6px 8px; font-size:12px; }
+.planche-case-row .planche-case-num[draggable="true"]{ cursor:grab; }

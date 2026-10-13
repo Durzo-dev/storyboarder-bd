@@ -56,7 +56,7 @@ import { setModelCacheCallbacks, clearModelCache, getLoadedModel, preloadModels 
 import { setImageCacheCallbacks, preloadImagesFor, clearImageCache, getLoadedImage } from './image-cache.js';
 import {
   ouvrirImportPlanche, setImportPlancheCallbacks, editionDesCasesActive, entrerEditionDesCases, sortirEditionDesCases,
-  debutGesteEdition, mouvementGesteEdition, finGesteEdition, curseurEdition, redetecter,
+  debutGesteEdition, mouvementGesteEdition, finGesteEdition, curseurEdition,
 } from './import-planche-ui.js';
 import { estPlancheImportee, estCaseImportee, cadrageLu, poseDeLImage, ancrageApresGlisserPlanche, recentrerPlanche } from './planche-importee.js';
 import {
@@ -2566,6 +2566,19 @@ canvas.addEventListener('mousedown', (e) => {
         return;
       }
     }
+    // Planche importée : le clic droit maintenu DÉPLACE L'IMAGE (son cadrage), demandé. Les bordures
+    // de la correction s'effacent le temps du geste (cf. dessinerEditionDesCases).
+    {
+      const _pgImp = currentPage();
+      if (estPlancheImportee(_pgImp)) {
+        const { x: _ix, y: _iy } = getCoords(e);
+        const imp = _pgImp.importee;
+        S.panMoved = false;
+        S.dragMode = 'plancheCadrage'; S.dragStart = { x: _ix, y: _iy };
+        S.dragOrig = { ancrage: cadrageLu(imp).ancrage, pose: poseDeLImage(_pgImp.w, _pgImp.h, imp.largeur, imp.hauteur, imp), bouge: false, boutonDroit: true };
+        return;
+      }
+    }
     // Dans une Scène : le clic droit maintenu DÉPLACE LA CAMÉRA (demandé), il ne fait plus défiler
     // la Planche. Sans bouger, le menu contextuel s'ouvre au relâchement, comme avant.
     {
@@ -3737,7 +3750,7 @@ window.addEventListener('mousemove', (e) => {
     // En deçà de 3 pixels c'est un clic, qui ne doit ni recadrer ni poser de point d'annulation.
     const dx = x - S.dragStart.x, dy = y - S.dragStart.y;
     if (!S.dragOrig.bouge && Math.abs(dx) <= 3 && Math.abs(dy) <= 3) return;
-    if (!S.dragOrig.bouge) { snapshot(); S.dragOrig.bouge = true; canvas.style.cursor = 'grabbing'; }
+    if (!S.dragOrig.bouge) { snapshot(); S.dragOrig.bouge = true; canvas.style.cursor = 'grabbing'; if (S.dragOrig.boutonDroit) S.panMoved = true; }
     const imp = currentPageData().importee;
     if (imp) {
       const a = ancrageApresGlisserPlanche(S.dragOrig.ancrage, { x: dx, y: dy }, page.w, page.h, S.dragOrig.pose);
@@ -7738,7 +7751,6 @@ sidePageBgColorInput.addEventListener('change', () => { S.sidePageBgColorSnapsho
 document.getElementById('sidePageEditionBtn').onclick = () => {
   if (editionDesCasesActive()) sortirEditionDesCases(); else entrerEditionDesCases();
 };
-document.getElementById('sidePageToleranceInput').addEventListener('change', (e) => redetecter(e.target.value));
 const sidePageZoomInput = document.getElementById('sidePageZoomInput');
 let _zoomPlanchePris = false;
 sidePageZoomInput.addEventListener('input', () => {

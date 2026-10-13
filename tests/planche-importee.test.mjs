@@ -246,8 +246,29 @@ describe('La correction des Cases, sur la Planche (demandé le 13 octobre 2026)'
     assert.doesNotMatch(html, /id="importPlancheModal"/);
     assert.match(html, /id="sidePageEditionSection"[\s\S]{0,900}id="sidePageEditionBtn"/);
     const i = ev.indexOf('if (debutGesteEdition({ x, y }))');
-    assert.ok(i > 0 && i < ev.indexOf("S.dragMode = 'plancheCadrage'"), 'l\'édition doit passer avant le cadrage');
+    assert.ok(i > 0 && i < ev.indexOf("S.dragMode = 'plancheCadrage'; S.dragStart = { x, y };"), 'l\'édition doit passer avant le cadrage');
     assert.match(ev, /if \(editionDesCasesActive\(\)\) sortirEditionDesCases\(\); else entrerEditionDesCases\(\);/);
     assert.match(lire('src/import-planche-ui.js'), /await preloadImagesFor\(pd\.objects\);\n {2}\/\/ Elle s'ouvre directement en correction des Cases\.\n {2}entrerEditionDesCases\(\);/);
+  });
+});
+
+describe('Retours du 13 octobre 2026 sur la Planche importée', () => {
+  const lire = (f) => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
+  test('plus de sensibilité : la correction suffit', () => {
+    assert.doesNotMatch(lire('src/index.html'), /sidePageToleranceInput/);
+    assert.doesNotMatch(lire('src/import-planche-ui.js'), /redetecter/);
+  });
+  test('le clic droit maintenu cadre la Planche, et les bordures s\'effacent pendant le geste', () => {
+    const ev = lire('src/events.js');
+    const i = ev.indexOf("if (estPlancheImportee(_pgImp)) {");
+    assert.ok(i > 0 && i < ev.indexOf('S.isPanning = true; S.panMoved = false;'), 'le clic droit doit être pris avant le défilement');
+    assert.match(lire('src/draw.js'), /S\.dragMode !== 'plancheCadrage'\n {4}&& \(editionDesCasesActive\(\) \|\| caseEnSurbrillance\(\)\)/);
+  });
+  test('menu Planche : surbrillance au clic, réordonner en glissant, champ au style des autres', () => {
+    const side = lire('src/sidebar.js');
+    assert.match(side, /row\.addEventListener\('mousedown', designer\);/);
+    assert.match(side, /setPanelNumber\(page, glissee, vers \+ 1\);/);
+    assert.match(side, /saisie\.className = 'side-desc-input planche-case-saisie';/);
+    assert.match(side, /sidePagePanels\.dataset\.signature === signature/, 'la liste ne doit pas se refaire à chaque clic');
   });
 });

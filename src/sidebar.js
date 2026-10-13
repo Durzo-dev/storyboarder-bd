@@ -19,7 +19,7 @@ import { isImportedModel } from './model-store.js';
 import { modelState } from './model-cache.js';
 import { casePorteUneImage3D, imageDeLaCase3D, zoomDeLImage3D, cadrageParDefaut3D } from './image-store.js';
 import { estPlancheImportee, estCaseImportee, cadrageLu, cadragePlancheParDefaut } from './planche-importee.js';
-import { editionDesCasesActive } from './import-planche-ui.js';
+import { editionDesCasesActive, mettreEnSurbrillance, caseEnSurbrillance } from './import-planche-ui.js';
 import { TRAIT_PLEIN, TRAIT_NET, opaciteRemplissageBulle } from './bubble-style.js';
 import { formeDeLaBulle } from './bubble-shape.js';
 import { textureDeLaBulle, teinteParDefautDeLaTexture,
@@ -971,42 +971,92 @@ export function renderTracéSideRow(t, panel, page){
  * et sa description, qui se tape ICI (demandé : « décrire chaque Case dans le menu de la Planche »).
  * C'est le même champ que celui du menu de la Case : les deux ne peuvent pas se contredire.
  */
-function ligneDeCaseImportee(p){
+function ligneDeCaseImportee(p, page){
   const row = document.createElement('div');
-  row.className = 'planche-case-row' + (S.selectedId === p.id ? ' active' : '');
+  row.className = 'planche-case-row' + (caseEnSurbrillance() === p.id ? ' active' : '');
+  // Un clic sur la ligne met la Case en SURBRILLANCE sur la Planche, sans quitter ce menu (demandé).
+  const designer = () => {
+    if (caseEnSurbrillance() === p.id) return;
+    mettreEnSurbrillance(p.id);
+    sidePagePanels.querySelectorAll('.planche-case-row').forEach(r => r.classList.toggle('active', r === row));
+    drawCurrentPage();
+  };
+  row.addEventListener('mousedown', designer);
   const num = document.createElement('span');
   num.className = 'planche-case-num';
   num.textContent = String(p.caseNumber || '?');
-  num.title = tr('Select this panel', 'Sélectionner cette Case');
-  num.addEventListener('click', () => { S.selectedId = p.id; S.selectedRoomId = null; drawCurrentPage(); });
+  num.title = tr('Drag to reorder', 'Glisser pour réordonner');
   const saisie = document.createElement('textarea');
-  saisie.className = 'planche-case-saisie';
+  saisie.className = 'side-desc-input planche-case-saisie';
   saisie.dataset.caseId = p.id;
   saisie.value = p.description || '';
   saisie.placeholder = tr('Describe what happens in this panel...', 'Décrivez ce qui se passe dans cette case...');
   let pris = false;
-  saisie.addEventListener('focus', () => { pris = false; });
+  saisie.addEventListener('focus', () => { pris = false; designer(); });
   saisie.addEventListener('input', () => {
     if (!pris) { _snapshot(); pris = true; }
     p.description = saisie.value;
     S.projectDirty = true;
+  });
+  // RÉORDONNER en glissant (demandé), par le numéro : glisser depuis le champ volerait la sélection
+  // de texte. Même mécanique que la liste des Cases d'une Planche ordinaire.
+  num.draggable = true;
+  num.addEventListener('dragstart', (e) => { S.draggedPageThumbnail = p.id; e.dataTransfer.effectAllowed = 'move'; });
+  num.addEventListener('dragend', () => { S.draggedPageThumbnail = null; });
+  row.addEventListener('dragover', (e) => {
+    if (!S.draggedPageThumbnail) return;
+    e.preventDefault();
+    const rect = row.getBoundingClientRect();
+    const avant = (e.clientY - rect.top) < rect.height / 2;
+    row.classList.toggle('drag-over-top', avant);
+    row.classList.toggle('drag-over-bottom', !avant);
+  });
+  row.addEventListener('dragleave', () => row.classList.remove('drag-over-top', 'drag-over-bottom'));
+  row.addEventListener('drop', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    const rect = row.getBoundingClientRect();
+    const avant = (e.clientY - rect.top) < rect.height / 2;
+    row.classList.remove('drag-over-top', 'drag-over-bottom');
+    const id = S.draggedPageThumbnail;
+    S.draggedPageThumbnail = null;
+    if (!id || id === p.id) return;
+    const triees = panelsInPage(page).slice().sort((a, b) => (a.caseNumber || 0) - (b.caseNumber || 0));
+    const glissee = triees.find(o => o.id === id);
+    if (!glissee) return;
+    const de = triees.indexOf(glissee);
+    let vers = triees.indexOf(p) + (avant ? 0 : 1);
+    if (de < vers) vers -= 1;
+    if (vers === de) return;
+    _snapshot();
+    setPanelNumber(page, glissee, vers + 1);
+    S.projectDirty = true;
+    drawCurrentPage();
   });
   row.append(num, saisie);
   return row;
 }
 
 export function renderSidePagePanels(page){
-  // ⚠️ UNE SAISIE EN COURS N'EST PAS REFAITE : la liste se reconstruit à chaque dessin, et chaque
-  // relâchement de souris redessine. Sans cette garde, cliquer dans une description la ferait
-  // disparaître sous le curseur.
-  const enSaisie = document.activeElement && document.activeElement.classList
-    && document.activeElement.classList.contains('planche-case-saisie') && sidePagePanels.contains(document.activeElement);
-  if (enSaisie && estPlancheImportee(page)) {
-    sidePagePanels.querySelectorAll('.planche-case-row').forEach(r => {
-      const t = r.querySelector('.planche-case-saisie');
-      r.classList.toggle('active', !!t && t.dataset.caseId === S.selectedId);
-    });
-    return;
+  // ⚠️ LA LISTE D'UNE PLANCHE IMPORTÉE N'EST REFAITE QUE SI SES CASES ONT CHANGÉ (ajout, retrait,
+  // ordre). Elle était reconstruite à chaque dessin, donc à chaque clic : cliquer dans une description
+  // faisait disparaître le champ sous le curseur avant qu'il ne prenne le focus. Sinon, on ne met à
+  // jour que la surbrillance et les textes des champs qu'on n'est pas en train de taper.
+  if (estPlancheImportee(page)) {
+    const cases = panelsInPage(page).slice().sort((a, b) => (a.caseNumber || 0) - (b.caseNumber || 0));
+    const signature = cases.map(o => `${o.id}:${o.caseNumber}`).join('|');
+    if (sidePagePanels.dataset.signature === signature) {
+      const choisie = caseEnSurbrillance();
+      sidePagePanels.querySelectorAll('.planche-case-row').forEach(r => {
+        const t = r.querySelector('.planche-case-saisie');
+        r.classList.toggle('active', !!t && t.dataset.caseId === choisie);
+        const o = t && cases.find(c => c.id === t.dataset.caseId);
+        if (o && t !== document.activeElement && t.value !== (o.description || '')) t.value = o.description || '';
+      });
+      return;
+    }
+    sidePagePanels.dataset.signature = signature;
+  } else {
+    delete sidePagePanels.dataset.signature;
   }
   sidePagePanels.innerHTML = '';
   const panels = panelsInPage(page).slice().sort((a, b) => (a.caseNumber || 0) - (b.caseNumber || 0));
@@ -1018,7 +1068,7 @@ export function renderSidePagePanels(page){
     return;
   }
   if (estPlancheImportee(page)) {
-    panels.forEach(p => sidePagePanels.appendChild(ligneDeCaseImportee(p)));
+    panels.forEach(p => sidePagePanels.appendChild(ligneDeCaseImportee(p, page)));
     return;
   }
   panels.forEach(p => {
@@ -1481,10 +1531,9 @@ function updateSidePanelImpl(){
         const enEdition = editionDesCasesActive();
         document.getElementById('sidePageEditionBtn').textContent = enEdition
           ? tr('Done', 'Terminer') : tr('Edit the panels', 'Modifier les cases');
-        document.getElementById('sidePageToleranceWrap').style.display = enEdition ? 'block' : 'none';
         document.getElementById('sidePageEditionHint').textContent = enEdition
-          ? tr('On the page: drag a panel to move it, a corner to resize it, drag in an empty area to add one; Delete removes the selected panel, Esc finishes. Changing the sensitivity detects again and replaces the panels.',
-            'Sur la Planche : tirez une Case pour la déplacer, un coin pour la redimensionner, tirez dans le vide pour en ajouter une ; Suppr retire la Case sélectionnée, Échap termine. Changer la sensibilité relance la détection et remplace les Cases.')
+          ? tr('On the page: drag a panel to move it, a corner to resize it, drag in an empty area to add one; Delete removes the selected panel, Esc finishes.',
+            'Sur la Planche : tirez une Case pour la déplacer, un coin pour la redimensionner, tirez dans le vide pour en ajouter une ; Suppr retire la Case sélectionnée, Échap termine.')
           : '';
         sidePageEditionSection.style.display = 'block';
       }
