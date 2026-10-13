@@ -506,6 +506,37 @@ export function regionTracee(a, b){
   return (x1 - x0 >= REGION_MIN && y1 - y0 >= REGION_MIN) ? { x: x0, y: y0, w: x1 - x0, h: y1 - y0 } : null;
 }
 
+/**
+ * La luminosité moyenne (0 à 255) de l'image LE LONG DU CONTOUR d'une Case, `pts` en fractions :
+ * ce sur quoi sa bordure se dessine. Échantillonnée tous les ~3 pixels de l'image analysée. PURE.
+ */
+export function luminositeDuContour(gris, w, h, pts){
+  if (!gris || !pts || pts.length < 2) return null;
+  let somme = 0, n = 0;
+  for (let k = 0; k < pts.length; k++) {
+    const a = pts[k], b = pts[(k + 1) % pts.length];
+    const pas = Math.max(1, Math.round(Math.hypot((b.x - a.x) * w, (b.y - a.y) * h) / 3));
+    for (let i = 0; i < pas; i++) {
+      const t = i / pas;
+      const x = Math.min(w - 1, Math.max(0, Math.round((a.x + (b.x - a.x) * t) * w)));
+      const y = Math.min(h - 1, Math.max(0, Math.round((a.y + (b.y - a.y) * t) * h)));
+      somme += gris[y * w + x]; n++;
+    }
+  }
+  return n ? somme / n : null;
+}
+
+/** Le seuil de luminosité au-delà duquel le dessin est « clair ». */
+export const SEUIL_CLAIR = 128;
+
+/**
+ * La couleur qui alterne avec l'orange quand une Case clignote : NOIRE sur un dessin clair, BLANCHE
+ * sur un dessin sombre (demandé). Inconnue (image pas encore lue) : noire, le cas le plus fréquent. PURE.
+ */
+export function couleurDeContraste(luminosite){
+  return (luminosite === null || luminosite === undefined || luminosite >= SEUIL_CLAIR) ? '#000' : '#fff';
+}
+
 /** Une image RGBA (`ImageData.data`) en niveaux de gris, un octet par pixel. PURE. */
 export function niveauxDeGris(rgba, w, h){
   const g = new Uint8Array(w * h);

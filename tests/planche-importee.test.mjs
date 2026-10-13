@@ -308,7 +308,7 @@ describe('Retours suivants (13 octobre 2026) : correction', () => {
   });
   test('tirets orange de 1,5 ; la Case sélectionnée clignote orange et noir', async () => {
     const d = lire('src/draw.js');
-    assert.match(d, /\(choisie && enEdition\) \? \[SIGNAL_SELECTION, '#000'\]\[phaseDuClignotement\(\)\] : SIGNAL_SELECTION/);
+    assert.match(d, /\(choisie && enEdition\) \? \[SIGNAL_SELECTION, couleurDeContrasteEdition\(\)\]\[phaseDuClignotement\(\)\] : SIGNAL_SELECTION/);
     const { phaseDuClignotement, CLIGNOTEMENT_MS } = await import('../src/import-planche-ui.js');
     assert.deepEqual([0, 1, 2, 3].map(k => phaseDuClignotement(k * CLIGNOTEMENT_MS)), [0, 1, 0, 1], 'orange et noir seulement');
   });
@@ -342,5 +342,23 @@ describe('Une planche qui n\'a pas le format du Tome', () => {
     const ui = readFileSync(new URL('../src/import-planche-ui.js', import.meta.url), 'utf8');
     assert.match(ui, /await proposerUnFormat\(t, pd\);\n {2}await preloadImagesFor/);
     assert.match(readFileSync(new URL('../src/events.js', import.meta.url), 'utf8'), /confirmer: confirmAction \}\);/);
+  });
+});
+
+describe('La couleur qui alterne avec l\'orange suit le dessin sous la bordure', () => {
+  test('noire sur un contour clair, blanche sur un contour sombre, noire si inconnue', async () => {
+    const { luminositeDuContour, couleurDeContraste } = await import('../src/planche-importee.js');
+    const w = 100, h = 100, g = new Uint8Array(w * h).fill(240);
+    for (let y = 50; y < 100; y++) for (let x = 0; x < 100; x++) g[y * w + x] = 15;   // moitié basse sombre
+    const haut = [{ x: 0.1, y: 0.1 }, { x: 0.9, y: 0.1 }, { x: 0.9, y: 0.4 }, { x: 0.1, y: 0.4 }];
+    const bas = [{ x: 0.1, y: 0.6 }, { x: 0.9, y: 0.6 }, { x: 0.9, y: 0.9 }, { x: 0.1, y: 0.9 }];
+    assert.equal(couleurDeContraste(luminositeDuContour(g, w, h, haut)), '#000');
+    assert.equal(couleurDeContraste(luminositeDuContour(g, w, h, bas)), '#fff');
+    assert.equal(couleurDeContraste(null), '#000');
+  });
+  test('mesurée à la sélection et après chaque retouche', () => {
+    const ui = readFileSync(new URL('../src/import-planche-ui.js', import.meta.url), 'utf8');
+    assert.match(ui, /const actif = editionDesCasesActive\(\) && !!edition\.sel;\n {2}mesurerLeContraste\(\);/);
+    assert.match(ui, /edition\.geste = null;\n {2}mesurerLeContraste\(\);/);
   });
 });

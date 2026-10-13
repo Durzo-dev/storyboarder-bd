@@ -17,11 +17,11 @@
 
 import { S, tr, newId, currentPageData, currentPage, createVolume } from './state.js';
 import { choisirImage, rangerImageChoisie } from './image-store.js';
-import { preloadImagesFor } from './image-cache.js';
+import { preloadImagesFor, getLoadedImage } from './image-cache.js';
 import { snapCornerToRightAngle } from './hit-test.js';
 import {
   detecterCases, niveauxDeGris, regionTracee, creerPlancheImportee,
-  pointsDeLaCase, poserPointsDeLaCase, translaterPoints, dansLesPoints,
+  pointsDeLaCase, poserPointsDeLaCase, translaterPoints, dansLesPoints, luminositeDuContour, couleurDeContraste,
   estPlancheImportee, estCaseImportee, imageDeLaPlanche, poseDeLImage, formatPourLaPlanche, tomeAdaptable,
 } from './planche-importee.js';
 
@@ -39,20 +39,45 @@ let edition = null;   // { pageId, sel, geste }
 
 /**
  * LE CLIGNOTEMENT de la Case sélectionnée en correction (demandé) : sa bordure passe d'orange à
- * noir, en boucle. Un minuteur ne redessine que tant qu'une Case est sélectionnée.
+ * noir (ou à blanc sur un dessin sombre, cf. couleurDeContrasteEdition), en boucle. Un minuteur ne redessine que tant qu'une Case est sélectionnée.
  */
 export const CLIGNOTEMENT_MS = 350;
 let _minuteur = null;
 function suivreLeClignotement(){
   const actif = editionDesCasesActive() && !!edition.sel;
+  mesurerLeContraste();
   if (actif && !_minuteur) _minuteur = setInterval(() => {
     if (!editionDesCasesActive() || !edition.sel) { clearInterval(_minuteur); _minuteur = null; return; }
     _rappels.redessiner();
   }, CLIGNOTEMENT_MS);
   if (!actif && _minuteur) { clearInterval(_minuteur); _minuteur = null; }
 }
-/** La phase du clignotement : 0 orange, 1 noir (demandé : entre orange et noir seulement). */
+/** La phase du clignotement : 0 orange, 1 la couleur de contraste. */
 export function phaseDuClignotement(t = Date.now()){ return Math.floor(t / CLIGNOTEMENT_MS) % 2; }
+
+/**
+ * La couleur qui alterne avec l'orange, selon le DESSIN sous la bordure (demandé) : noire sur clair,
+ * blanche sur sombre. Mesurée une fois par sélection et après chaque retouche (le contour a bougé),
+ * sur l'image réduite gardée en mémoire pour la Planche affichée.
+ */
+let _grisDeLaPlanche = null;   // { nom, aw, ah, gris }
+let _contraste = '#000';
+function grisDeLaPlanche(){
+  const nom = imageDeLaPlanche(currentPageData());
+  if (_grisDeLaPlanche && _grisDeLaPlanche.nom === nom) return _grisDeLaPlanche;
+  const image = nom ? getLoadedImage(nom) : null;
+  if (!image) return null;
+  try { _grisDeLaPlanche = { nom, ...grisDe(image.bitmap) }; } catch (e) { return null; }
+  return _grisDeLaPlanche;
+}
+function mesurerLeContraste(){
+  _contraste = '#000';
+  if (!editionDesCasesActive() || !edition.sel) return;
+  const o = casesImportees().find(c => c.id === edition.sel);
+  const g = o && grisDeLaPlanche();
+  if (g) _contraste = couleurDeContraste(luminositeDuContour(g.gris, g.aw, g.ah, pointsDeLaCase(o)));
+}
+export function couleurDeContrasteEdition(){ return _contraste; }
 
 /** La Planche affichée est-elle en édition des Cases ? */
 export function editionDesCasesActive(){
@@ -206,6 +231,7 @@ export function mouvementGesteEdition(p){
 export function finGesteEdition(){
   if (!editionDesCasesActive() || !edition.geste) return false;
   edition.geste = null;
+  mesurerLeContraste();   // le contour a pu bouger
   return true;
 }
 

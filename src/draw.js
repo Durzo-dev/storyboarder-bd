@@ -67,7 +67,7 @@ import {
 } from './image-store.js';
 import { getLoadedImage, imageState, preloadImagesFor } from './image-cache.js';
 import { estPlancheImportee, estCaseImportee, placerCasesImportees, imageDeLaPlanche } from './planche-importee.js';
-import { editionDesCasesActive, caseEnSurbrillance, phaseDuClignotement } from './import-planche-ui.js';
+import { editionDesCasesActive, caseEnSurbrillance, phaseDuClignotement, couleurDeContrasteEdition } from './import-planche-ui.js';
 import { preloadModelsFor } from './model-cache.js';
 // L'apparence d'une Bulle : opacité du fond, motif et régularité du trait. Décidée dans un module
 // pur (#425a), appliquée ici. Les décalages du tremblé s'ajoutent au TRACÉ, jamais au contour rendu
@@ -1207,9 +1207,9 @@ function dessinerEditionDesCases(c, page){
   page.objects.filter(o => estCaseImportee(o) && (enEdition || o.id === sel)).forEach(o => {
     const choisie = o.id === sel;
     // Tirets ORANGE, de l'épaisseur d'une sélection ordinaire (1,5, cf. drawSelection). La Case
-    // sélectionnée en correction CLIGNOTE (demandé) : orange puis noir, en boucle
-    // (cf. phaseDuClignotement). Le contour suit ses coins : une Case peut être déformée.
-    const couleur = (choisie && enEdition) ? [SIGNAL_SELECTION, '#000'][phaseDuClignotement()] : SIGNAL_SELECTION;
+    // sélectionnée en correction CLIGNOTE (demandé) : orange, puis noir sur un dessin clair ou blanc
+    // sur un dessin sombre (cf. couleurDeContrasteEdition). Le contour suit ses coins.
+    const couleur = (choisie && enEdition) ? [SIGNAL_SELECTION, couleurDeContrasteEdition()][phaseDuClignotement()] : SIGNAL_SELECTION;
     const pts = o.pts || getPanelPoints(o);
     c.lineCap = 'butt'; c.lineWidth = 1.5;
     c.setLineDash([6, 4]);
