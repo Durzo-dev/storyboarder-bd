@@ -266,9 +266,28 @@ describe('Retours du 13 octobre 2026 sur la Planche importée', () => {
   });
   test('menu Planche : surbrillance au clic, réordonner en glissant, champ au style des autres', () => {
     const side = lire('src/sidebar.js');
-    assert.match(side, /row\.addEventListener\('mousedown', designer\);/);
+    assert.match(side, /row\.draggable = !dansLeChamp;/, 'la ligne entière se glisse, sauf depuis le champ');
+    assert.match(side, /mettreEnSurbrillance\(deja \? null : p\.id\);/, 'un second clic désélectionne');
     assert.match(side, /setPanelNumber\(page, glissee, vers \+ 1\);/);
     assert.match(side, /saisie\.className = 'side-desc-input planche-case-saisie';/);
     assert.match(side, /sidePagePanels\.dataset\.signature === signature/, 'la liste ne doit pas se refaire à chaque clic');
+  });
+});
+
+describe('Retours suivants (13 octobre 2026) : correction', () => {
+  const lire = (f) => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
+  test('une Case se crée au clic droit sans glisser, et seulement ainsi', () => {
+    const ui = lire('src/import-planche-ui.js'), ev = lire('src/events.js');
+    assert.doesNotMatch(ui, /trace: true/, 'le bouton gauche ne trace plus');
+    assert.match(ev, /if \(S\.dragMode === 'plancheCadrage' && S\.dragOrig && S\.dragOrig\.creerCase && !S\.dragOrig\.bouge\) creerCaseAuPoint\(S\.dragStart\);/);
+    assert.match(ev, /creerCase: editionDesCasesActive\(\)/);
+  });
+  test('quitter la correction ne laisse rien de sélectionné ; cliquer hors des Cases désélectionne', () => {
+    const ui = lire('src/import-planche-ui.js');
+    assert.match(ui, /edition = null;\n {2}surbrillance = null;\n {2}S\.selectedId = null;/);
+    assert.match(ui, /edition\.sel = null;\n {4}surbrillance = null;/);
+  });
+  test('les tirets sont bordés de blanc et de noir', () => {
+    assert.match(lire('src/draw.js'), /c\.strokeStyle = '#000'; c\.lineWidth = l \+ 3;[\s\S]{0,120}c\.strokeStyle = '#fff'; c\.lineWidth = l \+ 1\.5;/);
   });
 });

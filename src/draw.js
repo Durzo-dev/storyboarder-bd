@@ -67,7 +67,7 @@ import {
 } from './image-store.js';
 import { getLoadedImage, imageState, preloadImagesFor } from './image-cache.js';
 import { estPlancheImportee, estCaseImportee, placerCasesImportees, imageDeLaPlanche } from './planche-importee.js';
-import { editionDesCasesActive, caseEnSurbrillance, traceEnCours } from './import-planche-ui.js';
+import { editionDesCasesActive, caseEnSurbrillance } from './import-planche-ui.js';
 import { preloadModelsFor } from './model-cache.js';
 // L'apparence d'une Bulle : opacité du fond, motif et régularité du trait. Décidée dans un module
 // pur (#425a), appliquée ici. Les décalages du tremblé s'ajoutent au TRACÉ, jamais au contour rendu
@@ -1206,9 +1206,14 @@ function dessinerEditionDesCases(c, page){
   // Hors correction, seule la Case en surbrillance (choisie dans le menu de la Planche) se montre.
   page.objects.filter(o => estCaseImportee(o) && (enEdition || o.id === sel)).forEach(o => {
     const choisie = o.id === sel;
-    c.strokeStyle = SIGNAL_SELECTION; c.lineWidth = choisie ? 3 : 2;
-    c.setLineDash(choisie ? [] : [6, 4]);
-    c.strokeRect(o.x, o.y, o.w, o.h);
+    // Plus lisible sur n'importe quel dessin (demandé) : chaque tiret orange est bordé d'un fin trait
+    // blanc, lui-même bordé de noir. Les trois passes suivent le même pointillé.
+    const l = choisie ? 3 : 2;
+    c.setLineDash(choisie ? [] : [7, 5]);
+    c.lineCap = 'butt';
+    c.strokeStyle = '#000'; c.lineWidth = l + 3; c.strokeRect(o.x, o.y, o.w, o.h);
+    c.strokeStyle = '#fff'; c.lineWidth = l + 1.5; c.strokeRect(o.x, o.y, o.w, o.h);
+    c.strokeStyle = SIGNAL_SELECTION; c.lineWidth = l; c.strokeRect(o.x, o.y, o.w, o.h);
     c.setLineDash([]);
     const t = String(o.caseNumber || '?');
     c.font = '600 12px system-ui, sans-serif';
@@ -1222,11 +1227,6 @@ function dessinerEditionDesCases(c, page){
       });
     }
   });
-  const tr = traceEnCours();
-  if (tr) {
-    c.strokeStyle = SIGNAL_SELECTION; c.lineWidth = 2;
-    c.strokeRect(Math.min(tr.a.x, tr.b.x), Math.min(tr.a.y, tr.b.y), Math.abs(tr.b.x - tr.a.x), Math.abs(tr.b.y - tr.a.y));
-  }
   c.restore();
 }
 

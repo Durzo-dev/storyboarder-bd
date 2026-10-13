@@ -56,7 +56,7 @@ import { setModelCacheCallbacks, clearModelCache, getLoadedModel, preloadModels 
 import { setImageCacheCallbacks, preloadImagesFor, clearImageCache, getLoadedImage } from './image-cache.js';
 import {
   ouvrirImportPlanche, setImportPlancheCallbacks, editionDesCasesActive, entrerEditionDesCases, sortirEditionDesCases,
-  debutGesteEdition, mouvementGesteEdition, finGesteEdition, curseurEdition,
+  debutGesteEdition, mouvementGesteEdition, finGesteEdition, curseurEdition, creerCaseAuPoint,
 } from './import-planche-ui.js';
 import { estPlancheImportee, estCaseImportee, cadrageLu, poseDeLImage, ancrageApresGlisserPlanche, recentrerPlanche } from './planche-importee.js';
 import {
@@ -2575,7 +2575,8 @@ canvas.addEventListener('mousedown', (e) => {
         const imp = _pgImp.importee;
         S.panMoved = false;
         S.dragMode = 'plancheCadrage'; S.dragStart = { x: _ix, y: _iy };
-        S.dragOrig = { ancrage: cadrageLu(imp).ancrage, pose: poseDeLImage(_pgImp.w, _pgImp.h, imp.largeur, imp.hauteur, imp), bouge: false, boutonDroit: true };
+        // En correction, un clic droit SANS glisser crée une Case (cf. le mouseup).
+        S.dragOrig = { ancrage: cadrageLu(imp).ancrage, pose: poseDeLImage(_pgImp.w, _pgImp.h, imp.largeur, imp.hauteur, imp), bouge: false, boutonDroit: true, creerCase: editionDesCasesActive() };
         return;
       }
     }
@@ -4098,6 +4099,7 @@ window.addEventListener('mouseup', () => {
   // mouvement rendrait le glissement impraticable ; l'aperçu suffit à annoncer ce qui va être
   // demandé. On lit la paire AVANT de vider l'état du geste, qui est réinitialisé juste après.
   if (S.dragMode === 'plancheEdition') finGesteEdition();
+  if (S.dragMode === 'plancheCadrage' && S.dragOrig && S.dragOrig.creerCase && !S.dragOrig.bouge) creerCaseAuPoint(S.dragStart);
   const fusionProposee = S.apercuFusion;
   S.apercuFusion = null;
   S.dragMode = null; S.tempBox = null; S.snapGuide = null;

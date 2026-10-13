@@ -20,12 +20,13 @@ the Panels detected, and the new Page opens right after the displayed one, in th
 **in panel correction**.
 
 **Correction happens on the Page** (requested on 13 October 2026, the first version used a modal):
-a click selects a Panel, dragging it moves it, dragging a corner resizes it, dragging in an empty
-area draws a new one, Delete removes it, Esc finishes. The Page menu carries the **"Detected
+a click selects a Panel (outside the Panels: deselects), dragging it moves it, dragging a corner
+resizes it, a **right-click without dragging creates one** (the only way), Delete removes it, Esc
+finishes; on leaving, nothing stays selected. The Page menu carries the **"Detected
 panels"** section: "Edit the panels" goes back to it at any time, "Done" leaves (the sensitivity
 slider was removed: correction is enough). Numbers follow reading order at import; afterwards they
-are changed by **dragging** the Panels (by their number) in the Page menu list, and a click on a row
-**highlights the Panel** on the Page. An import is undone with Ctrl+Z.
+are changed by **dragging** the rows of the Page menu list (except from their field), and a click on
+a row **highlights the Panel** (a second click deselects it). An import is undone with Ctrl+Z.
 
 ## The detection
 

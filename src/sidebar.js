@@ -973,36 +973,41 @@ export function renderTracéSideRow(t, panel, page){
  */
 function ligneDeCaseImportee(p, page){
   const row = document.createElement('div');
-  row.className = 'planche-case-row' + (caseEnSurbrillance() === p.id ? ' active' : '');
+  row.className = 'planche-case-row case-importee' + (caseEnSurbrillance() === p.id ? ' active' : '');
   // Un clic sur la ligne met la Case en SURBRILLANCE sur la Planche, sans quitter ce menu (demandé).
-  const designer = () => {
-    if (caseEnSurbrillance() === p.id) return;
-    mettreEnSurbrillance(p.id);
-    sidePagePanels.querySelectorAll('.planche-case-row').forEach(r => r.classList.toggle('active', r === row));
+  // Un second clic sur la Case déjà désignée la DÉSÉLECTIONNE (demandé) ; entrer dans son champ, non.
+  const designer = (basculer) => {
+    const deja = caseEnSurbrillance() === p.id;
+    if (deja && !basculer) return;
+    mettreEnSurbrillance(deja ? null : p.id);
+    sidePagePanels.querySelectorAll('.planche-case-row').forEach(r => r.classList.toggle('active', !deja && r === row));
     drawCurrentPage();
   };
-  row.addEventListener('mousedown', designer);
+  // La LIGNE ENTIÈRE se glisse pour réordonner (demandé), sauf depuis le champ, où glisser
+  // sélectionne du texte : elle n'est « draggable » que si le geste commence hors du champ.
+  row.addEventListener('mousedown', (e) => {
+    const dansLeChamp = e.target === saisie;
+    row.draggable = !dansLeChamp;
+    if (!dansLeChamp) designer(true);
+  });
   const num = document.createElement('span');
   num.className = 'planche-case-num';
   num.textContent = String(p.caseNumber || '?');
-  num.title = tr('Drag to reorder', 'Glisser pour réordonner');
   const saisie = document.createElement('textarea');
   saisie.className = 'side-desc-input planche-case-saisie';
   saisie.dataset.caseId = p.id;
   saisie.value = p.description || '';
   saisie.placeholder = tr('Describe what happens in this panel...', 'Décrivez ce qui se passe dans cette case...');
   let pris = false;
-  saisie.addEventListener('focus', () => { pris = false; designer(); });
+  saisie.addEventListener('focus', () => { pris = false; designer(false); });
   saisie.addEventListener('input', () => {
     if (!pris) { _snapshot(); pris = true; }
     p.description = saisie.value;
     S.projectDirty = true;
   });
-  // RÉORDONNER en glissant (demandé), par le numéro : glisser depuis le champ volerait la sélection
-  // de texte. Même mécanique que la liste des Cases d'une Planche ordinaire.
-  num.draggable = true;
-  num.addEventListener('dragstart', (e) => { S.draggedPageThumbnail = p.id; e.dataTransfer.effectAllowed = 'move'; });
-  num.addEventListener('dragend', () => { S.draggedPageThumbnail = null; });
+  // RÉORDONNER en glissant (demandé) : même mécanique que la liste d'une Planche ordinaire.
+  row.addEventListener('dragstart', (e) => { S.draggedPageThumbnail = p.id; e.dataTransfer.effectAllowed = 'move'; });
+  row.addEventListener('dragend', () => { S.draggedPageThumbnail = null; row.draggable = false; });
   row.addEventListener('dragover', (e) => {
     if (!S.draggedPageThumbnail) return;
     e.preventDefault();
@@ -1532,8 +1537,8 @@ function updateSidePanelImpl(){
         document.getElementById('sidePageEditionBtn').textContent = enEdition
           ? tr('Done', 'Terminer') : tr('Edit the panels', 'Modifier les cases');
         document.getElementById('sidePageEditionHint').textContent = enEdition
-          ? tr('On the page: drag a panel to move it, a corner to resize it, drag in an empty area to add one; Delete removes the selected panel, Esc finishes.',
-            'Sur la Planche : tirez une Case pour la déplacer, un coin pour la redimensionner, tirez dans le vide pour en ajouter une ; Suppr retire la Case sélectionnée, Échap termine.')
+          ? tr('On the page: drag a panel to move it, a corner to resize it, right-click to add one; Delete removes the selected panel, Esc finishes.',
+            'Sur la Planche : tirez une Case pour la déplacer, un coin pour la redimensionner, clic droit pour en ajouter une ; Suppr retire la Case sélectionnée, Échap termine.')
           : '';
         sidePageEditionSection.style.display = 'block';
       }

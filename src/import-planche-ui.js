@@ -7,7 +7,8 @@
  * L'import range l'image, crée la Planche avec les Cases détectées juste après la Planche affichée,
  * et l'ouvre en ÉDITION DES CASES. Dans ce mode, sur la Planche : un clic sélectionne une Case, la
  * tirer la déplace, tirer un coin la redimensionne, tirer dans le vide en trace une nouvelle, Suppr
- * la retire, Échap termine. Le menu de la Planche porte « Modifier les cases » / « Terminer » (la
+ * la retire, Échap termine ; un CLIC DROIT crée une Case (le seul moyen, demandé), un clic hors des
+ * Cases désélectionne. Le menu de la Planche porte « Modifier les cases » / « Terminer » (la
  * sensibilité a été retirée, demandé : la correction suffit).
  *
  * Un import se défait d'un Ctrl+Z, comme tout le reste : un point d'annulation est pris avant.
@@ -48,16 +49,13 @@ export function entrerEditionDesCases(){
   _rappels.renderAll();
 }
 
+/** Quitter la correction : plus aucune Case sélectionnée ni en surbrillance (demandé). */
 export function sortirEditionDesCases(){
   if (!edition) return;
   edition = null;
+  surbrillance = null;
+  S.selectedId = null;
   _rappels.renderAll();
-}
-
-/** Le rectangle tracé en cours (unités de Planche), pour le dessin. */
-export function traceEnCours(){
-  if (!editionDesCasesActive() || !edition.geste || !edition.geste.trace) return null;
-  return { a: edition.geste.departPage, b: edition.geste.courantPage };
 }
 
 /** La pose de l'image de la Planche affichée. */
@@ -85,7 +83,7 @@ function compacter(){
  */
 let surbrillance = null;
 export function mettreEnSurbrillance(id){
-  surbrillance = id;
+  surbrillance = id || null;
   if (editionDesCasesActive()) edition.sel = id;
 }
 export function caseEnSurbrillance(){
@@ -131,8 +129,10 @@ export function debutGesteEdition(p){
     edition.sel = t.o.id;
     edition.geste = { o: t.o, poignee: t.poignee, depart: enFraction(p, po), r0: { ...t.o.regionImage }, pris: false };
   } else {
+    // Un clic hors de toute Case désélectionne (demandé). On ne trace plus au bouton gauche : une
+    // Case se crée au clic droit, et seulement ainsi.
     edition.sel = null;
-    edition.geste = { trace: true, departPage: p, courantPage: p };
+    surbrillance = null;
   }
   return true;
 }
@@ -140,7 +140,6 @@ export function debutGesteEdition(p){
 export function mouvementGesteEdition(p){
   if (!editionDesCasesActive() || !edition.geste) return false;
   const g = edition.geste;
-  if (g.trace) { g.courantPage = p; return true; }
   const f = enFraction(p, pose());
   const dx = f.x - g.depart.x, dy = f.y - g.depart.y;
   if (!g.pris) { if (Math.abs(dx) < 0.002 && Math.abs(dy) < 0.002) return true; _rappels.snapshot(); g.pris = true; }
@@ -151,22 +150,31 @@ export function mouvementGesteEdition(p){
 
 export function finGesteEdition(){
   if (!editionDesCasesActive() || !edition.geste) return false;
-  const g = edition.geste;
   edition.geste = null;
-  if (g.trace) {
-    const po = pose();
-    const r = regionTracee(enFraction(g.departPage, po), enFraction(g.courantPage, po));
-    if (r) {
-      _rappels.snapshot();
-      const pd = currentPageData();
-      const nom = imageDeLaPlanche(pd);
-      const o = { id: newId(), type: 'panel', x: 0, y: 0, w: 1, h: 1, text: '', shape: 'rect', imageFile: nom, regionImage: r, caseNumber: 1e9 };
-      pd.objects.push(o);
-      edition.sel = o.id;
-      S.projectDirty = true;
-    }
-  }
+  return true;
+}
+
+/** La taille d'une Case créée au clic droit, en part de l'image : de quoi la saisir, puis l'ajuster. */
+const NOUVELLE_CASE = { w: 0.25, h: 0.18 };
+
+/**
+ * En correction, un CLIC DROIT sans glisser crée une Case centrée sur le point (demandé : le seul
+ * moyen d'en créer une). Elle prend le dernier numéro et devient la Case sélectionnée.
+ */
+export function creerCaseAuPoint(p){
+  if (!editionDesCasesActive()) return false;
+  const f = enFraction(p, pose());
+  if (f.x < 0 || f.x > 1 || f.y < 0 || f.y > 1) return false;
+  const r = regionTracee({ x: f.x - NOUVELLE_CASE.w / 2, y: f.y - NOUVELLE_CASE.h / 2 }, { x: f.x + NOUVELLE_CASE.w / 2, y: f.y + NOUVELLE_CASE.h / 2 });
+  if (!r) return false;
+  _rappels.snapshot();
+  const pd = currentPageData();
+  const o = { id: newId(), type: 'panel', x: 0, y: 0, w: 1, h: 1, text: '', shape: 'rect', imageFile: imageDeLaPlanche(pd), regionImage: r, caseNumber: 1e9 };
+  pd.objects.push(o);
+  edition.sel = o.id;
   compacter();
+  S.projectDirty = true;
+  _rappels.renderAll();
   return true;
 }
 

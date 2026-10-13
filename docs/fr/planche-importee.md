@@ -21,12 +21,14 @@ WebP) : l'image est rangée, les Cases détectées, et la nouvelle Planche s'ouv
 affichée, dans le même Chapitre, **en correction des Cases**.
 
 **La correction se fait sur la Planche** (demandé le 13 octobre 2026, la première version passait
-par une modale) : un clic sélectionne une Case, la tirer la déplace, tirer un coin la redimensionne,
-tirer dans le vide en trace une nouvelle, Suppr la retire, Échap termine. Le menu de la Planche porte
+par une modale) : un clic sélectionne une Case (hors des Cases : désélectionne), la tirer la déplace,
+tirer un coin la redimensionne, un **clic droit sans glisser en crée une** (le seul moyen), Suppr la
+retire, Échap termine ; en sortant, plus rien n'est sélectionné. Le menu de la Planche porte
 la section **« Cases détectées »** : « Modifier les cases » y ramène à tout moment, « Terminer » en
 sort (le curseur de sensibilité a été retiré : la correction suffit). Les numéros suivent l'ordre de
-lecture à l'import ; ensuite, on les change en **glissant** les Cases (par leur numéro) dans la liste
-du menu de la Planche, et un clic sur une ligne **met la Case en surbrillance** sur la Planche. Un
+lecture à l'import ; ensuite, on les change en **glissant** les lignes de la liste du menu de la Planche
+(sauf depuis leur champ), et un clic sur une ligne **met la Case en surbrillance** (un second clic la
+désélectionne). Un
 import se défait d'un Ctrl+Z.
 
 ## La détection

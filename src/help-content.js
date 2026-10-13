@@ -95,7 +95,7 @@ export const HELP_MANUAL_EN = [
     'Clicking outside the page canvas (in an empty area with no panel or bubble) deselects the active panel.',
     'The "Dimensions" section gives the length of each side of the panel in millimetres, worked out from the page format. It is read, not typed: a panel is resized by dragging its sides or its corners.',
     'The "Border" section drives the panel outline: the "Show border" tick, its thickness (Thin, Medium, Thick) and its colour. Unticking leaves the panel with no outline at all.',
-    'Right-click an empty area of the page → "Import a page" turns an image of an already drawn page into a new page, its panels detected. Correct them on the page: drag a panel or a corner, drag in an empty area to add one, Delete, Esc to finish.',
+    'Right-click an empty area of the page → "Import a page" turns an image of an already drawn page into a new page, its panels detected. Correct them on the page: drag a panel or a corner, right-click to add one, Delete, Esc to finish.',
     'Nothing else in it can be edited: hold the right button to move the image, set the zoom in the page menu, where each panel\'s description is typed. Its "Detected panels" section returns to correcting them.',
   ]},
   { id: 'images', title: 'Panel images', paragraphs: [
@@ -340,7 +340,7 @@ export const HELP_MANUAL_FR = [
     "Cliquer en dehors de la Planche (dans une zone sans Case ni Bulle) désélectionne la Case active.",
     "La section « Dimensions » donne la longueur de chaque côté de la Case en millimètres, calculée d'après le format de la Planche. Elle se lit, elle ne se saisit pas : une Case se redimensionne en faisant glisser ses côtés ou ses coins.",
     "La section « Bordure » commande le trait de la Case : la coche « Afficher la bordure », son épaisseur (Fine, Moyenne, Épaisse) et sa couleur. Décocher laisse la Case sans aucun contour.",
-    "Clic droit dans un espace vide de la planche → « Importer une planche » fait d'une image de planche déjà dessinée une nouvelle Planche, Cases détectées. Corrigez-les sur la Planche : tirez une Case ou un coin, tirez dans le vide pour en ajouter une, Suppr, Échap pour terminer.",
+    "Clic droit dans un espace vide de la planche → « Importer une planche » fait d'une image de planche déjà dessinée une nouvelle Planche, Cases détectées. Corrigez-les sur la Planche : tirez une Case ou un coin, clic droit pour en ajouter une, Suppr, Échap pour terminer.",
     "Rien d'autre ne s'y modifie : maintenez le clic droit pour déplacer l'image, réglez le zoom dans le menu de la Planche, où se tape la description de chaque Case. Sa section « Cases détectées » ramène à leur correction.",
   ]},
   { id: 'images', title: 'Images de case', paragraphs: [
