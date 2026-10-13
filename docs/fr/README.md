@@ -43,6 +43,7 @@ régression difficile à retrouver.
 | [creature-rigs.md](creature-rigs.md) | Rigs non humanoïdes : corpus, défauts mesurés, hypothèses démenties, archétypes, plan (tâches #358 à #377). |
 | [archetype-roles.md](archetype-roles.md) | Rôles de chaînes : ce qu'une pose peut viser, listes par archétype, décisions arrêtées (tâches #378 et #375). |
 | [archetype-poses.md](archetype-poses.md) | Poses par archétype : les trois vocabulaires, ce qui a été mesuré, ce qui a été infirmé, décisions prises (tâches #375 à #402). |
+| [building-research.md](building-research.md) | La construction de bâtiments dans les jeux (Les Sims, inZOI, Valheim, Tiny Glade…) et les logiciels d'architecture (Sweet Home 3D, Revit, Archicad…) : ce qu'on en retient, recommandations, modèle de données des niveaux (tâche #455). |
 | [planche-importee.md](planche-importee.md) | Les Planches importées : une image de planche, ses Cases détectées puis vérifiées, le cadrage de l'ensemble, ce qui est verrouillé, les champs ajoutés. |
 | [panel-images.md](panel-images.md) | Une image dans une Case à la place d'une scène 3D : décisions arrêtées, ce que le code fournit déjà, ce qui reste à mesurer (tâches #403a à #403d). |
 | [colour-accessibility.md](colour-accessibility.md) | La couleur qui dépeint contre celle qui signale, collisions mesurées par déficience, pourquoi un thème n'est pas le remède principal (tâches #409a à #409d). |
