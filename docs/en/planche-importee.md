@@ -28,6 +28,11 @@ slider was removed: correction is enough). Numbers follow reading order at impor
 are changed by **dragging** the rows of the Page menu list (except from their field), and a click on
 a row **highlights the Panel** (a second click deselects it). An import is undone with Ctrl+Z.
 
+**A page without the Volume's proportions** (more than 3 % off): the import offers a matching
+format, at the Volume's height. If the Volume's other Pages are empty or imported, it offers to switch
+the Volume to a custom format; otherwise (they would be upset), to create a new Volume in that format
+and move the page there. Declining keeps it, with bands.
+
 ## The detection
 
 Rewritten on 13 October 2026 on fifteen real pages provided by Valentin (manga, Franco-Belgian,

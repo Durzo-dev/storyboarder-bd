@@ -500,3 +500,28 @@ export function creerPlancheImportee({ nomImage, largeur, hauteur, regions, newI
   }));
   return { id: newId('p'), objects: cases, [CHAMP_PLANCHE_IMPORTEE]: { largeur, hauteur } };
 }
+
+/** L'écart de proportions toléré entre une planche importée et le format de son Tome (3 %). */
+export const ECART_DE_FORMAT = 0.03;
+
+/**
+ * Le format qu'il faudrait au Tome pour accueillir cette planche sans bandes : `{ w, h }` en unités
+ * de Planche, à la HAUTEUR du Tome (la mise en page garde son échelle), ou null si les proportions
+ * s'accordent déjà. PURE.
+ */
+export function formatPourLaPlanche(tome, largeur, hauteur){
+  const tw = Number(tome && tome.w), th = Number(tome && tome.h), lw = Number(largeur), lh = Number(hauteur);
+  if (![tw, th, lw, lh].every(v => Number.isFinite(v) && v > 0)) return null;
+  const rTome = tw / th, rPlanche = lw / lh;
+  if (Math.abs(rPlanche / rTome - 1) <= ECART_DE_FORMAT) return null;
+  return { w: Math.max(100, Math.round(th * rPlanche)), h: th };
+}
+
+/**
+ * Le Tome peut-il changer de format sans rien déranger ? Oui si ses AUTRES Planches sont vides ou
+ * importées (celles-ci se reposent d'elles-mêmes) ; une Planche dessinée à la main garderait ses
+ * Cases à des positions faites pour l'ancien format. PURE.
+ */
+export function tomeAdaptable(tome, pageId){
+  return (tome && tome.pages || []).every(p => p.id === pageId || estPlancheImportee(p) || !(p.objects || []).length);
+}

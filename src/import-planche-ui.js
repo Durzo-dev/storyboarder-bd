@@ -15,12 +15,12 @@
  * Les décisions (détection, retouches, ordre de lecture) sont dans planche-importee.js.
  */
 
-import { S, tr, newId, currentPageData, currentPage } from './state.js';
+import { S, tr, newId, currentPageData, currentPage, createVolume } from './state.js';
 import { choisirImage, rangerImageChoisie } from './image-store.js';
 import { preloadImagesFor } from './image-cache.js';
 import {
   detecterCases, niveauxDeGris, retoucherRegion, regionTracee, creerPlancheImportee,
-  estPlancheImportee, estCaseImportee, imageDeLaPlanche, poseDeLImage,
+  estPlancheImportee, estCaseImportee, imageDeLaPlanche, poseDeLImage, formatPourLaPlanche, tomeAdaptable,
 } from './planche-importee.js';
 
 /** La plus grande dimension de l'image ANALYSÉE : au-delà, la détection ralentit sans rien gagner. */
@@ -28,7 +28,7 @@ const ANALYSE_MAX_PX = 1400;
 /** La distance, en unités de Planche, à laquelle un coin se saisit. */
 const POIGNEE = 8;
 
-let _rappels = { snapshot: () => {}, renderAll: () => {}, alerter: async () => {} };
+let _rappels = { snapshot: () => {}, renderAll: () => {}, alerter: async () => {}, confirmer: async () => false };
 /** Les rappels de events.js (règle n°2 : pas d'import circulaire). */
 export function setImportPlancheCallbacks(r){ _rappels = { ..._rappels, ...r }; }
 
@@ -216,6 +216,40 @@ if (typeof window !== 'undefined' && window.addEventListener) {
   }, true);
 }
 
+/**
+ * La planche n'a pas les proportions du Tome : on PROPOSE un format qui lui corresponde (demandé).
+ * Si le Tome peut changer sans rien déranger (ses autres Planches sont vides ou importées), on
+ * propose de l'adapter ; sinon, de créer un Tome à ce format et d'y placer la planche. Refuser la
+ * garde dans le Tome, avec des bandes (cf. poseDeLImage). Le point d'annulation de l'import couvre
+ * aussi ce choix.
+ */
+async function proposerUnFormat(t, pd){
+  const f = formatPourLaPlanche(t, pd.importee.largeur, pd.importee.hauteur);
+  if (!f) return;
+  const dims = `${pd.importee.largeur} × ${pd.importee.hauteur} px`;
+  if (tomeAdaptable(t, pd.id)) {
+    const ok = await _rappels.confirmer(tr(
+      `This page (${dims}) does not have the proportions of the volume "${t.name}". Switch the volume to a custom format that matches it?`,
+      `Cette planche (${dims}) n'a pas les proportions du tome « ${t.name} ». Passer le tome à un format personnalisé qui lui correspond ?`),
+    tr('Page format', 'Format de la planche'));
+    if (ok) { t.format = 'custom'; t.w = f.w; t.h = f.h; }
+    return;
+  }
+  const ok = await _rappels.confirmer(tr(
+    `This page (${dims}) does not have the proportions of the volume "${t.name}", whose other pages would be upset by a format change. Create a new volume in a format that matches it, and move the page there?`,
+    `Cette planche (${dims}) n'a pas les proportions du tome « ${t.name} », dont les autres planches seraient dérangées par un changement de format. Créer un nouveau tome à son format et y placer la planche ?`),
+  tr('Page format', 'Format de la planche'));
+  if (!ok) return;
+  t.pages = t.pages.filter(p => p !== pd);
+  delete pd.chapitreId;
+  const nouveau = createVolume('custom');
+  nouveau.w = f.w; nouveau.h = f.h; nouveau.scale = t.scale;
+  nouveau.pages.push(pd);
+  S.currentTomeIndex = S.tomes.indexOf(nouveau);
+  S.currentPageIndex = 0;
+  if (S.expandedVolumes && S.expandedVolumes.add) S.expandedVolumes.add(nouveau.id);
+}
+
 /** Le point d'entrée : clic droit dans le vide de la Planche `pi` du Tome `ti`. */
 export async function ouvrirImportPlanche(ti, pi){
   const choisi = await choisirImage();
@@ -240,6 +274,7 @@ export async function ouvrirImportPlanche(ti, pi){
   S.currentPageIndex = pi + 1;
   S.selectedId = null; S.selectedRoomId = null;
   S.projectDirty = true;
+  await proposerUnFormat(t, pd);
   await preloadImagesFor(pd.objects);
   // Elle s'ouvre directement en correction des Cases.
   entrerEditionDesCases();

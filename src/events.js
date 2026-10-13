@@ -400,7 +400,7 @@ setModelCacheCallbacks({ onChange: () => renderAll(), getMaxAnisotropy: getMaxAn
 // Une image qui finit d'arriver remplace son signalement par le dessin, sans clic (#403b).
 setImageCacheCallbacks({ onChange: () => renderAll() });
 // « Importer une planche » : même injection que l'import de modèle, pour la même raison.
-setImportPlancheCallbacks({ snapshot, renderAll, alerter: alertAction });
+setImportPlancheCallbacks({ snapshot, renderAll, alerter: alertAction, confirmer: confirmAction });
 // L'import pose un point d'annulation et parle à l'utilisateur : les deux lui sont injectés,
 // plutôt qu'importés, pour qu'il ne dépende ni de la pile d'annulation ni des modales.
 // `confirmer` : la question « redimensionner ce modèle manifestement trop grand ? » (cf.

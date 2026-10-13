@@ -1206,14 +1206,17 @@ function dessinerEditionDesCases(c, page){
   // Hors correction, seule la Case en surbrillance (choisie dans le menu de la Planche) se montre.
   page.objects.filter(o => estCaseImportee(o) && (enEdition || o.id === sel)).forEach(o => {
     const choisie = o.id === sel;
-    // UN SEUL TRAIT, lisible sur n'importe quel dessin (demandé) : orange, haché de blanc et de noir.
-    // Trois passes du même trait, décalées dans une période de 14 : 8 orange, 3 blanc, 3 noir. Une
-    // superposition de traits de plus en plus larges épaississait trop la bordure.
-    const l = choisie ? 3 : 2;
-    c.lineCap = 'butt'; c.lineWidth = l;
-    c.setLineDash([8, 6]); c.lineDashOffset = 0; c.strokeStyle = SIGNAL_SELECTION; c.strokeRect(o.x, o.y, o.w, o.h);
-    c.setLineDash([3, 11]); c.lineDashOffset = -8; c.strokeStyle = '#fff'; c.strokeRect(o.x, o.y, o.w, o.h);
-    c.lineDashOffset = -11; c.strokeStyle = '#000'; c.strokeRect(o.x, o.y, o.w, o.h);
+    // UN SEUL TRAIT, de l'épaisseur d'une sélection ordinaire (1,5, cf. drawSelection), lisible sur
+    // n'importe quel dessin (demandé) : une ALTERNANCE de tirets orange, blanc, noir, orange…
+    // Trois passes du même pointillé, décalées d'un tiers de période.
+    const TIRET = 6, ESPACE = 3, PERIODE = 3 * (TIRET + ESPACE);
+    c.lineCap = 'butt'; c.lineWidth = 1.5;
+    c.setLineDash([TIRET, PERIODE - TIRET]);
+    [SIGNAL_SELECTION, '#fff', '#000'].forEach((couleur, k) => {
+      c.lineDashOffset = -k * (TIRET + ESPACE);
+      c.strokeStyle = couleur;
+      c.strokeRect(o.x, o.y, o.w, o.h);
+    });
     c.setLineDash([]); c.lineDashOffset = 0;
     const t = String(o.caseNumber || '?');
     c.font = '600 12px system-ui, sans-serif';

@@ -287,14 +287,33 @@ describe('Retours suivants (13 octobre 2026) : correction', () => {
     assert.match(ui, /edition = null;\n {2}surbrillance = null;\n {2}S\.selectedId = null;/);
     assert.match(ui, /edition\.sel = null;\n {4}surbrillance = null;/);
   });
-  test('un seul trait, orange haché de blanc et de noir (pas plus épais)', () => {
+  test('un seul trait de 1,5 (comme une sélection), tirets orange, blanc, noir en alternance', () => {
     const d = lire('src/draw.js');
-    assert.match(d, /c\.lineCap = 'butt'; c\.lineWidth = l;/);
-    assert.doesNotMatch(d, /lineWidth = l \+/, 'la bordure s\'épaissit de nouveau');
-    assert.match(d, /lineDashOffset = -8; c\.strokeStyle = '#fff'/);
+    assert.match(d, /c\.lineCap = 'butt'; c\.lineWidth = 1\.5;/);
+    assert.match(d, /\[SIGNAL_SELECTION, '#fff', '#000'\]\.forEach\(\(couleur, k\) => \{\n {6}c\.lineDashOffset = -k \* \(TIRET \+ ESPACE\);/);
   });
   test('un clic hors de la Planche quitte la correction ; l\'aide a une commande par ligne', () => {
     assert.match(lire('src/events.js'), /if \(e\.target === canvas\) return;\n[^\n]*\n {2}if \(editionDesCasesActive\(\)\) sortirEditionDesCases\(\);/);
     assert.match(lire('src/style.css'), /#sidePageEditionHint\{ white-space:pre-line;/);
+  });
+});
+
+describe('Une planche qui n\'a pas le format du Tome', () => {
+  const tome = { w: 550, h: 725, pages: [] };
+  test('les proportions proches suffisent ; sinon un format à la hauteur du Tome', async () => {
+    const { formatPourLaPlanche } = await import('../src/planche-importee.js');
+    assert.equal(formatPourLaPlanche(tome, 1100, 1460), null, '1 % d\'écart');
+    assert.deepEqual(formatPourLaPlanche(tome, 2000, 1400), { w: 1036, h: 725 }, 'une double page');
+  });
+  test('le Tome s\'adapte seulement si ses autres Planches sont vides ou importées', async () => {
+    const { tomeAdaptable } = await import('../src/planche-importee.js');
+    const imp = { id: 'p1', importee: { largeur: 1, hauteur: 1 }, objects: [] };
+    assert.equal(tomeAdaptable({ pages: [imp, { id: 'p2', objects: [] }] }, 'p1'), true);
+    assert.equal(tomeAdaptable({ pages: [imp, { id: 'p2', objects: [{ type: 'panel' }] }] }, 'p1'), false);
+  });
+  test('la question est posée à l\'import, avant la correction', () => {
+    const ui = readFileSync(new URL('../src/import-planche-ui.js', import.meta.url), 'utf8');
+    assert.match(ui, /await proposerUnFormat\(t, pd\);\n {2}await preloadImagesFor/);
+    assert.match(readFileSync(new URL('../src/events.js', import.meta.url), 'utf8'), /confirmer: confirmAction \}\);/);
   });
 });

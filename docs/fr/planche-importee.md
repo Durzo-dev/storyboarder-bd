@@ -31,6 +31,11 @@ lecture à l'import ; ensuite, on les change en **glissant** les lignes de la li
 désélectionne). Un
 import se défait d'un Ctrl+Z.
 
+**Une planche qui n'a pas les proportions du Tome** (plus de 3 % d'écart) : l'import propose un
+format qui lui corresponde, à la hauteur du Tome. Si les autres Planches du Tome sont vides ou
+importées, on propose de passer le Tome en format personnalisé ; sinon (elles seraient dérangées),
+de créer un nouveau Tome à ce format et d'y placer la planche. Refuser la garde, avec des bandes.
+
 ## La détection
 
 Réécrite le 13 octobre 2026 sur quinze planches réelles fournies par Valentin (manga, BD
