@@ -1,266 +1,249 @@
 /**
  * @file import-planche-ui.js
- * « Importer une planche » (clic droit sur une Planche, demandé le 12 octobre 2026) : choisir une
- * image, VÉRIFIER les Cases détectées, puis créer la Planche importée juste après celle du clic.
+ * « Importer une planche » (demandé le 12 octobre 2026) et la CORRECTION de ses Cases, directement
+ * sur la Planche (demandé le 13 octobre 2026 : pas de modale, et l'on doit pouvoir y revenir depuis
+ * le menu de la Planche).
  *
- * Les décisions sont dans planche-importee.js (détection, retouches, ordre de lecture, forme de la
- * Planche) ; ici le sélecteur, le décodage, la modale de vérification et ses gestes.
+ * L'import range l'image, crée la Planche avec les Cases détectées juste après la Planche affichée,
+ * et l'ouvre en ÉDITION DES CASES. Dans ce mode, sur la Planche : un clic sélectionne une Case, la
+ * tirer la déplace, tirer un coin la redimensionne, tirer dans le vide en trace une nouvelle, Suppr
+ * la retire, Échap termine. Le menu de la Planche porte « Modifier les Cases » / « Terminer » et le
+ * curseur de sensibilité, qui relance la détection (et remplace les retouches).
  *
- * ⚠️ RIEN N'EST ÉCRIT AVANT LA VALIDATION : ni la Planche, ni l'image dans le dossier Images.
- * Renoncer (Annuler, Échap, clic dehors) laisse le Projet et le disque tels qu'ils étaient.
- *
- * LES GESTES DE LA VÉRIFICATION : un clic sur une Case la sélectionne ; la tirer la déplace ; tirer
- * un coin la redimensionne ; tirer dans le vide en trace une nouvelle ; Suppr (ou le bouton)
- * supprime la sélection. Le curseur de tolérance relance la détection, et REMPLACE les retouches :
- * c'est dit dans l'aide.
+ * Un import se défait d'un Ctrl+Z, comme tout le reste : un point d'annulation est pris avant.
+ * Les décisions (détection, retouches, ordre de lecture) sont dans planche-importee.js.
  */
 
-import { S, tr, newId } from './state.js';
+import { S, tr, newId, currentPageData, currentPage } from './state.js';
 import { choisirImage, rangerImageChoisie } from './image-store.js';
-import { preloadImagesFor } from './image-cache.js';
+import { preloadImagesFor, getLoadedImage } from './image-cache.js';
 import {
-  detecterCases, niveauxDeGris, ordreDeLecture, retoucherRegion, regionTracee, creerPlancheImportee, DETECTION,
+  detecterCases, niveauxDeGris, ordreDeLecture, retoucherRegion, regionTracee, creerPlancheImportee,
+  estPlancheImportee, estCaseImportee, imageDeLaPlanche, poseDeLImage, DETECTION,
 } from './planche-importee.js';
-
-const $ = (id) => document.getElementById(id);
 
 /** La plus grande dimension de l'image ANALYSÉE : au-delà, la détection ralentit sans rien gagner. */
 const ANALYSE_MAX_PX = 1400;
-/** La distance, en pixels d'écran, à laquelle un coin se saisit. */
-const POIGNEE_PX = 9;
+/** La distance, en unités de Planche, à laquelle un coin se saisit. */
+const POIGNEE = 8;
 
 let _rappels = { snapshot: () => {}, renderAll: () => {}, alerter: async () => {} };
 /** Les rappels de events.js (règle n°2 : pas d'import circulaire). */
 export function setImportPlancheCallbacks(r){ _rappels = { ..._rappels, ...r }; }
 
-let etat = null;   // { ti, pi, choisi, bitmap, gris, aw, ah, regions, sel, geste, echelle }
+/** L'édition en cours : la Planche (par son id), la Case sélectionnée, le geste. */
+let edition = null;   // { pageId, sel, geste }
 
-/** Ferme la modale sans rien créer. */
-export function fermerImportPlanche(){
-  const m = $('importPlancheModal');
-  if (m) m.classList.add('hidden');
-  if (etat && etat.bitmap && etat.bitmap.close) etat.bitmap.close();
-  etat = null;
+/** La Planche affichée est-elle en édition des Cases ? */
+export function editionDesCasesActive(){
+  const pd = currentPageData();
+  return !!(edition && pd && pd.id === edition.pageId && estPlancheImportee(pd));
 }
 
-function textes(){
-  $('importPlancheTitre').textContent = tr('Import a page', 'Importer une planche');
-  $('importPlancheAide').textContent = tr(
-    'Check the detected panels before importing. Drag a panel to move it, a corner to resize it, drag in an empty area to add one; Delete removes the selected panel. Changing the sensitivity detects again and replaces your changes.',
-    'Vérifiez les Cases détectées avant d\'importer. Tirez une Case pour la déplacer, un coin pour la redimensionner, tirez dans le vide pour en ajouter une ; Suppr retire la Case sélectionnée. Changer la sensibilité relance la détection et remplace vos retouches.');
-  $('importPlancheToleranceLabel').textContent = tr('Sensitivity', 'Sensibilité');
-  $('importPlancheSupprimer').textContent = tr('Remove the panel', 'Retirer la Case');
-  $('importPlancheAnnuler').textContent = tr('Cancel', 'Annuler');
-  $('importPlancheValider').textContent = tr('Import the page', 'Importer la planche');
+export function entrerEditionDesCases(){
+  const pd = currentPageData();
+  if (!pd || !estPlancheImportee(pd)) return;
+  edition = { pageId: pd.id, sel: null, geste: null };
+  S.selectedId = null; S.pageSelected = true;
+  _rappels.renderAll();
 }
 
-function majCompte(){
-  const n = etat.regions.length;
-  $('importPlancheCompte').textContent = n
-    ? tr(`${n} panel(s)`, `${n} Case(s)`)
-    : tr('No panel: the whole image will be one panel.', 'Aucune Case : l\'image entière en fera une.');
-  $('importPlancheSupprimer').disabled = etat.sel === null;
+export function sortirEditionDesCases(){
+  if (!edition) return;
+  edition = null;
+  _rappels.renderAll();
 }
 
-/** Relance la détection avec la tolérance du curseur. */
-function detecter(){
-  const tolerance = Number($('importPlancheTolerance').value) || DETECTION.tolerance;
-  etat.regions = detecterCases(etat.gris, etat.aw, etat.ah, { tolerance });
-  etat.sel = null;
-  majCompte();
-  dessiner();
+/** La Case sélectionnée dans l'édition (son id), pour le dessin. */
+export function caseEnEdition(){ return editionDesCasesActive() ? edition.sel : null; }
+/** Le rectangle tracé en cours (unités de Planche), pour le dessin. */
+export function traceEnCours(){
+  if (!editionDesCasesActive() || !edition.geste || !edition.geste.trace) return null;
+  return { a: edition.geste.departPage, b: edition.geste.courantPage };
 }
 
-/** La toile, à la taille de la zone, l'image entière dedans. */
-function dimensionner(){
-  const toile = $('importPlancheToile');
-  const zone = toile.parentElement;
-  const maxW = Math.max(200, (zone.clientWidth || 816) - 16);   // moins le padding de la zone
-  const maxH = Math.max(200, Math.round(window.innerHeight * 0.6));
-  const e = Math.min(maxW / etat.bitmap.width, maxH / etat.bitmap.height);
-  const w = Math.round(etat.bitmap.width * e), h = Math.round(etat.bitmap.height * e);
-  const dpr = window.devicePixelRatio || 1;
-  toile.width = Math.round(w * dpr); toile.height = Math.round(h * dpr);
-  toile.style.width = `${w}px`; toile.style.height = `${h}px`;
-  etat.vue = { w, h, dpr };
+/** La pose de l'image de la Planche affichée. */
+function pose(){
+  const page = currentPage();
+  const i = page.importee;
+  return poseDeLImage(page.w, page.h, i.largeur, i.hauteur, i);
 }
+const enFraction = (p, po) => ({ x: (p.x - po.x) / po.w, y: (p.y - po.y) / po.h });
+const casesImportees = () => currentPageData().objects.filter(estCaseImportee);
 
-function dessiner(){
-  if (!etat) return;
-  const toile = $('importPlancheToile');
-  const c = toile.getContext('2d');
-  const { w, h, dpr } = etat.vue;
-  c.setTransform(dpr, 0, 0, dpr, 0, 0);
-  c.clearRect(0, 0, w, h);
-  c.drawImage(etat.bitmap, 0, 0, w, h);
-  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#FF7A45';
-  etat.regions.forEach((r, i) => {
-    const x = r.x * w, y = r.y * h, rw = r.w * w, rh = r.h * h;
-    const choisie = i === etat.sel;
-    c.lineWidth = choisie ? 3 : 2;
-    c.strokeStyle = accent;
-    c.setLineDash(choisie ? [] : [6, 4]);
-    c.strokeRect(x + 1, y + 1, rw - 2, rh - 2);
-    c.setLineDash([]);
-    // Le numéro, dans une pastille pleine : lisible sur n'importe quel dessin.
-    c.font = '600 12px system-ui, sans-serif';
-    const t = String(i + 1);
-    const lw = c.measureText(t).width + 10;
-    c.fillStyle = accent; c.fillRect(x + 4, y + 4, lw, 18);
-    c.fillStyle = '#FFFFFF'; c.textBaseline = 'middle'; c.fillText(t, x + 9, y + 13);
-    if (choisie) {
-      [[x, y], [x + rw, y], [x, y + rh], [x + rw, y + rh]].forEach(([px, py]) => {
-        c.fillStyle = accent; c.fillRect(px - 5, py - 5, 10, 10);
-      });
-    }
+/** Renumérote les Cases dans l'ordre de lecture (une double page se lit page par page). */
+function renumeroter(){
+  const pd = currentPageData();
+  const cases = casesImportees();
+  const double = pd.importee.largeur / pd.importee.hauteur > 1.15;
+  const ordre = ordreDeLecture(cases.map(o => ({ ...o.regionImage, id: o.id })), { double });
+  // ordreDeLecture rend des régions neuves : on les retrouve par position.
+  ordre.forEach((r, i) => {
+    const o = cases.find(c => c.regionImage.x === r.x && c.regionImage.y === r.y && c.regionImage.w === r.w && c.regionImage.h === r.h);
+    if (o) o.caseNumber = i + 1;
   });
-  if (etat.geste && etat.geste.trace) {
-    const r = regionTracee(etat.geste.depart, etat.geste.courant);
-    if (r) { c.strokeStyle = accent; c.lineWidth = 2; c.strokeRect(r.x * w, r.y * h, r.w * w, r.h * h); }
-  }
 }
 
-/** Un point de la toile, en fractions de l'image. */
-function fraction(e){
-  const b = $('importPlancheToile').getBoundingClientRect();
-  return { x: (e.clientX - b.left) / b.width, y: (e.clientY - b.top) / b.height };
-}
-
-/** Ce qui est sous le pointeur : un coin de la Case sélectionnée, une Case, ou rien. */
-function cible(p){
-  const { w, h } = etat.vue;
-  if (etat.sel !== null) {
-    const r = etat.regions[etat.sel];
+/** Ce qui est sous le pointeur (unités de Planche) : un coin de la Case sélectionnée, une Case, ou rien. */
+function cible(p, po){
+  const cases = casesImportees();
+  const sel = cases.find(o => o.id === edition.sel);
+  if (sel) {
+    const r = sel.regionImage;
     const coins = { nw: [r.x, r.y], ne: [r.x + r.w, r.y], sw: [r.x, r.y + r.h], se: [r.x + r.w, r.y + r.h] };
     for (const [nom, [cx, cy]] of Object.entries(coins)) {
-      if (Math.abs((p.x - cx) * w) <= POIGNEE_PX && Math.abs((p.y - cy) * h) <= POIGNEE_PX) return { i: etat.sel, poignee: nom };
+      if (Math.abs(po.x + cx * po.w - p.x) <= POIGNEE && Math.abs(po.y + cy * po.h - p.y) <= POIGNEE) return { o: sel, poignee: nom };
     }
   }
-  // La plus PETITE Case sous le pointeur : une Case tracée dans une autre doit rester saisissable.
+  const f = enFraction(p, po);
   let meilleure = null;
-  etat.regions.forEach((r, i) => {
-    if (p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h
-      && (meilleure === null || r.w * r.h < etat.regions[meilleure].w * etat.regions[meilleure].h)) meilleure = i;
-  });
-  return meilleure === null ? null : { i: meilleure, poignee: 'deplacer' };
+  for (const o of cases) {
+    const r = o.regionImage;
+    if (f.x >= r.x && f.x <= r.x + r.w && f.y >= r.y && f.y <= r.y + r.h
+      && (!meilleure || r.w * r.h < meilleure.regionImage.w * meilleure.regionImage.h)) meilleure = o;
+  }
+  return meilleure ? { o: meilleure, poignee: 'deplacer' } : null;
 }
 
-function cabler(){
-  const modale = document.getElementById('importPlancheModal');
-  if (!modale || modale.dataset.cable) return;
-  modale.dataset.cable = '1';
-  // Clic en dehors : on renonce, comme Annuler (convention de toutes les modales).
-  modale.addEventListener('mousedown', (e) => { if (e.target === modale) fermerImportPlanche(); });
-  $('importPlancheAnnuler').onclick = fermerImportPlanche;
-  $('importPlancheValider').onclick = valider;
-  $('importPlancheSupprimer').onclick = supprimerSelection;
-  $('importPlancheTolerance').addEventListener('change', () => { if (etat) detecter(); });
-  const toile = $('importPlancheToile');
-  toile.addEventListener('mousedown', (e) => {
-    if (!etat || e.button !== 0) return;
-    e.preventDefault();
-    const p = fraction(e);
-    const t = cible(p);
-    if (t) {
-      etat.sel = t.i;
-      etat.geste = { i: t.i, poignee: t.poignee, depart: p, r0: { ...etat.regions[t.i] } };
-    } else {
-      etat.sel = null;
-      etat.geste = { trace: true, depart: p, courant: p };
+/** Le curseur à montrer en survol, ou null hors édition. */
+export function curseurEdition(p){
+  if (!editionDesCasesActive()) return null;
+  const t = cible(p, pose());
+  if (!t) return 'crosshair';
+  return t.poignee === 'deplacer' ? 'move' : (t.poignee === 'nw' || t.poignee === 'se' ? 'nwse-resize' : 'nesw-resize');
+}
+
+/** Le début d'un geste sur la Planche (bouton gauche). Rend true s'il est pris. */
+export function debutGesteEdition(p){
+  if (!editionDesCasesActive()) return false;
+  const po = pose();
+  const t = cible(p, po);
+  if (t) {
+    edition.sel = t.o.id;
+    edition.geste = { o: t.o, poignee: t.poignee, depart: enFraction(p, po), r0: { ...t.o.regionImage }, pris: false };
+  } else {
+    edition.sel = null;
+    edition.geste = { trace: true, departPage: p, courantPage: p };
+  }
+  return true;
+}
+
+export function mouvementGesteEdition(p){
+  if (!editionDesCasesActive() || !edition.geste) return false;
+  const g = edition.geste;
+  if (g.trace) { g.courantPage = p; return true; }
+  const f = enFraction(p, pose());
+  const dx = f.x - g.depart.x, dy = f.y - g.depart.y;
+  if (!g.pris) { if (Math.abs(dx) < 0.002 && Math.abs(dy) < 0.002) return true; _rappels.snapshot(); g.pris = true; }
+  g.o.regionImage = retoucherRegion(g.r0, g.poignee, dx, dy) || g.r0;
+  S.projectDirty = true;
+  return true;
+}
+
+export function finGesteEdition(){
+  if (!editionDesCasesActive() || !edition.geste) return false;
+  const g = edition.geste;
+  edition.geste = null;
+  if (g.trace) {
+    const po = pose();
+    const r = regionTracee(enFraction(g.departPage, po), enFraction(g.courantPage, po));
+    if (r) {
+      _rappels.snapshot();
+      const pd = currentPageData();
+      const nom = imageDeLaPlanche(pd);
+      const o = { id: newId(), type: 'panel', x: 0, y: 0, w: 1, h: 1, text: '', shape: 'rect', imageFile: nom, regionImage: r };
+      pd.objects.push(o);
+      edition.sel = o.id;
+      S.projectDirty = true;
     }
-    majCompte();
-    dessiner();
-  });
-  window.addEventListener('mousemove', (e) => {
-    if (!etat || !etat.geste) return;
-    const p = fraction(e);
-    const g = etat.geste;
-    if (g.trace) g.courant = p;
-    else etat.regions[g.i] = retoucherRegion(g.r0, g.poignee, p.x - g.depart.x, p.y - g.depart.y) || g.r0;
-    dessiner();
-  });
-  window.addEventListener('mouseup', () => {
-    if (!etat || !etat.geste) return;
-    const g = etat.geste;
-    etat.geste = null;
-    if (g.trace) {
-      const r = regionTracee(g.depart, g.courant);
-      if (r) { etat.regions.push(r); etat.sel = etat.regions.length - 1; }
-    }
-    majCompte();
-    dessiner();
-  });
-  // ⚠️ EN CAPTURE, ET IL S'ARRÊTE LÀ : sans cela, Suppr atteindrait aussi l'écouteur du canevas
-  // (events.js), qui supprimerait l'objet sélectionné SUR LA PLANCHE, derrière la modale.
-  window.addEventListener('keydown', (e) => {
-    if (!etat || modale.classList.contains('hidden')) return;
-    if (e.key !== 'Delete' && e.key !== 'Backspace') return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    supprimerSelection();
-  }, true);
-  window.addEventListener('resize', () => { if (etat) { dimensionner(); dessiner(); } });
+  }
+  renumeroter();
+  return true;
 }
 
-function supprimerSelection(){
-  if (!etat || etat.sel === null) return;
-  etat.regions.splice(etat.sel, 1);
-  etat.sel = null;
-  majCompte();
-  dessiner();
+/** Retire la Case sélectionnée. */
+export function supprimerCaseEnEdition(){
+  if (!editionDesCasesActive() || !edition.sel) return false;
+  const pd = currentPageData();
+  // La dernière Case reste : une Planche importée porte son image par ses Cases.
+  if (casesImportees().length <= 1) return true;
+  _rappels.snapshot();
+  pd.objects = pd.objects.filter(o => o.id !== edition.sel);
+  edition.sel = null;
+  renumeroter();
+  S.projectDirty = true;
+  _rappels.renderAll();
+  return true;
 }
 
-/** L'image décodée, et sa version réduite en niveaux de gris pour la détection. */
-async function decoder(octets){
-  const bitmap = await createImageBitmap(new Blob([octets]));
+/** Une image décodée → niveaux de gris réduits, pour la détection. */
+function grisDe(bitmap){
   const e = Math.min(1, ANALYSE_MAX_PX / Math.max(bitmap.width, bitmap.height));
   const aw = Math.max(1, Math.round(bitmap.width * e)), ah = Math.max(1, Math.round(bitmap.height * e));
   const toile = document.createElement('canvas');
   toile.width = aw; toile.height = ah;
   const c = toile.getContext('2d', { willReadFrequently: true });
   c.drawImage(bitmap, 0, 0, aw, ah);
-  return { bitmap, aw, ah, gris: niveauxDeGris(c.getImageData(0, 0, aw, ah).data, aw, ah) };
+  return { aw, ah, gris: niveauxDeGris(c.getImageData(0, 0, aw, ah).data, aw, ah) };
 }
 
-/** Le point d'entrée : clic droit sur la Planche `pi` du Tome `ti`, entrée « Importer une planche ». */
+/** Relance la détection sur la Planche en édition ; remplace ses Cases (les descriptions sont perdues). */
+export function redetecter(tolerance){
+  if (!editionDesCasesActive()) return;
+  const pd = currentPageData();
+  const nom = imageDeLaPlanche(pd);
+  const image = nom ? getLoadedImage(nom) : null;
+  if (!image) return;
+  const { aw, ah, gris } = grisDe(image.bitmap);
+  const regions = detecterCases(gris, aw, ah, { tolerance: Number(tolerance) || DETECTION.tolerance });
+  _rappels.snapshot();
+  const neuve = creerPlancheImportee({ nomImage: nom, largeur: pd.importee.largeur, hauteur: pd.importee.hauteur, regions, newId });
+  pd.objects = [...pd.objects.filter(o => !estCaseImportee(o)), ...neuve.objects];
+  edition.sel = null;
+  renumeroter();
+  S.projectDirty = true;
+  _rappels.renderAll();
+}
+
+// Suppr et Échap pendant l'édition. EN CAPTURE, et ils s'arrêtent là : sans cela, Suppr atteindrait
+// l'écouteur du canevas (events.js) et Échap ouvrirait le menu Projet.
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener('keydown', (e) => {
+    if (!editionDesCasesActive()) return;
+    const tag = document.activeElement && document.activeElement.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); e.stopImmediatePropagation(); supprimerCaseEnEdition(); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); sortirEditionDesCases(); }
+  }, true);
+}
+
+/** Le point d'entrée : clic droit dans le vide de la Planche `pi` du Tome `ti`. */
 export async function ouvrirImportPlanche(ti, pi){
-  cabler();
   const choisi = await choisirImage();
   if (choisi.canceled) return;
   if (!choisi.ok) { await _rappels.alerter(tr(`The image could not be read: ${choisi.error}`, `L'image n'a pas pu être lue : ${choisi.error}`)); return; }
-  let d;
-  try { d = await decoder(choisi.data); }
+  let bitmap;
+  try { bitmap = await createImageBitmap(new Blob([choisi.data])); }
   catch (err) { await _rappels.alerter(tr('This file is not an image the application can read.', 'Ce fichier n\'est pas une image que l\'application sait lire.')); return; }
-  etat = { ti, pi, choisi, ...d, regions: [], sel: null, geste: null };
-  textes();
-  $('importPlancheTolerance').value = String(DETECTION.tolerance);
-  $('importPlancheModal').classList.remove('hidden');
-  dimensionner();
-  detecter();
-}
-
-/** Valider : l'image rangée, la Planche créée après celle du clic, et affichée. */
-async function valider(){
-  if (!etat) return;
-  const { ti, pi, choisi, bitmap } = etat;
+  const { aw, ah, gris } = grisDe(bitmap);
+  const regions = detecterCases(gris, aw, ah);
   const t = S.tomes[ti];
-  if (!t) { fermerImportPlanche(); return; }
+  if (!t) return;
   const range = await rangerImageChoisie(choisi);
   if (!range.ok) { await _rappels.alerter(tr(`The image could not be saved: ${range.error}`, `L'image n'a pas pu être rangée : ${range.error}`)); return; }
-  const pd = creerPlancheImportee({
-    nomImage: range.name, largeur: bitmap.width, hauteur: bitmap.height,
-    regions: ordreDeLecture(etat.regions), newId,
-  });
-  // Elle rejoint le chapitre de la Planche cliquée, juste après elle.
+  const pd = creerPlancheImportee({ nomImage: range.name, largeur: bitmap.width, hauteur: bitmap.height, regions, newId });
+  if (bitmap.close) bitmap.close();
   const voisine = t.pages[pi];
   if (voisine && voisine.chapitreId) pd.chapitreId = voisine.chapitreId;
-  fermerImportPlanche();
   _rappels.snapshot();
   t.pages.splice(pi + 1, 0, pd);
   S.currentTomeIndex = ti;
   S.currentPageIndex = pi + 1;
   S.selectedId = null; S.selectedRoomId = null;
   S.projectDirty = true;
-  preloadImagesFor(pd.objects);
-  _rappels.renderAll();
+  renumeroter();
+  await preloadImagesFor(pd.objects);
+  // Elle s'ouvre directement en correction des Cases.
+  entrerEditionDesCases();
 }
+

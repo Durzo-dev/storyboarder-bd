@@ -238,3 +238,16 @@ describe('L\'entrée « Importer une planche »', () => {
     assert.match(ev, /getElementById\('ctxImportPageCanvas'\)\.onclick[\s\S]{0,200}ouvrirImportPlanche\(S\.currentTomeIndex, S\.currentPageIndex\)/);
   });
 });
+
+describe('La correction des Cases, sur la Planche (demandé le 13 octobre 2026)', () => {
+  const lire = (f) => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
+  test('plus de modale ; le geste passe par l\'édition avant le cadrage, et le menu Planche y ramène', () => {
+    const html = lire('src/index.html'), ev = lire('src/events.js');
+    assert.doesNotMatch(html, /id="importPlancheModal"/);
+    assert.match(html, /id="sidePageEditionSection"[\s\S]{0,900}id="sidePageEditionBtn"/);
+    const i = ev.indexOf('if (debutGesteEdition({ x, y }))');
+    assert.ok(i > 0 && i < ev.indexOf("S.dragMode = 'plancheCadrage'"), 'l\'édition doit passer avant le cadrage');
+    assert.match(ev, /if \(editionDesCasesActive\(\)\) sortirEditionDesCases\(\); else entrerEditionDesCases\(\);/);
+    assert.match(lire('src/import-planche-ui.js'), /await preloadImagesFor\(pd\.objects\);\n {2}\/\/ Elle s'ouvre directement en correction des Cases\.\n {2}entrerEditionDesCases\(\);/);
+  });
+});

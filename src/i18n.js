@@ -80,6 +80,9 @@ export const I18N_TEXT = [
   ['#sidePagePanelsSection > h2', 'Panels', 'Cases'],
   // Planche importée : le cadrage de l'ensemble (cf. planche-importee.js).
   ['#sidePageCadrageTitle', 'Framing', 'Cadrage'],
+  ['#sidePageEditionTitle', 'Detected panels', 'Cases détectées'],
+  ['#sidePageEditionBtn', 'Edit the panels', 'Modifier les cases'],
+  ['#sidePageToleranceLabel', 'Sensitivity', 'Sensibilité'],
   ['#sidePageCadrageHint', 'Drag the page to move the image.', 'Tirez sur la Planche pour déplacer l\'image.'],
   ['#sidePageResetBtn', 'Recentre', 'Recentrer'],
   // Case menu

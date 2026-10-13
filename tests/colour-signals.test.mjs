@@ -207,7 +207,8 @@ describe('draw.js ne décide plus des couleurs de signal', () => {
     // Le défaut de forme qui est revenu quatre fois dans ce dépôt : vérifier qu'un identifiant
     // APPARAÎT plutôt qu'il ne SERT. On compte donc les emplois réels.
     const emplois = [
-      [SIGNAL_SELECTION, 'SIGNAL_SELECTION', 10],
+      // 10, plus 4 pour l'édition des Cases d'une Planche importée (dessinerEditionDesCases).
+      [SIGNAL_SELECTION, 'SIGNAL_SELECTION', 14],
       [SIGNAL_MESURE, 'SIGNAL_MESURE', 4],
       [SIGNAL_CONSTRUIRE, 'SIGNAL_CONSTRUIRE', 6],
       [SIGNAL_APERCU_PERSO, 'SIGNAL_APERCU_PERSO', 2],

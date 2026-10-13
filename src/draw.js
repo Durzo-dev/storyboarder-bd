@@ -67,6 +67,7 @@ import {
 } from './image-store.js';
 import { getLoadedImage, imageState, preloadImagesFor } from './image-cache.js';
 import { estPlancheImportee, estCaseImportee, placerCasesImportees, imageDeLaPlanche } from './planche-importee.js';
+import { editionDesCasesActive, caseEnEdition, traceEnCours } from './import-planche-ui.js';
 import { preloadModelsFor } from './model-cache.js';
 // L'apparence d'une Bulle : opacité du fond, motif et régularité du trait. Décidée dans un module
 // pur (#425a), appliquée ici. Les décalages du tremblé s'ajoutent au TRACÉ, jamais au contour rendu
@@ -1190,6 +1191,38 @@ export function drawContent(c, page, scale, withSelection, exportBadges){
   }
   // Overlay of the "Build a Building" tool (drawn segments + segment in progress + points)
   if (S.buildTool) drawBuildToolOverlay(c, page);
+  // L'édition des Cases d'une Planche importée : ses Cases, numérotées, et ce qu'on trace.
+  if (withSelection && estPlancheImportee(page) && editionDesCasesActive()) dessinerEditionDesCases(c, page);
+  c.restore();
+}
+
+/** Les Cases d'une Planche importée en cours de correction (cf. import-planche-ui.js). */
+function dessinerEditionDesCases(c, page){
+  const sel = caseEnEdition();
+  c.save();
+  page.objects.filter(estCaseImportee).forEach(o => {
+    const choisie = o.id === sel;
+    c.strokeStyle = SIGNAL_SELECTION; c.lineWidth = choisie ? 3 : 2;
+    c.setLineDash(choisie ? [] : [6, 4]);
+    c.strokeRect(o.x, o.y, o.w, o.h);
+    c.setLineDash([]);
+    const t = String(o.caseNumber || '?');
+    c.font = '600 12px system-ui, sans-serif';
+    const lw = c.measureText(t).width + 10;
+    c.fillStyle = SIGNAL_SELECTION; c.fillRect(o.x + 3, o.y + 3, lw, 18);
+    c.fillStyle = SIGNAL_SELECTION_LISERE; c.textBaseline = 'middle'; c.fillText(t, o.x + 8, o.y + 12);
+    if (choisie) {
+      c.strokeStyle = SIGNAL_SELECTION_LISERE; c.lineWidth = 1;
+      [[o.x, o.y], [o.x + o.w, o.y], [o.x, o.y + o.h], [o.x + o.w, o.y + o.h]].forEach(([px, py]) => {
+        c.fillStyle = SIGNAL_SELECTION; c.fillRect(px - 5, py - 5, 10, 10); c.strokeRect(px - 5, py - 5, 10, 10);
+      });
+    }
+  });
+  const tr = traceEnCours();
+  if (tr) {
+    c.strokeStyle = SIGNAL_SELECTION; c.lineWidth = 2;
+    c.strokeRect(Math.min(tr.a.x, tr.b.x), Math.min(tr.a.y, tr.b.y), Math.abs(tr.b.x - tr.a.x), Math.abs(tr.b.y - tr.a.y));
+  }
   c.restore();
 }
 

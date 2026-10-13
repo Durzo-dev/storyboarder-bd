@@ -242,6 +242,16 @@
     </div>
     <!-- Le cadrage d'une Planche IMPORTÉE (cf. planche-importee.js) : le même réglage que celui d'une
          image de Case, pour l'image entière. Déplacer se fait en tirant sur la Planche. -->
+    <!-- Les Cases d'une Planche importée : on les corrige SUR la Planche (cf. import-planche-ui.js). -->
+    <div id="sidePageEditionSection" class="side-section" style="display:none;">
+      <h2 id="sidePageEditionTitle">Cases détectées</h2>
+      <p id="sidePageEditionHint" class="side-aide"></p>
+      <div id="sidePageToleranceWrap" class="tome-format">
+        <label for="sidePageToleranceInput" id="sidePageToleranceLabel">Sensibilité</label>
+        <input type="range" id="sidePageToleranceInput" min="5" max="120" step="5" value="40">
+      </div>
+      <button id="sidePageEditionBtn" type="button" class="full-btn">Modifier les cases</button>
+    </div>
     <div id="sidePageCadrageSection" class="side-section" style="display:none;">
       <h2 id="sidePageCadrageTitle">Cadrage</h2>
       <div class="tome-format">
@@ -1544,26 +1554,6 @@
     <div id="ressourcesCorps" class="ressources-corps"></div>
     <button class="full-btn" id="ressourcesConfiguration" type="button"></button>
     <button class="nav-btn" id="ressourcesFermer" type="button" style="margin-top:6px;"></button>
-  </div>
-</div>
-
-<!-- Importer une planche (demandé le 12 octobre 2026) : la VÉRIFICATION des Cases détectées, avant
-     de rien créer. Tout le texte est écrit par le code (src/import-planche-ui.js). -->
-<div class="modal-overlay hidden" id="importPlancheModal">
-  <div class="modal-box import-planche-box">
-    <h3 id="importPlancheTitre"></h3>
-    <p id="importPlancheAide" class="import-planche-aide"></p>
-    <div class="import-planche-outils">
-      <label for="importPlancheTolerance" id="importPlancheToleranceLabel"></label>
-      <input type="range" id="importPlancheTolerance" min="5" max="120" step="5" value="40">
-      <span id="importPlancheCompte" class="import-planche-compte"></span>
-      <button id="importPlancheSupprimer" type="button" class="nav-btn"></button>
-    </div>
-    <div class="import-planche-zone"><canvas id="importPlancheToile"></canvas></div>
-    <div class="import-planche-pied">
-      <button id="importPlancheAnnuler" type="button" class="nav-btn"></button>
-      <button id="importPlancheValider" type="button" class="full-btn"></button>
-    </div>
   </div>
 </div>
 

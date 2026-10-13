@@ -54,7 +54,10 @@ import { clicDeselectionne3D } from './deselection.js';
 import { champsLumierePosee3D, estUneLumiere3D, OBJ_TYPE_LUMIERE } from './light-source-3d.js';
 import { setModelCacheCallbacks, clearModelCache, getLoadedModel, preloadModels } from './model-cache.js';
 import { setImageCacheCallbacks, preloadImagesFor, clearImageCache, getLoadedImage } from './image-cache.js';
-import { ouvrirImportPlanche, fermerImportPlanche, setImportPlancheCallbacks } from './import-planche-ui.js';
+import {
+  ouvrirImportPlanche, setImportPlancheCallbacks, editionDesCasesActive, entrerEditionDesCases, sortirEditionDesCases,
+  debutGesteEdition, mouvementGesteEdition, finGesteEdition, curseurEdition, redetecter,
+} from './import-planche-ui.js';
 import { estPlancheImportee, estCaseImportee, cadrageLu, poseDeLImage, ancrageApresGlisserPlanche, recentrerPlanche } from './planche-importee.js';
 import {
   importImage, imageDeLaCase3D, casePorteUneImage3D, entreesImageDuMenu3D, CHAMP_IMAGE_CASE,
@@ -2617,6 +2620,8 @@ canvas.addEventListener('mousedown', (e) => {
   // description) ; tirer cadre l'ENSEMBLE de l'image, Cases comprises. Avant tout le reste, pour
   // qu'aucun des gestes d'édition plus bas ne puisse s'y appliquer. Cf. planche-importee.js.
   if (e.button === 0 && estPlancheImportee(page)) {
+    // En ÉDITION DES CASES, la Planche corrige ses Cases (cf. import-planche-ui.js) ; sinon elle se cadre.
+    if (debutGesteEdition({ x, y })) { S.pageSelected = true; S.dragMode = 'plancheEdition'; drawCurrentPage(); return; }
     const hitImp = hitTestPanelOrBubble(page, x, y);
     S.selectedId = hitImp ? hitImp.id : null; S.selectedRoomId = null;
     S.pageSelected = true;   // comme partout ailleurs : cliquer dans la Planche ouvre son menu
@@ -3725,6 +3730,8 @@ window.addEventListener('mousemove', (e) => {
       obj.x = retenue.x;
       obj.y = retenue.y;
     }
+  } else if (S.dragMode === 'plancheEdition') {
+    mouvementGesteEdition({ x, y });
   } else if (S.dragMode === 'plancheCadrage') {
     // Le cadrage d'une Planche importée : l'image ET ses Cases suivent (elles se reposent au dessin).
     // En deçà de 3 pixels c'est un clic, qui ne doit ni recadrer ni poser de point d'annulation.
@@ -4077,6 +4084,7 @@ window.addEventListener('mouseup', () => {
   // ⚠️ LA CONFIRMATION ARRIVE AU RELÂCHEMENT, JAMAIS PENDANT. Poser une question à chaque
   // mouvement rendrait le glissement impraticable ; l'aperçu suffit à annoncer ce qui va être
   // demandé. On lit la paire AVANT de vider l'état du geste, qui est réinitialisé juste après.
+  if (S.dragMode === 'plancheEdition') finGesteEdition();
   const fusionProposee = S.apercuFusion;
   S.apercuFusion = null;
   S.dragMode = null; S.tempBox = null; S.snapGuide = null;
@@ -4243,7 +4251,7 @@ canvas.addEventListener('mousemove', (e) => {
     if (hName) { canvas.style.cursor = CURSOR_MAP[hName]; return; }
   }
   // Une Planche importée ne se manipule que d'un bloc : la main dit qu'on peut la cadrer.
-  if (estPlancheImportee(page)) { canvas.style.cursor = 'grab'; return; }
+  if (estPlancheImportee(page)) { canvas.style.cursor = curseurEdition({ x, y }) || 'grab'; return; }
   const hit = hitTestPanelOrBubble(page, x, y);
   canvas.style.cursor = (hit && isLockedScenePanel(hit)) ? 'default' : (hit ? 'move' : 'crosshair');
 });
@@ -7726,6 +7734,11 @@ sidePageBgColorInput.addEventListener('input', () => {
 sidePageBgColorInput.addEventListener('change', () => { S.sidePageBgColorSnapshotTaken = false; });
 // Le cadrage d'une Planche importée (cf. planche-importee.js) : le zoom au curseur, et Recentrer.
 // Mêmes conventions que celui d'une image de Case : un point d'annulation par geste.
+// L'édition des Cases d'une Planche importée, depuis son menu : entrer / terminer, et la sensibilité.
+document.getElementById('sidePageEditionBtn').onclick = () => {
+  if (editionDesCasesActive()) sortirEditionDesCases(); else entrerEditionDesCases();
+};
+document.getElementById('sidePageToleranceInput').addEventListener('change', (e) => redetecter(e.target.value));
 const sidePageZoomInput = document.getElementById('sidePageZoomInput');
 let _zoomPlanchePris = false;
 sidePageZoomInput.addEventListener('input', () => {
@@ -9193,7 +9206,6 @@ cablerPolices({
 chargerPolicesUtilisateur().then(() => { updateSidePanel(); drawCurrentPage(); }).catch(() => {});
 
 enregistrerFermeture('skeletonMapModal', () => fermerSkeletonMap(false));
-enregistrerFermeture('importPlancheModal', fermerImportPlanche);
 enregistrerFermeture('modelUsagesModal', () => modelUsagesModal.classList.add('hidden'));
 // ⚠️ ÉCHAP FERME LA MODALE DE NOMMAGE, ET SANS CELA IL OUVRIRAIT LE MENU PROJET DERRIÈRE ELLE. Le
 // test de complétude des modales l'a signalé dès l'ajout : c'est la garde qui tient cette

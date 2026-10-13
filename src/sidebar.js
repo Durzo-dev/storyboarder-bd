@@ -19,6 +19,7 @@ import { isImportedModel } from './model-store.js';
 import { modelState } from './model-cache.js';
 import { casePorteUneImage3D, imageDeLaCase3D, zoomDeLImage3D, cadrageParDefaut3D } from './image-store.js';
 import { estPlancheImportee, estCaseImportee, cadrageLu, cadragePlancheParDefaut } from './planche-importee.js';
+import { editionDesCasesActive } from './import-planche-ui.js';
 import { TRAIT_PLEIN, TRAIT_NET, opaciteRemplissageBulle } from './bubble-style.js';
 import { formeDeLaBulle } from './bubble-shape.js';
 import { textureDeLaBulle, teinteParDefautDeLaTexture,
@@ -83,6 +84,7 @@ const pageMenuHeader = document.getElementById('pageMenuHeader');
 const sidePagePanelsSection = document.getElementById('sidePagePanelsSection');
 const sidePageBgSection = document.getElementById('sidePageBgSection');
 const sidePageCadrageSection = document.getElementById('sidePageCadrageSection');
+const sidePageEditionSection = document.getElementById('sidePageEditionSection');
 const sidePageZoomInput = document.getElementById('sidePageZoomInput');
 const sidePageZoomValue = document.getElementById('sidePageZoomValue');
 const sidePageResetBtn = document.getElementById('sidePageResetBtn');
@@ -1083,6 +1085,7 @@ function updateSidePanelImpl(){
   const page = currentPage();
   // Le cadrage d'une Planche importée n'appartient qu'au menu Planche, qui la remontre plus bas.
   sidePageCadrageSection.style.display = 'none';
+  sidePageEditionSection.style.display = 'none';
   const selRaw = page.objects.find(o => o.id === S.selectedId);
   // The right-hand panel (Dimensions / Elements / Description) must stay displayed as long as we're
   // "inside" a panel, even when the selected object is an Element (persona/object) of
@@ -1474,6 +1477,16 @@ function updateSidePanelImpl(){
         sidePageZoomValue.textContent = S.appLang === 'en' ? z.toFixed(1) : z.toFixed(1).replace('.', ',');
         sidePageResetBtn.style.display = cadragePlancheParDefaut(page.importee) ? 'none' : 'block';
         sidePageCadrageSection.style.display = 'block';
+        // La correction des Cases, sur la Planche : on y entre (ou en sort) d'ici.
+        const enEdition = editionDesCasesActive();
+        document.getElementById('sidePageEditionBtn').textContent = enEdition
+          ? tr('Done', 'Terminer') : tr('Edit the panels', 'Modifier les cases');
+        document.getElementById('sidePageToleranceWrap').style.display = enEdition ? 'block' : 'none';
+        document.getElementById('sidePageEditionHint').textContent = enEdition
+          ? tr('On the page: drag a panel to move it, a corner to resize it, drag in an empty area to add one; Delete removes the selected panel, Esc finishes. Changing the sensitivity detects again and replaces the panels.',
+            'Sur la Planche : tirez une Case pour la déplacer, un coin pour la redimensionner, tirez dans le vide pour en ajouter une ; Suppr retire la Case sélectionnée, Échap termine. Changer la sensibilité relance la détection et remplace les Cases.')
+          : '';
+        sidePageEditionSection.style.display = 'block';
       }
       rightPanel.classList.remove('collapsed');
       return;

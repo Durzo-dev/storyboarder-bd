@@ -15,12 +15,17 @@ l'ensemble se règle.
 
 ## Le geste
 
-Clic droit dans un espace vide de la Planche affichée, **« Importer une planche »** (sous « Créer une case » et « Créer une bulle de dialogue », et nulle part ailleurs). On choisit une
-image (PNG, JPG, WebP), l'application **détecte les Cases**, puis une fenêtre de **vérification**
-les montre sur l'image : on les déplace, les redimensionne par un coin, en trace de nouvelles dans
-le vide, en retire (Suppr). Le curseur « Sensibilité » relance la détection, et remplace les
-retouches. **Rien n'est écrit avant « Importer la planche »** : ni la Planche, ni l'image dans le
-dossier Images. La nouvelle Planche se place juste après celle affichée, dans le même Chapitre.
+Clic droit dans un espace vide de la Planche affichée, **« Importer une planche »** (sous « Créer une
+case » et « Créer une bulle de dialogue », et nulle part ailleurs). On choisit une image (PNG, JPG,
+WebP) : l'image est rangée, les Cases détectées, et la nouvelle Planche s'ouvre juste après celle
+affichée, dans le même Chapitre, **en correction des Cases**.
+
+**La correction se fait sur la Planche** (demandé le 13 octobre 2026, la première version passait
+par une modale) : un clic sélectionne une Case, la tirer la déplace, tirer un coin la redimensionne,
+tirer dans le vide en trace une nouvelle, Suppr la retire, Échap termine. Le menu de la Planche porte
+la section **« Cases détectées »** : « Modifier les cases » y ramène à tout moment, « Terminer » en
+sort, et le curseur « Sensibilité » relance la détection (il remplace les Cases). Les numéros suivent
+l'ordre de lecture. Un import se défait d'un Ctrl+Z.
 
 ## La détection
 
