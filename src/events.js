@@ -2182,6 +2182,8 @@ window.addEventListener('resize', () => { fitZoomToWrap(); drawCurrentPage(); })
 // conflict.
 canvasWrap.addEventListener('mousedown', (e) => {
   if (e.target === canvas) return;
+  // Cliquer hors de la Planche quitte la correction des Cases d'une Planche importée (demandé).
+  if (editionDesCasesActive()) sortirEditionDesCases();
   if (S.pageSelected) {
     S.pageSelected = false;
     drawCurrentPage();

@@ -1537,8 +1537,9 @@ function updateSidePanelImpl(){
         document.getElementById('sidePageEditionBtn').textContent = enEdition
           ? tr('Done', 'Terminer') : tr('Edit the panels', 'Modifier les cases');
         document.getElementById('sidePageEditionHint').textContent = enEdition
-          ? tr('On the page: drag a panel to move it, a corner to resize it, right-click to add one; Delete removes the selected panel, Esc finishes.',
-            'Sur la Planche : tirez une Case pour la déplacer, un coin pour la redimensionner, clic droit pour en ajouter une ; Suppr retire la Case sélectionnée, Échap termine.')
+          // Une commande par ligne (demandé : enchaînée en une phrase, elle se lisait mal).
+          ? tr('On the page:\n• Drag a panel: move it\n• Drag a corner: resize it\n• Right-click: add a panel\n• Delete: remove the selected panel\n• Esc, or a click outside the page: finish',
+            'Sur la Planche :\n• Tirer une Case : la déplacer\n• Tirer un coin : la redimensionner\n• Clic droit : ajouter une Case\n• Suppr : retirer la Case sélectionnée\n• Échap, ou un clic hors de la Planche : terminer')
           : '';
         sidePageEditionSection.style.display = 'block';
       }

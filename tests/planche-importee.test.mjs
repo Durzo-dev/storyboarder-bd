@@ -287,7 +287,14 @@ describe('Retours suivants (13 octobre 2026) : correction', () => {
     assert.match(ui, /edition = null;\n {2}surbrillance = null;\n {2}S\.selectedId = null;/);
     assert.match(ui, /edition\.sel = null;\n {4}surbrillance = null;/);
   });
-  test('les tirets sont bordés de blanc et de noir', () => {
-    assert.match(lire('src/draw.js'), /c\.strokeStyle = '#000'; c\.lineWidth = l \+ 3;[\s\S]{0,120}c\.strokeStyle = '#fff'; c\.lineWidth = l \+ 1\.5;/);
+  test('un seul trait, orange haché de blanc et de noir (pas plus épais)', () => {
+    const d = lire('src/draw.js');
+    assert.match(d, /c\.lineCap = 'butt'; c\.lineWidth = l;/);
+    assert.doesNotMatch(d, /lineWidth = l \+/, 'la bordure s\'épaissit de nouveau');
+    assert.match(d, /lineDashOffset = -8; c\.strokeStyle = '#fff'/);
+  });
+  test('un clic hors de la Planche quitte la correction ; l\'aide a une commande par ligne', () => {
+    assert.match(lire('src/events.js'), /if \(e\.target === canvas\) return;\n[^\n]*\n {2}if \(editionDesCasesActive\(\)\) sortirEditionDesCases\(\);/);
+    assert.match(lire('src/style.css'), /#sidePageEditionHint\{ white-space:pre-line;/);
   });
 });

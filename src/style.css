@@ -2580,3 +2580,5 @@ button.store-chip:hover{ border-color:var(--accent); }
 /* Planche importée : la description de chaque Case se tape dans la liste des Cases du menu Planche. */
 .planche-case-row textarea.planche-case-saisie{ flex:1; width:auto; min-height:46px; padding:6px 8px; font-size:12px; }
 .planche-case-row.case-importee{ cursor:grab; }
+/* L'aide de la correction des Cases : une commande par ligne. */
+#sidePageEditionHint{ white-space:pre-line; line-height:1.7; }
