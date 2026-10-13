@@ -21,7 +21,7 @@ Planches d'un chapitre sont contiguës, celles sans chapitre en tête.
 **Planches importées** (octobre 2026, cf. [planche-importee.md](planche-importee.md)) : `importee`
 sur une Planche (`{ largeur, hauteur }`, plus `imageAnchorX`, `imageAnchorY`, `imageZoom` pour le
 cadrage de l'ensemble) et `regionImage` sur ses Cases (`{ x, y, w, h }` en fractions de l'image),
-qui portent aussi `imageFile`. Champs AJOUTÉS : la place d'une Case (`x`, `y`, `w`, `h`, `pts`) est
+qui portent aussi `imageFile`, et `pointsImage` (ses quatre coins, en fractions) quand une Case a été déformée. Champs AJOUTÉS : la place d'une Case (`x`, `y`, `w`, `h`, `pts`) est
 recalculée à chaque dessin et reste écrite, si bien qu'une version qui les ignore lit des Cases
 ordinaires.
 

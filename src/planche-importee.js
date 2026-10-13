@@ -30,6 +30,13 @@
 /** Les champs AJOUTÉS (rien n'est renommé) : sur la Planche, et sur chacune de ses Cases. */
 export const CHAMP_PLANCHE_IMPORTEE = 'importee';
 export const CHAMP_REGION_IMAGE = 'regionImage';
+/**
+ * Les QUATRE COINS d'une Case DÉFORMÉE (demandé : déformer par les coins, comme une Case ordinaire),
+ * en fractions de l'image, dans l'ordre haut-gauche, haut-droit, bas-droit, bas-gauche (celui de
+ * `pts`). Champ AJOUTÉ, absent pour un rectangle ; `regionImage` reste toujours écrit (la boîte
+ * englobante), pour qu'une version qui ignore les coins lise une Case à sa place.
+ */
+export const CHAMP_POINTS_IMAGE = 'pointsImage';
 
 /** Le cadrage de l'ensemble : mêmes noms que celui d'une image de Case, mêmes bornes de zoom. */
 export const ZOOM_PLANCHE_MIN = 1;
@@ -53,6 +60,50 @@ export function regionValide(r){
   const x = nombre(r.x), y = nombre(r.y), w = nombre(r.w), h = nombre(r.h);
   if (![x, y, w, h].every(Number.isFinite) || w <= 0 || h <= 0) return null;
   return { x, y, w, h };
+}
+
+/** Les quatre coins d'une Case importée, toujours utilisables (le rectangle si elle n'est pas déformée). PURE. */
+export function pointsDeLaCase(o){
+  const p = o && o[CHAMP_POINTS_IMAGE];
+  if (Array.isArray(p) && p.length === 4 && p.every(q => q && Number.isFinite(Number(q.x)) && Number.isFinite(Number(q.y)))) {
+    return p.map(q => ({ x: Number(q.x), y: Number(q.y) }));
+  }
+  const r = regionValide(o && o[CHAMP_REGION_IMAGE]);
+  if (!r) return null;
+  return [{ x: r.x, y: r.y }, { x: r.x + r.w, y: r.y }, { x: r.x + r.w, y: r.y + r.h }, { x: r.x, y: r.y + r.h }];
+}
+
+/**
+ * Pose les coins d'une Case : bornés à l'image, et la boîte englobante réécrite dans `regionImage`.
+ * Un rectangle droit SUPPRIME `pointsImage` : une Case redressée redevient identique à une Case
+ * jamais déformée. PURE vis-à-vis du DOM (modifie `o`).
+ */
+export function poserPointsDeLaCase(o, pts){
+  const c = (v) => Math.min(1, Math.max(0, v));
+  const q = pts.map(p => ({ x: c(p.x), y: c(p.y) }));
+  const xs = q.map(p => p.x), ys = q.map(p => p.y);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  o[CHAMP_REGION_IMAGE] = { x: x0, y: y0, w: Math.max(REGION_MIN, x1 - x0), h: Math.max(REGION_MIN, y1 - y0) };
+  const droit = q[0].x === q[3].x && q[1].x === q[2].x && q[0].y === q[1].y && q[3].y === q[2].y;
+  if (droit) delete o[CHAMP_POINTS_IMAGE]; else o[CHAMP_POINTS_IMAGE] = q;
+}
+
+/** Translate des coins sans qu'aucun ne sorte de l'image. PURE. */
+export function translaterPoints(pts, dx, dy){
+  const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+  const ddx = Math.min(1 - Math.max(...xs), Math.max(-Math.min(...xs), dx));
+  const ddy = Math.min(1 - Math.max(...ys), Math.max(-Math.min(...ys), dy));
+  return pts.map(p => ({ x: p.x + ddx, y: p.y + ddy }));
+}
+
+/** Le point (fractions) est-il dans le quadrilatère ? PURE. */
+export function dansLesPoints(pts, x, y){
+  let dedans = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const a = pts[i], b = pts[j];
+    if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) dedans = !dedans;
+  }
+  return dedans;
 }
 
 /** Cette Case appartient-elle à une Planche importée ? PURE. */
@@ -140,7 +191,8 @@ export function placerCasesImportees(page){
     o.y = pose.y + r.y * pose.h;
     o.w = r.w * pose.w;
     o.h = r.h * pose.h;
-    o.pts = [{ x: o.x, y: o.y }, { x: o.x + o.w, y: o.y }, { x: o.x + o.w, y: o.y + o.h }, { x: o.x, y: o.y + o.h }];
+    // Les coins : ceux d'une Case déformée, sinon ceux de son rectangle.
+    o.pts = pointsDeLaCase(o).map(q => ({ x: pose.x + q.x * pose.w, y: pose.y + q.y * pose.h }));
   });
   return pose;
 }
@@ -446,27 +498,6 @@ export function ordreDeLecture(regions, { double = false } = {}){
 
 /** Le côté minimal d'une région retouchée à la main, en part de l'image. */
 export const REGION_MIN = 0.02;
-
-/**
- * Une région retouchée pendant la vérification : `poignee` vaut 'deplacer' ou un coin ('nw', 'ne',
- * 'sw', 'se') ; `dx`, `dy` sont le déplacement depuis le DÉBUT du geste, en fractions de l'image
- * (on repart toujours de `r0`, jamais de la région courante). Elle reste dans l'image et garde une
- * taille minimale. PURE.
- */
-export function retoucherRegion(r0, poignee, dx, dy){
-  const r = regionValide(r0);
-  if (!r) return null;
-  const c = (v) => Math.min(1, Math.max(0, v));
-  if (poignee === 'deplacer') {
-    return { x: c(Math.min(r.x + dx, 1 - r.w)), y: c(Math.min(r.y + dy, 1 - r.h)), w: r.w, h: r.h };
-  }
-  let x0 = r.x, y0 = r.y, x1 = r.x + r.w, y1 = r.y + r.h;
-  if (poignee.includes('w')) x0 = c(Math.min(x0 + dx, x1 - REGION_MIN));
-  if (poignee.includes('e')) x1 = c(Math.max(x1 + dx, x0 + REGION_MIN));
-  if (poignee.includes('n')) y0 = c(Math.min(y0 + dy, y1 - REGION_MIN));
-  if (poignee.includes('s')) y1 = c(Math.max(y1 + dy, y0 + REGION_MIN));
-  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
-}
 
 /** Une région tracée entre deux points (fractions), ou null si elle est trop petite. PURE. */
 export function regionTracee(a, b){

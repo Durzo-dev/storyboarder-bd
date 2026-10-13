@@ -18,8 +18,10 @@
 import { S, tr, newId, currentPageData, currentPage, createVolume } from './state.js';
 import { choisirImage, rangerImageChoisie } from './image-store.js';
 import { preloadImagesFor } from './image-cache.js';
+import { snapCornerToRightAngle } from './hit-test.js';
 import {
-  detecterCases, niveauxDeGris, retoucherRegion, regionTracee, creerPlancheImportee,
+  detecterCases, niveauxDeGris, regionTracee, creerPlancheImportee,
+  pointsDeLaCase, poserPointsDeLaCase, translaterPoints, dansLesPoints,
   estPlancheImportee, estCaseImportee, imageDeLaPlanche, poseDeLImage, formatPourLaPlanche, tomeAdaptable,
 } from './planche-importee.js';
 
@@ -37,7 +39,7 @@ let edition = null;   // { pageId, sel, geste }
 
 /**
  * LE CLIGNOTEMENT de la Case sélectionnée en correction (demandé) : sa bordure passe d'orange à
- * blanc puis à noir, en boucle. Un minuteur ne redessine que tant qu'une Case est sélectionnée.
+ * noir, en boucle. Un minuteur ne redessine que tant qu'une Case est sélectionnée.
  */
 export const CLIGNOTEMENT_MS = 350;
 let _minuteur = null;
@@ -49,8 +51,8 @@ function suivreLeClignotement(){
   }, CLIGNOTEMENT_MS);
   if (!actif && _minuteur) { clearInterval(_minuteur); _minuteur = null; }
 }
-/** La phase du clignotement : 0 orange, 1 blanc, 2 noir. */
-export function phaseDuClignotement(t = Date.now()){ return Math.floor(t / CLIGNOTEMENT_MS) % 3; }
+/** La phase du clignotement : 0 orange, 1 noir (demandé : entre orange et noir seulement). */
+export function phaseDuClignotement(t = Date.now()){ return Math.floor(t / CLIGNOTEMENT_MS) % 2; }
 
 /** La Planche affichée est-elle en édition des Cases ? */
 export function editionDesCasesActive(){
@@ -108,31 +110,31 @@ export function caseEnSurbrillance(){
   return surbrillance && casesImportees().some(o => o.id === surbrillance) ? surbrillance : null;
 }
 
-/** Ce qui est sous le pointeur (unités de Planche) : un coin de la Case sélectionnée, une Case, ou rien. */
+/**
+ * Ce qui est sous le pointeur (unités de Planche) : un COIN de la Case sélectionnée (`{ coin: i }`),
+ * le MILIEU d'un de ses bords (`{ bord: i }`, le bord i joint les coins i et i+1, comme `pts`), une
+ * Case (`deplacer`), ou rien. Mêmes poignées qu'une Case ordinaire (cf. hitPanelCorner, hitPanelEdge).
+ */
 function cible(p, po){
   const cases = casesImportees();
   const sel = cases.find(o => o.id === edition.sel);
+  const versPage = (q) => ({ x: po.x + q.x * po.w, y: po.y + q.y * po.h });
   if (sel) {
-    const r = sel.regionImage;
-    const coins = { nw: [r.x, r.y], ne: [r.x + r.w, r.y], sw: [r.x, r.y + r.h], se: [r.x + r.w, r.y + r.h] };
-    for (const [nom, [cx, cy]] of Object.entries(coins)) {
-      if (Math.abs(po.x + cx * po.w - p.x) <= POIGNEE && Math.abs(po.y + cy * po.h - p.y) <= POIGNEE) return { o: sel, poignee: nom };
-    }
-    // Les MILIEUX des bords (demandé, comme une Case ordinaire, cf. hitPanelEdge) : tirer l'un
-    // déplace ce seul côté.
-    const milieux = { n: [r.x + r.w / 2, r.y], s: [r.x + r.w / 2, r.y + r.h], w: [r.x, r.y + r.h / 2], e: [r.x + r.w, r.y + r.h / 2] };
-    for (const [nom, [cx, cy]] of Object.entries(milieux)) {
-      if (Math.hypot(po.x + cx * po.w - p.x, po.y + cy * po.h - p.y) <= POIGNEE) return { o: sel, poignee: nom };
+    const pts = pointsDeLaCase(sel).map(versPage);
+    for (let i = 0; i < 4; i++) if (Math.hypot(p.x - pts[i].x, p.y - pts[i].y) <= POIGNEE) return { o: sel, coin: i };
+    for (let i = 0; i < 4; i++) {
+      const a = pts[i], b = pts[(i + 1) % 4];
+      if (Math.hypot(p.x - (a.x + b.x) / 2, p.y - (a.y + b.y) / 2) <= POIGNEE) return { o: sel, bord: i };
     }
   }
   const f = enFraction(p, po);
   let meilleure = null;
   for (const o of cases) {
     const r = o.regionImage;
-    if (f.x >= r.x && f.x <= r.x + r.w && f.y >= r.y && f.y <= r.y + r.h
+    if (dansLesPoints(pointsDeLaCase(o), f.x, f.y)
       && (!meilleure || r.w * r.h < meilleure.regionImage.w * meilleure.regionImage.h)) meilleure = o;
   }
-  return meilleure ? { o: meilleure, poignee: 'deplacer' } : null;
+  return meilleure ? { o: meilleure, deplacer: true } : null;
 }
 
 /** Le curseur à montrer en survol, ou null hors édition. */
@@ -141,9 +143,8 @@ export function curseurEdition(p){
   const t = cible(p, pose());
   if (!t) return 'crosshair';
   // Les mêmes curseurs qu'une Case ordinaire : la main sur un coin, une double flèche sur un bord.
-  if (t.poignee === 'deplacer') return 'move';
-  if (t.poignee === 'n' || t.poignee === 's') return 'ns-resize';
-  if (t.poignee === 'e' || t.poignee === 'w') return 'ew-resize';
+  if (t.deplacer) return 'move';
+  if (t.bord !== undefined) return (t.bord === 0 || t.bord === 2) ? 'ns-resize' : 'ew-resize';
   return 'pointer';
 }
 
@@ -153,8 +154,8 @@ export function debutGesteEdition(p){
   const po = pose();
   const t = cible(p, po);
   if (t) {
-    edition.sel = t.o.id; suivreLeClignotement();
-    edition.geste = { o: t.o, poignee: t.poignee, depart: enFraction(p, po), r0: { ...t.o.regionImage }, pris: false };
+    edition.sel = t.o.id;
+    edition.geste = { ...t, depart: p, pts0: pointsDeLaCase(t.o), pris: false };
   } else {
     // Un clic hors de toute Case désélectionne (demandé). On ne trace plus au bouton gauche : une
     // Case se crée au clic droit, et seulement ainsi.
@@ -165,13 +166,39 @@ export function debutGesteEdition(p){
   return true;
 }
 
+/** Le seuil d'équerre, en unités de Planche : celui d'une Case ordinaire (cf. events.js, panelCorner). */
+const EQUERRE = 8;
+
+/**
+ * Le glisser, comme sur une Case ordinaire : un COIN se déplace seul (la Case se DÉFORME), et
+ * s'aligne sur ses voisins à moins de 8 unités (snapCornerToRightAngle) ; un BORD se déplace
+ * parallèlement à lui-même (haut et bas en hauteur, gauche et droite en largeur) ; la Case entière
+ * se translate sans sortir de l'image.
+ */
 export function mouvementGesteEdition(p){
   if (!editionDesCasesActive() || !edition.geste) return false;
   const g = edition.geste;
-  const f = enFraction(p, pose());
-  const dx = f.x - g.depart.x, dy = f.y - g.depart.y;
-  if (!g.pris) { if (Math.abs(dx) < 0.002 && Math.abs(dy) < 0.002) return true; _rappels.snapshot(); g.pris = true; }
-  g.o.regionImage = retoucherRegion(g.r0, g.poignee, dx, dy) || g.r0;
+  const po = pose();
+  const dx = p.x - g.depart.x, dy = p.y - g.depart.y;
+  if (!g.pris) { if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return true; _rappels.snapshot(); g.pris = true; }
+  const fx = dx / po.w, fy = dy / po.h;
+  let pts;
+  if (g.deplacer) {
+    pts = translaterPoints(g.pts0, fx, fy);
+  } else if (g.coin !== undefined) {
+    const enPage = g.pts0.map(q => ({ x: po.x + q.x * po.w, y: po.y + q.y * po.h }));
+    const vise = { x: enPage[g.coin].x + dx, y: enPage[g.coin].y + dy };
+    const s = snapCornerToRightAngle(g.coin, enPage, vise.x, vise.y, EQUERRE);
+    pts = g.pts0.slice();
+    pts[g.coin] = { x: (s.x - po.x) / po.w, y: (s.y - po.y) / po.h };
+  } else {
+    const i = g.bord, j = (i + 1) % 4;
+    const horizontal = i === 0 || i === 2;
+    pts = g.pts0.slice();
+    pts[i] = { x: g.pts0[i].x + (horizontal ? 0 : fx), y: g.pts0[i].y + (horizontal ? fy : 0) };
+    pts[j] = { x: g.pts0[j].x + (horizontal ? 0 : fx), y: g.pts0[j].y + (horizontal ? fy : 0) };
+  }
+  poserPointsDeLaCase(g.o, pts);
   S.projectDirty = true;
   return true;
 }

@@ -21,7 +21,7 @@ the Panels detected, and the new Page opens right after the displayed one, in th
 
 **Correction happens on the Page** (requested on 13 October 2026, the first version used a modal):
 a click selects a Panel (outside the Panels: deselects), dragging it moves it, dragging a corner
-or the middle of a side resizes it (as with an ordinary Panel), the selected Panel blinks orange, white, black, a **right-click without dragging creates one** (the only way), Delete removes it, Esc or a click outside the Page
+or the middle of a side resizes it (as with an ordinary Panel), a corner alone deforms it (with the same square snapping), the selected Panel blinks orange and black, a **right-click without dragging creates one** (the only way), Delete removes it, Esc or a click outside the Page
 finishes; on leaving, nothing stays selected. The Page menu carries the **"Detected
 panels"** section: "Edit the panels" goes back to it at any time, "Done" leaves (the sensitivity
 slider was removed: correction is enough). Numbers follow reading order at import; afterwards they
@@ -63,7 +63,7 @@ Two **added** fields, nothing renamed:
 - on the Page, `importee: { largeur, hauteur }` (the image size), plus the framing of the whole,
   under the names of a Panel image's: `imageAnchorX`, `imageAnchorY`, `imageZoom` (absent =
   centred, 1);
-- on each Panel, `imageFile` (the Page's image) and `regionImage: { x, y, w, h }`, its area in the
+- on each Panel, `pointsImage` when it has been deformed (its four corners, as fractions; `regionImage` then holds their bounding box), `imageFile` (the Page's image) and `regionImage: { x, y, w, h }`, its area in the
   image, as fractions.
 
 **The image name lives on the Panels**, not on the Page: this gives the imported Page, without one

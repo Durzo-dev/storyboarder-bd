@@ -22,7 +22,7 @@ affichée, dans le même Chapitre, **en correction des Cases**.
 
 **La correction se fait sur la Planche** (demandé le 13 octobre 2026, la première version passait
 par une modale) : un clic sélectionne une Case (hors des Cases : désélectionne), la tirer la déplace,
-tirer un coin ou le milieu d'un bord la redimensionne (comme une Case ordinaire), la Case sélectionnée clignote orange, blanc, noir, un **clic droit sans glisser en crée une** (le seul moyen), Suppr la
+tirer un coin ou le milieu d'un bord la redimensionne (comme une Case ordinaire), un coin seul la déforme (avec la même équerre), la Case sélectionnée clignote orange et noir, un **clic droit sans glisser en crée une** (le seul moyen), Suppr la
 retire, Échap ou un clic hors de la Planche termine ; en sortant, plus rien n'est sélectionné. Le menu de la Planche porte
 la section **« Cases détectées »** : « Modifier les cases » y ramène à tout moment, « Terminer » en
 sort (le curseur de sensibilité a été retiré : la correction suffit). Les numéros suivent l'ordre de
@@ -66,7 +66,7 @@ Deux champs **ajoutés**, rien de renommé :
 - sur la Planche, `importee: { largeur, hauteur }` (les dimensions de l'image), plus le cadrage de
   l'ensemble, sous les noms de celui d'une image de Case : `imageAnchorX`, `imageAnchorY`,
   `imageZoom` (absents = centré, 1) ;
-- sur chaque Case, `imageFile` (l'image de la Planche) et `regionImage: { x, y, w, h }`, sa zone
+- sur chaque Case, `pointsImage` quand elle a été déformée (ses quatre coins, en fractions ; `regionImage` porte alors leur boîte englobante), `imageFile` (l'image de la Planche) et `regionImage: { x, y, w, h }`, sa zone
   dans l'image, en fractions.
 
 **Le nom de l'image vit sur les Cases**, pas sur la Planche : c'est ce qui donne à la Planche

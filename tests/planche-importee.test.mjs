@@ -11,7 +11,7 @@ import './helpers/dom-stub.mjs';
 import {
   detecterCases, niveauxDeGris, poseDeLImage, ancrageApresGlisserPlanche,
   placerCasesImportees, creerPlancheImportee, estPlancheImportee, estCaseImportee, imageDeLaPlanche,
-  cadrageLu, cadragePlancheParDefaut, recentrerPlanche, regionValide, ordreDeLecture, retoucherRegion, regionTracee, REGION_MIN,
+  cadrageLu, cadragePlancheParDefaut, recentrerPlanche, regionValide, ordreDeLecture, regionTracee, pointsDeLaCase, poserPointsDeLaCase, translaterPoints, dansLesPoints,
 } from '../src/planche-importee.js';
 
 /** Une planche synthétique : fond `fond`, des Cases (rectangles en pixels) bordées de noir, remplies de `dedans`. */
@@ -178,12 +178,30 @@ describe('La vérification : retouches et ordre de lecture', () => {
     assert.deepEqual(r.map(x => x.x), [0.05, 0.05, 0.55]);
   });
 
-  test('déplacer reste dans l\'image ; un coin garde une taille minimale', () => {
-    assert.deepEqual(retoucherRegion({ x: 0.5, y: 0.5, w: 0.4, h: 0.4 }, 'deplacer', 0.5, -0.9), { x: 0.6, y: 0, w: 0.4, h: 0.4 });
-    const r = retoucherRegion({ x: 0.2, y: 0.2, w: 0.3, h: 0.3 }, 'se', -0.5, -0.5);
-    assert.ok(Math.abs(r.w - REGION_MIN) < 1e-9 && Math.abs(r.h - REGION_MIN) < 1e-9);
-    const nw = retoucherRegion({ x: 0.2, y: 0.2, w: 0.3, h: 0.3 }, 'nw', -0.1, -0.1);
-    assert.ok(Math.abs(nw.x - 0.1) < 1e-9 && Math.abs(nw.w - 0.4) < 1e-9);
+  test('une Case se DÉFORME par ses coins ; redressée, elle redevient un simple rectangle', () => {
+    const o = { type: 'panel', regionImage: { x: 0.2, y: 0.2, w: 0.4, h: 0.3 } };
+    const pts = pointsDeLaCase(o);
+    assert.deepEqual(pts[2], { x: 0.6000000000000001, y: 0.5 });
+    pts[1] = { x: 0.7, y: 0.1 };
+    poserPointsDeLaCase(o, pts);
+    assert.equal(o.pointsImage.length, 4, 'les coins sont gardés');
+    assert.ok(Math.abs(o.regionImage.x + o.regionImage.w - 0.7) < 1e-9 && Math.abs(o.regionImage.y - 0.1) < 1e-9, 'la boîte englobante suit');
+    poserPointsDeLaCase(o, [{ x: 0.2, y: 0.2 }, { x: 0.6, y: 0.2 }, { x: 0.6, y: 0.5 }, { x: 0.2, y: 0.5 }]);
+    assert.equal(o.pointsImage, undefined, 'un rectangle droit n\'a pas de coins écrits');
+  });
+
+  test('translater sans sortir ; un point dans un quadrilatère', () => {
+    const t = translaterPoints([{ x: 0.8, y: 0.1 }, { x: 0.9, y: 0.1 }, { x: 0.9, y: 0.2 }, { x: 0.8, y: 0.2 }], 0.5, -0.5);
+    assert.ok(Math.abs(t[1].x - 1) < 1e-9 && Math.abs(t[0].y) < 1e-9);
+    const losange = [{ x: 0.5, y: 0 }, { x: 1, y: 0.5 }, { x: 0.5, y: 1 }, { x: 0, y: 0.5 }];
+    assert.equal(dansLesPoints(losange, 0.5, 0.5), true);
+    assert.equal(dansLesPoints(losange, 0.05, 0.05), false);
+  });
+
+  test('placée, une Case déformée garde ses coins dans `pts`', () => {
+    const o = { type: 'panel', regionImage: { x: 0, y: 0, w: 1, h: 1 }, pointsImage: [{ x: 0.1, y: 0 }, { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 0, y: 1 }] };
+    placerCasesImportees({ w: 100, h: 100, importee: { largeur: 10, hauteur: 10 }, objects: [o] });
+    assert.deepEqual(o.pts[0], { x: 10, y: 0 });
   });
 
   test('tracer : dans n\'importe quel sens, rogné à l\'image, refusé s\'il est trop petit', () => {
@@ -288,16 +306,17 @@ describe('Retours suivants (13 octobre 2026) : correction', () => {
     assert.match(ui, /edition = null;\n {2}surbrillance = null;\n {2}S\.selectedId = null;/);
     assert.match(ui, /edition\.sel = null;\n {4}surbrillance = null;/);
   });
-  test('tirets orange de 1,5 ; la Case sélectionnée clignote orange, blanc, noir', async () => {
+  test('tirets orange de 1,5 ; la Case sélectionnée clignote orange et noir', async () => {
     const d = lire('src/draw.js');
-    assert.match(d, /\(choisie && enEdition\) \? \[SIGNAL_SELECTION, '#fff', '#000'\]\[phaseDuClignotement\(\)\] : SIGNAL_SELECTION/);
+    assert.match(d, /\(choisie && enEdition\) \? \[SIGNAL_SELECTION, '#000'\]\[phaseDuClignotement\(\)\] : SIGNAL_SELECTION/);
     const { phaseDuClignotement, CLIGNOTEMENT_MS } = await import('../src/import-planche-ui.js');
-    assert.deepEqual([0, 1, 2, 3].map(k => phaseDuClignotement(k * CLIGNOTEMENT_MS)), [0, 1, 2, 0]);
+    assert.deepEqual([0, 1, 2, 3].map(k => phaseDuClignotement(k * CLIGNOTEMENT_MS)), [0, 1, 0, 1], 'orange et noir seulement');
   });
   test('les bords se tirent par leur milieu, comme une Case ordinaire, avec les mêmes curseurs', () => {
     const ui = lire('src/import-planche-ui.js');
-    assert.match(ui, /const milieux = \{ n: \[/);
-    assert.match(ui, /if \(t\.poignee === 'n' \|\| t\.poignee === 's'\) return 'ns-resize';/);
+    assert.match(ui, /return \{ o: sel, bord: i \};/);
+    assert.match(ui, /if \(t\.bord !== undefined\) return \(t\.bord === 0 \|\| t\.bord === 2\) \? 'ns-resize' : 'ew-resize';/);
+    assert.match(ui, /snapCornerToRightAngle\(g\.coin, enPage, vise\.x, vise\.y, EQUERRE\)/, 'un coin déforme, avec l\'équerre d\'une Case ordinaire');
     assert.match(lire('src/draw.js'), /Les milieux des bords, ronds/);
   });
   test('un clic hors de la Planche quitte la correction ; l\'aide a une commande par ligne', () => {

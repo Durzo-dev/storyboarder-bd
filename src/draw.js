@@ -1207,13 +1207,14 @@ function dessinerEditionDesCases(c, page){
   page.objects.filter(o => estCaseImportee(o) && (enEdition || o.id === sel)).forEach(o => {
     const choisie = o.id === sel;
     // Tirets ORANGE, de l'épaisseur d'une sélection ordinaire (1,5, cf. drawSelection). La Case
-    // sélectionnée en correction CLIGNOTE (demandé) : orange, blanc, noir, en boucle
-    // (cf. phaseDuClignotement), ce qui la fait ressortir sur n'importe quel dessin.
-    const couleur = (choisie && enEdition) ? [SIGNAL_SELECTION, '#fff', '#000'][phaseDuClignotement()] : SIGNAL_SELECTION;
+    // sélectionnée en correction CLIGNOTE (demandé) : orange puis noir, en boucle
+    // (cf. phaseDuClignotement). Le contour suit ses coins : une Case peut être déformée.
+    const couleur = (choisie && enEdition) ? [SIGNAL_SELECTION, '#000'][phaseDuClignotement()] : SIGNAL_SELECTION;
+    const pts = o.pts || getPanelPoints(o);
     c.lineCap = 'butt'; c.lineWidth = 1.5;
     c.setLineDash([6, 4]);
     c.strokeStyle = couleur;
-    c.strokeRect(o.x, o.y, o.w, o.h);
+    c.beginPath(); pts.forEach((p, k) => (k ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y))); c.closePath(); c.stroke();
     c.setLineDash([]);
     const t = String(o.caseNumber || '?');
     c.font = '600 12px system-ui, sans-serif';
@@ -1222,13 +1223,14 @@ function dessinerEditionDesCases(c, page){
     c.fillStyle = SIGNAL_SELECTION_LISERE; c.textBaseline = 'middle'; c.fillText(t, o.x + 8, o.y + 12);
     if (choisie && enEdition) {
       c.strokeStyle = SIGNAL_SELECTION_LISERE; c.lineWidth = 1;
-      [[o.x, o.y], [o.x + o.w, o.y], [o.x, o.y + o.h], [o.x + o.w, o.y + o.h]].forEach(([px, py]) => {
-        c.fillStyle = SIGNAL_SELECTION; c.fillRect(px - 5, py - 5, 10, 10); c.strokeRect(px - 5, py - 5, 10, 10);
+      pts.forEach(p => {
+        c.fillStyle = SIGNAL_SELECTION; c.fillRect(p.x - 5, p.y - 5, 10, 10); c.strokeRect(p.x - 5, p.y - 5, 10, 10);
       });
       // Les milieux des bords, ronds, comme ceux d'une Case ordinaire (cf. drawSelection).
       c.fillStyle = SIGNAL_SELECTION_LISERE; c.strokeStyle = SIGNAL_SELECTION; c.lineWidth = 1.5;
-      [[o.x + o.w / 2, o.y], [o.x + o.w / 2, o.y + o.h], [o.x, o.y + o.h / 2], [o.x + o.w, o.y + o.h / 2]].forEach(([mx, my]) => {
-        c.beginPath(); c.arc(mx, my, 5, 0, Math.PI * 2); c.fill(); c.stroke();
+      pts.forEach((a, k) => {
+        const b = pts[(k + 1) % pts.length];
+        c.beginPath(); c.arc((a.x + b.x) / 2, (a.y + b.y) / 2, 5, 0, Math.PI * 2); c.fill(); c.stroke();
       });
     }
   });
