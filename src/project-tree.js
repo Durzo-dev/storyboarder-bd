@@ -164,7 +164,8 @@ export function renderTree(){
       formatSelect.appendChild(document.createElement('hr'));
       const gerer = document.createElement('option');
       gerer.value = GERER_LES_FORMATS; gerer.className = 'option-action';
-      gerer.textContent = '⚙ ' + tr('Manage formats…', 'Gérer les formats…');
+      // Deux espaces insécables : une espace ordinaire se réduit à une seule dans une <option>.
+      gerer.textContent = '⚙\u00A0\u00A0' + tr('Manage formats…', 'Gérer les formats…');
       formatSelect.appendChild(gerer);
       formatSelect.value = t.format;
       formatSelect.onclick = (e) => e.stopPropagation();
