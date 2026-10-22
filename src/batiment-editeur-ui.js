@@ -52,15 +52,15 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null } = {}
   const b = batiment ? JSON.parse(JSON.stringify(batiment)) : creerBatiment('', tr);
   E = {
     batiment: b, fichier, modifie: false, vue: null, niveauId: b.niveaux[0].id, apercu: null, geste: null,
-    // #454a-3 : le tracé. Un bâtiment vide s'ouvre sur l'outil Mur, un bâtiment existant sur la Sélection.
-    outil: b.murs.length ? 'selection' : 'mur', chaine: null, survol: null, selection: null,
+    // #454a-3 : le tracé.
+    // Aucun outil à l'ouverture : le menu de base (demandé).
+    outil: null, chaine: null, survol: null, selection: null,
     glisserSommet: null, historique: [], refaire: [],
   };
   $('batimentEditeur').classList.remove('hidden');
   $('batimentNom').value = b.nom;
   statut('');
-  choisirOutil(E.outil);
-  remplirPanneau();
+  choisirOutil(null);
   recadrer();
   appliquerAffichage();
   E.apercu = ouvrirApercu($('batimentApercu'), b);
@@ -124,7 +124,8 @@ function remplirPanneau(){
   const pieces = $('batimentPieces');
   pieces.replaceChildren(...(b.pieces.length ? b.pieces.map(p => ligne(p.nom, '')) : [vide(tr('No room yet', 'Aucune pièce pour l\'instant'))]));
   const m = murSelectionne();
-  $('batimentSectionSelection').hidden = !m;
+  $('batimentSelectionMur').hidden = !m;
+  $('batimentSelectionVide').hidden = !!m;
   if (m) {
     $('batimentMurLongueur').textContent = tr(`Length: ${metres(longueurDuMur(m))}`, `Longueur : ${metres(longueurDuMur(m))}`);
     if (document.activeElement !== $('batimentMurEpaisseur')) $('batimentMurEpaisseur').value = Math.round(m.epaisseur * 100);
@@ -139,13 +140,22 @@ function murSelectionne(){
   return E.batiment.murs.find(m => m.id === E.selection.murId) || null;
 }
 
+/**
+ * Choisit l'outil (null : aucun). Le menu de droite suit (demandé) : le panneau porte `data-outil`,
+ * et chaque section dit pour quel outil elle s'affiche. Quitter la Sélection désélectionne.
+ */
 function choisirOutil(outil){
   if (!E) return;
-  E.outil = outil; E.chaine = null; E.survol = null;
-  document.querySelectorAll('.batiment-outil').forEach(b => b.classList.toggle('actif', b.dataset.outil === outil));
-  $('batimentPlan').classList.toggle('outil-mur', outil === 'mur');
+  E.outil = outil || null; E.chaine = null; E.survol = null;
+  if (E.outil !== 'selection') E.selection = null;
+  document.querySelectorAll('.batiment-outil').forEach(b => b.classList.toggle('actif', b.dataset.outil === E.outil));
+  $('batimentPanneau').dataset.outil = E.outil || 'aucun';
+  $('batimentPlan').classList.toggle('outil-mur', E.outil === 'mur');
+  remplirPanneau();
   dessinerPlan();
 }
+/** Un clic sur un outil : le prend, ou le quitte s'il était déjà pris. */
+function basculerOutil(outil){ if (E) choisirOutil(E.outil === outil ? null : outil); }
 
 /** L'épaisseur des nouveaux murs, en mètres (le champ est en centimètres). */
 function epaisseurDesNouveaux(){
@@ -344,11 +354,11 @@ function survoler(e){
     const s = aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, depuis: E.chaine && E.chaine.depuis });
     s.croise = !!E.chaine && croiseUnMur(E.batiment, E.niveauId, E.chaine.depuis, s.point);
     E.survol = s;
-  } else {
+  } else if (E.outil === 'selection') {
     const sommet = sommetSous(E.batiment, E.niveauId, p, tol);
     const m = sommet ? null : murSous(E.batiment, E.niveauId, p, tol / 2);
     E.survol = { sommet, murId: m ? m.mur.id : null };
-  }
+  } else E.survol = null;
   dessinerPlan();
 }
 
@@ -369,7 +379,7 @@ function cablerPlan(){
       c.setPointerCapture(e.pointerId);
       return;
     }
-    if (e.button !== 0) return;
+    if (e.button !== 0 || !E.outil) return;
     const { p, tol } = souris(e);
     if (E.outil === 'mur') {
       poserUnPoint(aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, depuis: E.chaine && E.chaine.depuis }));
@@ -626,9 +636,10 @@ function clavier(e){
   const avale = () => { e.preventDefault(); e.stopImmediatePropagation(); };
   if (e.key === 'Escape') {
     avale();
-    // Échap défait d'abord ce qui est en cours : la chaîne, puis la sélection ; ensuite il ferme.
+    // Échap défait d'abord ce qui est en cours : la chaîne, la sélection, l'outil ; ensuite il ferme.
     if (finirLaChaine()) return;
     if (E.selection) { E.selection = null; remplirPanneau(); dessinerPlan(); return; }
+    if (E.outil) { choisirOutil(null); return; }
     fermerEditeurDeBatiment();
     return;
   }
@@ -640,8 +651,8 @@ function clavier(e){
     return;
   }
   if (dansUnChamp || e.ctrlKey || e.metaKey) return;
-  if (touche === 'm') choisirOutil('mur');
-  else if (touche === 'v') choisirOutil('selection');
+  if (touche === 'm') basculerOutil('mur');
+  else if (touche === 'v') basculerOutil('selection');
   else if (e.key === 'Enter') finirLaChaine();
   else if ((e.key === 'Delete' || e.key === 'Backspace') && murSelectionne()) {
     const id = E.selection.murId;
@@ -663,7 +674,7 @@ export function initEditeurDeBatiment(){
     if (!nom) return;
     E.batiment.nom = nom; E.modifie = true; statut('');
   });
-  document.querySelectorAll('.batiment-outil').forEach(b => { b.onclick = () => choisirOutil(b.dataset.outil); });
+  document.querySelectorAll('.batiment-outil').forEach(b => { b.onclick = () => basculerOutil(b.dataset.outil); });
   $('batimentMurSupprimer').onclick = () => { const m = murSelectionne(); if (m) modifier(b => supprimerMur(b, m.id)); };
   $('batimentMurEpaisseur').addEventListener('change', (e) => {
     const m = murSelectionne(); const v = Number(e.target.value);

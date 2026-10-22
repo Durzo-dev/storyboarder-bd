@@ -15,7 +15,7 @@ export const GROUPES_MANUEL = Object.freeze([
   { id: 'dialogues', en: 'Dialogue', fr: 'Dialogues', sections: ['bulles', 'style', 'fusion', 'polices'] },
   { id: 'mise-en-scene', en: '3D staging', fr: 'Mise en scène 3D', sections: ['scenes', 'camera', 'lumiere', 'sources', 'ombres'] },
   { id: 'elements', en: 'Elements', fr: 'Éléments', sections: ['objets', 'personnages'] },
-  { id: 'modeles-3d', en: '3D models', fr: 'Modèles 3D', sections: ['modeles', 'store', 'modeles_articules', 'correspondance', 'editeur', 'batiments'] },
+  { id: 'modeles-3d', en: '3D models', fr: 'Modèles 3D', sections: ['modeles', 'store', 'modeles_articules', 'correspondance', 'editeur', 'batiments', 'batiments_trace'] },
 ]);
 
 /** Un caractère sans accent ni majuscule : « É » → « e ». Rend toujours UN caractère (ou vide). */

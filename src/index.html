@@ -202,57 +202,79 @@
           </div>
           <div class="batiment-editeur-apercu" id="batimentApercu"></div>
         </div>
+        <!-- Les OUTILS, en bas au centre de la vue de dessus (demandé). Un nouveau clic sur l'outil
+             actif le quitte : le menu de droite revient au menu de base. -->
+        <div class="batiment-outils" id="batimentOutils">
+          <button type="button" class="batiment-outil" id="batimentOutilMur" data-outil="mur" title="Tracer des murs (M)">Mur</button>
+          <button type="button" class="batiment-outil" id="batimentOutilSelection" data-outil="selection" title="Sélectionner (V)">Sélection</button>
+        </div>
         <button type="button" class="batiment-apercu-icone" id="batimentApercuIcone" data-coin="hd" title="Afficher l'aperçu 3D" hidden>
           <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
             <path d="M12 3 3 7.5v9L12 21l9-4.5v-9Z"/><path d="M3 7.5 12 12l9-4.5"/><path d="M12 12v9"/>
           </svg>
         </button>
       </div>
-      <aside class="batiment-editeur-panneau">
+      <aside class="batiment-editeur-panneau" id="batimentPanneau" data-outil="aucun">
         <div class="menu-header">
           <span></span>
           <span class="menu-title" id="batimentEditeurTitre">Éditeur de bâtiment</span>
           <button id="batimentEditeurFermerX" class="menu-close-btn" type="button" title="Fermer l'éditeur (Échap)">&times;</button>
         </div>
-        <section class="side-section">
+        <!-- LE CONTENU SUIT L'OUTIL (demandé) : `data-outil` sur le panneau, et chaque section dit pour
+             quel outil elle s'affiche (pour-aucun, pour-mur, pour-selection). Sans outil : le menu
+             de base. Les boutons du bas restent, quel que soit l'outil. -->
+        <section class="side-section pour-aucun">
           <h2 id="batimentSectionNom">Bâtiment</h2>
           <input type="text" id="batimentNom" class="modal-input batiment-nom" autocomplete="off" spellcheck="false">
           <p id="batimentFichier" class="batiment-fichier"></p>
         </section>
-        <section class="side-section">
-          <h2 id="batimentSectionOutils">Outils</h2>
-          <div class="batiment-outils">
-            <button type="button" class="batiment-outil" id="batimentOutilMur" data-outil="mur" title="Tracer des murs (M)">Mur</button>
-            <button type="button" class="batiment-outil" id="batimentOutilSelection" data-outil="selection" title="Sélectionner (V)">Sélection</button>
-          </div>
-          <label class="batiment-champ"><span id="batimentEpaisseurLibelle">Épaisseur des nouveaux murs</span>
-            <span class="batiment-champ-valeur"><input type="number" id="batimentEpaisseur" min="5" max="100" step="1" value="20"> cm</span></label>
-        </section>
-        <section class="side-section" id="batimentSectionSelection" hidden>
-          <h2 id="batimentSelectionTitre">Mur sélectionné</h2>
-          <p id="batimentMurLongueur" class="batiment-fichier"></p>
-          <label class="batiment-champ"><span id="batimentMurEpaisseurLibelle">Épaisseur</span>
-            <span class="batiment-champ-valeur"><input type="number" id="batimentMurEpaisseur" min="5" max="100" step="1"> cm</span></label>
-          <button type="button" class="full-btn delete-btn" id="batimentMurSupprimer">Supprimer le mur</button>
-        </section>
-        <section class="side-section">
+        <section class="side-section pour-aucun">
           <h2 id="batimentSectionNiveaux">Niveaux</h2>
           <div id="batimentNiveaux" class="batiment-liste"></div>
         </section>
-        <section class="side-section">
+        <section class="side-section pour-aucun">
           <h2 id="batimentSectionPieces">Pièces</h2>
           <div id="batimentPieces" class="batiment-liste"></div>
         </section>
-        <section class="side-section">
+        <section class="side-section pour-aucun">
           <h2 id="batimentSectionAide">Commandes</h2>
-          <p id="batimentAide" class="batiment-aide">Mur (M) : un clic pour commencer, un clic par angle ; un clic sur un mur existant fait une jonction en T. Double-clic, Entrée, clic droit ou Échap : finir la chaîne.
-L'angle s'aimante par 15°, la longueur au centimètre, les sommets et les alignements aussi ; Alt maintenu : rien n'est aimanté. Un mur qui en traverse un autre est refusé (en rouge).
-Sélection (V) : clic sur un mur pour le choisir, tirer un angle pour le déplacer ; Suppr : supprimer.
-Ctrl+Z / Ctrl+Y : annuler / rétablir.
+          <p id="batimentAide" class="batiment-aide">Les outils sont en bas : Mur (M) pour tracer, Sélection (V) pour retoucher. Un nouveau clic sur l'outil actif le quitte.
 Vue de dessus : molette pour zoomer, clic droit maintenu pour déplacer la vue.
 Aperçu 3D : clic gauche maintenu pour tourner, clic droit maintenu pour déplacer, molette pour zoomer. Sa barre : la tirer pour l'ancrer à un autre coin, − pour le réduire, ⤢ pour le plein écran.
-Échap : fermer l'éditeur.</p>
+Ctrl+Z / Ctrl+Y : annuler / rétablir. Échap : fermer l'éditeur.</p>
         </section>
+
+        <section class="side-section pour-mur">
+          <h2 id="batimentSectionMur">Mur</h2>
+          <label class="batiment-champ"><span id="batimentEpaisseurLibelle">Épaisseur des nouveaux murs</span>
+            <span class="batiment-champ-valeur"><input type="number" id="batimentEpaisseur" min="5" max="100" step="1" value="20"> cm</span></label>
+        </section>
+        <section class="side-section pour-mur">
+          <h2 id="batimentSectionAideMur">Commandes</h2>
+          <p id="batimentAideMur" class="batiment-aide">Un clic pour commencer, puis un clic par angle. Un clic sur un mur existant fait une jonction en T.
+Double-clic, Entrée, clic droit ou un angle déjà posé : finir la chaîne.
+L'angle s'aimante par 15°, la longueur au centimètre, les angles et les alignements aussi. Alt maintenu : rien n'est aimanté.
+Un mur qui en traverserait un autre s'affiche en rouge et est refusé.
+Échap : finir la chaîne, puis quitter l'outil.</p>
+        </section>
+
+        <section class="side-section pour-selection" id="batimentSectionSelection">
+          <h2 id="batimentSelectionTitre">Mur sélectionné</h2>
+          <p id="batimentSelectionVide" class="batiment-vide">Cliquez sur un mur pour le choisir.</p>
+          <div id="batimentSelectionMur">
+            <p id="batimentMurLongueur" class="batiment-fichier"></p>
+            <label class="batiment-champ"><span id="batimentMurEpaisseurLibelle">Épaisseur</span>
+              <span class="batiment-champ-valeur"><input type="number" id="batimentMurEpaisseur" min="5" max="100" step="1"> cm</span></label>
+            <button type="button" class="full-btn delete-btn" id="batimentMurSupprimer">Supprimer le mur</button>
+          </div>
+        </section>
+        <section class="side-section pour-selection">
+          <h2 id="batimentSectionAideSelection">Commandes</h2>
+          <p id="batimentAideSelection" class="batiment-aide">Clic sur un mur : le choisir. Suppr : le supprimer.
+Tirer un angle : le déplacer, avec tous les murs qui y sont attachés (Alt : sans aimantation).
+Échap : désélectionner, puis quitter l'outil.</p>
+        </section>
+
         <p id="batimentStatut" class="batiment-statut"></p>
         <button id="batimentEnregistrerBtn" type="button" class="full-btn">Enregistrer dans la bibliothèque</button>
         <button id="batimentRecadrerBtn" type="button" class="nav-btn">Recadrer</button>
@@ -954,6 +976,9 @@ Aperçu 3D : clic gauche maintenu pour tourner, clic droit maintenu pour déplac
             </button>
             <button type="button" class="help-group" data-help="batiments">
               <span class="help-group-title">Éditeur de bâtiment</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="batiments_trace">
+              <span class="help-group-title">Tracer les murs</span><span class="help-group-compte"></span>
             </button>
           </div>
         </div>
