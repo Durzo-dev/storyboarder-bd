@@ -377,6 +377,12 @@ la vue de dessus (repère en mètres, grille adaptative, zoom autour de la souri
 « Modifier » sur un Bâtiment ou une Pièce ouvre une copie de ses murs (`batimentDesPieces`, un
 niveau, recentré) ; la Scène n'est pas touchée avant #454f.
 
+**Le tracé des murs** (#454a-3a, fait) : `src/batiment-trace.js` (aimantation aux sommets puis au
+milieu d'un mur, jonction en T qui coupe le mur touché, angle par 15°, longueur au centimètre,
+guides d'alignement, Alt pour poser librement, croisement refusé) et `src/batiment-geometrie.js`
+(les polygones des murs aux jonctions : onglet aux angles, T qui bute contre la face, bout libre
+carré). La vue de dessus et l'aperçu 3D (murs extrudés) partagent ces polygones.
+
 Les bâtiments déjà tracés dans les Scènes (murs Éléments, `pieceId`, `batimentNames`,
 `batimentRotY`) restent LUS et sont **convertis** à l'ouverture en bâtiments d'un niveau, à la même
 place : rien ne bouge à l'écran.

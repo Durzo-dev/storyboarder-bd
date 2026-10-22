@@ -21,9 +21,14 @@ import { tr } from './state.js';
 import { creerBatiment, nomAfficheDuFichier } from './batiment.js';
 import { enregistrerBatiment } from './batiment-store.js';
 import {
-  versEcran, pasDeGrille, zoomerAutour, glisserVue, polygoneDuMur, boiteDesMurs, cadrerSur,
+  versEcran, versBatiment, pasDeGrille, zoomerAutour, glisserVue, boiteDesMurs, cadrerSur,
   affichageApercuLu, coinLePlusProche,
 } from './batiment-plan.js';
+import { polygonesDesMurs } from './batiment-geometrie.js';
+import {
+  aimanter, ajouterMur, croiseUnMur, deplacerSommet, supprimerMur, sommetSous, murSous,
+  sommetsDuNiveau, longueurDuMur,
+} from './batiment-trace.js';
 import { cadrage3D, orbite3D, zoom3D, positionCamera3D, deplacement3D } from './store-apercu-3d.js';
 
 const $ = (id) => document.getElementById(id);
@@ -45,10 +50,16 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null } = {}
   if (E) fermerSansDemander();
   _rappels.avantOuverture();
   const b = batiment ? JSON.parse(JSON.stringify(batiment)) : creerBatiment('', tr);
-  E = { batiment: b, fichier, modifie: false, vue: null, niveauId: b.niveaux[0].id, apercu: null, geste: null };
+  E = {
+    batiment: b, fichier, modifie: false, vue: null, niveauId: b.niveaux[0].id, apercu: null, geste: null,
+    // #454a-3 : le tracé. Un bâtiment vide s'ouvre sur l'outil Mur, un bâtiment existant sur la Sélection.
+    outil: b.murs.length ? 'selection' : 'mur', chaine: null, survol: null, selection: null,
+    glisserSommet: null, historique: [], refaire: [],
+  };
   $('batimentEditeur').classList.remove('hidden');
   $('batimentNom').value = b.nom;
   statut('');
+  choisirOutil(E.outil);
   remplirPanneau();
   recadrer();
   appliquerAffichage();
@@ -112,6 +123,92 @@ function remplirPanneau(){
   niveaux.replaceChildren(...b.niveaux.slice().reverse().map(n => ligne(n.nom, metres(n.hauteur))));
   const pieces = $('batimentPieces');
   pieces.replaceChildren(...(b.pieces.length ? b.pieces.map(p => ligne(p.nom, '')) : [vide(tr('No room yet', 'Aucune pièce pour l\'instant'))]));
+  const m = murSelectionne();
+  $('batimentSectionSelection').hidden = !m;
+  if (m) {
+    $('batimentMurLongueur').textContent = tr(`Length: ${metres(longueurDuMur(m))}`, `Longueur : ${metres(longueurDuMur(m))}`);
+    if (document.activeElement !== $('batimentMurEpaisseur')) $('batimentMurEpaisseur').value = Math.round(m.epaisseur * 100);
+  }
+}
+
+// ── Le tracé (#454a-3) : outils, historique, modifications ───────────────────────────────────────
+
+/** Le mur sélectionné, s'il existe encore. */
+function murSelectionne(){
+  if (!E || !E.selection || !E.selection.murId) return null;
+  return E.batiment.murs.find(m => m.id === E.selection.murId) || null;
+}
+
+function choisirOutil(outil){
+  if (!E) return;
+  E.outil = outil; E.chaine = null; E.survol = null;
+  document.querySelectorAll('.batiment-outil').forEach(b => b.classList.toggle('actif', b.dataset.outil === outil));
+  $('batimentPlan').classList.toggle('outil-mur', outil === 'mur');
+  dessinerPlan();
+}
+
+/** L'épaisseur des nouveaux murs, en mètres (le champ est en centimètres). */
+function epaisseurDesNouveaux(){
+  const v = Number($('batimentEpaisseur').value);
+  return Number.isFinite(v) ? Math.min(1, Math.max(0.05, v / 100)) : 0.2;
+}
+
+/** Un point d'annulation, puis la modification, puis tout se redessine. */
+function modifier(faire){
+  E.historique.push(JSON.stringify(E.batiment));
+  if (E.historique.length > 200) E.historique.shift();
+  E.refaire = [];
+  faire(E.batiment);
+  E.modifie = true;
+  apresModification();
+}
+
+function apresModification(){
+  if (E.selection && E.selection.murId && !murSelectionne()) E.selection = null;
+  remplirPanneau();
+  dessinerPlan();
+  if (E.apercu) E.apercu.reconstruire(E.batiment);
+}
+
+function annuler(){
+  if (!E || !E.historique.length) return;
+  E.refaire.push(JSON.stringify(E.batiment));
+  E.batiment = JSON.parse(E.historique.pop());
+  E.chaine = null; E.modifie = true;
+  apresModification();
+}
+function retablir(){
+  if (!E || !E.refaire.length) return;
+  E.historique.push(JSON.stringify(E.batiment));
+  E.batiment = JSON.parse(E.refaire.pop());
+  E.chaine = null; E.modifie = true;
+  apresModification();
+}
+
+function finirLaChaine(){
+  if (!E || !E.chaine) return false;
+  E.chaine = null;
+  dessinerPlan();
+  return true;
+}
+
+/** Un clic de l'outil Mur au point aimanté `s` (le résultat d'aimanter). */
+function poserUnPoint(s){
+  if (!E.chaine) { E.chaine = { depuis: s.point, accroche: s.accroche }; dessinerPlan(); return; }
+  const { depuis, accroche } = E.chaine;
+  if (Math.hypot(s.point.x - depuis.x, s.point.z - depuis.z) < 0.05) return;
+  if (croiseUnMur(E.batiment, E.niveauId, depuis, s.point)) {
+    statut(tr('This wall would cross another one: it is refused.', 'Ce mur en traverserait un autre : il est refusé.'));
+    return;
+  }
+  // Un point posé sur un sommet déjà présent ferme la forme : la chaîne s'arrête là.
+  const ferme = s.accroche.type === 'sommet';
+  let r = null;
+  modifier(b => { r = ajouterMur(b, E.niveauId, depuis, s.point, epaisseurDesNouveaux(), { accrocheA: accroche, accrocheB: s.accroche }); });
+  if (r && r.erreur) { annuler(); E.refaire = []; return; }
+  statut('');
+  E.chaine = ferme ? null : { depuis: s.point, accroche: { type: 'sommet' } };
+  dessinerPlan();
 }
 
 // ── La vue de dessus ─────────────────────────────────────────────────────────────────────────────
@@ -163,18 +260,96 @@ function dessinerPlan(){
   g.moveTo(0, Math.round(o.y) + 0.5); g.lineTo(l, Math.round(o.y) + 0.5);
   g.stroke();
 
-  // Les murs du niveau courant, pleins.
-  g.fillStyle = couleur('--ink', '#ededef');
-  E.batiment.murs.filter(m => m.niveauId === E.niveauId).forEach(m => {
-    const pts = polygoneDuMur(m).map(p => versEcran(vue, l, h, p));
-    g.beginPath(); pts.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.closePath(); g.fill();
+  // Les murs du niveau courant, pleins, jonctions résolues (batiment-geometrie.js).
+  const poly = (pts) => { g.beginPath(); pts.forEach((p, i) => { const e = versEcran(vue, l, h, p); if (i) g.lineTo(e.x, e.y); else g.moveTo(e.x, e.y); }); g.closePath(); };
+  const murs = E.batiment.murs.filter(m => m.niveauId === E.niveauId);
+  const formes = polygonesDesMurs(murs);
+  const accent = couleur('--accent', '#ff7a45'), encre = couleur('--ink', '#ededef');
+  const survole = E.outil === 'selection' && E.survol && E.survol.murId;
+  murs.forEach(m => {
+    const f = formes.get(m.id); if (!f) return;
+    poly(f);
+    g.fillStyle = (E.selection && E.selection.murId === m.id) ? accent : encre;
+    g.fill();
+    if (survole === m.id) { g.strokeStyle = accent; g.lineWidth = 2; g.stroke(); }
   });
+
+  // Les sommets, en Sélection : des poignées.
+  if (E.outil === 'selection') {
+    sommetsDuNiveau(E.batiment, E.niveauId).forEach(q => {
+      const e = versEcran(vue, l, h, q);
+      const actif = E.survol && E.survol.sommet && Math.hypot(E.survol.sommet.x - q.x, E.survol.sommet.z - q.z) < 1e-6;
+      g.beginPath(); g.arc(e.x, e.y, actif ? 6 : 4, 0, Math.PI * 2);
+      g.fillStyle = actif ? accent : couleur('--paper-dark', '#212226'); g.fill();
+      g.strokeStyle = accent; g.lineWidth = 1.5; g.stroke();
+    });
+  }
+
+  // Le tracé en cours : le mur fantôme (rouge s'il en traverse un autre), sa longueur, les guides.
+  if (E.outil === 'mur' && E.survol && E.survol.point) {
+    const s = E.survol;
+    g.save(); g.setLineDash([5, 4]); g.strokeStyle = accent; g.lineWidth = 1;
+    (s.guides || []).forEach(gd => {
+      const a = versEcran(vue, l, h, gd.de), b = versEcran(vue, l, h, gd.vers);
+      g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke();
+    });
+    g.restore();
+    if (E.chaine) {
+      const fantome = { id: '_', a: E.chaine.depuis, b: s.point, epaisseur: epaisseurDesNouveaux() };
+      const f = polygonesDesMurs([fantome]).get('_');
+      if (f) {
+        poly(f);
+        g.globalAlpha = 0.55; g.fillStyle = s.croise ? couleur('--danger', '#c0392b') : accent; g.fill(); g.globalAlpha = 1;
+        const L = Math.hypot(s.point.x - E.chaine.depuis.x, s.point.z - E.chaine.depuis.z);
+        const milieu = versEcran(vue, l, h, { x: (s.point.x + E.chaine.depuis.x) / 2, z: (s.point.z + E.chaine.depuis.z) / 2 });
+        const texte = metres(L);
+        g.font = '600 12px Inter, sans-serif';
+        const lt = g.measureText(texte).width;
+        g.fillStyle = couleur('--paper-dark', '#212226'); g.fillRect(milieu.x - lt / 2 - 5, milieu.y - 22, lt + 10, 18);
+        g.fillStyle = s.croise ? couleur('--danger', '#c0392b') : accent; g.fillText(texte, milieu.x - lt / 2, milieu.y - 9);
+      }
+    }
+    const e = versEcran(vue, l, h, s.point);
+    g.strokeStyle = accent; g.lineWidth = 2; g.beginPath();
+    if (s.accroche.type === 'sommet') g.arc(e.x, e.y, 7, 0, Math.PI * 2);
+    else if (s.accroche.type === 'mur') g.rect(e.x - 5, e.y - 5, 10, 10);
+    else { g.moveTo(e.x - 6, e.y); g.lineTo(e.x + 6, e.y); g.moveTo(e.x, e.y - 6); g.lineTo(e.x, e.y + 6); }
+    g.stroke();
+  }
 
   // L'échelle, en bas à gauche : la longueur du pas fort.
   const px = fort * vue.echelle;
   g.strokeStyle = couleur('--ink-soft', '#9a9aa2'); g.fillStyle = g.strokeStyle; g.lineWidth = 2;
   g.beginPath(); g.moveTo(16, h - 16); g.lineTo(16 + px, h - 16); g.stroke();
   g.font = '11px Inter, sans-serif'; g.fillText(metres(fort), 16, h - 22);
+}
+
+/** La souris sur le plan → un point du bâtiment, et la tolérance d'aimantation (10 px) en mètres. */
+function souris(e){
+  const r = $('batimentPlan').getBoundingClientRect();
+  return { p: versBatiment(E.vue, r.width, r.height, { x: e.clientX - r.left, y: e.clientY - r.top }), tol: 10 / E.vue.echelle };
+}
+
+function survoler(e){
+  const { p, tol } = souris(e);
+  if (E.glisserSommet) {
+    const s = aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, sauf: E.glisserSommet.actuel });
+    deplacerSommet(E.batiment, E.niveauId, E.glisserSommet.actuel, s.point);
+    E.glisserSommet.actuel = s.point;
+    E.survol = { sommet: s.point };
+    apresModification();
+    return;
+  }
+  if (E.outil === 'mur') {
+    const s = aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, depuis: E.chaine && E.chaine.depuis });
+    s.croise = !!E.chaine && croiseUnMur(E.batiment, E.niveauId, E.chaine.depuis, s.point);
+    E.survol = s;
+  } else {
+    const sommet = sommetSous(E.batiment, E.niveauId, p, tol);
+    const m = sommet ? null : murSous(E.batiment, E.niveauId, p, tol / 2);
+    E.survol = { sommet, murId: m ? m.mur.id : null };
+  }
+  dessinerPlan();
 }
 
 function cablerPlan(){
@@ -184,24 +359,63 @@ function cablerPlan(){
     e.preventDefault();
     const r = c.getBoundingClientRect();
     E.vue = zoomerAutour(E.vue, r.width, r.height, { x: e.clientX - r.left, y: e.clientY - r.top }, Math.exp(-e.deltaY * 0.0015));
-    dessinerPlan();
+    survoler(e);
   }, { passive: false });
-  // Clic droit (ou milieu) maintenu : déplacer la vue, comme partout dans l'application. Le clic
-  // gauche est gardé pour le tracé (#454a-3).
   c.addEventListener('pointerdown', (e) => {
-    if (!E || (e.button !== 2 && e.button !== 1)) return;
-    E.geste = { x: e.clientX, y: e.clientY };
-    c.setPointerCapture(e.pointerId);
+    if (!E) return;
+    // Clic droit (ou milieu) maintenu : déplacer la vue. Un clic droit SANS glisser finit la chaîne.
+    if (e.button === 2 || e.button === 1) {
+      E.geste = { x: e.clientX, y: e.clientY, bouge: false, bouton: e.button };
+      c.setPointerCapture(e.pointerId);
+      return;
+    }
+    if (e.button !== 0) return;
+    const { p, tol } = souris(e);
+    if (E.outil === 'mur') {
+      poserUnPoint(aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, depuis: E.chaine && E.chaine.depuis }));
+      return;
+    }
+    const sommet = sommetSous(E.batiment, E.niveauId, p, tol);
+    if (sommet) {
+      E.historique.push(JSON.stringify(E.batiment)); E.refaire = [];
+      E.glisserSommet = { depart: sommet, actuel: sommet };
+      c.setPointerCapture(e.pointerId);
+      return;
+    }
+    const m = murSous(E.batiment, E.niveauId, p, tol / 2);
+    E.selection = m ? { murId: m.mur.id } : null;
+    remplirPanneau();
+    dessinerPlan();
   });
   c.addEventListener('pointermove', (e) => {
-    if (!E || !E.geste) return;
-    E.vue = glisserVue(E.vue, e.clientX - E.geste.x, e.clientY - E.geste.y);
-    E.geste = { x: e.clientX, y: e.clientY };
-    dessinerPlan();
+    if (!E) return;
+    if (E.geste) {
+      const dx = e.clientX - E.geste.x, dy = e.clientY - E.geste.y;
+      if (Math.abs(dx) + Math.abs(dy) > 0) E.geste.bouge = E.geste.bouge || Math.hypot(dx, dy) > 0;
+      E.vue = glisserVue(E.vue, dx, dy);
+      E.geste.x = e.clientX; E.geste.y = e.clientY;
+    }
+    survoler(e);
   });
-  const fin = () => { if (E) E.geste = null; };
+  const fin = (e) => {
+    if (!E) return;
+    if (E.glisserSommet) {
+      const { depart, actuel } = E.glisserSommet;
+      E.glisserSommet = null;
+      // Un angle relâché à sa place n'a rien changé : le point d'annulation est retiré.
+      if (Math.hypot(depart.x - actuel.x, depart.z - actuel.z) < 1e-9) E.historique.pop(); else E.modifie = true;
+      apresModification();
+    }
+    if (E.geste) {
+      const { bouge } = E.geste;
+      E.geste = null;
+      if (!bouge && e && e.type === 'pointerup') { if (!finirLaChaine() && E.outil === 'selection') { E.selection = null; remplirPanneau(); dessinerPlan(); } }
+    }
+  };
   c.addEventListener('pointerup', fin);
   c.addEventListener('pointercancel', fin);
+  c.addEventListener('dblclick', () => { if (E) finirLaChaine(); });
+  c.addEventListener('pointerleave', () => { if (E && !E.glisserSommet) { E.survol = null; dessinerPlan(); } });
   c.addEventListener('contextmenu', (e) => e.preventDefault());
   const Observateur = globalThis.ResizeObserver;
   if (Observateur) new Observateur(() => dessinerPlan()).observe(c);
@@ -274,21 +488,29 @@ function cablerFenetreApercu(){
 
 const CHAMP = 35;
 
-/** Les murs en boîtes, posés à l'élévation de leur niveau. */
-function construireMurs(T, b){
+/**
+ * Les murs EXTRUDÉS depuis les mêmes polygones que la vue de dessus (jonctions comprises), posés à
+ * l'élévation de leur niveau.
+ */
+function construireMurs(T, b, matiere){
   const groupe = new T.Group();
-  const matiere = new T.MeshStandardMaterial({ color: 0xd9d4c7, roughness: 0.9 });
-  const niveaux = new Map(b.niveaux.map(n => [n.id, n]));
-  b.murs.forEach(m => {
-    const n = niveaux.get(m.niveauId);
-    const hauteur = m.hauteurPropre || (n ? n.hauteur : 2.8);
-    const dx = m.b.x - m.a.x, dz = m.b.z - m.a.z, L = Math.hypot(dx, dz);
-    const boite = new T.Mesh(new T.BoxGeometry(L, hauteur, m.epaisseur), matiere);
-    boite.position.set((m.a.x + m.b.x) / 2, (n ? n.elevation : 0) + hauteur / 2, (m.a.z + m.b.z) / 2);
-    boite.rotation.y = -Math.atan2(dz, dx);
-    groupe.add(boite);
+  b.niveaux.forEach(n => {
+    const murs = b.murs.filter(m => m.niveauId === n.id);
+    const formes = polygonesDesMurs(murs);
+    murs.forEach(m => {
+      const f = formes.get(m.id); if (!f) return;
+      const hauteur = m.hauteurPropre || n.hauteur;
+      // La forme est tracée dans (x, −z) puis extrudée vers le haut : la rotation de −90° autour de x
+      // envoie (x, y, profondeur) sur (x, profondeur, −y).
+      const forme = new T.Shape(f.map(p => new T.Vector2(p.x, -p.z)));
+      const geo = new T.ExtrudeGeometry(forme, { depth: hauteur, bevelEnabled: false });
+      geo.rotateX(-Math.PI / 2);
+      const maillage = new T.Mesh(geo, matiere);
+      maillage.position.y = n.elevation;
+      groupe.add(maillage);
+    });
   });
-  return { groupe, matiere };
+  return groupe;
 }
 
 function ouvrirApercu(conteneur, b){
@@ -300,7 +522,8 @@ function ouvrirApercu(conteneur, b){
   scene.add(cle);
   const grille = new T.GridHelper(40, 40, 0x888888, 0x555555);
   scene.add(grille);
-  const { groupe, matiere } = construireMurs(T, b);
+  const matiere = new T.MeshStandardMaterial({ color: 0xd9d4c7, roughness: 0.9 });
+  let groupe = construireMurs(T, b, matiere);
   scene.add(groupe);
 
   let centre = [0, 1.4, 0], distance = 20, distanceCadrage = 20;
@@ -359,6 +582,14 @@ function ouvrirApercu(conteneur, b){
   return {
     recadrer: recadrerApercu,
     redessiner,
+    /** Les murs ont changé : on refait le groupe, sans toucher au cadrage. */
+    reconstruire(nouveau){
+      scene.remove(groupe);
+      groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); });
+      groupe = construireMurs(T, nouveau, matiere);
+      scene.add(groupe);
+      redessiner();
+    },
     fermer(){
       if (demande) cancelAnimationFrame(demande);
       if (observateur) observateur.disconnect();
@@ -392,10 +623,32 @@ function clavier(e){
   const dansUnChamp = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
   // Une modale ouverte par-dessus (la confirmation) garde ses touches.
   if (document.querySelector('.modal-overlay:not(.hidden)')) return;
-  if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); fermerEditeurDeBatiment(); return; }
+  const avale = () => { e.preventDefault(); e.stopImmediatePropagation(); };
+  if (e.key === 'Escape') {
+    avale();
+    // Échap défait d'abord ce qui est en cours : la chaîne, puis la sélection ; ensuite il ferme.
+    if (finirLaChaine()) return;
+    if (E.selection) { E.selection = null; remplirPanneau(); dessinerPlan(); return; }
+    fermerEditeurDeBatiment();
+    return;
+  }
+  // Annuler et rétablir agissent sur le BÂTIMENT, pas sur le Projet caché dessous.
+  const touche = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && !dansUnChamp && (touche === 'z' || touche === 'y')) {
+    avale();
+    if (touche === 'y' || e.shiftKey) retablir(); else annuler();
+    return;
+  }
   if (dansUnChamp || e.ctrlKey || e.metaKey) return;
-  // Les raccourcis de la Planche cachée dessous n'ont pas de sens ici : avalés, comme au Lecteur.
-  e.stopImmediatePropagation();
+  if (touche === 'm') choisirOutil('mur');
+  else if (touche === 'v') choisirOutil('selection');
+  else if (e.key === 'Enter') finirLaChaine();
+  else if ((e.key === 'Delete' || e.key === 'Backspace') && murSelectionne()) {
+    const id = E.selection.murId;
+    modifier(b => supprimerMur(b, id));
+  }
+  // Le reste, raccourcis de la Planche cachée dessous, n'a pas de sens ici : avalé, comme au Lecteur.
+  avale();
 }
 
 export function initEditeurDeBatiment(){
@@ -410,6 +663,14 @@ export function initEditeurDeBatiment(){
     if (!nom) return;
     E.batiment.nom = nom; E.modifie = true; statut('');
   });
+  document.querySelectorAll('.batiment-outil').forEach(b => { b.onclick = () => choisirOutil(b.dataset.outil); });
+  $('batimentMurSupprimer').onclick = () => { const m = murSelectionne(); if (m) modifier(b => supprimerMur(b, m.id)); };
+  $('batimentMurEpaisseur').addEventListener('change', (e) => {
+    const m = murSelectionne(); const v = Number(e.target.value);
+    if (!m || !Number.isFinite(v)) return;
+    modifier(() => { m.epaisseur = Math.min(1, Math.max(0.05, v / 100)); });
+  });
+  $('batimentEpaisseur').addEventListener('change', () => { $('batimentEpaisseur').value = Math.round(epaisseurDesNouveaux() * 100); dessinerPlan(); });
   cablerPlan();
   cablerFenetreApercu();
 }

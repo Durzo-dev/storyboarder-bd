@@ -360,6 +360,12 @@ its own renderer, like the store's: it does not touch the Panels' shared scene. 
 Building or a Room opens a copy of its walls (`batimentDesPieces`, one level, recentred); the Scene
 is not touched before #454f.
 
+**Wall tracing** (#454a-3a, done): `src/batiment-trace.js` (snapping to vertices then to the middle
+of a wall, a T junction that splits the wall touched, angle by 15°, length to the centimetre,
+alignment guides, Alt to place freely, crossings refused) and `src/batiment-geometrie.js` (the
+walls' polygons at junctions: mitre at corners, a T that butts against the face, a square free
+end). The top view and the 3D preview (extruded walls) share these polygons.
+
 Buildings already traced in Scenes (wall Elements, `pieceId`, `batimentNames`, `batimentRotY`)
 remain READ and are **converted** on opening into one-level buildings, in the same place: nothing
 moves on screen.

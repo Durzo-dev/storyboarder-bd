@@ -2681,3 +2681,13 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-liste .batiment-ligne small { color: var(--ink-soft); }
 .batiment-liste .batiment-vide { color: var(--ink-soft); font-style: italic; }
 .batiment-aide { margin: 0; font-size: 12px; color: var(--ink-soft); line-height: 1.45; white-space: pre-line; }
+.batiment-outils { display: flex; gap: 4px; margin-bottom: 10px; }
+.batiment-outil { flex: 1 1 0; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line-strong); background: var(--white);
+                  color: var(--ink); font-size: 12px; cursor: pointer; }
+.batiment-outil.actif { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.batiment-champ { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--ink); margin: 6px 0; }
+.batiment-champ-valeur { display: flex; align-items: center; gap: 4px; color: var(--ink-soft); }
+.batiment-champ input[type=number] { width: 64px; }
+#batimentSectionSelection[hidden] { display: none; }
+#batimentSectionSelection .full-btn { margin-top: 6px; }
+.batiment-editeur-plan canvas.outil-mur { cursor: crosshair; }

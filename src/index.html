@@ -220,6 +220,22 @@
           <p id="batimentFichier" class="batiment-fichier"></p>
         </section>
         <section class="side-section">
+          <h2 id="batimentSectionOutils">Outils</h2>
+          <div class="batiment-outils">
+            <button type="button" class="batiment-outil" id="batimentOutilMur" data-outil="mur" title="Tracer des murs (M)">Mur</button>
+            <button type="button" class="batiment-outil" id="batimentOutilSelection" data-outil="selection" title="Sélectionner (V)">Sélection</button>
+          </div>
+          <label class="batiment-champ"><span id="batimentEpaisseurLibelle">Épaisseur des nouveaux murs</span>
+            <span class="batiment-champ-valeur"><input type="number" id="batimentEpaisseur" min="5" max="100" step="1" value="20"> cm</span></label>
+        </section>
+        <section class="side-section" id="batimentSectionSelection" hidden>
+          <h2 id="batimentSelectionTitre">Mur sélectionné</h2>
+          <p id="batimentMurLongueur" class="batiment-fichier"></p>
+          <label class="batiment-champ"><span id="batimentMurEpaisseurLibelle">Épaisseur</span>
+            <span class="batiment-champ-valeur"><input type="number" id="batimentMurEpaisseur" min="5" max="100" step="1"> cm</span></label>
+          <button type="button" class="full-btn delete-btn" id="batimentMurSupprimer">Supprimer le mur</button>
+        </section>
+        <section class="side-section">
           <h2 id="batimentSectionNiveaux">Niveaux</h2>
           <div id="batimentNiveaux" class="batiment-liste"></div>
         </section>
@@ -229,9 +245,12 @@
         </section>
         <section class="side-section">
           <h2 id="batimentSectionAide">Commandes</h2>
-          <p id="batimentAide" class="batiment-aide">Vue de dessus : molette pour zoomer, clic droit maintenu pour déplacer la vue.
-Aperçu 3D : clic gauche maintenu pour tourner, clic droit maintenu pour déplacer, molette pour zoomer.
-Barre de l'aperçu : la tirer pour l'ancrer à un autre coin, − pour le réduire, ⤢ pour le plein écran.
+          <p id="batimentAide" class="batiment-aide">Mur (M) : un clic pour commencer, un clic par angle ; un clic sur un mur existant fait une jonction en T. Double-clic, Entrée, clic droit ou Échap : finir la chaîne.
+L'angle s'aimante par 15°, la longueur au centimètre, les sommets et les alignements aussi ; Alt maintenu : rien n'est aimanté. Un mur qui en traverse un autre est refusé (en rouge).
+Sélection (V) : clic sur un mur pour le choisir, tirer un angle pour le déplacer ; Suppr : supprimer.
+Ctrl+Z / Ctrl+Y : annuler / rétablir.
+Vue de dessus : molette pour zoomer, clic droit maintenu pour déplacer la vue.
+Aperçu 3D : clic gauche maintenu pour tourner, clic droit maintenu pour déplacer, molette pour zoomer. Sa barre : la tirer pour l'ancrer à un autre coin, − pour le réduire, ⤢ pour le plein écran.
 Échap : fermer l'éditeur.</p>
         </section>
         <p id="batimentStatut" class="batiment-statut"></p>
