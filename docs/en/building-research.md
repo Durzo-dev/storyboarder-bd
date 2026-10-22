@@ -319,48 +319,77 @@ Ranked by priority. Estimated effort: S (one session), M (a few sessions), L (a 
 
 ## The proposed data model
 
-ADDED fields, none renamed (see [persisted-data.md](persisted-data.md)); an older Project opens as
-today, with a one-level building.
+> Revised on 22 October 2026 after the decisions below: the building is no longer built in the
+> Scene but in an **editor**, and it becomes a **Model**. The first version (levels stored on the
+> Panel, walls staying Scene Elements) is dropped.
+
+A **building file** stored in the model library, like an imported model, and listed with them
+(Buildings category, thumbnail):
 
 ```
-Panel (or Scene canvas)
-  batiments: { <batimentId>: { nom, rotY,
-                niveaux: [ { id, nom, elevation, hauteur, dalle } ] } }   ← ADDED
-Wall / floor / opening Element of a room
-  pieceId (existing), batimentId (ADDED), niveauId (ADDED, absent = level 0)
-  hauteurPropre (ADDED, absent = level height), epaisseur (ADDED, absent = current rule)
-Staircase
-  niveauId (start); it goes up to the next level; its cut-out is deduced from its footprint
+<name>.batiment.json
+  { version, nom,
+    niveaux:    [ { id, nom, elevation, hauteur, dalle } ]        ← ordered, 0 = ground floor
+    murs:       [ { id, niveauId, a:{x,z}, b:{x,z}, epaisseur, hauteurPropre?,
+                    revetement: { interieur, exterieur } } ]      ← one wall PER FLOOR
+    ouvertures: [ { id, murId, type, along, y } ]                 ← doors, windows, bay windows
+    escaliers:  [ { id, niveauId, ... } ]                         ← goes up to the next level
+    pieces:     [ { id, niveauId, nom, sol, plafond } ]           ← deduced from closed walls, NAMED
+    toit:       { type, pente, debord, matiere, terrasse, gardeCorps }
+    elements:   [ ... ]                                           ← fixed furniture, the chimney
+  }
 ```
 
-`batimentNames` and `batimentRotY` remain READ (older Projects) and are no longer written once
-buildings are explicit; the two forms do not coexist in one file (same rule as the mappings, see
-persisted-data.md). An element's vertical position is deduced from its level's elevation: changing
-an elevation moves the whole level.
+In a Scene or a Panel, **placing a building makes an independent copy**: the Element embeds the
+whole building (`batiment: { … }`) and keeps the original file name (`batimentSource`, for
+information). Editing that copy opens the editor on it, without touching the file or other copies.
 
-## Questions to settle with Valentin
+A Scene Element placed **inside** a building (Character, object, model) carries, as ADDED fields:
+`dansBatiment` (the building Element's id), `niveauId` and, optionally, `pieceId`. Its height is
+deduced from the level's elevation.
 
-1. **How many levels?** The Sims stop at 4 + 2; a storyboard rarely needs more, but a tower block
-   has twenty. Proposal: no ceiling, but an interface designed for 1 to 6.
-2. **The current level**: a Scene setting (like the floor shown in The Sims), or a building one?
-   Proposal: the Scene's, while the cutaway view is per Panel.
-3. **The basement**: is the pierced-Ground work worth doing now, or after floors and roofs?
-4. **Roofs**: automatic only, or also roof pieces placed by hand (The Sims)?
-5. **A wall over several floors** (a facade in one piece): useful on screen, or is one wall per
-   floor enough?
+Buildings already traced in Scenes (wall Elements, `pieceId`, `batimentNames`, `batimentRotY`)
+remain READ and are **converted** on opening into one-level buildings, in the same place: nothing
+moves on screen.
+
+## Valentin's decisions (22 October 2026)
+
+1. **Levels**: the usual case is one basement and three floors, but with no limit (tower blocks).
+   The interface is designed for about half a dozen levels and stays usable beyond.
+2. **A building editor**, not the Scene: the building is built there, the Scene only places it.
+   Full screen like the Pose editor: top view of the current level (the others see-through), 3D
+   preview, level list, roof settings, wall finishes. To be adjusted with use.
+3. **The basement**: after the floors.
+4. **Roofs**: automatic, with options (type, pitch, colour, material: tiles, slates, bricks…),
+   Elements placed on them (chimney…), and the **roof terrace**.
+5. **One wall per floor**: each floor dresses the inside of its walls its own way (wallpaper…).
+6. **Independent copy**: placing a building in a Scene makes a copy.
+7. **A building is a Model**: stored and listed like imported models.
+8. **Furniture**: in the editor (fixed) AND in the Scene (staging), for now; eventually perhaps
+   everything in the editor, to be seen with use.
+9. **Placing an Element in a building**: by hand (unticking "Stuck to the ground"), or from the
+   Element's modal: a building, then a floor, then a room.
+10. **The "Build a building" tool leaves the Scene** for the editor; existing buildings are
+    converted.
+11. **Materials** (bricks, slates, wallpapers): the texture store (#446), plus a small set
+    supplied from the start.
 
 ## The proposed roadmap
 
-- **#454a** explicit building and levels (priority 1, points 1 to 4), with nothing changing on
-  screen for a one-level building.
-- **#454b** current level, add / duplicate a floor, slabs (points 5 to 7).
-- **#454c** staircase between levels and stairwell (point 8).
-- **#454d** basement and pierced Ground (point 9).
-- **#458** (new) roof deduced from the outline (point 10).
-- **#459** (new) cutaway view per Panel (point 11).
-- Points 12 to 14 along the way.
-- **#456** (architect's plan) afterwards: it relies on levels (one plan = one level) and reuses the
-  imported-pages scheme.
+- **#454a** the building editor, one level: full screen, wall tracing taken from the current tool,
+  adjustable thickness, named rooms, saving as a Model, placing in a Scene (independent copy).
+- **#454b** levels: list, add, duplicate, rename, storey height, automatic slabs, neighbouring
+  levels see-through.
+- **#454c** the staircase between two levels and its stairwell.
+- **#454d** finishes: walls (inner and outer face, per room and per floor), floors, ceilings; a
+  supplied set of materials, then the store (#446).
+- **#454e** placing an Element in a building: the modal (building, floor, room), and placing by hand.
+- **#454f** converting the buildings traced in Scenes, and removing the tool from the Scene.
+- **#458** the automatic roof: types, pitch, overhang, materials, roof terrace with railing,
+  Elements on the roof.
+- **#459** the cutaway view per Panel ("up to level N", front walls hidden).
+- **#454g** the basement and the pierced Ground, last.
+- **#456** (architect's plan) afterwards, in the editor: one plan = one level.
 
 ## Sources
 

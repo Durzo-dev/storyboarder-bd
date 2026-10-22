@@ -335,48 +335,81 @@ Classées par priorité. Effort estimé : S (une séance), M (quelques séances)
 
 ## Le modèle de données proposé
 
-Champs AJOUTÉS, aucun renommé (cf. [persisted-data.md](persisted-data.md)) ; un Projet d'avant
-s'ouvre comme aujourd'hui, avec un bâtiment d'un niveau.
+> Révisé le 22 octobre 2026 après les décisions ci-dessous : le bâtiment n'est plus construit dans
+> la Scène mais dans un **éditeur**, et il devient un **Modèle**. La première version (niveaux rangés
+> sur la Case, murs restant des Éléments de la Scène) est abandonnée.
+
+Un **fichier de bâtiment** rangé dans la bibliothèque des modèles, comme un modèle importé, et
+listé avec eux (catégorie Bâtiments, vignette) :
 
 ```
-Case (ou toile de Scène)
-  batiments: { <batimentId>: { nom, rotY,
-                niveaux: [ { id, nom, elevation, hauteur, dalle } ] } }   ← AJOUTÉ
-Élément mur / sol / ouverture d'une pièce
-  pieceId (existant), batimentId (AJOUTÉ), niveauId (AJOUTÉ, absent = niveau 0)
-  hauteurPropre (AJOUTÉ, absent = hauteur du niveau), epaisseur (AJOUTÉ, absent = règle actuelle)
-Escalier
-  niveauId (départ) ; il monte au niveau suivant ; sa découpe se déduit de son emprise
+<nom>.batiment.json
+  { version, nom,
+    niveaux:    [ { id, nom, elevation, hauteur, dalle } ]        ← ordonnés, 0 = rez-de-chaussée
+    murs:       [ { id, niveauId, a:{x,z}, b:{x,z}, epaisseur, hauteurPropre?,
+                    revetement: { interieur, exterieur } } ]      ← un mur PAR ÉTAGE
+    ouvertures: [ { id, murId, type, le long, y } ]               ← portes, fenêtres, baies
+    escaliers:  [ { id, niveauId, ... } ]                         ← monte au niveau suivant
+    pieces:     [ { id, niveauId, nom, sol, plafond } ]           ← déduites des murs fermés, NOMMÉES
+    toit:       { type, pente, debord, matiere, terrasse, gardeCorps }
+    elements:   [ ... ]                                           ← le mobilier fixe, la cheminée
+  }
 ```
 
-`batimentNames` et `batimentRotY` restent LUS (anciens Projets) et ne sont plus écrits une fois les
-bâtiments explicites ; les deux formes ne coexistent pas dans un même fichier (même règle que les
-correspondances, cf. persisted-data.md). La position verticale d'un élément se déduit de
-l'élévation de son niveau : changer une élévation déplace tout le niveau.
+Dans une Scène ou une Case, **placer un bâtiment en fait une copie indépendante** : l'Élément
+embarque le bâtiment entier (`batiment: { … }`) et garde le nom du fichier d'origine
+(`batimentSource`, pour information). Retoucher cette copie ouvre l'éditeur sur elle, sans toucher
+au fichier ni aux autres copies.
 
-## Les questions à trancher avec Valentin
+Un Élément de la Scène posé **dans** un bâtiment (Personnage, objet, modèle) porte, en champs
+AJOUTÉS : `dansBatiment` (l'id de l'Élément bâtiment), `niveauId` et, facultatif, `pieceId`. Sa
+hauteur se déduit de l'élévation du niveau.
 
-1. **Combien de niveaux ?** Les Sims s'arrêtent à 4 + 2 ; un storyboard a rarement besoin de plus,
-   mais un immeuble en a vingt. Proposition : pas de plafond, mais l'interface pensée pour 1 à 6.
-2. **Le niveau courant** : un réglage de la Scène (comme l'étage affiché des Sims), ou du bâtiment ?
-   Proposition : de la Scène, et la vue en coupe, elle, par Case.
-3. **Le sous-sol** : vaut-il le chantier du Sol percé maintenant, ou après les étages et les toits ?
-4. **Les toits** : automatiques seulement, ou aussi des pièces de toit posées à la main (Sims) ?
-5. **Un mur sur plusieurs étages** (façade d'un seul tenant) : utile pour l'image, ou un mur par
-   étage suffit-il ?
+Les bâtiments déjà tracés dans les Scènes (murs Éléments, `pieceId`, `batimentNames`,
+`batimentRotY`) restent LUS et sont **convertis** à l'ouverture en bâtiments d'un niveau, à la même
+place : rien ne bouge à l'écran.
+
+## Les décisions de Valentin (22 octobre 2026)
+
+1. **Les niveaux** : le cas courant est un sous-sol et trois étages, mais sans limite (immeubles).
+   L'interface est pensée pour une demi-douzaine de niveaux et reste utilisable au-delà.
+2. **Un éditeur de bâtiments**, et non la Scène : on y construit le bâtiment, la Scène ne fait que
+   le placer. Écran plein comme l'Éditeur de pose : vue de dessus du niveau courant (les autres en
+   transparence), aperçu 3D, liste des niveaux, réglages du toit, revêtements des murs. À ajuster à
+   l'usage.
+3. **Le sous-sol** : après les étages.
+4. **Les toits** : automatiques, avec des options (type, pente, couleur, matière : tuiles, ardoises,
+   briques…), des Éléments posés dessus (cheminée…), et le **toit-terrasse**.
+5. **Un mur par étage** : chaque étage habille l'intérieur de ses murs à sa façon (tapisserie…).
+6. **Copie indépendante** : placer un bâtiment dans une Scène en fait une copie.
+7. **Un bâtiment est un Modèle** : rangé et listé comme les modèles importés.
+8. **Le mobilier** : dans l'éditeur (fixe) ET dans la Scène (mise en scène), pour l'instant ; à
+   terme peut-être tout dans l'éditeur, à voir à l'usage.
+9. **Placer un Élément dans un bâtiment** : à la main (en décochant « Collé au sol »), ou depuis la
+   modale de l'Élément : un bâtiment, puis un étage, puis une pièce.
+10. **L'outil « Construire un bâtiment » quitte la Scène** pour l'éditeur ; les bâtiments existants
+    sont convertis.
+11. **Les matières** (briques, ardoises, tapisseries) : le store de textures (#446), plus un petit
+    jeu fourni d'emblée.
 
 ## La feuille de route proposée
 
-- **#454a** bâtiment explicite et niveaux (priorité 1, points 1 à 4), sans rien changer à l'écran
-  pour un bâtiment d'un niveau.
-- **#454b** niveau courant, ajouter / dupliquer un étage, dalles (points 5 à 7).
-- **#454c** escalier entre niveaux et trémie (point 8).
-- **#454d** sous-sol et Sol percé (point 9).
-- **#458** (nouvelle) toit déduit du contour (point 10).
-- **#459** (nouvelle) vue en coupe par Case (point 11).
-- Points 12 à 14 au fil de l'eau.
-- **#456** (plan d'architecte) ensuite : il s'appuie sur les niveaux (un plan = un niveau) et
-  reprend le schéma des planches importées.
+- **#454a** l'éditeur de bâtiments, un seul niveau : écran plein, tracé des murs repris de l'outil
+  actuel, épaisseur réglable, pièces nommées, enregistrement comme Modèle, placement dans une Scène
+  (copie indépendante).
+- **#454b** les niveaux : liste, ajouter, dupliquer, renommer, hauteur d'étage, dalles
+  automatiques, niveaux voisins en transparence.
+- **#454c** l'escalier entre deux niveaux et sa trémie.
+- **#454d** les revêtements : murs (face intérieure et extérieure, par pièce et par étage), sols,
+  plafonds ; un jeu de matières fourni, puis le store (#446).
+- **#454e** placer un Élément dans un bâtiment : la modale (bâtiment, étage, pièce), et la pose à
+  la main.
+- **#454f** la conversion des bâtiments tracés dans les Scènes, et le retrait de l'outil de la Scène.
+- **#458** le toit automatique : types, pente, débord, matières, toit-terrasse avec garde-corps,
+  Éléments sur le toit.
+- **#459** la vue en coupe par Case (« jusqu'au niveau N », murs de devant effacés).
+- **#454g** le sous-sol et le Sol percé, en dernier.
+- **#456** (plan d'architecte) ensuite, dans l'éditeur : un plan = un niveau.
 
 ## Sources
 
