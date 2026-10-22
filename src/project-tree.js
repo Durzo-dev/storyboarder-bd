@@ -163,11 +163,12 @@ export function renderTree(){
       // la couleur des actions. Le trait est une <option> éteinte faite de « ─ », et non un <hr> :
       // la liste native de Windows dessinait le <hr> en noir sans lire aucun style (signalé deux
       // fois), alors qu'elle respecte la couleur d'une <option>. Sa longueur suit le plus long
-      // libellé, pour ne pas élargir la liste.
+      // libellé, pour ne pas élargir la liste. Écrite petite (style.css) pour que la ligne soit basse :
+      // il faut donc 2,5 fois plus de « ─ » pour la même longueur.
       const plusLong = Math.max(...S.formats.map(f => libelleDuFormat(f, tr).length), 20);
       const trait = document.createElement('option');
       trait.disabled = true; trait.className = 'option-separateur';
-      trait.textContent = '─'.repeat(Math.round(plusLong * 0.8));
+      trait.textContent = '─'.repeat(Math.round(plusLong * 0.8 * 2.5));
       formatSelect.appendChild(trait);
       const gerer = document.createElement('option');
       gerer.value = GERER_LES_FORMATS; gerer.className = 'option-action';

@@ -2601,4 +2601,6 @@ button.store-chip:hover{ border-color:var(--accent); }
 select option.option-action{ color:var(--accent); font-weight:700; }
 /* Le trait qui la sépare des formats (une <option> éteinte, cf. project-tree.js) : `--ink-soft`, le
    texte secondaire de chaque thème, CLAIR sur le thème sombre et SOMBRE sur le clair (demandé). */
-select option.option-separateur{ color:var(--ink-soft); }
+/* Petite police et sans marge : la hauteur d'une option suit sa police, et à taille normale le trait
+   laissait trop d'écart au-dessus et au-dessous (signalé). */
+select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-height:6px; padding:0; min-height:0; }
