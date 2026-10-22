@@ -1352,6 +1352,33 @@
   </div>
 </div>
 
+<!-- #453 : les formats du Projet (src/formats-ui.js), ouverte par « Gérer les formats… » dans la liste
+     des formats d'un Tome. Un format se crée, se renomme, et se supprime tant qu'aucun Tome ne
+     l'utilise ; ses dimensions ne changent pas (les Cases des Tomes se déplaceraient). -->
+<div class="modal-overlay hidden" id="formatsModal">
+  <div class="modal-box">
+    <h3 id="formatsTitre">Formats du projet</h3>
+    <p id="formatsAide" class="formats-aide">Partagés par tous les tomes du projet. Un format se renomme mais ses dimensions sont figées, et il ne se supprime pas tant qu'un tome l'utilise.</p>
+    <div id="formatsListe" class="formats-liste"></div>
+    <h4 id="formatsNouveauTitre" class="formats-sous-titre">Nouveau format</h4>
+    <input type="text" id="formatsNom" class="modal-input" placeholder="Nom du format" autocomplete="off">
+    <div class="formats-dimensions">
+      <input type="number" id="formatsLargeur" class="modal-input" placeholder="Largeur" min="1">
+      <span>×</span>
+      <input type="number" id="formatsHauteur" class="modal-input" placeholder="Hauteur" min="1">
+      <select id="formatsUnite" class="modal-input">
+        <option value="mm">mm</option>
+        <option value="px">px</option>
+      </select>
+    </div>
+    <p id="formatsErreur" class="modal-error"></p>
+    <div class="modal-actions">
+      <button class="nav-btn" id="formatsFermer" type="button">Fermer</button>
+      <button class="full-btn" id="formatsCreer" type="button">Créer le format</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modale générique de confirmation (Supprimer un Tome/une Planche/une Scène, remplacer le contenu
      d'une Case en chargeant une Scène, continuer sans enregistrer...) : remplace window.confirm(),
      qui — comme window.prompt() ci-dessus — ouvre une boîte de dialogue NATIVE bloquante sous

@@ -24,7 +24,13 @@ the whole) and `regionImage` on its Panels (`{ x, y, w, h }` as fractions of the
 carry `imageFile`, and `pointsImage` (its four corners, as fractions) when a Panel has been deformed. ADDED fields: a Panel's place (`x`, `y`, `w`, `h`, `pts`) is recomputed at every
 draw and stays written, so a version that ignores them reads ordinary Panels.
 
-**Project level**: `projectName`, `tomes`, `scenes`, `currentTomeIndex`, `currentPageIndex`,
+**Formats** (#453, October 2026, see [formats.md](formats.md)): `formats` at project level
+(`[{ key, nom?, unite, largeur, hauteur, w, h, scale, mmW }]`). ADDED field: each Volume keeps its
+`format` key and its copy of `w`, `h`, `scale`, so a version that ignores it reads the same Volumes.
+A file without `formats` gets the four built-in formats; a Volume whose dimensions match no format
+gets one with its dimensions (only its key changes).
+
+**Project level**: `projectName`, `tomes`, `formats`, `scenes`, `currentTomeIndex`, `currentPageIndex`,
 `poses` (pose library: `[{ id, name, skeleton, joints }]`).
 
 ⚠️ **The scope of `poses` changed (Fix 57)** without its name or its shape moving: the library now

@@ -33,7 +33,7 @@ import se défait d'un Ctrl+Z.
 
 **Une planche qui n'a pas les proportions du Tome** (plus de 3 % d'écart) : l'import propose un
 format qui lui corresponde, à la hauteur du Tome. Si les autres Planches du Tome sont vides ou
-importées, on propose de passer le Tome en format personnalisé ; sinon (elles seraient dérangées),
+importées, on propose de passer le Tome à ce format, ajouté aux formats du Projet (cf. [formats.md](formats.md)) ; sinon (elles seraient dérangées),
 de créer un nouveau Tome à ce format et d'y placer la planche. Refuser la garde, avec des bandes.
 
 ## La détection

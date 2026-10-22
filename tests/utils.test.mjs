@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import {
   makeFrameScheduler, vaguesDePrechargement3D,
   wrapAngle, clamp, memeContenu, getBBox,
-  pxPerMm, getFormat, getEmotion,
+  getEmotion,
   getElementDepth, getHandles, repairElementBase3D, unknownPoseKey3D,
   jointsEqual3D, resolvePoseLabel3D,
   poseSliderSpecs3D, readPoseSliderDeg3D, writePoseSliderDeg3D, poseSliderSignature3D,
@@ -138,22 +138,8 @@ describe('getBBox', () => {
   });
 });
 
-// ── Data lookups (getFormat / pxPerMm / getStyle3D / getEmotion / getPosition) ──────────────────
-describe('getFormat / pxPerMm : Format d\'un Tome et conversion px→mm', () => {
-  test('getFormat : renvoie l\'entrée FORMATS correspondant à la clé, undefined si inconnue', () => {
-    assert.equal(getFormat('fb').label, 'Franco-Belge (220×290mm)');
-    assert.equal(getFormat('nope'), undefined);
-  });
-
-  test('pxPerMm : dérivé de la taille physique réelle déclarée (w/mmW) pour un format donné', () => {
-    assertClose(pxPerMm('fb'), 2.5, 'Franco-Belge : 550px / 220mm');
-    assertClose(pxPerMm('us'), 480 / 170, 'Comics US : 480px / 170mm');
-  });
-
-  test('pxPerMm : format inconnu → repli sur l\'équivalence standard écran 96dpi', () => {
-    assertClose(pxPerMm('nope'), 96 / 25.4);
-  });
-});
+// ── Data lookups ──────────────────────────────────────────────────────────────────────────────
+// #453 : getFormat et pxPerMm sont devenus trouverFormat et pxParMm (tests/formats.test.mjs).
 
 // ⚠️ `getStyle3D` ET `getPosition` ONT ÉTÉ RETIRÉES (#402d) : deux des trois recherches de cette
 // famille n'avaient aucun appelant. `resolveStyle3D` (rig3d.js) résout un style, `nameOfPose3D` et

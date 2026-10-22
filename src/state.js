@@ -10,7 +10,7 @@
  */
 
 import { STYLES_3D } from './constants.js';
-import { getFormat } from './utils.js';
+import { formatsParDefaut, trouverFormat, appliquerFormat } from './formats.js';
 
 export const S = {
 
@@ -23,6 +23,9 @@ export const S = {
   autosaveIntervalMs: 60000,
 
   // ── Data (Volumes / Pages / Scenes) ────────────────────────────────────
+  // #453 : les formats du PROJET (champ `formats` du fichier), où tous ses Tomes puisent, cf.
+  // src/formats.js. Remplacés à chaque Projet lu ou créé.
+  formats: formatsParDefaut(),
   // NOTE: the field below is still named `tomes` (not `volumes`) on purpose, it is written
   // verbatim as the top-level "tomes" key in every saved Project .json file (cf.
   // serializeProject/applyProjectData in io.js). Renaming this field would silently break every
@@ -345,9 +348,10 @@ function nextDefaultVolumeName() {
 }
 export { nextDefaultVolumeName };
 
+// #453 : un format absent du Projet (le Franco-Belge a pu être supprimé) cède la place au premier.
 export function createVolume(formatKey) {
-  const f = getFormat(formatKey);
-  const t = { id: newId('t'), name: nextDefaultVolumeName(), format: f.key, w: f.w, h: f.h, scale: f.scale, style3d: STYLES_3D[0].key, pages: [] };
+  const f = trouverFormat(S.formats, formatKey) || S.formats[0];
+  const t = appliquerFormat({ id: newId('t'), name: nextDefaultVolumeName(), format: '', w: 0, h: 0, scale: 1, style3d: STYLES_3D[0].key, pages: [] }, f);
   S.tomes.push(t);
   return t;
 }

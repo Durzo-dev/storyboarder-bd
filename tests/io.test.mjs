@@ -46,11 +46,12 @@ describe('serializeProject : instantané JSON du Projet courant', () => {
   // Le compte de champs est volontairement figé : chacun d'eux devient un élément PERMANENT du
   // format de fichier (cf. docs/en/persisted-data.md). Ce test tombe à chaque ajout, ce qui est le
   // but, il force à se demander si le champ mérite vraiment d'être gravé.
-  test('sérialise exactement les 6 champs attendus depuis S', () => {
+  // #453 : `formats`, les formats du Projet, est le septième (cf. src/formats.js).
+  test('sérialise exactement les 7 champs attendus depuis S', () => {
     S.projectName = 'Test'; S.tomes = [{ id: 't1' }]; S.currentTomeIndex = 0; S.currentPageIndex = 0;
-    S.scenes = []; S.poses = [];
+    S.scenes = []; S.poses = []; S.formats = [{ key: 'fb' }];
     const json = JSON.parse(serializeProject());
-    assert.deepEqual(json, { projectName: 'Test', tomes: [{ id: 't1' }], currentTomeIndex: 0,
+    assert.deepEqual(json, { projectName: 'Test', tomes: [{ id: 't1' }], formats: [{ key: 'fb' }], currentTomeIndex: 0,
                              currentPageIndex: 0, scenes: [], poses: [] });
   });
 
@@ -869,4 +870,22 @@ describe('Fermeture décidée : la cascade de préchargement s\'arrête (#407c)'
    * fin de tour, juste avant de repartir. Elle n'économiserait alors que la vague suivante, jamais
    * celle qui coûte, et le test resterait vert sur la présence de l'identifiant.
    */
+});
+
+describe('#453 : les formats du Projet à la lecture', () => {
+  test('un fichier sans `formats` reçoit ceux de départ ; un Tome importé à d’autres dimensions reçoit le sien', () => {
+    applyProjectData({ projectName: 'P', tomes: [
+      { id: 't1', format: 'fb', w: 550, h: 725, scale: 4, pages: [] },
+      { id: 't2', format: 'custom', w: 512, h: 725, scale: 4, pages: [] },
+    ] });
+    assert.deepEqual(S.formats.slice(0, 4).map(f => f.key), ['fb', 'us', 'webtoon', 'custom']);
+    assert.equal(S.formats.length, 5);
+    assert.equal(S.tomes[1].format, S.formats[4].key);
+    assert.equal(S.tomes[1].w, 512);
+  });
+  test('la liste du fichier est reprise, et ressort à l’identique', () => {
+    const formats = [{ key: 'f1', nom: 'A4', unite: 'mm', largeur: 210, hauteur: 297, w: 513, h: 725, scale: 4, mmW: 210 }];
+    applyProjectData({ projectName: 'P', formats, tomes: [{ id: 't1', format: 'f1', w: 513, h: 725, scale: 4, pages: [] }] });
+    assert.deepEqual(JSON.parse(serializeProject()).formats, formats);
+  });
 });

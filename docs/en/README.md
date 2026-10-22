@@ -44,6 +44,7 @@ down.
 | [archetype-roles.md](archetype-roles.md) | Chain roles: what a pose can aim at, lists per archetype, settled decisions (tasks #378 and #375). |
 | [archetype-poses.md](archetype-poses.md) | Archetype poses: the three vocabularies, what was measured, what was disproved, decisions taken (tasks #375 to #402). |
 | [building-research.md](building-research.md) | Building construction in games (The Sims, inZOI, Valheim, Tiny Glade…) and architecture software (Sweet Home 3D, Revit, Archicad…): what we keep, recommendations, data model for levels (task #455). |
+| [formats.md](formats.md) | Volume formats: owned by the Project, created, renamed, deleted when unused; mm and px; the added field. |
 | [planche-importee.md](planche-importee.md) | Imported pages: a page image, its Panels detected then checked, the framing of the whole, what is locked, the added fields. |
 | [panel-images.md](panel-images.md) | An image in a panel instead of a 3D scene: settled decisions, what the code already provides, what is left to measure (tasks #403a to #403d). |
 | [colour-accessibility.md](colour-accessibility.md) | Colour that depicts against colour that signals, measured collisions per deficiency, why a theme is not the main remedy (tasks #409a to #409d). |

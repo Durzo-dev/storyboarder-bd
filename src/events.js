@@ -127,6 +127,8 @@ import {
   panelsInPage, renumberPanels,
 } from './state.js';
 import { APP_VERSION } from './version.js';
+import { formatsParDefaut } from './formats.js';
+import { setFormatsCallbacks } from './formats-ui.js';
 import {
   cloneJoints, disposeObjectRig3D, disposePersonaRig3D, disposeWallRenderRig3D, ensurePersonaScene3D,
   frameOrthoCameraToBox, ensureObjectRigEntry3D, getWallPanRect2D, wallOpeningRect, personaCameraOrtho3D,
@@ -205,7 +207,7 @@ window.toggleModalSection = toggleModalSection;
 // ════════════════════════════════════════════════════════════
 // UI HELPERS
 // ════════════════════════════════════════════════════════════
-// ↳ src/utils.js (pxPerMm, getStyle3D, getEmotion, getPosition)
+// ↳ src/utils.js (getStyle3D, getEmotion, getPosition)
 // A set of Volumes/Pages/Panels makes up a "Project" (default name "Projet"), shown at the
 // top of the left-hand menu (cf. #projectNameHeader) above the Volumes section.
 // [STATE→S] let S.projectName = 'Projet';
@@ -265,7 +267,7 @@ window.toggleModalSection = toggleModalSection;
 // Id of the last Wall created: WallOpening Elements automatically magnetize to it upon creation.
 // [STATE→S] let S.lastWallId = null;
 
-// ↳ src/utils.js (getFormat)
+// ↳ src/formats.js (trouverFormat)
 // When a Scene is being edited (cf. S.editingSceneId/openScene), the entire rendering and
 // editing engine (which systematically goes through these two functions) works on the Scene, which has the same
 // shape as a Volume with a single Page, rather than on normal Volumes/Pages, without any
@@ -401,6 +403,7 @@ setModelCacheCallbacks({ onChange: () => renderAll(), getMaxAnisotropy: getMaxAn
 setImageCacheCallbacks({ onChange: () => renderAll() });
 // « Importer une planche » : même injection que l'import de modèle, pour la même raison.
 setImportPlancheCallbacks({ snapshot, renderAll, redessiner: () => drawCurrentPage(), alerter: alertAction, confirmer: confirmAction });
+setFormatsCallbacks({ snapshot });
 // L'import pose un point d'annulation et parle à l'utilisateur : les deux lui sont injectés,
 // plutôt qu'importés, pour qu'il ne dépende ni de la pile d'annulation ni des modales.
 // `confirmer` : la question « redimensionner ce modèle manifestement trop grand ? » (cf.
@@ -512,7 +515,7 @@ function assignNextPanelNumber(page, panelObj){
 // UNDO / HISTORY
 // ════════════════════════════════════════════════════════════
 function snapshot(){
-  S.undoStack.push(JSON.stringify({ tomes: S.tomes, currentTomeIndex: S.currentTomeIndex, currentPageIndex: S.currentPageIndex, scenes: S.scenes, editingSceneId: S.editingSceneId }));
+  S.undoStack.push(JSON.stringify({ tomes: S.tomes, formats: S.formats, currentTomeIndex: S.currentTomeIndex, currentPageIndex: S.currentPageIndex, scenes: S.scenes, editingSceneId: S.editingSceneId }));
   if (S.undoStack.length > MAX_UNDO) S.undoStack.shift();
   const btn = document.getElementById('undoBtn');
   if (btn) btn.disabled = false;
@@ -524,6 +527,8 @@ function undo(){
   if (S.undoStack.length === 0) return;
   const prev = JSON.parse(S.undoStack.pop());
   S.tomes = prev.tomes; S.currentTomeIndex = prev.currentTomeIndex; S.currentPageIndex = prev.currentPageIndex;
+  // #453 : les formats du Projet se défont avec le reste (créer, renommer, supprimer, import).
+  if (Array.isArray(prev.formats)) S.formats = prev.formats;
   S.scenes = prev.scenes || []; S.editingSceneId = prev.editingSceneId || null;
   S.selectedId = null; S.selectedRoomId = null; S.dragMode = null; S.snapGuide = null;
   renderAll();
@@ -8939,6 +8944,7 @@ setDemarrageProjetVierge(() => {
   S.projectName = tr('Project', 'Projet');
   S.projectDirty = false;
   S.tomes = [];
+  S.formats = formatsParDefaut();
   S.scenes = [];
   S.expandedVolumes.clear();
   startDefaultProject();

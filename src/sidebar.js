@@ -33,7 +33,8 @@ import {
   BUBBLE_PADDING_DEFAULT, GROUND_TYPE_DEFS,
   WALL_TYPES,
 } from './constants.js';
-import { clamp, getEmotion, libelleTable3D, libelleTypeObjet3D, pxPerMm } from './utils.js';
+import { clamp, getEmotion, libelleTable3D, libelleTypeObjet3D } from './utils.js';
+import { pxParMm, trouverFormat } from './formats.js';
 import { estUneLumiere3D } from './light-source-3d.js';
 import { groupeReplie, memoriserGroupe } from './section-memory.js';
 import {
@@ -1234,7 +1235,7 @@ function updateSidePanelImpl(){
       sideStackSection.style.display = 'none';
       sideBubbleStackSection.style.display = 'none';
     } else {
-      const ratio = pxPerMm(page.format);
+      const ratio = pxParMm(trouverFormat(S.formats, page.format));
       sideDims.innerHTML = edgeLengths(sel)
         .map(e => `<span class="dim-chip">${e.label} <b>${Math.round(e.len / ratio)}</b> mm</span>`)
         .join('');

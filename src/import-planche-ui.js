@@ -19,6 +19,7 @@ import { S, tr, newId, currentPageData, currentPage, createVolume } from './stat
 import { choisirImage, rangerImageChoisie } from './image-store.js';
 import { preloadImagesFor, getLoadedImage } from './image-cache.js';
 import { snapCornerToRightAngle } from './hit-test.js';
+import { formatAuxDimensions, appliquerFormat } from './formats.js';
 import {
   detecterCases, niveauxDeGris, regionTracee, creerPlancheImportee,
   pointsDeLaCase, poserPointsDeLaCase, translaterPoints, dansLesPoints, luminositeDuContour, couleurDeContraste,
@@ -311,10 +312,12 @@ async function proposerUnFormat(t, pd){
   const dims = `${pd.importee.largeur} × ${pd.importee.hauteur} px`;
   if (tomeAdaptable(t, pd.id)) {
     const ok = await _rappels.confirmer(tr(
-      `This page (${dims}) does not have the proportions of the volume "${t.name}". Switch the volume to a custom format that matches it?`,
-      `Cette planche (${dims}) n'a pas les proportions du tome « ${t.name} ». Passer le tome à un format personnalisé qui lui correspond ?`),
+      `This page (${dims}) does not have the proportions of the volume "${t.name}". Switch the volume to a format that matches it?`,
+      `Cette planche (${dims}) n'a pas les proportions du tome « ${t.name} ». Passer le tome à un format qui lui correspond ?`),
     tr('Page format', 'Format de la planche'));
-    if (ok) { t.format = 'custom'; t.w = f.w; t.h = f.h; }
+    // #453 : le format rejoint ceux du Projet (un existant aux mêmes dimensions, sinon un nouveau),
+    // au lieu de passer le Tome en « Format personnalisé » à d'autres dimensions que les siennes.
+    if (ok) appliquerFormat(t, formatAuxDimensions(S.formats, f.w, f.h, t.scale, tr('Imported page', 'Planche importée'), tr));
     return;
   }
   const ok = await _rappels.confirmer(tr(
@@ -324,8 +327,7 @@ async function proposerUnFormat(t, pd){
   if (!ok) return;
   t.pages = t.pages.filter(p => p !== pd);
   delete pd.chapitreId;
-  const nouveau = createVolume('custom');
-  nouveau.w = f.w; nouveau.h = f.h; nouveau.scale = t.scale;
+  const nouveau = createVolume(formatAuxDimensions(S.formats, f.w, f.h, t.scale, tr('Imported page', 'Planche importée'), tr).key);
   nouveau.pages.push(pd);
   S.currentTomeIndex = S.tomes.indexOf(nouveau);
   S.currentPageIndex = 0;

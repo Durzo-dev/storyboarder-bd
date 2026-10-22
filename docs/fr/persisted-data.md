@@ -25,7 +25,13 @@ qui portent aussi `imageFile`, et `pointsImage` (ses quatre coins, en fractions)
 recalculée à chaque dessin et reste écrite, si bien qu'une version qui les ignore lit des Cases
 ordinaires.
 
-**Niveau projet** : `projectName`, `tomes`, `scenes`, `currentTomeIndex`, `currentPageIndex`,
+**Formats** (#453, octobre 2026, cf. [formats.md](formats.md)) : `formats` au niveau projet
+(`[{ key, nom?, unite, largeur, hauteur, w, h, scale, mmW }]`). Champ AJOUTÉ : chaque Tome garde sa
+clé `format` et sa copie de `w`, `h`, `scale`, si bien qu'une version qui l'ignore lit les mêmes
+Tomes. Un fichier sans `formats` reçoit les quatre formats intégrés ; un Tome dont les dimensions ne
+sont celles d'aucun format en reçoit un à ses dimensions (seule sa clé change).
+
+**Niveau projet** : `projectName`, `tomes`, `formats`, `scenes`, `currentTomeIndex`, `currentPageIndex`,
 `poses` (bibliothèque de poses : `[{ id, name, skeleton, joints }]`).
 
 ⚠️ **La portée de `poses` a changé (Fix 57)** sans que son nom ni sa forme bougent : la

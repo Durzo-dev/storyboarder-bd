@@ -18,11 +18,15 @@ import { POLICES_DAFONT } from './polices-dafont.js';
 // que dans une table parallèle : une entrée ajoutée sans sa traduction se voit à la ligne près, et
 // tests/i18n.test.mjs refuse un `labelEn` manquant. Ce qui est persisté reste la CLÉ (`key`,
 // `id`), jamais le libellé, traduire une étiquette ne peut donc pas abîmer un Projet.
+// #453 : ce sont les formats INTÉGRÉS, ceux qu'un Projet reçoit à sa création (et un Projet d'avant
+// #453 à sa lecture). Le Projet tient ensuite SA liste (`formats`, cf. src/formats.js) : ces entrées
+// y sont renommables et supprimables comme les autres. `largeur`/`hauteur`/`unite` : la taille
+// annoncée à l'utilisateur ; `mmW` : la largeur imprimée, d'où les mm de la section Dimensions.
 export const FORMATS = [
-  {key:'fb', label:'Franco-Belge (220×290mm)', labelEn:'Franco-Belgian (220×290mm)', w:550, h:725, scale:4, mmW:220},
-  {key:'us', label:'Comics US (170×260mm)', labelEn:'US comics (170×260mm)', w:480, h:735, scale:4, mmW:170},
-  {key:'webtoon', label:'Webtoon vertical (800×1280px)', labelEn:'Vertical webtoon (800×1280px)', w:400, h:640, scale:2, mmW:400 * 25.4 / 96},
-  {key:'custom', label:'Format personnalisé', labelEn:'Custom format', w:480, h:660, scale:3, mmW:480 * 25.4 / 96},
+  {key:'fb', label:'Franco-Belge (220×290mm)', labelEn:'Franco-Belgian (220×290mm)', w:550, h:725, scale:4, mmW:220, unite:'mm', largeur:220, hauteur:290},
+  {key:'us', label:'Comics US (170×260mm)', labelEn:'US comics (170×260mm)', w:480, h:735, scale:4, mmW:170, unite:'mm', largeur:170, hauteur:260},
+  {key:'webtoon', label:'Webtoon vertical (800×1280px)', labelEn:'Vertical webtoon (800×1280px)', w:400, h:640, scale:2, mmW:400 * 25.4 / 96, unite:'px', largeur:800, hauteur:1280},
+  {key:'custom', label:'Format personnalisé', labelEn:'Custom format', w:480, h:660, scale:3, mmW:480 * 25.4 / 96, unite:'px', largeur:1440, hauteur:1980},
 ];
 
 // 3D rendering style of Elements (personas, objects, plants...), settable per Volume just like

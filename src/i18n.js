@@ -55,6 +55,15 @@ export const I18N_TEXT = [
   ['#policesFermer', null, null, 'title', 'Close (Esc)', 'Fermer (Échap)'],
   ['#helpSearchInput', null, null, 'placeholder', 'Search the manual', 'Rechercher dans le manuel'],
   ['#policesPhrase', null, null, 'placeholder', 'Sample sentence', "Phrase d'exemple"],
+  // #453 : la modale « Formats du projet » (src/formats-ui.js).
+  ['#formatsTitre', 'Project formats', 'Formats du projet'],
+  ['#formatsAide', 'Shared by every volume of the project. A format can be renamed but its dimensions are fixed, and it cannot be deleted while a volume uses it.', "Partagés par tous les tomes du projet. Un format se renomme mais ses dimensions sont figées, et il ne se supprime pas tant qu'un tome l'utilise."],
+  ['#formatsNouveauTitre', 'New format', 'Nouveau format'],
+  ['#formatsFermer', 'Close', 'Fermer'],
+  ['#formatsCreer', 'Create the format', 'Créer le format'],
+  ['#formatsNom', null, null, 'placeholder', 'Format name', 'Nom du format'],
+  ['#formatsLargeur', null, null, 'placeholder', 'Width', 'Largeur'],
+  ['#formatsHauteur', null, null, 'placeholder', 'Height', 'Hauteur'],
   ['#personaEditorStoreBtn', null, null, 'title', 'Choose the model to pose among your models', 'Choisir le modèle à poser parmi vos modèles'],
   // Fix 63 : ce bouton porte une ICÔNE : son libellé traduit va sur `title`, pas sur le texte.
   // Écrire dans textContent remplaçait l'icône par la phrase, qui débordait du bouton de 30px.

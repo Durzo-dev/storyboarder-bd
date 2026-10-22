@@ -84,7 +84,7 @@ export const HELP_MANUAL_EN = [
     'Chapters are optional: "Add a chapter" in an expanded volume, then drag pages onto it. A chapter folds with a click, reorders by dragging, and its right-click menu renames, exports or deletes it (its pages are kept). Page numbering stays continuous across the volume.',
     'Right-click a volume or a page to export it as PNG or delete it.',
     'An exported page lists under its image the credits of the 3D models downloaded from the library that can be seen in its panels: title, author, license, source and links. The licenses require it, so it is always there.',
-    'Expand a volume in the left-hand menu to change its format: Franco-Belge, US comics, vertical webtoon, or custom.',
+    'Expand a volume in the left-hand menu to change its format. The formats belong to the project, shared by all its volumes: "Manage formats…" at the bottom of the list creates one (name, width, height, in mm or px), renames one, or deletes one that no volume uses. A format\'s dimensions cannot be changed, since the panels of its volumes would move.',
     'Select a page to set its "Background" on the right: "Page color" is the colour of the paper under the panels. It belongs to the page, not to the volume, so each page can have its own.',
   ]},
   { id: 'cases', title: 'Panels', paragraphs: [
@@ -329,7 +329,7 @@ export const HELP_MANUAL_FR = [
     "Les chapitres sont facultatifs : « Ajouter un chapitre » dans un tome déplié, puis glissez-y des planches. Un chapitre se replie d'un clic, se réordonne en le glissant, et son clic droit le renomme, l'exporte ou le supprime (ses planches sont gardées). La numérotation des planches reste continue dans le tome.",
     "Clic droit sur un tome ou une planche pour l'exporter en PNG ou le supprimer.",
     "Une Planche exportée liste sous son image les crédits des modèles 3D téléchargés depuis la bibliothèque visibles dans ses Cases : titre, auteur, licence, source et liens. Les licences l'exigent, la section est donc toujours là.",
-    "Dépliez un tome dans le menu de gauche pour changer son format : Franco-Belge, Comics US, webtoon vertical ou personnalisé.",
+    "Dépliez un tome dans le menu de gauche pour changer son format. Les formats appartiennent au projet, partagés par tous ses tomes : « Gérer les formats… » en bas de la liste en crée un (nom, largeur, hauteur, en mm ou en px), en renomme un, ou supprime celui qu'aucun tome n'utilise. Les dimensions d'un format ne se modifient pas, les cases de ses tomes se déplaceraient.",
     "Sélectionnez une Planche pour régler son « Arrière-plan » à droite : « Couleur de la Planche » est celle du papier sous les Cases. Elle appartient à la Planche et non au Tome, chacune peut donc avoir la sienne.",
   ]},
   { id: 'cases', title: 'Cases', paragraphs: [

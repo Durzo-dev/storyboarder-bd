@@ -13,6 +13,7 @@ import { tomesOuverts } from './section-memory.js';
 import { verifierRessources, cablerModaleRessources, fermerModaleRessources } from './missing-resources.js';
 import { S, tr, createVolume, addPageToVolume, modeCanevasActif3D } from './state.js';
 import { normaliserChapitres } from './chapitres.js';
+import { normaliserFormats, formatsParDefaut } from './formats.js';
 import { preloadModelsFor } from './model-cache.js';
 // Les images d'une Case suivent le même chemin que les modèles, et pour la même raison : le dessin
 // est synchrone, le décodage ne l'est pas (cf. src/image-cache.js).
@@ -80,7 +81,7 @@ export function supportsFileSystemAccess(){ return typeof window.showSaveFilePic
 // change (cf. docs/en/persisted-data.md).
 export function serializeProject(){
   return JSON.stringify({
-    projectName: S.projectName, tomes: S.tomes,
+    projectName: S.projectName, tomes: S.tomes, formats: S.formats,
     currentTomeIndex: S.currentTomeIndex, currentPageIndex: S.currentPageIndex,
     scenes: S.scenes, poses: posesUsedByProject3D(S.poses, S.tomes, S.scenes),
   });
@@ -564,6 +565,9 @@ export function applyProjectData(data){
   disposeAllRigs3D();
   S.projectName = (data && data.projectName) || 'Projet';
   S.tomes = (data && data.tomes) || [];
+  // #453 : les formats du Projet (src/formats.js). Un fichier d'avant #453 reçoit ceux de départ, et
+  // un Tome dont les dimensions ne sont celles d'aucun format reçoit le sien (seule sa clé change).
+  S.formats = normaliserFormats(data && data.formats, S.tomes, tr);
   S.currentTomeIndex = (data && data.currentTomeIndex) || 0;
   S.currentPageIndex = (data && data.currentPageIndex) || 0;
   // Chapitres (cf. src/chapitres.js) : un fichier dont les Planches d'un chapitre ne seraient plus
@@ -873,9 +877,10 @@ export async function createNewProjectFlow(){
   S.projectFileHandle = null;
   S.projectFilePath = null;
   S.tomes = [];
+  S.formats = formatsParDefaut();
   const t0 = createVolume('fb');
   addPageToVolume(t0);
-  applyProjectData({ projectName: 'Projet', tomes: S.tomes, currentTomeIndex: 0, currentPageIndex: 0 });
+  applyProjectData({ projectName: 'Projet', tomes: S.tomes, formats: S.formats, currentTomeIndex: 0, currentPageIndex: 0 });
   // Immediately triggers a save (on user request): proposes a .json location (or rewrites the
   // already-known file) via the same logic as the "Save project" button.
   await saveProjectFlow();
@@ -1172,7 +1177,7 @@ function isEntityNameTakenByOther(kind, target, name){
   // son identifiant, et leur place dans le Tome les distingue.
   if (kind === 'chapitre') return false;
   // Une police (#423) : comparée sans la casse à la liste capturée à l'ouverture, intégrées comprises.
-  if (kind === 'police') {
+  if (kind === 'police' || kind === 'format') {
     return ((S.renameModalContext && S.renameModalContext.pris) || [])
       .some(n => String(n).toLowerCase() === norm && String(n) !== String(target));
   }
@@ -1211,6 +1216,8 @@ function updateRenameEntityConfirmState(){
         ? tr('A model file already has that name.', 'Un fichier de modèle porte déjà ce nom.')
       : quoi === 'police'
         ? tr('A font already has that name.', 'Une police porte déjà ce nom.')
+      : quoi === 'format'
+        ? tr('A format already has that name.', 'Un format porte déjà ce nom.')
         : quoi === 'image'
           ? tr('An image file already has that name.', 'Un fichier image porte déjà ce nom.')
           : tr('That name is already used by another scene.', 'Ce nom est déjà utilisé par une autre scène.');
@@ -1228,6 +1235,8 @@ export function openRenameEntityModal(kind, target, currentName, extra){
       ? tr('Rename the model file', 'Renommer le fichier du modèle')
     : kind === 'police'
       ? tr('Rename the font', 'Renommer la police')
+    : kind === 'format'
+      ? tr('Rename the format', 'Renommer le format')
       : kind === 'image'
         ? tr('Rename the image file', 'Renommer le fichier image')
         : tr('Rename scene', 'Renommer la scène');

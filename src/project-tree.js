@@ -12,11 +12,11 @@
  * injected, see setProjectTreeCallbacks.
  */
 
-import { FORMATS } from './constants.js';
+import { trouverFormat, libelleDuFormat, nomDuFormat, appliquerFormat } from './formats.js';
+import { ouvrirFormats } from './formats-ui.js';
 import { S, addPageToVolume, createVolume, newId, tr } from './state.js';
 import { listImages } from './image-store.js';
 import { groupImagesByUsage, imageUsageLabel } from './image-library.js';
-import { getFormat, libelleTable3D } from './utils.js';
 import { alertAction, confirmAction, openRenameEntityModal, prechargerEnCascade3D } from './io.js';
 import { renderAll } from './draw.js';
 import { memoriserTome, groupeReplie, memoriserGroupe } from './section-memory.js';
@@ -29,6 +29,9 @@ import {
 // Scene is (createScene / openScene / disableSceneCameraMode), the context menus its rows open,
 // and the undo stack. Injected rather than imported, events.js imports this module, so importing
 // back would close a cycle (cf. docs/en/architecture.md rule #2).
+/** La valeur de l'entrée « Gérer les formats… » : aucune clé de format ne commence par un tiret bas. */
+const GERER_LES_FORMATS = '__gerer';
+
 let _cb = {};
 export function setProjectTreeCallbacks(callbacks) { _cb = callbacks; }
 const createScene              = (...a) => _cb.createScene(...a);
@@ -130,7 +133,7 @@ export function renderTree(){
     const row = document.createElement('div');
     row.className = 'tome-row' + (ti === S.currentTomeIndex && !S.editingSceneId ? ' active' : '');
     const expanded = S.expandedVolumes.has(t.id);
-    row.innerHTML = `<span>${t.name} <small style="color:var(--sepia)">— ${libelleTable3D(getFormat(t.format), tr).split(' (')[0]}</small></span><span class="caret">${expanded ? '▾' : '▸'}</span>`;
+    row.innerHTML = `<span>${t.name} <small style="color:var(--sepia)">— ${nomDuFormat(trouverFormat(S.formats, t.format), tr)}</small></span><span class="caret">${expanded ? '▾' : '▸'}</span>`;
     row.onclick = () => {
       if (S.expandedVolumes.has(t.id)) S.expandedVolumes.delete(t.id); else S.expandedVolumes.add(t.id);
       // #441 : l'état du Tome survit à la fermeture de l'application.
@@ -150,17 +153,23 @@ export function renderTree(){
       const formatLabel = document.createElement('label');
       formatLabel.textContent = 'Format du tome';
       const formatSelect = document.createElement('select');
-      FORMATS.forEach(f => {
+      // #453 : les formats du PROJET, puis l'entrée qui ouvre leur gestion.
+      S.formats.forEach(f => {
         const opt = document.createElement('option');
-        opt.value = f.key; opt.textContent = libelleTable3D(f, tr);
+        opt.value = f.key; opt.textContent = libelleDuFormat(f, tr);
         formatSelect.appendChild(opt);
       });
+      const gerer = document.createElement('option');
+      gerer.value = GERER_LES_FORMATS; gerer.textContent = tr('Manage formats…', 'Gérer les formats…');
+      formatSelect.appendChild(gerer);
       formatSelect.value = t.format;
       formatSelect.onclick = (e) => e.stopPropagation();
       formatSelect.onchange = (e) => {
+        if (e.target.value === GERER_LES_FORMATS) { e.target.value = t.format; ouvrirFormats(); return; }
+        const f = trouverFormat(S.formats, e.target.value);
+        if (!f) return;
         snapshot();
-        const f = getFormat(e.target.value);
-        t.format = f.key; t.w = f.w; t.h = f.h; t.scale = f.scale;
+        appliquerFormat(t, f);
         renderAll();
       };
       formatWrap.appendChild(formatLabel);

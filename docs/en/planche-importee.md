@@ -30,7 +30,7 @@ a row **highlights the Panel** (a second click deselects it). An import is undon
 
 **A page without the Volume's proportions** (more than 3 % off): the import offers a matching
 format, at the Volume's height. If the Volume's other Pages are empty or imported, it offers to switch
-the Volume to a custom format; otherwise (they would be upset), to create a new Volume in that format
+the Volume to that format, added to the Project's formats (see [formats.md](formats.md)); otherwise (they would be upset), to create a new Volume in that format
 and move the page there. Declining keeps it, with bands.
 
 ## The detection

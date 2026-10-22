@@ -3,7 +3,7 @@
  * Pure utility functions for Storyboarder.
  * No side effects, no global state, safe to import from any module.
  *
- * Data lookups:    getFormat, pxPerMm, getStyle3D, getEmotion, getPosition
+ * Data lookups:    getStyle3D, getEmotion, getPosition
  * Poses:           unknownPoseKey3D, jointsEqual3D, resolvePoseLabel3D
  * Pose sliders:    poseSliderSpecs3D, readPoseSliderDeg3D, writePoseSliderDeg3D
  * Math helpers:    clamp, wrapAngle, clampAngle
@@ -11,7 +11,7 @@
  * Element helpers: getElementDepth
  */
 
-import { FORMATS, EMOTIONS, POSITIONS, POSE_3D, POSE_HANDLES, WALL_PX_PER_UNIT_3D,
+import { EMOTIONS, POSITIONS, POSE_3D, POSE_HANDLES, WALL_PX_PER_UNIT_3D,
   OBJECT_TYPE_LABELS, OBJECT_TYPE_LABELS_EN, ANIMAL_LABELS_EN, JOINT_LABELS, JOINT_LABELS_EN,
   ANIMAL_ARCHETYPES_3D } from './constants.js';
 
@@ -19,15 +19,8 @@ import { FORMATS, EMOTIONS, POSITIONS, POSE_3D, POSE_HANDLES, WALL_PX_PER_UNIT_3
 // DATA LOOKUPS
 // ══════════════════════════════════════════════════════════════
 
-// px → mm conversion specific to the Volume's format (fb/us use their real print size;
-// webtoon/custom have no declared physical size, so we fall back to the standard
-// 96dpi screen equivalence).
-export function pxPerMm(formatKey){
-  const f = FORMATS.find(x => x.key === formatKey);
-  return f ? f.w / f.mmW : 96 / 25.4;
-}
-
-export function getFormat(key){ return FORMATS.find(f => f.key === key); }
+// #453 : getFormat et pxPerMm sont partis dans src/formats.js (trouverFormat, pxParMm) : les formats
+// appartiennent désormais au Projet, plus à la table FORMATS.
 
 // `getStyle3D` A ÉTÉ RETIRÉE (#402d) : `resolveStyle3D` (rig3d.js) est le chemin vivant, et deux
 // façons de résoudre un style, c'était deux replis à tenir d'accord.
