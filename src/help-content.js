@@ -70,6 +70,7 @@ export const HELP_MANUAL_EN = [
     'F1: show or hide the user manual, like the \u201c?\u201d button. Its sections are grouped; the search field finds the words you type and highlights them.',
     'T: toggle between perspective and top-down view (Scene editor only).',
     'B: open or close the model library, where you left it during the session; after a restart, it starts afresh.',
+    'H: open or close the Building editor. P: open or close the fonts.',
     'In the Reader: ← → turn the pages (in manga, left moves forward), Home / End go to the first / last page, Space starts or stops automatic scrolling, F toggles full screen, Esc leaves full screen then the Reader.',
     '↑ ↓ ← → or W A S D (in Camera mode): pan the camera sideways and vertically.',
     'Delete: delete the selected Element.',
@@ -277,7 +278,7 @@ export const HELP_MANUAL_EN = [
     'The editor covers the central area only, the left menu stays usable. Clicking a Page or a Scene leaves it, without reopening the dialog you came from.',
   ]},
   { id: 'batiments', title: 'Building editor', paragraphs: [
-    'Buildings are built in their own editor, then placed in Scenes. Open it with the house button at the top (left of "Model editor"), with "Create a building" when right-clicking a Scene, or with "Edit" when right-clicking a Building or a Room in the right-hand menu.',
+    'Buildings are built in their own editor, then placed in Scenes. Open it with the house button at the top (left of "Model editor") or the H key, with "Create a building" when right-clicking a Scene, or with "Edit" when right-clicking a Building or a Room in the right-hand menu.',
     '"Edit" opens a COPY of the walls already drawn in the Scene: the Scene does not change. "Save to the library" stores the building with your models, in the Batiments folder next to your projects.',
     'The top view of the current level fills the editor: scroll wheel to zoom, hold the right button to move the view. The 3D preview is a window over it: hold the left button to turn, the right button to move, scroll wheel to zoom. "Reframe" fits both views to the building.',
     'Drag the preview by its bar to anchor it to another corner. − minimises it to an icon that reopens it, ⤢ (or a double-click on the bar) switches it to full screen and back. The choice is remembered.',
@@ -328,6 +329,7 @@ export const HELP_MANUAL_FR = [
     'F1 : afficher ou masquer le Manuel d\'utilisation, comme le bouton « ? ». Ses sections sont groupées ; la recherche trouve les mots tapés et les surligne.',
     "T : basculer entre vue perspective et vue de dessus (éditeur de Scène uniquement).",
     'B : ouvrir ou fermer la bibliothèque de modèles, là où vous l\'aviez laissée pendant la session ; après un redémarrage, elle repart de zéro.',
+    "H : ouvrir ou fermer l'Éditeur de bâtiment. P : ouvrir ou fermer les Polices.",
     "Dans le Lecteur : ← → tournent les pages (en manga, la gauche avance), Origine / Fin vont à la première / dernière page, Espace lance ou arrête le défilement automatique, F bascule le plein écran, Échap quitte le plein écran puis le Lecteur.",
     '↑ ↓ ← → ou W A S D (en mode Caméra) : translater la caméra latéralement et verticalement.',
     'Suppr : supprimer l\'Élément sélectionné.',
@@ -516,7 +518,7 @@ export const HELP_MANUAL_FR = [
     "L'éditeur n'occupe que la zone centrale, le menu de gauche reste utilisable. Cliquer une Planche ou une Scène le quitte, sans rouvrir la fiche d'où vous veniez.",
   ]},
   { id: 'batiments', title: 'Éditeur de bâtiment', paragraphs: [
-    "Un bâtiment se construit dans son éditeur, puis se place dans les Scènes. On l'ouvre par le bouton en forme de maison en haut (à gauche d'« Éditeur de modèle »), par « Créer un bâtiment » au clic droit dans une Scène, ou par « Modifier » au clic droit sur un Bâtiment ou une Pièce du menu de droite.",
+    "Un bâtiment se construit dans son éditeur, puis se place dans les Scènes. On l'ouvre par le bouton en forme de maison en haut (à gauche d'« Éditeur de modèle ») ou la touche H, par « Créer un bâtiment » au clic droit dans une Scène, ou par « Modifier » au clic droit sur un Bâtiment ou une Pièce du menu de droite.",
     "« Modifier » ouvre une COPIE des murs déjà tracés dans la Scène : la Scène ne change pas. « Enregistrer dans la bibliothèque » range le bâtiment avec vos modèles, dans le dossier Batiments à côté de vos projets.",
     "La vue de dessus du niveau courant occupe l'éditeur : molette pour zoomer, clic droit maintenu pour déplacer la vue. L'aperçu 3D est une fenêtre par-dessus : clic gauche maintenu pour tourner, clic droit maintenu pour déplacer, molette pour zoomer. « Recadrer » ajuste les deux vues au bâtiment.",
     "Tirez l'aperçu par sa barre pour l'ancrer à un autre coin. − le réduit à une icône qui le rouvre, ⤢ (ou un double-clic sur la barre) le passe en plein écran et retour. Le choix est retenu.",

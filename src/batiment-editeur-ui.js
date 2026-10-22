@@ -651,7 +651,8 @@ function clavier(e){
     return;
   }
   if (dansUnChamp || e.ctrlKey || e.metaKey) return;
-  if (touche === 'm') basculerOutil('mur');
+  if (touche === 'h') fermerEditeurDeBatiment();   // H ouvre l'éditeur (events.js) et le referme ici
+  else if (touche === 'm') basculerOutil('mur');
   else if (touche === 'v') basculerOutil('selection');
   else if (e.key === 'Enter') finirLaChaine();
   else if ((e.key === 'Delete' || e.key === 'Backspace') && murSelectionne()) {

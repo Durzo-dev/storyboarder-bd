@@ -1780,6 +1780,21 @@ window.addEventListener('keydown', (e) => {
     const autre = [...document.querySelectorAll('.modal-overlay:not(.hidden)')].some(m => m.id !== 'storeModal');
     if (!autre) { e.preventDefault(); basculerStore(); return; }
   }
+  // Raccourci P : ouvrir ou fermer les Polices (demandé), aux mêmes conditions que B.
+  if (e.key.toLowerCase() === 'p' && !e.ctrlKey && !e.metaKey && !e.altKey
+      && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
+    const autre = [...document.querySelectorAll('.modal-overlay:not(.hidden)')].some(m => m.id !== 'policesModal');
+    if (!autre) { e.preventDefault(); document.getElementById('policesOuvrirBtn').click(); return; }
+  }
+  // Raccourci H : ouvrir l'Éditeur de bâtiment (demandé ; H comme habitation, B étant pris par la
+  // bibliothèque). Le REFERMER se fait dans l'éditeur, qui garde ses touches (batiment-editeur-ui.js).
+  if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.metaKey && !e.altKey
+      && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT' && pileOuverte().length === 0
+      && !editeurDeBatimentOuvert()) {
+    e.preventDefault();
+    document.getElementById('openBatimentEditorBtn').click();
+    return;
+  }
   // T shortcut: toggles the top-down view in a Scene (cf. sceneTopDownBtn), only available in the
   // Scene editor (S.editingSceneId), on the selected Panel/Scene, on user request.
   // We look for the Scene's locked panel directly in the page's objects (rather than via

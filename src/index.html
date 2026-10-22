@@ -20,7 +20,7 @@
        droite (demandé). Leur infobulle est écrite par le code : src/store-texts.js pour le premier,
        l'i18n pour le second. Les Images restent à gauche pour l'instant. -->
   <!-- #454a : l'Éditeur de bâtiment, à gauche de l'Éditeur de modèle (demandé). -->
-  <button class="help-round-btn" type="button" id="openBatimentEditorBtn" title="Éditeur de bâtiment">
+  <button class="help-round-btn" type="button" id="openBatimentEditorBtn" title="Éditeur de bâtiment (H)">
     <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 11 12 4l9 7"/>
       <path d="M5 9.5V20h14V9.5"/>
@@ -154,7 +154,7 @@
            les grise alors de lui-même. Fermer reste toujours disponible. -->
       <button id="personaEditorResetBtn" type="button" class="nav-btn">Réinitialiser la pose</button>
       <button id="personaEditorApplyBtn" type="button" class="full-btn">Appliquer les modifications</button>
-      <button id="personaEditorCloseBtn" type="button" class="nav-btn">Fermer</button>
+      <button id="personaEditorCloseBtn" type="button" class="nav-btn">Quitter</button>
     </aside>
   </div>
 </div>
@@ -205,12 +205,12 @@
         <!-- Les OUTILS, en bas au centre de la vue de dessus (demandé). Un nouveau clic sur l'outil
              actif le quitte : le menu de droite revient au menu de base. -->
         <div class="batiment-outils" id="batimentOutils">
-          <button type="button" class="batiment-outil" id="batimentOutilMur" data-outil="mur" title="Mur : tracer des murs (M)">
+          <button type="button" class="batiment-outil" id="batimentOutilMur" data-outil="mur" title="Tracer des murs (M)">
             <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
               <rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 12h18M9 5v7M15 12v7"/>
             </svg>
           </button>
-          <button type="button" class="batiment-outil" id="batimentOutilSelection" data-outil="selection" title="Sélection : retoucher les murs (V)">
+          <button type="button" class="batiment-outil" id="batimentOutilSelection" data-outil="selection" title="Sélection (V)">
             <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
               <path d="M5 3l6 17 2.5-7.5L21 10Z"/>
             </svg>
@@ -249,7 +249,7 @@
           <p id="batimentAide" class="batiment-aide">Les outils sont en bas : Mur (M) pour tracer, Sélection (V) pour retoucher. Un nouveau clic sur l'outil actif, ou « Fermer », le quitte.
 Vue de dessus : molette pour zoomer, clic droit maintenu pour déplacer la vue.
 Aperçu 3D : clic gauche maintenu pour tourner, clic droit maintenu pour déplacer, molette pour zoomer. Sa barre : la tirer pour l'ancrer à un autre coin, − pour le réduire, ⤢ pour le plein écran.
-Ctrl+Z / Ctrl+Y : annuler / rétablir. Échap : fermer l'éditeur.</p>
+Ctrl+Z / Ctrl+Y : annuler / rétablir. H ou Échap : fermer l'éditeur.</p>
         </section>
 
         <section class="side-section pour-mur">

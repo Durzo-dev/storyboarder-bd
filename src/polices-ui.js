@@ -506,7 +506,7 @@ export async function supprimerPolice(nom){
 
 export function rafraichirTextesPolices(){
   const btn = $('policesOuvrirBtn');
-  if (btn) { btn.title = tr('My fonts', 'Mes polices'); btn.setAttribute('aria-label', tr('My fonts', 'Mes polices')); }
+  if (btn) { btn.title = tr('My fonts (P)', 'Mes polices (P)'); btn.setAttribute('aria-label', tr('My fonts', 'Mes polices')); }
   if (!$('policesModal') || $('policesModal').classList.contains('hidden')) return;
   rafraichirFiltresEnLigne(categoriesEnLigne);
   rendreListe();
