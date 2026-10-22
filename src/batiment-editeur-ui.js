@@ -665,7 +665,8 @@ function clavier(e){
 export function initEditeurDeBatiment(){
   if (!$('batimentEditeur')) return;
   $('batimentEditeurFermerX').onclick = () => fermerEditeurDeBatiment();
-  $('batimentFermerBtn').onclick = () => fermerEditeurDeBatiment();
+  $('batimentQuitterBtn').onclick = () => fermerEditeurDeBatiment();
+  $('batimentFermerOutilBtn').onclick = () => choisirOutil(null);
   $('batimentRecadrerBtn').onclick = () => recadrer();
   $('batimentEnregistrerBtn').onclick = () => enregistrer();
   $('batimentNom').addEventListener('input', (e) => {

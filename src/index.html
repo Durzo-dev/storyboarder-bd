@@ -205,8 +205,16 @@
         <!-- Les OUTILS, en bas au centre de la vue de dessus (demandé). Un nouveau clic sur l'outil
              actif le quitte : le menu de droite revient au menu de base. -->
         <div class="batiment-outils" id="batimentOutils">
-          <button type="button" class="batiment-outil" id="batimentOutilMur" data-outil="mur" title="Tracer des murs (M)">Mur</button>
-          <button type="button" class="batiment-outil" id="batimentOutilSelection" data-outil="selection" title="Sélectionner (V)">Sélection</button>
+          <button type="button" class="batiment-outil" id="batimentOutilMur" data-outil="mur" title="Mur : tracer des murs (M)">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+              <rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 12h18M9 5v7M15 12v7"/>
+            </svg>
+          </button>
+          <button type="button" class="batiment-outil" id="batimentOutilSelection" data-outil="selection" title="Sélection : retoucher les murs (V)">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+              <path d="M5 3l6 17 2.5-7.5L21 10Z"/>
+            </svg>
+          </button>
         </div>
         <button type="button" class="batiment-apercu-icone" id="batimentApercuIcone" data-coin="hd" title="Afficher l'aperçu 3D" hidden>
           <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
@@ -238,7 +246,7 @@
         </section>
         <section class="side-section pour-aucun">
           <h2 id="batimentSectionAide">Commandes</h2>
-          <p id="batimentAide" class="batiment-aide">Les outils sont en bas : Mur (M) pour tracer, Sélection (V) pour retoucher. Un nouveau clic sur l'outil actif le quitte.
+          <p id="batimentAide" class="batiment-aide">Les outils sont en bas : Mur (M) pour tracer, Sélection (V) pour retoucher. Un nouveau clic sur l'outil actif, ou « Fermer », le quitte.
 Vue de dessus : molette pour zoomer, clic droit maintenu pour déplacer la vue.
 Aperçu 3D : clic gauche maintenu pour tourner, clic droit maintenu pour déplacer, molette pour zoomer. Sa barre : la tirer pour l'ancrer à un autre coin, − pour le réduire, ⤢ pour le plein écran.
 Ctrl+Z / Ctrl+Y : annuler / rétablir. Échap : fermer l'éditeur.</p>
@@ -276,9 +284,12 @@ Tirer un angle : le déplacer, avec tous les murs qui y sont attachés (Alt : sa
         </section>
 
         <p id="batimentStatut" class="batiment-statut"></p>
-        <button id="batimentEnregistrerBtn" type="button" class="full-btn">Enregistrer dans la bibliothèque</button>
-        <button id="batimentRecadrerBtn" type="button" class="nav-btn">Recadrer</button>
-        <button id="batimentFermerBtn" type="button" class="nav-btn">Fermer</button>
+        <!-- Le menu de base : enregistrer, recadrer, quitter l'éditeur. Avec un outil : « Fermer »
+             quitte l'OUTIL et ramène le menu de base (demandé). -->
+        <button id="batimentEnregistrerBtn" type="button" class="full-btn pour-aucun">Enregistrer dans la bibliothèque</button>
+        <button id="batimentRecadrerBtn" type="button" class="nav-btn pour-aucun">Recadrer</button>
+        <button id="batimentQuitterBtn" type="button" class="nav-btn pour-aucun">Quitter</button>
+        <button id="batimentFermerOutilBtn" type="button" class="nav-btn pour-outil">Fermer</button>
       </aside>
     </div>
   </div>
