@@ -565,9 +565,10 @@ setupDropdown('imageTrigger', 'imagePanel');
 // a rien derrière à alimenter, et « Appliquer » est donc absent (cf. syncPersonaEditorDom).
 {
   const btn = document.getElementById('openPoseEditorBtn');
-  // Déjà dans l'Éditeur : rien (demandé). Le rouvrir remettait la figure de base par-dessus le
-  // modèle qu'on venait de choisir.
-  if (btn) btn.onclick = () => { if (!isPersonaEditorOpen()) showPersonaEditor(null, false); };
+  // Le bouton BASCULE, comme ceux de l'Éditeur de bâtiment, de la bibliothèque et des Polices
+  // (demandé, pour un comportement homogène) : déjà ouvert, il ferme, comme « Quitter ». Il ne
+  // le ROUVRE jamais : rouvrir remettait la figure de base par-dessus le modèle qu'on venait de choisir.
+  if (btn) btn.onclick = () => { if (isPersonaEditorOpen()) hidePersonaEditor(); else showPersonaEditor(null, false); };
 }
 
 
@@ -1651,6 +1652,13 @@ window.addEventListener('keydown', (e) => {
   // sans elle, « E » ouvrirait l'éditeur DERRIÈRE une fiche restée à l'écran. Je ne l'ai pas
   // ajoutée aux trois autres dans le même geste, ce serait changer leur comportement en douce,
   // sous couvert d'ajouter un raccourci.
+  // E dans l'Éditeur de modèle le referme, comme H, B et P referment le leur (demandé).
+  if (e.key.toLowerCase() === 'e' && !e.ctrlKey && !e.metaKey && !e.altKey && tag !== 'INPUT' && tag !== 'TEXTAREA'
+      && tag !== 'SELECT' && S.personaEditorOpen && pileOuverte().length === 0) {
+    e.preventDefault();
+    hidePersonaEditor();
+    return;
+  }
   if (e.key === 'e' && !e.ctrlKey && !e.metaKey && !e.altKey && tag !== 'INPUT' && tag !== 'TEXTAREA'
       && !S.personaEditorOpen && pileOuverte().length === 0) {
     e.preventDefault();

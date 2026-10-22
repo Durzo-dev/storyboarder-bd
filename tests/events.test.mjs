@@ -2443,10 +2443,12 @@ describe('éditeur de Personnage : quitter par le menu de gauche', () => {
       assert.equal(clicQuitteLEditeur3D(noeud({ className: c })), true, `classe « ${c} » non reconnue`));
   });
 
-  test('déjà dans l\'Éditeur, son bouton du bandeau ne fait RIEN (il remettait la figure de base)', () => {
+  // Il ne le ROUVRE jamais (il remettait la figure de base) ; depuis #454a, il le FERME, comme les
+  // boutons de l'Éditeur de bâtiment, de la bibliothèque et des Polices (demandé).
+  test('déjà dans l\'Éditeur, son bouton du bandeau le ferme, sans jamais le rouvrir', () => {
     assert.equal(clicQuitteLEditeur3D(noeud({ id: 'openPoseEditorBtn' })), false);
     const EV = readFileSync(new URL('../src/events.js', import.meta.url), 'utf8');
-    assert.match(EV, /btn\.onclick = \(\) => \{ if \(!isPersonaEditorOpen\(\)\) showPersonaEditor\(null, false\); \};/);
+    assert.match(EV, /btn\.onclick = \(\) => \{ if \(isPersonaEditorOpen\(\)\) hidePersonaEditor\(\); else showPersonaEditor\(null, false\); \};/);
   });
 
   test('Éditeur : les gestes des aperçus du store (gauche tourne, droit déplace, clic sans glisser désélectionne)', () => {
