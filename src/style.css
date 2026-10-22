@@ -2599,7 +2599,8 @@ button.store-chip:hover{ border-color:var(--accent); }
 /* #453 : « Gérer les formats… » au bout de la liste d'un Tome est une ACTION, pas un format : elle
    se distingue des choix (demandé). */
 select option.option-action{ color:var(--accent); font-weight:700; }
-/* Le trait qui la sépare des formats : `--sepia`, un ton moyen redéfini par chaque thème (sombre,
-   clair, contrastes), visible sur le fond de la liste quel que soit le thème. Le noir par défaut
-   de Chromium disparaissait sur le thème sombre (signalé). */
-select hr{ border:0; border-top:1px solid var(--sepia); margin:4px 0; }
+/* Le trait qui la sépare des formats : `--ink-soft`, le texte secondaire de chaque thème, CLAIR
+   sur le thème sombre et SOMBRE sur le clair (demandé). Le popup natif de Chromium ne lit pas la
+   même propriété selon la version (bordure, fond ou `color`) : les trois sont posées. Le noir par
+   défaut disparaissait sur le thème sombre, et `--sepia` y restait trop sombre (signalé). */
+select hr{ border:none; border-top:1px solid var(--ink-soft); height:0; background-color:var(--ink-soft); color:var(--ink-soft); margin:4px 0; }
