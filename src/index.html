@@ -189,9 +189,24 @@
        construit le bâtiment ; la Scène ne fait que le placer (décision du 22 octobre 2026). -->
   <div id="batimentEditeur" class="batiment-editeur hidden">
     <div class="batiment-editeur-body">
-      <div class="batiment-editeur-scene">
+      <!-- La vue de dessus prend tout ; l'aperçu 3D est une FENÊTRE par-dessus (demandé) : ancrée à un
+           coin (on la tire par sa barre, elle s'ancre au coin le plus proche), en plein écran, ou
+           réduite à une icône qui la rouvre. -->
+      <div class="batiment-editeur-scene" id="batimentScene">
         <div class="batiment-editeur-plan"><canvas id="batimentPlan"></canvas></div>
-        <div class="batiment-editeur-apercu" id="batimentApercu"></div>
+        <div class="batiment-apercu-fenetre" id="batimentApercuFenetre" data-mode="fenetre" data-coin="hd">
+          <div class="batiment-apercu-barre" id="batimentApercuBarre">
+            <span id="batimentApercuTitre">Aperçu 3D</span>
+            <button type="button" class="batiment-apercu-btn" id="batimentApercuReduire" title="Réduire l'aperçu">&minus;</button>
+            <button type="button" class="batiment-apercu-btn" id="batimentApercuPlein" title="Aperçu en plein écran">&#x2922;</button>
+          </div>
+          <div class="batiment-editeur-apercu" id="batimentApercu"></div>
+        </div>
+        <button type="button" class="batiment-apercu-icone" id="batimentApercuIcone" data-coin="hd" title="Afficher l'aperçu 3D" hidden>
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+            <path d="M12 3 3 7.5v9L12 21l9-4.5v-9Z"/><path d="M3 7.5 12 12l9-4.5"/><path d="M12 12v9"/>
+          </svg>
+        </button>
       </div>
       <aside class="batiment-editeur-panneau">
         <div class="menu-header">
@@ -216,6 +231,7 @@
           <h2 id="batimentSectionAide">Commandes</h2>
           <p id="batimentAide" class="batiment-aide">Vue de dessus : molette pour zoomer, clic droit maintenu pour déplacer la vue.
 Aperçu 3D : clic gauche maintenu pour tourner, clic droit maintenu pour déplacer, molette pour zoomer.
+Barre de l'aperçu : la tirer pour l'ancrer à un autre coin, − pour le réduire, ⤢ pour le plein écran.
 Échap : fermer l'éditeur.</p>
         </section>
         <p id="batimentStatut" class="batiment-statut"></p>

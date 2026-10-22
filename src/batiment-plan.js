@@ -81,3 +81,28 @@ export function cadrerSur(boite, l, h, marge = 40){
     Math.min((Math.max(1, l - 2 * marge)) / w, (Math.max(1, h - 2 * marge)) / d)));
   return { cx: (b.minX + b.maxX) / 2, cz: (b.minZ + b.maxZ) / 2, echelle };
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// L'AFFICHAGE DE L'APERÇU 3D (demandé le 22 octobre 2026)
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+//
+// La vue de dessus prend tout l'éditeur ; l'aperçu 3D est une fenêtre par-dessus, dans un des
+// quatre coins (on la tire pour en changer : elle s'ancre au coin le plus proche), en plein écran,
+// ou réduite à une icône qui la rouvre. Le choix se retient d'une ouverture à l'autre.
+
+export const MODES_APERCU = ['fenetre', 'plein', 'reduit'];
+export const COINS_APERCU = ['hg', 'hd', 'bg', 'bd'];   // haut-gauche, haut-droite, bas-gauche, bas-droite
+
+/** Un affichage relu (localStorage) : un mode et un coin connus, sinon fenêtré en haut à droite. */
+export function affichageApercuLu(brut){
+  const a = brut && typeof brut === 'object' ? brut : {};
+  return {
+    mode: MODES_APERCU.includes(a.mode) ? a.mode : 'fenetre',
+    coin: COINS_APERCU.includes(a.coin) ? a.coin : 'hd',
+  };
+}
+
+/** Le coin d'un rectangle `l`×`h` le plus proche du point (x, y) : là où la fenêtre lâchée s'ancre. */
+export function coinLePlusProche(x, y, l, h){
+  return (y < h / 2 ? 'h' : 'b') + (x < l / 2 ? 'g' : 'd');
+}

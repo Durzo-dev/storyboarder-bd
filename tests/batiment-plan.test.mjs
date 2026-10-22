@@ -4,7 +4,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ECHELLE_MIN, ECHELLE_MAX, versEcran, versBatiment, pasDeGrille, zoomerAutour, glisserVue,
-  polygoneDuMur, boiteDesMurs, cadrerSur,
+  polygoneDuMur, boiteDesMurs, cadrerSur, affichageApercuLu, coinLePlusProche,
 } from '../src/batiment-plan.js';
 import { batimentDesPieces } from '../src/batiment.js';
 
@@ -106,5 +106,19 @@ describe('reprendre les pièces tracées dans une Scène', () => {
   test('la Scène n’est pas touchée', () => {
     assert.equal(objets[0].wxFloor, 10);
     assert.equal(objets.length, 7);
+  });
+});
+
+describe('l’affichage de l’aperçu 3D', () => {
+  test('par défaut : fenêtré, en haut à droite ; un choix illisible revient au défaut', () => {
+    assert.deepEqual(affichageApercuLu(null), { mode: 'fenetre', coin: 'hd' });
+    assert.deepEqual(affichageApercuLu({ mode: 'geant', coin: 'centre' }), { mode: 'fenetre', coin: 'hd' });
+    assert.deepEqual(affichageApercuLu({ mode: 'reduit', coin: 'bg' }), { mode: 'reduit', coin: 'bg' });
+  });
+  test('la fenêtre lâchée s’ancre au coin le plus proche', () => {
+    assert.equal(coinLePlusProche(10, 10, 800, 600), 'hg');
+    assert.equal(coinLePlusProche(790, 10, 800, 600), 'hd');
+    assert.equal(coinLePlusProche(10, 590, 800, 600), 'bg');
+    assert.equal(coinLePlusProche(500, 400, 800, 600), 'bd');
   });
 });

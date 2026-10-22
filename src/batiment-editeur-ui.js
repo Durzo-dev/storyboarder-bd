@@ -20,7 +20,10 @@
 import { tr } from './state.js';
 import { creerBatiment, nomAfficheDuFichier } from './batiment.js';
 import { enregistrerBatiment } from './batiment-store.js';
-import { versEcran, pasDeGrille, zoomerAutour, glisserVue, polygoneDuMur, boiteDesMurs, cadrerSur } from './batiment-plan.js';
+import {
+  versEcran, pasDeGrille, zoomerAutour, glisserVue, polygoneDuMur, boiteDesMurs, cadrerSur,
+  affichageApercuLu, coinLePlusProche,
+} from './batiment-plan.js';
 import { cadrage3D, orbite3D, zoom3D, positionCamera3D, deplacement3D } from './store-apercu-3d.js';
 
 const $ = (id) => document.getElementById(id);
@@ -48,6 +51,7 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null } = {}
   statut('');
   remplirPanneau();
   recadrer();
+  appliquerAffichage();
   E.apercu = ouvrirApercu($('batimentApercu'), b);
   window.addEventListener('keydown', clavier, true);
   window.addEventListener('resize', dessinerPlan);
@@ -203,6 +207,69 @@ function cablerPlan(){
   if (Observateur) new Observateur(() => dessinerPlan()).observe(c);
 }
 
+// ── La fenêtre de l'aperçu 3D : ancrée à un coin, en plein écran, ou réduite (demandé) ──────────
+
+const CLE_AFFICHAGE = 'storyboarder.batimentApercu';
+let affichage = (() => {
+  try { return affichageApercuLu(JSON.parse(globalThis.localStorage.getItem(CLE_AFFICHAGE) || 'null')); }
+  catch { return affichageApercuLu(null); }
+})();
+
+function changerAffichage(nouveau){
+  affichage = affichageApercuLu({ ...affichage, ...nouveau });
+  try { globalThis.localStorage.setItem(CLE_AFFICHAGE, JSON.stringify(affichage)); } catch { /* une préférence perdue */ }
+  appliquerAffichage();
+}
+
+function appliquerAffichage(){
+  const f = $('batimentApercuFenetre'), icone = $('batimentApercuIcone');
+  f.dataset.mode = affichage.mode;
+  f.dataset.coin = affichage.coin;
+  icone.dataset.coin = affichage.coin;
+  icone.hidden = affichage.mode !== 'reduit';
+  const plein = affichage.mode === 'plein';
+  $('batimentApercuPlein').innerHTML = plein ? '&#x2921;' : '&#x2922;';
+  $('batimentApercuPlein').title = plein ? tr('Back to a window', 'Revenir en fenêtre') : tr('Full-screen preview', 'Aperçu en plein écran');
+  if (E && E.apercu) E.apercu.redessiner();
+}
+
+function cablerFenetreApercu(){
+  const f = $('batimentApercuFenetre'), barre = $('batimentApercuBarre'), scene = $('batimentScene');
+  $('batimentApercuReduire').onclick = () => changerAffichage({ mode: 'reduit' });
+  $('batimentApercuPlein').onclick = () => changerAffichage({ mode: affichage.mode === 'plein' ? 'fenetre' : 'plein' });
+  $('batimentApercuIcone').onclick = () => changerAffichage({ mode: 'fenetre' });
+  barre.addEventListener('dblclick', (e) => {
+    if (e.target.closest('button')) return;
+    changerAffichage({ mode: affichage.mode === 'plein' ? 'fenetre' : 'plein' });
+  });
+  // Tirer la barre : la fenêtre suit la souris, puis s'ancre au coin le plus proche.
+  let glisser = null;
+  barre.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || affichage.mode !== 'fenetre' || e.target.closest('button')) return;
+    const rf = f.getBoundingClientRect(), rs = scene.getBoundingClientRect();
+    glisser = { dx: e.clientX - rf.left, dy: e.clientY - rf.top, rs };
+    f.classList.add('en-glisser');
+    barre.setPointerCapture(e.pointerId);
+  });
+  barre.addEventListener('pointermove', (e) => {
+    if (!glisser) return;
+    const { rs } = glisser;
+    f.style.left = `${e.clientX - rs.left - glisser.dx}px`;
+    f.style.top = `${e.clientY - rs.top - glisser.dy}px`;
+    f.style.right = 'auto'; f.style.bottom = 'auto';
+  });
+  const lacher = () => {
+    if (!glisser) return;
+    const rf = f.getBoundingClientRect(), { rs } = glisser;
+    glisser = null;
+    f.classList.remove('en-glisser');
+    f.style.left = f.style.top = f.style.right = f.style.bottom = '';
+    changerAffichage({ coin: coinLePlusProche(rf.left + rf.width / 2 - rs.left, rf.top + rf.height / 2 - rs.top, rs.width, rs.height) });
+  };
+  barre.addEventListener('pointerup', lacher);
+  barre.addEventListener('pointercancel', lacher);
+}
+
 // ── L'aperçu 3D ──────────────────────────────────────────────────────────────────────────────────
 
 const CHAMP = 35;
@@ -291,6 +358,7 @@ function ouvrirApercu(conteneur, b){
 
   return {
     recadrer: recadrerApercu,
+    redessiner,
     fermer(){
       if (demande) cancelAnimationFrame(demande);
       if (observateur) observateur.disconnect();
@@ -343,4 +411,5 @@ export function initEditeurDeBatiment(){
     E.batiment.nom = nom; E.modifie = true; statut('');
   });
   cablerPlan();
+  cablerFenetreApercu();
 }
