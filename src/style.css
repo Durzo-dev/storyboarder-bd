@@ -2698,7 +2698,9 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-editeur-panneau[data-outil="mur"] .pour-aucun, .batiment-editeur-panneau[data-outil="mur"] .pour-selection,
 .batiment-editeur-panneau[data-outil="selection"] .pour-aucun, .batiment-editeur-panneau[data-outil="selection"] .pour-mur,
 .batiment-editeur-panneau[data-outil="aucun"] .pour-outil { display: none; }
-#batimentSelectionMur[hidden], #batimentSelectionVide[hidden] { display: none; }
+#batimentSelectionMur[hidden], #batimentSelectionVide[hidden], #batimentSelectionPiece[hidden] { display: none; }
+.batiment-liste .batiment-ligne.cliquable { cursor: pointer; }
+.batiment-liste .batiment-ligne.cliquable:hover { border-color: var(--accent); }
 .batiment-champ { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--ink); margin: 6px 0; }
 .batiment-champ-valeur { display: flex; align-items: center; gap: 4px; color: var(--ink-soft); }
 .batiment-champ input[type=number] { width: 64px; }

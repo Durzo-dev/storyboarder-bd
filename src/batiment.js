@@ -299,7 +299,12 @@ export function batimentDesPieces(objets, pieceIds, nom, traduire){
   });
   [...voulues].forEach((pid, i) => {
     const rep = tous.find(o => o && o.pieceId === pid && o.pieceLabel);
-    b.pieces.push({ id: 'p' + i, niveauId: b.niveaux[0].id, nom: rep ? String(rep.pieceLabel) : (traduire || ((en, fr) => fr))(`Room ${i + 1}`, `Pièce ${i + 1}`) });
+    // Le REPÈRE (#454a-3b) : le centre des bouts de ses murs. C'est par lui que la pièce détectée
+    // dans l'éditeur retrouve ce nom (cf. batiment-pieces.js).
+    const siens = bouts.map((m, j) => ({ m, j })).filter(x => x.m.w.pieceId === pid).flatMap(x => [b.murs[x.j].a, b.murs[x.j].b]);
+    const piece = { id: 'p' + i, niveauId: b.niveaux[0].id, nom: rep ? String(rep.pieceLabel) : (traduire || ((en, fr) => fr))(`Room ${i + 1}`, `Pièce ${i + 1}`) };
+    if (siens.length) piece.repere = { x: siens.reduce((t, p) => t + p.x, 0) / siens.length, z: siens.reduce((t, p) => t + p.z, 0) / siens.length };
+    b.pieces.push(piece);
   });
   return normaliserBatiment(b, traduire).batiment;
 }

@@ -383,6 +383,12 @@ guides d'alignement, Alt pour poser librement, croisement refusé) et `src/batim
 (les polygones des murs aux jonctions : onglet aux angles, T qui bute contre la face, bout libre
 carré). La vue de dessus et l'aperçu 3D (murs extrudés) partagent ces polygones.
 
+**Les pièces** (#454a-3b, fait) : `src/batiment-pieces.js`. Une pièce est une face fermée du réseau
+des murs d'un niveau ; chacune garde un `repere` (un point intérieur, champ ajouté) par lequel la
+face qui le contient après une modification hérite de son nom. Un glisser de l'outil Mur trace
+une pièce rectangulaire (`ajouterRectangle`), dont un côté accolé à un mur existant n'est pas
+doublé.
+
 Les bâtiments déjà tracés dans les Scènes (murs Éléments, `pieceId`, `batimentNames`,
 `batimentRotY`) restent LUS et sont **convertis** à l'ouverture en bâtiments d'un niveau, à la même
 place : rien ne bouge à l'écran.

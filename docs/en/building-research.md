@@ -366,6 +366,11 @@ alignment guides, Alt to place freely, crossings refused) and `src/batiment-geom
 walls' polygons at junctions: mitre at corners, a T that butts against the face, a square free
 end). The top view and the 3D preview (extruded walls) share these polygons.
 
+**Rooms** (#454a-3b, done): `src/batiment-pieces.js`. A room is a closed face of a level's wall
+network; each keeps a `repere` (an inside point, an added field) through which the face containing
+it after a change inherits its name. Dragging with the Wall tool draws a rectangular room
+(`ajouterRectangle`), whose side against an existing wall is not doubled.
+
 Buildings already traced in Scenes (wall Elements, `pieceId`, `batimentNames`, `batimentRotY`)
 remain READ and are **converted** on opening into one-level buildings, in the same place: nothing
 moves on screen.

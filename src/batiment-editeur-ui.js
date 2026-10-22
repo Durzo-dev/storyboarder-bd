@@ -26,9 +26,10 @@ import {
 } from './batiment-plan.js';
 import { polygonesDesMurs } from './batiment-geometrie.js';
 import {
-  aimanter, ajouterMur, croiseUnMur, deplacerSommet, supprimerMur, sommetSous, murSous,
+  aimanter, ajouterMur, ajouterRectangle, croiseUnMur, deplacerSommet, supprimerMur, sommetSous, murSous,
   sommetsDuNiveau, longueurDuMur,
 } from './batiment-trace.js';
+import { actualiserPieces, formesDesPieces, pieceSous } from './batiment-pieces.js';
 import { cadrage3D, orbite3D, zoom3D, positionCamera3D, deplacement3D } from './store-apercu-3d.js';
 
 const $ = (id) => document.getElementById(id);
@@ -50,12 +51,15 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null } = {}
   if (E) fermerSansDemander();
   _rappels.avantOuverture();
   const b = batiment ? JSON.parse(JSON.stringify(batiment)) : creerBatiment('', tr);
+  // Les pièces se déduisent des murs (#454a-3b) : un bâtiment repris d'une Scène reçoit les siennes.
+  b.niveaux.forEach(n => actualiserPieces(b, n.id, tr));
   E = {
     batiment: b, fichier, modifie: false, vue: null, niveauId: b.niveaux[0].id, apercu: null, geste: null,
     // #454a-3 : le tracé.
     // Aucun outil à l'ouverture : le menu de base (demandé).
     outil: null, chaine: null, survol: null, selection: null,
     glisserSommet: null, historique: [], refaire: [],
+    appui: null, rectangle: null,   // #454a-3b : un glisser de l'outil Mur trace une pièce rectangulaire
   };
   $('batimentEditeur').classList.remove('hidden');
   $('batimentNom').value = b.nom;
@@ -113,6 +117,7 @@ function vide(texte){
   return d;
 }
 const metres = (v) => `${(Math.round(v * 100) / 100).toLocaleString(tr('en', 'fr'))} m`;
+const surface = (v) => `${(Math.round(v * 10) / 10).toLocaleString(tr('en', 'fr'))} m²`;
 
 function remplirPanneau(){
   const b = E.batiment;
@@ -121,11 +126,25 @@ function remplirPanneau(){
     : tr('Not yet in the library', 'Pas encore dans la bibliothèque');
   const niveaux = $('batimentNiveaux');
   niveaux.replaceChildren(...b.niveaux.slice().reverse().map(n => ligne(n.nom, metres(n.hauteur))));
+  // Les pièces du niveau, avec leur surface ; un clic en choisit une (outil Sélection).
+  const formes = formesDesPieces(b, E.niveauId);
   const pieces = $('batimentPieces');
-  pieces.replaceChildren(...(b.pieces.length ? b.pieces.map(p => ligne(p.nom, '')) : [vide(tr('No room yet', 'Aucune pièce pour l\'instant'))]));
-  const m = murSelectionne();
+  const siennes = b.pieces.filter(p => p.niveauId === E.niveauId);
+  pieces.replaceChildren(...(siennes.length ? siennes.map(p => {
+    const l = ligne(p.nom, formes.has(p.id) ? surface(formes.get(p.id).aire) : '');
+    l.classList.add('cliquable');
+    l.onclick = () => { choisirOutil('selection'); E.selection = { pieceId: p.id }; remplirPanneau(); dessinerPlan(); };
+    return l;
+  }) : [vide(tr('No room yet: close a contour of walls.', 'Aucune pièce : fermez un contour de murs.'))]));
+  const m = murSelectionne(), piece = pieceSelectionnee();
   $('batimentSelectionMur').hidden = !m;
-  $('batimentSelectionVide').hidden = !!m;
+  $('batimentSelectionPiece').hidden = !piece;
+  $('batimentSelectionVide').hidden = !!(m || piece);
+  $('batimentSelectionTitre').textContent = m ? tr('Selected wall', 'Mur sélectionné') : piece ? tr('Selected room', 'Pièce sélectionnée') : tr('Selection', 'Sélection');
+  if (piece) {
+    if (document.activeElement !== $('batimentPieceNom')) $('batimentPieceNom').value = piece.nom;
+    $('batimentPieceSurface').textContent = formes.has(piece.id) ? tr(`Area: ${surface(formes.get(piece.id).aire)}`, `Surface : ${surface(formes.get(piece.id).aire)}`) : '';
+  }
   if (m) {
     $('batimentMurLongueur').textContent = tr(`Length: ${metres(longueurDuMur(m))}`, `Longueur : ${metres(longueurDuMur(m))}`);
     if (document.activeElement !== $('batimentMurEpaisseur')) $('batimentMurEpaisseur').value = Math.round(m.epaisseur * 100);
@@ -133,6 +152,12 @@ function remplirPanneau(){
 }
 
 // ── Le tracé (#454a-3) : outils, historique, modifications ───────────────────────────────────────
+
+/** La pièce sélectionnée, si elle existe encore. */
+function pieceSelectionnee(){
+  if (!E || !E.selection || !E.selection.pieceId) return null;
+  return E.batiment.pieces.find(p => p.id === E.selection.pieceId) || null;
+}
 
 /** Le mur sélectionné, s'il existe encore. */
 function murSelectionne(){
@@ -169,12 +194,13 @@ function modifier(faire){
   if (E.historique.length > 200) E.historique.shift();
   E.refaire = [];
   faire(E.batiment);
+  actualiserPieces(E.batiment, E.niveauId, tr);
   E.modifie = true;
   apresModification();
 }
 
 function apresModification(){
-  if (E.selection && E.selection.murId && !murSelectionne()) E.selection = null;
+  if (E.selection && ((E.selection.murId && !murSelectionne()) || (E.selection.pieceId && !pieceSelectionnee()))) E.selection = null;
   remplirPanneau();
   dessinerPlan();
   if (E.apercu) E.apercu.reconstruire(E.batiment);
@@ -219,6 +245,22 @@ function poserUnPoint(s){
   statut('');
   E.chaine = ferme ? null : { depuis: s.point, accroche: { type: 'sommet' } };
   dessinerPlan();
+}
+
+/** Le glisser de l'outil Mur, relâché : la pièce rectangulaire (#454a-3b). */
+function poserLeRectangle(){
+  const { de, vers } = E.rectangle;
+  E.rectangle = null;
+  const essai = ajouterRectangle(JSON.parse(JSON.stringify(E.batiment)), E.niveauId, de, vers, epaisseurDesNouveaux());
+  if (essai.erreur) {
+    statut(essai.erreur === 'croise'
+      ? tr('This room would cross a wall: it is refused.', 'Cette pièce traverserait un mur : elle est refusée.')
+      : tr('This room is too small.', 'Cette pièce est trop petite.'));
+    dessinerPlan();
+    return;
+  }
+  statut('');
+  modifier(b => ajouterRectangle(b, E.niveauId, de, vers, epaisseurDesNouveaux()));
 }
 
 // ── La vue de dessus ─────────────────────────────────────────────────────────────────────────────
@@ -275,6 +317,17 @@ function dessinerPlan(){
   const murs = E.batiment.murs.filter(m => m.niveauId === E.niveauId);
   const formes = polygonesDesMurs(murs);
   const accent = couleur('--accent', '#ff7a45'), encre = couleur('--ink', '#ededef');
+
+  // Les pièces (#454a-3b) : un fond léger sous les murs, plus soutenu pour la pièce choisie.
+  const pieces = formesDesPieces(E.batiment, E.niveauId);
+  const pieceSurvolee = E.outil === 'selection' && E.survol && E.survol.pieceId;
+  for (const [id, f] of pieces) {
+    poly(f.points);
+    g.fillStyle = accent;
+    g.globalAlpha = (E.selection && E.selection.pieceId === id) ? 0.22 : pieceSurvolee === id ? 0.13 : 0.06;
+    g.fill();
+    g.globalAlpha = 1;
+  }
   const survole = E.outil === 'selection' && E.survol && E.survol.murId;
   murs.forEach(m => {
     const f = formes.get(m.id); if (!f) return;
@@ -295,8 +348,34 @@ function dessinerPlan(){
     });
   }
 
+  // Le nom et la surface de chaque pièce, à son repère.
+  g.textAlign = 'center';
+  for (const p of E.batiment.pieces.filter(q => q.niveauId === E.niveauId && pieces.has(q.id) && q.repere)) {
+    const e = versEcran(vue, l, h, p.repere);
+    g.font = '600 12.5px Inter, sans-serif'; g.fillStyle = encre; g.fillText(p.nom, e.x, e.y);
+    g.font = '11px Inter, sans-serif'; g.fillStyle = couleur('--ink-soft', '#9a9aa2'); g.fillText(surface(pieces.get(p.id).aire), e.x, e.y + 14);
+  }
+  g.textAlign = 'start';
+
+  // Le glisser de l'outil Mur : la pièce rectangulaire fantôme, ses dimensions.
+  if (E.rectangle) {
+    const { de, vers, erreur } = E.rectangle;
+    const coins = [de, { x: vers.x, z: de.z }, vers, { x: de.x, z: vers.z }];
+    const fantomes = coins.map((q, i) => ({ id: 'r' + i, a: q, b: coins[(i + 1) % 4], epaisseur: epaisseurDesNouveaux() }));
+    const fp = polygonesDesMurs(fantomes);
+    g.globalAlpha = 0.55; g.fillStyle = erreur ? couleur('--danger', '#c0392b') : accent;
+    fantomes.forEach(f => { const q = fp.get(f.id); if (q) { poly(q); g.fill(); } });
+    g.globalAlpha = 1;
+    const centre = versEcran(vue, l, h, { x: (de.x + vers.x) / 2, z: (de.z + vers.z) / 2 });
+    const texte = `${metres(Math.abs(vers.x - de.x))} × ${metres(Math.abs(vers.z - de.z))}`;
+    g.font = '600 12px Inter, sans-serif';
+    const lt = g.measureText(texte).width;
+    g.fillStyle = couleur('--paper-dark', '#212226'); g.fillRect(centre.x - lt / 2 - 5, centre.y - 13, lt + 10, 18);
+    g.fillStyle = erreur ? couleur('--danger', '#c0392b') : accent; g.fillText(texte, centre.x - lt / 2, centre.y);
+  }
+
   // Le tracé en cours : le mur fantôme (rouge s'il en traverse un autre), sa longueur, les guides.
-  if (E.outil === 'mur' && E.survol && E.survol.point) {
+  if (E.outil === 'mur' && E.survol && E.survol.point && !E.rectangle) {
     const s = E.survol;
     g.save(); g.setLineDash([5, 4]); g.strokeStyle = accent; g.lineWidth = 1;
     (s.guides || []).forEach(gd => {
@@ -345,19 +424,32 @@ function survoler(e){
   if (E.glisserSommet) {
     const s = aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, sauf: E.glisserSommet.actuel });
     deplacerSommet(E.batiment, E.niveauId, E.glisserSommet.actuel, s.point);
+    actualiserPieces(E.batiment, E.niveauId, tr);
     E.glisserSommet.actuel = s.point;
     E.survol = { sommet: s.point };
     apresModification();
     return;
   }
   if (E.outil === 'mur') {
+    // Un appui gauche qui glisse de plus de 6 px, hors d'une chaîne : une pièce rectangulaire.
+    if (E.appui && !E.chaine && !E.rectangle && Math.hypot(e.clientX - E.appui.x, e.clientY - E.appui.y) > 6) {
+      E.rectangle = { de: E.appui.s.point };
+    }
+    if (E.rectangle) {
+      const vers = aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey }).point;
+      const essai = ajouterRectangle(JSON.parse(JSON.stringify(E.batiment)), E.niveauId, E.rectangle.de, vers, epaisseurDesNouveaux());
+      E.rectangle = { de: E.rectangle.de, vers, erreur: essai.erreur || null };
+      dessinerPlan();
+      return;
+    }
     const s = aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, depuis: E.chaine && E.chaine.depuis });
     s.croise = !!E.chaine && croiseUnMur(E.batiment, E.niveauId, E.chaine.depuis, s.point);
     E.survol = s;
   } else if (E.outil === 'selection') {
     const sommet = sommetSous(E.batiment, E.niveauId, p, tol);
     const m = sommet ? null : murSous(E.batiment, E.niveauId, p, tol / 2);
-    E.survol = { sommet, murId: m ? m.mur.id : null };
+    const pieceId = (sommet || m) ? null : pieceSous(E.batiment, E.niveauId, p);
+    E.survol = { sommet, murId: m ? m.mur.id : null, pieceId };
   } else E.survol = null;
   dessinerPlan();
 }
@@ -382,7 +474,9 @@ function cablerPlan(){
     if (e.button !== 0 || !E.outil) return;
     const { p, tol } = souris(e);
     if (E.outil === 'mur') {
-      poserUnPoint(aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, depuis: E.chaine && E.chaine.depuis }));
+      // Le point est posé au RELÂCHER : un appui qui glisse trace une pièce rectangulaire.
+      E.appui = { x: e.clientX, y: e.clientY, s: aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, depuis: E.chaine && E.chaine.depuis }) };
+      c.setPointerCapture(e.pointerId);
       return;
     }
     const sommet = sommetSous(E.batiment, E.niveauId, p, tol);
@@ -393,7 +487,8 @@ function cablerPlan(){
       return;
     }
     const m = murSous(E.batiment, E.niveauId, p, tol / 2);
-    E.selection = m ? { murId: m.mur.id } : null;
+    const pieceId = m ? null : pieceSous(E.batiment, E.niveauId, p);
+    E.selection = m ? { murId: m.mur.id } : pieceId ? { pieceId } : null;
     remplirPanneau();
     dessinerPlan();
   });
@@ -409,6 +504,12 @@ function cablerPlan(){
   });
   const fin = (e) => {
     if (!E) return;
+    if (E.appui) {
+      const { s: point } = E.appui;
+      E.appui = null;
+      if (E.rectangle) { if (e && e.type === 'pointerup' && E.rectangle.vers) poserLeRectangle(); else { E.rectangle = null; dessinerPlan(); } }
+      else if (e && e.type === 'pointerup') poserUnPoint(point);
+    }
     if (E.glisserSommet) {
       const { depart, actuel } = E.glisserSommet;
       E.glisserSommet = null;
@@ -502,9 +603,18 @@ const CHAMP = 35;
  * Les murs EXTRUDÉS depuis les mêmes polygones que la vue de dessus (jonctions comprises), posés à
  * l'élévation de leur niveau.
  */
-function construireMurs(T, b, matiere){
+function construireMurs(T, b, matiere, matiereSol){
   const groupe = new T.Group();
   b.niveaux.forEach(n => {
+    // Le sol de chaque pièce (#454a-3b), un peu au-dessus de la grille pour ne pas scintiller avec elle.
+    for (const f of formesDesPieces(b, n.id).values()) {
+      const forme = new T.Shape(f.points.map(p => new T.Vector2(p.x, -p.z)));
+      const geo = new T.ShapeGeometry(forme);
+      geo.rotateX(-Math.PI / 2);
+      const sol = new T.Mesh(geo, matiereSol);
+      sol.position.y = n.elevation + 0.005;
+      groupe.add(sol);
+    }
     const murs = b.murs.filter(m => m.niveauId === n.id);
     const formes = polygonesDesMurs(murs);
     murs.forEach(m => {
@@ -533,7 +643,8 @@ function ouvrirApercu(conteneur, b){
   const grille = new T.GridHelper(40, 40, 0x888888, 0x555555);
   scene.add(grille);
   const matiere = new T.MeshStandardMaterial({ color: 0xd9d4c7, roughness: 0.9 });
-  let groupe = construireMurs(T, b, matiere);
+  const matiereSol = new T.MeshStandardMaterial({ color: 0xa89c86, roughness: 1, side: T.DoubleSide });
+  let groupe = construireMurs(T, b, matiere, matiereSol);
   scene.add(groupe);
 
   let centre = [0, 1.4, 0], distance = 20, distanceCadrage = 20;
@@ -596,7 +707,7 @@ function ouvrirApercu(conteneur, b){
     reconstruire(nouveau){
       scene.remove(groupe);
       groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); });
-      groupe = construireMurs(T, nouveau, matiere);
+      groupe = construireMurs(T, nouveau, matiere, matiereSol);
       scene.add(groupe);
       redessiner();
     },
@@ -604,7 +715,7 @@ function ouvrirApercu(conteneur, b){
       if (demande) cancelAnimationFrame(demande);
       if (observateur) observateur.disconnect();
       groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); });
-      matiere.dispose();
+      matiere.dispose(); matiereSol.dispose();
       grille.geometry.dispose(); grille.material.dispose();
       rendu.dispose();
       if (rendu.forceContextLoss) rendu.forceContextLoss();
@@ -636,7 +747,9 @@ function clavier(e){
   const avale = () => { e.preventDefault(); e.stopImmediatePropagation(); };
   if (e.key === 'Escape') {
     avale();
-    // Échap défait d'abord ce qui est en cours : la chaîne, la sélection, l'outil ; ensuite il ferme.
+    // Échap défait d'abord ce qui est en cours : la pièce qu'on tire, la chaîne, la sélection,
+    // l'outil ; ensuite il ferme.
+    if (E.rectangle || E.appui) { E.rectangle = null; E.appui = null; dessinerPlan(); return; }
     if (finirLaChaine()) return;
     if (E.selection) { E.selection = null; remplirPanneau(); dessinerPlan(); return; }
     if (E.outil) { choisirOutil(null); return; }
@@ -682,6 +795,13 @@ export function initEditeurDeBatiment(){
     E.batiment.nom = nom; E.modifie = true; statut('');
   });
   document.querySelectorAll('.batiment-outil').forEach(b => { b.onclick = () => basculerOutil(b.dataset.outil); });
+  // Renommer la pièce choisie : un point d'annulation au moment où le nom est validé.
+  $('batimentPieceNom').addEventListener('change', (e) => {
+    const piece = pieceSelectionnee(); const nom = e.target.value.trim();
+    if (!piece || !nom || nom === piece.nom) { if (piece) e.target.value = piece.nom; return; }
+    modifier(b => { const p = b.pieces.find(q => q.id === piece.id); if (p) p.nom = nom; });
+  });
+  $('batimentPieceNom').addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
   $('batimentMurSupprimer').onclick = () => { const m = murSelectionne(); if (m) modifier(b => supprimerMur(b, m.id)); };
   $('batimentMurEpaisseur').addEventListener('change', (e) => {
     const m = murSelectionne(); const v = Number(e.target.value);

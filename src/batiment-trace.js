@@ -226,3 +226,67 @@ export function deplacerSommet(batiment, niveauId, ancien, nouveau){
 
 /** La longueur d'un mur, en mètres. */
 export function longueurDuMur(m){ return dist(m.a, m.b); }
+
+/**
+ * Les parties du segment [u, v] que NE COUVRE aucun mur existant posé sur la même droite : des
+ * intervalles de fraction [t0, t1] de u à v. Un côté de pièce accolé à un mur existant n'en double
+ * pas l'épaisseur : seul ce qui dépasse est à construire.
+ */
+function partiesNonCouvertes(batiment, niveauId, u, v){
+  const L = dist(u, v);
+  const couverts = [];
+  for (const m of mursDuNiveau(batiment, niveauId)) {
+    // Sur la même droite : les deux bouts du mur sur la droite (u, v), prolongée.
+    const surDroite = (p) => {
+      const dx = v.x - u.x, dz = v.z - u.z;
+      return Math.abs((p.x - u.x) * dz - (p.z - u.z) * dx) / (L || 1) < TOLERANCE_SOMMET;
+    };
+    if (!surDroite(m.a) || !surDroite(m.b)) continue;
+    const t = (p) => ((p.x - u.x) * (v.x - u.x) + (p.z - u.z) * (v.z - u.z)) / (L * L || 1);
+    const t0 = Math.max(0, Math.min(t(m.a), t(m.b))), t1 = Math.min(1, Math.max(t(m.a), t(m.b)));
+    if (t1 - t0 > 1e-9) couverts.push([t0, t1]);
+  }
+  couverts.sort((x, y) => x[0] - y[0]);
+  const libres = [];
+  let curseur = 0;
+  for (const [t0, t1] of couverts) {
+    if (t0 > curseur + 1e-9) libres.push([curseur, t0]);
+    curseur = Math.max(curseur, t1);
+  }
+  if (curseur < 1 - 1e-9) libres.push([curseur, 1]);
+  return libres.filter(([t0, t1]) => (t1 - t0) * L >= BORNES_BATIMENT.longueurMin);
+}
+
+/**
+ * Une pièce rectangulaire d'un seul geste (#454a-3b, comme « tirer une pièce » des Sims et de
+ * Bloxburg) : quatre côtés entre les coins opposés `p1` et `p2`. Un côté accolé à un mur existant ne
+ * le double pas (seule la partie qui dépasse est construite), un coin posé sur un mur y fait une
+ * jonction en T. Tout ou rien : si un morceau à construire en traverserait un autre, rien n'est
+ * ajouté. Rend `{ murs }` (les murs ajoutés) ou `{ erreur: 'court' | 'croise' }`.
+ */
+export function ajouterRectangle(batiment, niveauId, p1, p2, epaisseur){
+  const a = point(p1), c = point(p2);
+  if (Math.abs(c.x - a.x) < BORNES_BATIMENT.longueurMin || Math.abs(c.z - a.z) < BORNES_BATIMENT.longueurMin) return { erreur: 'court' };
+  const coins = [a, { x: c.x, z: a.z }, c, { x: a.x, z: c.z }];
+  const morceaux = [];
+  coins.forEach((u, i) => {
+    const v = coins[(i + 1) % 4];
+    for (const [t0, t1] of partiesNonCouvertes(batiment, niveauId, u, v)) {
+      const lerp = (t) => point({ x: u.x + (v.x - u.x) * t, z: u.z + (v.z - u.z) * t });
+      morceaux.push([lerp(t0), lerp(t1)]);
+    }
+  });
+  if (morceaux.some(([u, v]) => croiseUnMur(batiment, niveauId, u, v))) return { erreur: 'croise' };
+  // Les coins posés au milieu d'un mur existant le coupent, même si aucun morceau n'y aboutit
+  // (côté entièrement accolé) : la pièce doit pouvoir s'y refermer.
+  for (const q of coins) {
+    const hote = mursDuNiveau(batiment, niveauId).find(m => {
+      const pr = projeter(q, m.a, m.b);
+      return pr.distance < 0.002 && pr.t > 1e-6 && pr.t < 1 - 1e-6;
+    });
+    if (hote) couperMur(batiment, hote.id, q);
+  }
+  const surUnMur = { type: 'mur' };   // ajouterMur cherche lui-même le mur à couper, s'il y en a un
+  const murs = morceaux.map(([u, v]) => ajouterMur(batiment, niveauId, u, v, epaisseur, { accrocheA: surUnMur, accrocheB: surUnMur }).mur).filter(Boolean);
+  return { murs };
+}
