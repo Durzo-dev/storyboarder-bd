@@ -2596,3 +2596,6 @@ button.store-chip:hover{ border-color:var(--accent); }
 .formats-dimensions .modal-input{ width:auto; flex:1; min-width:0; }
 .formats-dimensions select.modal-input{ flex:0 0 72px; }
 .formats-dimensions span{ color:var(--ink-soft); margin-top:8px; }
+/* #453 : « Gérer les formats… » au bout de la liste d'un Tome est une ACTION, pas un format : elle
+   se distingue des choix (demandé). */
+select option.option-action{ color:var(--accent); font-weight:700; }

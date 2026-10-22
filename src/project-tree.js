@@ -159,8 +159,12 @@ export function renderTree(){
         opt.value = f.key; opt.textContent = libelleDuFormat(f, tr);
         formatSelect.appendChild(opt);
       });
+      // C'est un BOUTON, pas un choix (demandé) : séparé des formats par un trait, avec une icône et
+      // la couleur des actions. Chromium accepte un <hr> dans un <select>, et le style d'une <option>.
+      formatSelect.appendChild(document.createElement('hr'));
       const gerer = document.createElement('option');
-      gerer.value = GERER_LES_FORMATS; gerer.textContent = tr('Manage formats…', 'Gérer les formats…');
+      gerer.value = GERER_LES_FORMATS; gerer.className = 'option-action';
+      gerer.textContent = '⚙ ' + tr('Manage formats…', 'Gérer les formats…');
       formatSelect.appendChild(gerer);
       formatSelect.value = t.format;
       formatSelect.onclick = (e) => e.stopPropagation();
