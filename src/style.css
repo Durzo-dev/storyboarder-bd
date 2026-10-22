@@ -2604,3 +2604,22 @@ select option.option-action{ color:var(--accent); font-weight:700; }
 /* Petite police et sans marge : la hauteur d'une option suit sa police, et à taille normale le trait
    laissait trop d'écart au-dessus et au-dessous (signalé). */
 select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-height:6px; padding:0; min-height:0; }
+
+/* #453 : LA LISTE « RICHE » (`appearance: base-select`, Chromium 135+). La liste native de Windows
+   ignore le style d'un <hr> et impose sa hauteur de ligne : impossible d'y séparer proprement une
+   action des choix (signalé). Ici tout se règle, aux couleurs de chaque thème. Ne vaut que pour les
+   <select> qui portent la classe (pour l'instant : le format d'un Tome). */
+.select-riche, .select-riche::picker(select){ appearance:base-select; }
+.select-riche{ display:flex; align-items:center; justify-content:space-between; gap:6px; cursor:pointer; }
+.select-riche::picker-icon{ color:var(--ink-soft); }
+.select-riche::picker(select){
+  background:var(--paper-dark); color:var(--ink); border:1px solid var(--bord-actif); border-radius:6px;
+  padding:4px 0; margin-top:2px; box-shadow:0 8px 24px rgba(0,0,0,.45);
+}
+.select-riche option{ padding:5px 10px; font-size:12.5px; color:var(--ink); background:transparent; cursor:pointer; }
+.select-riche option::checkmark{ display:none; }
+.select-riche option:checked{ font-weight:700; }
+.select-riche option:hover, .select-riche option:focus-visible{ background:var(--accent-soft); }
+.select-riche option.option-action, .select-riche option.option-action:hover{ color:var(--accent); font-weight:700; }
+/* Le trait : `--ink-soft`, clair sur le thème sombre, sombre sur le clair (demandé). */
+.select-riche hr{ border:0; border-top:1px solid var(--ink-soft); margin:4px 8px; }
