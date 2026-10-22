@@ -359,7 +359,8 @@ listé avec eux (catégorie Bâtiments, vignette) :
 Dans une Scène ou une Case, **placer un bâtiment en fait une copie indépendante** : l'Élément
 embarque le bâtiment entier (`batiment: { … }`) et garde le nom du fichier d'origine
 (`batimentSource`, pour information). Retoucher cette copie ouvre l'éditeur sur elle, sans toucher
-au fichier ni aux autres copies.
+au fichier ni aux autres copies. **« Enregistrer dans la bibliothèque »** refait d'une copie retouchée
+un Modèle, pour la réutiliser ailleurs (confirmé par Valentin le 22 octobre 2026).
 
 Un Élément de la Scène posé **dans** un bâtiment (Personnage, objet, modèle) porte, en champs
 AJOUTÉS : `dansBatiment` (l'id de l'Élément bâtiment), `niveauId` et, facultatif, `pieceId`. Sa

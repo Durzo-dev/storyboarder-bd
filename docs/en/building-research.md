@@ -342,7 +342,8 @@ A **building file** stored in the model library, like an imported model, and lis
 
 In a Scene or a Panel, **placing a building makes an independent copy**: the Element embeds the
 whole building (`batiment: { … }`) and keeps the original file name (`batimentSource`, for
-information). Editing that copy opens the editor on it, without touching the file or other copies.
+information). Editing that copy opens the editor on it, without touching the file or other copies. **"Save to the library"** turns an edited copy back
+into a Model, to reuse it elsewhere (confirmed by Valentin on 22 October 2026).
 
 A Scene Element placed **inside** a building (Character, object, model) carries, as ADDED fields:
 `dansBatiment` (the building Element's id), `niveauId` and, optionally, `pieceId`. Its height is
