@@ -19,6 +19,14 @@
        section du menu de gauche, réduite à un seul bouton. Ronds et à icône, comme les boutons de
        droite (demandé). Leur infobulle est écrite par le code : src/store-texts.js pour le premier,
        l'i18n pour le second. Les Images restent à gauche pour l'instant. -->
+  <!-- #454a : l'Éditeur de bâtiment, à gauche de l'Éditeur de modèle (demandé). -->
+  <button class="help-round-btn" type="button" id="openBatimentEditorBtn" title="Éditeur de bâtiment">
+    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 11 12 4l9 7"/>
+      <path d="M5 9.5V20h14V9.5"/>
+      <path d="M10 20v-6h4v6"/>
+    </svg>
+  </button>
   <button class="help-round-btn" type="button" id="openPoseEditorBtn" title="Éditeur de modèle (E)">
     <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="4.5" r="2"/>
@@ -172,6 +180,48 @@
           <button id="lecteurFermerBtn" class="menu-close-btn" type="button" title="Fermer le lecteur (Échap)">&times;</button>
         </div>
         <div id="lecteurPanneau"></div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- #454a : l'ÉDITEUR DE BÂTIMENT (src/batiment-editeur-ui.js), même emprise que l'Éditeur de
+       modèle et le Lecteur. La vue de dessus à gauche, l'aperçu 3D à droite, le menu au bord. On y
+       construit le bâtiment ; la Scène ne fait que le placer (décision du 22 octobre 2026). -->
+  <div id="batimentEditeur" class="batiment-editeur hidden">
+    <div class="batiment-editeur-body">
+      <div class="batiment-editeur-scene">
+        <div class="batiment-editeur-plan"><canvas id="batimentPlan"></canvas></div>
+        <div class="batiment-editeur-apercu" id="batimentApercu"></div>
+      </div>
+      <aside class="batiment-editeur-panneau">
+        <div class="menu-header">
+          <span></span>
+          <span class="menu-title" id="batimentEditeurTitre">Éditeur de bâtiment</span>
+          <button id="batimentEditeurFermerX" class="menu-close-btn" type="button" title="Fermer l'éditeur (Échap)">&times;</button>
+        </div>
+        <section class="side-section">
+          <h2 id="batimentSectionNom">Bâtiment</h2>
+          <input type="text" id="batimentNom" class="modal-input batiment-nom" autocomplete="off" spellcheck="false">
+          <p id="batimentFichier" class="batiment-fichier"></p>
+        </section>
+        <section class="side-section">
+          <h2 id="batimentSectionNiveaux">Niveaux</h2>
+          <div id="batimentNiveaux" class="batiment-liste"></div>
+        </section>
+        <section class="side-section">
+          <h2 id="batimentSectionPieces">Pièces</h2>
+          <div id="batimentPieces" class="batiment-liste"></div>
+        </section>
+        <section class="side-section">
+          <h2 id="batimentSectionAide">Commandes</h2>
+          <p id="batimentAide" class="batiment-aide">Vue de dessus : molette pour zoomer, clic droit maintenu pour déplacer la vue.
+Aperçu 3D : clic gauche maintenu pour tourner, clic droit maintenu pour déplacer, molette pour zoomer.
+Échap : fermer l'éditeur.</p>
+        </section>
+        <p id="batimentStatut" class="batiment-statut"></p>
+        <button id="batimentEnregistrerBtn" type="button" class="full-btn">Enregistrer dans la bibliothèque</button>
+        <button id="batimentRecadrerBtn" type="button" class="nav-btn">Recadrer</button>
+        <button id="batimentFermerBtn" type="button" class="nav-btn">Fermer</button>
       </aside>
     </div>
   </div>
@@ -867,6 +917,9 @@
             <button type="button" class="help-group" data-help="editeur">
               <span class="help-group-title">Éditeur de modèle</span><span class="help-group-compte"></span>
             </button>
+            <button type="button" class="help-group" data-help="batiments">
+              <span class="help-group-title">Éditeur de bâtiment</span><span class="help-group-compte"></span>
+            </button>
           </div>
         </div>
       </div>
@@ -883,6 +936,8 @@
        Scène a été retiré sur demande utilisateur — il faisait choisir entre deux choses au moment
        d'ouvrir un fichier, alors que « Nouvelle scène » puis cette même entrée y mènent, et par un
        geste qu'on relit. -->
+  <!-- #454a : dans une Scène seulement, au-dessus d'« Importer un modèle » (demandé). -->
+  <button id="ctxCreerBatiment"><span class="ctx-icon">🏠</span> Créer un bâtiment</button>
   <button id="ctxImportModel"><span class="ctx-icon">📦</span> Importer un modèle</button>
   <!-- Insérer / Retirer : exclusives, jamais visibles ensemble (cf. openPanelContextMenu). Une Case
        porte une image OU de la 3D, jamais les deux — cf. docs/en/panel-images.md. -->
@@ -1059,6 +1114,11 @@
 
 <div class="context-menu hidden" id="zoneSubmenu">
   <button id="ctxZoneTerrain"><span class="ctx-icon">🌿</span> Zone de terrain</button>
+</div>
+
+<!-- #454a : le clic droit sur un Bâtiment ou une Pièce du menu de droite (demandé). -->
+<div class="context-menu hidden" id="batimentContextMenu">
+  <button id="ctxModifierBatiment"><span class="ctx-icon">✏️</span> Modifier</button>
 </div>
 
 <div class="context-menu hidden" id="volumeContextMenu">

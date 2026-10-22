@@ -236,3 +236,70 @@ export function nomDeFichierLibre(souhaite, existants = []){
 export function nomAfficheDuFichier(fichier){
   return String(fichier || '').replace(/\.batiment\.json$/i, '');
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// LES BÂTIMENTS TRACÉS DANS UNE SCÈNE, AVANT L'ÉDITEUR
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+//
+// Jusqu'à #454, un bâtiment était une poignée d'Éléments de la Scène : des murs `objet3d` d'objType
+// 'mur' groupés par `pieceId`, et leurs ouvertures aimantées. « Modifier » sur un Bâtiment ou une
+// Pièce du menu de droite en fait un bâtiment de l'éditeur, d'UN niveau. La Scène n'est pas touchée
+// (c'est #454f qui remplacera ses murs par le bâtiment) : on travaille sur une copie.
+//
+// Un mur de la Scène : son CENTRE (`wxFloor`, `wzFloor`, en mètres), sa longueur (`realLenFloor`),
+// son orientation (`rotY`) et sa hauteur (`realHeightFloor`, 3 m par défaut). Ses deux bouts sont
+// ceux que calcule `getRoomConnectedComponents` (sidebar.js). Son épaisseur était 6 % de sa hauteur.
+
+const OUVERTURES_DE_LA_SCENE = { porte_ouverte: 'porte', fenetre_ouverte: 'fenetre', baie_vitree: 'baie' };
+const TAILLES_D_OUVERTURE = {
+  porte: { largeur: 0.9, hauteur: 2.1, y: 0 },
+  fenetre: { largeur: 1.2, hauteur: 1.2, y: 0.9 },
+  baie: { largeur: 2.4, hauteur: 2.2, y: 0 },
+};
+
+/**
+ * Le bâtiment d'un niveau qui reprend les pièces `pieceIds` des Éléments `objets` (ceux d'une Case
+ * ou d'une Scène). Recentré sur l'origine : c'est la Scène qui le place. Rend un bâtiment normalisé.
+ */
+export function batimentDesPieces(objets, pieceIds, nom, traduire){
+  const voulues = new Set(pieceIds || []);
+  const tous = Array.isArray(objets) ? objets : [];
+  const mursScene = tous.filter(o => o && o.objType === 'mur' && voulues.has(o.pieceId)
+    && fini(o.wxFloor) && fini(o.wzFloor) && fini(o.realLenFloor) && o.realLenFloor > 0);
+  const b = creerBatiment(nom, traduire);
+  const bouts = mursScene.map(w => {
+    const demi = w.realLenFloor / 2, ca = Math.cos(w.rotY || 0), sa = Math.sin(w.rotY || 0);
+    return { w, a: { x: w.wxFloor - demi * ca, z: w.wzFloor + demi * sa }, b: { x: w.wxFloor + demi * ca, z: w.wzFloor - demi * sa } };
+  });
+  const xs = bouts.flatMap(m => [m.a.x, m.b.x]), zs = bouts.flatMap(m => [m.a.z, m.b.z]);
+  const cx = xs.length ? (Math.min(...xs) + Math.max(...xs)) / 2 : 0;
+  const cz = zs.length ? (Math.min(...zs) + Math.max(...zs)) / 2 : 0;
+  const hauteurs = mursScene.map(w => (fini(w.realHeightFloor) && w.realHeightFloor > 0 ? w.realHeightFloor : 3));
+  const hauteur = hauteurs.length ? Math.max(...hauteurs) : DEFAUTS_BATIMENT.hauteur;
+  b.niveaux[0].hauteur = borne(hauteur, BORNES_BATIMENT.hauteur, DEFAUTS_BATIMENT.hauteur);
+  const idDuMur = new Map();
+  bouts.forEach((m, i) => {
+    const id = 'm' + i;
+    idDuMur.set(m.w.id, id);
+    const h = hauteurs[i];
+    const mur = {
+      id, niveauId: b.niveaux[0].id,
+      a: { x: m.a.x - cx, z: m.a.z - cz }, b: { x: m.b.x - cx, z: m.b.z - cz },
+      epaisseur: h * 0.06, revetement: { interieur: null, exterieur: null },
+    };
+    if (Math.abs(h - b.niveaux[0].hauteur) > 1e-6) mur.hauteurPropre = h;
+    b.murs.push(mur);
+  });
+  tous.forEach((o, i) => {
+    const type = o && OUVERTURES_DE_LA_SCENE[o.objType];
+    const murId = o && idDuMur.get(o.magnetWallId);
+    if (!type || !murId) return;
+    const t = TAILLES_D_OUVERTURE[type];
+    b.ouvertures.push({ id: 'o' + i, murId, type, le: fini(o.wallAlongFrac) ? o.wallAlongFrac : 0.5, y: t.y, largeur: t.largeur, hauteur: t.hauteur });
+  });
+  [...voulues].forEach((pid, i) => {
+    const rep = tous.find(o => o && o.pieceId === pid && o.pieceLabel);
+    b.pieces.push({ id: 'p' + i, niveauId: b.niveaux[0].id, nom: rep ? String(rep.pieceLabel) : (traduire || ((en, fr) => fr))(`Room ${i + 1}`, `Pièce ${i + 1}`) });
+  });
+  return normaliserBatiment(b, traduire).batiment;
+}

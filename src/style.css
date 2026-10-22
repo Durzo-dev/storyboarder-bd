@@ -2624,3 +2624,29 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .select-riche option.option-action, .select-riche option.option-action:hover{ color:var(--accent); font-weight:700; }
 /* Le trait : `--ink-soft`, clair sur le thème sombre, sombre sur le clair (demandé). */
 .select-riche hr{ border:0; border-top:1px solid var(--ink-soft); margin:4px 8px; }
+
+/* #454a : L'ÉDITEUR DE BÂTIMENT (src/batiment-editeur-ui.js). Même emprise que l'Éditeur de modèle
+   et le Lecteur : la zone centrale, pas la fenêtre. La vue de dessus prend la plus grande part,
+   l'aperçu 3D le reste, le menu a la largeur de celui de l'Éditeur de modèle. */
+.batiment-editeur { position: absolute; top: 0; right: 0; bottom: 0; left: var(--sidebar-w); z-index: 900;
+                    background: var(--paper); color: var(--ink); display: flex; flex-direction: column; }
+.batiment-editeur.hidden { display: none; }
+.batiment-editeur-body { flex: 1; min-height: 0; display: flex; }
+.batiment-editeur-scene { flex: 1; min-width: 0; min-height: 0; display: flex; }
+.batiment-editeur-plan { flex: 3; min-width: 0; position: relative; border-right: 1px solid var(--line); }
+.batiment-editeur-plan canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.batiment-editeur-apercu { flex: 2; min-width: 0; position: relative; }
+.batiment-editeur-apercu canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+.batiment-editeur-apercu canvas:active { cursor: grabbing; }
+.batiment-editeur-panneau { width: 300px; flex-shrink: 0; overflow-y: auto; padding: 14px 16px; background: var(--paper-dark);
+                            border-left: 1px solid var(--line); zoom: var(--echelle-ui); display: flex; flex-direction: column; }
+.batiment-editeur-panneau h2 { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; color: var(--ink-soft); margin: 0 0 8px;
+                               text-transform: uppercase; letter-spacing: .05em; }
+.batiment-editeur-panneau .modal-input.batiment-nom { margin-top: 0; }
+.batiment-fichier, .batiment-statut { margin: 4px 0 0; font-size: 11.5px; color: var(--ink-soft); min-height: 1.2em; }
+.batiment-statut { margin: 0 0 8px; }
+.batiment-liste { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
+.batiment-liste .batiment-ligne { display: flex; justify-content: space-between; gap: 8px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; }
+.batiment-liste .batiment-ligne small { color: var(--ink-soft); }
+.batiment-liste .batiment-vide { color: var(--ink-soft); font-style: italic; }
+.batiment-aide { margin: 0; font-size: 12px; color: var(--ink-soft); line-height: 1.45; white-space: pre-line; }

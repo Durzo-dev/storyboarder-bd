@@ -354,6 +354,12 @@ a folder apart from `Modeles` (whose whole path assumes glTF), joined to the mod
 The format and its reading are in `src/batiment.js`: units in metres, version 1, unknown fields
 kept (a newer file loses nothing), unreadable walls dropped one by one.
 
+**The editor** (#454a-2, done): `src/batiment-editeur-ui.js` for the screen, `src/batiment-plan.js`
+for the top view (metre frame, adaptive grid, zoom around the mouse, framing). The 3D preview has
+its own renderer, like the store's: it does not touch the Panels' shared scene. "Edit" on a
+Building or a Room opens a copy of its walls (`batimentDesPieces`, one level, recentred); the Scene
+is not touched before #454f.
+
 Buildings already traced in Scenes (wall Elements, `pieceId`, `batimentNames`, `batimentRotY`)
 remain READ and are **converted** on opening into one-level buildings, in the same place: nothing
 moves on screen.

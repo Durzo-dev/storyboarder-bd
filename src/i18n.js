@@ -41,6 +41,18 @@ export const I18N_TEXT = [
   ['#headerSaveBtn', null, null, 'title', 'Save project (Ctrl+S)', "Sauvegarder le projet (Ctrl+S)"],
   ['#settingsBtn', null, null, 'title', 'Settings (Ctrl+,)', 'Configuration (Ctrl+,)'],
   ['#lecteurFermerBtn', null, null, 'title', 'Close the reader (Esc)', 'Fermer le lecteur (Échap)'],
+  // #454a : l'Éditeur de bâtiment (src/batiment-editeur-ui.js).
+  ['#openBatimentEditorBtn', null, null, 'title', 'Building editor', 'Éditeur de bâtiment'],
+  ['#batimentEditeurFermerX', null, null, 'title', 'Close the editor (Esc)', "Fermer l'éditeur (Échap)"],
+  ['#batimentEditeurTitre', 'Building editor', 'Éditeur de bâtiment'],
+  ['#batimentSectionNom', 'Building', 'Bâtiment'],
+  ['#batimentSectionNiveaux', 'Levels', 'Niveaux'],
+  ['#batimentSectionPieces', 'Rooms', 'Pièces'],
+  ['#batimentSectionAide', 'Controls', 'Commandes'],
+  ['#batimentAide', 'Top view: wheel to zoom, hold the right button to move the view.\n3D preview: hold the left button to turn, the right button to move, wheel to zoom.\nEsc: close the editor.', "Vue de dessus : molette pour zoomer, clic droit maintenu pour déplacer la vue.\nAperçu 3D : clic gauche maintenu pour tourner, clic droit maintenu pour déplacer, molette pour zoomer.\nÉchap : fermer l'éditeur."],
+  ['#batimentEnregistrerBtn', 'Save to the library', 'Enregistrer dans la bibliothèque'],
+  ['#batimentRecadrerBtn', 'Reframe', 'Recadrer'],
+  ['#batimentFermerBtn', 'Close', 'Fermer'],
   ['#lecteurBordGauche', null, null, 'title', 'Previous or next page, depending on the reading direction', 'Page précédente ou suivante, selon le sens de lecture'],
   ['#lecteurBordDroite', null, null, 'title', 'Next or previous page, depending on the reading direction', 'Page suivante ou précédente, selon le sens de lecture'],
   // Le libellé du bouton de mise à jour, aussi posé par src/update-button.js (mêmes mots, cf.
@@ -242,6 +254,8 @@ export const I18N_TRAILING = [
   // ── Menus contextuels : le libellé SUIT une icône (<span class="ctx-icon">). C'est pourquoi ces
   //    entrées vivent ici et non dans I18N_TEXT : `textContent` effacerait l'icône avec le texte.
   //    Ajoutées après constat que 49 boutons sur 123 restaient en français en mode anglais.
+  ['#ctxCreerBatiment', 'Create a building', 'Créer un bâtiment'],
+  ['#ctxModifierBatiment', 'Edit', 'Modifier'],
   ['#ctxImportModel', 'Import a model', 'Importer un modèle'],
   ['#ctxInsertImage', 'Insert an image', 'Insérer une image'],
   ['#ctxMoveImage', 'Move the image', 'Déplacer l\'image'],

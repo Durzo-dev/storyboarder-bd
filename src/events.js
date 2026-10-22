@@ -130,6 +130,11 @@ import { APP_VERSION } from './version.js';
 import { formatsParDefaut } from './formats.js';
 import { setFormatsCallbacks } from './formats-ui.js';
 import {
+  initEditeurDeBatiment, setBatimentEditeurCallbacks, ouvrirEditeurDeBatiment, fermerEditeurDeBatiment,
+  editeurDeBatimentOuvert,
+} from './batiment-editeur-ui.js';
+import { batimentDesPieces } from './batiment.js';
+import {
   cloneJoints, disposeObjectRig3D, disposePersonaRig3D, disposeWallRenderRig3D, ensurePersonaScene3D,
   frameOrthoCameraToBox, ensureObjectRigEntry3D, getWallPanRect2D, wallOpeningRect, personaCameraOrtho3D,
   personaScene3D, personaRenderer3D, getMaxAnisotropy3D,
@@ -4462,6 +4467,8 @@ canvas.addEventListener('contextmenu', (e) => {
   document.getElementById('ctxInsertImage').style.display = _img.insererImage ? '' : 'none';
   document.getElementById('ctxMoveImage').style.display = _img.deplacerImage ? '' : 'none';
   document.getElementById('ctxImportModel').style.display = (_surCase && _img.ajouter3D) ? '' : 'none';
+  // #454a : « Créer un bâtiment », dans une Scène seulement (demandé).
+  document.getElementById('ctxCreerBatiment').style.display = isSceneCanvas ? '' : 'none';
   ctxLoadSceneTrigger.style.display = (isSceneCanvas || !_img.ajouter3D) ? 'none' : '';
   document.getElementById('ctxBringForward').style.display = isSceneCanvas ? 'none' : '';
   document.getElementById('ctxSendBackward').style.display = isSceneCanvas ? 'none' : '';
@@ -6343,6 +6350,41 @@ document.getElementById('ctxDeleteScene').onclick = () => {
   if (S.ctxSceneTarget !== null) deleteScene(S.ctxSceneTarget);
   hideContextMenu();
 };
+// ── #454a : L'ÉDITEUR DE BÂTIMENT, cf. src/batiment-editeur-ui.js. ──
+initEditeurDeBatiment();
+setBatimentEditeurCallbacks({
+  confirmer: confirmAction,
+  // Un seul écran au centre : l'Éditeur de modèle et le Lecteur se ferment.
+  avantOuverture: () => { if (isPersonaEditorOpen()) hidePersonaEditor(); if (lecteurOuvert()) fermerLecteur(); },
+  apresFermeture: () => renderAll(),
+});
+document.getElementById('openBatimentEditorBtn').onclick = () => { if (!editeurDeBatimentOuvert()) ouvrirEditeurDeBatiment(); };
+document.getElementById('ctxCreerBatiment').onclick = () => { hideContextMenu(); ouvrirEditeurDeBatiment(); };
+// Le clic droit sur un Bâtiment ou une Pièce du menu de droite (sidebar.js) : « Modifier » ouvre
+// l'éditeur sur une COPIE de ses murs (batimentDesPieces) ; la Scène n'est pas touchée (#454f).
+let _ctxBatiment = null;
+function openBatimentMenu(e, cible){
+  hideContextMenu();
+  _ctxBatiment = cible;
+  placerMenu3D(document.getElementById('batimentContextMenu'), e.clientX, e.clientY);
+}
+document.getElementById('ctxModifierBatiment').onclick = () => {
+  hideContextMenu();
+  if (!_ctxBatiment) return;
+  const { objets, pieceIds, nom } = _ctxBatiment;
+  _ctxBatiment = null;
+  ouvrirEditeurDeBatiment({ batiment: batimentDesPieces(objets, pieceIds, nom, tr) });
+};
+// Ce qui, dans le menu de gauche et le bandeau, mène AILLEURS ferme l'éditeur (comme le Lecteur).
+// Un bâtiment modifié et pas enregistré : le clic est retenu le temps de demander, puis rejoué.
+document.addEventListener('click', (e) => {
+  if (!editeurDeBatimentOuvert()) return;
+  const cible = e.target && e.target.closest && e.target.closest('.page-row, #sceneList, #addVolumeBtn, #addSceneBtn, .add-page-btn, #openPoseEditorBtn, #projectNameHeader, #ctxReadVolume, #ctxReadChapter');
+  if (!cible) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  fermerEditeurDeBatiment().then(ferme => { if (ferme && typeof cible.click === 'function') cible.click(); });
+}, true);
+
 // ── Le Lecteur (demandé) : lire un Tome ou un Chapitre, cf. src/lecteur-ui.js. ──
 initLecteur();
 cablerLecteur({
@@ -8700,7 +8742,7 @@ setI18nCallbacks(updateSidePanel, renderTree);
 setDrawCallbacks({ canvas, ctx, applyZoom, updateSidePanel, renderTree, renderSceneList, renderImageList, updateContextualControls, fitZoomToWrap });
 // Wire up sidebar.js callbacks (snapshot + modal openers, avoids circular imports
 // sidebar→app; these modals will themselves be extracted into src/modals.js at Step B.13).
-setSidebarCallbacks({ snapshot, openPersonaModal, openObjectModal, openRoomModal, openBuildingModal, openTerrainModal, openTracéModal, restoreSectionCollapseStates });
+setSidebarCallbacks({ snapshot, openPersonaModal, openObjectModal, openRoomModal, openBuildingModal, openTerrainModal, openTracéModal, restoreSectionCollapseStates, openBatimentMenu });
 // Wire up scene3d.js's UI render callbacks (avoids the circular import scene3d→app)
 setScene3DCallbacks(drawCurrentPage, refreshCameraSliders, renderSideCameraGizmo);
 

@@ -371,6 +371,12 @@ un dossier à part de `Modeles` (dont tout le chemin suppose un glTF), réuni au
 l'affichage. Le format et sa relecture sont dans `src/batiment.js` : unités en mètres, version 1,
 champs inconnus gardés (un fichier plus récent ne perd rien), murs illisibles écartés un par un.
 
+**L'éditeur** (#454a-2, fait) : `src/batiment-editeur-ui.js` pour l'écran, `src/batiment-plan.js` pour
+la vue de dessus (repère en mètres, grille adaptative, zoom autour de la souris, cadrage). L'aperçu
+3D a son propre renderer, comme celui du store : il ne touche pas à la scène partagée des Cases.
+« Modifier » sur un Bâtiment ou une Pièce ouvre une copie de ses murs (`batimentDesPieces`, un
+niveau, recentré) ; la Scène n'est pas touchée avant #454f.
+
 Les bâtiments déjà tracés dans les Scènes (murs Éléments, `pieceId`, `batimentNames`,
 `batimentRotY`) restent LUS et sont **convertis** à l'ouverture en bâtiments d'un niveau, à la même
 place : rien ne bouge à l'écran.

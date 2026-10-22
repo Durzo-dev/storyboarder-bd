@@ -276,6 +276,12 @@ export const HELP_MANUAL_EN = [
     '"Reset pose" returns to the pose the editor opened with. "Apply changes", the same button for every figure, sends the pose back to the dialog it came from: nothing is written there until you save. Closing without applying changes nothing.',
     'The editor covers the central area only, the left menu stays usable. Clicking a Page or a Scene leaves it, without reopening the dialog you came from.',
   ]},
+  { id: 'batiments', title: 'Building editor', paragraphs: [
+    'Buildings are built in their own editor, then placed in Scenes. Open it with the house button at the top (left of "Model editor"), with "Create a building" when right-clicking a Scene, or with "Edit" when right-clicking a Building or a Room in the right-hand menu.',
+    '"Edit" opens a COPY of the walls already drawn in the Scene: the Scene does not change. "Save to the library" stores the building with your models, in the Batiments folder next to your projects.',
+    'On the left, the top view of the current level: scroll wheel to zoom, hold the right button to move the view. On the right, the 3D preview: hold the left button to turn, the right button to move, scroll wheel to zoom. "Reframe" fits both views to the building.',
+    'Esc or "Close" leaves the editor; if the building has unsaved changes, you are asked first.',
+  ]},
 ];
 
 export const HELP_MANUAL_FR = [
@@ -501,6 +507,12 @@ export const HELP_MANUAL_FR = [
     "Une pose qui n'est plus proposée s'affiche toujours : ses angles sont conservés.",
     "« Réinitialiser la pose » revient à la pose d'ouverture. « Appliquer les modifications », le même bouton pour toutes les figures, renvoie la pose vers la modale d'où l'on vient : rien n'y est écrit tant que vous n'avez pas enregistré. Fermer sans appliquer ne change rien.",
     "L'éditeur n'occupe que la zone centrale, le menu de gauche reste utilisable. Cliquer une Planche ou une Scène le quitte, sans rouvrir la fiche d'où vous veniez.",
+  ]},
+  { id: 'batiments', title: 'Éditeur de bâtiment', paragraphs: [
+    "Un bâtiment se construit dans son éditeur, puis se place dans les Scènes. On l'ouvre par le bouton en forme de maison en haut (à gauche d'« Éditeur de modèle »), par « Créer un bâtiment » au clic droit dans une Scène, ou par « Modifier » au clic droit sur un Bâtiment ou une Pièce du menu de droite.",
+    "« Modifier » ouvre une COPIE des murs déjà tracés dans la Scène : la Scène ne change pas. « Enregistrer dans la bibliothèque » range le bâtiment avec vos modèles, dans le dossier Batiments à côté de vos projets.",
+    "À gauche, la vue de dessus du niveau courant : molette pour zoomer, clic droit maintenu pour déplacer la vue. À droite, l'aperçu 3D : clic gauche maintenu pour tourner, clic droit maintenu pour déplacer, molette pour zoomer. « Recadrer » ajuste les deux vues au bâtiment.",
+    "Échap ou « Fermer » quitte l'éditeur ; si le bâtiment a des modifications non enregistrées, la question est posée d'abord.",
   ]},
 ];
 

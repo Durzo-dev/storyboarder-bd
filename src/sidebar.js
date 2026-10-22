@@ -55,6 +55,8 @@ let _openRoomModal = null;
 let _openBuildingModal = null;
 let _openTerrainModal = null;
 let _openTracéModal = null;
+// #454a : le clic droit sur un Bâtiment ou une Pièce, « Modifier » (cf. batiment-editeur-ui.js).
+let _openBatimentMenu = null;
 // FIX (pre-existing bug, regression from extraction B.12): restoreSectionCollapseStates() (persistence
 // of the right-hand panel's sections' collapsed/expanded state) lived in app.js/events.js, which tried
 // to hook it at the end of updateSidePanel() by REASSIGNING the imported `updateSidePanel` binding
@@ -64,7 +66,8 @@ let _openTracéModal = null;
 // like the modal openers above, and called directly from updateSidePanel (cf. further down).
 let _restoreSectionCollapseStates = null;
 
-export function setSidebarCallbacks({ snapshot, openPersonaModal, openObjectModal, openRoomModal, openBuildingModal, openTerrainModal, openTracéModal, restoreSectionCollapseStates }) {
+export function setSidebarCallbacks({ snapshot, openPersonaModal, openObjectModal, openRoomModal, openBuildingModal, openTerrainModal, openTracéModal, restoreSectionCollapseStates, openBatimentMenu }) {
+  _openBatimentMenu = openBatimentMenu;
   _snapshot = snapshot;
   _openPersonaModal = openPersonaModal;
   _openObjectModal = openObjectModal;
@@ -757,7 +760,14 @@ export function renderSidePersonas(panel, page, horsChampFn = elementNonVisible3
       }
       drawCurrentPage();
     });
-    header.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); });
+    // #454a : « Modifier » ouvre l'éditeur sur le BÂTIMENT entier dont la Pièce fait partie (une
+    // Pièce isolée est un bâtiment d'une pièce). Une copie : la Scène n'est pas touchée.
+    header.addEventListener('contextmenu', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const comp = components.find(c => c.includes(p.pieceId)) || [p.pieceId];
+      const nom = comp.length >= 2 ? (panel.batimentNames[comp.slice().sort().join(',')] || 'Bâtiment') : (p.pieceLabel || 'Pièce');
+      if (_openBatimentMenu) _openBatimentMenu(e, { objets: page.objects, pieceIds: comp, nom });
+    });
 
     container.appendChild(header);
     container.appendChild(groupWrap);
@@ -819,7 +829,10 @@ export function renderSidePersonas(panel, page, horsChampFn = elementNonVisible3
         }
         drawCurrentPage();
       });
-      buildingHeader.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); });
+      buildingHeader.addEventListener('contextmenu', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        if (_openBatimentMenu) _openBatimentMenu(e, { objets: page.objects, pieceIds: component, nom: buildingName });
+      });
 
       sidePersonas.appendChild(buildingHeader);
       sidePersonas.appendChild(buildingMembers);
