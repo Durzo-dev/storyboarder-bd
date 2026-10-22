@@ -6373,7 +6373,25 @@ setBatimentEditeurCallbacks({
   avantOuverture: () => { if (isPersonaEditorOpen()) hidePersonaEditor(); if (lecteurOuvert()) fermerLecteur(); },
   apresFermeture: () => renderAll(),
 });
-document.getElementById('openBatimentEditorBtn').onclick = () => { if (!editeurDeBatimentOuvert()) ouvrirEditeurDeBatiment(); };
+// Le bouton BASCULE (demandé) : il ouvre l'éditeur, et le referme si on reclique dessus.
+document.getElementById('openBatimentEditorBtn').onclick = () => {
+  if (editeurDeBatimentOuvert()) fermerEditeurDeBatiment(); else ouvrirEditeurDeBatiment();
+};
+// LE BANDEAU DIT CE QUI EST OUVERT (demandé) : le bouton d'un écran ou d'une bibliothèque ouverte
+// s'allume. Observé sur la classe `hidden` de chacun, plutôt que posé à chaque ouverture : les
+// chemins d'ouverture sont nombreux (bouton, touche, fiche, navigation), l'état affiché est un seul.
+[['personaEditorOverlay', 'openPoseEditorBtn'], ['batimentEditeur', 'openBatimentEditorBtn'],
+  ['storeModal', 'storeOuvrirBtn'], ['policesModal', 'policesOuvrirBtn']].forEach(([ecran, bouton]) => {
+  const el = document.getElementById(ecran), btn = document.getElementById(bouton);
+  if (!el || !btn) return;
+  const maj = () => btn.classList.toggle('actif', !el.classList.contains('hidden'));
+  const Observateur = globalThis.MutationObserver;   // absent sous Node (tests) : rien à allumer
+  if (Observateur) new Observateur(maj).observe(el, { attributes: true, attributeFilter: ['class'] });
+  maj();
+});
+// Un bouton du bandeau rend le focus après un clic : gardé, il s'entourait de la bague orange du
+// clavier à la première touche frappée ensuite (signalé avec les raccourcis H, E, B, P).
+document.querySelectorAll('header button').forEach(b => b.addEventListener('click', () => b.blur()));
 document.getElementById('ctxCreerBatiment').onclick = () => { hideContextMenu(); ouvrirEditeurDeBatiment(); };
 // Le clic droit sur un Bâtiment ou une Pièce du menu de droite (sidebar.js) : « Modifier » ouvre
 // l'éditeur sur une COPIE de ses murs (batimentDesPieces) ; la Scène n'est pas touchée (#454f).

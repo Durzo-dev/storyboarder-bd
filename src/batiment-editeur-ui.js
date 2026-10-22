@@ -651,7 +651,12 @@ function clavier(e){
     return;
   }
   if (dansUnChamp || e.ctrlKey || e.metaKey) return;
+  // B et P ouvrent leur bibliothèque PAR-DESSUS l'éditeur : on les laisse passer (events.js).
+  if (!e.altKey && (touche === 'b' || touche === 'p')) return;
   if (touche === 'h') fermerEditeurDeBatiment();   // H ouvre l'éditeur (events.js) et le referme ici
+  // E : l'Éditeur de modèle, à la place de celui-ci. Par son bouton, pour passer par la même porte
+  // (events.js) : confirmation si le bâtiment n'est pas enregistré, puis le clic est rejoué.
+  else if (touche === 'e') $('openPoseEditorBtn').click();
   else if (touche === 'm') basculerOutil('mur');
   else if (touche === 'v') basculerOutil('selection');
   else if (e.key === 'Enter') finirLaChaine();

@@ -291,6 +291,8 @@ header span{ font-size:12px; color:var(--ink-soft); }
 }
 .help-round-btn svg{ width:16px; height:16px; stroke:currentColor; fill:none; }
 .help-round-btn:hover{ color:var(--accent); border-color:var(--accent); }
+/* L'écran ou la bibliothèque que ce bouton ouvre est à l'écran (cf. events.js). */
+.help-round-btn.actif{ color:var(--accent); border-color:var(--accent); background:var(--accent-soft); }
 .help-round-btn:disabled{ opacity:.4; cursor:default; }
 .help-round-btn:disabled:hover{ color:var(--ink-soft); border-color: var(--bord-actif); }
 /* Bouton Annuler déplacé dans le header (à gauche du bouton "?", cf. <header> plus bas), désormais au

@@ -191,7 +191,10 @@ export const CIBLES_NAV_EDITEUR_3D = Object.freeze({
   //   il le rouvrait sans cible et remettait la figure de base.)
   //   helpBtn ................ affiche le Manuel dans le PANNEAU DROIT, que l'éditeur recouvre :
   //                            sans quitter l'éditeur, le bouton aurait l'air cassé.
-  ids: Object.freeze(['sceneList', 'addVolumeBtn', 'addSceneBtn', 'helpBtn']),
+  //   openBatimentEditorBtn .. l'Éditeur de bâtiment (#454a, et sa touche H) : un seul écran au
+  //                            centre. Passer par ici, c'est demander confirmation pour une pose en
+  //                            cours et ne pas rouvrir la fiche d'où l'on venait par-dessus.
+  ids: Object.freeze(['sceneList', 'addVolumeBtn', 'addSceneBtn', 'helpBtn', 'openBatimentEditorBtn']),
   // Par classe :
   //   page-row ............... les Planches d'un Tome déplié, seule partie navigante de #volumeList
   //                            (la ligne du Tome, elle, ne fait que déplier).
