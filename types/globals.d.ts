@@ -120,6 +120,14 @@ interface StoryboarderAPI {
   deleteImageFile(name: string): Promise<{ ok: boolean; error?: string }>;
   renameImageFile(ancien: string, nouveau: string):
     Promise<{ ok: boolean; name?: string; error?: string }>;
+  // Bâtiments (#454a) : <dossier de Projets>/Batiments, des `.batiment.json` (du TEXTE, pas des
+  // octets). src/batiment-store.js décide du nom ; le pont refuse tout autre nom de fichier.
+  listBatimentFiles(): Promise<string[]>;
+  readBatimentFile(name: string): Promise<{ ok: boolean; texte?: string; error?: string }>;
+  writeBatimentFile(name: string, texte: string): Promise<{ ok: boolean; name?: string; error?: string }>;
+  deleteBatimentFile(name: string): Promise<{ ok: boolean; error?: string }>;
+  renameBatimentFile(ancien: string, nouveau: string):
+    Promise<{ ok: boolean; name?: string; error?: string }>;
   // Polices de l'utilisateur (#423) : <dossier de Projets>/Polices et son index. L'import se fait en
   // deux temps (pickFonts puis commitFonts, sous un jeton) ; `integrees` : les noms des polices
   // intégrées, qu'une police importée ne peut pas prendre.

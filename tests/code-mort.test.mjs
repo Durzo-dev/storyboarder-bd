@@ -43,7 +43,7 @@ const DEHORS = ['electron/main.js', 'electron/preload.js', 'src/index.html']
  */
 const SEAUX_DE_TEST = [
   '_setModelCacheEntry', '_applyAnisotropyForTests', '_viderCacheCorrespondances',
-  '_reinitialiserPile', 'setModelBridge', 'setSkeletonBridge', 'setImageBridge',
+  '_reinitialiserPile', 'setModelBridge', 'setSkeletonBridge', 'setImageBridge', 'setBatimentBridge',
   '_setImageCacheEntry', 'fermeturesEnregistrees', '_poserSolPourTests3D', '_viderTexturesDuSol3D', '_poserWebGL2PourTests3D', '_uniformesEauPourTests3D', '_viderCiel3D', '_viderTexturesDesTraces3D', '_calculsDeBoite3D',
   // #431b2 — `bubble-grain.js` garde deux Map de module : les grains chargés et les motifs
   // composés. Sans ces deux seaux, aucun test ne pourrait ni repartir d'un état propre entre deux
@@ -272,6 +272,15 @@ const EN_ATTENTE = {
    * exemptions qui ne surveilleraient rien.
    */
   particulesDeLaBulle: '#425p — axe retiré de la fiche, code conservé sur demande',
+  // #454a-1 — LE RANGEMENT DES BÂTIMENTS ARRIVE AVANT L'ÉDITEUR, comme le magasin d'images de
+  // #403a : le format et le pont sont écrits et testés (tests/batiment.test.mjs) pendant que l'écran
+  // qui s'en servira reste à faire. Échéances : #454a-2 (l'éditeur ouvre et enregistre) et #454a-4
+  // (la bibliothèque des modèles liste, renomme et supprime les bâtiments).
+  lireBatimentDuDisque: '#454a-2 — l\'éditeur ouvre un bâtiment de la bibliothèque',
+  enregistrerBatiment: '#454a-2 — l\'éditeur enregistre',
+  renommerBatiment: '#454a-4 — la bibliothèque des modèles renomme un bâtiment',
+  supprimerBatiment: '#454a-4 — la bibliothèque des modèles supprime un bâtiment',
+  nomAfficheDuFichier: '#454a-4 — la bibliothèque des modèles affiche le nom d\'un bâtiment',
 
   // #435b — LE CRITÈRE QUI RESTE APRÈS LE DÉFAUT QU'IL AURAIT ÉVITÉ. Le Sol portait un déplacement
   // qui n'a jamais produit de relief : sa carte se répétait des dizaines de fois entre deux sommets
@@ -410,7 +419,9 @@ describe('Aucun export de src/ ne reste sans appelant', () => {
     // shader de l'eau, comme les trois du pavage avant lui. Il n'aura jamais d'appelant, c'est le
     // GLSL qui calcule, et il est tenu par les tests de tests/ground-3d.test.mjs. Remonté à 12 en
     // #436c pour la même raison : `elevationDuCiel3D` est le modèle de `cielDirection`.
-    assert.equal(Object.keys(EN_ATTENTE).length, 12,
+    // Remonté à 17 en #454a-1 : cinq fonctions du rangement des bâtiments, EN AVANCE sur l'éditeur,
+    // chacune avec son numéro de tâche pour échéance (cf. leur entrée plus haut).
+    assert.equal(Object.keys(EN_ATTENTE).length, 17,
       'une décision de plus a été REPORTÉE au lieu d\'être prise');
   });
 });

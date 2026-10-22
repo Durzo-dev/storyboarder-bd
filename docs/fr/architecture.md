@@ -74,7 +74,8 @@ raisonnement, pour que personne n'y voie un précédent gratuit :
 
 État actuel de la liste : `models:*` (modèles 3D importés), `images:*` (images de Case, cf.
 [panel-images.md](panel-images.md)), `fonts:*` (polices de l'utilisateur, cf. [polices.md](polices.md)),
-`skeletons:*` (le fichier de correspondances partagé),
+`skeletons:*` (le fichier de correspondances partagé), `batiments:*` (les bâtiments, `Batiments/`,
+cf. [building-research.md](building-research.md)),
 `project:delete` et `maj:*` (mises à jour intégrées, cf. [updates.md](updates.md)). Ce dernier ajoute
 aussi des fichiers à côté de `main.js` : `update-policy.js` décide, `updater.js` fait les
 entrées-sorties, et `preload-blocage.js` est le pont de l'écran bloquant. Télécharger et lancer un

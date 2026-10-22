@@ -35,6 +35,13 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   listImageFiles: () => ipcRenderer.invoke('images:list'),
   deleteImageFile: (name) => ipcRenderer.invoke('images:delete', name),
   renameImageFile: (ancien, nouveau) => ipcRenderer.invoke('images:rename', ancien, nouveau),
+  // Bâtiments (#454a), rangés dans <dossier de Projets>/Batiments. Même exception que les modèles
+  // et les images (docs/en/architecture.md, règle n°1) ; src/batiment-store.js décide.
+  listBatimentFiles: () => ipcRenderer.invoke('batiments:list'),
+  readBatimentFile: (name) => ipcRenderer.invoke('batiments:read', name),
+  writeBatimentFile: (name, texte) => ipcRenderer.invoke('batiments:write', name, texte),
+  deleteBatimentFile: (name) => ipcRenderer.invoke('batiments:delete', name),
+  renameBatimentFile: (ancien, nouveau) => ipcRenderer.invoke('batiments:rename', ancien, nouveau),
   // Polices de l'utilisateur (#423), rangées dans <dossier de Projets>/Polices. Même exception que
   // les modèles et les images (docs/en/architecture.md, règle n°1). L'import se fait en deux temps :
   // choisir et lire, puis écrire une fois les conflits de nom tranchés.

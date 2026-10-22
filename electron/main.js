@@ -795,6 +795,89 @@ ipcMain.handle('images:list', async () => {
   }
 });
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// BÂTIMENTS (#454a)
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+//
+// MÊME EXCEPTION, MÊME RÉPARTITION QUE `models:*` et `images:*` (docs/en/architecture.md, règle
+// n°1) : des fichiers que l'utilisateur crée à l'exécution, dans son dossier de Projets. ICI on fait
+// des entrées-sorties et on se défend ; c'est src/batiment-store.js qui DÉCIDE.
+//
+// UN DOSSIER À PART, et non `Modeles` : `models:list` n'accepte que des `.glb`, et tout le chemin
+// des modèles importés suppose un glTF. Le contenu est du TEXTE (JSON), écrit par un fichier
+// temporaire puis un renommage : une coupure au milieu ne laisse jamais un bâtiment à moitié écrit.
+function getBatimentsDir() {
+  return path.join(getProjectsDir(), 'Batiments');
+}
+
+function nomDeBatimentAcceptable(name) {
+  if (typeof name !== 'string' || !name) return false;
+  if (name !== path.basename(name)) return false;      // aucun séparateur de chemin
+  if (name.startsWith('.')) return false;              // ni « .. », ni fichier caché
+  return /\.batiment\.json$/i.test(name);
+}
+
+ipcMain.handle('batiments:list', async () => {
+  try {
+    return fs.readdirSync(getBatimentsDir()).filter(nomDeBatimentAcceptable);
+  } catch (err) {
+    return [];   // dossier pas encore créé : aucun bâtiment, ce n'est pas une erreur
+  }
+});
+
+ipcMain.handle('batiments:read', async (event, name) => {
+  if (!nomDeBatimentAcceptable(name)) return { ok: false, error: 'nom de bâtiment refusé' };
+  try {
+    return { ok: true, texte: await fs.promises.readFile(path.join(getBatimentsDir(), name), 'utf8') };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+});
+
+ipcMain.handle('batiments:write', async (event, name, texte) => {
+  if (!nomDeBatimentAcceptable(name)) return { ok: false, error: 'nom de bâtiment refusé' };
+  if (typeof texte !== 'string') return { ok: false, error: 'contenu refusé' };
+  try {
+    fs.mkdirSync(getBatimentsDir(), { recursive: true });
+    const cible = path.join(getBatimentsDir(), name);
+    await fs.promises.writeFile(cible + '.tmp', texte, 'utf8');
+    await fs.promises.rename(cible + '.tmp', cible);
+    return { ok: true, name };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+});
+
+// Le renderer a DÉJÀ confirmé. Les copies placées dans les Scènes n'en dépendent pas : elles
+// embarquent leur bâtiment.
+ipcMain.handle('batiments:delete', async (event, name) => {
+  if (!nomDeBatimentAcceptable(name)) return { ok: false, error: 'nom de bâtiment refusé' };
+  try {
+    await fs.promises.unlink(path.join(getBatimentsDir(), name));
+    return { ok: true };
+  } catch (err) {
+    if (err && err.code === 'ENOENT') return { ok: true };
+    return { ok: false, error: String(err) };
+  }
+});
+
+// Le refus d'écraser est ICI aussi, pour la raison de `models:rename` : `fs.rename` écrase.
+ipcMain.handle('batiments:rename', async (event, ancien, nouveau) => {
+  if (!nomDeBatimentAcceptable(ancien) || !nomDeBatimentAcceptable(nouveau)) {
+    return { ok: false, error: 'nom de bâtiment refusé' };
+  }
+  const src = path.join(getBatimentsDir(), ancien);
+  const dst = path.join(getBatimentsDir(), nouveau);
+  const memeFichier = src.toLowerCase() === dst.toLowerCase();
+  try {
+    if (!memeFichier && fs.existsSync(dst)) return { ok: false, error: 'un bâtiment porte déjà ce nom' };
+    await fs.promises.rename(src, dst);
+    return { ok: true, name: nouveau };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+});
+
 // ─── POLICES DE L'UTILISATEUR (#423) ───
 // Même exception que models:* et images:* (docs/en/architecture.md, règle n°1) : des octets choisis
 // par l'utilisateur à l'exécution, que rien ne peut générer à la construction. ICI les

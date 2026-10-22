@@ -366,6 +366,11 @@ Un Élément de la Scène posé **dans** un bâtiment (Personnage, objet, modèl
 AJOUTÉS : `dansBatiment` (l'id de l'Élément bâtiment), `niveauId` et, facultatif, `pieceId`. Sa
 hauteur se déduit de l'élévation du niveau.
 
+**Où, et en quel format** (#454a-1, fait) : `<dossier de Projets>/Batiments/<nom>.batiment.json`,
+un dossier à part de `Modeles` (dont tout le chemin suppose un glTF), réuni aux modèles à
+l'affichage. Le format et sa relecture sont dans `src/batiment.js` : unités en mètres, version 1,
+champs inconnus gardés (un fichier plus récent ne perd rien), murs illisibles écartés un par un.
+
 Les bâtiments déjà tracés dans les Scènes (murs Éléments, `pieceId`, `batimentNames`,
 `batimentRotY`) restent LUS et sont **convertis** à l'ouverture en bâtiments d'un niveau, à la même
 place : rien ne bouge à l'écran.
@@ -389,9 +394,14 @@ place : rien ne bouge à l'écran.
 9. **Placer un Élément dans un bâtiment** : à la main (en décochant « Collé au sol »), ou depuis la
    modale de l'Élément : un bâtiment, puis un étage, puis une pièce.
 10. **L'outil « Construire un bâtiment » quitte la Scène** pour l'éditeur ; les bâtiments existants
-    sont convertis.
+    sont convertis. Le tracé y est repris, puis **amélioré** d'après les motifs de cette analyse
+    (retour visuel, Alt, pièces toutes faites, etc.).
 11. **Les matières** (briques, ardoises, tapisseries) : le store de textures (#446), plus un petit
     jeu fourni d'emblée.
+12. **Les entrées de l'éditeur** : un bouton « Éditeur de bâtiment » dans le bandeau, à gauche de
+    « Éditeur de modèle » ; « Créer un bâtiment » au clic droit dans une Scène, au-dessus de
+    « Importer un modèle » ; « Modifier » au clic droit sur un Bâtiment ou une Pièce dans le menu de
+    droite d'une Case ou d'une Scène.
 
 ## La feuille de route proposée
 

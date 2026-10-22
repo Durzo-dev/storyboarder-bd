@@ -31,6 +31,11 @@ clé `format` et sa copie de `w`, `h`, `scale`, si bien qu'une version qui l'ign
 Tomes. Un fichier sans `formats` reçoit les quatre formats intégrés ; un Tome dont les dimensions ne
 sont celles d'aucun format en reçoit un à ses dimensions (seule sa clé change).
 
+**Fichiers de bâtiment** (#454a, octobre 2026, cf. [building-research.md](building-research.md)) :
+`<dossier de Projets>/Batiments/*.batiment.json`, un format à part, VERSIONNÉ (`version: 1`). Même
+règle que les Projets : ses champs ne se renomment pas, et un champ inconnu est gardé à la lecture,
+si bien qu'un fichier écrit par une version plus récente ne perd rien en passant par celle-ci.
+
 **Niveau projet** : `projectName`, `tomes`, `formats`, `scenes`, `currentTomeIndex`, `currentPageIndex`,
 `poses` (bibliothèque de poses : `[{ id, name, skeleton, joints }]`).
 

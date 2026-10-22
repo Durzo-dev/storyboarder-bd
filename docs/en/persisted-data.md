@@ -30,6 +30,11 @@ draw and stays written, so a version that ignores them reads ordinary Panels.
 A file without `formats` gets the four built-in formats; a Volume whose dimensions match no format
 gets one with its dimensions (only its key changes).
 
+**Building files** (#454a, October 2026, see [building-research.md](building-research.md)):
+`<Projects folder>/Batiments/*.batiment.json`, a separate, VERSIONED format (`version: 1`). Same
+rule as Projects: its fields are never renamed, and an unknown field is kept on reading, so a file
+written by a newer version loses nothing by passing through this one.
+
 **Project level**: `projectName`, `tomes`, `formats`, `scenes`, `currentTomeIndex`, `currentPageIndex`,
 `poses` (pose library: `[{ id, name, skeleton, joints }]`).
 

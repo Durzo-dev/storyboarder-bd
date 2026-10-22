@@ -349,6 +349,11 @@ A Scene Element placed **inside** a building (Character, object, model) carries,
 `dansBatiment` (the building Element's id), `niveauId` and, optionally, `pieceId`. Its height is
 deduced from the level's elevation.
 
+**Where, and in what format** (#454a-1, done): `<Projects folder>/Batiments/<name>.batiment.json`,
+a folder apart from `Modeles` (whose whole path assumes glTF), joined to the models on display.
+The format and its reading are in `src/batiment.js`: units in metres, version 1, unknown fields
+kept (a newer file loses nothing), unreadable walls dropped one by one.
+
 Buildings already traced in Scenes (wall Elements, `pieceId`, `batimentNames`, `batimentRotY`)
 remain READ and are **converted** on opening into one-level buildings, in the same place: nothing
 moves on screen.
@@ -371,9 +376,13 @@ moves on screen.
 9. **Placing an Element in a building**: by hand (unticking "Stuck to the ground"), or from the
    Element's modal: a building, then a floor, then a room.
 10. **The "Build a building" tool leaves the Scene** for the editor; existing buildings are
-    converted.
+    converted. Tracing is taken over, then **improved** from this analysis's patterns (visual
+    feedback, Alt, ready-made rooms, etc.).
 11. **Materials** (bricks, slates, wallpapers): the texture store (#446), plus a small set
     supplied from the start.
+12. **The editor's entry points**: a "Building editor" button in the header, left of "Model
+    editor"; "Create a building" on right-click in a Scene, above "Import a model"; "Edit" on
+    right-click on a Building or a Room in a Panel's or Scene's right-hand menu.
 
 ## The proposed roadmap
 

@@ -70,7 +70,8 @@ treats it as a free precedent:
 
 Current membership: `models:*` (imported 3D models), `images:*` (panel images, see
 [panel-images.md](panel-images.md)), `fonts:*` (the user's fonts, see [polices.md](polices.md)),
-`skeletons:*` (the shared mapping file), `project:delete`, and
+`skeletons:*` (the shared mapping file), `batiments:*` (buildings, `Batiments/`, see
+[building-research.md](building-research.md)), `project:delete`, and
 `maj:*` (built-in updates, see [updates.md](updates.md)). The last one also adds files next to
 `main.js`: `update-policy.js` decides, `updater.js` does the I/O, and `preload-blocage.js` is the
 bridge of the blocking screen. Downloading and launching an installer has no possible home in `src/`.
