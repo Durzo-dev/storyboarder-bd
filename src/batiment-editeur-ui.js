@@ -437,51 +437,77 @@ function remplirNiveaux(){
  * la fenêtre. Rend une promesse : vrai si le changement a été fait.
  */
 async function appliquerSansCasserLesEscaliers(transformer, titre){
+  const bloques = escaliersBloquesPar(transformer);
+  if (!bloques.length) { modifier(transformer); return true; }
+  const n = bloques.length;
+  const ok = await _rappels.confirmer(
+    tr(`This change would block ${n > 1 ? 'these staircases' : 'this staircase'}:`, `Ce changement bloquerait ${n > 1 ? 'ces escaliers' : 'cet escalier'} :`) + '\n\n' + lignesDesEscaliers(bloques)
+      + '\n\n' + tr(`You can delete ${n > 1 ? 'them' : 'it'} to make the change anyway, or cancel and move ${n > 1 ? 'them' : 'it'} first.`,
+        `Vous pouvez ${n > 1 ? 'les' : 'le'} supprimer pour faire le changement quand même, ou annuler pour ${n > 1 ? 'les' : 'le'} déplacer d'abord.`),
+    titre,
+    { ok: n > 1 ? tr(`Delete the ${n} staircases and continue`, `Supprimer les ${n} escaliers et continuer`) : tr('Delete the staircase and continue', 'Supprimer l\'escalier et continuer'), danger: true });
+  if (!ok || !E) return false;
+  appliquerEtSupprimer(transformer, bloques);
+  return true;
+}
+
+/** Les escaliers que `transformer` bloquerait, essayé sur une copie. */
+function escaliersBloquesPar(transformer){
   const apres = JSON.parse(JSON.stringify(E.batiment));
   transformer(apres);
-  const bloques = escaliersBloques(E.batiment, apres, (id) => [...formesDesPieces(E.batiment, id).values()], (id) => [...formesDesPieces(apres, id).values()]);
-  if (!bloques.length) { modifier(transformer); return true; }
+  return escaliersBloques(E.batiment, apres, (id) => [...formesDesPieces(E.batiment, id).values()], (id) => [...formesDesPieces(apres, id).values()]);
+}
+
+/** Fait le changement, et supprime les escaliers bloqués : un seul point d'annulation. */
+function appliquerEtSupprimer(transformer, bloques){
+  const ids = new Set(bloques.map(x => x.escalier.id));
+  modifier(bat => { transformer(bat); bat.escaliers = (bat.escaliers || []).filter(x => !ids.has(x.id)); });
+}
+
+/** Une ligne par escalier bloqué : lequel (son rang dans son niveau, son type, sa largeur), et pourquoi. */
+function lignesDesEscaliers(bloques){
   const types = { droit: tr('straight', 'droit'), L: tr('L-shaped', 'en L'), U: tr('U-shaped', 'en U') };
   const raisons = {
     sansEtage: tr('it would have no level above to lead to', 'il n\'aurait plus de niveau au-dessus où mener'),
     mur: tr('with the new height, it would cross a wall', 'avec la nouvelle hauteur, il traverserait un mur'),
     hors: tr('with the new height, it would no longer fit in its room', 'avec la nouvelle hauteur, il ne tiendrait plus dans sa pièce'),
   };
-  const lignes = bloques.map(({ escalier, niveau, raison }) => {
+  return bloques.map(({ escalier, niveau, raison }) => {
     const rang = E.batiment.escaliers.filter(x => x.niveauId === escalier.niveauId).findIndex(x => x.id === escalier.id) + 1;
     const nom = tr(`Staircase ${rang} (${types[escalier.type]}, ${Math.round(escalier.largeur * 100)} cm), on "${niveau ? niveau.nom : '?'}"`,
       `Escalier ${rang} (${types[escalier.type]}, ${Math.round(escalier.largeur * 100)} cm), au niveau « ${niveau ? niveau.nom : '?'} »`);
     return `• ${nom} : ${raisons[raison] || raison}.`;
-  });
-  const n = bloques.length;
-  const ok = await _rappels.confirmer(
-    tr(`This change would block ${n > 1 ? 'these staircases' : 'this staircase'}:`, `Ce changement bloquerait ${n > 1 ? 'ces escaliers' : 'cet escalier'} :`) + '\n\n' + lignes.join('\n')
-      + '\n\n' + tr(`You can delete ${n > 1 ? 'them' : 'it'} to make the change anyway, or cancel and move ${n > 1 ? 'them' : 'it'} first.`,
-        `Vous pouvez ${n > 1 ? 'les' : 'le'} supprimer pour faire le changement quand même, ou annuler pour ${n > 1 ? 'les' : 'le'} déplacer d'abord.`),
-    titre,
-    { ok: n > 1 ? tr(`Delete the ${n} staircases and continue`, `Supprimer les ${n} escaliers et continuer`) : tr('Delete the staircase and continue', 'Supprimer l\'escalier et continuer'), danger: true });
-  if (!ok || !E) return false;
-  const ids = new Set(bloques.map(x => x.escalier.id));
-  modifier(bat => { transformer(bat); bat.escaliers = (bat.escaliers || []).filter(x => !ids.has(x.id)); });
-  return true;
+  }).join('\n');
 }
 
 /** Supprime un niveau qui porte quelque chose après confirmation ; un niveau vide, directement. */
 async function supprimerUnNiveau(n){
+  const transformer = (b) => supprimerNiveau(b, n.id);
   const plein = E.batiment.murs.some(m => m.niveauId === n.id);
-  if (plein) {
-    const ok = await _rappels.confirmer(tr(`Delete the level "${n.nom}" and everything on it? The levels above come down.`,
-      `Supprimer le niveau « ${n.nom} » et tout ce qu'il porte ? Les niveaux du dessus redescendent.`), tr('Delete a level', 'Supprimer un niveau'));
+  const bloques = escaliersBloquesPar(transformer);
+  // UNE SEULE FENÊTRE (demandé) : ce que le niveau emporte, et les escaliers d'autres niveaux qu'il
+  // bloquerait, qui partiraient avec lui. Un niveau vide qui ne bloque rien part sans question.
+  if (plein || bloques.length) {
+    const k = bloques.length;
+    const morceaux = [plein
+      ? tr(`Delete the level "${n.nom}" and everything on it? The levels above come down.`, `Supprimer le niveau « ${n.nom} » et tout ce qu'il porte ? Les niveaux du dessus redescendent.`)
+      : tr(`Delete the level "${n.nom}"? The levels above come down.`, `Supprimer le niveau « ${n.nom} » ? Les niveaux du dessus redescendent.`)];
+    if (k) {
+      morceaux.push(tr(`${k > 1 ? 'These staircases' : 'This staircase'} of another level would also be deleted, as ${k > 1 ? 'they' : 'it'} would no longer fit:`,
+        `${k > 1 ? 'Ces escaliers' : 'Cet escalier'} d'un autre niveau ${k > 1 ? 'seraient' : 'serait'} aussi ${k > 1 ? 'supprimés' : 'supprimé'}, car ${k > 1 ? 'ils ne tiendraient' : 'il ne tiendrait'} plus :`)
+        + '\n' + lignesDesEscaliers(bloques));
+    }
+    const ok = await _rappels.confirmer(morceaux.join('\n\n'), tr('Delete a level', 'Supprimer un niveau'), {
+      ok: k ? (k > 1 ? tr(`Delete the level and the ${k} staircases`, `Supprimer le niveau et les ${k} escaliers`) : tr('Delete the level and the staircase', 'Supprimer le niveau et l\'escalier'))
+        : tr('Delete the level', 'Supprimer le niveau'),
+      danger: true,
+    });
     if (!ok || !E) return;
   }
   // Le niveau courant supprimé : le plus bas des autres devient courant (choisi avant, pour que le menu
   // refait après la suppression ne vise pas un niveau disparu).
-  const avant = E.niveauId;
-  if (avant === n.id) E.niveauId = niveauxTries(E.batiment).find(x => x.id !== n.id).id;
-  // Sans casser d'escalier (demandé) : celui du dessous, s'il menait à ce niveau, n'aurait plus rien.
-  const fait = await appliquerSansCasserLesEscaliers(b => supprimerNiveau(b, n.id), tr('Delete a level', 'Supprimer un niveau'));
-  if (!E) return;
-  if (!fait) E.niveauId = avant;
+  if (E.niveauId === n.id) E.niveauId = niveauxTries(E.batiment).find(x => x.id !== n.id).id;
+  appliquerEtSupprimer(transformer, bloques);
   remplirPanneau(); dessinerPlan(); if (E.apercu) E.apercu.reconstruire(E.batiment);
 }
 
