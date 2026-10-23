@@ -274,7 +274,7 @@ function remplirPanneau(){
     // Tourner : décalé au besoin pour tenir, éteint seulement si aucune place proche ne convient.
     const t = essaiEscalier(esc.id, { angle: esc.angle + Math.PI / 2 });
     $('batimentEscalierTourner').disabled = !!t.erreur;
-    $('batimentEscalierTourner').title = t.erreur || t.note || '';
+    $('batimentEscalierTourner').title = '';   // pas d'infobulle contextuelle (demandé)
   }
   // Les deux formulaires d'ouverture : celle qu'on va poser (outil Ouverture), celle qu'on a choisie.
   if (E.outil === 'ouverture') formulaireOuverture($('batimentReglagesOuverture'), E.reglagesOuverture, (c) => {
@@ -594,13 +594,15 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
     const d = document.createElement('div'); d.className = 'batiment-choix';
     valeurs.forEach(([val, lib, icone, bulle]) => {
       const b = document.createElement('button'); b.type = 'button';
-      // Avec un pictogramme (demandé) : l'icône, et le libellé court dessous ; l'infobulle dit tout.
-      if (icone) { b.classList.add('icone'); b.innerHTML = icone; const t = document.createElement('span'); t.textContent = lib; b.appendChild(t); }
+      // Avec un pictogramme (demandé) : l'icône SEULE, le libellé passe dans l'infobulle.
+      if (icone) { b.classList.add('icone'); b.innerHTML = icone; b.setAttribute('aria-label', bulle || lib); }
       else b.textContent = lib;
       b.classList.toggle('actif', actuelle === val);
       const essai = essayer && actuelle !== val ? essayer({ [quoi]: val }) : null;
       b.disabled = !!(essai && essai.erreur);
-      b.title = essai ? (essai.erreur || essai.note || bulle || '') : (bulle || '');
+      // L'infobulle n'est PAS contextuelle (demandé) : elle nomme le choix, sans le déplacement
+      // éventuel ni la raison d'un refus.
+      b.title = icone ? (bulle || lib) : (bulle || '');
       b.onclick = () => changer(essai && essai.changements ? essai.changements : { [quoi]: val });
       d.appendChild(b);
     });
@@ -701,13 +703,15 @@ function formulaireOuverture(conteneur, v, changer, essayer = null){
     const d = document.createElement('div'); d.className = 'batiment-choix';
     valeurs.forEach(([val, lib, icone, bulle]) => {
       const b = document.createElement('button'); b.type = 'button';
-      // Avec un pictogramme (demandé) : l'icône, et le libellé court dessous ; l'infobulle dit tout.
-      if (icone) { b.classList.add('icone'); b.innerHTML = icone; const t = document.createElement('span'); t.textContent = lib; b.appendChild(t); }
+      // Avec un pictogramme (demandé) : l'icône SEULE, le libellé passe dans l'infobulle.
+      if (icone) { b.classList.add('icone'); b.innerHTML = icone; b.setAttribute('aria-label', bulle || lib); }
       else b.textContent = lib;
       b.classList.toggle('actif', actuelle === val);
       const essai = essayer && actuelle !== val ? essayer({ [quoi]: val }) : null;
       b.disabled = !!(essai && essai.erreur);
-      b.title = essai ? (essai.erreur || essai.note || bulle || '') : (bulle || '');
+      // L'infobulle n'est PAS contextuelle (demandé) : elle nomme le choix, sans le déplacement
+      // éventuel ni la raison d'un refus.
+      b.title = icone ? (bulle || lib) : (bulle || '');
       b.onclick = () => changer(essai && essai.changements ? essai.changements : { [quoi]: val });
       d.appendChild(b);
     });
