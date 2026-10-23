@@ -123,6 +123,23 @@ export function messageMaillagesEgares(noms){
 }
 
 /**
+ * La hauteur à donner à l'Élément d'un modèle : celle du fichier, sauf si elle est démesurée et que
+ * l'utilisateur accepte de la ramener à la taille neutre (cf. choisirEtPreparerModele).
+ */
+async function hauteurRetenue(hauteurFichier){
+  let hauteurM = hauteurFichier;
+  let redimensionné = false;
+  if (Number.isFinite(hauteurM) && hauteurM > MODEL_HEIGHT_WARN_MAX_M) {
+    const redimensionner = await _confirmer(tr(
+      `This model is ${hauteurM.toFixed(1)} m tall once decoded, most likely a scale issue in the file, not an intentionally giant object. Resize it now to a standard height (${OBJECT_REAL_HEIGHT_M.modele} m)? You can fine-tune it afterward from its modal.`,
+      `Ce modèle mesure ${hauteurM.toFixed(1)} m une fois décodé, presque sûrement un souci d'échelle dans le fichier, pas un objet volontairement gigantesque. Le redimensionner maintenant à une taille standard (${OBJECT_REAL_HEIGHT_M.modele} m) ? Vous pourrez l'ajuster ensuite depuis sa fiche.`,
+    ), tr('Unusual model size', 'Taille de modèle inhabituelle'));
+    if (redimensionner) { hauteurM = OBJECT_REAL_HEIGHT_M.modele; redimensionné = true; }
+  }
+  return { hauteurM, redimensionné };
+}
+
+/**
  * Choisit un fichier, le range, le décode, et rend de quoi créer un Élément.
  *
  * Résultats, tous explicites : { canceled } | { ok: false, error } | { ok: true, modelFile, nom,
@@ -150,15 +167,7 @@ export async function choisirEtPreparerModele(){
   await preloadModels([rangé.name]);
   const chargé = getLoadedModel(rangé.name);
   // La hauteur naturelle du fichier, en mètres, la vraie taille, puisque glTF impose l'unité.
-  let hauteurM = chargé ? chargé.hauteurM : undefined;
-  let redimensionné = false;
-  if (Number.isFinite(hauteurM) && hauteurM > MODEL_HEIGHT_WARN_MAX_M) {
-    const redimensionner = await _confirmer(tr(
-      `This model is ${hauteurM.toFixed(1)} m tall once decoded, most likely a scale issue in the file, not an intentionally giant object. Resize it now to a standard height (${OBJECT_REAL_HEIGHT_M.modele} m)? You can fine-tune it afterward from its modal.`,
-      `Ce modèle mesure ${hauteurM.toFixed(1)} m une fois décodé, presque sûrement un souci d'échelle dans le fichier, pas un objet volontairement gigantesque. Le redimensionner maintenant à une taille standard (${OBJECT_REAL_HEIGHT_M.modele} m) ? Vous pourrez l'ajuster ensuite depuis sa fiche.`,
-    ), tr('Unusual model size', 'Taille de modèle inhabituelle'));
-    if (redimensionner) { hauteurM = OBJECT_REAL_HEIGHT_M.modele; redimensionné = true; }
-  }
+  const { hauteurM, redimensionné } = await hauteurRetenue(chargé ? chargé.hauteurM : undefined);
   const avertissement = messageMaillagesEgares(chargé && chargé.egares);
   // ATTENDU, alors que les autres appels à _alerter ne le sont pas : l'écran de correspondance du
   // squelette s'ouvre juste après (cf. _confirmerImport), et deux boîtes qui se disputent la même
@@ -223,3 +232,26 @@ export async function importModelIntoPanel(panel, page){
   return el;
 }
 
+
+/**
+ * Pose dans une Case (ou le canevas d'une Scène) un modèle DÉJÀ dans « Mes modèles » (#454a-4b,
+ * demandé : « Importer un modèle » ouvre la bibliothèque, et un clic sur une vignette place le
+ * modèle). Même création que l'import depuis le disque, sans le choix du fichier ni l'écran de
+ * correspondance (le modèle est déjà connu). Rend l'Élément créé.
+ */
+export async function placerModeleExistant(panel, page, fichier){
+  await preloadModels([fichier]);
+  const chargé = getLoadedModel(fichier);
+  const { hauteurM } = await hauteurRetenue(chargé ? chargé.hauteurM : undefined);
+  _snapshot();
+  const el = createModelElement({
+    panel, page, modelFile: fichier, name: nomLisible(fichier), realHeightM: hauteurM,
+    ratioLargeur: chargé ? chargé.ratioLargeur : undefined,
+  });
+  currentPageData().objects.push(el);
+  S.selectedId = el.id;
+  S.projectDirty = true;
+  _finaliserCreation(el, panel, page);
+  _renderAll();
+  return el;
+}

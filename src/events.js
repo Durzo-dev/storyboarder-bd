@@ -71,7 +71,7 @@ import {
   messageSuppressionImage, messageRenommageImage,
 } from './image-library.js';
 import {
-  setModelImportCallbacks, importModelIntoPanel,
+  setModelImportCallbacks, importModelIntoPanel, placerModeleExistant,
 } from './model-import.js';
 import { isImportedModel, listModels, renameModel, sanitizeModelName } from './model-store.js';
 import {
@@ -4777,10 +4777,25 @@ function _cibleDuMenu(){
   const panel = S.ctxTarget && S.ctxTarget.type === 'panel' ? S.ctxTarget : null;
   return { panel, page };
 }
+// « Importer un modèle » OUVRE LA BIBLIOTHÈQUE (#454a-4b, demandé) : un clic sur une vignette place le
+// modèle ou le bâtiment dans la Case (ou la Scène) ; « Importer un fichier… » garde l'import depuis
+// le disque. Le canevas visé est retenu par son id : il est retrouvé au retour du choix.
 document.getElementById('ctxImportModel').onclick = () => {
   const { panel, page } = _cibleDuMenu();
   hideContextMenu();
-  if (panel) importModelIntoPanel(panel, page);
+  if (!panel) return;
+  const panelId = panel.id;
+  const cible = () => currentPage().objects.find(o => o.id === panelId && o.type === 'panel') || null;
+  ouvrirStore({
+    choisir: (fichier) => {
+      const c = cible();
+      if (!c) return;
+      if (/\.batiment\.json$/i.test(fichier)) placerBatimentDeLaBibliotheque(fichier, c);
+      else placerModeleExistant(c, currentPage(), fichier);
+    },
+    accepter: (e) => !e.introuvable,
+    importer: () => { const c = cible(); if (c) importModelIntoPanel(c, page); },
+  });
 };
 
 // ─── Bibliothèque de modèles : clic droit sur une ligne ───
@@ -9374,8 +9389,8 @@ function caseOuPlacer(){
 }
 
 /** Place une copie d'un bâtiment de la bibliothèque dans la Scène ouverte ou la Case choisie. */
-async function placerBatimentDeLaBibliotheque(fichier){
-  const panel = caseOuPlacer();
+async function placerBatimentDeLaBibliotheque(fichier, panelChoisi = null){
+  const panel = panelChoisi || caseOuPlacer();
   if (!panel) {
     alertAction(tr('Open a Scene, or select a panel, to place this building in it.', 'Ouvrez une Scène, ou sélectionnez une Case, pour y placer ce bâtiment.'));
     return;

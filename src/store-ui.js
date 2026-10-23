@@ -27,6 +27,7 @@ import { ouvrirApercu3D } from './store-apercu-3d.js';
 import { listerBatiments, lireBatimentDuDisque } from './batiment-store.js';
 import { entreesBatiments } from './batiment-bibliotheque.js';
 import { vignetteDuBatiment } from './batiment-vignettes.js';
+import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
 import { textesStore, PLAFONDS_FACES, nombreCourt, poidsLisible, estLourd, phrasesLicence, lignesDetails } from './store-texts.js';
 
 /**
@@ -58,6 +59,11 @@ let affiches = [];
  * ouverte la dernière fois n'est ni rouverte ni oubliée.
  */
 let choix = null;
+// #454a-4b : ce que le choix accepte (par défaut, une figure à poser : un modèle articulé), et, pour
+// « Importer un modèle », de quoi importer un fichier du disque à la place.
+const POSABLE = (e) => !e.batiment && e.os !== 0;
+let accepterChoix = POSABLE;
+let importerChoix = null;
 let sourceAvantChoix = null;
 /** La pause de saisie avant de lancer la recherche. */
 export const PAUSE_SAISIE_MS = 450;
@@ -553,10 +559,11 @@ function boutonApercuLocal(r, visuel, image, charger = () => window.storyboarder
     try { rep = await charger(); } catch (e) { rep = { erreur: 'reseau' }; }
     if (moi !== apercuGeneration) return;   // revenu à l'image, ou fiche fermée, entre-temps
     apercuAttendu = null;
-    if (!rep || rep.erreur || !rep.data) { dire(t.erreurs[rep && rep.erreur] || t.erreurs.reponse); return; }
+    if (!rep || rep.erreur || !(rep.data || rep.objet)) { dire(t.erreurs[rep && rep.erreur] || t.erreurs.reponse); return; }
     visuel.replaceChildren();
     let v = null;
-    try { v = await ouvrirApercu3D(visuel, rep.data); } catch (e) { dire(t.apercuIllisible); return; }
+    // `objet` : un objet 3D déjà construit (un bâtiment, #454a-4b), au lieu d'octets glTF à décoder.
+    try { v = await ouvrirApercu3D(visuel, rep.data, { objet: rep.objet }); } catch (e) { dire(t.apercuIllisible); return; }
     if (moi !== apercuGeneration) { v.fermer(); return; }   // fermé pendant le décodage
     apercuCourant = v;
   };
@@ -754,9 +761,17 @@ function carteBatiment(e){
       e.introuvable ? null : el('span', { texte: t.nombrePieces(e.pieces) }),
     ]),
   ]);
-  // En mode choix (l'Éditeur de modèle choisit une figure), un bâtiment n'a rien à poser.
-  if (choix) { c.classList.add('store-carte-inactive'); c.title = e.fichier + ' · ' + t.statiqueNonPosable; }
-  c.onclick = () => { if (!choix) ouvrirFiche(e); };
+  // En mode choix : choisi s'il est accepté (« Importer un modèle » le place), inactif sinon (l'Éditeur
+  // de modèle cherche une figure à poser, un bâtiment n'en est pas une).
+  const refuse = !!choix && !accepterChoix(e);
+  if (refuse) { c.classList.add('store-carte-inactive'); c.title = e.fichier + ' · ' + t.statiqueNonPosable; }
+  c.onclick = () => {
+    if (!choix) { ouvrirFiche(e); return; }
+    if (refuse) return;
+    const rendre = choix;
+    fermerStore();
+    rendre(e.fichier);
+  };
   c.addEventListener('contextmenu', (ev) => {
     ev.preventDefault();
     if (!choix && _rappels.menuBatiment) _rappels.menuBatiment(ev, e.fichier);
@@ -770,7 +785,17 @@ function ficheBatiment(e){
   const t = textesStore(langue());
   const fiche = $('storeFiche');
   const url = e.introuvable ? null : vignetteDuBatiment(batimentDe(e.fichier));
-  const visuel = el('div', { classe: 'store-fiche-visuel' }, url ? [el('img', { attrs: { src: url, alt: '' } })] : []);
+  const image = () => (url ? [el('img', { attrs: { src: url, alt: '' } })] : []);
+  const visuel = el('div', { classe: 'store-fiche-visuel' }, image());
+  // L'aperçu 3D, comme pour les autres modèles (demandé) : le bâtiment construit par le même code que
+  // les Cases, avec ses propres matières (l'aperçu les libère en se fermant).
+  const boutons = el('div', { classe: 'store-fiche-boutons' });
+  if (!e.introuvable) {
+    boutons.appendChild(boutonApercuLocal({ source: LOCAL, id: e.fichier }, visuel, image, async () => {
+      const T = globalThis.THREE, b = batimentDe(e.fichier);
+      return T && b ? { objet: construireBatiment3D(T, b, materiauxBatiment3D(T)) } : { erreur: 'reponse' };
+    }));
+  }
   const section = (titre, enfants) => el('section', { classe: 'store-fiche-section' }, [el('h5', { texte: titre }), ...enfants]);
   const liste = (lignes) => el('ul', {}, lignes.filter(Boolean).map(p => el('li', { texte: p })));
   const endroit = (g) => {
@@ -804,12 +829,12 @@ function ficheBatiment(e){
   };
   const actions = e.introuvable
     ? [retour, action(t.supprimer, 'supprimerBatiment', 'full-btn delete-btn store-action-blanc')]
-    : [retour, action(t.editeur, 'editerBatiment'), action(t.placer, 'placerBatiment', 'full-btn'),
+    : [retour, action(t.editeur, 'editerBatiment'),
       action(t.renommer, 'renommerBatiment', 'full-btn edit-btn store-action-blanc'),
       action(t.supprimer, 'supprimerBatiment', 'full-btn delete-btn store-action-blanc')];
   fiche.replaceChildren(
     el('div', { classe: 'store-fiche-corps' }, [
-      el('div', { classe: 'store-fiche-gauche' }, [visuel]),
+      el('div', { classe: 'store-fiche-gauche' }, [visuel, boutons]),
       el('div', { classe: 'store-fiche-droite' }, droite.filter(Boolean)),
     ]),
     el('div', { classe: 'store-fiche-pied' }, [el('div', { classe: 'store-fiche-actions store-fiche-actions-locales' }, actions)]),
@@ -1029,16 +1054,16 @@ function carteLocale(e){
       e.taille ? el('span', { texte: poidsLisible(e.taille, langue()) }) : null,
     ]),
   ]);
-  // En mode choix, la vignette CHOISIT le modèle (demandé). Un modèle statique (squelette mesuré, sans
-  // os) n'a rien à poser : sa carte reste visible mais inactive.
-  const statique = e.os === 0;
-  if (choix && statique) {
+  // En mode choix, la vignette CHOISIT le modèle (demandé). Ce que le choix n'accepte pas (un modèle
+  // statique pour l'Éditeur de modèle, qui n'a rien à poser) reste visible mais inactif.
+  const refuse = !!choix && !accepterChoix(e);
+  if (refuse) {
     c.classList.add('store-carte-inactive');
-    c.title = e.fichier + ' · ' + t.statiqueNonPosable;
+    if (e.os === 0) c.title = e.fichier + ' · ' + t.statiqueNonPosable;
   }
   c.onclick = () => {
     if (!choix) { ouvrirFiche(e); return; }
-    if (statique) return;
+    if (refuse) return;
     const rendre = choix;
     fermerStore();
     rendre(e.fichier);
@@ -1197,12 +1222,15 @@ export function basculerStore(){
   else fermerStore();
 }
 
-export async function ouvrirStore({ onglet, choisir } = {}){
+export async function ouvrirStore({ onglet, choisir, accepter, importer } = {}){
   const pont = window.storyboarderAPI;
   if (!pont || !pont.storeChercher) return;
   if (typeof choisir === 'function') {
     if (!choix) sourceAvantChoix = infos ? source : null;
     choix = choisir;
+    accepterChoix = typeof accepter === 'function' ? accepter : POSABLE;
+    importerChoix = typeof importer === 'function' ? importer : null;
+    if ($('storeImporterFichier')) $('storeImporterFichier').hidden = !importerChoix;
     onglet = LOCAL;
   } else if (choix) {
     // Le bouton du bandeau pendant un choix : on revient à la fenêtre ordinaire.
@@ -1243,6 +1271,9 @@ export async function ouvrirStore({ onglet, choisir } = {}){
 /** Fin du mode choix : l'onglet d'avant revient, et la grille sera refaite à la prochaine ouverture. */
 function quitterModeChoix(){
   choix = null;
+  accepterChoix = POSABLE;
+  importerChoix = null;
+  if ($('storeImporterFichier')) $('storeImporterFichier').hidden = true;
   if (sourceAvantChoix && sourceAvantChoix !== source && infosPar[sourceAvantChoix]) {
     source = sourceAvantChoix;
     infos = infosPar[source];
@@ -1276,6 +1307,9 @@ export function cablerStore(rappels = {}){
   try { globalThis.localStorage.removeItem(ANCIENNE_CLE_ETAT); } catch (e) { /* rien à effacer */ }
   const storeModal = document.getElementById('storeModal');
   if (!storeModal) return;
+  // « Importer un fichier… » (mode choix de « Importer un modèle ») : la fenêtre se ferme, l'import
+  // depuis le disque prend le relais.
+  $('storeImporterFichier').onclick = () => { const importer = importerChoix; fermerStore(); if (importer) importer(); };
   const pont = window.storyboarderAPI;
   if (pont && pont.onStoreProgression) pont.onStoreProgression(progression);
   if (pont && pont.onStoreApercuProgression) pont.onStoreApercuProgression(progressionApercu);

@@ -310,7 +310,7 @@ describe('le mode choix (l\'Éditeur de modèle choisit sa figure dans « Mes mo
   const ui = sans(lire('src/store-ui.js'));
   test('ouvrirStore({ choisir }) force l\'onglet local et retient l\'onglet d\'avant', () => {
     const corps = ui.slice(ui.indexOf('export async function ouvrirStore'), ui.indexOf('export function fermerStore'));
-    assert.match(corps, /if \(typeof choisir === 'function'\) \{[\s\S]*?choix = choisir;\s*onglet = LOCAL;/);
+    assert.match(corps, /if \(typeof choisir === 'function'\) \{[\s\S]*?choix = choisir;[\s\S]*?onglet = LOCAL;/);
     assert.match(corps, /sourceAvantChoix = infos \? source :/);
     // La fiche laissée ouverte n'est pas rouverte en mode choix, ni oubliée.
     assert.match(corps, /const reprise = choix \? null : aRouvrir;/);
@@ -318,12 +318,15 @@ describe('le mode choix (l\'Éditeur de modèle choisit sa figure dans « Mes mo
   test('seul l\'onglet « Mes modèles » est montré', () => {
     assert.match(ui, /SOURCES_STORE\.filter\(id => !choix \|\| id === LOCAL\)/);
   });
-  test('la vignette choisit au lieu d\'ouvrir la fiche ; un modèle statique est inactif', () => {
+  // #454a-4b : ce que le choix accepte est passé par l'appelant ; par défaut (l'Éditeur de modèle),
+  // une figure à poser : ni un modèle statique, ni un bâtiment.
+  test('la vignette choisit au lieu d\'ouvrir la fiche ; ce que le choix refuse est inactif', () => {
     const corps = ui.slice(ui.indexOf('function carteLocale'), ui.indexOf('function ficheLocale'));
     assert.match(corps, /if \(!choix\) \{ ouvrirFiche\(e\); return; \}/);
-    assert.match(corps, /if \(statique\) return;/);
+    assert.match(corps, /if \(refuse\) return;/);
     assert.match(corps, /const rendre = choix;\s*fermerStore\(\);\s*rendre\(e\.fichier\);/);
-    assert.match(corps, /const statique = e\.os === 0;/);
+    assert.match(corps, /const refuse = !!choix && !accepterChoix\(e\);/);
+    assert.match(ui, /const POSABLE = \(e\) => !e\.batiment && e\.os !== 0;/);
   });
   test('fermer quitte le mode choix et rend l\'onglet d\'avant', () => {
     const corps = ui.slice(ui.indexOf('export function fermerStore'), ui.indexOf('/** Ce que le reste'));

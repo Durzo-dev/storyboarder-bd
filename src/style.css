@@ -2717,3 +2717,6 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 #batimentSectionSelection .full-btn { margin-top: 6px; }
 .batiment-editeur-plan canvas.outil-mur { cursor: crosshair; }
 #batimentPlacerBtn[hidden] { display: none; }
+.store-importer{ margin:0; white-space:nowrap; }
+.store-importer[hidden]{ display:none; }
+#batimentBiblioMenu{ z-index:1100; }

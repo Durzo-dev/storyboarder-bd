@@ -85,10 +85,10 @@ function decoder(octets){
  * Ouvre l'aperçu dans `conteneur` (un élément vide) et rend `{ fermer }`. Lève si le modèle ne se
  * décode pas : l'appelant revient alors à l'image et le dit.
  */
-export async function ouvrirApercu3D(conteneur, octets){
+export async function ouvrirApercu3D(conteneur, octets, { objet = null } = {}){
   const T = globalThis.THREE;
-  const gltf = await decoder(octets);
-  const modele = preparerModeleImporte3D(gltf);
+  // #454a-4b : un objet DÉJÀ construit (un bâtiment) se montre tel quel ; sinon, des octets glTF.
+  const modele = objet || preparerModeleImporte3D(await decoder(octets));
 
   const scene = new T.Scene();
   scene.add(new T.AmbientLight(0xffffff, AMBIANTE_ACTUELLE));

@@ -121,7 +121,8 @@ describe('Un modèle importé, décodé puis préparé', () => {
 
   test('l\'aperçu 3D du store passe par la même préparation que les Cases', () => {
     const { readFileSync } = require('node:fs');
-    assert.match(readFileSync(new URL('../src/store-apercu-3d.js', import.meta.url), 'utf8'), /const modele = preparerModeleImporte3D\(gltf\);/);
+    // #454a-4b : un objet déjà construit (un bâtiment) passe à côté ; un glTF passe toujours par elle.
+    assert.match(readFileSync(new URL('../src/store-apercu-3d.js', import.meta.url), 'utf8'), /const modele = objet \|\| preparerModeleImporte3D\(await decoder\(octets\)\);/);
   });
 });
 

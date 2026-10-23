@@ -111,6 +111,31 @@ export async function fermerEditeurDeBatiment(){
   return true;
 }
 
+/**
+ * Les boutons qui font sortir le bâtiment (demandé) :
+ *   - « Placer dans la scène » (orange, on ajoute) : éteint tant qu'il n'a aucun mur ;
+ *   - « Appliquer à la scène » (jaune, on modifie) : éteint sans modification, ou sans mur ;
+ *   - « Enregistrer dans la bibliothèque » : éteint sans modification quand il y est déjà (un bâtiment
+ *     qui n'y est pas encore peut y entrer tel quel), et sans mur.
+ */
+function majBoutonsDeSortie(){
+  const b = E.batiment, sansMur = !b.murs.length;
+  const dest = $('batimentPlacerBtn');
+  dest.hidden = !E.destination;
+  if (E.destination) {
+    const appliquer = E.destination.mode === 'appliquer';
+    dest.textContent = appliquer ? tr('Apply to the scene', 'Appliquer à la scène') : tr('Place in the scene', 'Placer dans la scène');
+    dest.classList.toggle('edit-btn', appliquer);
+    dest.disabled = sansMur || (appliquer && !E.modifie);
+    dest.title = sansMur ? tr('Draw at least one wall first.', 'Tracez d\'abord au moins un mur.')
+      : dest.disabled ? tr('Nothing has changed yet.', 'Rien n\'a encore changé.') : '';
+  }
+  const enr = $('batimentEnregistrerBtn');
+  enr.disabled = sansMur || (!!E.fichier && !E.modifie);
+  enr.title = sansMur ? tr('Draw at least one wall first.', 'Tracez d\'abord au moins un mur.')
+    : enr.disabled ? tr('Nothing has changed since it was saved.', 'Rien n\'a changé depuis l\'enregistrement.') : '';
+}
+
 function statut(texte){ $('batimentStatut').textContent = texte; }
 
 function ligne(nom, detail){
@@ -132,13 +157,7 @@ const surface = (v) => `${(Math.round(v * 10) / 10).toLocaleString(tr('en', 'fr'
 
 function remplirPanneau(){
   const b = E.batiment;
-  const dest = $('batimentPlacerBtn');
-  dest.hidden = !E.destination;
-  if (E.destination) dest.textContent = E.destination.mode === 'appliquer' ? tr('Apply to the scene', 'Appliquer à la scène') : tr('Place in the scene', 'Placer dans la scène');
-  // Rien à placer tant qu'aucun mur n'est tracé (demandé) : le bouton reste éteint, et dit pourquoi.
-  const sansMur = !b.murs.length;
-  dest.disabled = sansMur;
-  dest.title = sansMur ? tr('Draw at least one wall first.', 'Tracez d\'abord au moins un mur.') : '';
+  majBoutonsDeSortie();
   $('batimentFichier').textContent = E.fichier
     ? tr(`In the library: ${nomAfficheDuFichier(E.fichier)}`, `Dans la bibliothèque : ${nomAfficheDuFichier(E.fichier)}`)
     : tr('Not yet in the library', 'Pas encore dans la bibliothèque');
@@ -1024,6 +1043,7 @@ export function initEditeurDeBatiment(){
     const nom = e.target.value.trim();
     if (!nom) return;
     E.batiment.nom = nom; E.modifie = true; statut('');
+    majBoutonsDeSortie();
   });
   document.querySelectorAll('.batiment-outil').forEach(b => { b.onclick = () => basculerOutil(b.dataset.outil); });
   // Renommer la pièce choisie : un point d'annulation au moment où le nom est validé.

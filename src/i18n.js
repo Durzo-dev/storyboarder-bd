@@ -288,6 +288,7 @@ export const I18N_TRAILING = [
   ['#ctxMesure', 'Measure', 'Mesure'],
   ['#ctxSkeletonMap', 'Skeleton mapping…', 'Correspondance du squelette…'],
   ['#ctxBiblioEditerBatiment', 'Open in the editor', "Ouvrir dans l'éditeur"],
+  ['#storeImporterFichier', 'Import a file…', 'Importer un fichier…'],
   ['#ctxBiblioPlacerBatiment', 'Place', 'Placer'],
   ['#ctxBiblioRenommerBatiment', 'Rename…', 'Renommer…'],
   ['#ctxBiblioSupprimerBatiment', 'Delete from disk', 'Supprimer du disque'],

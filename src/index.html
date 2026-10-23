@@ -1297,6 +1297,9 @@ Tirer un angle : le déplacer, avec tous les murs qui y sont attachés (Alt : sa
       <!-- « Mes modèles » seulement : articulés ou statues (nombre d'os mesuré au rendu des vignettes). -->
       <select id="storeSquelette"></select>
       <span id="storeCommercialCase"><label class="store-case"><input type="checkbox" id="storeCommercial"> <span id="storeCommercialLibelle"></span></label></span>
+      <!-- #454a-4b : « Importer un modèle » ouvre la bibliothèque ; ce bouton garde l'import depuis le
+           disque. Visible seulement dans ce cas (src/store-ui.js, importerChoix). -->
+      <button id="storeImporterFichier" class="nav-btn store-importer" type="button" hidden>Importer un fichier…</button>
     </form>
     <p id="storeMessage" class="maj-message"></p>
     <!-- Seule cette zone défile : les filtres restent en haut, la mention en bas. La fiche d'un
