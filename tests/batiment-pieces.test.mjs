@@ -2,7 +2,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  facesDesMurs, pointDansPolygone, pointInterieur, actualiserPieces, formesDesPieces, pieceSous,
+  facesDesMurs, pointDansPolygone, pointInterieur, actualiserPieces, formesDesPieces, pieceSous, supprimerPiece,
 } from '../src/batiment-pieces.js';
 import { ajouterMur, ajouterRectangle, supprimerMur, deplacerSommet } from '../src/batiment-trace.js';
 import { creerBatiment } from '../src/batiment.js';
@@ -164,5 +164,19 @@ describe('la pièce rectangulaire d’un geste', () => {
     assert.deepEqual(ajouterRectangle(b, 'n0', { x: 0, z: 0 }, { x: 4, z: 3 }, 0.2), { erreur: 'croise' });
     assert.equal(b.murs.length, 1);
     assert.deepEqual(ajouterRectangle(b, 'n0', { x: 5, z: 0 }, { x: 5.01, z: 3 }, 0.2), { erreur: 'court' });
+  });
+});
+
+describe('supprimer une pièce', () => {
+  test('ses murs partent, sauf la cloison qu’elle partage avec sa voisine', () => {
+    const b = creerBatiment('B', fr);
+    ajouterRectangle(b, 'n0', { x: 0, z: 0 }, { x: 4, z: 4 }, 0.2);
+    ajouterRectangle(b, 'n0', { x: 4, z: 0 }, { x: 7, z: 4 }, 0.2);
+    actualiserPieces(b, 'n0', fr);
+    const droite = b.pieces.find(p => p.repere.x > 4);
+    const partis = supprimerPiece(b, 'n0', droite.id, supprimerMur);
+    assert.equal(partis.length, 3);
+    actualiserPieces(b, 'n0', fr);
+    assert.equal(b.pieces.length, 1, 'la pièce de gauche reste fermée');
   });
 });

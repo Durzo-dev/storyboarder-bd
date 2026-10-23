@@ -1180,7 +1180,7 @@ function isEntityNameTakenByOther(kind, target, name){
   // son identifiant, et leur place dans le Tome les distingue.
   if (kind === 'chapitre') return false;
   // Une police (#423) : comparée sans la casse à la liste capturée à l'ouverture, intégrées comprises.
-  if (kind === 'police' || kind === 'format' || kind === 'batiment') {
+  if (kind === 'police' || kind === 'format' || kind === 'batiment' || kind === 'piece') {
     return ((S.renameModalContext && S.renameModalContext.pris) || [])
       .some(n => String(n).toLowerCase() === norm && String(n) !== String(target));
   }
@@ -1223,6 +1223,8 @@ function updateRenameEntityConfirmState(){
         ? tr('A format already has that name.', 'Un format porte déjà ce nom.')
       : quoi === 'batiment'
         ? tr('A building already has that name.', 'Un bâtiment porte déjà ce nom.')
+      : quoi === 'piece'
+        ? tr('A room of this level already has that name.', 'Une pièce de ce niveau porte déjà ce nom.')
         : quoi === 'image'
           ? tr('An image file already has that name.', 'Un fichier image porte déjà ce nom.')
           : tr('That name is already used by another scene.', 'Ce nom est déjà utilisé par une autre scène.');
@@ -1244,6 +1246,8 @@ export function openRenameEntityModal(kind, target, currentName, extra){
       ? tr('Rename the format', 'Renommer le format')
     : kind === 'batiment'
       ? tr('Rename the building', 'Renommer le bâtiment')
+    : kind === 'piece'
+      ? tr('Rename the room', 'Renommer la pièce')
       : kind === 'image'
         ? tr('Rename the image file', 'Renommer le fichier image')
         : tr('Rename scene', 'Renommer la scène');

@@ -131,7 +131,7 @@ import { formatsParDefaut } from './formats.js';
 import { setFormatsCallbacks } from './formats-ui.js';
 import {
   initEditeurDeBatiment, setBatimentEditeurCallbacks, ouvrirEditeurDeBatiment, fermerEditeurDeBatiment,
-  editeurDeBatimentOuvert,
+  editeurDeBatimentOuvert, nomsDesPiecesDuNiveau, renommerPieceDeLEditeur, supprimerPieceDeLEditeur,
 } from './batiment-editeur-ui.js';
 import { batimentDesPieces } from './batiment.js';
 import { creerElementBatiment, appliquerBatiment, estUnBatimentPlace } from './batiment-element.js';
@@ -6395,10 +6395,20 @@ document.getElementById('ctxDeleteScene').onclick = () => {
   hideContextMenu();
 };
 // ── #454a : L'ÉDITEUR DE BÂTIMENT, cf. src/batiment-editeur-ui.js. ──
+let _ctxPiece = null;
+document.getElementById('ctxRenommerPiece').onclick = () => {
+  hideContextMenu();
+  const id = _ctxPiece; if (!id) return;
+  const { nom, pris } = nomsDesPiecesDuNiveau(id);
+  openRenameEntityModal('piece', nom, nom, { pris, appliquer: (nouveau) => renommerPieceDeLEditeur(id, nouveau) });
+};
+document.getElementById('ctxSupprimerPiece').onclick = () => { hideContextMenu(); if (_ctxPiece) supprimerPieceDeLEditeur(_ctxPiece); };
 initEditeurDeBatiment();
 setBatimentEditeurCallbacks({
   confirmer: confirmAction,
   alerter: alertAction,
+  // Le clic droit sur une pièce de la liste : renommer ou supprimer (#454b).
+  menuPiece: (e, id) => { _ctxPiece = id; hideContextMenu(); placerMenu3D(document.getElementById('batimentPieceMenu'), e.clientX, e.clientY); },
   // Un seul écran au centre : l'Éditeur de modèle et le Lecteur se ferment.
   avantOuverture: () => { if (isPersonaEditorOpen()) hidePersonaEditor(); if (lecteurOuvert()) fermerLecteur(); },
   apresFermeture: () => renderAll(),

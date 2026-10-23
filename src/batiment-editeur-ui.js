@@ -35,7 +35,7 @@ import {
   aimanter, ajouterMur, ajouterRectangle, croiseUnMur, deplacerSommet, supprimerMur, sommetSous, murSous,
   sommetsDuNiveau, longueurDuMur,
 } from './batiment-trace.js';
-import { actualiserPieces, formesDesPieces, pieceSous } from './batiment-pieces.js';
+import { actualiserPieces, formesDesPieces, pieceSous, supprimerPiece } from './batiment-pieces.js';
 import {
   formeDeLEscalier, tremieDeLEscalier, validiteDeLEscalier, ajouterEscalier, modifierEscalier, supprimerEscalier,
   escalierSous, decoupage, hauteurAFranchir, DEFAUTS_ESCALIER, essayerEscalier, aimanterEscalier, escaliersBloques,
@@ -57,6 +57,25 @@ export function setBatimentEditeurCallbacks(r){ _rappels = { ..._rappels, ...r }
 let E = null;
 
 export function editeurDeBatimentOuvert(){ return !!E; }
+
+// ── Les pièces, par le clic droit de leur liste (#454b, demandé) : les gestes appelés par events.js ──
+
+/** Le nom de la pièce `id`, et ceux de toutes les pièces du niveau courant (pour refuser un doublon). */
+export function nomsDesPiecesDuNiveau(id){
+  if (!E) return { nom: '', pris: [] };
+  const siennes = E.batiment.pieces.filter(p => p.niveauId === E.niveauId);
+  return { nom: (siennes.find(p => p.id === id) || {}).nom || '', pris: siennes.map(p => p.nom) };
+}
+/** Renomme une pièce (un point d'annulation). */
+export function renommerPieceDeLEditeur(id, nom){
+  if (!E || !nom) return;
+  modifier(b => { const p = b.pieces.find(q => q.id === id); if (p) p.nom = nom; });
+}
+/** Supprime une pièce : ses murs, sauf ceux qu'elle partage avec une voisine (un point d'annulation). */
+export function supprimerPieceDeLEditeur(id){
+  if (!E) return;
+  modifier(b => supprimerPiece(b, E.niveauId, id, supprimerMur));
+}
 
 /**
  * Ouvre l'éditeur. `batiment` : celui à modifier (une copie est faite) ; absent, un bâtiment neuf.
@@ -234,6 +253,8 @@ function remplirPanneau(){
     const l = ligne(p.nom, formes.has(p.id) ? surface(formes.get(p.id).aire) : '');
     l.classList.add('cliquable');
     l.onclick = () => { choisirOutil('selection'); E.selection = { pieceId: p.id }; remplirPanneau(); dessinerPlan(); };
+    // Le clic droit : renommer ou supprimer la pièce (demandé ; le menu est posé par events.js).
+    l.addEventListener('contextmenu', (e) => { e.preventDefault(); if (_rappels.menuPiece) _rappels.menuPiece(e, p.id); });
     return l;
   }) : [vide(tr('No room yet: close a contour of walls.', 'Aucune pièce : fermez un contour de murs.'))]));
   const m = murSelectionne(), piece = pieceSelectionnee(), ouv = ouvertureSelectionnee(), esc = escalierSelectionne();
@@ -265,8 +286,9 @@ function remplirPanneau(){
     return r.erreur ? { erreur: refusOuverture(r.erreur) } : { ...r, note: noteDeDeplacement(r.deplacement, tr('the opening', 'l\'ouverture')) };
   });
   if (piece) {
-    if (document.activeElement !== $('batimentPieceNom')) $('batimentPieceNom').value = piece.nom;
-    $('batimentPieceSurface').textContent = formes.has(piece.id) ? tr(`Area: ${surface(formes.get(piece.id).aire)}`, `Surface : ${surface(formes.get(piece.id).aire)}`) : '';
+    // Plus de formulaire pour une pièce (demandé) : son nom et sa surface ; on la renomme ou la
+    // supprime par le clic droit, dans la liste des pièces.
+    $('batimentPieceInfo').textContent = piece.nom + (formes.has(piece.id) ? ` · ${surface(formes.get(piece.id).aire)}` : '');
   }
   if (m) {
     $('batimentMurLongueur').textContent = tr(`Length: ${metres(longueurDuMur(m))}`, `Longueur : ${metres(longueurDuMur(m))}`);
@@ -353,7 +375,8 @@ function remplirNiveaux(){
     const d = document.createElement('div');
     d.className = 'batiment-ligne batiment-ligne-niveau cliquable' + (n.id === E.niveauId ? ' actif' : '');
     d.dataset.id = n.id;
-    d.onclick = (e) => { if (e.target === d || e.target.closest('.batiment-niveau-gauche, .batiment-niveau-droite') === e.target || e.target.classList.contains('batiment-niveau-pastille')) choisirNiveau(n.id); };
+    // Un clic N'IMPORTE OÙ dans la ligne choisit le niveau (demandé), sauf sur sa suppression.
+    d.onclick = (e) => { if (!e.target.closest('.batiment-niveau-suppr')) choisirNiveau(n.id); };
     const pastille = document.createElement('span');
     pastille.className = 'batiment-niveau-pastille'; pastille.textContent = libelleCourt(n);
     const nom = document.createElement('input');
@@ -366,6 +389,7 @@ function remplirNiveaux(){
     const champ = (titre, valeur, quoi) => {
       const i = document.createElement('input');
       i.type = 'number'; i.min = '5'; i.step = '1'; i.value = Math.round(valeur * 100); i.title = titre;
+      i.addEventListener('focus', () => choisirNiveau(n.id));
       i.addEventListener('change', async () => {
         i.blur();
         const v = Number(i.value);
@@ -498,8 +522,7 @@ async function supprimerUnNiveau(n){
         + '\n' + lignesDesEscaliers(bloques));
     }
     const ok = await _rappels.confirmer(morceaux.join('\n\n'), tr('Delete a level', 'Supprimer un niveau'), {
-      ok: k ? (k > 1 ? tr(`Delete the level and the ${k} staircases`, `Supprimer le niveau et les ${k} escaliers`) : tr('Delete the level and the staircase', 'Supprimer le niveau et l\'escalier'))
-        : tr('Delete the level', 'Supprimer le niveau'),
+      ok: tr('Delete', 'Supprimer'),
       danger: true,
     });
     if (!ok || !E) return;
@@ -1604,13 +1627,6 @@ export function initEditeurDeBatiment(){
     majBoutonsDeSortie();
   });
   document.querySelectorAll('.batiment-outil').forEach(b => { b.onclick = () => basculerOutil(b.dataset.outil); });
-  // Renommer la pièce choisie : un point d'annulation au moment où le nom est validé.
-  $('batimentPieceNom').addEventListener('change', (e) => {
-    const piece = pieceSelectionnee(); const nom = e.target.value.trim();
-    if (!piece || !nom || nom === piece.nom) { if (piece) e.target.value = piece.nom; return; }
-    modifier(b => { const p = b.pieces.find(q => q.id === piece.id); if (p) p.nom = nom; });
-  });
-  $('batimentPieceNom').addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
   // #454c : l'escalier choisi.
   $('batimentEscalierTourner').onclick = () => {
     const x = escalierSelectionne(); if (!x) return;

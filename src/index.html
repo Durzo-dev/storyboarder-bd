@@ -331,10 +331,9 @@ En rouge : pas d'étage au-dessus, ou il traverserait un mur.</p>
             </div>
             <button type="button" class="full-btn delete-btn" id="batimentOuvertureSupprimer">Supprimer l'ouverture</button>
           </div>
-          <!-- #454a-3b : une pièce sélectionnée (clic à l'intérieur) se renomme ici. -->
+          <!-- #454a-3b : une pièce sélectionnée : son nom et sa surface (on la renomme par le clic droit de la liste). -->
           <div id="batimentSelectionPiece">
-            <input type="text" id="batimentPieceNom" class="modal-input batiment-nom" autocomplete="off" spellcheck="false">
-            <p id="batimentPieceSurface" class="batiment-fichier"></p>
+            <p id="batimentPieceInfo" class="batiment-info"></p>
           </div>
           <!-- #454c : un escalier choisi se retouche ici. -->
           <div id="batimentSelectionEscalier">
@@ -1128,6 +1127,12 @@ Tirer un escalier : le déplacer.</p>
 </div>
 
 <!-- #454a-4b : le clic droit sur un bâtiment de « Mes modèles ». -->
+<!-- #454b : le clic droit sur une pièce de la liste de l'éditeur de bâtiment. -->
+<div class="context-menu hidden" id="batimentPieceMenu">
+  <button id="ctxRenommerPiece"><span class="ctx-icon">✏️</span> Renommer…</button>
+  <button id="ctxSupprimerPiece"><span class="ctx-icon">🗑</span> Supprimer</button>
+</div>
+
 <div class="context-menu hidden" id="batimentBiblioMenu">
   <button id="ctxBiblioEditerBatiment"><span class="ctx-icon">✏️</span> Ouvrir dans l'éditeur</button>
   <button id="ctxBiblioRenommerBatiment"><span class="ctx-icon">🔤</span> Renommer…</button>

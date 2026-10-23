@@ -2754,3 +2754,4 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-champ input.refuse { border-color: var(--danger, #c0392b); }
 /* Les boutons du bas du menu de l'éditeur : le même écart entre chacun (demandé). */
 .batiment-editeur-panneau > .full-btn, .batiment-editeur-panneau > .nav-btn { margin: 0 0 8px; width: 100%; }
+#batimentPieceMenu{ z-index:1100; }

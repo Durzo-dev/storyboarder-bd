@@ -225,3 +225,25 @@ export function pieceSous(batiment, niveauId, p){
   }
   return meilleur ? meilleur.id : null;
 }
+
+/**
+ * Supprime une PIÈCE (#454b, demandé : clic droit dans la liste des pièces) : les murs qui la ferment,
+ * SAUF ceux qu'elle partage avec une autre pièce (la voisine garde sa cloison), avec leurs ouvertures,
+ * et les escaliers posés dedans. Rend la liste des murs supprimés (leurs ids), vide si la pièce est
+ * introuvable. `supprimerMur(b, id)` est fourni par l'appelant (batiment-trace.js).
+ */
+export function supprimerPiece(batiment, niveauId, pieceId, supprimerMur){
+  const formes = formesDesPieces(batiment, niveauId);
+  const f = formes.get(pieceId);
+  if (!f) return [];
+  const cleDe = (p, q) => [cle(p), cle(q)].sort().join('|');
+  const aretes = (pts) => pts.map((p, i) => cleDe(p, pts[(i + 1) % pts.length]));
+  const siennes = new Set(aretes(f.points));
+  const partagees = new Set();
+  for (const [id, g] of formes) if (id !== pieceId) aretes(g.points).forEach(a => { if (siennes.has(a)) partagees.add(a); });
+  const murs = (batiment.murs || []).filter(m => m.niveauId === niveauId && siennes.has(cleDe(m.a, m.b)) && !partagees.has(cleDe(m.a, m.b)));
+  // Les escaliers dont le pied est dans la pièce partent avec elle.
+  batiment.escaliers = (batiment.escaliers || []).filter(e => !(e.niveauId === niveauId && e.depart && dansLaFace(e.depart, f)));
+  murs.forEach(m => supprimerMur(batiment, m.id));
+  return murs.map(m => m.id);
+}
