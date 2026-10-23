@@ -12,7 +12,7 @@
 import { polygonesDesMurs, morceauxDuMur } from './batiment-geometrie.js';
 import { intervalleDe } from './batiment-ouvertures.js';
 import { formesDesPieces } from './batiment-pieces.js';
-import { niveauxTries, hauteurDesMursDuNiveau } from './batiment-niveaux.js';
+import { niveauxTries, hauteurDesMursDuNiveau, epaisseurDuDessus } from './batiment-niveaux.js';
 
 /** Les matières d'un bâtiment, à créer une fois par renderer. */
 export function materiauxBatiment3D(T){
@@ -74,6 +74,18 @@ export function construireBatiment3D(T, b, mats, { jusquA = null } = {}){
   const limite = jusquA ? tries.findIndex(n => n.id === jusquA) : -1;
   const visibles = limite >= 0 ? tries.slice(0, limite + 1) : tries;
   const lePlusBas = tries[0] && tries[0].id;
+  const coupe = limite >= 0;
+  const dernier = visibles.length ? visibles[visibles.length - 1].id : null;
+  const dalle = (f, y, epaisseur) => {
+    if (!(epaisseur > 0)) return;
+    const forme = new T.Shape(f.points.map(p => new T.Vector2(p.x, -p.z)));
+    (f.trous || []).forEach(t => forme.holes.push(new T.Path(t.map(p => new T.Vector2(p.x, -p.z)))));
+    const geo = new T.ExtrudeGeometry(forme, { depth: epaisseur, bevelEnabled: false });
+    geo.rotateX(-Math.PI / 2);
+    const m = new T.Mesh(geo, mats.mur);
+    m.position.y = y;
+    groupe.add(m);
+  };
   visibles.forEach(n => {
     const forme2D = (f) => {
       const forme = new T.Shape(f.points.map(p => new T.Vector2(p.x, -p.z)));
@@ -87,15 +99,14 @@ export function construireBatiment3D(T, b, mats, { jusquA = null } = {}){
       const sol = new T.Mesh(geo, mats.sol);
       sol.position.y = n.elevation + 0.005;
       groupe.add(sol);
-      // #454b : la dalle, SOUS le sol d'un étage (le plus bas des niveaux est posé sur le Sol). Elle
-      // est aussi le plafond du niveau d'en dessous.
-      if (n.id !== lePlusBas && n.dalle > 0) {
-        const dalle = new T.ExtrudeGeometry(forme2D(f), { depth: n.dalle, bevelEnabled: false });
-        dalle.rotateX(-Math.PI / 2);
-        const m = new T.Mesh(dalle, mats.mur);
-        m.position.y = n.elevation - n.dalle;
-        groupe.add(m);
-      }
+      // #454b : la dalle, SOUS le sol d'un étage (le plus bas des niveaux est posé sur le Sol).
+      if (n.id !== lePlusBas && n.dalle > 0) dalle(f, n.elevation - n.dalle, n.dalle);
+      // ET LE DESSUS DE CHAQUE PIÈCE (signalé : une pièce qui dépassait de l'étage du dessus restait à
+      // ciel ouvert). Chaque pièce est couverte d'une dalle à sa hauteur sous plafond, de l'épaisseur
+      // du plancher du dessus : sous une pièce de l'étage, elle se confond avec son plancher ;
+      // ailleurs, c'est un toit plat (en attendant les toits de #458). Le dernier niveau montré par
+      // une coupe reste ouvert, pour voir dedans.
+      if (!(coupe && n.id === dernier)) dalle(f, n.elevation + n.hauteur, epaisseurDuDessus(b, n.id));
     }
     const murs = b.murs.filter(m => m.niveauId === n.id);
     const formes = polygonesDesMurs(murs);

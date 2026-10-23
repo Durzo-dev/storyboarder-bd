@@ -22,7 +22,7 @@ describe('les entrées', () => {
     assert.equal(e.titre, 'Maison');
     assert.equal(e.categorie, CATEGORIE_BATIMENTS);
     assert.deepEqual([e.niveaux, e.pieces, e.ouvertures, e.os, e.introuvable], [1, 1, 0, 0, false]);
-    assert.deepEqual(e.dimensions.map(v => Math.round(v * 10) / 10), [6.2, 4.2, 2.8]);
+    assert.deepEqual(e.dimensions.map(v => Math.round(v * 10) / 10), [6.2, 4.2, 3]);
   });
   test('un fichier illisible reste listé, signalé', () => {
     const [e] = entreesBatiments([{ fichier: 'Abime.batiment.json', batiment: null }]);

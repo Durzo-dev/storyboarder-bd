@@ -85,21 +85,26 @@ export function murSous(batiment, niveauId, p, tol){
  *   3. sinon, depuis `depuis`, l'angle aimanté par pas de 15° et la longueur arrondie au
  *      centimètre ; puis les GUIDES : un sommet existant à la même abscisse ou à la même profondeur
  *      (à `tol` près) tire le point sur sa ligne.
+ * `dessous` (#454b) : l'id du niveau du dessous, dont les sommets et les murs aimantent AUSSI (accroche
+ * 'repere', après ceux du niveau courant) et dont les sommets donnent des guides.
  * Avec `libre` (Alt maintenu), le point est rendu tel quel.
  * Rend `{ point, accroche: { type: 'sommet' | 'mur' | null, murId? }, guides: [{ de, vers }] }`.
  */
-export function aimanter(batiment, niveauId, p, { depuis = null, tol = 0.1, libre = false, sauf = null } = {}){
+export function aimanter(batiment, niveauId, p, { depuis = null, tol = 0.1, libre = false, sauf = null, dessous = null } = {}){
   if (libre) return { point: point(p), accroche: { type: null }, guides: [] };
   const exclus = (s) => sauf && dist(s, sauf) < TOLERANCE_SOMMET;
-  const s = sommetsDuNiveau(batiment, niveauId).filter(q => !exclus(q))
-    .map(q => ({ q, d: dist(p, q) })).filter(x => x.d <= tol).sort((x, y) => x.d - y.d)[0];
-  if (s) return { point: point(s.q), accroche: { type: 'sommet' }, guides: [] };
-  const surMur = mursDuNiveau(batiment, niveauId)
-    .filter(m => !sauf || (dist(m.a, sauf) > TOLERANCE_SOMMET && dist(m.b, sauf) > TOLERANCE_SOMMET))
-    .map(m => ({ m, pr: projeter(p, m.a, m.b) }))
-    .filter(x => x.pr.distance <= tol && x.pr.t > 0 && x.pr.t < 1)
-    .sort((x, y) => x.pr.distance - y.pr.distance)[0];
-  if (surMur) {
+  // Les sommets et les murs d'un niveau, et ce que l'accroche à chacun produit.
+  const surLesSommets = (sommets, type) => {
+    const s = sommets.filter(q => !exclus(q)).map(q => ({ q, d: dist(p, q) })).filter(x => x.d <= tol).sort((x, y) => x.d - y.d)[0];
+    return s ? { point: point(s.q), accroche: { type }, guides: [] } : null;
+  };
+  const surLesMurs = (murs, accroche) => {
+    const surMur = murs
+      .filter(m => !sauf || (dist(m.a, sauf) > TOLERANCE_SOMMET && dist(m.b, sauf) > TOLERANCE_SOMMET))
+      .map(m => ({ m, pr: projeter(p, m.a, m.b) }))
+      .filter(x => x.pr.distance <= tol && x.pr.t > 0 && x.pr.t < 1)
+      .sort((x, y) => x.pr.distance - y.pr.distance)[0];
+    if (!surMur) return null;
     // ⚠️ EN COURS DE TRACÉ, L'ANGLE PASSE AVANT LA PROJECTION (signalé) : arrivé contre le mur d'en
     // face, le point tombait au pied de la perpendiculaire depuis la SOURIS, et l'angle droit qu'on
     // suivait se perdait au dernier moment. On garde la direction aimantée (par 15°) depuis `depuis`
@@ -115,11 +120,21 @@ export function aimanter(batiment, niveauId, p, { depuis = null, tol = 0.1, libr
         const s = ((a.x - depuis.x) * u.z - (a.z - depuis.z) * u.x) / det;
         const q = { x: depuis.x + u.x * t, z: depuis.z + u.z * t };
         if (t > 0 && s > 0 && s < 1 && dist(q, p) <= Math.max(3 * tol, surMur.m.epaisseur)) {
-          return { point: point(q), accroche: { type: 'mur', murId: surMur.m.id }, guides: [] };
+          return { point: point(q), accroche: accroche(surMur.m), guides: [] };
         }
       }
     }
-    return { point: point(surMur.pr.point), accroche: { type: 'mur', murId: surMur.m.id }, guides: [] };
+    return { point: point(surMur.pr.point), accroche: accroche(surMur.m), guides: [] };
+  };
+  // 1. Le niveau courant : ses sommets, puis ses murs (jonction en T).
+  const ici = surLesSommets(sommetsDuNiveau(batiment, niveauId), 'sommet')
+    || surLesMurs(mursDuNiveau(batiment, niveauId), (m) => ({ type: 'mur', murId: m.id }));
+  if (ici) return ici;
+  // 2. #454b (demandé) : le niveau du DESSOUS, en repère seulement, pour poser un étage sur les murs
+  // d'en dessous. Une accroche 'repere' ne coupe rien et ne ferme pas la chaîne.
+  if (dessous) {
+    const la = surLesSommets(sommetsDuNiveau(batiment, dessous), 'repere') || surLesMurs(mursDuNiveau(batiment, dessous), () => ({ type: 'repere' }));
+    if (la) return la;
   }
 
   let q = { ...p };
@@ -131,9 +146,10 @@ export function aimanter(batiment, niveauId, p, { depuis = null, tol = 0.1, libr
       q = { x: depuis.x + Math.cos(angle) * longueur, z: depuis.z + Math.sin(angle) * longueur };
     }
   }
-  // Les guides : sur la ligne d'un sommet existant. Un guide déplace le point sur son axe seulement.
+  // Les guides : sur la ligne d'un sommet existant (ou du niveau du dessous). Un guide déplace le point
+  // sur son axe seulement.
   const guides = [];
-  const sommets = sommetsDuNiveau(batiment, niveauId).filter(x => !exclus(x));
+  const sommets = [...sommetsDuNiveau(batiment, niveauId), ...(dessous ? sommetsDuNiveau(batiment, dessous) : [])].filter(x => !exclus(x));
   const gx = sommets.map(x => ({ x, d: Math.abs(x.x - q.x) })).filter(o => o.d <= tol).sort((a, b) => a.d - b.d)[0];
   const gz = sommets.map(x => ({ x, d: Math.abs(x.z - q.z) })).filter(o => o.d <= tol).sort((a, b) => a.d - b.d)[0];
   if (gx) { q.x = gx.x.x; guides.push({ de: gx.x, axe: 'x' }); }

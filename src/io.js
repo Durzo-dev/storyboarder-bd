@@ -14,6 +14,7 @@ import { verifierRessources, cablerModaleRessources, fermerModaleRessources } fr
 import { S, tr, createVolume, addPageToVolume, modeCanevasActif3D } from './state.js';
 import { normaliserChapitres } from './chapitres.js';
 import { normaliserFormats, formatsParDefaut } from './formats.js';
+import { recalerHauteurDuBatimentPlace } from './batiment-element.js';
 import { preloadModelsFor } from './model-cache.js';
 // Les images d'une Case suivent le même chemin que les modèles, et pour la même raison : le dessin
 // est synchrone, le décodage ne l'est pas (cf. src/image-cache.js).
@@ -594,6 +595,8 @@ export function applyProjectData(data){
   migrateMissingHomePanelId();
   migrateSceneTopDownDefault();
   migrateElementWxFloor();
+  // #454b : la hauteur réelle des bâtiments placés suit leur bâtiment (toit plat compris).
+  [...S.tomes, ...S.scenes].forEach(v => (v.pages || []).forEach(p => (p.objects || []).forEach(recalerHauteurDuBatimentPlace)));
   migratePanelWorldCoords(); // Phase 3: de-scale world coords for old projects
   // Reset the animation locks and Camera mode of every Panel on load.
   //

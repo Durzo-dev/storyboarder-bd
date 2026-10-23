@@ -3,7 +3,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   OBJ_TYPE_BATIMENT, estUnBatimentPlace, encombrementDuBatiment, creerElementBatiment, appliquerBatiment,
-  signatureDuBatiment, signatureDeStructure,
+  signatureDuBatiment, signatureDeStructure, recalerHauteurDuBatimentPlace,
 } from '../src/batiment-element.js';
 import { creerBatiment } from '../src/batiment.js';
 import { ajouterRectangle } from '../src/batiment-trace.js';
@@ -22,7 +22,7 @@ const panel = { id: 'c1', x: 100, y: 100, w: 800, h: 600 };
 describe('encombrement', () => {
   test('hauteur du niveau, largeur et profondeur épaisseur comprise', () => {
     const e = encombrementDuBatiment(maison());
-    assert.equal(e.hauteur, 2.8);
+    assert.equal(e.hauteur, 3, '2,80 m sous plafond + 20 cm de toit plat');
     proche(e.largeur, 6.2); proche(e.profondeur, 4.2);
   });
   test('un bâtiment vide mesure 1 m', () => {
@@ -39,8 +39,8 @@ describe('placer, puis appliquer une retouche', () => {
     assert.notEqual(o.batiment, b, 'une copie');
     b.nom = 'Autre';
     assert.equal(o.batiment.nom, 'Maison', 'indépendante');
-    assert.equal(o.realHeightFloor, 2.8);
-    proche(o.h, 2.8 * WALL_PX_PER_UNIT_3D); proche(o.w, 6.2 * WALL_PX_PER_UNIT_3D);
+    assert.equal(o.realHeightFloor, 3);
+    proche(o.h, 3 * WALL_PX_PER_UNIT_3D); proche(o.w, 6.2 * WALL_PX_PER_UNIT_3D);
     assert.equal(o.homePanelId, 'c1');
     assert.equal(o.magnetGround, true);
   });
@@ -74,6 +74,13 @@ describe('placer, puis appliquer une retouche', () => {
     assert.equal(signatureDeStructure(a), signatureDeStructure(b));
     b.murs[0].epaisseur = 0.3;
     assert.notEqual(signatureDeStructure(a), signatureDeStructure(b));
+  });
+  test('un bâtiment placé avant le toit plat retrouve sa hauteur', () => {
+    const o = creerElementBatiment({ panel, page, batiment: maison() });
+    o.realHeightFloor = 2.8; o.h = 2.8 * WALL_PX_PER_UNIT_3D;
+    assert.equal(recalerHauteurDuBatimentPlace(o), true);
+    assert.equal(o.realHeightFloor, 3); proche(o.h, 3 * WALL_PX_PER_UNIT_3D);
+    assert.equal(recalerHauteurDuBatimentPlace(o), false);
   });
   test('ce qui n’est pas un bâtiment placé', () => {
     assert.equal(estUnBatimentPlace({ type: 'objet3d', objType: 'modele' }), false);

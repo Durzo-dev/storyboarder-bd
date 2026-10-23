@@ -94,6 +94,15 @@ describe('l’aimantation', () => {
     assert.equal(r.point.x, 4);
     assert.deepEqual(r.guides.map(g => g.axe), ['x']);
   });
+  test('#454b : les sommets et les murs du niveau du dessous aimantent aussi, en repère', () => {
+    const c = creerBatiment('C', fr);
+    c.niveaux.push({ id: 'n1', nom: 'Étage', elevation: 3, hauteur: 2.8, dalle: 0.2 });
+    c.murs.push(mur('m0', { x: 0, z: 0 }, { x: 4, z: 0 }));
+    assert.deepEqual(aimanter(c, 'n1', { x: 4.04, z: 0.05 }, { tol: 0.1, dessous: 'n0' }), { point: { x: 4, z: 0 }, accroche: { type: 'repere' }, guides: [] });
+    const r = aimanter(c, 'n1', { x: 2.03, z: 0.06 }, { tol: 0.1, dessous: 'n0', depuis: { x: 2, z: 5 } });
+    assert.deepEqual([r.point, r.accroche.type], [{ x: 2, z: 0 }, 'repere']);
+    assert.equal(aimanter(c, 'n1', { x: 4.04, z: 0.05 }, { tol: 0.1 }).accroche.type, null, 'sans dessous : rien');
+  });
   test('Alt : rien n’est aimanté', () => {
     assert.deepEqual(aimanter(b, 'n0', { x: 4.05, z: 0.04 }, { tol: 0.1, libre: true }).point, { x: 4.05, z: 0.04 });
   });

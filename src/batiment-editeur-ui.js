@@ -261,6 +261,9 @@ function libelleCourt(n){
   return r === 0 ? tr('GF', 'RDC') : String(r);
 }
 
+/** L'id du niveau du dessous (ses murs aimantent le tracé, demandé), ou null. */
+function idDessous(){ const d = niveauDessous(E.batiment, E.niveauId); return d ? d.id : null; }
+
 /** Change le niveau courant : ce qu'on trace, ce qu'on voit, ce que coupe l'aperçu. */
 function choisirNiveau(id){
   if (!E || !E.batiment.niveaux.some(n => n.id === id) || id === E.niveauId) return;
@@ -289,10 +292,21 @@ function construireColonneDesNiveaux(){
     b.onclick = faire;
     return b;
   };
+  // Une FENÊTRE de cinq niveaux au plus, le courant au MILIEU (demandé : la colonne débordait de
+  // l'application). Les places sans niveau (en haut ou en bas du bâtiment) restent vides, pour que le
+  // niveau courant ne bouge pas.
   const t = niveauxTries(E.batiment).reverse();
+  const i = t.findIndex(n => n.id === E.niveauId);
+  const DEMI = 2;
+  const places = [];
+  for (let k = i - DEMI; k <= i + DEMI; k++) {
+    const n = t[k];
+    if (n) places.push(bouton(libelleCourt(n), n.nom, '', () => choisirNiveau(n.id), n.id === E.niveauId));
+    else { const vide = document.createElement('span'); vide.className = 'batiment-niveau-vide'; places.push(vide); }
+  }
   col.replaceChildren(
     bouton('▲', tr('Level above (Page Up)', 'Niveau du dessus (Page haut)'), 'batiment-niveau-fleche', () => changerDeNiveau(1), false, !niveauDessus(E.batiment, E.niveauId)),
-    ...t.map(n => bouton(libelleCourt(n), n.nom, '', () => choisirNiveau(n.id), n.id === E.niveauId)),
+    ...places,
     bouton('▼', tr('Level below (Page Down)', 'Niveau du dessous (Page bas)'), 'batiment-niveau-fleche', () => changerDeNiveau(-1), false, !niveauDessous(E.batiment, E.niveauId)),
   );
 }
@@ -307,7 +321,7 @@ function remplirNiveaux(){
   const zone = $('batimentNiveaux');
   // Un champ de la liste a le focus (on tape un nom, une hauteur) : la reconstruire le lui ôterait. On
   // ne fait que suivre le niveau courant ; la liste sera refaite à la validation (« change »).
-  if (zone.contains(document.activeElement)) {
+  if (zone.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') {
     zone.querySelectorAll('.batiment-ligne-niveau').forEach(l => l.classList.toggle('actif', l.dataset.id === E.niveauId));
     return;
   }
@@ -321,12 +335,15 @@ function remplirNiveaux(){
     pastille.className = 'batiment-niveau-pastille'; pastille.textContent = libelleCourt(n);
     const nom = document.createElement('input');
     nom.type = 'text'; nom.className = 'batiment-niveau-nom'; nom.value = n.nom; nom.spellcheck = false;
-    nom.addEventListener('change', () => { const v = nom.value.trim(); if (v && v !== n.nom) modifier(b => modifierNiveau(b, n.id, { nom: v })); else nom.value = n.nom; });
+    // Le champ rend le focus avant la modification : la liste peut alors se refaire (signalé : une
+    // modification ou une suppression ne s'y voyait pas).
+    nom.addEventListener('change', () => { nom.blur(); const v = nom.value.trim(); if (v && v !== n.nom) modifier(b => modifierNiveau(b, n.id, { nom: v })); else remplirNiveaux(); });
+    nom.addEventListener('keydown', (e) => { if (e.key === 'Enter') nom.blur(); });
     nom.addEventListener('focus', () => choisirNiveau(n.id));
     const champ = (titre, valeur, quoi) => {
       const i = document.createElement('input');
       i.type = 'number'; i.min = '5'; i.step = '1'; i.value = Math.round(valeur * 100); i.title = titre;
-      i.addEventListener('change', () => { const v = Number(i.value); if (Number.isFinite(v)) modifier(b => modifierNiveau(b, n.id, { [quoi]: v / 100 })); });
+      i.addEventListener('change', () => { i.blur(); const v = Number(i.value); if (Number.isFinite(v)) modifier(b => modifierNiveau(b, n.id, { [quoi]: v / 100 })); else remplirNiveaux(); });
       const w = document.createElement('span'); w.className = 'batiment-champ-valeur'; w.title = titre;
       w.append(i, document.createTextNode(' cm'));
       return w;
@@ -771,6 +788,7 @@ function dessinerPlan(){
     g.strokeStyle = accent; g.lineWidth = 2; g.beginPath();
     if (s.accroche.type === 'sommet') g.arc(e.x, e.y, 7, 0, Math.PI * 2);
     else if (s.accroche.type === 'mur') g.rect(e.x - 5, e.y - 5, 10, 10);
+    else if (s.accroche.type === 'repere') { g.moveTo(e.x, e.y - 7); g.lineTo(e.x + 7, e.y); g.lineTo(e.x, e.y + 7); g.lineTo(e.x - 7, e.y); g.closePath(); }
     else { g.moveTo(e.x - 6, e.y); g.lineTo(e.x + 6, e.y); g.moveTo(e.x, e.y - 6); g.lineTo(e.x, e.y + 6); }
     g.stroke();
   }
@@ -791,7 +809,7 @@ function souris(e){
 function survoler(e){
   const { p, tol } = souris(e);
   if (E.glisserSommet) {
-    const s = aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, sauf: E.glisserSommet.actuel });
+    const s = aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, sauf: E.glisserSommet.actuel, dessous: idDessous() });
     deplacerSommet(E.batiment, E.niveauId, E.glisserSommet.actuel, s.point);
     actualiserPieces(E.batiment, E.niveauId, tr);
     E.glisserSommet.actuel = s.point;
@@ -805,13 +823,13 @@ function survoler(e){
       E.rectangle = { de: E.appui.s.point };
     }
     if (E.rectangle) {
-      const vers = aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey }).point;
+      const vers = aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, dessous: idDessous() }).point;
       const essai = ajouterRectangle(JSON.parse(JSON.stringify(E.batiment)), E.niveauId, E.rectangle.de, vers, epaisseurDesNouveaux());
       E.rectangle = { de: E.rectangle.de, vers, erreur: essai.erreur || null };
       dessinerPlan();
       return;
     }
-    const s = aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, depuis: E.chaine && E.chaine.depuis });
+    const s = aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, depuis: E.chaine && E.chaine.depuis, dessous: idDessous() });
     s.croise = !!E.chaine && croiseUnMur(E.batiment, E.niveauId, E.chaine.depuis, s.point);
     E.survol = s;
   } else if (E.outil === 'ouverture') {
@@ -874,7 +892,7 @@ function cablerPlan(){
     const { p, tol } = souris(e);
     if (E.outil === 'mur') {
       // Le point est posé au RELÂCHER : un appui qui glisse trace une pièce rectangulaire.
-      E.appui = { x: e.clientX, y: e.clientY, s: aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, depuis: E.chaine && E.chaine.depuis }) };
+      E.appui = { x: e.clientX, y: e.clientY, s: aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, depuis: E.chaine && E.chaine.depuis, dessous: idDessous() }) };
       c.setPointerCapture(e.pointerId);
       return;
     }

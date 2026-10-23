@@ -412,7 +412,9 @@ informatif), par lequel sa fiche liste où il sert.
 **Les niveaux** (#454b, fait) : `src/batiment-niveaux.js`. Un niveau commence au dessus de son
 plancher (`elevation`), a `hauteur` sous plafond, et son plancher (`dalle`) est sous lui : le niveau
 du dessus commence à `elevation + hauteur + dalle(du dessus)`. Les élévations se déduisent
-(`recalerNiveaux`) ; les murs montent jusqu'au plancher du dessus (façade continue).
+(`recalerNiveaux`). Chaque pièce est couverte d'une dalle (le plancher de l'étage, ou un toit plat
+en attendant #458) et les murs montent jusqu'au dessus de cette dalle (façade continue). Le tracé
+s'aimante aussi au niveau du dessous (accroche 'repere').
 
 Les bâtiments déjà tracés dans les Scènes (murs Éléments, `pieceId`, `batimentNames`,
 `batimentRotY`) restent LUS et sont **convertis** à l'ouverture en bâtiments d'un niveau, à la même

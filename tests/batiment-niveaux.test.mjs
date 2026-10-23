@@ -79,10 +79,10 @@ describe('supprimer et modifier', () => {
     assert.equal(b.niveaux.find(x => x.id === e1.id).dalle, 1);
     assert.equal(b.niveaux.find(x => x.id === e1.id).elevation, 4.5);
   });
-  test('les murs montent jusqu’au plancher du dessus, sinon la hauteur du niveau', () => {
+  test('les murs montent jusqu’au dessus de la dalle qui les couvre (plancher du dessus, ou toit plat)', () => {
     const b = maison(); const e1 = ajouterEtage(b, fr);
     assert.equal(hauteurDesMursDuNiveau(b, 'n0'), 3);
-    assert.equal(hauteurDesMursDuNiveau(b, e1.id), 2.8);
+    assert.equal(hauteurDesMursDuNiveau(b, e1.id), 3, 'le dernier : sa hauteur + le toit plat');
     assert.equal(recalerNiveaux(b), b);
   });
 });

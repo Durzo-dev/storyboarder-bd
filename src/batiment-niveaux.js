@@ -128,12 +128,23 @@ export function modifierNiveau(b, id, { nom, hauteur, dalle } = {}){
 }
 
 /**
- * La hauteur à donner aux murs d'un niveau : jusqu'au DESSOUS du plancher du dessus (s'il y en a
- * un, ses murs traversent son épaisseur pour que la façade soit continue), sinon sa hauteur.
+ * L'épaisseur de la dalle qui COUVRE un niveau : le plancher du niveau du dessus s'il y en a un, sinon
+ * le toit plat du dernier niveau (en attendant les toits de #458), de l'épaisseur de son propre
+ * plancher.
+ */
+export function epaisseurDuDessus(b, id){
+  const n = (b.niveaux || []).find(x => x.id === id);
+  const dessus = niveauDessus(b, id);
+  return dessus ? dessus.dalle : (n ? n.dalle : DEFAUTS_BATIMENT.dalle);
+}
+
+/**
+ * La hauteur à donner aux murs d'un niveau : jusqu'au DESSUS de la dalle qui le couvre (le plancher
+ * du niveau du dessus, ou le toit plat du dernier) : la façade est continue, sans joint entre deux
+ * étages, et un toit plat ne déborde pas des murs.
  */
 export function hauteurDesMursDuNiveau(b, id){
   const n = (b.niveaux || []).find(x => x.id === id);
   if (!n) return DEFAUTS_BATIMENT.hauteur;
-  const dessus = niveauDessus(b, id);
-  return dessus ? arrondi(dessus.elevation - n.elevation) : n.hauteur;
+  return arrondi(n.hauteur + epaisseurDuDessus(b, id));
 }

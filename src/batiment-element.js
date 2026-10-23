@@ -14,7 +14,7 @@
 import { WALL_PX_PER_UNIT_3D } from './constants.js';
 import { newId } from './state.js';
 import { clamp } from './utils.js';
-import { hauteurDuMur } from './batiment-ouvertures.js';
+import { hauteurDesMursDuNiveau } from './batiment-niveaux.js';
 
 /** Le discriminant persisté. */
 export const OBJ_TYPE_BATIMENT = 'batiment';
@@ -25,7 +25,8 @@ export function estUnBatimentPlace(o){
 }
 
 /**
- * L'encombrement d'un bâtiment, en mètres : sa hauteur (le haut du plus haut mur), sa largeur (en x)
+ * L'encombrement d'un bâtiment, en mètres : sa hauteur (le haut du plus haut mur, toit plat compris,
+ * c'est-à-dire exactement ce que dessine batiment-3d.js : le rendu s'y normalise), sa largeur (en x)
  * et sa profondeur (en z). Un bâtiment sans mur mesure 1 m en tout, pour rester visible et sélectionnable.
  */
 export function encombrementDuBatiment(b){
@@ -35,7 +36,7 @@ export function encombrementDuBatiment(b){
   let haut = 0, minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
   for (const m of murs) {
     const n = niveaux.get(m.niveauId);
-    haut = Math.max(haut, (n ? n.elevation : 0) + hauteurDuMur(b, m));
+    haut = Math.max(haut, (n ? n.elevation : 0) + (m.hauteurPropre || hauteurDesMursDuNiveau(b, m.niveauId)));
     const e = m.epaisseur / 2;
     for (const p of [m.a, m.b]) {
       minX = Math.min(minX, p.x - e); maxX = Math.max(maxX, p.x + e);
@@ -117,4 +118,19 @@ export function signatureDeStructure(b){
   const { nom: _nom, ...reste } = b;
   void _nom;
   return signatureDuBatiment(reste);
+}
+
+/**
+ * Remet la hauteur réelle d'un bâtiment placé d'accord avec son bâtiment (#454b : les murs montent
+ * désormais à travers le toit plat). Le rendu normalise le rig sur `realHeightFloor` : un écart le
+ * rétrécirait. Rend vrai si quelque chose a changé.
+ */
+export function recalerHauteurDuBatimentPlace(o){
+  if (!estUnBatimentPlace(o)) return false;
+  const h = encombrementDuBatiment(o.batiment).hauteur;
+  if (Math.abs((o.realHeightFloor || 0) - h) < 1e-6) return false;
+  const k = o.realHeightFloor > 0 ? h / o.realHeightFloor : 1;
+  o.realHeightFloor = h;
+  if (o.h > 0) { o.h *= k; o.baseH = o.h; }
+  return true;
 }
