@@ -409,6 +409,11 @@ confirmation, renommé → nouveau modèle), `src/batiment-vignettes.js` (la vig
 en mémoire). Un bâtiment placé depuis la bibliothèque garde `batimentSource` (champ ajouté,
 informatif), par lequel sa fiche liste où il sert.
 
+**Les niveaux** (#454b, fait) : `src/batiment-niveaux.js`. Un niveau commence au dessus de son
+plancher (`elevation`), a `hauteur` sous plafond, et son plancher (`dalle`) est sous lui : le niveau
+du dessus commence à `elevation + hauteur + dalle(du dessus)`. Les élévations se déduisent
+(`recalerNiveaux`) ; les murs montent jusqu'au plancher du dessus (façade continue).
+
 Les bâtiments déjà tracés dans les Scènes (murs Éléments, `pieceId`, `batimentNames`,
 `batimentRotY`) restent LUS et sont **convertis** à l'ouverture en bâtiments d'un niveau, à la même
 place : rien ne bouge à l'écran.

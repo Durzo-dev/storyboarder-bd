@@ -12,6 +12,7 @@
 import { polygonesDesMurs, morceauxDuMur } from './batiment-geometrie.js';
 import { intervalleDe } from './batiment-ouvertures.js';
 import { formesDesPieces } from './batiment-pieces.js';
+import { niveauxTries, hauteurDesMursDuNiveau } from './batiment-niveaux.js';
 
 /** Les matières d'un bâtiment, à créer une fois par renderer. */
 export function materiauxBatiment3D(T){
@@ -63,18 +64,38 @@ function construireMenuiserie(T, mur, o, mats){
   return g;
 }
 
-export function construireBatiment3D(T, b, mats){
+/**
+ * `jusquA` (#454b) : l'id du DERNIER niveau à montrer ; ceux du dessus sont omis (la « coupe » de
+ * l'aperçu de l'éditeur, pour voir dans l'étage qu'on retouche). Absent : tout le bâtiment.
+ */
+export function construireBatiment3D(T, b, mats, { jusquA = null } = {}){
   const groupe = new T.Group();
-  b.niveaux.forEach(n => {
-    // Le sol de chaque pièce (#454a-3b), un peu au-dessus de la grille pour ne pas scintiller avec elle.
-    for (const f of formesDesPieces(b, n.id).values()) {
+  const tries = niveauxTries(b);
+  const limite = jusquA ? tries.findIndex(n => n.id === jusquA) : -1;
+  const visibles = limite >= 0 ? tries.slice(0, limite + 1) : tries;
+  const lePlusBas = tries[0] && tries[0].id;
+  visibles.forEach(n => {
+    const forme2D = (f) => {
       const forme = new T.Shape(f.points.map(p => new T.Vector2(p.x, -p.z)));
       (f.trous || []).forEach(t => forme.holes.push(new T.Path(t.map(p => new T.Vector2(p.x, -p.z)))));
-      const geo = new T.ShapeGeometry(forme);
+      return forme;
+    };
+    for (const f of formesDesPieces(b, n.id).values()) {
+      // Le sol de chaque pièce (#454a-3b), un peu au-dessus de la grille pour ne pas scintiller avec elle.
+      const geo = new T.ShapeGeometry(forme2D(f));
       geo.rotateX(-Math.PI / 2);
       const sol = new T.Mesh(geo, mats.sol);
       sol.position.y = n.elevation + 0.005;
       groupe.add(sol);
+      // #454b : la dalle, SOUS le sol d'un étage (le plus bas des niveaux est posé sur le Sol). Elle
+      // est aussi le plafond du niveau d'en dessous.
+      if (n.id !== lePlusBas && n.dalle > 0) {
+        const dalle = new T.ExtrudeGeometry(forme2D(f), { depth: n.dalle, bevelEnabled: false });
+        dalle.rotateX(-Math.PI / 2);
+        const m = new T.Mesh(dalle, mats.mur);
+        m.position.y = n.elevation - n.dalle;
+        groupe.add(m);
+      }
     }
     const murs = b.murs.filter(m => m.niveauId === n.id);
     const formes = polygonesDesMurs(murs);
@@ -90,7 +111,8 @@ export function construireBatiment3D(T, b, mats){
     };
     murs.forEach(m => {
       const f = formes.get(m.id); if (!f) return;
-      const hauteur = m.hauteurPropre || n.hauteur;
+      // #454b : les murs montent jusqu'au plancher du dessus, à travers sa dalle (façade continue).
+      const hauteur = m.hauteurPropre || hauteurDesMursDuNiveau(b, n.id);
       // #454a-3c : le mur tranché à ses ouvertures ; sous et au-dessus de chacune, l'allège et le linteau.
       const siennes = (b.ouvertures || []).filter(o => o.murId === m.id);
       const { pleins, percees } = morceauxDuMur(f, m, siennes.map(o => intervalleDe(o, m)));

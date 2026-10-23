@@ -297,6 +297,11 @@ export const HELP_MANUAL_EN = [
     'Hover over a wall: the opening sits there, centred under the mouse; it shows in red if it does not fit (too close to a corner or another opening). Click to place it. The wall is cut in the top view, like an architect\'s plan, and pierced in 3D with a simple frame, glass and leaves.',
     'With Selection, click an opening to adjust it in the menu (changing its type takes that type\'s sizes), drag it along its wall, raise or lower it with the scroll wheel (5 cm per notch, 1 cm with Shift), flip the side or the hinge of a door, or delete it (Del).',
   ]},
+  { id: 'batiments_niveaux', title: 'Building levels', paragraphs: [
+    'The round buttons on the left of the top view switch level (Page Up / Page Down too); the level below shows faintly under the current one, to draw a floor over the walls of the one beneath.',
+    'In the base menu, "Levels": rename a level, set its ceiling height and floor thickness (the levels above move with it), delete it (with what it holds). "Add a floor" adds an empty level on top; "Duplicate the floor" copies the current level, walls, openings and rooms, just above it.',
+    'In 3D, each floor sits on a slab that is also the ceiling of the level below, and the walls run through it. The layers button of the preview cuts it at the current level, to see inside.',
+  ]},
 ];
 
 export const HELP_MANUAL_FR = [
@@ -543,6 +548,11 @@ export const HELP_MANUAL_FR = [
     "Outil Ouverture (O) : choisissez une porte, une fenêtre, une baie vitrée ou un passage dans le menu de droite, avec sa largeur, sa hauteur et sa hauteur d'allège, ses battants (1 ou 2), coulissante ou non, vitrée ou non.",
     "Survolez un mur : l'ouverture s'y place, centrée sous la souris ; elle s'affiche en rouge si elle ne tient pas (trop près d'un angle ou d'une autre ouverture). Un clic la pose. Le mur est coupé dans la vue de dessus, comme sur un plan d'architecte, et percé en 3D, avec un cadre, du verre et des battants simples.",
     "Avec Sélection, un clic sur une ouverture la retouche dans le menu (changer de type reprend les dimensions de ce type), la tirer la fait glisser le long de son mur, la molette la monte ou la descend (5 cm par cran, 1 cm avec Maj) ; on peut inverser le côté ou la charnière d'une porte, ou la supprimer (Suppr).",
+  ]},
+  { id: 'batiments_niveaux', title: 'Niveaux d\'un bâtiment', paragraphs: [
+    "Les boutons ronds à gauche de la vue de dessus changent de niveau (Page haut / Page bas aussi) ; le niveau du dessous s'affiche en transparence sous le niveau courant, pour tracer un étage par-dessus les murs de celui d'en dessous.",
+    "Dans le menu de base, « Niveaux » : renommer un niveau, régler sa hauteur sous plafond et l'épaisseur de son plancher (les niveaux du dessus suivent), le supprimer (avec ce qu'il porte). « Ajouter un étage » ajoute un niveau vide en haut ; « Dupliquer l'étage » copie le niveau courant, murs, ouvertures et pièces, juste au-dessus.",
+    "En 3D, chaque étage repose sur une dalle qui est aussi le plafond du niveau du dessous, et les murs la traversent. Le bouton des calques de l'aperçu le coupe au niveau courant, pour voir dedans.",
   ]},
 ];
 

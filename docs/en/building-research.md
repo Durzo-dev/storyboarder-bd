@@ -390,6 +390,11 @@ model), `src/batiment-vignettes.js` (the thumbnail, rendered on the fly, kept in
 placed from the library keeps `batimentSource` (an added, informative field), through which its
 details list where it is used.
 
+**Levels** (#454b, done): `src/batiment-niveaux.js`. A level starts at the top of its floor
+(`elevation`), has `hauteur` of ceiling height, and its floor (`dalle`) is beneath it: the level above
+starts at `elevation + hauteur + dalle(above)`. Elevations are derived (`recalerNiveaux`); walls run
+up to the floor above (continuous facade).
+
 Buildings already traced in Scenes (wall Elements, `pieceId`, `batimentNames`, `batimentRotY`)
 remain READ and are **converted** on opening into one-level buildings, in the same place: nothing
 moves on screen.

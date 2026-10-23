@@ -36,6 +36,9 @@ import {
   sommetsDuNiveau, longueurDuMur,
 } from './batiment-trace.js';
 import { actualiserPieces, formesDesPieces, pieceSous } from './batiment-pieces.js';
+import {
+  niveauxTries, niveauDessous, niveauDessus, ajouterEtage, dupliquerNiveau, supprimerNiveau, modifierNiveau,
+} from './batiment-niveaux.js';
 import { cadrage3D, orbite3D, zoom3D, positionCamera3D, deplacement3D } from './store-apercu-3d.js';
 import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
 
@@ -76,11 +79,13 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null, desti
     appui: null, rectangle: null,   // #454a-3b : un glisser de l'outil Mur trace une pièce rectangulaire
     // #454a-3c : les réglages de l'ouverture à poser, et l'ouverture qu'on fait glisser.
     reglagesOuverture: reglagesParDefaut('porte'), glisserOuverture: null,
+    coupe: false,   // #454b : l'aperçu 3D coupé au niveau courant
     // #454a-4 : où va le bâtiment en sortant. { mode: 'placer' | 'appliquer', valider(batiment) },
     // ou null (ouvert par le bandeau : il ne va que dans la bibliothèque).
     destination,
   };
   $('batimentEditeur').classList.remove('hidden');
+  $('batimentApercuCoupe').classList.remove('actif');
   $('batimentNom').value = b.nom;
   statut('');
   choisirOutil(null);
@@ -211,8 +216,8 @@ function remplirPanneau(){
   $('batimentFichier').textContent = E.fichier
     ? tr(`In the library: ${nomAfficheDuFichier(E.fichier)}`, `Dans la bibliothèque : ${nomAfficheDuFichier(E.fichier)}`)
     : tr('Not yet in the library', 'Pas encore dans la bibliothèque');
-  const niveaux = $('batimentNiveaux');
-  niveaux.replaceChildren(...b.niveaux.slice().reverse().map(n => ligne(n.nom, metres(n.hauteur))));
+  remplirNiveaux();
+  construireColonneDesNiveaux();
   // Les pièces du niveau, avec leur surface ; un clic en choisit une (outil Sélection).
   const formes = formesDesPieces(b, E.niveauId);
   const pieces = $('batimentPieces');
@@ -244,6 +249,124 @@ function remplirPanneau(){
     $('batimentMurLongueur').textContent = tr(`Length: ${metres(longueurDuMur(m))}`, `Longueur : ${metres(longueurDuMur(m))}`);
     if (document.activeElement !== $('batimentMurEpaisseur')) $('batimentMurEpaisseur').value = Math.round(m.epaisseur * 100);
   }
+}
+
+// ── Les niveaux (#454b) ────────────────────────────────────────────────────────────────────────
+
+/** Le libellé court d'un niveau, pour sa pastille : « RDC », « 1 », « 2 »… (« -1 » pour un sous-sol). */
+function libelleCourt(n){
+  const t = niveauxTries(E.batiment);
+  const base = Math.max(0, t.findIndex(x => x.elevation >= 0));
+  const r = t.findIndex(x => x.id === n.id) - base;
+  return r === 0 ? tr('GF', 'RDC') : String(r);
+}
+
+/** Change le niveau courant : ce qu'on trace, ce qu'on voit, ce que coupe l'aperçu. */
+function choisirNiveau(id){
+  if (!E || !E.batiment.niveaux.some(n => n.id === id) || id === E.niveauId) return;
+  E.niveauId = id; E.chaine = null; E.selection = null; E.survol = null; E.rectangle = null; E.appui = null;
+  remplirPanneau();
+  dessinerPlan();
+  if (E.apercu) E.apercu.reconstruire(E.batiment);
+}
+/** Page haut / Page bas, et les flèches de la colonne. */
+function changerDeNiveau(sens){
+  const v = sens > 0 ? niveauDessus(E.batiment, E.niveauId) : niveauDessous(E.batiment, E.niveauId);
+  if (v) choisirNiveau(v.id);
+}
+
+/**
+ * La colonne des niveaux, à gauche de la vue de dessus (demandé) : une pastille ronde par niveau, du
+ * plus haut au plus bas, entre ▲ et ▼ ; le niveau courant en orange.
+ */
+function construireColonneDesNiveaux(){
+  const col = $('batimentNiveauxPlan');
+  if (!col) return;
+  const bouton = (texte, titre, classe, faire, actif = false, inactif = false) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'batiment-outil batiment-niveau ' + classe; b.textContent = texte; b.title = titre;
+    b.classList.toggle('actif', actif); b.disabled = inactif;
+    b.onclick = faire;
+    return b;
+  };
+  const t = niveauxTries(E.batiment).reverse();
+  col.replaceChildren(
+    bouton('▲', tr('Level above (Page Up)', 'Niveau du dessus (Page haut)'), 'batiment-niveau-fleche', () => changerDeNiveau(1), false, !niveauDessus(E.batiment, E.niveauId)),
+    ...t.map(n => bouton(libelleCourt(n), n.nom, '', () => choisirNiveau(n.id), n.id === E.niveauId)),
+    bouton('▼', tr('Level below (Page Down)', 'Niveau du dessous (Page bas)'), 'batiment-niveau-fleche', () => changerDeNiveau(-1), false, !niveauDessous(E.batiment, E.niveauId)),
+  );
+}
+
+/**
+ * La section « Niveaux » du menu de base, éditable (demandé) : par niveau, du plus haut au plus bas,
+ * son nom, sa hauteur sous plafond et l'épaisseur de son plancher (sauf le plus bas, posé sur le
+ * Sol), et sa suppression ; un clic sur la ligne en fait le niveau courant. Dessous : ajouter un
+ * étage, dupliquer l'étage courant.
+ */
+function remplirNiveaux(){
+  const zone = $('batimentNiveaux');
+  // Un champ de la liste a le focus (on tape un nom, une hauteur) : la reconstruire le lui ôterait. On
+  // ne fait que suivre le niveau courant ; la liste sera refaite à la validation (« change »).
+  if (zone.contains(document.activeElement)) {
+    zone.querySelectorAll('.batiment-ligne-niveau').forEach(l => l.classList.toggle('actif', l.dataset.id === E.niveauId));
+    return;
+  }
+  const tries = niveauxTries(E.batiment);
+  const lignes = tries.slice().reverse().map(n => {
+    const d = document.createElement('div');
+    d.className = 'batiment-ligne batiment-ligne-niveau cliquable' + (n.id === E.niveauId ? ' actif' : '');
+    d.dataset.id = n.id;
+    d.onclick = (e) => { if (e.target === d || e.target.classList.contains('batiment-niveau-pastille')) choisirNiveau(n.id); };
+    const pastille = document.createElement('span');
+    pastille.className = 'batiment-niveau-pastille'; pastille.textContent = libelleCourt(n);
+    const nom = document.createElement('input');
+    nom.type = 'text'; nom.className = 'batiment-niveau-nom'; nom.value = n.nom; nom.spellcheck = false;
+    nom.addEventListener('change', () => { const v = nom.value.trim(); if (v && v !== n.nom) modifier(b => modifierNiveau(b, n.id, { nom: v })); else nom.value = n.nom; });
+    nom.addEventListener('focus', () => choisirNiveau(n.id));
+    const champ = (titre, valeur, quoi) => {
+      const i = document.createElement('input');
+      i.type = 'number'; i.min = '5'; i.step = '1'; i.value = Math.round(valeur * 100); i.title = titre;
+      i.addEventListener('change', () => { const v = Number(i.value); if (Number.isFinite(v)) modifier(b => modifierNiveau(b, n.id, { [quoi]: v / 100 })); });
+      const w = document.createElement('span'); w.className = 'batiment-champ-valeur'; w.title = titre;
+      w.append(i, document.createTextNode(' cm'));
+      return w;
+    };
+    const suppr = document.createElement('button');
+    suppr.type = 'button'; suppr.className = 'batiment-niveau-suppr'; suppr.textContent = '×';
+    suppr.title = tries.length > 1 ? tr('Delete this level and what it holds', 'Supprimer ce niveau et ce qu\'il porte') : tr('A building keeps at least one level', 'Un bâtiment garde au moins un niveau');
+    suppr.disabled = tries.length <= 1;
+    suppr.onclick = () => supprimerUnNiveau(n);
+    const reglages = document.createElement('div');
+    reglages.className = 'batiment-niveau-reglages';
+    reglages.append(champ(tr('Ceiling height', 'Hauteur sous plafond'), n.hauteur, 'hauteur'));
+    if (n.id !== tries[0].id) reglages.append(champ(tr('Floor slab thickness', 'Épaisseur du plancher'), n.dalle, 'dalle'));
+    d.append(pastille, nom, reglages, suppr);
+    return d;
+  });
+  const actions = document.createElement('div');
+  actions.className = 'batiment-boutons';
+  const ajouter = document.createElement('button');
+  ajouter.type = 'button'; ajouter.className = 'nav-btn'; ajouter.textContent = tr('Add a floor', 'Ajouter un étage');
+  ajouter.onclick = () => { let n = null; modifier(b => { n = ajouterEtage(b, tr); }); if (n) choisirNiveau(n.id); };
+  const dupliquer = document.createElement('button');
+  dupliquer.type = 'button'; dupliquer.className = 'nav-btn'; dupliquer.textContent = tr('Duplicate the floor', 'Dupliquer l\'étage');
+  dupliquer.title = tr('Copy the current level (walls, openings, rooms) just above it', 'Copier le niveau courant (murs, ouvertures, pièces) juste au-dessus');
+  dupliquer.onclick = () => { let n = null; const src = E.niveauId; modifier(b => { n = dupliquerNiveau(b, src, tr); }); if (n) choisirNiveau(n.id); };
+  actions.append(ajouter, dupliquer);
+  zone.replaceChildren(...lignes, actions);
+}
+
+/** Supprime un niveau qui porte quelque chose après confirmation ; un niveau vide, directement. */
+async function supprimerUnNiveau(n){
+  const plein = E.batiment.murs.some(m => m.niveauId === n.id);
+  if (plein) {
+    const ok = await _rappels.confirmer(tr(`Delete the level "${n.nom}" and everything on it? The levels above come down.`,
+      `Supprimer le niveau « ${n.nom} » et tout ce qu'il porte ? Les niveaux du dessus redescendent.`), tr('Delete a level', 'Supprimer un niveau'));
+    if (!ok || !E) return;
+  }
+  const courant = E.niveauId === n.id;
+  modifier(b => supprimerNiveau(b, n.id));
+  if (courant) { E.niveauId = niveauxTries(E.batiment)[0].id; remplirPanneau(); dessinerPlan(); if (E.apercu) E.apercu.reconstruire(E.batiment); }
 }
 
 // ── Le tracé (#454a-3) : outils, historique, modifications ───────────────────────────────────────
@@ -525,6 +648,16 @@ function dessinerPlan(){
   const murs = E.batiment.murs.filter(m => m.niveauId === E.niveauId);
   const formes = polygonesDesMurs(murs);
   const accent = couleur('--accent', '#ff7a45'), encre = couleur('--ink', '#ededef');
+
+  // #454b : le niveau du DESSOUS, en transparence, pour tracer l'étage par-dessus ses murs.
+  const dessous = niveauDessous(E.batiment, E.niveauId);
+  if (dessous) {
+    const mursDessous = E.batiment.murs.filter(m => m.niveauId === dessous.id);
+    const fd = polygonesDesMurs(mursDessous);
+    g.globalAlpha = 0.22; g.fillStyle = encre;
+    mursDessous.forEach(m => { const f = fd.get(m.id); if (f) { poly(f); g.fill(); } });
+    g.globalAlpha = 1;
+  }
 
   // Les pièces (#454a-3b) : un fond léger sous les murs, plus soutenu pour la pièce choisie.
   const pieces = formesDesPieces(E.batiment, E.niveauId);
@@ -853,6 +986,13 @@ function appliquerAffichage(){
 function cablerFenetreApercu(){
   const f = $('batimentApercuFenetre'), barre = $('batimentApercuBarre'), scene = $('batimentScene');
   $('batimentApercuReduire').onclick = () => changerAffichage({ mode: 'reduit' });
+  // #454b : la coupe au niveau courant (les niveaux du dessus disparaissent de l'aperçu).
+  $('batimentApercuCoupe').onclick = () => {
+    if (!E) return;
+    E.coupe = !E.coupe;
+    $('batimentApercuCoupe').classList.toggle('actif', E.coupe);
+    if (E.apercu) E.apercu.reconstruire(E.batiment);
+  };
   $('batimentApercuPlein').onclick = () => changerAffichage({ mode: affichage.mode === 'plein' ? 'fenetre' : 'plein' });
   $('batimentApercuIcone').onclick = () => changerAffichage({ mode: 'fenetre' });
   barre.addEventListener('dblclick', (e) => {
@@ -905,7 +1045,8 @@ function ouvrirApercu(conteneur, b){
   const grille = new T.GridHelper(40, 40, 0x888888, 0x555555);
   scene.add(grille);
   const mats = materiauxBatiment3D(T);
-  let groupe = construireBatiment3D(T, b, mats);
+  const options = () => ({ jusquA: E && E.coupe ? E.niveauId : null });
+  let groupe = construireBatiment3D(T, b, mats, options());
   scene.add(groupe);
 
   let centre = [0, 1.4, 0], distance = 20, distanceCadrage = 20;
@@ -968,7 +1109,7 @@ function ouvrirApercu(conteneur, b){
     reconstruire(nouveau){
       scene.remove(groupe);
       groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); });
-      groupe = construireBatiment3D(T, nouveau, mats);
+      groupe = construireBatiment3D(T, nouveau, mats, options());
       scene.add(groupe);
       redessiner();
     },
@@ -1068,6 +1209,8 @@ function clavier(e){
   else if (touche === 'e') $('openPoseEditorBtn').click();
   else if (touche === 'm') basculerOutil('mur');
   else if (touche === 'o') basculerOutil('ouverture');
+  else if (e.key === 'PageUp') changerDeNiveau(1);
+  else if (e.key === 'PageDown') changerDeNiveau(-1);
   else if (touche === 'v') basculerOutil('selection');
   else if (e.key === 'Enter') finirLaChaine();
   else if ((e.key === 'Delete' || e.key === 'Backspace') && ouvertureSelectionnee()) {
