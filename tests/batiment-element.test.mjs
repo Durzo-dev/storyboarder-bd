@@ -3,7 +3,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   OBJ_TYPE_BATIMENT, estUnBatimentPlace, encombrementDuBatiment, creerElementBatiment, appliquerBatiment,
-  signatureDuBatiment,
+  signatureDuBatiment, signatureDeStructure,
 } from '../src/batiment-element.js';
 import { creerBatiment } from '../src/batiment.js';
 import { ajouterRectangle } from '../src/batiment-trace.js';
@@ -67,6 +67,13 @@ describe('placer, puis appliquer une retouche', () => {
     assert.equal(signatureDuBatiment(b), signatureDuBatiment(JSON.parse(JSON.stringify(b))));
     const c = maison(); c.murs[0].epaisseur = 0.3;
     assert.notEqual(signatureDuBatiment(b), signatureDuBatiment(c));
+  });
+  test('la structure ignore le nom, pas le reste', () => {
+    const a = maison(), b = maison();
+    b.nom = 'Autre nom';
+    assert.equal(signatureDeStructure(a), signatureDeStructure(b));
+    b.murs[0].epaisseur = 0.3;
+    assert.notEqual(signatureDeStructure(a), signatureDeStructure(b));
   });
   test('ce qui n’est pas un bâtiment placé', () => {
     assert.equal(estUnBatimentPlace({ type: 'objet3d', objType: 'modele' }), false);

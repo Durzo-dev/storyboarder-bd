@@ -106,3 +106,15 @@ export function signatureDuBatiment(b){
   for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193); }
   return `${t.length}:${(h >>> 0).toString(16)}`;
 }
+
+/**
+ * La signature de la STRUCTURE d'un bâtiment, son nom mis à part (demandé : savoir si un bâtiment
+ * est déjà dans la bibliothèque d'après ce qu'il est, pas d'après son nom). Deux bâtiments qui ne
+ * diffèrent que par le nom ont la même.
+ */
+export function signatureDeStructure(b){
+  if (!b) return signatureDuBatiment(b);
+  const { nom: _nom, ...reste } = b;
+  void _nom;
+  return signatureDuBatiment(reste);
+}

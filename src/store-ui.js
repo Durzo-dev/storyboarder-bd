@@ -758,8 +758,24 @@ function carteAjout(){
   if (choix && !importerChoix) return null;
   if (!choix && !_rappels.importerDansLaBibliotheque) return null;
   const t = textesStore(langue());
+  // L'icône : un plateau et une flèche qui y entre, l'icône d'import usuelle (demandé, au lieu d'un « + »).
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('class', 'store-ajout-icone');
+  for (const d of ['M12 3v12', 'M7 10l5 5 5-5', 'M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2']) {
+    const trait = document.createElementNS(NS, 'path');
+    trait.setAttribute('d', d);
+    trait.setAttribute('fill', 'none');
+    trait.setAttribute('stroke', 'currentColor');
+    trait.setAttribute('stroke-width', '1.8');
+    trait.setAttribute('stroke-linecap', 'round');
+    trait.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(trait);
+  }
   const c = el('button', { classe: 'store-carte store-carte-ajout', attrs: { type: 'button', title: t.ajouterModeleAide } }, [
-    el('span', { texte: '+', classe: 'store-ajout-plus' }),
+    svg,
     el('span', { texte: t.ajouterModele, classe: 'store-carte-nom' }),
   ]);
   c.onclick = () => {

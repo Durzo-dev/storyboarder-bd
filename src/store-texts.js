@@ -46,7 +46,7 @@ const T = {
     renommer: 'Renommer',
     supprimer: 'Supprimer',
     editeur: 'Éditeur',
-    ajouterModele: 'Ajouter un modèle',
+    ajouterModele: 'Importer un modèle',
     ajouterModeleAide: 'Importer un fichier glTF (.glb, .gltf) depuis le disque',
     // #454a-4b : les bâtiments de l'Éditeur de bâtiment, listés avec les modèles.
     batiment: 'Bâtiment',
@@ -153,7 +153,7 @@ const T = {
     renommer: 'Rename',
     supprimer: 'Delete',
     editeur: 'Editor',
-    ajouterModele: 'Add a model',
+    ajouterModele: 'Import a model',
     ajouterModeleAide: 'Import a glTF file (.glb, .gltf) from disk',
     batiment: 'Building',
     batimentConstruit: 'Built in the Building editor.',

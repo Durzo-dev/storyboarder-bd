@@ -2722,5 +2722,5 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .store-carte-ajout{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
   border:2px dashed var(--bord-actif); background:transparent; color:var(--ink-soft); min-height:180px; }
 .store-carte-ajout:hover{ border-color:var(--accent); color:var(--accent); }
-.store-carte-ajout .store-ajout-plus{ font-size:42px; line-height:1; font-weight:300; }
+.store-carte-ajout .store-ajout-icone{ width:44px; height:44px; display:block; }
 .store-carte-ajout .store-carte-nom{ color:inherit; }

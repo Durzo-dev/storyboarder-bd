@@ -20,8 +20,8 @@
 import { tr } from './state.js';
 import { creerBatiment, nomAfficheDuFichier } from './batiment.js';
 import { actionDEnregistrement } from './batiment-bibliotheque.js';
-import { signatureDuBatiment } from './batiment-element.js';
-import { enregistrerBatiment } from './batiment-store.js';
+import { signatureDuBatiment, signatureDeStructure } from './batiment-element.js';
+import { enregistrerBatiment, listerBatiments, lireBatimentDuDisque } from './batiment-store.js';
 import {
   versEcran, versBatiment, pasDeGrille, zoomerAutour, glisserVue, boiteDesMurs, cadrerSur,
   affichageApercuLu, coinLePlusProche,
@@ -65,7 +65,10 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null, desti
     // CE QUI A CHANGÉ se mesure, il ne se coche pas (signalé : après un Ctrl+Z, « Appliquer » restait
     // allumé) : la signature du bâtiment comparée à celle qu'il avait à l'ouverture (pour la Scène) et
     // au dernier enregistrement (pour la bibliothèque). Revenir en arrière rend les boutons éteints.
-    refScene: signatureDuBatiment(b), refBiblio: signatureDuBatiment(b), niveauId: b.niveaux[0].id, apercu: null, geste: null,
+    refScene: signatureDuBatiment(b), refBiblio: signatureDuBatiment(b),
+    // LA BIBLIOTHÈQUE, PAR STRUCTURE (demandé) : la structure de chaque bâtiment qui y est (nom mis à
+    // part) → son fichier. Lue à l'ouverture ; tant qu'elle ne l'est pas, on s'en tient à refBiblio.
+    structuresBiblio: null, niveauId: b.niveaux[0].id, apercu: null, geste: null,
     // #454a-3 : le tracé.
     // Aucun outil à l'ouverture : le menu de base (demandé).
     outil: null, chaine: null, survol: null, selection: null,
@@ -84,6 +87,7 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null, desti
   recadrer();
   appliquerAffichage();
   E.apercu = ouvrirApercu($('batimentApercu'), b);
+  lireStructuresDeLaBibliotheque(E);
   window.addEventListener('keydown', clavier, true);
   window.addEventListener('resize', dessinerPlan);
 }
@@ -123,8 +127,31 @@ export async function fermerEditeurDeBatiment(){
  *   - « Enregistrer dans la bibliothèque » : éteint sans modification (demandé, même pour un bâtiment
  *     qui n'y est pas encore), et sans mur.
  */
-/** Le bâtiment diffère-t-il de ce qui est dans la bibliothèque (ou de ce qu'il était à l'ouverture) ? */
-function differeBiblio(){ return signatureDuBatiment(E.batiment) !== E.refBiblio; }
+/** Lit la structure de chaque bâtiment de la bibliothèque, puis rafraîchit les boutons. */
+async function lireStructuresDeLaBibliotheque(ed){
+  const structures = new Map();
+  for (const fichier of await listerBatiments()) {
+    const r = await lireBatimentDuDisque(fichier, tr);
+    if (r.ok) structures.set(signatureDeStructure(r.batiment), fichier);
+  }
+  if (E !== ed) return;
+  ed.structuresBiblio = structures;
+  majBoutonsDeSortie();
+}
+
+/** Le fichier de la bibliothèque qui a déjà EXACTEMENT cette structure, ou null. */
+function dejaDansLaBibliotheque(){
+  return E.structuresBiblio ? (E.structuresBiblio.get(signatureDeStructure(E.batiment)) || null) : null;
+}
+
+/**
+ * Le bâtiment diffère-t-il de ce qui est dans la bibliothèque ? Par STRUCTURE quand elle est lue
+ * (demandé) : une copie placée identique à un modèle n'a rien à y enregistrer, quel que soit son nom.
+ */
+function differeBiblio(){
+  if (E.structuresBiblio) return !dejaDansLaBibliotheque();
+  return signatureDuBatiment(E.batiment) !== E.refBiblio;
+}
 /** … de la copie placée dans la Scène ? */
 function differeScene(){ return signatureDuBatiment(E.batiment) !== E.refScene; }
 /** Des modifications seraient-elles perdues en fermant ? Ni enregistrées, ni parties dans la Scène. */
@@ -144,8 +171,11 @@ function majBoutonsDeSortie(){
   }
   const enr = $('batimentEnregistrerBtn');
   enr.disabled = sansMur || !differeBiblio();
+  const present = dejaDansLaBibliotheque();
   enr.title = sansMur ? tr('Draw at least one wall first.', 'Tracez d\'abord au moins un mur.')
-    : enr.disabled ? tr('Nothing has changed since it was saved.', 'Rien n\'a changé depuis l\'enregistrement.') : '';
+    : !enr.disabled ? ''
+    : present ? tr(`Already in the library, as "${nomAfficheDuFichier(present)}".`, `Déjà dans la bibliothèque, sous « ${nomAfficheDuFichier(present)} ».`)
+    : tr('Nothing has changed since it was saved.', 'Rien n\'a changé depuis l\'enregistrement.');
 }
 
 function statut(texte){ $('batimentStatut').textContent = texte; }
@@ -984,6 +1014,11 @@ async function enregistrer(){
   const nouveau = action === 'nouveau' && ed.fichier;
   ed.fichier = r.fichier;
   ed.refBiblio = signatureDuBatiment(ed.batiment);
+  // Le fichier réécrit n'a plus son ancienne structure : son entrée est remplacée, pas ajoutée.
+  if (ed.structuresBiblio) {
+    for (const [cle, f] of ed.structuresBiblio) if (f === r.fichier) ed.structuresBiblio.delete(cle);
+    ed.structuresBiblio.set(signatureDeStructure(ed.batiment), r.fichier);
+  }
   ed.remplacementAccepte = ed.remplacementAccepte && !nouveau;
   remplirPanneau();
   statut(nouveau

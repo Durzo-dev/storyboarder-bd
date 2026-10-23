@@ -223,7 +223,7 @@ export const HELP_MANUAL_EN = [
   ]},
   { id: 'modeles', title: 'Imported 3D models', paragraphs: [
     'Import models made in Blender, Maya or elsewhere, in glTF format (.glb or .gltf). The format guarantees the unit (the metre), so a model arrives at its real size.',
-    'Right-click a panel or a Scene → "Import a model" opens My models: click a thumbnail (model or building) to place it there, the "+" tile takes a .glb from disk. Reusable set: import it into a Scene.',
+    'Right-click a panel or a Scene → "Import a model" opens My models: click a thumbnail (model or building) to place it there, the "Import a model" tile takes a .glb from disk. Reusable set: import it into a Scene.',
     'Files are copied into a "Modeles" folder next to your projects. One moved or deleted outside the application can no longer be read: its Elements become placeholder boxes, and the library marks it "file not found".',
     '"Model library", at the top next to the version, opens "My models": your files as cards, searchable, filtered by category, by use in the open project (by Scenes, in Panels, unused) and by skeleton (joint icon: can be posed). Other projects are not checked.',
     'A model\'s details list where it is used: click a Scene or a Panel to go there ("×2": two Elements in the same place, you pick one).',
@@ -470,7 +470,7 @@ export const HELP_MANUAL_FR = [
   ]},
   { id: 'modeles', title: 'Modèles 3D importés', paragraphs: [
     'Importez des modèles faits dans Blender, Maya ou ailleurs, au format glTF (.glb ou .gltf). Ce format garantit l\'unité, le mètre : un modèle arrive à sa taille réelle.',
-    'Clic droit sur une Case ou une Scène → « Importer un modèle » ouvre Mes modèles : un clic sur une vignette (modèle ou bâtiment) l\'y place, la vignette « + » prend un .glb sur le disque. Pour un décor : importez-le dans une Scène.',
+    'Clic droit sur une Case ou une Scène → « Importer un modèle » ouvre Mes modèles : un clic sur une vignette (modèle ou bâtiment) l\'y place, la vignette « Importer un modèle » prend un .glb du disque. Décor : importez-le dans une Scène.',
     'Les fichiers sont copiés dans un dossier « Modeles », près de vos projets. Déplacé ou supprimé hors de l\'application, un fichier devient illisible : ses Éléments deviennent des boîtes « fichier introuvable ».',
     "« Bibliothèque de modèles », en haut à côté de la version, ouvre « Mes modèles » : vos fichiers en vignettes, avec recherche, catégorie, usage dans le Projet ouvert (Scènes, Cases, non utilisés) et squelette (icône d'articulation : se pose).",
     'La fiche d\'un modèle liste où il sert : cliquez une Scène ou une Case pour y aller (« ×2 » : deux Éléments au même endroit, à choisir).',
