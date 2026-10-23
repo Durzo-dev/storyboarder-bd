@@ -258,7 +258,10 @@ function remplirPanneau(){
     E.reglagesOuverture = c.type && c.type !== E.reglagesOuverture.type ? { ...reglagesParDefaut(c.type), sens: E.reglagesOuverture.sens, charniere: E.reglagesOuverture.charniere } : { ...E.reglagesOuverture, ...c };
     remplirPanneau(); dessinerPlan();
   });
-  if (ouv) formulaireOuverture($('batimentFormOuverture'), ouv, (c) => retoucherOuverture(ouv.id, c));
+  if (ouv) formulaireOuverture($('batimentFormOuverture'), ouv, (c) => retoucherOuverture(ouv.id, c), (c) => {
+    const r = modifierOuverture(JSON.parse(JSON.stringify(E.batiment)), ouv.id, c);
+    return r.erreur ? refusOuverture(r.erreur) : null;
+  });
   if (piece) {
     if (document.activeElement !== $('batimentPieceNom')) $('batimentPieceNom').value = piece.nom;
     $('batimentPieceSurface').textContent = formes.has(piece.id) ? tr(`Area: ${surface(formes.get(piece.id).aire)}`, `Surface : ${surface(formes.get(piece.id).aire)}`) : '';
@@ -517,13 +520,19 @@ function retoucherOuverture(id, changements){
  * Le formulaire d'une ouverture (#454a-3c), construit dans `conteneur` : le type, les dimensions en
  * centimètres, les battants, coulissante, vitrée. `changer(partiel)` reçoit chaque modification.
  */
-function formulaireOuverture(conteneur, v, changer){
+function formulaireOuverture(conteneur, v, changer, essayer = null){
+  // `essayer(changements)` (une ouverture posée) rend la raison d'un refus, ou null : un choix qui ne
+  // tiendrait pas est ÉTEINT, sa raison en infobulle ; une valeur refusée revient et le dit au survol
+  // (demandé, comme pour les escaliers, plutôt qu'un message en bas du menu).
   const types = [['porte', tr('Door', 'Porte')], ['fenetre', tr('Window', 'Fenêtre')], ['baie', tr('Bay window', 'Baie vitrée')], ['passage', tr('Passage', 'Passage')]];
   const choix = (valeurs, actuelle, quoi) => {
     const d = document.createElement('div'); d.className = 'batiment-choix';
     valeurs.forEach(([val, lib]) => {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = lib;
       b.classList.toggle('actif', actuelle === val);
+      const refus = essayer && actuelle !== val ? essayer({ [quoi]: val }) : null;
+      b.disabled = !!refus;
+      b.title = refus || '';
       b.onclick = () => changer({ [quoi]: val });
       d.appendChild(b);
     });
@@ -534,7 +543,13 @@ function formulaireOuverture(conteneur, v, changer){
     const t = document.createElement('span'); t.textContent = libelle;
     const w = document.createElement('span'); w.className = 'batiment-champ-valeur';
     const i = document.createElement('input'); i.type = 'number'; i.min = '0'; i.step = '1'; i.value = Math.round(valeur * 100);
-    i.addEventListener('change', () => { const n = Number(i.value); if (Number.isFinite(n) && n >= 0) changer({ [quoi]: n / 100 }); });
+    i.addEventListener('change', () => {
+      const n = Number(i.value);
+      if (!Number.isFinite(n) || n < 0) { i.value = Math.round(valeur * 100); return; }
+      const refus = essayer ? essayer({ [quoi]: n / 100 }) : null;
+      if (refus) { i.value = Math.round(valeur * 100); i.title = refus; i.classList.add('refuse'); return; }
+      changer({ [quoi]: n / 100 });
+    });
     w.append(i, document.createTextNode(' cm'));
     l.append(t, w);
     return l;
