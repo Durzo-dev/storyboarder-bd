@@ -8,7 +8,7 @@ import {
 } from '../src/batiment-escaliers.js';
 import { creerBatiment, normaliserBatiment } from '../src/batiment.js';
 import { ajouterRectangle } from '../src/batiment-trace.js';
-import { ajouterEtage, deplacerNiveau } from '../src/batiment-niveaux.js';
+import { ajouterEtage, deplacerNiveau, supprimerNiveau, modifierNiveau } from '../src/batiment-niveaux.js';
 import { actualiserPieces, formesDesPieces } from '../src/batiment-pieces.js';
 
 const fr = (en, f) => f;
@@ -172,5 +172,22 @@ describe('réordonner les niveaux ne doit pas casser un escalier', () => {
     const t = apres.niveaux.slice().sort((x, y) => x.elevation - y.elevation);
     deplacerNiveau(apres, t[2].id, 1, fr);
     assert.deepEqual(escaliersBloques(b, apres, () => [], () => []), []);
+  });
+});
+
+describe('supprimer un niveau ou changer une hauteur : même règle', () => {
+  test('supprimer l’étage où mène l’escalier le bloque ; agrandir la hauteur peut lui faire traverser un mur', () => {
+    const b = maison(); actualiserPieces(b, 'n0', fr);
+    const { escalier } = ajouterEscalier(b, 'n0', { depart: { x: 4, z: 5.8 }, angle: angleHaut });
+    const faces = (bat) => (id) => [...formesDesPieces(bat, id).values()];
+    const sans = JSON.parse(JSON.stringify(b));
+    supprimerNiveau(sans, b.niveaux.find(n => n.id !== 'n0').id);
+    assert.deepEqual(escaliersBloques(b, sans, faces(b), faces(sans)).map(x => x.raison), ['sansEtage']);
+    const haut = JSON.parse(JSON.stringify(b));
+    modifierNiveau(haut, 'n0', { hauteur: 5 });
+    const p = escaliersBloques(b, haut, faces(b), faces(haut));
+    assert.equal(p.length, 1);
+    assert.ok(['mur', 'hors'].includes(p[0].raison), p[0].raison);
+    assert.equal(p[0].escalier.id, escalier.id);
   });
 });

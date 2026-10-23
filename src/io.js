@@ -1314,14 +1314,17 @@ const confirmActionMessage = document.getElementById('confirmActionMessage');
 const confirmActionOk = document.getElementById('confirmActionOk');
 const confirmActionCancel = document.getElementById('confirmActionCancel');
 // [STATE→S] let S.confirmActionResolve = null;
-export function confirmAction(message, title){
+// `options` (#454b) : `ok`, le texte du bouton de confirmation (« Confirmer » par défaut), et
+// `danger`, qui le passe en rouge quand confirmer supprime quelque chose.
+export function confirmAction(message, title, options = {}){
   preemptConfirmAction();
   confirmActionCancel.style.display = '';
+  confirmActionOk.classList.toggle('delete-btn', !!options.danger);
   // Le texte du bouton est RÉÉCRIT à chaque ouverture, parce que la variante « information »
   // ci-dessous y met « OK ». Il était écrit en dur, en français : `#confirmActionOk` a pourtant son
   // entrée dans I18N_TEXT, appliquée au chargement et à chaque changement de langue, mais cette
   // ligne repassait par-dessus. Le bouton affichait donc « Confirmer » sous une interface anglaise.
-  confirmActionOk.textContent = tr('Confirm', 'Confirmer');
+  confirmActionOk.textContent = options.ok || tr('Confirm', 'Confirmer');
   confirmActionTitle.textContent = title || tr('Confirm', 'Confirmer');
   confirmActionMessage.textContent = message;
   confirmActionModal.classList.remove('hidden');
@@ -1334,6 +1337,7 @@ export function confirmAction(message, title){
 export function alertAction(message, title){
   preemptConfirmAction();
   confirmActionCancel.style.display = 'none';
+  confirmActionOk.classList.remove('delete-btn');
   confirmActionOk.textContent = 'OK';   // même mot dans les deux langues
   confirmActionTitle.textContent = title || tr('Information', 'Information');
   confirmActionMessage.textContent = message;

@@ -366,7 +366,11 @@ function remplirNiveaux(){
     const champ = (titre, valeur, quoi) => {
       const i = document.createElement('input');
       i.type = 'number'; i.min = '5'; i.step = '1'; i.value = Math.round(valeur * 100); i.title = titre;
-      i.addEventListener('change', () => { i.blur(); const v = Number(i.value); if (Number.isFinite(v)) modifier(b => modifierNiveau(b, n.id, { [quoi]: v / 100 })); else remplirNiveaux(); });
+      i.addEventListener('change', async () => {
+        i.blur();
+        const v = Number(i.value);
+        if (!Number.isFinite(v) || !await appliquerSansCasserLesEscaliers(b => modifierNiveau(b, n.id, { [quoi]: v / 100 }), tr('Change the height', 'Changer la hauteur'))) remplirNiveaux();
+      });
       const w = document.createElement('span'); w.className = 'batiment-champ-valeur'; w.title = titre;
       w.append(i, document.createTextNode(' cm'));
       return w;
@@ -407,13 +411,8 @@ function remplirNiveaux(){
       const pile = niveauxTries(E.batiment).filter(x => x.id !== tire);
       const k = pile.findIndex(x => x.id === n.id);
       const rang = dessus ? k + 1 : k;
-      // Essayé d'abord sur une copie (demandé) : si un escalier ne tiendrait plus, rien ne change et
-      // une fenêtre dit lesquels, et pourquoi.
-      const apres = JSON.parse(JSON.stringify(E.batiment));
-      deplacerNiveau(apres, tire, rang, tr);
-      const bloques = escaliersBloques(E.batiment, apres, (id) => [...formesDesPieces(E.batiment, id).values()], (id) => [...formesDesPieces(apres, id).values()]);
-      if (bloques.length) { signalerEscaliersBloques(bloques); return; }
-      modifier(b => deplacerNiveau(b, tire, rang, tr));
+      // Sans casser d'escalier (demandé) : sinon une fenêtre dit lesquels, et propose de les supprimer.
+      appliquerSansCasserLesEscaliers(b => deplacerNiveau(b, tire, rang, tr), tr('Reorder the levels', 'Changer l\'ordre des niveaux'));
     });
     return d;
   });
@@ -430,8 +429,18 @@ function remplirNiveaux(){
   zone.replaceChildren(...lignes, actions);
 }
 
-/** La fenêtre qui dit pourquoi un changement de la pile des niveaux est refusé : un escalier par ligne. */
-function signalerEscaliersBloques(bloques){
+/**
+ * Applique un changement de la PILE DES NIVEAUX (réordonner, supprimer, changer une hauteur) sans
+ * casser d'escalier (demandé) : il est d'abord essayé sur une copie. Si des escaliers ne tiendraient
+ * plus, une fenêtre les cite, chacun avec sa raison, et propose de les SUPPRIMER pour faire le
+ * changement quand même ; refuser ne change rien. `transformer(b)` fait le changement ; `titre` nomme
+ * la fenêtre. Rend une promesse : vrai si le changement a été fait.
+ */
+async function appliquerSansCasserLesEscaliers(transformer, titre){
+  const apres = JSON.parse(JSON.stringify(E.batiment));
+  transformer(apres);
+  const bloques = escaliersBloques(E.batiment, apres, (id) => [...formesDesPieces(E.batiment, id).values()], (id) => [...formesDesPieces(apres, id).values()]);
+  if (!bloques.length) { modifier(transformer); return true; }
   const types = { droit: tr('straight', 'droit'), L: tr('L-shaped', 'en L'), U: tr('U-shaped', 'en U') };
   const raisons = {
     sansEtage: tr('it would have no level above to lead to', 'il n\'aurait plus de niveau au-dessus où mener'),
@@ -444,10 +453,17 @@ function signalerEscaliersBloques(bloques){
       `Escalier ${rang} (${types[escalier.type]}, ${Math.round(escalier.largeur * 100)} cm), au niveau « ${niveau ? niveau.nom : '?'} »`);
     return `• ${nom} : ${raisons[raison] || raison}.`;
   });
-  _rappels.alerter(
-    tr('The levels cannot be reordered this way:', 'L\'ordre des niveaux ne peut pas changer ainsi :') + '\n\n' + lignes.join('\n')
-      + '\n\n' + tr('Move or delete these staircases first.', 'Déplacez ou supprimez d\'abord ces escaliers.'),
-    tr('Reordering refused', 'Changement d\'ordre refusé'));
+  const n = bloques.length;
+  const ok = await _rappels.confirmer(
+    tr(`This change would block ${n > 1 ? 'these staircases' : 'this staircase'}:`, `Ce changement bloquerait ${n > 1 ? 'ces escaliers' : 'cet escalier'} :`) + '\n\n' + lignes.join('\n')
+      + '\n\n' + tr(`You can delete ${n > 1 ? 'them' : 'it'} to make the change anyway, or cancel and move ${n > 1 ? 'them' : 'it'} first.`,
+        `Vous pouvez ${n > 1 ? 'les' : 'le'} supprimer pour faire le changement quand même, ou annuler pour ${n > 1 ? 'les' : 'le'} déplacer d'abord.`),
+    titre,
+    { ok: n > 1 ? tr(`Delete the ${n} staircases and continue`, `Supprimer les ${n} escaliers et continuer`) : tr('Delete the staircase and continue', 'Supprimer l\'escalier et continuer'), danger: true });
+  if (!ok || !E) return false;
+  const ids = new Set(bloques.map(x => x.escalier.id));
+  modifier(bat => { transformer(bat); bat.escaliers = (bat.escaliers || []).filter(x => !ids.has(x.id)); });
+  return true;
 }
 
 /** Supprime un niveau qui porte quelque chose après confirmation ; un niveau vide, directement. */
@@ -458,9 +474,15 @@ async function supprimerUnNiveau(n){
       `Supprimer le niveau « ${n.nom} » et tout ce qu'il porte ? Les niveaux du dessus redescendent.`), tr('Delete a level', 'Supprimer un niveau'));
     if (!ok || !E) return;
   }
-  const courant = E.niveauId === n.id;
-  modifier(b => supprimerNiveau(b, n.id));
-  if (courant) { E.niveauId = niveauxTries(E.batiment)[0].id; remplirPanneau(); dessinerPlan(); if (E.apercu) E.apercu.reconstruire(E.batiment); }
+  // Le niveau courant supprimé : le plus bas des autres devient courant (choisi avant, pour que le menu
+  // refait après la suppression ne vise pas un niveau disparu).
+  const avant = E.niveauId;
+  if (avant === n.id) E.niveauId = niveauxTries(E.batiment).find(x => x.id !== n.id).id;
+  // Sans casser d'escalier (demandé) : celui du dessous, s'il menait à ce niveau, n'aurait plus rien.
+  const fait = await appliquerSansCasserLesEscaliers(b => supprimerNiveau(b, n.id), tr('Delete a level', 'Supprimer un niveau'));
+  if (!E) return;
+  if (!fait) E.niveauId = avant;
+  remplirPanneau(); dessinerPlan(); if (E.apercu) E.apercu.reconstruire(E.batiment);
 }
 
 // ── Le tracé (#454a-3) : outils, historique, modifications ───────────────────────────────────────
