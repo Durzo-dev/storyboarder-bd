@@ -134,6 +134,10 @@ function remplirPanneau(){
   const dest = $('batimentPlacerBtn');
   dest.hidden = !E.destination;
   if (E.destination) dest.textContent = E.destination.mode === 'appliquer' ? tr('Apply to the scene', 'Appliquer à la scène') : tr('Place in the scene', 'Placer dans la scène');
+  // Rien à placer tant qu'aucun mur n'est tracé (demandé) : le bouton reste éteint, et dit pourquoi.
+  const sansMur = !b.murs.length;
+  dest.disabled = sansMur;
+  dest.title = sansMur ? tr('Draw at least one wall first.', 'Tracez d\'abord au moins un mur.') : '';
   $('batimentFichier').textContent = E.fichier
     ? tr(`In the library: ${nomAfficheDuFichier(E.fichier)}`, `Dans la bibliothèque : ${nomAfficheDuFichier(E.fichier)}`)
     : tr('Not yet in the library', 'Pas encore dans la bibliothèque');
@@ -917,7 +921,7 @@ function ouvrirApercu(conteneur, b){
 
 /** « Placer dans la scène » / « Appliquer à la scène » : le bâtiment part, l'éditeur se ferme. */
 function versLaScene(){
-  if (!E || !E.destination) return;
+  if (!E || !E.destination || !E.batiment.murs.length) return;
   const { destination, batiment } = E;
   E.modifie = false;
   fermerSansDemander();
