@@ -2746,3 +2746,5 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-niveau-suppr:disabled { opacity: .35; cursor: default; }
 .batiment-apercu-btn.actif { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
 .batiment-niveau-vide { display: block; width: 34px; height: 34px; }
+.batiment-choix button:disabled { opacity: .4; cursor: not-allowed; }
+.batiment-champ input.refuse { border-color: var(--danger, #c0392b); }

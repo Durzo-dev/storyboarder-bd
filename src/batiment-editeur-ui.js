@@ -246,7 +246,13 @@ function remplirPanneau(){
   if (E.outil === 'escalier') formulaireEscalier($('batimentReglagesEscalier'), E.reglagesEscalier, (c) => {
     E.reglagesEscalier = { ...E.reglagesEscalier, ...c }; remplirPanneau(); dessinerPlan();
   });
-  if (esc) formulaireEscalier($('batimentFormEscalier'), esc, (c) => retoucherEscalier(esc.id, c));
+  if (esc) {
+    formulaireEscalier($('batimentFormEscalier'), esc, (c) => retoucherEscalier(esc.id, c), (c) => raisonDuRefusEscalier(esc.id, c));
+    // Tourner : éteint si l'escalier tourné traverserait un mur, avec la raison en infobulle.
+    const refus = raisonDuRefusEscalier(esc.id, { angle: esc.angle + Math.PI / 2 });
+    $('batimentEscalierTourner').disabled = !!refus;
+    $('batimentEscalierTourner').title = refus || '';
+  }
   // Les deux formulaires d'ouverture : celle qu'on va poser (outil Ouverture), celle qu'on a choisie.
   if (E.outil === 'ouverture') formulaireOuverture($('batimentReglagesOuverture'), E.reglagesOuverture, (c) => {
     E.reglagesOuverture = c.type && c.type !== E.reglagesOuverture.type ? { ...reglagesParDefaut(c.type), sens: E.reglagesOuverture.sens, charniere: E.reglagesOuverture.charniere } : { ...E.reglagesOuverture, ...c };
@@ -418,6 +424,12 @@ function refusEscalier(erreur){
     : tr('This staircase would cross a wall.', 'Cet escalier traverserait un mur.');
 }
 
+/** La raison pour laquelle cette retouche de l'escalier serait refusée, ou null si elle tient. */
+function raisonDuRefusEscalier(id, changements){
+  const r = modifierEscalier(JSON.parse(JSON.stringify(E.batiment)), id, changements);
+  return r.erreur ? refusEscalier(r.erreur) : null;
+}
+
 /** Retouche l'escalier choisi, essayé d'abord sur une copie (cf. retoucherOuverture). */
 function retoucherEscalier(id, changements){
   const essai = JSON.parse(JSON.stringify(E.batiment));
@@ -431,12 +443,17 @@ function retoucherEscalier(id, changements){
  * Le formulaire d'un escalier (#454c), dans `conteneur` : le type, la largeur, le côté où il tourne
  * (L et U), les contremarches, la rampe, et le nombre de marches qui en résulte.
  */
-function formulaireEscalier(conteneur, v, changer){
+function formulaireEscalier(conteneur, v, changer, essayer = null){
+  // `essayer(changements)` (un escalier posé) rend la raison d'un refus, ou null : un choix qui ne
+  // tiendrait pas est ÉTEINT, sa raison en infobulle (demandé, plutôt qu'un message après coup).
   const choix = (valeurs, actuelle, quoi) => {
     const d = document.createElement('div'); d.className = 'batiment-choix';
     valeurs.forEach(([val, lib]) => {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = lib;
       b.classList.toggle('actif', actuelle === val);
+      const refus = essayer && actuelle !== val ? essayer({ [quoi]: val }) : null;
+      b.disabled = !!refus;
+      b.title = refus || '';
       b.onclick = () => changer({ [quoi]: val });
       d.appendChild(b);
     });
@@ -446,7 +463,14 @@ function formulaireEscalier(conteneur, v, changer){
   const lt = document.createElement('span'); lt.textContent = tr('Width', 'Largeur');
   const lw = document.createElement('span'); lw.className = 'batiment-champ-valeur';
   const li = document.createElement('input'); li.type = 'number'; li.min = '50'; li.max = '300'; li.step = '1'; li.value = Math.round(v.largeur * 100);
-  li.addEventListener('change', () => { const n = Number(li.value); if (Number.isFinite(n)) changer({ largeur: n / 100 }); });
+  // Une largeur qui ne tiendrait pas : le champ revient à la sienne, et dit pourquoi en infobulle.
+  li.addEventListener('change', () => {
+    const n = Number(li.value);
+    if (!Number.isFinite(n)) { li.value = Math.round(v.largeur * 100); return; }
+    const refus = essayer ? essayer({ largeur: n / 100 }) : null;
+    if (refus) { li.value = Math.round(v.largeur * 100); li.title = refus; li.classList.add('refuse'); return; }
+    changer({ largeur: n / 100 });
+  });
   lw.append(li, document.createTextNode(' cm')); l.append(lt, lw);
   const c = document.createElement('label'); c.className = 'batiment-case';
   const ci = document.createElement('input'); ci.type = 'checkbox'; ci.checked = !!v.contremarches;
@@ -1406,7 +1430,10 @@ function clavier(e){
   else if (touche === 'm') basculerOutil('mur');
   else if (touche === 'o') basculerOutil('ouverture');
   else if (touche === 's') basculerOutil('escalier');
-  else if (touche === 'r' && escalierSelectionne()) { const x = escalierSelectionne(); retoucherEscalier(x.id, { angle: x.angle + Math.PI / 2 }); }
+  else if (touche === 'r' && escalierSelectionne()) {
+    const x = escalierSelectionne(), c = { angle: x.angle + Math.PI / 2 };
+    if (!raisonDuRefusEscalier(x.id, c)) retoucherEscalier(x.id, c);
+  }
   else if (e.key === 'PageUp') changerDeNiveau(1);
   else if (e.key === 'PageDown') changerDeNiveau(-1);
   else if (touche === 'v') basculerOutil('selection');
