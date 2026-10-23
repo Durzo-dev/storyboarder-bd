@@ -115,7 +115,6 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null, desti
   $('batimentEditeur').classList.remove('hidden');
   $('batimentApercuCoupe').classList.remove('actif');
   $('batimentNom').value = b.nom;
-  statut('');
   // Un bâtiment vide s'ouvre sur l'outil Mur (demandé) : il n'y a rien d'autre à faire.
   choisirOutil(b.murs.length ? null : 'mur');
   recadrer();
@@ -220,7 +219,6 @@ function majBoutonsDeSortie(){
     : tr('Nothing has changed since it was saved.', 'Rien n\'a changé depuis l\'enregistrement.');
 }
 
-function statut(texte){ $('batimentStatut').textContent = texte; }
 
 function ligne(nom, detail){
   const d = document.createElement('div');
@@ -578,8 +576,7 @@ function essaiEscalier(id, changements){
 function retoucherEscalier(id, changements){
   const essai = JSON.parse(JSON.stringify(E.batiment));
   const r = modifierEscalier(essai, id, changements);
-  if (r.erreur) { statut(refusEscalier(r.erreur)); remplirPanneau(); return; }
-  statut('');
+  if (r.erreur) { remplirPanneau(); return; }
   modifier(b => modifierEscalier(b, id, changements));
 }
 
@@ -684,8 +681,7 @@ function refusOuverture(erreur){
 function retoucherOuverture(id, changements){
   const essai = JSON.parse(JSON.stringify(E.batiment));
   const r = modifierOuverture(essai, id, changements);
-  if (r.erreur) { statut(refusOuverture(r.erreur)); remplirPanneau(); return; }
-  statut('');
+  if (r.erreur) { remplirPanneau(); return; }
   modifier(b => modifierOuverture(b, id, changements));
 }
 
@@ -900,15 +896,13 @@ function poserUnPoint(s){
   const { depuis, accroche } = E.chaine;
   if (Math.hypot(s.point.x - depuis.x, s.point.z - depuis.z) < 0.05) return;
   if (croiseUnMur(E.batiment, E.niveauId, depuis, s.point)) {
-    statut(tr('This wall would cross another one: it is refused.', 'Ce mur en traverserait un autre : il est refusé.'));
-    return;
+    return;   // refusé sans message (demandé) : le tracé était rouge
   }
   // Un point posé sur un sommet déjà présent ferme la forme : la chaîne s'arrête là.
   const ferme = s.accroche.type === 'sommet';
   let r = null;
   modifier(b => { r = ajouterMur(b, E.niveauId, depuis, s.point, epaisseurDesNouveaux(), { accrocheA: accroche, accrocheB: s.accroche }); });
   if (r && r.erreur) { annuler(); E.refaire = []; return; }
-  statut('');
   E.chaine = ferme ? null : { depuis: s.point, accroche: { type: 'sommet' } };
   dessinerPlan();
 }
@@ -919,13 +913,9 @@ function poserLeRectangle(){
   E.rectangle = null;
   const essai = ajouterRectangle(JSON.parse(JSON.stringify(E.batiment)), E.niveauId, de, vers, epaisseurDesNouveaux());
   if (essai.erreur) {
-    statut(essai.erreur === 'croise'
-      ? tr('This room would cross a wall: it is refused.', 'Cette pièce traverserait un mur : elle est refusée.')
-      : tr('This room is too small.', 'Cette pièce est trop petite.'));
-    dessinerPlan();
+    dessinerPlan();   // refusée sans message (demandé) : le rectangle était rouge
     return;
   }
-  statut('');
   modifier(b => ajouterRectangle(b, E.niveauId, de, vers, epaisseurDesNouveaux()));
 }
 
@@ -1308,7 +1298,6 @@ function cablerPlan(){
       const pas = (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 0.01 : PAS_ALLEGE);
       if (monterOuverture(E.batiment, ouv.id, pas)) {
         E.molette = { id: ouv.id, t: maintenant };
-        statut(tr(`Sill height: ${metres(ouv.y)}`, `Hauteur d'allège : ${metres(ouv.y)}`));
         apresModification();
       } else if (nouveauGeste) E.historique.pop();
       return;
@@ -1350,8 +1339,7 @@ function cablerPlan(){
       const m = murSous(E.batiment, E.niveauId, p, tol);
       if (!m) return;
       const essai = ajouterOuverture(JSON.parse(JSON.stringify(E.batiment)), m.mur.id, m.t, E.reglagesOuverture);
-      if (essai.erreur) { statut(refusOuverture(essai.erreur)); return; }
-      statut('');
+      if (essai.erreur) return;   // refusée sans message (demandé) : l'aperçu était rouge
       modifier(b => ajouterOuverture(b, m.mur.id, m.t, E.reglagesOuverture));
       return;
     }
@@ -1423,10 +1411,8 @@ function cablerPlan(){
         const depart = E.fantomeEscalier && E.fantomeEscalier.angle === angle ? E.fantomeEscalier.depart : pose.depart;
         const reglages = { ...E.reglagesEscalier, depart, angle };
         const essai = ajouterEscalier(JSON.parse(JSON.stringify(E.batiment)), E.niveauId, reglages);
-        if (essai.erreur) statut(refusEscalier(essai.erreur));
-        else {
+        if (!essai.erreur) {   // refusé : sans message (demandé), le fantôme était rouge
           // Posé : il est choisi, et l'outil Sélection est pris (demandé).
-          statut('');
           let id = null;
           modifier(b => { const r = ajouterEscalier(b, E.niveauId, reglages); id = r.escalier && r.escalier.id; });
           if (id) { choisirOutil('selection'); E.selection = { escalierId: id }; remplirPanneau(); dessinerPlan(); }
@@ -1670,7 +1656,8 @@ async function enregistrer(){
   }
   const r = await enregistrerBatiment(ed.batiment, action === 'remplacer' ? ed.fichier : null);
   if (E !== ed) return;
-  if (!r.ok) { statut(tr(`Could not save: ${r.error}`, `Échec de l'enregistrement : ${r.error}`)); return; }
+  // Un échec : une modale (demandé ; plus de ligne de statut dans le menu).
+  if (!r.ok) { await _rappels.alerter(tr(`The building could not be saved: ${r.error}`, `Le bâtiment n'a pas pu être enregistré : ${r.error}`), tr('Save failed', 'Échec de l\'enregistrement')); return; }
   const nouveau = action === 'nouveau' && ed.fichier;
   ed.fichier = r.fichier;
   ed.refBiblio = signatureDuBatiment(ed.batiment);
@@ -1680,10 +1667,8 @@ async function enregistrer(){
     ed.structuresBiblio.set(signatureDeStructure(ed.batiment), r.fichier);
   }
   ed.remplacementAccepte = ed.remplacementAccepte && !nouveau;
+  // Aucun message (demandé) : le bouton se grise, son infobulle dit sous quel nom.
   remplirPanneau();
-  statut(nouveau
-    ? tr(`Saved as a new model, "${nomAfficheDuFichier(r.fichier)}"; the previous one is unchanged.`, `Enregistré comme nouveau modèle, « ${nomAfficheDuFichier(r.fichier)} » ; le précédent est inchangé.`)
-    : tr(`Saved as "${nomAfficheDuFichier(r.fichier)}".`, `Enregistré sous « ${nomAfficheDuFichier(r.fichier)} ».`));
 }
 
 function clavier(e){
@@ -1758,7 +1743,7 @@ export function initEditeurDeBatiment(){
     if (!E) return;
     const nom = e.target.value.trim();
     if (!nom) return;
-    E.batiment.nom = nom; statut('');
+    E.batiment.nom = nom; 
     majBoutonsDeSortie();
   });
   document.querySelectorAll('.batiment-outil').forEach(b => { b.onclick = () => basculerOutil(b.dataset.outil); });
