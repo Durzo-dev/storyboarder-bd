@@ -2765,3 +2765,6 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 #batimentReglagesEscalier .batiment-champ-large{ margin-bottom:0; }
 .batiment-champ-large .batiment-champ-valeur{ flex:1 1 auto; }
 .batiment-champ-large .batiment-champ-valeur input[type=number]{ flex:1 1 auto; width:auto; min-width:0; }
+/* Les choix à pictogramme (demandé) : l'icône au trait, le libellé court dessous. */
+.batiment-choix button.icone{ display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 4px 5px; font-size:11px; line-height:1.1; }
+.batiment-choix button.icone svg{ display:block; flex:none; }

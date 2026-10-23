@@ -19,6 +19,7 @@
  */
 import { tr } from './state.js';
 import { creerBatiment, nomAfficheDuFichier, DEFAUTS_BATIMENT } from './batiment.js';
+import { ICONES_TYPE_ESCALIER, ICONES_SENS_ESCALIER, ICONES_RAMPE, ICONES_MARCHES, ICONES_OUVERTURE } from './batiment-icones.js';
 import { actionDEnregistrement } from './batiment-bibliotheque.js';
 import { signatureDuBatiment, signatureDeStructure } from './batiment-element.js';
 import { enregistrerBatiment, listerBatiments, lireBatimentDuDisque } from './batiment-store.js';
@@ -591,12 +592,15 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
   // comprise si l'escalier doit se décaler pour que le choix tienne (demandé), et l'infobulle qui le dit.
   const choix = (valeurs, actuelle, quoi) => {
     const d = document.createElement('div'); d.className = 'batiment-choix';
-    valeurs.forEach(([val, lib]) => {
-      const b = document.createElement('button'); b.type = 'button'; b.textContent = lib;
+    valeurs.forEach(([val, lib, icone, bulle]) => {
+      const b = document.createElement('button'); b.type = 'button';
+      // Avec un pictogramme (demandé) : l'icône, et le libellé court dessous ; l'infobulle dit tout.
+      if (icone) { b.classList.add('icone'); b.innerHTML = icone; const t = document.createElement('span'); t.textContent = lib; b.appendChild(t); }
+      else b.textContent = lib;
       b.classList.toggle('actif', actuelle === val);
       const essai = essayer && actuelle !== val ? essayer({ [quoi]: val }) : null;
       b.disabled = !!(essai && essai.erreur);
-      b.title = essai ? (essai.erreur || essai.note || '') : '';
+      b.title = essai ? (essai.erreur || essai.note || bulle || '') : (bulle || '');
       b.onclick = () => changer(essai && essai.changements ? essai.changements : { [quoi]: val });
       d.appendChild(b);
     });
@@ -616,10 +620,6 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
     changer(essai ? essai.changements : { largeur: n / 100 });
   });
   lw.append(li, document.createTextNode(' cm')); l.append(lt, lw);
-  const c = document.createElement('label'); c.className = 'batiment-case';
-  const ci = document.createElement('input'); ci.type = 'checkbox'; ci.checked = !!v.contremarches;
-  ci.onchange = () => changer({ contremarches: ci.checked });
-  c.append(ci, document.createTextNode(tr('Solid steps', 'Marches pleines')));
   // Deux sous-sections (demandé) : Type (la forme et le côté où il tourne), Marches (la rampe et
   // les contremarches) ; la largeur dessous (demandé). Le détail des marches n'est plus affiché.
   const sousSection = (titre, ...contenu) => {
@@ -628,12 +628,30 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
     d.append(h, ...contenu);
     return d;
   };
-  const type = [choix([['droit', tr('Straight', 'Droit')], ['L', tr('L-shaped', 'En L')], ['U', tr('U-shaped', 'En U')]], v.type, 'type')];
-  if (v.type !== 'droit') type.push(choix([[1, tr('Turns left', 'Tourne à gauche')], [-1, tr('Turns right', 'Tourne à droite')]], v.sens, 'sens'));
+  const I = ICONES_TYPE_ESCALIER, S = ICONES_SENS_ESCALIER, R = ICONES_RAMPE, M = ICONES_MARCHES;
+  const type = [choix([
+    ['droit', tr('Straight', 'Droit'), I.droit, tr('Straight staircase', 'Escalier droit')],
+    ['L', tr('L', 'En L'), I.L, tr('L-shaped staircase (quarter turn)', 'Escalier en L (quart tournant)')],
+    ['U', tr('U', 'En U'), I.U, tr('U-shaped staircase (half turn)', 'Escalier en U (demi-tour)')],
+  ], v.type, 'type')];
+  if (v.type !== 'droit') type.push(choix([
+    [1, tr('Left', 'Gauche'), S[1], tr('Turns left', 'Tourne à gauche')],
+    [-1, tr('Right', 'Droite'), S[-1], tr('Turns right', 'Tourne à droite')],
+  ], v.sens, 'sens'));
   const elements = [
     sousSection(tr('Type', 'Type'), ...type),
     sousSection(tr('Steps', 'Marches'),
-      choix([['aucune', tr('No rail', 'Sans rampe')], ['gauche', tr('Left', 'Gauche')], ['droite', tr('Right', 'Droite')], ['deux', tr('Both', 'Les deux')]], v.rampe, 'rampe'), c),
+      choix([
+        ['aucune', tr('None', 'Aucune'), R.aucune, tr('No rail', 'Sans rampe')],
+        ['gauche', tr('Left', 'Gauche'), R.gauche, tr('Rail on the left', 'Rampe à gauche')],
+        ['droite', tr('Right', 'Droite'), R.droite, tr('Rail on the right', 'Rampe à droite')],
+        ['deux', tr('Both', 'Les deux'), R.deux, tr('Rails on both sides', 'Rampe des deux côtés')],
+      ], v.rampe, 'rampe'),
+      // Pleines ou ouvertes, de profil (demandé : à la place de la case à cocher).
+      choix([
+        [true, tr('Solid', 'Pleines'), M.true, tr('Solid steps (with risers)', 'Marches pleines (avec contremarches)')],
+        [false, tr('Open', 'Ouvertes'), M.false, tr('Open steps (no risers)', 'Marches ouvertes (sans contremarches)')],
+      ], !!v.contremarches, 'contremarches')),
     l,
   ];
   // Seul reste l'avertissement utile : sans niveau au-dessus, l'escalier ne peut pas se poser.
@@ -676,15 +694,20 @@ function formulaireOuverture(conteneur, v, changer, essayer = null){
   // `essayer(changements)` (une ouverture posée) : comme pour les escaliers, `{ erreur }` (éteint, la
   // raison en infobulle ; une valeur refusée revient et le dit) ou `{ changements, note }` (l'ouverture
   // glisse sur son mur à la place libre la plus proche si le choix l'exige, l'infobulle le dit).
-  const types = [['porte', tr('Door', 'Porte')], ['fenetre', tr('Window', 'Fenêtre')], ['baie', tr('Bay window', 'Baie vitrée')], ['passage', tr('Passage', 'Passage')]];
+  const O = ICONES_OUVERTURE;
+  const types = [['porte', tr('Door', 'Porte'), O.porte], ['fenetre', tr('Window', 'Fenêtre'), O.fenetre],
+    ['baie', tr('Bay', 'Baie'), O.baie, tr('Bay window', 'Baie vitrée')], ['passage', tr('Passage', 'Passage'), O.passage, tr('Passage (no door)', 'Passage (sans porte)')]];
   const choix = (valeurs, actuelle, quoi) => {
     const d = document.createElement('div'); d.className = 'batiment-choix';
-    valeurs.forEach(([val, lib]) => {
-      const b = document.createElement('button'); b.type = 'button'; b.textContent = lib;
+    valeurs.forEach(([val, lib, icone, bulle]) => {
+      const b = document.createElement('button'); b.type = 'button';
+      // Avec un pictogramme (demandé) : l'icône, et le libellé court dessous ; l'infobulle dit tout.
+      if (icone) { b.classList.add('icone'); b.innerHTML = icone; const t = document.createElement('span'); t.textContent = lib; b.appendChild(t); }
+      else b.textContent = lib;
       b.classList.toggle('actif', actuelle === val);
       const essai = essayer && actuelle !== val ? essayer({ [quoi]: val }) : null;
       b.disabled = !!(essai && essai.erreur);
-      b.title = essai ? (essai.erreur || essai.note || '') : '';
+      b.title = essai ? (essai.erreur || essai.note || bulle || '') : (bulle || '');
       b.onclick = () => changer(essai && essai.changements ? essai.changements : { [quoi]: val });
       d.appendChild(b);
     });
