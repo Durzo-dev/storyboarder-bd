@@ -302,6 +302,11 @@ export const HELP_MANUAL_EN = [
     'In the base menu, "Levels": rename a level, set its ceiling height and floor thickness (the levels above move with it), delete it (with what it holds). "Add a floor" adds an empty level on top; "Duplicate the floor" copies the current level, walls, openings and rooms, just above it.',
     'In 3D, every room is covered: by the floor of the room above, or else by a flat roof; the walls run through the slabs. The layers button of the preview cuts it at the current level, to see inside.',
   ]},
+  { id: 'batiments_escaliers', title: 'Staircases', paragraphs: [
+    'Stairs tool (S): straight, L-shaped or U-shaped, with its width, the side it turns to, risers or open steps, and a rail on one side, both or none. The steps are computed from the height to climb (about 17 cm high, 24 to 30 cm deep).',
+    'Click at the foot and drag the way it goes up (by 15°); a simple click places it in the last direction. It links the current level to the one above and pierces its floor, shown dashed on the upper level. It is refused (in red) with no level above, or if it would cross a wall.',
+    'With Selection, click a staircase to adjust it in the menu, drag it to move it, R to turn it by 90°, Del to delete it.',
+  ]},
 ];
 
 export const HELP_MANUAL_FR = [
@@ -553,6 +558,11 @@ export const HELP_MANUAL_FR = [
     "Les boutons ronds à gauche de la vue de dessus changent de niveau (Page haut / Page bas aussi) ; le niveau du dessous s'affiche en transparence sous le niveau courant, et ses murs et ses angles aimantent aussi, pour tracer un étage par-dessus celui d'en dessous.",
     "Dans le menu de base, « Niveaux » : renommer un niveau, régler sa hauteur sous plafond et l'épaisseur de son plancher (les niveaux du dessus suivent), le supprimer (avec ce qu'il porte). « Ajouter un étage » ajoute un niveau vide en haut ; « Dupliquer l'étage » copie le niveau courant, murs, ouvertures et pièces, juste au-dessus.",
     "En 3D, chaque pièce est couverte : par le plancher de la pièce du dessus, sinon par un toit plat ; les murs traversent les dalles. Le bouton des calques de l'aperçu le coupe au niveau courant, pour voir dedans.",
+  ]},
+  { id: 'batiments_escaliers', title: 'Escaliers', paragraphs: [
+    "Outil Escalier (S) : droit, en L ou en U, avec sa largeur, le côté où il tourne, des marches pleines (contremarches) ou ouvertes, et une rampe d'un côté, des deux ou aucune. Les marches se calculent d'après la hauteur à franchir (environ 17 cm de haut, 24 à 30 cm de profondeur).",
+    "Cliquez au pied et tirez dans la direction où il monte (par 15°) ; un simple clic le pose dans la dernière direction. Il relie le niveau courant à celui du dessus et perce son plancher, dessiné en pointillés à l'étage. Il est refusé (en rouge) sans niveau au-dessus, ou s'il traverserait un mur.",
+    "Avec Sélection, un clic sur un escalier le retouche dans le menu ; le tirer le déplace, R le tourne de 90°, Suppr le supprime.",
   ]},
 ];
 

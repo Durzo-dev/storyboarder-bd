@@ -396,6 +396,11 @@ starts at `elevation + hauteur + dalle(above)`. Elevations are derived (`recaler
 (the floor above, or a flat roof until #458) and walls run up to the top of that slab (continuous
 facade). Tracing also snaps to the level below ('repere' anchor).
 
+**Staircases** (#454c, done): `src/batiment-escaliers.js`. Straight, L or U (spiral later); steps
+of about 17 cm, Blondel going (2h + g = 63 cm, bounded to 24–30 cm); the stairwell (the widened
+footprint) pierces the floor above and the ceiling of its level, in the room that contains it.
+Refused with no level above or through a wall.
+
 Buildings already traced in Scenes (wall Elements, `pieceId`, `batimentNames`, `batimentRotY`)
 remain READ and are **converted** on opening into one-level buildings, in the same place: nothing
 moves on screen.

@@ -11,8 +11,9 @@
  */
 import { polygonesDesMurs, morceauxDuMur } from './batiment-geometrie.js';
 import { intervalleDe } from './batiment-ouvertures.js';
-import { formesDesPieces } from './batiment-pieces.js';
-import { niveauxTries, hauteurDesMursDuNiveau, epaisseurDuDessus } from './batiment-niveaux.js';
+import { formesDesPieces, dansLaFace } from './batiment-pieces.js';
+import { formeDeLEscalier, tremieDeLEscalier } from './batiment-escaliers.js';
+import { niveauxTries, hauteurDesMursDuNiveau, epaisseurDuDessus, niveauDessous } from './batiment-niveaux.js';
 
 /** Les matières d'un bâtiment, à créer une fois par renderer. */
 export function materiauxBatiment3D(T){
@@ -76,10 +77,16 @@ export function construireBatiment3D(T, b, mats, { jusquA = null } = {}){
   const lePlusBas = tries[0] && tries[0].id;
   const coupe = limite >= 0;
   const dernier = visibles.length ? visibles[visibles.length - 1].id : null;
-  const dalle = (f, y, epaisseur) => {
+  // #454c : les trémies des escaliers, par niveau : celles qu'un escalier perce dans le plafond de SON
+  // niveau, qui sont aussi celles du plancher du niveau du dessus.
+  const tremiesDe = (id) => (b.escaliers || []).filter(x => x.niveauId === id).map(x => tremieDeLEscalier(b, x)).filter(Boolean);
+  // Une trémie n'est retenue que dans la pièce qui la contient tout entière (un trou qui déborderait
+  // de sa forme casserait la triangulation).
+  const percees = (f, tremies) => tremies.filter(t => t.every(p => dansLaFace(p, f)));
+  const dalle = (f, y, epaisseur, tremies = []) => {
     if (!(epaisseur > 0)) return;
     const forme = new T.Shape(f.points.map(p => new T.Vector2(p.x, -p.z)));
-    (f.trous || []).forEach(t => forme.holes.push(new T.Path(t.map(p => new T.Vector2(p.x, -p.z)))));
+    [...(f.trous || []), ...percees(f, tremies)].forEach(t => forme.holes.push(new T.Path(t.map(p => new T.Vector2(p.x, -p.z)))));
     const geo = new T.ExtrudeGeometry(forme, { depth: epaisseur, bevelEnabled: false });
     geo.rotateX(-Math.PI / 2);
     const m = new T.Mesh(geo, mats.mur);
@@ -87,26 +94,29 @@ export function construireBatiment3D(T, b, mats, { jusquA = null } = {}){
     groupe.add(m);
   };
   visibles.forEach(n => {
-    const forme2D = (f) => {
+    const dessous = niveauDessous(b, n.id);
+    const tremiesPlancher = dessous ? tremiesDe(dessous.id) : [];
+    const tremiesPlafond = tremiesDe(n.id);
+    const forme2D = (f, tremies = []) => {
       const forme = new T.Shape(f.points.map(p => new T.Vector2(p.x, -p.z)));
-      (f.trous || []).forEach(t => forme.holes.push(new T.Path(t.map(p => new T.Vector2(p.x, -p.z)))));
+      [...(f.trous || []), ...percees(f, tremies)].forEach(t => forme.holes.push(new T.Path(t.map(p => new T.Vector2(p.x, -p.z)))));
       return forme;
     };
     for (const f of formesDesPieces(b, n.id).values()) {
       // Le sol de chaque pièce (#454a-3b), un peu au-dessus de la grille pour ne pas scintiller avec elle.
-      const geo = new T.ShapeGeometry(forme2D(f));
+      const geo = new T.ShapeGeometry(forme2D(f, tremiesPlancher));
       geo.rotateX(-Math.PI / 2);
       const sol = new T.Mesh(geo, mats.sol);
       sol.position.y = n.elevation + 0.005;
       groupe.add(sol);
       // #454b : la dalle, SOUS le sol d'un étage (le plus bas des niveaux est posé sur le Sol).
-      if (n.id !== lePlusBas && n.dalle > 0) dalle(f, n.elevation - n.dalle, n.dalle);
+      if (n.id !== lePlusBas && n.dalle > 0) dalle(f, n.elevation - n.dalle, n.dalle, tremiesPlancher);
       // ET LE DESSUS DE CHAQUE PIÈCE (signalé : une pièce qui dépassait de l'étage du dessus restait à
       // ciel ouvert). Chaque pièce est couverte d'une dalle à sa hauteur sous plafond, de l'épaisseur
       // du plancher du dessus : sous une pièce de l'étage, elle se confond avec son plancher ;
       // ailleurs, c'est un toit plat (en attendant les toits de #458). Le dernier niveau montré par
       // une coupe reste ouvert, pour voir dedans.
-      if (!(coupe && n.id === dernier)) dalle(f, n.elevation + n.hauteur, epaisseurDuDessus(b, n.id));
+      if (!(coupe && n.id === dernier)) dalle(f, n.elevation + n.hauteur, epaisseurDuDessus(b, n.id), tremiesPlafond);
     }
     const murs = b.murs.filter(m => m.niveauId === n.id);
     const formes = polygonesDesMurs(murs);
@@ -137,7 +147,53 @@ export function construireBatiment3D(T, b, mats, { jusquA = null } = {}){
         groupe.add(menuiserie);
       });
     });
+    // #454c : les escaliers du niveau.
+    (b.escaliers || []).filter(x => x.niveauId === n.id).forEach(x => construireEscalier(T, b, x, mats, n.elevation, groupe));
   });
   return groupe;
+}
+
+/**
+ * Un escalier en 3D : ses marches (pleines jusqu'au sol avec contremarches, sinon des planches), ses
+ * paliers, et sa rampe (une main courante inclinée et deux poteaux, par volée et par côté).
+ */
+function construireEscalier(T, b, esc, mats, elevation, groupe){
+  const f = formeDeLEscalier(b, esc);
+  if (!f) return;
+  const bloc = (pts, y0, y1, mat) => {
+    if (y1 - y0 < 1e-3) return;
+    const geo = new T.ExtrudeGeometry(new T.Shape(pts.map(p => new T.Vector2(p.x, -p.z))), { depth: y1 - y0, bevelEnabled: false });
+    geo.rotateX(-Math.PI / 2);
+    const m = new T.Mesh(geo, mat);
+    m.position.y = elevation + y0;
+    groupe.add(m);
+  };
+  f.morceaux.forEach(m => {
+    if (f.e.contremarches) bloc(m.points, 0, m.dessus, m.palier ? mats.mur : mats.bois);
+    else bloc(m.points, m.dessus - (m.palier ? 0.12 : 0.05), m.dessus, mats.bois);
+  });
+  if (f.e.rampe === 'aucune') return;
+  const cotes = f.e.rampe === 'deux' ? [1, -1] : [f.e.rampe === 'gauche' ? 1 : -1];
+  const w = f.e.largeur / 2 - 0.04, HAUT = 0.9;
+  f.volees.forEach(v => {
+    const L = Math.hypot(v.vers.x - v.de.x, v.vers.z - v.de.z) || 1;
+    const d = { x: (v.vers.x - v.de.x) / L, z: (v.vers.z - v.de.z) / L };
+    for (const c of cotes) {
+      // La gauche en montant : (d.z, −d.x) dans ce repère, z vers le bas en vue de dessus.
+      const o = { x: d.z * c * w, z: -d.x * c * w };
+      const a = new T.Vector3(v.de.x + o.x, elevation + v.y0 + HAUT, v.de.z + o.z);
+      const z = new T.Vector3(v.vers.x + o.x, elevation + v.y1 + HAUT, v.vers.z + o.z);
+      const dir = z.clone().sub(a), long = dir.length();
+      const main = new T.Mesh(new T.BoxGeometry(long, 0.05, 0.05), mats.bois);
+      main.position.copy(a).add(z).multiplyScalar(0.5);
+      main.quaternion.setFromUnitVectors(new T.Vector3(1, 0, 0), dir.normalize());
+      groupe.add(main);
+      for (const [p, y] of [[v.de, v.y0], [v.vers, v.y1]]) {
+        const poteau = new T.Mesh(new T.BoxGeometry(0.05, HAUT, 0.05), mats.bois);
+        poteau.position.set(p.x + o.x, elevation + y + HAUT / 2, p.z + o.z);
+        groupe.add(poteau);
+      }
+    }
+  });
 }
 

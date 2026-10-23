@@ -29,6 +29,8 @@
  * que de faire refuser tout le bâtiment.
  */
 
+import { normaliserEscalier } from './batiment-escaliers.js';
+
 /** La version du format que cette application écrit. */
 export const VERSION_BATIMENT = 1;
 /** L'extension d'un fichier de bâtiment ; le pont Electron n'accepte qu'elle. */
@@ -210,7 +212,8 @@ export function normaliserBatiment(brut, traduire){
     nom: texte(brut.nom, creerBatiment('', traduire).nom),
     niveaux, murs,
     ouvertures: normaliserOuvertures(brut.ouvertures, murs),
-    escaliers: rattacherAuNiveau(brut.escaliers, niveaux),
+    // #454c : relus avec leurs valeurs par défaut (cf. batiment-escaliers.js, normaliserEscalier).
+    escaliers: rattacherAuNiveau(brut.escaliers, niveaux).map(normaliserEscalier),
     pieces: rattacherAuNiveau(brut.pieces, niveaux),
     toit: normaliserToit(brut.toit),
     elements: Array.isArray(brut.elements) ? brut.elements.filter(objet) : [],

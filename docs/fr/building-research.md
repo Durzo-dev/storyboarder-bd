@@ -416,6 +416,11 @@ du dessus commence à `elevation + hauteur + dalle(du dessus)`. Les élévations
 en attendant #458) et les murs montent jusqu'au dessus de cette dalle (façade continue). Le tracé
 s'aimante aussi au niveau du dessous (accroche 'repere').
 
+**Les escaliers** (#454c, fait) : `src/batiment-escaliers.js`. Droit, en L ou en U (le colimaçon
+plus tard) ; marches d'environ 17 cm, giron de Blondel (2h + g = 63 cm, borné à 24–30 cm) ; la trémie
+(l'emprise élargie) perce le plancher du dessus et le plafond de son niveau, dans la pièce qui la
+contient. Refusé sans niveau au-dessus ou à travers un mur.
+
 Les bâtiments déjà tracés dans les Scènes (murs Éléments, `pieceId`, `batimentNames`,
 `batimentRotY`) restent LUS et sont **convertis** à l'ouverture en bâtiments d'un niveau, à la même
 place : rien ne bouge à l'écran.

@@ -222,6 +222,11 @@
               <path d="M5 21V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v17"/><path d="M3 21h18"/><path d="M15 12h.01"/>
             </svg>
           </button>
+          <button type="button" class="batiment-outil" id="batimentOutilEscalier" data-outil="escalier" title="Escaliers (S)">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+              <path d="M3 21h5v-5h5v-5h5V6h3"/>
+            </svg>
+          </button>
           <button type="button" class="batiment-outil" id="batimentOutilSelection" data-outil="selection" title="Sélection (V)">
             <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
               <path d="M5 3l6 17 2.5-7.5L21 10Z"/>
@@ -258,7 +263,7 @@
         </section>
         <section class="side-section pour-aucun">
           <h2 id="batimentSectionAide">Commandes</h2>
-          <p id="batimentAide" class="batiment-aide">Les outils sont en bas : Mur (M) pour tracer, Ouverture (O) pour les portes et fenêtres, Sélection (V) pour retoucher. Les niveaux sont à gauche (Page haut / Page bas). Un nouveau clic sur l'outil actif, ou « Fermer », le quitte.
+          <p id="batimentAide" class="batiment-aide">Les outils sont en bas : Mur (M) pour tracer, Ouverture (O) pour les portes et fenêtres, Escalier (S), Sélection (V) pour retoucher. Les niveaux sont à gauche (Page haut / Page bas). Un nouveau clic sur l'outil actif, ou « Fermer », le quitte.
 Vue de dessus : molette pour zoomer, clic droit maintenu pour déplacer la vue.
 Aperçu 3D : clic gauche maintenu pour tourner, clic droit maintenu pour déplacer, molette pour zoomer. Sa barre : la tirer pour l'ancrer à un autre coin, − pour le réduire, ⤢ pour le plein écran.
 Ctrl+Z / Ctrl+Y : annuler / rétablir. H ou Échap : fermer l'éditeur.</p>
@@ -292,6 +297,18 @@ Clic : la poser. Pour la déplacer ou la retoucher : outil Sélection.
 Échap : quitter l'outil.</p>
         </section>
 
+        <!-- #454c : l'outil Escalier. Les réglages de l'escalier à poser ; formulaire construit par le code. -->
+        <section class="side-section pour-escalier">
+          <h2 id="batimentSectionEscalier">Escalier à poser</h2>
+          <div id="batimentReglagesEscalier"></div>
+        </section>
+        <section class="side-section pour-escalier">
+          <h2 id="batimentSectionAideEscalier">Commandes</h2>
+          <p id="batimentAideEscalier" class="batiment-aide">Cliquez au pied de l'escalier et tirez dans la direction où il monte (par 15°) ; un simple clic le pose dans la dernière direction.
+Il relie le niveau courant à celui du dessus, et perce son plancher. En rouge : pas d'étage au-dessus, ou il traverserait un mur.
+Échap : quitter l'outil.</p>
+        </section>
+
         <section class="side-section pour-selection" id="batimentSectionSelection">
           <h2 id="batimentSelectionTitre">Sélection</h2>
           <p id="batimentSelectionVide" class="batiment-vide">Cliquez sur un mur, une ouverture ou dans une pièce pour le choisir.</p>
@@ -309,6 +326,14 @@ Clic : la poser. Pour la déplacer ou la retoucher : outil Sélection.
             <input type="text" id="batimentPieceNom" class="modal-input batiment-nom" autocomplete="off" spellcheck="false">
             <p id="batimentPieceSurface" class="batiment-fichier"></p>
           </div>
+          <!-- #454c : un escalier choisi se retouche ici. -->
+          <div id="batimentSelectionEscalier">
+            <div id="batimentFormEscalier"></div>
+            <div class="batiment-boutons">
+              <button type="button" class="nav-btn" id="batimentEscalierTourner">Tourner de 90° (R)</button>
+            </div>
+            <button type="button" class="full-btn delete-btn" id="batimentEscalierSupprimer">Supprimer l'escalier</button>
+          </div>
           <div id="batimentSelectionMur">
             <p id="batimentMurLongueur" class="batiment-fichier"></p>
             <label class="batiment-champ"><span id="batimentMurEpaisseurLibelle">Épaisseur</span>
@@ -320,6 +345,7 @@ Clic : la poser. Pour la déplacer ou la retoucher : outil Sélection.
           <h2 id="batimentSectionAideSelection">Commandes</h2>
           <p id="batimentAideSelection" class="batiment-aide">Clic sur un mur : le choisir. Suppr : le supprimer.
 Clic sur une ouverture : la choisir ; la tirer la fait glisser le long de son mur, la molette la monte ou la descend (Maj : au centimètre).
+Clic sur un escalier : le choisir ; le tirer le déplace, R le tourne de 90°.
 Clic dans une pièce : la choisir, pour la renommer.
 Tirer un angle : le déplacer, avec tous les murs qui y sont attachés (Alt : sans aimantation).
 Échap : désélectionner, puis quitter l'outil.</p>
@@ -1041,6 +1067,9 @@ Tirer un angle : le déplacer, avec tous les murs qui y sont attachés (Alt : sa
             </button>
             <button type="button" class="help-group" data-help="batiments_niveaux">
               <span class="help-group-title">Niveaux d'un bâtiment</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="batiments_escaliers">
+              <span class="help-group-title">Escaliers</span><span class="help-group-compte"></span>
             </button>
           </div>
         </div>

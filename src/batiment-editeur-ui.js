@@ -37,6 +37,10 @@ import {
 } from './batiment-trace.js';
 import { actualiserPieces, formesDesPieces, pieceSous } from './batiment-pieces.js';
 import {
+  formeDeLEscalier, tremieDeLEscalier, validiteDeLEscalier, ajouterEscalier, modifierEscalier, supprimerEscalier,
+  escalierSous, decoupage, hauteurAFranchir, DEFAUTS_ESCALIER,
+} from './batiment-escaliers.js';
+import {
   niveauxTries, niveauDessous, niveauDessus, ajouterEtage, dupliquerNiveau, supprimerNiveau, modifierNiveau,
 } from './batiment-niveaux.js';
 import { cadrage3D, orbite3D, zoom3D, positionCamera3D, deplacement3D } from './store-apercu-3d.js';
@@ -80,6 +84,9 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null, desti
     // #454a-3c : les réglages de l'ouverture à poser, et l'ouverture qu'on fait glisser.
     reglagesOuverture: reglagesParDefaut('porte'), glisserOuverture: null,
     coupe: false,   // #454b : l'aperçu 3D coupé au niveau courant
+    // #454c : les réglages de l'escalier à poser (et sa dernière direction), le geste de pose, le
+    // fantôme sous la souris, l'escalier qu'on fait glisser.
+    reglagesEscalier: { ...DEFAUTS_ESCALIER, angle: -Math.PI / 2 }, poseEscalier: null, fantomeEscalier: null, glisserEscalier: null,
     // #454a-4 : où va le bâtiment en sortant. { mode: 'placer' | 'appliquer', valider(batiment) },
     // ou null (ouvert par le bandeau : il ne va que dans la bibliothèque).
     destination,
@@ -228,13 +235,18 @@ function remplirPanneau(){
     l.onclick = () => { choisirOutil('selection'); E.selection = { pieceId: p.id }; remplirPanneau(); dessinerPlan(); };
     return l;
   }) : [vide(tr('No room yet: close a contour of walls.', 'Aucune pièce : fermez un contour de murs.'))]));
-  const m = murSelectionne(), piece = pieceSelectionnee(), ouv = ouvertureSelectionnee();
+  const m = murSelectionne(), piece = pieceSelectionnee(), ouv = ouvertureSelectionnee(), esc = escalierSelectionne();
   $('batimentSelectionMur').hidden = !m;
   $('batimentSelectionPiece').hidden = !piece;
   $('batimentSelectionOuverture').hidden = !ouv;
-  $('batimentSelectionVide').hidden = !!(m || piece || ouv);
+  $('batimentSelectionEscalier').hidden = !esc;
+  $('batimentSelectionVide').hidden = !!(m || piece || ouv || esc);
   $('batimentSelectionTitre').textContent = m ? tr('Selected wall', 'Mur sélectionné') : piece ? tr('Selected room', 'Pièce sélectionnée')
-    : ouv ? tr('Selected opening', 'Ouverture sélectionnée') : tr('Selection', 'Sélection');
+    : ouv ? tr('Selected opening', 'Ouverture sélectionnée') : esc ? tr('Selected staircase', 'Escalier sélectionné') : tr('Selection', 'Sélection');
+  if (E.outil === 'escalier') formulaireEscalier($('batimentReglagesEscalier'), E.reglagesEscalier, (c) => {
+    E.reglagesEscalier = { ...E.reglagesEscalier, ...c }; remplirPanneau(); dessinerPlan();
+  });
+  if (esc) formulaireEscalier($('batimentFormEscalier'), esc, (c) => retoucherEscalier(esc.id, c));
   // Les deux formulaires d'ouverture : celle qu'on va poser (outil Ouverture), celle qu'on a choisie.
   if (E.outil === 'ouverture') formulaireOuverture($('batimentReglagesOuverture'), E.reglagesOuverture, (c) => {
     E.reglagesOuverture = c.type && c.type !== E.reglagesOuverture.type ? { ...reglagesParDefaut(c.type), sens: E.reglagesOuverture.sens, charniere: E.reglagesOuverture.charniere } : { ...E.reglagesOuverture, ...c };
@@ -394,6 +406,66 @@ function pieceSelectionnee(){
   return E.batiment.pieces.find(p => p.id === E.selection.pieceId) || null;
 }
 
+/** L'escalier sélectionné, s'il existe encore. */
+function escalierSelectionne(){
+  if (!E || !E.selection || !E.selection.escalierId) return null;
+  return (E.batiment.escaliers || []).find(x => x.id === E.selection.escalierId) || null;
+}
+
+/** Le message d'un refus d'escalier. */
+function refusEscalier(erreur){
+  return erreur === 'sansEtage' ? tr('A staircase needs a level above: add a floor first.', 'Un escalier a besoin d\'un niveau au-dessus : ajoutez d\'abord un étage.')
+    : tr('This staircase would cross a wall.', 'Cet escalier traverserait un mur.');
+}
+
+/** Retouche l'escalier choisi, essayé d'abord sur une copie (cf. retoucherOuverture). */
+function retoucherEscalier(id, changements){
+  const essai = JSON.parse(JSON.stringify(E.batiment));
+  const r = modifierEscalier(essai, id, changements);
+  if (r.erreur) { statut(refusEscalier(r.erreur)); remplirPanneau(); return; }
+  statut('');
+  modifier(b => modifierEscalier(b, id, changements));
+}
+
+/**
+ * Le formulaire d'un escalier (#454c), dans `conteneur` : le type, la largeur, le côté où il tourne
+ * (L et U), les contremarches, la rampe, et le nombre de marches qui en résulte.
+ */
+function formulaireEscalier(conteneur, v, changer){
+  const choix = (valeurs, actuelle, quoi) => {
+    const d = document.createElement('div'); d.className = 'batiment-choix';
+    valeurs.forEach(([val, lib]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = lib;
+      b.classList.toggle('actif', actuelle === val);
+      b.onclick = () => changer({ [quoi]: val });
+      d.appendChild(b);
+    });
+    return d;
+  };
+  const l = document.createElement('label'); l.className = 'batiment-champ';
+  const lt = document.createElement('span'); lt.textContent = tr('Width', 'Largeur');
+  const lw = document.createElement('span'); lw.className = 'batiment-champ-valeur';
+  const li = document.createElement('input'); li.type = 'number'; li.min = '50'; li.max = '300'; li.step = '1'; li.value = Math.round(v.largeur * 100);
+  li.addEventListener('change', () => { const n = Number(li.value); if (Number.isFinite(n)) changer({ largeur: n / 100 }); });
+  lw.append(li, document.createTextNode(' cm')); l.append(lt, lw);
+  const c = document.createElement('label'); c.className = 'batiment-case';
+  const ci = document.createElement('input'); ci.type = 'checkbox'; ci.checked = !!v.contremarches;
+  ci.onchange = () => changer({ contremarches: ci.checked });
+  c.append(ci, document.createTextNode(tr('Risers (solid steps)', 'Contremarches (marches pleines)')));
+  const H = hauteurAFranchir(E.batiment, v.niveauId || E.niveauId);
+  const info = document.createElement('p'); info.className = 'batiment-info';
+  info.textContent = H > 0
+    ? (() => { const d = decoupage(H); return tr(`${d.nombre} steps of ${Math.round(d.hauteur * 1000) / 10} cm, ${Math.round(d.giron * 100)} cm deep.`, `${d.nombre} marches de ${(Math.round(d.hauteur * 1000) / 10).toLocaleString('fr')} cm, ${Math.round(d.giron * 100)} cm de profondeur.`); })()
+    : tr('No level above: add a floor first.', 'Pas de niveau au-dessus : ajoutez d\'abord un étage.');
+  const elements = [
+    choix([['droit', tr('Straight', 'Droit')], ['L', tr('L-shaped', 'En L')], ['U', tr('U-shaped', 'En U')]], v.type, 'type'),
+    l,
+  ];
+  if (v.type !== 'droit') elements.push(choix([[1, tr('Turns left', 'Tourne à gauche')], [-1, tr('Turns right', 'Tourne à droite')]], v.sens, 'sens'));
+  elements.push(c, choix([['aucune', tr('No rail', 'Sans rampe')], ['gauche', tr('Left', 'Gauche')], ['droite', tr('Right', 'Droite')], ['deux', tr('Both', 'Les deux')]], v.rampe, 'rampe'), info);
+  conteneur.replaceChildren(...elements);
+}
+
 /** L'ouverture sélectionnée, si elle existe encore. */
 function ouvertureSelectionnee(){
   if (!E || !E.selection || !E.selection.ouvertureId) return null;
@@ -477,7 +549,8 @@ function choisirOutil(outil){
   if (E.outil !== 'selection') E.selection = null;
   document.querySelectorAll('.batiment-outil').forEach(b => b.classList.toggle('actif', b.dataset.outil === E.outil));
   $('batimentPanneau').dataset.outil = E.outil || 'aucun';
-  $('batimentPlan').classList.toggle('outil-mur', E.outil === 'mur' || E.outil === 'ouverture');
+  $('batimentPlan').classList.toggle('outil-mur', E.outil === 'mur' || E.outil === 'ouverture' || E.outil === 'escalier');
+  E.fantomeEscalier = null;
   remplirPanneau();
   dessinerPlan();
 }
@@ -502,7 +575,7 @@ function modifier(faire){
 
 function apresModification(){
   if (E.selection && ((E.selection.murId && !murSelectionne()) || (E.selection.pieceId && !pieceSelectionnee())
-    || (E.selection.ouvertureId && !ouvertureSelectionnee()))) E.selection = null;
+    || (E.selection.ouvertureId && !ouvertureSelectionnee()) || (E.selection.escalierId && !escalierSelectionne()))) E.selection = null;
   remplirPanneau();
   dessinerPlan();
   if (E.apercu) E.apercu.reconstruire(E.batiment);
@@ -631,6 +704,30 @@ function dessinerOuverture(g, versE, echelle, mur, o, tranche, teinte, pleine){
   }
 }
 
+/**
+ * Un escalier dans la vue de dessus, comme sur un plan : chaque marche en trait (un palier sans trait
+ * intérieur), et la flèche de la montée qui suit ses volées, d'un rond au pied à une pointe en haut.
+ */
+function dessinerEscalier(g, versE, f, teinte, poly, fantome = false){
+  g.save();
+  f.morceaux.forEach(m => {
+    poly(m.points);
+    g.globalAlpha = fantome ? 0.35 : 0.18; g.fillStyle = teinte; g.fill();
+    g.globalAlpha = 1; g.strokeStyle = teinte; g.lineWidth = 1; g.stroke();
+  });
+  g.lineWidth = 1.5; g.strokeStyle = teinte; g.fillStyle = teinte;
+  const pts = f.volees.flatMap(v => [v.de, v.vers]).map(versE);
+  g.beginPath(); pts.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.stroke();
+  const a = pts[0], z = pts[pts.length - 1], y = pts[pts.length - 2] || a;
+  g.beginPath(); g.arc(a.x, a.y, 3, 0, Math.PI * 2); g.fill();
+  const ang = Math.atan2(z.y - y.y, z.x - y.x);
+  g.beginPath(); g.moveTo(z.x, z.y);
+  g.lineTo(z.x - 9 * Math.cos(ang - 0.4), z.y - 9 * Math.sin(ang - 0.4));
+  g.lineTo(z.x - 9 * Math.cos(ang + 0.4), z.y - 9 * Math.sin(ang + 0.4));
+  g.closePath(); g.fill();
+  g.restore();
+}
+
 function dessinerPlan(){
   if (!E || !E.vue) return;
   const { c, l, h } = taillePlan();
@@ -693,6 +790,22 @@ function dessinerPlan(){
     g.globalAlpha = 1;
   }
   const survole = E.outil === 'selection' && E.survol && E.survol.murId;
+  // #454c : les escaliers du niveau (sous les murs), et la trémie de ceux du niveau du dessous.
+  const versEsc = (p) => versEcran(vue, l, h, p);
+  if (dessous) {
+    g.save(); g.setLineDash([6, 4]); g.strokeStyle = couleur('--ink-soft', '#9a9aa2'); g.lineWidth = 1.5;
+    (E.batiment.escaliers || []).filter(x => x.niveauId === dessous.id).forEach(x => {
+      const t = tremieDeLEscalier(E.batiment, x);
+      if (t) { poly(t); g.stroke(); }
+    });
+    g.restore();
+  }
+  (E.batiment.escaliers || []).filter(x => x.niveauId === E.niveauId).forEach(x => {
+    const f = formeDeLEscalier(E.batiment, x);
+    const choisi = (E.selection && E.selection.escalierId === x.id) || (E.outil === 'selection' && E.survol && E.survol.escalierId === x.id);
+    if (f) dessinerEscalier(g, versEsc, f, choisi ? accent : couleur('--ink-soft', '#9a9aa2'), poly);
+  });
+
   // Chaque mur est coupé à ses ouvertures (#454a-3c), comme sur un plan d'architecte ; chaque
   // ouverture y dessine son symbole.
   const ouvertures = E.batiment.ouvertures || [];
@@ -732,6 +845,12 @@ function dessinerPlan(){
       g.fillStyle = actif ? accent : couleur('--paper-dark', '#212226'); g.fill();
       g.strokeStyle = accent; g.lineWidth = 1.5; g.stroke();
     });
+  }
+
+  // #454c : l'escalier à poser (outil Escalier), en accent, ou en rouge s'il ne tient pas.
+  if (E.outil === 'escalier' && E.fantomeEscalier) {
+    const f = formeDeLEscalier(E.batiment, E.fantomeEscalier);
+    if (f) dessinerEscalier(g, versEsc, f, E.fantomeEscalier.ok ? accent : couleur('--danger', '#c0392b'), poly, true);
   }
 
   // Le nom et la surface de chaque pièce, à son repère.
@@ -832,6 +951,21 @@ function survoler(e){
     const s = aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, depuis: E.chaine && E.chaine.depuis, dessous: idDessous() });
     s.croise = !!E.chaine && croiseUnMur(E.batiment, E.niveauId, E.chaine.depuis, s.point);
     E.survol = s;
+  } else if (E.outil === 'escalier') {
+    // #454c : le fantôme suit la souris ; pendant un appui, il tourne vers elle (par 15°).
+    let depart = aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, dessous: idDessous() }).point;
+    let angle = E.reglagesEscalier.angle;
+    if (E.poseEscalier) {
+      depart = E.poseEscalier.depart;
+      if (Math.hypot(e.clientX - E.poseEscalier.x, e.clientY - E.poseEscalier.y) > 6) {
+        const pas = Math.PI / 12;
+        angle = Math.round(Math.atan2(p.z - depart.z, p.x - depart.x) / pas) * pas;
+        E.poseEscalier.angle = angle;
+      } else if (E.poseEscalier.angle != null) angle = E.poseEscalier.angle;
+    }
+    const fantome = { ...E.reglagesEscalier, niveauId: E.niveauId, depart, angle };
+    fantome.ok = !validiteDeLEscalier(E.batiment, fantome).erreur;
+    E.fantomeEscalier = fantome;
   } else if (E.outil === 'ouverture') {
     // L'ouverture à poser suit la souris le long du mur survolé (#454a-3c).
     const m = murSous(E.batiment, E.niveauId, p, tol);
@@ -842,6 +976,13 @@ function survoler(e){
       if (r.ok && E.reglagesOuverture.y > H - 0.25) E.survol.raison = 'haute';
     } else E.survol = null;
   } else if (E.outil === 'selection') {
+    if (E.glisserEscalier) {
+      // Le déplacement suit la souris ; une position où il traverserait un mur est sautée.
+      const g = E.glisserEscalier;
+      const depart = { x: g.depart.x + p.x - g.p.x, z: g.depart.z + p.z - g.p.z };
+      if (!modifierEscalier(E.batiment, g.id, { depart }).erreur) { g.bouge = true; apresModification(); }
+      return;
+    }
     if (E.glisserOuverture) {
       if (deplacerOuverture(E.batiment, E.glisserOuverture.id, p)) { E.glisserOuverture.bouge = true; apresModification(); }
       return;
@@ -849,8 +990,9 @@ function survoler(e){
     const sommet = sommetSous(E.batiment, E.niveauId, p, tol);
     const ouvertureId = sommet ? null : ouvertureSous(E.batiment, E.niveauId, p, tol / 2);
     const m = (sommet || ouvertureId) ? null : murSous(E.batiment, E.niveauId, p, tol / 2);
-    const pieceId = (sommet || m || ouvertureId) ? null : pieceSous(E.batiment, E.niveauId, p);
-    E.survol = { sommet, murId: m ? m.mur.id : null, pieceId, ouvertureId };
+    const escalierId = (sommet || ouvertureId || m) ? null : escalierSous(E.batiment, E.niveauId, p);
+    const pieceId = (sommet || m || ouvertureId || escalierId) ? null : pieceSous(E.batiment, E.niveauId, p);
+    E.survol = { sommet, murId: m ? m.mur.id : null, pieceId, ouvertureId, escalierId };
   } else E.survol = null;
   dessinerPlan();
 }
@@ -896,6 +1038,12 @@ function cablerPlan(){
       c.setPointerCapture(e.pointerId);
       return;
     }
+    if (E.outil === 'escalier') {
+      // Le pied est posé à l'appui ; la direction se choisit en tirant, la pose se fait au relâcher.
+      E.poseEscalier = { x: e.clientX, y: e.clientY, depart: aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, dessous: idDessous() }).point, angle: null };
+      c.setPointerCapture(e.pointerId);
+      return;
+    }
     if (E.outil === 'ouverture') {
       const m = murSous(E.batiment, E.niveauId, p, tol);
       if (!m) return;
@@ -923,6 +1071,17 @@ function cablerPlan(){
       return;
     }
     const m = murSous(E.batiment, E.niveauId, p, tol / 2);
+    // Un escalier : le choisir, et le déplacer si on tire.
+    const escalierId = m ? null : escalierSous(E.batiment, E.niveauId, p);
+    if (escalierId) {
+      const x = E.batiment.escaliers.find(q => q.id === escalierId);
+      E.selection = { escalierId };
+      E.historique.push(JSON.stringify(E.batiment)); E.refaire = [];
+      E.glisserEscalier = { id: escalierId, depart: { ...x.depart }, p, bouge: false };
+      c.setPointerCapture(e.pointerId);
+      remplirPanneau(); dessinerPlan();
+      return;
+    }
     const pieceId = m ? null : pieceSous(E.batiment, E.niveauId, p);
     E.selection = m ? { murId: m.mur.id } : pieceId ? { pieceId } : null;
     remplirPanneau();
@@ -945,6 +1104,25 @@ function cablerPlan(){
       E.appui = null;
       if (E.rectangle) { if (e && e.type === 'pointerup' && E.rectangle.vers) poserLeRectangle(); else { E.rectangle = null; dessinerPlan(); } }
       else if (e && e.type === 'pointerup') poserUnPoint(point);
+    }
+    if (E.glisserEscalier) {
+      const { bouge } = E.glisserEscalier;
+      E.glisserEscalier = null;
+      if (!bouge) E.historique.pop();
+      apresModification();
+    }
+    if (E.poseEscalier) {
+      const pose = E.poseEscalier;
+      E.poseEscalier = null;
+      if (e && e.type === 'pointerup') {
+        const angle = pose.angle != null ? pose.angle : E.reglagesEscalier.angle;
+        E.reglagesEscalier.angle = angle;   // le prochain simple clic reprend cette direction
+        const reglages = { ...E.reglagesEscalier, depart: pose.depart, angle };
+        const essai = ajouterEscalier(JSON.parse(JSON.stringify(E.batiment)), E.niveauId, reglages);
+        if (essai.erreur) statut(refusEscalier(essai.erreur));
+        else { statut(''); modifier(b => ajouterEscalier(b, E.niveauId, reglages)); }
+      }
+      dessinerPlan();
     }
     if (E.glisserOuverture) {
       const { bouge } = E.glisserOuverture;
@@ -969,7 +1147,7 @@ function cablerPlan(){
   c.addEventListener('pointerup', fin);
   c.addEventListener('pointercancel', fin);
   c.addEventListener('dblclick', () => { if (E) finirLaChaine(); });
-  c.addEventListener('pointerleave', () => { if (E && !E.glisserSommet) { E.survol = null; dessinerPlan(); } });
+  c.addEventListener('pointerleave', () => { if (E && !E.glisserSommet) { E.survol = null; E.fantomeEscalier = null; dessinerPlan(); } });
   c.addEventListener('contextmenu', (e) => e.preventDefault());
   const Observateur = globalThis.ResizeObserver;
   if (Observateur) new Observateur(() => dessinerPlan()).observe(c);
@@ -1204,7 +1382,7 @@ function clavier(e){
     avale();
     // Échap défait d'abord ce qui est en cours : la pièce qu'on tire, la chaîne, la sélection,
     // l'outil ; ensuite il ferme.
-    if (E.rectangle || E.appui) { E.rectangle = null; E.appui = null; dessinerPlan(); return; }
+    if (E.rectangle || E.appui || E.poseEscalier) { E.rectangle = null; E.appui = null; E.poseEscalier = null; dessinerPlan(); return; }
     if (finirLaChaine()) return;
     if (E.selection) { E.selection = null; remplirPanneau(); dessinerPlan(); return; }
     if (E.outil) { choisirOutil(null); return; }
@@ -1227,10 +1405,16 @@ function clavier(e){
   else if (touche === 'e') $('openPoseEditorBtn').click();
   else if (touche === 'm') basculerOutil('mur');
   else if (touche === 'o') basculerOutil('ouverture');
+  else if (touche === 's') basculerOutil('escalier');
+  else if (touche === 'r' && escalierSelectionne()) { const x = escalierSelectionne(); retoucherEscalier(x.id, { angle: x.angle + Math.PI / 2 }); }
   else if (e.key === 'PageUp') changerDeNiveau(1);
   else if (e.key === 'PageDown') changerDeNiveau(-1);
   else if (touche === 'v') basculerOutil('selection');
   else if (e.key === 'Enter') finirLaChaine();
+  else if ((e.key === 'Delete' || e.key === 'Backspace') && escalierSelectionne()) {
+    const id = E.selection.escalierId;
+    modifier(b => supprimerEscalier(b, id));
+  }
   else if ((e.key === 'Delete' || e.key === 'Backspace') && ouvertureSelectionnee()) {
     const id = E.selection.ouvertureId;
     modifier(b => supprimerOuverture(b, id));
@@ -1266,6 +1450,9 @@ export function initEditeurDeBatiment(){
     modifier(b => { const p = b.pieces.find(q => q.id === piece.id); if (p) p.nom = nom; });
   });
   $('batimentPieceNom').addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
+  // #454c : l'escalier choisi.
+  $('batimentEscalierTourner').onclick = () => { const x = escalierSelectionne(); if (x) retoucherEscalier(x.id, { angle: x.angle + Math.PI / 2 }); };
+  $('batimentEscalierSupprimer').onclick = () => { const x = escalierSelectionne(); if (x) modifier(b => supprimerEscalier(b, x.id)); };
   // #454a-3c : l'ouverture choisie.
   $('batimentOuvertureSupprimer').onclick = () => { const o = ouvertureSelectionnee(); if (o) modifier(b => supprimerOuverture(b, o.id)); };
   $('batimentOuvertureSens').onclick = () => { const o = ouvertureSelectionnee(); if (o) retoucherOuverture(o.id, { sens: o.sens === -1 ? 1 : -1 }); };
