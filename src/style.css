@@ -2750,9 +2750,13 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-editeur-panneau > .full-btn, .batiment-editeur-panneau > .nav-btn { margin: 0 0 8px; width: 100%; }
 #batimentPieceMenu{ z-index:1100; }
 /* Éditeur de bâtiment : « Ajouter un étage » au-dessus de « Dupliquer l'étage » (demandé). */
-.batiment-boutons-pile{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
-.batiment-boutons-pile > button{ width:100%; }
+.batiment-boutons-pile{ display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+/* Le même écart que « Tourner » / « Supprimer » d'un escalier (6 px) : la marge propre du bouton est retirée. */
+.batiment-boutons-pile > button{ width:100%; margin:0; }
 /* Les sous-sections d'un formulaire (Type, Marches d'un escalier) : un creux, un titre un cran sous
    celui de la section, comme les sous-sections de l'Éditeur de modèle. */
 .batiment-sous-section{ background:var(--creux); border-radius:5px; padding:7px 9px 9px; margin:0 0 10px; display:flex; flex-direction:column; gap:8px; }
 .batiment-sous-section > h3{ margin:0; font-size:13px; font-weight:600; color:var(--ink-mid); }
+/* Dans une sous-section, seul son `gap` espace les rangées : Contremarches est à la même distance
+   des boutons de rampe que les deux rangées de Type entre elles (demandé). */
+.batiment-sous-section > .batiment-choix, .batiment-sous-section > .batiment-case{ margin:0; }

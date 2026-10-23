@@ -445,11 +445,12 @@ function remplirNiveaux(){
   const actions = document.createElement('div');
   actions.className = 'batiment-boutons-pile';
   const ajouter = document.createElement('button');
-  ajouter.type = 'button'; ajouter.className = 'nav-btn'; ajouter.textContent = tr('Add a floor', 'Ajouter un étage');
+  // Orange (demandé) : ces deux boutons CRÉENT un niveau.
+  ajouter.type = 'button'; ajouter.className = 'full-btn'; ajouter.textContent = tr('Add a floor', 'Ajouter un étage');
   ajouter.title = tr('Add an empty level on top (N)', 'Ajouter un niveau vide en haut (N)');
   ajouter.onclick = ajouterUnEtage;
   const dupliquer = document.createElement('button');
-  dupliquer.type = 'button'; dupliquer.className = 'nav-btn'; dupliquer.textContent = tr('Duplicate the floor', 'Dupliquer l\'étage');
+  dupliquer.type = 'button'; dupliquer.className = 'full-btn'; dupliquer.textContent = tr('Duplicate the floor', 'Dupliquer l\'étage');
   dupliquer.title = tr('Copy the current level (walls, openings, rooms) just above it (D)', 'Copier le niveau courant (murs, ouvertures, pièces) juste au-dessus (D)');
   dupliquer.onclick = dupliquerLEtage;
   actions.append(ajouter, dupliquer);
@@ -619,7 +620,7 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
   ci.onchange = () => changer({ contremarches: ci.checked });
   c.append(ci, document.createTextNode(tr('Risers (solid steps)', 'Contremarches (marches pleines)')));
   // Deux sous-sections (demandé) : Type (la forme et le côté où il tourne), Marches (la rampe et
-  // les contremarches) ; la largeur entre les deux. Le détail des marches n'est plus affiché.
+  // les contremarches) ; la largeur dessous (demandé). Le détail des marches n'est plus affiché.
   const sousSection = (titre, ...contenu) => {
     const d = document.createElement('div'); d.className = 'batiment-sous-section';
     const h = document.createElement('h3'); h.textContent = titre;
@@ -630,9 +631,9 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
   if (v.type !== 'droit') type.push(choix([[1, tr('Turns left', 'Tourne à gauche')], [-1, tr('Turns right', 'Tourne à droite')]], v.sens, 'sens'));
   const elements = [
     sousSection(tr('Type', 'Type'), ...type),
-    l,
     sousSection(tr('Steps', 'Marches'),
       choix([['aucune', tr('No rail', 'Sans rampe')], ['gauche', tr('Left', 'Gauche')], ['droite', tr('Right', 'Droite')], ['deux', tr('Both', 'Les deux')]], v.rampe, 'rampe'), c),
+    l,
   ];
   // Seul reste l'avertissement utile : sans niveau au-dessus, l'escalier ne peut pas se poser.
   if (!(hauteurAFranchir(E.batiment, v.niveauId || E.niveauId) > 0)) {
