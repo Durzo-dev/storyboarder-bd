@@ -80,6 +80,12 @@ if [ -f "$ESLINT" ]; then
 else
   echo "pre-commit : ESLint absent, analyse ignorée — npm i -D eslint pour l'activer."
 fi
+# Le système de design suit l'interface (style.css, index.html, icônes) : sa page est régénérée à
+# chaque commit, pour ne jamais retarder sur l'application (tools/design-system.mjs ; un test vérifie
+# qu'elle est à jour, ce qui couvre aussi un commit fait sans ce hook).
+if node tools/design-system.mjs > /dev/null 2>&1; then
+  git add docs/design-system.html
+fi
 if ! node --test tests/*.test.mjs > /dev/null 2>&1; then
   echo "pre-commit : la suite de tests échoue — commit annulé." >&2
   echo "  Détail   : npm test" >&2

@@ -2,15 +2,18 @@
 
 *[Version française](../fr/interface.md)*
 
-> The visual and interaction rules set by the user through feedback rounds, mostly while building the
-> building editor (#454). They were scattered across `src/style.css` comments and conversations; this
-> document gathers them. The checkable ones are held by `tests/interface.test.mjs`. The values' source
+> The visual and interaction rules of the whole application, set by the user through feedback rounds
+> (button convention #398, accessibility #409, interface size #410, editors, store, building editor
+> #454…). They were scattered across `src/style.css` comments and conversations; this document
+> gathers them. The checkable ones are held by `tests/interface.test.mjs`. The values' source
 > of truth stays `src/style.css`: if a figure here and the stylesheet disagree, the stylesheet wins
 > and this document is behind.
 >
-> The **design system** (the four renderings' tokens, typography, gaps, radii, components, icons) is a
-> page generated from the code: [design-system.html](../design-system.html), by
-> `node tools/design-system.mjs`. A test checks it is up to date.
+> The **design system** (the four renderings' tokens, typography, gaps, radii, controls, and every
+> screen: header, left and right menus, context menus, modals, store, editors, Reader) is a page
+> generated from the code: [design-system.html](../design-system.html), by
+> `node tools/design-system.mjs`, which the pre-commit hook runs on every commit. A test checks it is
+> up to date.
 
 ## Colours
 
@@ -83,6 +86,98 @@ A grouping inside a section (Type, Steps, Dimensions): a **well** (`--creux`), a
 - Neither does a success: the button's state is enough ("Save" greys out, its tooltip says under
   which name).
 - A failure that needs attention (a save that cannot happen) opens a **modal**.
+
+## Screens
+
+### Header
+
+- The application's name on the left, then **round buttons** opening the screens (building, model,
+  library, fonts, undo, save, settings, manual).
+- Each round button has a tooltip with its shortcut; it **lights up** while its screen is open.
+
+### Left menu
+
+- The **Project name** on top (a click opens the Project modal), then one card per list: Volumes,
+  Scenes, Images. Each card folds by its title.
+- Rows are bordered tiles; the **active** row is marked in orange (border, plus a light
+  orange fill for a Page).
+  Right-click: its menu. Drag: reorder, the insertion point marked by an orange line.
+- Secondary additions ("Add a page", "Add a chapter") are dashed buttons; the main addition ("New
+  volume") is the orange button at the bottom of the card.
+- A **fixed footer** says how long ago the Project was saved.
+
+### The application's right-hand menu
+
+- It follows what is selected: Page, Panel, Bubble; the Camera; the Manual when nothing is.
+- A centred header with its round close cross; sections fold with a click on their title.
+- A setting is a **block**: an upper-case label above, a full-width field below. In the right-hand
+  panel, a block is not indented.
+- The panel's checkboxes have one look (box, then a normal-case label).
+
+### Editors and Reader
+
+- The Model editor, the building editor and the Reader **cover the central area**, not the window:
+  the header and the left menu stay visible.
+- Their right-hand menu is built with the same sections as the application's, and their exit
+  actions (Apply, Save, Quit) always sit at the bottom.
+- In the Model editor, a joint group is a folding card on a well; a chain inside an anchor is
+  separated from the next by a rule.
+
+### Modals
+
+- A **dark veil**, a dark-paper box with a 10 px radius, a 14.5 px bold title.
+- **Only one area scrolls**: the box. Long modals (an Element) are split into folding sections on a
+  well, rather than into areas with a capped height.
+- Actions sit **at the bottom right**: Cancel in grey, then the action in its colour.
+- A field is not stuck to the title; the gap between two fields (14 px) comes from the bottom margin
+  of the field above. An error line, when the field has one, goes below it.
+- A long modal has a round cross at the top right; Esc closes it.
+- **Project modal**: its buttons keep a uniform fill, and the role's colour only shows **on hover**.
+  It is the application's first screen; four fill colours would make it a rainbow.
+
+### Tabs
+
+The store and the Settings have tabs: text, the active one **underlined in orange**. The pages of a
+tabbed modal take the height of the longest: the modal does not change size from one tab to the
+next.
+
+### Context menus
+
+- `--white` fill, 8 px radius, drop shadow; an entry = an **emoji** then a 12.5 px label.
+- A submenu shows a ▶ on the right. Delete comes last.
+
+### Store and fonts window
+
+- One tab per source, the filters on top, the licence notice at the bottom: **only the grid
+  scrolls**.
+- A card: thumbnail, name, author, licence badge (orange if commercial use is allowed, grey
+  otherwise), size. The import tile is a dashed card.
+- The **details page replaces the grid** instead of opening on top of it; the fonts window does the
+  same.
+
+### Information banners
+
+**Information** (the resume banner) is **blue**, not in an action colour: the colour says what the
+banner is, not what a button will do.
+
+## Accessibility
+
+### Themes and contrast
+
+- Four renderings: Dark, Light, and each one's **high contrast** (a modifier that combines, not a
+  fifth theme). The values are **measured**: 4.5:1 for text, 7:1 in high contrast; a test replays
+  the computation.
+- Three rule tokens: `--line` frames (decorative), `--line-strong` separates inside a block,
+  `--bord-actif` borders what can be clicked or typed into (3:1 minimum).
+- Text on a coloured button has its own token (`--sur-accent`, `--sur-danger`, `--sur-warn`).
+- The **focus ring** (`--focus`) follows the field's shape.
+- 3D preview backgrounds (`--fond-3d`) stay light in all four themes; scrollbars are styled the same
+  way everywhere.
+
+### Interface size
+
+A setting enlarges the interface (`--echelle-ui`): header, menus, modals and context menus. **The
+Page is not enlarged**, nor the modals' veil: only what is read.
 
 ## Choices and icons
 

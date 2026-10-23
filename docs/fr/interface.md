@@ -2,15 +2,18 @@
 
 *[English version](../en/interface.md)*
 
-> Les règles visuelles et d'interaction posées par l'utilisateur au fil des retours, surtout pendant
-> l'éditeur de bâtiment (#454). Elles étaient éparpillées dans les commentaires de `src/style.css` et
-> dans les conversations ; ce document les rassemble. Celles qui se vérifient sont tenues par
+> Les règles visuelles et d'interaction de toute l'application, posées par l'utilisateur au fil des
+> retours (convention des boutons #398, accessibilité #409, taille de l'interface #410, éditeurs,
+> store, éditeur de bâtiment #454…). Elles étaient éparpillées dans les commentaires de
+> `src/style.css` et dans les conversations ; ce document les rassemble. Celles qui se vérifient sont tenues par
 > `tests/interface.test.mjs`. La source de vérité des valeurs reste `src/style.css` : si un chiffre
 > d'ici et la feuille divergent, c'est la feuille qui fait foi et ce document qui est en retard.
 >
-> Le **système de design** (jetons des quatre rendus, typographie, écarts, rayons, composants,
-> icônes) est une page générée depuis le code : [design-system.html](../design-system.html), par
-> `node tools/design-system.mjs`. Un test vérifie qu'elle est à jour.
+> Le **système de design** (jetons des quatre rendus, typographie, écarts, rayons, contrôles, et
+> chaque écran : en-tête, menus de gauche et de droite, menus contextuels, modales, store, éditeurs,
+> Lecteur) est une page générée depuis le code : [design-system.html](../design-system.html), par
+> `node tools/design-system.mjs`, que le hook pre-commit lance à chaque commit. Un test vérifie
+> qu'elle est à jour.
 
 ## Couleurs
 
@@ -86,6 +89,98 @@ ensemble.
 - Une réussite non plus : l'état du bouton suffit (« Enregistrer » se grise, son infobulle dit sous
   quel nom).
 - Un échec qui demande l'attention (un enregistrement impossible) ouvre une **modale**.
+
+## Écrans
+
+### En-tête
+
+- Le nom de l'application à gauche, puis des **boutons ronds** d'accès aux écrans (bâtiment,
+  modèle, bibliothèque, polices, annuler, sauvegarder, configuration, manuel).
+- Chaque bouton rond a une infobulle avec son raccourci ; il **s'allume** quand son écran est ouvert.
+
+### Menu de gauche
+
+- Le **nom du Projet** en tête (un clic ouvre la modale Projet), puis une carte par liste : Tomes,
+  Scènes, Images. Chaque carte se replie par son titre.
+- Les lignes sont des pavés bordés ; la ligne **active** est marquée d'orange (bord, et fond
+  orange léger pour une Planche). Clic droit : son menu. Glisser : réordonner, l'endroit d'insertion marqué d'un trait orange.
+- Les ajouts secondaires (« Ajouter une planche », « Ajouter un chapitre ») sont des boutons en
+  pointillés ; l'ajout principal (« Nouveau tome ») est le bouton orange en bas de la carte.
+- Un **pied de page fixe** dit depuis quand le Projet est enregistré.
+
+### Menu de droite de l'application
+
+- Il suit ce qui est choisi : Planche, Case, Bulle ; la Caméra ; le Manuel quand rien ne l'est.
+- En-tête centré avec sa croix de fermeture ronde ; sections repliables d'un clic sur leur titre.
+- Un réglage est un **bloc** : libellé en capitales au-dessus, champ pleine largeur dessous. Dans le
+  panneau droit, un bloc n'est pas en retrait.
+- Les cases à cocher du panneau ont une seule apparence (case, puis libellé en casse normale).
+
+### Éditeurs et Lecteur
+
+- L'Éditeur de modèle, l'éditeur de bâtiment et le Lecteur **recouvrent la zone centrale**, pas la
+  fenêtre : l'en-tête et le menu de gauche restent visibles.
+- Leur menu de droite est construit avec les mêmes sections que celui de l'application, et leurs
+  actions de sortie (Appliquer, Enregistrer, Quitter) sont toujours en bas.
+- Dans l'Éditeur de modèle, un groupe d'articulations est une carte repliable sur fond creux ; une
+  chaîne dans une ancre est séparée de la suivante par un filet.
+
+### Modales
+
+- Un **voile sombre**, une boîte en papier foncé de rayon 10 px, un titre en 14,5 px gras.
+- **Une seule zone défile** : la boîte. Les longues modales (un Élément) se découpent en sections
+  repliables sur fond creux, plutôt qu'en zones à hauteur plafonnée.
+- Les actions sont **en bas à droite** : Annuler en gris, puis l'action dans sa couleur.
+- Un champ n'est pas collé au titre ; l'écart entre deux champs (14 px) vient de la marge basse du
+  champ qui précède. Une ligne d'erreur, quand le champ en a une, se place dessous.
+- Une modale longue a une croix ronde en haut à droite ; Échap la ferme.
+- **Modale Projet** : ses boutons gardent un fond uniforme, et la couleur du rôle n'apparaît
+  qu'**au survol**. C'est le premier écran de l'application ; quatre couleurs de fond en feraient un
+  arc-en-ciel.
+
+### Onglets
+
+Le store et la Configuration ont des onglets : un texte, l'actif **souligné d'orange**. Les pages
+d'une modale à onglets ont la hauteur de la plus longue : la modale ne change pas de taille d'un
+onglet à l'autre.
+
+### Menus contextuels
+
+- Fond `--white`, rayon 8 px, ombre portée ; une entrée = un **emoji** puis un libellé de 12,5 px.
+- Un sous-menu s'annonce par ▶ à droite. Supprimer vient en dernier.
+
+### Store et fenêtre des polices
+
+- Un onglet par source, les filtres en haut, la mention des licences en bas : **seule la grille
+  défile**.
+- Une carte : vignette, nom, auteur, badge de licence (orange si l'usage commercial est permis,
+  gris sinon), poids. La tuile d'import est une carte en pointillés.
+- La **fiche remplace la grille** au lieu de s'ouvrir par-dessus ; la fenêtre des polices fait de
+  même.
+
+### Bandeaux d'information
+
+Une **information** (le bandeau de reprise) est en **bleu**, pas dans une couleur d'action : la
+couleur dit la nature du bandeau, pas la conséquence d'un bouton.
+
+## Accessibilité
+
+### Thèmes et contraste
+
+- Quatre rendus : Sombre, Clair, et le **contraste renforcé** de chacun (un modificateur qui se
+  cumule, pas un cinquième thème). Les valeurs sont **mesurées** : 4,5:1 pour le texte, 7:1 en
+  contraste renforcé ; un test rejoue le calcul.
+- Trois jetons de filet : `--line` encadre (décoratif), `--line-strong` sépare dans un bloc,
+  `--bord-actif` borde ce qui se clique ou se saisit (3:1 minimum).
+- Le texte sur un bouton coloré a son propre jeton (`--sur-accent`, `--sur-danger`, `--sur-warn`).
+- La **bague de focus** (`--focus`) épouse la forme du champ.
+- Les fonds d'aperçu 3D (`--fond-3d`) restent clairs dans les quatre thèmes ; les ascenseurs sont
+  stylés partout de la même façon.
+
+### Taille de l'interface
+
+Un réglage agrandit l'interface (`--echelle-ui`) : en-tête, menus, modales et menus contextuels.
+**La Planche n'est pas agrandie**, ni le voile des modales : seulement ce qui se lit.
 
 ## Choix et icônes
 
