@@ -368,7 +368,8 @@ end). The top view and the 3D preview (extruded walls) share these polygons.
 
 **Rooms** (#454a-3b, done): `src/batiment-pieces.js`. A room is a closed face of a level's wall
 network; each keeps a `repere` (an inside point, an added field) through which the face containing
-it after a change inherits its name. Dragging with the Wall tool draws a rectangular room
+it after a change inherits its name. A room placed inside another with no wall linking them (an
+island) pierces it: its outline becomes a hole of the other. Dragging with the Wall tool draws a rectangular room
 (`ajouterRectangle`), whose side against an existing wall is not doubled.
 
 Buildings already traced in Scenes (wall Elements, `pieceId`, `batimentNames`, `batimentRotY`)

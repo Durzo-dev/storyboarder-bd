@@ -48,6 +48,30 @@ describe('les faces', () => {
   });
 });
 
+describe('les îlots (signalé)', () => {
+  function ilot(){
+    const b = creerBatiment('B', fr);
+    chaine(b, [{ x: 0, z: 0 }, { x: 10, z: 0 }, { x: 10, z: 10 }, { x: 0, z: 10 }]);
+    chaine(b, [{ x: 3, z: 3 }, { x: 7, z: 3 }, { x: 7, z: 7 }, { x: 3, z: 7 }]);
+    return b;
+  }
+  test('la pièce intérieure perce celle qui l’entoure : surfaces 84 et 16', () => {
+    const f = facesDesMurs(ilot().murs).sort((a, b) => b.aire - a.aire);
+    assert.equal(f.length, 2);
+    proche(f[0].aire, 84); proche(f[1].aire, 16);
+    assert.equal(f[0].trous.length, 1);
+  });
+  test('les deux noms ne se superposent plus : celui de la grande pièce tombe hors du trou', () => {
+    const b = ilot();
+    actualiserPieces(b, 'n0', fr);
+    const [grande, petite] = b.pieces.map(p => p.repere);
+    assert.ok(!(grande.x > 3 && grande.x < 7 && grande.z > 3 && grande.z < 7), JSON.stringify(grande));
+    assert.ok(petite.x > 3 && petite.x < 7 && petite.z > 3 && petite.z < 7);
+    assert.equal(pieceSous(b, 'n0', { x: 5, z: 5 }), b.pieces.find(p => p.repere === petite).id);
+    assert.equal(pieceSous(b, 'n0', { x: 1, z: 1 }), b.pieces.find(p => p.repere === grande).id);
+  });
+});
+
 describe('les polygones', () => {
   const L = [{ x: 0, z: 0 }, { x: 4, z: 0 }, { x: 4, z: 1 }, { x: 1, z: 1 }, { x: 1, z: 4 }, { x: 0, z: 4 }];
   test('aire d’un L, et point dedans / dehors', () => {

@@ -64,6 +64,11 @@ describe('l’aimantation', () => {
     const r = aimanter(b, 'n0', { x: 2, z: 0.05 }, { tol: 0.1 });
     assert.deepEqual([r.point, r.accroche], [{ x: 2, z: 0 }, { type: 'mur', murId: 'm0' }]);
   });
+  test('RÉGRESSION (signalé) : arrivé contre un mur, l’angle droit est gardé', () => {
+    // Un mur horizontal en z = 0 ; on part de (1, 5) vers le haut, la souris dérive un peu à droite.
+    const r = aimanter(b, 'n0', { x: 1.06, z: 0.04 }, { tol: 0.1, depuis: { x: 1, z: 5 } });
+    assert.deepEqual([r.point, r.accroche.type], [{ x: 1, z: 0 }, 'mur'], 'pas (1,06 ; 0) : la verticale est tenue');
+  });
   test('depuis un point : l’angle par pas de 15°, la longueur au centimètre', () => {
     const r = aimanter(b, 'n0', { x: 10.004, z: 5.2 }, { tol: 0.1, depuis: { x: 10, z: 2 } });
     assert.deepEqual(r.point, { x: 10, z: 5.2 }, 'vertical');

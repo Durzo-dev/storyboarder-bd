@@ -322,10 +322,16 @@ function dessinerPlan(){
   const pieces = formesDesPieces(E.batiment, E.niveauId);
   const pieceSurvolee = E.outil === 'selection' && E.survol && E.survol.pieceId;
   for (const [id, f] of pieces) {
-    poly(f.points);
+    // Le contour, puis ses trous (les îlots) dans le même tracé : la règle pair-impair les évide.
+    g.beginPath();
+    [f.points, ...(f.trous || [])].forEach(anneau => anneau.forEach((p, i) => {
+      const e = versEcran(vue, l, h, p);
+      if (i) g.lineTo(e.x, e.y); else { g.closePath(); g.moveTo(e.x, e.y); }
+    }));
+    g.closePath();
     g.fillStyle = accent;
     g.globalAlpha = (E.selection && E.selection.pieceId === id) ? 0.22 : pieceSurvolee === id ? 0.13 : 0.06;
-    g.fill();
+    g.fill('evenodd');
     g.globalAlpha = 1;
   }
   const survole = E.outil === 'selection' && E.survol && E.survol.murId;
@@ -609,6 +615,7 @@ function construireMurs(T, b, matiere, matiereSol){
     // Le sol de chaque pièce (#454a-3b), un peu au-dessus de la grille pour ne pas scintiller avec elle.
     for (const f of formesDesPieces(b, n.id).values()) {
       const forme = new T.Shape(f.points.map(p => new T.Vector2(p.x, -p.z)));
+      (f.trous || []).forEach(t => forme.holes.push(new T.Path(t.map(p => new T.Vector2(p.x, -p.z)))));
       const geo = new T.ShapeGeometry(forme);
       geo.rotateX(-Math.PI / 2);
       const sol = new T.Mesh(geo, matiereSol);

@@ -79,7 +79,9 @@ export function murSous(batiment, niveauId, p, tol){
  * Le point retenu pour la souris en `p`, pendant un tracé qui part de `depuis` (ou null pour le
  * premier point). Par ordre de priorité :
  *   1. un SOMMET existant à moins de `tol` ;
- *   2. un point d'un MUR existant (à moins de `tol` de son axe) : il deviendra une jonction en T ;
+ *   2. un point d'un MUR existant (à moins de `tol` de son axe) : il deviendra une jonction en T. En
+ *      cours de tracé, c'est l'intersection du mur avec la direction aimantée par 15° (l'angle droit
+ *      qu'on suivait), sinon le pied de la perpendiculaire depuis la souris ;
  *   3. sinon, depuis `depuis`, l'angle aimanté par pas de 15° et la longueur arrondie au
  *      centimètre ; puis les GUIDES : un sommet existant à la même abscisse ou à la même profondeur
  *      (à `tol` près) tire le point sur sa ligne.
@@ -97,7 +99,28 @@ export function aimanter(batiment, niveauId, p, { depuis = null, tol = 0.1, libr
     .map(m => ({ m, pr: projeter(p, m.a, m.b) }))
     .filter(x => x.pr.distance <= tol && x.pr.t > 0 && x.pr.t < 1)
     .sort((x, y) => x.pr.distance - y.pr.distance)[0];
-  if (surMur) return { point: point(surMur.pr.point), accroche: { type: 'mur', murId: surMur.m.id }, guides: [] };
+  if (surMur) {
+    // ⚠️ EN COURS DE TRACÉ, L'ANGLE PASSE AVANT LA PROJECTION (signalé) : arrivé contre le mur d'en
+    // face, le point tombait au pied de la perpendiculaire depuis la SOURIS, et l'angle droit qu'on
+    // suivait se perdait au dernier moment. On garde la direction aimantée (par 15°) depuis `depuis`
+    // et on prend son intersection avec le mur, si elle est sur lui et près de la souris.
+    if (depuis && dist(p, depuis) > 1e-6) {
+      const angle = Math.round(Math.atan2(p.z - depuis.z, p.x - depuis.x) / PAS_ANGLE) * PAS_ANGLE;
+      const u = { x: Math.cos(angle), z: Math.sin(angle) };
+      const { a, b } = surMur.m;
+      const v = { x: b.x - a.x, z: b.z - a.z };
+      const det = u.x * v.z - u.z * v.x;
+      if (Math.abs(det) > 1e-9) {
+        const t = ((a.x - depuis.x) * v.z - (a.z - depuis.z) * v.x) / det;
+        const s = ((a.x - depuis.x) * u.z - (a.z - depuis.z) * u.x) / det;
+        const q = { x: depuis.x + u.x * t, z: depuis.z + u.z * t };
+        if (t > 0 && s > 0 && s < 1 && dist(q, p) <= Math.max(3 * tol, surMur.m.epaisseur)) {
+          return { point: point(q), accroche: { type: 'mur', murId: surMur.m.id }, guides: [] };
+        }
+      }
+    }
+    return { point: point(surMur.pr.point), accroche: { type: 'mur', murId: surMur.m.id }, guides: [] };
+  }
 
   let q = { ...p };
   if (depuis) {

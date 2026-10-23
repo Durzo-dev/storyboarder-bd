@@ -385,7 +385,8 @@ carré). La vue de dessus et l'aperçu 3D (murs extrudés) partagent ces polygon
 
 **Les pièces** (#454a-3b, fait) : `src/batiment-pieces.js`. Une pièce est une face fermée du réseau
 des murs d'un niveau ; chacune garde un `repere` (un point intérieur, champ ajouté) par lequel la
-face qui le contient après une modification hérite de son nom. Un glisser de l'outil Mur trace
+face qui le contient après une modification hérite de son nom. Une pièce posée au milieu d'une
+autre sans mur qui les relie (un îlot) la perce : son contour devient un trou de l'autre. Un glisser de l'outil Mur trace
 une pièce rectangulaire (`ajouterRectangle`), dont un côté accolé à un mur existant n'est pas
 doublé.
 
