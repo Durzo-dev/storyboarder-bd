@@ -52,3 +52,28 @@ export const ICONES_OUVERTURE = {
   // Un passage : l'encadrement seul, sans rien dedans.
   passage: svg(32, 28, '<path d="M2 26h28"/><path d="M10 26V3h12v23" stroke-width="2.2"/>'),
 };
+
+/** Comment l'ouverture s'ouvre, de face : un battant, deux, ou deux vantaux qui coulissent. */
+export const ICONES_MANOEUVRE = {
+  1: svg(32, 28, '<path d="M2 26h28"/><rect x="9" y="3" width="14" height="23"/><path d="M20 13v3" stroke-width="2"/>'),
+  2: svg(32, 28, '<path d="M2 26h28"/><rect x="5" y="3" width="22" height="23"/><path d="M16 3v23"/><path d="M13.5 13v3M18.5 13v3" stroke-width="2"/>'),
+  coulissant: svg(32, 28, '<path d="M2 26h28"/><rect x="4" y="3" width="14" height="23"/><rect x="14" y="5" width="14" height="21"/><path d="M7 14h6m-2-2 2 2-2 2"/>'),
+};
+
+/** Le remplissage d'une porte, de face : pleine, ou vitrée. */
+export const ICONES_REMPLISSAGE = {
+  pleine: svg(32, 28, '<path d="M2 26h28"/><rect x="9" y="3" width="14" height="23" fill="currentColor" fill-opacity=".25"/><path d="M20 13v3" stroke-width="2"/>'),
+  vitree: svg(32, 28, '<path d="M2 26h28"/><rect x="9" y="3" width="14" height="23"/><rect x="12" y="6" width="8" height="12"/><path d="M14 10l2-2M14 14l4-4"/>'),
+};
+
+/** Le dessus d'un passage, de face : droit, ou en arche. */
+export const ICONES_DESSUS = {
+  droit: svg(32, 28, '<path d="M2 26h28"/><path d="M10 26V3h12v23" stroke-width="2.2"/>'),
+  arche: svg(32, 28, '<path d="M2 26h28"/><path d="M10 26V11a6 6 0 0 1 12 0v15" stroke-width="2.2"/>'),
+};
+
+/** Les deux gestes d'une porte battante, vus de dessus : changer de côté, changer de charnière. */
+export const ICONES_INVERSER = {
+  cote: svg(32, 30, '<path d="M2 14h8M22 14h8" stroke-width="3"/><path d="M10 14V4"/><path d="M10 4a10 10 0 0 1 10 10" stroke-dasharray="2 2"/><path d="M16 18v9m-3-3 3 3 3-3"/>'),
+  charniere: svg(32, 30, '<path d="M2 14h8M22 14h8" stroke-width="3"/><path d="M10 14V4"/><path d="M10 4a10 10 0 0 1 10 10" stroke-dasharray="2 2"/><path d="M9 24h14m-3-3 3 3-3 3M12 21l-3 3 3 3"/>'),
+};

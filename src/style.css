@@ -2757,7 +2757,8 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-sous-section > h3{ margin:0; font-size:13px; font-weight:600; color:var(--ink-mid); }
 /* Dans une sous-section, seul son `gap` espace les rangées : Contremarches est à la même distance
    des boutons de rampe que les deux rangées de Type entre elles (demandé). */
-.batiment-sous-section > .batiment-choix, .batiment-sous-section > .batiment-case{ margin:0; }
+.batiment-sous-section > .batiment-choix, .batiment-sous-section > .batiment-case,
+.batiment-sous-section > .batiment-champ{ margin:0; }
 /* Dessous, le même écart que dessus (10 px, demandé) : la marge haute de « Tourner » (6 px) se
    confond avec celle-ci, elles ne s'additionnent pas. */
 .batiment-champ.batiment-champ-large{ margin:0 0 10px; }

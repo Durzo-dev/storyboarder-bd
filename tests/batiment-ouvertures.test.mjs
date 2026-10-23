@@ -20,13 +20,19 @@ function unMur(L = 5){
 describe('les réglages', () => {
   test('quatre types, et leurs valeurs par défaut', () => {
     assert.deepEqual(Object.keys(DEFAUTS_OUVERTURE), ['porte', 'fenetre', 'baie', 'passage']);
-    assert.deepEqual(reglagesParDefaut('fenetre'), { type: 'fenetre', largeur: 1.2, hauteur: 1.2, y: 0.9, battants: 2, coulissant: false, vitre: true, sens: 1, charniere: 'debut' });
+    assert.deepEqual(reglagesParDefaut('fenetre'), { type: 'fenetre', largeur: 1.2, hauteur: 1.2, y: 0.9, battants: 2, coulissant: false, vitre: true, dessus: 'droit', sens: 1, charniere: 'debut' });
     assert.equal(reglagesParDefaut('inconnu').largeur, 0.9);
+  });
+  test('le dessus en arche : seulement pour un passage', () => {
+    const { batiment } = normaliserBatiment({ murs: [{ id: 'm', niveauId: 'n0', a: { x: 0, z: 0 }, b: { x: 6, z: 0 }, epaisseur: 0.2 }],
+      ouvertures: [{ id: 'a', murId: 'm', type: 'passage', dessus: 'arche', le: 0.25 }, { id: 'b', murId: 'm', type: 'porte', dessus: 'arche', le: 0.75 }] }, fr);
+    assert.deepEqual(batiment.ouvertures.map(o => o.dessus), ['arche', 'droit']);
   });
   test('relire : options par défaut, un passage n’a pas de battant', () => {
     const { batiment } = normaliserBatiment({ murs: [{ id: 'm', niveauId: 'n0', a: { x: 0, z: 0 }, b: { x: 4, z: 0 }, epaisseur: 0.2 }],
       ouvertures: [{ id: 'o', murId: 'm', type: 'passage', battants: 2 }, { id: 'p', murId: 'm', type: 'fenetre', sens: -1, charniere: 'fin', battants: 3 }] }, fr);
     assert.equal(batiment.ouvertures[0].battants, 0);
+    assert.equal(batiment.ouvertures[0].dessus, 'droit', 'droit par défaut');
     assert.deepEqual([batiment.ouvertures[1].sens, batiment.ouvertures[1].charniere, batiment.ouvertures[1].battants], [-1, 'fin', 2]);
   });
 });

@@ -23,6 +23,8 @@ export function materiauxBatiment3D(T){
     cadre: new T.MeshStandardMaterial({ color: 0xf2f0ea, roughness: 0.6 }),
     bois: new T.MeshStandardMaterial({ color: 0x8b6b4a, roughness: 0.8 }),
     verre: new T.MeshStandardMaterial({ color: 0x9fc6d8, roughness: 0.1, metalness: 0.1, transparent: true, opacity: 0.35, side: T.DoubleSide }),
+    // Poignées et paumelles d'une porte (demandé : voir de quel côté on la regarde).
+    metal: new T.MeshStandardMaterial({ color: 0x3a3a3e, roughness: 0.35, metalness: 0.8 }),
   };
 }
 
@@ -61,8 +63,52 @@ function construireMenuiserie(T, mur, o, mats){
   } else {
     boite(interieur, hi, epPanneau, 0, y0, 0, remplissage);
     if (o.battants === 2) boite(ep, hi, prof * 0.8, 0, y0, 0, mats.cadre);
+    if (o.type === 'porte') quincaillerie(boite, o, interieur, hi, epPanneau, mats);
   }
   return g;
+}
+
+/**
+ * La quincaillerie d'une porte battante (demandé : « voir la poignée pour distinguer quel côté on
+ * voit »). Une poignée sur CHAQUE face, côté opposé à la charnière (au milieu pour deux battants) ;
+ * les PAUMELLES, elles, ne se voient que du côté où la porte s'ouvre, comme en vrai : c'est ce qui
+ * dit de quel côté on la regarde. Repère du mur : x le long, z vers le côté `sens` +1.
+ */
+function quincaillerie(boite, o, interieur, hi, epPanneau, mats){
+  const demi = interieur / 2, yPoignee = 1.0, cote = o.sens === -1 ? -1 : 1;
+  const bords = o.battants === 2 ? [-1, 1] : [o.charniere === 'fin' ? 1 : -1];   // les bords des charnières
+  for (const bord of bords) {
+    // La poignée : à 7 cm du bord libre, une rosace et un bec tourné vers la charnière, des deux côtés.
+    const libre = o.battants === 2 ? -bord * 0.07 : -bord * (demi - 0.07);
+    for (const face of [-1, 1]) {
+      const z = face * (epPanneau / 2 + 0.012);
+      boite(0.05, 0.07, 0.012, libre, yPoignee, z, mats.metal);
+      boite(0.12, 0.02, 0.02, libre + bord * 0.05, yPoignee, face * (epPanneau / 2 + 0.035), mats.metal);
+    }
+    // Les paumelles : trois, sur le bord de la charnière, du côté où la porte s'ouvre.
+    for (const y of [0.2, hi / 2, hi - 0.2]) boite(0.02, 0.1, 0.02, bord * (demi - 0.01), y, cote * (epPanneau / 2 + 0.01), mats.metal);
+  }
+}
+
+/**
+ * Le dessus en ARCHE d'un passage (demandé) : les deux écoinçons entre le haut rectangulaire de la
+ * percée et un demi-cercle (aplati si le passage est plus large que haut), dans la matière du mur.
+ */
+function construireArche(T, mur, o, mats){
+  const L = Math.hypot(mur.b.x - mur.a.x, mur.b.z - mur.a.z) || 1;
+  const u = { x: (mur.b.x - mur.a.x) / L, z: (mur.b.z - mur.a.z) / L };
+  const c = o.le * L, rx = o.largeur / 2, haut = o.y + o.hauteur;
+  const ry = Math.max(0.05, Math.min(rx, o.hauteur - 0.05) - 0.01), naissance = haut - 0.01 - ry;
+  const forme = new T.Shape();
+  forme.moveTo(-rx, haut); forme.lineTo(-rx, naissance);
+  forme.absellipse(0, naissance, rx, ry, Math.PI, 0, true);   // de gauche à droite, par le haut
+  forme.lineTo(rx, haut); forme.lineTo(-rx, haut);
+  const geo = new T.ExtrudeGeometry(forme, { depth: mur.epaisseur, bevelEnabled: false, curveSegments: 24 });
+  geo.translate(0, 0, -mur.epaisseur / 2);
+  const m = new T.Mesh(geo, mats.mur);
+  m.position.set(mur.a.x + u.x * c, 0, mur.a.z + u.z * c);
+  m.rotation.y = -Math.atan2(u.z, u.x);
+  return m;
 }
 
 /**
@@ -142,6 +188,11 @@ export function construireBatiment3D(T, b, mats, { jusquA = null } = {}){
         if (!percees[i]) return;
         extruder(percees[i], 0, o.y);
         extruder(percees[i], Math.min(hauteur, o.y + o.hauteur), hauteur);
+        if (o.type === 'passage' && o.dessus === 'arche') {
+          const arche = construireArche(T, m, o, mats);
+          arche.position.y += n.elevation;
+          groupe.add(arche);
+        }
         const menuiserie = construireMenuiserie(T, m, o, mats);
         menuiserie.position.y += n.elevation;
         groupe.add(menuiserie);

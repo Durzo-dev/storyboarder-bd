@@ -58,8 +58,6 @@ export const I18N_TEXT = [
   ['#batimentEscalierTourner', 'Turn by 90° (R)', 'Tourner de 90° (R)'],
   ['#batimentEscalierSupprimer', 'Delete the staircase', "Supprimer l'escalier"],
   ['#batimentSectionOuverture', 'Opening to place', 'Ouverture à poser'],
-  ['#batimentOuvertureSens', 'Flip the side', 'Inverser le côté'],
-  ['#batimentOuvertureCharniere', 'Flip the hinge', 'Inverser la charnière'],
   ['#batimentOuvertureSupprimer', 'Delete the opening', "Supprimer l'ouverture"],
   ['#batimentApercuTitre', '3D preview', 'Aperçu 3D'],
   ['#batimentApercuReduire', null, null, 'title', 'Minimise the preview', "Réduire l'aperçu"],

@@ -58,10 +58,11 @@ export const TYPES_D_OUVERTURE = ['porte', 'fenetre', 'baie', 'passage'];
  * à quel bout elle pivote ('debut' ou 'fin', le long du mur).
  */
 export const DEFAUTS_OUVERTURE = {
-  porte: { largeur: 0.9, hauteur: 2.1, y: 0, battants: 1, coulissant: false, vitre: false },
-  fenetre: { largeur: 1.2, hauteur: 1.2, y: 0.9, battants: 2, coulissant: false, vitre: true },
-  baie: { largeur: 2.4, hauteur: 2.2, y: 0, battants: 2, coulissant: true, vitre: true },
-  passage: { largeur: 1.2, hauteur: 2.3, y: 0, battants: 0, coulissant: false, vitre: false },
+  porte: { largeur: 0.9, hauteur: 2.1, y: 0, battants: 1, coulissant: false, vitre: false, dessus: 'droit' },
+  fenetre: { largeur: 1.2, hauteur: 1.2, y: 0.9, battants: 2, coulissant: false, vitre: true, dessus: 'droit' },
+  baie: { largeur: 2.4, hauteur: 2.2, y: 0, battants: 2, coulissant: true, vitre: true, dessus: 'droit' },
+  // `dessus` (demandé) : un passage peut être droit ou en arche ; les autres restent droits pour l'instant.
+  passage: { largeur: 1.2, hauteur: 2.3, y: 0, battants: 0, coulissant: false, vitre: false, dessus: 'droit' },
 };
 
 const TOIT_DEFAUT = { type: 'deux-pans', pente: 35, debord: 0.3, matiere: null, couleur: null, terrasse: false, gardeCorps: false };
@@ -173,6 +174,7 @@ function normaliserOuvertures(liste, murs){
         vitre: typeof o.vitre === 'boolean' ? o.vitre : d.vitre,
         sens: o.sens === -1 ? -1 : 1,
         charniere: o.charniere === 'fin' ? 'fin' : 'debut',
+        dessus: type === 'passage' && o.dessus === 'arche' ? 'arche' : 'droit',
       };
     });
 }

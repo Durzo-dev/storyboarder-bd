@@ -293,7 +293,7 @@ export const HELP_MANUAL_EN = [
     'Rooms: every closed contour of walls is a room, named Room 1, Room 2… with its area. Drag with the Wall tool to draw a rectangular room in one go. Click a room in the Rooms list to select it; right-click it to rename or delete it. It keeps its name when its walls move.',
   ]},
   { id: 'batiments_ouvertures', title: 'Doors and windows', paragraphs: [
-    'Opening tool (O): choose a door, a window, a bay window or a passage in the right-hand menu, with its width, height and height from the floor, its leaves (1 or 2), sliding or not, glazed or not.',
+    'Opening tool (O): choose a door, a window, a bay window or a passage in the right-hand menu, with its width, height and elevation (from the floor), one leaf, two or sliding, a solid or glazed door, a straight or arched passage. A door shows its handles on both faces, its hinges on the side it opens to.',
     'Hover over a wall: the opening sits there, centred under the mouse; it shows in red if it does not fit (too close to a corner or another opening). The wheel changes its type, a right-click its opening direction; a click places it, selects it and takes Selection. The wall is cut in the top view, like an architect\'s plan, and pierced in 3D (frame, glass, leaves).',
     'With Selection, click an opening to adjust it in the menu (changing its type takes that type\'s sizes), drag it along its wall, raise or lower it with the scroll wheel (5 cm per notch, 1 cm with Shift), flip the side or the hinge of a door, or delete it (Del).',
   ]},
@@ -551,7 +551,7 @@ export const HELP_MANUAL_FR = [
     "Les pièces : chaque contour de murs fermé est une pièce, nommée Pièce 1, Pièce 2… avec sa surface. Glisser avec l'outil Mur trace une pièce rectangulaire d'un coup. Un clic sur une pièce de la liste Pièces la sélectionne ; un clic droit la renomme ou la supprime. Elle garde son nom quand ses murs bougent.",
   ]},
   { id: 'batiments_ouvertures', title: 'Portes et fenêtres', paragraphs: [
-    "Outil Ouverture (O) : choisissez une porte, une fenêtre, une baie vitrée ou un passage dans le menu de droite, avec sa largeur, sa hauteur et sa hauteur depuis le sol, ses battants (1 ou 2), coulissante ou non, vitrée ou non.",
+    "Outil Ouverture (O) : choisissez une porte, une fenêtre, une baie vitrée ou un passage dans le menu de droite, avec sa largeur, sa hauteur et son élévation (depuis le sol), un battant, deux ou coulissante, une porte pleine ou vitrée, un passage droit ou en arche. Une porte montre ses poignées des deux côtés, ses paumelles du côté où elle s'ouvre.",
     "Survolez un mur : l'ouverture s'y place, centrée sous la souris, en rouge si elle ne tient pas (trop près d'un angle ou d'une autre ouverture). La molette change son type, le clic droit son sens d'ouverture ; un clic la pose, la choisit et prend Sélection. Le mur est coupé dans la vue de dessus, comme sur un plan d'architecte, et percé en 3D (cadre, verre, battants).",
     "Avec Sélection, un clic sur une ouverture la retouche dans le menu (changer de type reprend les dimensions de ce type), la tirer la fait glisser le long de son mur, la molette la monte ou la descend (5 cm par cran, 1 cm avec Maj) ; on peut inverser le côté ou la charnière d'une porte, ou la supprimer (Suppr).",
   ]},
