@@ -246,17 +246,21 @@ function facesEnFace(b, f){
       const ta = (m.a.x - e.depart.x) * axe.x + (m.a.z - e.depart.z) * axe.z, tb = (m.b.x - e.depart.x) * axe.x + (m.b.z - e.depart.z) * axe.z;
       if (Math.min(ta, tb) > c.de[1] - 0.01 || Math.max(ta, tb) < c.de[0] + 0.01) continue;
       if (ecart < -m.epaisseur) continue;   // le mur est derrière le côté, pas devant
-      if (!meilleur || Math.abs(ecart) < Math.abs(meilleur.ecart)) meilleur = { ecart, ext: c.ext };
+      if (!meilleur || Math.abs(ecart) < Math.abs(meilleur.ecart)) meilleur = { ecart, ext: c.ext, murId: m.id };
     }
     return { cote: c.cote, face: meilleur };
   });
 }
 
-/** Les côtés de l'escalier qui touchent un mur (#454c, demandé) : 'bas', 'haut', 'flanc0', 'flanc1'. */
+/**
+ * Les MURS que l'escalier touche (#454c, demandé : ses « aimants ») : les ids des murs dont la face
+ * est contre un de ses côtés. Ce sont les murs qui comptent, pas les côtés : tourné, l'escalier peut
+ * garder le même mur contre un autre de ses côtés.
+ */
 export function contactsDeLEscalier(b, esc){
   const f = formeDeLEscalier(b, esc);
   if (!f) return [];
-  return facesEnFace(b, f).filter(x => x.face && Math.abs(x.face.ecart) <= CONTACT).map(x => x.cote);
+  return [...new Set(facesEnFace(b, f).filter(x => x.face && Math.abs(x.face.ecart) <= CONTACT).map(x => x.face.murId))];
 }
 
 /**
@@ -290,53 +294,67 @@ function pieceDeLEscalier(b, esc, faces){
 const dedansFace = (p, face) => dedans(p, face.points) && !(face.trous || []).some(t => dedans(p, t));
 
 /**
- * Essaie une retouche de l'escalier `id` ; si elle ne tient pas là où il est, cherche la place la plus
- * proche où elle tient, à 1,5 m au plus, par pas de 10 cm. Deux CONTRAINTES sont gardées (demandé) :
- * un escalier qui était dans le bâtiment (dans une pièce) y reste, et les murs qu'il touchait, il
- * essaie de les toucher encore (chaque contact perdu pèse comme un mètre de plus). Chaque place essayée
- * passe par l'aimant. `faces` : les formes des pièces du niveau (formesDesPieces), fournies par
- * l'appelant pour éviter une dépendance circulaire. Ne modifie rien. Rend `{ changements, deplacement }`
- * ou `{ erreur }` ('mur', 'sansEtage', 'hors').
+ * Essaie une retouche de l'escalier `id` (un changement de type, d'angle, de largeur…). Ne modifie
+ * rien. Rend `{ changements, deplacement }` (ce qu'il faut appliquer, sa nouvelle position comprise
+ * s'il doit bouger, et la distance parcourue) ou `{ erreur }` ('mur', 'sansEtage', 'hors').
+ *
+ * LES CONTRAINTES, dans cet ordre (demandé par Valentin le 23 octobre 2026) :
+ *   1. un escalier qui est dans une pièce y RESTE : toute place essayée est dans CETTE pièce, et c'est
+ *      toute la pièce qui est explorée (pas seulement les environs) ;
+ *   2. les murs qu'il touche (ses « aimants »), il les touche encore si c'est possible ; sinon on en
+ *      lâche un, puis deux, et ainsi de suite : la place retenue est la plus PROCHE parmi celles qui
+ *      gardent le plus de contacts ;
+ *   3. si même sans aucun contact rien ne tient dans la pièce, c'est refusé ('hors') : le bouton qui
+ *      le proposerait reste éteint.
+ * Un escalier posé hors de toute pièce n'a que la contrainte 2, et cherche à 1,5 m autour de lui.
+ * Chaque place essayée passe aussi par l'aimant, pour retomber collée aux murs. `faces` : les formes
+ * des pièces du niveau (formesDesPieces), fournies par l'appelant.
  */
 export function essayerEscalier(b, id, changements, faces = []){
   const e = (b.escaliers || []).find(x => x.id === id);
   if (!e) return { erreur: 'inconnu' };
-  const dansUnePiece = faces.length && !!pieceDeLEscalier(b, e, faces);
+  const piece = faces.length ? pieceDeLEscalier(b, e, faces) : null;
   const contacts = contactsDeLEscalier(b, e);
   const neuf = normaliserEscalier({ ...e, ...changements });
   if (!formeDeLEscalier(b, neuf)) return { erreur: 'sansEtage' };
-  const evaluer = (depart) => {
-    const essai = { ...neuf, depart };
-    if (!validiteDeLEscalier(b, essai).ok) return null;
-    if (dansUnePiece && !pieceDeLEscalier(b, essai, faces)) return null;
-    const perdus = contacts.filter(c => !contactsDeLEscalier(b, essai).includes(c)).length;
-    return { depart, perdus };
-  };
-  const n = Math.round(RAYON_RECHERCHE / PAS_RECHERCHE);
+  // Les places à essayer : toute la pièce (sa boîte, par pas de 20 cm, l'aimant affine), sinon les
+  // environs ; de la plus proche à la plus lointaine.
   const essais = [{ dx: 0, dz: 0, d: 0 }];
-  for (let i = -n; i <= n; i++) for (let j = -n; j <= n; j++) {
-    const d = Math.hypot(i, j) * PAS_RECHERCHE;
-    if (d > 0 && d <= RAYON_RECHERCHE + 1e-9) essais.push({ dx: i * PAS_RECHERCHE, dz: j * PAS_RECHERCHE, d });
-  }
-  let meilleur = null;
-  for (const t of essais) {
-    // Sans contrainte de contact, la première place valide (la plus proche) suffit.
-    if (meilleur && !contacts.length) break;
-    if (meilleur && t.d >= meilleur.score) break;
-    const brut = { x: neuf.depart.x + t.dx, z: neuf.depart.z + t.dz };
-    // Sur place, la position telle quelle d'abord (une retouche qui tient ne bouge rien) ; ailleurs,
-    // la position aimantée d'abord (on recolle l'escalier aux murs).
-    const aimante = aimanterEscalier(b, { ...neuf, depart: brut });
-    for (const depart of (t.d === 0 ? [brut, aimante] : [aimante, brut])) {
-      const r = evaluer(depart);
-      if (!r) continue;
-      const deplacement = Math.hypot(depart.x - e.depart.x, depart.z - e.depart.z);
-      const score = deplacement + r.perdus;
-      if (!meilleur || score < meilleur.score - 1e-9) meilleur = { depart, deplacement, score };
-      break;
+  if (piece) {
+    const xs = piece.points.map(p => p.x), zs = piece.points.map(p => p.z), PAS = 0.2;
+    for (let x = Math.min(...xs); x <= Math.max(...xs); x += PAS) for (let z = Math.min(...zs); z <= Math.max(...zs); z += PAS) {
+      const dx = x - neuf.depart.x, dz = z - neuf.depart.z;
+      essais.push({ dx, dz, d: Math.hypot(dx, dz) });
+    }
+  } else {
+    const n = Math.round(RAYON_RECHERCHE / PAS_RECHERCHE);
+    for (let i = -n; i <= n; i++) for (let j = -n; j <= n; j++) {
+      const d = Math.hypot(i, j) * PAS_RECHERCHE;
+      if (d > 0 && d <= RAYON_RECHERCHE + 1e-9) essais.push({ dx: i * PAS_RECHERCHE, dz: j * PAS_RECHERCHE, d });
     }
   }
-  if (!meilleur) return { erreur: dansUnePiece ? 'hors' : 'mur' };
-  const memePlace = Math.hypot(meilleur.depart.x - neuf.depart.x, meilleur.depart.z - neuf.depart.z) < 1e-9;
-  return memePlace ? { changements, deplacement: 0 } : { changements: { ...changements, depart: meilleur.depart }, deplacement: meilleur.deplacement };
+  essais.sort((x, y) => x.d - y.d);
+  // La meilleure place par nombre de contacts gardés.
+  const meilleures = new Map();
+  for (const t of essais) {
+    const brut = { x: neuf.depart.x + t.dx, z: neuf.depart.z + t.dz };
+    const aimante = aimanterEscalier(b, { ...neuf, depart: brut });
+    for (const depart of (t.d === 0 ? [brut, aimante] : [aimante, brut])) {
+      const essai = { ...neuf, depart };
+      if (!validiteDeLEscalier(b, essai).ok) continue;
+      if (piece && pieceDeLEscalier(b, essai, [piece]) !== piece) continue;
+      const garde = contacts.length ? contactsDeLEscalier(b, essai).filter(c => contacts.includes(c)).length : 0;
+      const deplacement = Math.hypot(depart.x - e.depart.x, depart.z - e.depart.z);
+      const actuel = meilleures.get(garde);
+      if (!actuel || deplacement < actuel.deplacement - 1e-9) meilleures.set(garde, { depart, deplacement });
+      break;
+    }
+    // Tous les contacts gardés : les places suivantes sont plus loin, inutile de continuer.
+    if (meilleures.has(contacts.length)) break;
+  }
+  if (!meilleures.size) return { erreur: piece ? 'hors' : 'mur' };
+  const garde = Math.max(...meilleures.keys());
+  const { depart, deplacement } = meilleures.get(garde);
+  const memePlace = Math.hypot(depart.x - neuf.depart.x, depart.z - neuf.depart.z) < 1e-9;
+  return memePlace ? { changements, deplacement: 0 } : { changements: { ...changements, depart }, deplacement };
 }

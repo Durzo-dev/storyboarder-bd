@@ -134,6 +134,18 @@ describe('l’aimant et les contraintes (demandé)', () => {
     const apres = contactsDeLEscalier(b, escalier);
     assert.ok(avant.some(c => apres.includes(c)), `contacts ${avant} → ${apres}`);
   });
+  test('dans un coin : tourné, il garde ses deux murs ; un mur lâché seulement s’il le faut', () => {
+    const b = maisonEtPieces();
+    // Contre le mur de gauche et le mur du bas, en montant vers le haut.
+    const depart = aimanterEscalier(b, { niveauId: 'n0', type: 'droit', depart: { x: 0.6, z: 5.85 }, angle: angleHaut, largeur: 0.9 }, 0.2);
+    const { escalier } = ajouterEscalier(b, 'n0', { depart, angle: angleHaut });
+    const avant = contactsDeLEscalier(b, escalier);
+    assert.equal(avant.length, 2, JSON.stringify(avant));
+    const faces = [...formesDesPieces(b, 'n0').values()];
+    const r = essayerEscalier(b, escalier.id, { angle: 0 }, faces);
+    modifierEscalier(b, escalier.id, r.changements);
+    assert.deepEqual(contactsDeLEscalier(b, escalier).sort(), avant.slice().sort(), 'les deux mêmes murs');
+  });
   test('aucune place dans le bâtiment : refusé, plutôt que d’en sortir', () => {
     const b = creerBatiment('Petite', fr);
     ajouterRectangle(b, 'n0', { x: 0, z: 0 }, { x: 2, z: 6 }, 0.2);

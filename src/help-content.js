@@ -305,7 +305,7 @@ export const HELP_MANUAL_EN = [
   { id: 'batiments_escaliers', title: 'Staircases', paragraphs: [
     'Stairs tool (S): straight, L-shaped or U-shaped, with its width, the side it turns to, risers or open steps, and a rail on one side, both or none. The steps are computed from the height to climb (about 17 cm high, 24 to 30 cm deep).',
     'Click at the foot and drag the way it goes up (by 15°); a simple click places it in the last direction. It links the current level to the one above and pierces its floor, shown dashed on the upper level. It is refused (in red) with no level above, or if it would cross a wall.',
-    'It snaps to nearby walls when placed or dragged (Alt: free). With Selection, click a staircase to adjust it in the menu, drag it to move it, R to turn it by 90°, Del to delete it. A change that does not fit shifts it to the nearest place that does, staying in its room and against the walls it touched.',
+    'It snaps to nearby walls when placed or dragged (Alt: free). With Selection, click a staircase to adjust it in the menu, drag it to move it, R to turn it by 90°, Del to delete it. A change that does not fit moves it within its room, keeping the walls it touched if it can, then letting go of one, then two; if nothing fits in the room, the button is greyed.',
   ]},
 ];
 
@@ -562,7 +562,7 @@ export const HELP_MANUAL_FR = [
   { id: 'batiments_escaliers', title: 'Escaliers', paragraphs: [
     "Outil Escalier (S) : droit, en L ou en U, avec sa largeur, le côté où il tourne, des marches pleines (contremarches) ou ouvertes, et une rampe d'un côté, des deux ou aucune. Les marches se calculent d'après la hauteur à franchir (environ 17 cm de haut, 24 à 30 cm de profondeur).",
     "Cliquez au pied et tirez dans la direction où il monte (par 15°) ; un simple clic le pose dans la dernière direction. Il relie le niveau courant à celui du dessus et perce son plancher, dessiné en pointillés à l'étage. Il est refusé (en rouge) sans niveau au-dessus, ou s'il traverserait un mur.",
-    "Il s'aimante aux murs proches quand on le pose ou le tire (Alt : libre). Avec Sélection, un clic sur un escalier le retouche dans le menu ; le tirer le déplace, R le tourne de 90°, Suppr le supprime. Une retouche qui ne tient pas le décale à la place la plus proche, sans quitter sa pièce et en restant contre les murs qu'il touchait.",
+    "Il s'aimante aux murs proches quand on le pose ou le tire (Alt : libre). Avec Sélection, un clic sur un escalier le retouche dans le menu ; le tirer le déplace, R le tourne de 90°, Suppr le supprime. Une retouche qui ne tient pas le déplace dans sa pièce, en gardant les murs qu'il touchait si possible, puis en en lâchant un, puis deux ; si rien ne tient dans la pièce, le bouton est grisé.",
   ]},
 ];
 
