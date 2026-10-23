@@ -41,10 +41,14 @@ export const ICONES_MARCHES = {
   false: svg(32, 22, '<path d="M3 19h7M10 14h7M17 9h7M24 4h5" stroke-width="2.4"/><path d="M3 21 29 3" stroke-width="1.1"/>'),
 };
 
-/** Les ouvertures, vues de dessus comme sur un plan d'architecte. */
+/** Les ouvertures, vues DE FACE (demandé : plus parlant que le symbole du plan), posées sur le sol. */
 export const ICONES_OUVERTURE = {
-  porte: svg(32, 24, '<path d="M2 20h7M23 20h7" stroke-width="3"/><path d="M9 20V6"/><path d="M9 6a14 14 0 0 1 14 14" stroke-dasharray="2 2"/>'),
-  fenetre: svg(32, 24, '<path d="M2 12h7M23 12h7" stroke-width="3"/><path d="M9 10h14M9 14h14"/>'),
-  baie: svg(32, 24, '<path d="M2 12h4M26 12h4" stroke-width="3"/><path d="M6 10h12M14 14h12"/>'),
-  passage: svg(32, 24, '<path d="M2 12h8M22 12h8" stroke-width="3"/><path d="M10 7v10M22 7v10" stroke-dasharray="2 2"/>'),
+  // Une porte : un panneau haut, sa poignée.
+  porte: svg(32, 28, '<path d="M2 26h28"/><rect x="10" y="3" width="12" height="23"/><path d="M19 15v1.5" stroke-width="2"/>'),
+  // Une fenêtre : à mi-hauteur, deux carreaux et son appui.
+  fenetre: svg(32, 28, '<path d="M2 26h28"/><rect x="9" y="5" width="14" height="12"/><path d="M16 5v12M9 11h14M7 19h18"/>'),
+  // Une baie vitrée : large, du sol presque au plafond, deux vantaux qui coulissent.
+  baie: svg(32, 28, '<path d="M2 26h28"/><rect x="4" y="4" width="24" height="22"/><path d="M16 4v22M9 15h4m-1.5-1.5L13 15l-1.5 1.5M23 15h-4m1.5-1.5L19 15l1.5 1.5"/>'),
+  // Un passage : l'encadrement seul, sans rien dedans.
+  passage: svg(32, 28, '<path d="M2 26h28"/><path d="M10 26V3h12v23" stroke-width="2.2"/>'),
 };

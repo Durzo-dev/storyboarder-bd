@@ -18,7 +18,7 @@
  * dessine à la demande et libère tout à la fermeture.
  */
 import { tr } from './state.js';
-import { creerBatiment, nomAfficheDuFichier, DEFAUTS_BATIMENT } from './batiment.js';
+import { creerBatiment, nomAfficheDuFichier, DEFAUTS_BATIMENT, TYPES_D_OUVERTURE } from './batiment.js';
 import { ICONES_TYPE_ESCALIER, ICONES_SENS_ESCALIER, ICONES_RAMPE, ICONES_MARCHES, ICONES_OUVERTURE } from './batiment-icones.js';
 import { actionDEnregistrement } from './batiment-bibliotheque.js';
 import { signatureDuBatiment, signatureDeStructure } from './batiment-element.js';
@@ -622,12 +622,6 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
   lw.append(li, document.createTextNode(' cm')); l.append(lt, lw);
   // Deux sous-sections (demandé) : Type (la forme et le côté où il tourne), Marches (la rampe et
   // les contremarches) ; la largeur dessous (demandé). Le détail des marches n'est plus affiché.
-  const sousSection = (titre, ...contenu) => {
-    const d = document.createElement('div'); d.className = 'batiment-sous-section';
-    const h = document.createElement('h3'); h.textContent = titre;
-    d.append(h, ...contenu);
-    return d;
-  };
   const I = ICONES_TYPE_ESCALIER, S = ICONES_SENS_ESCALIER, R = ICONES_RAMPE, M = ICONES_MARCHES;
   const type = [choix([
     ['droit', tr('Straight', 'Droit'), I.droit, tr('Straight staircase', 'Escalier droit')],
@@ -661,6 +655,14 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
     elements.push(info);
   }
   conteneur.replaceChildren(...elements);
+}
+
+/** Une sous-section de formulaire (Type, Marches, Dimensions…) : un creux titré. */
+function sousSection(titre, ...contenu){
+  const d = document.createElement('div'); d.className = 'batiment-sous-section';
+  const h = document.createElement('h3'); h.textContent = titre;
+  d.append(h, ...contenu);
+  return d;
 }
 
 /** L'ouverture sélectionnée, si elle existe encore. */
@@ -737,15 +739,19 @@ function formulaireOuverture(conteneur, v, changer, essayer = null){
     l.append(i, document.createTextNode(libelle));
     return l;
   };
-  const elements = [choix(types, v.type, 'type'),
-    champ(tr('Width', 'Largeur'), v.largeur, 'largeur'), champ(tr('Height', 'Hauteur'), v.hauteur, 'hauteur'),
-    champ(tr('Sill height', 'Hauteur d\'allège'), v.y, 'y')];
-  if (v.type !== 'passage') {
-    elements.push(choix([[1, tr('1 leaf', '1 battant')], [2, tr('2 leaves', '2 battants')]], v.battants, 'battants'));
-    elements.push(caseACocher(tr('Sliding', 'Coulissante'), v.coulissant, 'coulissant'));
-    elements.push(caseACocher(tr('Glazed', 'Vitrée'), v.vitre, 'vitre'));
-  }
-  conteneur.replaceChildren(...elements);
+  // Deux sous-sections (demandé) : Type (l'icône, les battants, coulissante, vitrée), Dimensions.
+  const type = [choix(types, v.type, 'type')];
+  if (v.type !== 'passage') type.push(
+    choix([[1, tr('1 leaf', '1 battant')], [2, tr('2 leaves', '2 battants')]], v.battants, 'battants'),
+    caseACocher(tr('Sliding', 'Coulissante'), v.coulissant, 'coulissant'),
+    caseACocher(tr('Glazed', 'Vitrée'), v.vitre, 'vitre'));
+  // « Hauteur d'allège » n'était pas clair (demandé) : c'est la hauteur du bas de l'ouverture au-dessus du sol.
+  const bas = champ(tr('Height from floor', 'Hauteur depuis le sol'), v.y, 'y');
+  bas.title = tr('Distance between the floor and the bottom of the opening', 'Distance entre le sol et le bas de l\'ouverture');
+  conteneur.replaceChildren(
+    sousSection(tr('Type', 'Type'), ...type),
+    sousSection(tr('Dimensions', 'Dimensions'),
+      champ(tr('Width', 'Largeur'), v.largeur, 'largeur'), champ(tr('Height', 'Hauteur'), v.hauteur, 'hauteur'), bas));
 }
 
 /** Le mur sélectionné, s'il existe encore. */
@@ -806,7 +812,10 @@ function commandes({ m, piece, ouv, esc }){
     tr('In red: crosses another wall.', 'En rouge : traverse un autre mur.'), sortir);
   if (E.outil === 'ouverture') return lignes(
     tr('Hover a wall: preview the opening.', 'Survol d\'un mur : aperçu de l\'ouverture.'),
-    tr('Click: place it.', 'Clic : la poser.'),
+    tr('Click: place and select it.', 'Clic : la poser et la choisir.'),
+    tr('Right-click: change the opening direction.', 'Clic droit : changer le sens d\'ouverture.'),
+    tr('Wheel: change the type.', 'Molette : changer de type.'),
+    tr('Ctrl + wheel: zoom.', 'Ctrl + molette : zoomer.'),
     tr('In red: does not fit.', 'En rouge : ne tient pas.'), sortir);
   if (E.outil === 'escalier') return lignes(
     tr('Click: place and select it.', 'Clic : le poser et le choisir.'),
@@ -1302,6 +1311,14 @@ function cablerPlan(){
       } else if (nouveauGeste) E.historique.pop();
       return;
     }
+    // L'outil Ouverture : la molette change le type de l'ouverture à poser (demandé) ; Ctrl + molette zoome.
+    if (E.outil === 'ouverture' && !e.ctrlKey) {
+      const types = TYPES_D_OUVERTURE, i = types.indexOf(E.reglagesOuverture.type);
+      const type = types[(i + (e.deltaY > 0 ? 1 : types.length - 1)) % types.length];
+      E.reglagesOuverture = { ...reglagesParDefaut(type), sens: E.reglagesOuverture.sens, charniere: E.reglagesOuverture.charniere };
+      remplirPanneau(); survoler(e);
+      return;
+    }
     // L'outil Escalier : la molette change le type de l'escalier à poser (demandé) ; Ctrl + molette zoome.
     if (E.outil === 'escalier' && !e.ctrlKey) {
       const types = TYPES_D_ESCALIER, i = types.indexOf(E.reglagesEscalier.type);
@@ -1340,7 +1357,10 @@ function cablerPlan(){
       if (!m) return;
       const essai = ajouterOuverture(JSON.parse(JSON.stringify(E.batiment)), m.mur.id, m.t, E.reglagesOuverture);
       if (essai.erreur) return;   // refusée sans message (demandé) : l'aperçu était rouge
-      modifier(b => ajouterOuverture(b, m.mur.id, m.t, E.reglagesOuverture));
+      // Posée : elle est choisie, et l'outil Sélection est pris (demandé, comme un escalier).
+      let id = null;
+      modifier(b => { const r = ajouterOuverture(b, m.mur.id, m.t, E.reglagesOuverture); id = r.ouverture && r.ouverture.id; });
+      if (id) { choisirOutil('selection'); E.selection = { ouvertureId: id }; remplirPanneau(); dessinerPlan(); }
       return;
     }
     const sommet = sommetSous(E.batiment, E.niveauId, p, tol);
@@ -1441,6 +1461,14 @@ function cablerPlan(){
       if (!bouge && e && e.type === 'pointerup' && E.outil === 'escalier') {
         E.reglagesEscalier = { ...E.reglagesEscalier, angle: E.reglagesEscalier.angle + Math.PI / 2 };
         if (E.poseEscalier && E.poseEscalier.angle != null) E.poseEscalier.angle += Math.PI / 2;
+        remplirPanneau(); survoler(e);
+      } else if (!bouge && e && e.type === 'pointerup' && E.outil === 'ouverture') {
+        // L'outil Ouverture : le clic droit change le sens d'ouverture (demandé), en faisant le tour
+        // des quatre quarts possibles : charnière au début / à la fin, d'un côté du mur puis de l'autre.
+        const { sens, charniere } = E.reglagesOuverture;
+        const suivant = sens === -1 ? (charniere === 'fin' ? { sens: -1, charniere: 'debut' } : { sens: 1, charniere: 'debut' })
+          : (charniere === 'fin' ? { sens: -1, charniere: 'fin' } : { sens: 1, charniere: 'fin' });
+        E.reglagesOuverture = { ...E.reglagesOuverture, ...suivant };
         remplirPanneau(); survoler(e);
       } else if (!bouge && e && e.type === 'pointerup') { if (!finirLaChaine() && E.outil === 'selection') { E.selection = null; remplirPanneau(); dessinerPlan(); } }
     }
