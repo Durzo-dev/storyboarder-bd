@@ -78,7 +78,7 @@ export function creerElementBatiment({ panel, page, batiment, source = null }){
 }
 
 /**
- * Remplace le bâtiment d'un Élément déjà placé (« Modifier », puis « Appliquer à la scène ») : sa
+ * Remplace le bâtiment d'un Élément déjà placé (« Modifier », puis « Appliquer les modifications ») : sa
  * copie, son nom, sa hauteur réelle et son cadre 2D, recentré sur l'ancien. Sa position monde, sa
  * rotation et son aimantation ne bougent pas.
  */

@@ -322,7 +322,7 @@ Tirer un angle : le déplacer, avec tous les murs qui y sont attachés (Alt : sa
         <!-- Le menu de base : enregistrer, recadrer, quitter l'éditeur. Avec un outil : « Fermer »
              quitte l'OUTIL et ramène le menu de base (demandé). -->
         <!-- #454a-4 : ouvert depuis une Scène, le bâtiment y retourne. Texte posé par le code
-             (« Placer dans la scène » ou « Appliquer à la scène »). -->
+             (« Placer dans la scène » ou « Appliquer les modifications »). -->
         <button id="batimentPlacerBtn" type="button" class="full-btn pour-aucun" hidden>Placer dans la scène</button>
         <button id="batimentEnregistrerBtn" type="button" class="full-btn pour-aucun">Enregistrer dans la bibliothèque</button>
         <button id="batimentRecadrerBtn" type="button" class="nav-btn pour-aucun">Recadrer</button>
@@ -1080,7 +1080,6 @@ Tirer un angle : le déplacer, avec tous les murs qui y sont attachés (Alt : sa
 <!-- #454a-4b : le clic droit sur un bâtiment de « Mes modèles ». -->
 <div class="context-menu hidden" id="batimentBiblioMenu">
   <button id="ctxBiblioEditerBatiment"><span class="ctx-icon">✏️</span> Ouvrir dans l'éditeur</button>
-  <button id="ctxBiblioPlacerBatiment"><span class="ctx-icon">🏠</span> Placer</button>
   <button id="ctxBiblioRenommerBatiment"><span class="ctx-icon">🔤</span> Renommer…</button>
   <button id="ctxBiblioSupprimerBatiment"><span class="ctx-icon">🗑</span> Supprimer du disque</button>
 </div>
@@ -1297,9 +1296,6 @@ Tirer un angle : le déplacer, avec tous les murs qui y sont attachés (Alt : sa
       <!-- « Mes modèles » seulement : articulés ou statues (nombre d'os mesuré au rendu des vignettes). -->
       <select id="storeSquelette"></select>
       <span id="storeCommercialCase"><label class="store-case"><input type="checkbox" id="storeCommercial"> <span id="storeCommercialLibelle"></span></label></span>
-      <!-- #454a-4b : « Importer un modèle » ouvre la bibliothèque ; ce bouton garde l'import depuis le
-           disque. Visible seulement dans ce cas (src/store-ui.js, importerChoix). -->
-      <button id="storeImporterFichier" class="nav-btn store-importer" type="button" hidden>Importer un fichier…</button>
     </form>
     <p id="storeMessage" class="maj-message"></p>
     <!-- Seule cette zone défile : les filtres restent en haut, la mention en bas. La fiche d'un

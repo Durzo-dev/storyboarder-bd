@@ -223,7 +223,7 @@ export const HELP_MANUAL_EN = [
   ]},
   { id: 'modeles', title: 'Imported 3D models', paragraphs: [
     'Import models made in Blender, Maya or elsewhere, in glTF format (.glb or .gltf). The format guarantees the unit (the metre), so a model arrives at its real size.',
-    'Right-click a panel or a Scene → "Import a model" opens My models: click a thumbnail (model or building) to place it there, "Import a file…" takes a .glb from disk. Reusable set: import it into a Scene.',
+    'Right-click a panel or a Scene → "Import a model" opens My models: click a thumbnail (model or building) to place it there, the "+" tile takes a .glb from disk. Reusable set: import it into a Scene.',
     'Files are copied into a "Modeles" folder next to your projects. One moved or deleted outside the application can no longer be read: its Elements become placeholder boxes, and the library marks it "file not found".',
     '"Model library", at the top next to the version, opens "My models": your files as cards, searchable, filtered by category, by use in the open project (by Scenes, in Panels, unused) and by skeleton (joint icon: can be posed). Other projects are not checked.',
     'A model\'s details list where it is used: click a Scene or a Panel to go there ("×2": two Elements in the same place, you pick one).',
@@ -281,8 +281,8 @@ export const HELP_MANUAL_EN = [
     '"Edit" opens a COPY of the walls already drawn in the Scene: the Scene does not change. "Save to the library" stores the building with your models, in the Batiments folder next to your projects.',
     'The top view of the current level fills the editor: scroll wheel to zoom, hold the right button to move the view. The 3D preview is a window over it: hold the left button to turn, the right button to move, scroll wheel to zoom. "Reframe" fits both views to the building.',
     'Drag the preview by its bar to anchor it to another corner. − minimises it to an icon that reopens it, ⤢ (or a double-click on the bar) switches it to full screen and back. The choice is remembered.',
-    'Opened with "Create a building" in a Scene, the editor offers "Place in the scene": the building is placed at the centre, as an independent copy. On a placed building, "Edit" (right-click on its row) or a double-click reopens the editor with "Apply to the scene".',
-    'Your buildings are listed in My models (B), in the Architecture & buildings category, with a house icon. Open one to see it in 3D, edit, rename or delete it; right-click places it. Saving a building opened from there replaces that model (you are asked first; placed copies do not change); rename it in the editor to make a new model instead.',
+    'Opened with "Create a building" in a Scene, the editor offers "Place in the scene": the building is placed at the centre, as an independent copy. On a placed building, "Edit" (right-click on its row) or a double-click reopens the editor with "Apply the changes".',
+    'Your buildings are listed in My models (B), in the Architecture & buildings category, with a house icon. Open one to see it in 3D, edit, rename or delete it. Saving a building opened from there replaces that model (you are asked first; placed copies do not change); rename it in the editor to make a new model instead.',
     'Esc or "Quit" leaves the editor; if the building has unsaved changes, you are asked first.',
   ]},
   { id: 'batiments_trace', title: 'Drawing walls', paragraphs: [
@@ -470,7 +470,7 @@ export const HELP_MANUAL_FR = [
   ]},
   { id: 'modeles', title: 'Modèles 3D importés', paragraphs: [
     'Importez des modèles faits dans Blender, Maya ou ailleurs, au format glTF (.glb ou .gltf). Ce format garantit l\'unité, le mètre : un modèle arrive à sa taille réelle.',
-    'Clic droit sur une Case ou une Scène → « Importer un modèle » ouvre Mes modèles : un clic sur une vignette (modèle ou bâtiment) l\'y place, « Importer un fichier… » prend un .glb sur le disque. Pour un décor : importez-le dans une Scène.',
+    'Clic droit sur une Case ou une Scène → « Importer un modèle » ouvre Mes modèles : un clic sur une vignette (modèle ou bâtiment) l\'y place, la vignette « + » prend un .glb sur le disque. Pour un décor : importez-le dans une Scène.',
     'Les fichiers sont copiés dans un dossier « Modeles », près de vos projets. Déplacé ou supprimé hors de l\'application, un fichier devient illisible : ses Éléments deviennent des boîtes « fichier introuvable ».',
     "« Bibliothèque de modèles », en haut à côté de la version, ouvre « Mes modèles » : vos fichiers en vignettes, avec recherche, catégorie, usage dans le Projet ouvert (Scènes, Cases, non utilisés) et squelette (icône d'articulation : se pose).",
     'La fiche d\'un modèle liste où il sert : cliquez une Scène ou une Case pour y aller (« ×2 » : deux Éléments au même endroit, à choisir).',
@@ -528,8 +528,8 @@ export const HELP_MANUAL_FR = [
     "« Modifier » ouvre une COPIE des murs déjà tracés dans la Scène : la Scène ne change pas. « Enregistrer dans la bibliothèque » range le bâtiment avec vos modèles, dans le dossier Batiments à côté de vos projets.",
     "La vue de dessus du niveau courant occupe l'éditeur : molette pour zoomer, clic droit maintenu pour déplacer la vue. L'aperçu 3D est une fenêtre par-dessus : clic gauche maintenu pour tourner, clic droit maintenu pour déplacer, molette pour zoomer. « Recadrer » ajuste les deux vues au bâtiment.",
     "Tirez l'aperçu par sa barre pour l'ancrer à un autre coin. − le réduit à une icône qui le rouvre, ⤢ (ou un double-clic sur la barre) le passe en plein écran et retour. Le choix est retenu.",
-    "Ouvert par « Créer un bâtiment » dans une Scène, l'éditeur propose « Placer dans la scène » : le bâtiment s'y pose au centre, en copie indépendante. Sur un bâtiment placé, « Modifier » (clic droit sur sa ligne) ou un double-clic rouvre l'éditeur avec « Appliquer à la scène ».",
-    "Vos bâtiments sont listés dans Mes modèles (B), dans la catégorie Architecture & bâtiments, avec une icône de maison. Ouvrez-en un pour le voir en 3D, l'éditer, le renommer ou le supprimer ; le clic droit le place. Enregistrer un bâtiment ouvert de là remplace ce modèle (la question est posée ; les copies placées ne changent pas) ; renommez-le dans l'éditeur pour en faire un nouveau modèle.",
+    "Ouvert par « Créer un bâtiment » dans une Scène, l'éditeur propose « Placer dans la scène » : le bâtiment s'y pose au centre, en copie indépendante. Sur un bâtiment placé, « Modifier » (clic droit sur sa ligne) ou un double-clic rouvre l'éditeur avec « Appliquer les modifications ».",
+    "Vos bâtiments sont listés dans Mes modèles (B), dans la catégorie Architecture & bâtiments, avec une icône de maison. Ouvrez-en un pour le voir en 3D, l'éditer, le renommer ou le supprimer. Enregistrer un bâtiment ouvert de là remplace ce modèle (la question est posée ; les copies placées ne changent pas) ; renommez-le dans l'éditeur pour en faire un nouveau modèle.",
     "Échap ou « Quitter » quitte l'éditeur ; si le bâtiment a des modifications non enregistrées, la question est posée d'abord.",
   ]},
   { id: 'batiments_trace', title: 'Tracer les murs', paragraphs: [

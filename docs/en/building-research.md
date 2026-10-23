@@ -382,7 +382,7 @@ shop front, round window, bow window, glass wall, arched top, shutters.
 copy, its real height, its 2D frame) and `src/batiment-3d.js` (the 3D builder shared by the editor's
 preview and the Panels' rendering). "Create a building" in a Scene opens the editor with "Place in
 the scene"; "Edit" (right-click on its row) or a double-click on a placed building opens it with
-"Apply to the scene".
+"Apply the changes".
 
 **The library** (#454a-4b, done): `src/batiment-bibliotheque.js` (the My models entries, category
 `architecture` by default; the saving rule: same name → replace after confirmation, renamed → new

@@ -73,7 +73,7 @@ import {
 import {
   setModelImportCallbacks, importModelIntoPanel, placerModeleExistant,
 } from './model-import.js';
-import { isImportedModel, listModels, renameModel, sanitizeModelName } from './model-store.js';
+import { isImportedModel, listModels, renameModel, sanitizeModelName, importModel } from './model-store.js';
 import {
   setProjectTreeCallbacks, renderTree, renderSceneList, renderImageList, deleteVolume, deletePage, duplicatePage,
   renameVolume, applyRenameVolume, renameScene, applyRenameScene, deleteScene,
@@ -9351,7 +9351,12 @@ cablerStore({
   // #454a-4b : les bâtiments de la bibliothèque.
   menuBatiment: (e, fichier) => openBatimentBiblioMenu(e, fichier),
   editerBatiment: (fichier) => editerBatimentDeLaBibliotheque(fichier),
-  placerBatiment: (fichier) => placerBatimentDeLaBibliotheque(fichier),
+  // La vignette « Ajouter un modèle » hors du choix : le fichier rejoint la bibliothèque, sans être posé.
+  importerDansLaBibliotheque: async () => {
+    const r = await importModel();
+    if (r && r.ok === false && r.error) alertAction(tr(`Import failed: ${r.error}`, `Import impossible : ${r.error}`));
+    rafraichirBibliothequeLocale();
+  },
   renommerBatiment: (fichier) => renommerBatimentDeLaBibliotheque(fichier),
   supprimerBatiment: (fichier) => supprimerBatimentDeLaBibliotheque(fichier),
 });
@@ -9363,8 +9368,7 @@ function openBatimentBiblioMenu(e, fichier){
   hideContextMenu();
   placerMenu3D(document.getElementById('batimentBiblioMenu'), e.clientX, e.clientY);
 }
-[['ctxBiblioEditerBatiment', editerBatimentDeLaBibliotheque], ['ctxBiblioPlacerBatiment', placerBatimentDeLaBibliotheque],
-  ['ctxBiblioRenommerBatiment', renommerBatimentDeLaBibliotheque], ['ctxBiblioSupprimerBatiment', supprimerBatimentDeLaBibliotheque]]
+[['ctxBiblioEditerBatiment', editerBatimentDeLaBibliotheque], ['ctxBiblioRenommerBatiment', renommerBatimentDeLaBibliotheque], ['ctxBiblioSupprimerBatiment', supprimerBatimentDeLaBibliotheque]]
   .forEach(([id, faire]) => { document.getElementById(id).onclick = () => { hideContextMenu(); if (_ctxBiblioBatiment) faire(_ctxBiblioBatiment); }; });
 
 /** Ouvre un bâtiment de la bibliothèque dans l'éditeur ; « Enregistrer » réécrira son fichier. */
@@ -9375,26 +9379,9 @@ async function editerBatimentDeLaBibliotheque(fichier){
   ouvrirEditeurDeBatiment({ batiment: r.batiment, fichier });
 }
 
-/**
- * La Case où placer : le canevas de la Scène ouverte, sinon la Case sélectionnée (ou celle de
- * l'Élément sélectionné), sinon aucune.
- */
-function caseOuPlacer(){
-  const page = currentPage();
-  if (S.editingSceneId) return page.objects.find(o => o.type === 'panel' && isLockedScenePanel(o)) || null;
-  const sel = page.objects.find(o => o.id === S.selectedId);
-  if (sel && sel.type === 'panel') return sel;
-  if (sel && sel.homePanelId) return page.objects.find(o => o.id === sel.homePanelId && o.type === 'panel') || null;
-  return null;
-}
-
-/** Place une copie d'un bâtiment de la bibliothèque dans la Scène ouverte ou la Case choisie. */
-async function placerBatimentDeLaBibliotheque(fichier, panelChoisi = null){
-  const panel = panelChoisi || caseOuPlacer();
-  if (!panel) {
-    alertAction(tr('Open a Scene, or select a panel, to place this building in it.', 'Ouvrez une Scène, ou sélectionnez une Case, pour y placer ce bâtiment.'));
-    return;
-  }
+/** Place une copie d'un bâtiment de la bibliothèque dans la Case (ou le canevas de Scène) `panel`. */
+async function placerBatimentDeLaBibliotheque(fichier, panel){
+  if (!panel) return;
   const r = await lireBatimentDuDisque(fichier, tr);
   if (!r.ok) { alertAction(tr(`This building could not be read: ${r.error}`, `Ce bâtiment n'a pas pu être lu : ${r.error}`)); return; }
   fermerStore();

@@ -401,7 +401,7 @@ haut cintré, volets.
 copie, sa hauteur réelle, son cadre 2D) et `src/batiment-3d.js` (le constructeur 3D partagé par
 l'aperçu de l'éditeur et le rendu des Cases). « Créer un bâtiment » dans une Scène ouvre l'éditeur
 avec « Placer dans la scène » ; « Modifier » (clic droit sur sa ligne) ou un double-clic sur un
-bâtiment placé l'ouvre avec « Appliquer à la scène ».
+bâtiment placé l'ouvre avec « Appliquer les modifications ».
 
 **La bibliothèque** (#454a-4b, fait) : `src/batiment-bibliotheque.js` (les entrées de « Mes
 modèles », catégorie `architecture` d'office ; la règle d'enregistrement : même nom → remplacer après

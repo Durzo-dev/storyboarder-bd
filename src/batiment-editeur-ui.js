@@ -20,6 +20,7 @@
 import { tr } from './state.js';
 import { creerBatiment, nomAfficheDuFichier } from './batiment.js';
 import { actionDEnregistrement } from './batiment-bibliotheque.js';
+import { signatureDuBatiment } from './batiment-element.js';
 import { enregistrerBatiment } from './batiment-store.js';
 import {
   versEcran, versBatiment, pasDeGrille, zoomerAutour, glisserVue, boiteDesMurs, cadrerSur,
@@ -44,7 +45,7 @@ let _rappels = { confirmer: async () => true, avantOuverture: () => {}, apresFer
 /** Les rappels d'events.js (règle n°2 : pas d'import circulaire). */
 export function setBatimentEditeurCallbacks(r){ _rappels = { ..._rappels, ...r }; }
 
-/** L'édition en cours : { batiment, fichier, modifie, vue, niveauId, apercu, geste }, ou null. */
+/** L'édition en cours : { batiment, fichier, refBiblio, refScene, vue, niveauId, apercu, geste, … }, ou null. */
 let E = null;
 
 export function editeurDeBatimentOuvert(){ return !!E; }
@@ -60,7 +61,11 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null, desti
   // Les pièces se déduisent des murs (#454a-3b) : un bâtiment repris d'une Scène reçoit les siennes.
   b.niveaux.forEach(n => actualiserPieces(b, n.id, tr));
   E = {
-    batiment: b, fichier, modifie: false, vue: null, niveauId: b.niveaux[0].id, apercu: null, geste: null,
+    batiment: b, fichier, vue: null,
+    // CE QUI A CHANGÉ se mesure, il ne se coche pas (signalé : après un Ctrl+Z, « Appliquer » restait
+    // allumé) : la signature du bâtiment comparée à celle qu'il avait à l'ouverture (pour la Scène) et
+    // au dernier enregistrement (pour la bibliothèque). Revenir en arrière rend les boutons éteints.
+    refScene: signatureDuBatiment(b), refBiblio: signatureDuBatiment(b), niveauId: b.niveaux[0].id, apercu: null, geste: null,
     // #454a-3 : le tracé.
     // Aucun outil à l'ouverture : le menu de base (demandé).
     outil: null, chaine: null, survol: null, selection: null,
@@ -100,7 +105,7 @@ function fermerSansDemander(){
  */
 export async function fermerEditeurDeBatiment(){
   if (!E) return true;
-  if (E.modifie) {
+  if (nonSauve()) {
     const ok = await _rappels.confirmer(
       tr('This building has unsaved changes. Close the editor without saving them?',
         'Ce bâtiment a des modifications non enregistrées. Fermer l\'éditeur sans les enregistrer ?'),
@@ -114,24 +119,31 @@ export async function fermerEditeurDeBatiment(){
 /**
  * Les boutons qui font sortir le bâtiment (demandé) :
  *   - « Placer dans la scène » (orange, on ajoute) : éteint tant qu'il n'a aucun mur ;
- *   - « Appliquer à la scène » (jaune, on modifie) : éteint sans modification, ou sans mur ;
- *   - « Enregistrer dans la bibliothèque » : éteint sans modification quand il y est déjà (un bâtiment
- *     qui n'y est pas encore peut y entrer tel quel), et sans mur.
+ *   - « Appliquer les modifications » (jaune, on modifie) : éteint sans modification, ou sans mur ;
+ *   - « Enregistrer dans la bibliothèque » : éteint sans modification (demandé, même pour un bâtiment
+ *     qui n'y est pas encore), et sans mur.
  */
+/** Le bâtiment diffère-t-il de ce qui est dans la bibliothèque (ou de ce qu'il était à l'ouverture) ? */
+function differeBiblio(){ return signatureDuBatiment(E.batiment) !== E.refBiblio; }
+/** … de la copie placée dans la Scène ? */
+function differeScene(){ return signatureDuBatiment(E.batiment) !== E.refScene; }
+/** Des modifications seraient-elles perdues en fermant ? Ni enregistrées, ni parties dans la Scène. */
+function nonSauve(){ return differeBiblio() && (!E.destination || differeScene()); }
+
 function majBoutonsDeSortie(){
   const b = E.batiment, sansMur = !b.murs.length;
   const dest = $('batimentPlacerBtn');
   dest.hidden = !E.destination;
   if (E.destination) {
     const appliquer = E.destination.mode === 'appliquer';
-    dest.textContent = appliquer ? tr('Apply to the scene', 'Appliquer à la scène') : tr('Place in the scene', 'Placer dans la scène');
+    dest.textContent = appliquer ? tr('Apply the changes', 'Appliquer les modifications') : tr('Place in the scene', 'Placer dans la scène');
     dest.classList.toggle('edit-btn', appliquer);
-    dest.disabled = sansMur || (appliquer && !E.modifie);
+    dest.disabled = sansMur || (appliquer && !differeScene());
     dest.title = sansMur ? tr('Draw at least one wall first.', 'Tracez d\'abord au moins un mur.')
       : dest.disabled ? tr('Nothing has changed yet.', 'Rien n\'a encore changé.') : '';
   }
   const enr = $('batimentEnregistrerBtn');
-  enr.disabled = sansMur || (!!E.fichier && !E.modifie);
+  enr.disabled = sansMur || !differeBiblio();
   enr.title = sansMur ? tr('Draw at least one wall first.', 'Tracez d\'abord au moins un mur.')
     : enr.disabled ? tr('Nothing has changed since it was saved.', 'Rien n\'a changé depuis l\'enregistrement.') : '';
 }
@@ -307,7 +319,6 @@ function modifier(faire){
   E.refaire = [];
   faire(E.batiment);
   actualiserPieces(E.batiment, E.niveauId, tr);
-  E.modifie = true;
   apresModification();
 }
 
@@ -323,14 +334,14 @@ function annuler(){
   if (!E || !E.historique.length) return;
   E.refaire.push(JSON.stringify(E.batiment));
   E.batiment = JSON.parse(E.historique.pop());
-  E.chaine = null; E.modifie = true;
+  E.chaine = null;
   apresModification();
 }
 function retablir(){
   if (!E || !E.refaire.length) return;
   E.historique.push(JSON.stringify(E.batiment));
   E.batiment = JSON.parse(E.refaire.pop());
-  E.chaine = null; E.modifie = true;
+  E.chaine = null;
   apresModification();
 }
 
@@ -670,7 +681,6 @@ function cablerPlan(){
       if (nouveauGeste) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; }
       const pas = (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 0.01 : PAS_ALLEGE);
       if (monterOuverture(E.batiment, ouv.id, pas)) {
-        E.modifie = true;
         E.molette = { id: ouv.id, t: maintenant };
         statut(tr(`Sill height: ${metres(ouv.y)}`, `Hauteur d'allège : ${metres(ouv.y)}`));
         apresModification();
@@ -751,14 +761,14 @@ function cablerPlan(){
       const { bouge } = E.glisserOuverture;
       E.glisserOuverture = null;
       // Un clic sans glisser n'a rien changé : le point d'annulation est retiré.
-      if (bouge) E.modifie = true; else E.historique.pop();
+      if (!bouge) E.historique.pop();
       apresModification();
     }
     if (E.glisserSommet) {
       const { depart, actuel } = E.glisserSommet;
       E.glisserSommet = null;
       // Un angle relâché à sa place n'a rien changé : le point d'annulation est retiré.
-      if (Math.hypot(depart.x - actuel.x, depart.z - actuel.z) < 1e-9) E.historique.pop(); else E.modifie = true;
+      if (Math.hypot(depart.x - actuel.x, depart.z - actuel.z) < 1e-9) E.historique.pop();
       apresModification();
     }
     if (E.geste) {
@@ -939,11 +949,10 @@ function ouvrirApercu(conteneur, b){
 
 // ── Enregistrer, le clavier, le câblage ──────────────────────────────────────────────────────────
 
-/** « Placer dans la scène » / « Appliquer à la scène » : le bâtiment part, l'éditeur se ferme. */
+/** « Placer dans la scène » / « Appliquer les modifications » : le bâtiment part, l'éditeur se ferme. */
 function versLaScene(){
   if (!E || !E.destination || !E.batiment.murs.length) return;
   const { destination, batiment } = E;
-  E.modifie = false;
   fermerSansDemander();
   destination.valider(JSON.parse(JSON.stringify(batiment)));
 }
@@ -974,7 +983,7 @@ async function enregistrer(){
   if (!r.ok) { statut(tr(`Could not save: ${r.error}`, `Échec de l'enregistrement : ${r.error}`)); return; }
   const nouveau = action === 'nouveau' && ed.fichier;
   ed.fichier = r.fichier;
-  ed.modifie = false;
+  ed.refBiblio = signatureDuBatiment(ed.batiment);
   ed.remplacementAccepte = ed.remplacementAccepte && !nouveau;
   remplirPanneau();
   statut(nouveau
@@ -1042,7 +1051,7 @@ export function initEditeurDeBatiment(){
     if (!E) return;
     const nom = e.target.value.trim();
     if (!nom) return;
-    E.batiment.nom = nom; E.modifie = true; statut('');
+    E.batiment.nom = nom; statut('');
     majBoutonsDeSortie();
   });
   document.querySelectorAll('.batiment-outil').forEach(b => { b.onclick = () => basculerOutil(b.dataset.outil); });

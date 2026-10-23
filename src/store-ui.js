@@ -685,7 +685,8 @@ async function chercherLocal(moi){
     entreesAffichees = filtrerEntrees(toutes, { texte: p.texte, categorie: p.categorie, usage: p.usage, squelette: p.squelette, tri: TRIS_LOCAUX.includes(p.tri) ? p.tri : 'nom', tags: tagsFiltre });
     cartesLocales.clear();
     affiches = entreesAffichees.map(e => ({ ...e, local: true }));
-    $('storeGrille').replaceChildren(...affiches.map(carte));
+    const ajout = carteAjout();
+    $('storeGrille').replaceChildren(...(ajout ? [ajout] : []), ...affiches.map(carte));
     message(toutes.length ? (affiches.length ? '' : t.aucunLocal) : t.videLocal);
   };
   afficher();
@@ -745,6 +746,27 @@ function pastilleBatiment(t){
   trait.setAttribute('stroke-linejoin', 'round');
   svg.appendChild(trait);
   return el('span', { classe: 'store-articule store-batiment', attrs: { title: t.batiment, role: 'img', 'aria-label': t.batiment } }, [svg]);
+}
+
+/**
+ * La « VIGNETTE BOUTON » en tête de « Mes modèles » (demandé, au lieu d'un gros bouton) : ajouter un
+ * modèle depuis le disque. Ouverte par « Importer un modèle », elle l'importe ET le place dans la
+ * Case ; ouverte autrement, elle le range dans la bibliothèque. Absente quand l'Éditeur de modèle
+ * choisit une figure : on y choisit parmi ce qu'on a.
+ */
+function carteAjout(){
+  if (choix && !importerChoix) return null;
+  if (!choix && !_rappels.importerDansLaBibliotheque) return null;
+  const t = textesStore(langue());
+  const c = el('button', { classe: 'store-carte store-carte-ajout', attrs: { type: 'button', title: t.ajouterModeleAide } }, [
+    el('span', { texte: '+', classe: 'store-ajout-plus' }),
+    el('span', { texte: t.ajouterModele, classe: 'store-carte-nom' }),
+  ]);
+  c.onclick = () => {
+    if (importerChoix) { const importer = importerChoix; fermerStore(); importer(); return; }
+    _rappels.importerDansLaBibliotheque();
+  };
+  return c;
 }
 
 /** La carte d'un bâtiment : sa vignette, l'icône, son nom, où il sert, sa catégorie et ses pièces. */
@@ -1230,7 +1252,6 @@ export async function ouvrirStore({ onglet, choisir, accepter, importer } = {}){
     choix = choisir;
     accepterChoix = typeof accepter === 'function' ? accepter : POSABLE;
     importerChoix = typeof importer === 'function' ? importer : null;
-    if ($('storeImporterFichier')) $('storeImporterFichier').hidden = !importerChoix;
     onglet = LOCAL;
   } else if (choix) {
     // Le bouton du bandeau pendant un choix : on revient à la fenêtre ordinaire.
@@ -1273,7 +1294,6 @@ function quitterModeChoix(){
   choix = null;
   accepterChoix = POSABLE;
   importerChoix = null;
-  if ($('storeImporterFichier')) $('storeImporterFichier').hidden = true;
   if (sourceAvantChoix && sourceAvantChoix !== source && infosPar[sourceAvantChoix]) {
     source = sourceAvantChoix;
     infos = infosPar[source];
@@ -1307,9 +1327,6 @@ export function cablerStore(rappels = {}){
   try { globalThis.localStorage.removeItem(ANCIENNE_CLE_ETAT); } catch (e) { /* rien à effacer */ }
   const storeModal = document.getElementById('storeModal');
   if (!storeModal) return;
-  // « Importer un fichier… » (mode choix de « Importer un modèle ») : la fenêtre se ferme, l'import
-  // depuis le disque prend le relais.
-  $('storeImporterFichier').onclick = () => { const importer = importerChoix; fermerStore(); if (importer) importer(); };
   const pont = window.storyboarderAPI;
   if (pont && pont.onStoreProgression) pont.onStoreProgression(progression);
   if (pont && pont.onStoreApercuProgression) pont.onStoreApercuProgression(progressionApercu);
