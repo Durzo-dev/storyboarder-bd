@@ -148,3 +148,26 @@ export function hauteurDesMursDuNiveau(b, id){
   if (!n) return DEFAUTS_BATIMENT.hauteur;
   return arrondi(n.hauteur + epaisseurDuDessus(b, id));
 }
+
+/**
+ * Change la place d'un niveau dans la pile (demandé : glisser-déposer dans la liste des niveaux).
+ * `rang` : sa nouvelle place, 0 = le plus bas. Les élévations sont refaites depuis le bas (le plus bas
+ * garde l'élévation qu'avait le plus bas) ; un niveau qui portait un nom par défaut (« Étage 2 »…)
+ * prend celui de sa nouvelle place, un nom choisi reste. Rend vrai si l'ordre a changé.
+ */
+export function deplacerNiveau(b, id, rang, traduire){
+  const t = niveauxTries(b);
+  const i = t.findIndex(n => n.id === id);
+  const cible = Math.max(0, Math.min(t.length - 1, rang));
+  if (i < 0 || i === cible) return false;
+  const base = t[0].elevation;
+  const defauts = new Set(t.map((n, k) => nomDuNiveauParDefaut(k - Math.max(0, t.findIndex(x => x.elevation >= 0)), traduire)));
+  const [n] = t.splice(i, 1);
+  t.splice(cible, 0, n);
+  t[0].elevation = base;
+  for (let k = 1; k < t.length; k++) t[k].elevation = arrondi(t[k - 1].elevation + t[k - 1].hauteur + t[k].dalle);
+  const zero = Math.max(0, t.findIndex(x => x.elevation >= 0));
+  t.forEach((x, k) => { if (defauts.has(x.nom)) x.nom = nomDuNiveauParDefaut(k - zero, traduire); });
+  b.niveaux = t;
+  return true;
+}

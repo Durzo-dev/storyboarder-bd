@@ -42,6 +42,7 @@ import {
 } from './batiment-escaliers.js';
 import {
   niveauxTries, niveauDessous, niveauDessus, ajouterEtage, dupliquerNiveau, supprimerNiveau, modifierNiveau,
+  deplacerNiveau,
 } from './batiment-niveaux.js';
 import { cadrage3D, orbite3D, zoom3D, positionCamera3D, deplacement3D } from './store-apercu-3d.js';
 import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
@@ -352,7 +353,7 @@ function remplirNiveaux(){
     const d = document.createElement('div');
     d.className = 'batiment-ligne batiment-ligne-niveau cliquable' + (n.id === E.niveauId ? ' actif' : '');
     d.dataset.id = n.id;
-    d.onclick = (e) => { if (e.target === d || e.target.classList.contains('batiment-niveau-pastille')) choisirNiveau(n.id); };
+    d.onclick = (e) => { if (e.target === d || e.target.closest('.batiment-niveau-gauche, .batiment-niveau-droite') === e.target || e.target.classList.contains('batiment-niveau-pastille')) choisirNiveau(n.id); };
     const pastille = document.createElement('span');
     pastille.className = 'batiment-niveau-pastille'; pastille.textContent = libelleCourt(n);
     const nom = document.createElement('input');
@@ -375,11 +376,39 @@ function remplirNiveaux(){
     suppr.title = tries.length > 1 ? tr('Delete this level and what it holds', 'Supprimer ce niveau et ce qu\'il porte') : tr('A building keeps at least one level', 'Un bâtiment garde au moins un niveau');
     suppr.disabled = tries.length <= 1;
     suppr.onclick = () => supprimerUnNiveau(n);
-    const reglages = document.createElement('div');
-    reglages.className = 'batiment-niveau-reglages';
-    reglages.append(champ(tr('Ceiling height', 'Hauteur sous plafond'), n.hauteur, 'hauteur'));
-    if (n.id !== tries[0].id) reglages.append(champ(tr('Floor slab thickness', 'Épaisseur du plancher'), n.dalle, 'dalle'));
-    d.append(pastille, nom, reglages, suppr);
+    // Deux colonnes (demandé) : à gauche le numéro et, juste dessous, la suppression ; à droite le
+    // nom et la hauteur sous plafond. L'épaisseur du plancher n'est plus réglable ici (demandé) :
+    // elle garde sa valeur par défaut, 20 cm.
+    const gauche = document.createElement('div');
+    gauche.className = 'batiment-niveau-gauche';
+    gauche.append(pastille, suppr);
+    const droite = document.createElement('div');
+    droite.className = 'batiment-niveau-droite';
+    droite.append(nom, champ(tr('Ceiling height', 'Hauteur sous plafond'), n.hauteur, 'hauteur'));
+    d.append(gauche, droite);
+    // LE GLISSER-DÉPOSER (demandé) : la ligne se tire, sauf depuis un champ (on y sélectionne du texte).
+    d.addEventListener('mousedown', (e) => { d.draggable = e.target.tagName !== 'INPUT'; });
+    d.addEventListener('dragstart', (e) => { E.niveauTire = n.id; d.classList.add('tiree'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', n.id); });
+    d.addEventListener('dragend', () => { E.niveauTire = null; zone.querySelectorAll('.batiment-ligne-niveau').forEach(l => l.classList.remove('tiree', 'cible-dessus', 'cible-dessous')); });
+    d.addEventListener('dragover', (e) => {
+      if (!E.niveauTire || E.niveauTire === n.id) return;
+      e.preventDefault();
+      const r = d.getBoundingClientRect(), dessus = e.clientY < r.top + r.height / 2;
+      d.classList.toggle('cible-dessus', dessus); d.classList.toggle('cible-dessous', !dessus);
+    });
+    d.addEventListener('dragleave', () => d.classList.remove('cible-dessus', 'cible-dessous'));
+    d.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const tire = E.niveauTire;
+      if (!tire || tire === n.id) return;
+      // La liste est affichée du plus haut au plus bas : déposé AU-DESSUS d'une ligne, le niveau tiré
+      // passe juste au-dessus de ce niveau dans la pile.
+      const r = d.getBoundingClientRect(), dessus = e.clientY < r.top + r.height / 2;
+      const pile = niveauxTries(E.batiment).filter(x => x.id !== tire);
+      const k = pile.findIndex(x => x.id === n.id);
+      const rang = dessus ? k + 1 : k;
+      modifier(b => deplacerNiveau(b, tire, rang, tr));
+    });
     return d;
   });
   const actions = document.createElement('div');

@@ -299,7 +299,7 @@ export const HELP_MANUAL_EN = [
   ]},
   { id: 'batiments_niveaux', title: 'Building levels', paragraphs: [
     'The round buttons on the left of the top view switch level (Page Up / Page Down too); the level below shows faintly under the current one, and its walls and corners snap too, to draw a floor over the one beneath.',
-    'In the base menu, "Levels": rename a level, set its ceiling height and floor thickness (the levels above move with it), delete it (with what it holds). "Add a floor" adds an empty level on top; "Duplicate the floor" copies the current level, walls, openings and rooms, just above it.',
+    'In the base menu, "Levels": rename a level, set its ceiling height (the levels above move with it), drag it to change its place in the stack, delete it (with what it holds). "Add a floor" adds an empty level on top; "Duplicate the floor" copies the current level, walls, openings and rooms, just above it.',
     'In 3D, every room is covered: by the floor of the room above, or else by a flat roof; the walls run through the slabs. The layers button of the preview cuts it at the current level, to see inside.',
   ]},
   { id: 'batiments_escaliers', title: 'Staircases', paragraphs: [
@@ -556,7 +556,7 @@ export const HELP_MANUAL_FR = [
   ]},
   { id: 'batiments_niveaux', title: 'Niveaux d\'un bâtiment', paragraphs: [
     "Les boutons ronds à gauche de la vue de dessus changent de niveau (Page haut / Page bas aussi) ; le niveau du dessous s'affiche en transparence sous le niveau courant, et ses murs et ses angles aimantent aussi, pour tracer un étage par-dessus celui d'en dessous.",
-    "Dans le menu de base, « Niveaux » : renommer un niveau, régler sa hauteur sous plafond et l'épaisseur de son plancher (les niveaux du dessus suivent), le supprimer (avec ce qu'il porte). « Ajouter un étage » ajoute un niveau vide en haut ; « Dupliquer l'étage » copie le niveau courant, murs, ouvertures et pièces, juste au-dessus.",
+    "Dans le menu de base, « Niveaux » : renommer un niveau, régler sa hauteur sous plafond (les niveaux du dessus suivent), le glisser pour changer sa place dans la pile, le supprimer (avec ce qu'il porte). « Ajouter un étage » ajoute un niveau vide en haut ; « Dupliquer l'étage » copie le niveau courant, murs, ouvertures et pièces, juste au-dessus.",
     "En 3D, chaque pièce est couverte : par le plancher de la pièce du dessus, sinon par un toit plat ; les murs traversent les dalles. Le bouton des calques de l'aperçu le coupe au niveau courant, pour voir dedans.",
   ]},
   { id: 'batiments_escaliers', title: 'Escaliers', paragraphs: [

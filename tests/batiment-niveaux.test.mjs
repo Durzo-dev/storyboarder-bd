@@ -3,7 +3,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   niveauxTries, niveauDessous, niveauDessus, recalerNiveaux, ajouterEtage, dupliquerNiveau, supprimerNiveau,
-  modifierNiveau, hauteurDesMursDuNiveau,
+  modifierNiveau, hauteurDesMursDuNiveau, deplacerNiveau,
 } from '../src/batiment-niveaux.js';
 import { creerBatiment } from '../src/batiment.js';
 import { ajouterRectangle } from '../src/batiment-trace.js';
@@ -84,5 +84,18 @@ describe('supprimer et modifier', () => {
     assert.equal(hauteurDesMursDuNiveau(b, 'n0'), 3);
     assert.equal(hauteurDesMursDuNiveau(b, e1.id), 3, 'le dernier : sa hauteur + le toit plat');
     assert.equal(recalerNiveaux(b), b);
+  });
+});
+
+describe('réordonner (glisser-déposer)', () => {
+  test('le rez-de-chaussée monte au-dessus de l’étage : élévations refaites, noms par défaut suivis, noms choisis gardés', () => {
+    const b = maison(); const e1 = ajouterEtage(b, fr); const e2 = ajouterEtage(b, fr);
+    modifierNiveau(b, e2.id, { nom: 'Grenier' });
+    assert.equal(deplacerNiveau(b, 'n0', 1, fr), true);
+    const t = niveauxTries(b);
+    assert.deepEqual(t.map(n => n.id), [e1.id, 'n0', e2.id]);
+    assert.deepEqual(t.map(n => n.elevation), [0, 3, 6]);
+    assert.deepEqual(t.map(n => n.nom), ['Rez-de-chaussée', 'Étage 1', 'Grenier']);
+    assert.equal(deplacerNiveau(b, 'n0', 1, fr), false, 'déjà là');
   });
 });

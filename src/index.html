@@ -263,10 +263,13 @@
         </section>
         <section class="side-section pour-aucun">
           <h2 id="batimentSectionAide">Commandes</h2>
-          <p id="batimentAide" class="batiment-aide">Les outils sont en bas : Mur (M) pour tracer, Ouverture (O) pour les portes et fenêtres, Escalier (S), Sélection (V) pour retoucher. Les niveaux sont à gauche (Page haut / Page bas). Un nouveau clic sur l'outil actif, ou « Fermer », le quitte.
-Vue de dessus : molette pour zoomer, clic droit maintenu pour déplacer la vue.
-Aperçu 3D : clic gauche maintenu pour tourner, clic droit maintenu pour déplacer, molette pour zoomer. Sa barre : la tirer pour l'ancrer à un autre coin, − pour le réduire, ⤢ pour le plein écran.
-Ctrl+Z / Ctrl+Y : annuler / rétablir. H ou Échap : fermer l'éditeur.</p>
+          <p id="batimentAide" class="batiment-aide">Choisissez un outil en bas de la vue : murs, portes et fenêtres, escaliers, ou sélection.
+
+Changez de niveau avec les pastilles à gauche.
+
+Vue de dessus : molette pour zoomer, clic droit maintenu pour déplacer.
+
+Aperçu 3D : clic gauche maintenu pour tourner, clic droit pour déplacer. Tirez sa barre vers un autre coin.</p>
         </section>
 
         <section class="side-section pour-mur">
@@ -276,12 +279,15 @@ Ctrl+Z / Ctrl+Y : annuler / rétablir. H ou Échap : fermer l'éditeur.</p>
         </section>
         <section class="side-section pour-mur">
           <h2 id="batimentSectionAideMur">Commandes</h2>
-          <p id="batimentAideMur" class="batiment-aide">Un clic pour commencer, puis un clic par angle. Un clic sur un mur existant fait une jonction en T.
-Glisser : une pièce rectangulaire d'un coup (un côté accolé à un mur existant ne le double pas).
-Double-clic, Entrée, clic droit ou un angle déjà posé : finir la chaîne.
-L'angle s'aimante par 15°, la longueur au centimètre, les angles et les alignements aussi. Alt maintenu : rien n'est aimanté.
-Un mur qui en traverserait un autre s'affiche en rouge et est refusé.
-Échap : finir la chaîne, puis quitter l'outil.</p>
+          <p id="batimentAideMur" class="batiment-aide">Un clic par angle ; un clic sur un mur existant fait une jonction en T.
+
+Glisser : une pièce rectangulaire d'un coup.
+
+Double-clic ou clic droit : finir le tracé.
+
+Les angles, les longueurs et les alignements s'aimantent ; Alt maintenu pour tracer librement.
+
+En rouge : le mur en traverserait un autre.</p>
         </section>
 
         <!-- #454a-3c : l'outil Ouverture. Les réglages des ouvertures à poser ; le formulaire est
@@ -292,9 +298,11 @@ Un mur qui en traverserait un autre s'affiche en rouge et est refusé.
         </section>
         <section class="side-section pour-ouverture">
           <h2 id="batimentSectionAideOuverture">Commandes</h2>
-          <p id="batimentAideOuverture" class="batiment-aide">Survolez un mur : l'ouverture s'y place, centrée sous la souris (en rouge si elle ne tient pas : trop près d'un angle ou d'une autre ouverture).
-Clic : la poser. Pour la déplacer ou la retoucher : outil Sélection.
-Échap : quitter l'outil.</p>
+          <p id="batimentAideOuverture" class="batiment-aide">Survolez un mur : l'ouverture s'y place, centrée sous la souris.
+
+Clic : la poser.
+
+En rouge : elle ne tient pas (trop près d'un angle ou d'une autre ouverture).</p>
         </section>
 
         <!-- #454c : l'outil Escalier. Les réglages de l'escalier à poser ; formulaire construit par le code. -->
@@ -304,9 +312,11 @@ Clic : la poser. Pour la déplacer ou la retoucher : outil Sélection.
         </section>
         <section class="side-section pour-escalier">
           <h2 id="batimentSectionAideEscalier">Commandes</h2>
-          <p id="batimentAideEscalier" class="batiment-aide">Cliquez au pied de l'escalier et tirez dans la direction où il monte (par 15°) ; un simple clic le pose dans la dernière direction.
-Il s'aimante aux murs proches (Alt : libre). Il relie le niveau courant à celui du dessus, et perce son plancher. En rouge : pas d'étage au-dessus, ou il traverserait un mur.
-Échap : quitter l'outil.</p>
+          <p id="batimentAideEscalier" class="batiment-aide">Cliquez au pied et tirez dans la direction où il monte ; un simple clic reprend la dernière direction.
+
+Il s'aimante aux murs proches et relie le niveau courant à celui du dessus.
+
+En rouge : pas d'étage au-dessus, ou il traverserait un mur.</p>
         </section>
 
         <section class="side-section pour-selection" id="batimentSectionSelection">
@@ -343,12 +353,13 @@ Il s'aimante aux murs proches (Alt : libre). Il relie le niveau courant à celui
         </section>
         <section class="side-section pour-selection">
           <h2 id="batimentSectionAideSelection">Commandes</h2>
-          <p id="batimentAideSelection" class="batiment-aide">Clic sur un mur : le choisir. Suppr : le supprimer.
-Clic sur une ouverture : la choisir ; la tirer la fait glisser le long de son mur, la molette la monte ou la descend (Maj : au centimètre).
-Clic sur un escalier : le choisir ; le tirer le déplace, R le tourne de 90°.
-Clic dans une pièce : la choisir, pour la renommer.
-Tirer un angle : le déplacer, avec tous les murs qui y sont attachés (Alt : sans aimantation).
-Échap : désélectionner, puis quitter l'outil.</p>
+          <p id="batimentAideSelection" class="batiment-aide">Clic : choisir un mur, une pièce, une ouverture ou un escalier.
+
+Tirer un angle : le déplacer avec ses murs.
+
+Tirer une ouverture : la faire glisser sur son mur ; la molette la monte ou la descend.
+
+Tirer un escalier : le déplacer.</p>
         </section>
 
         <p id="batimentStatut" class="batiment-statut"></p>
