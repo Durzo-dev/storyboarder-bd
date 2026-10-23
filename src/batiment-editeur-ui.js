@@ -38,7 +38,7 @@ import {
 import { actualiserPieces, formesDesPieces, pieceSous, supprimerPiece } from './batiment-pieces.js';
 import {
   formeDeLEscalier, tremieDeLEscalier, validiteDeLEscalier, ajouterEscalier, modifierEscalier, supprimerEscalier,
-  escalierSous, decoupage, hauteurAFranchir, DEFAUTS_ESCALIER, essayerEscalier, aimanterEscalier, escaliersBloques,
+  escalierSous, decoupage, hauteurAFranchir, DEFAUTS_ESCALIER, TYPES_D_ESCALIER, essayerEscalier, aimanterEscalier, escaliersBloques,
 } from './batiment-escaliers.js';
 import {
   niveauxTries, niveauDessous, niveauDessus, ajouterEtage, dupliquerNiveau, supprimerNiveau, modifierNiveau,
@@ -259,11 +259,13 @@ function remplirPanneau(){
   }) : [vide(tr('No room yet: close a contour of walls.', 'Aucune pièce : fermez un contour de murs.'))]));
   const m = murSelectionne(), piece = pieceSelectionnee(), ouv = ouvertureSelectionnee(), esc = escalierSelectionne();
   $('batimentSelectionMur').hidden = !m;
-  $('batimentSelectionPiece').hidden = !piece;
   $('batimentSelectionOuverture').hidden = !ouv;
   $('batimentSelectionEscalier').hidden = !esc;
-  $('batimentSelectionVide').hidden = !!(m || piece || ouv || esc);
-  $('batimentSelectionTitre').textContent = m ? tr('Selected wall', 'Mur sélectionné') : piece ? tr('Selected room', 'Pièce sélectionnée')
+  $('batimentSelectionVide').hidden = !!(m || ouv || esc);
+  // Une pièce choisie n'a pas de menu à elle (demandé) : le menu de base revient, la pièce reste
+  // surlignée et l'outil Sélection reste pris.
+  $('batimentPanneau').dataset.outil = (E.outil === 'selection' && piece) ? 'aucun' : (E.outil || 'aucun');
+  $('batimentSelectionTitre').textContent = m ? tr('Selected wall', 'Mur sélectionné')
     : ouv ? tr('Selected opening', 'Ouverture sélectionnée') : esc ? tr('Selected staircase', 'Escalier sélectionné') : tr('Selection', 'Sélection');
   if (E.outil === 'escalier') formulaireEscalier($('batimentReglagesEscalier'), E.reglagesEscalier, (c) => {
     E.reglagesEscalier = { ...E.reglagesEscalier, ...c }; remplirPanneau(); dessinerPlan();
@@ -285,11 +287,6 @@ function remplirPanneau(){
     const r = essayerOuverture(E.batiment, ouv.id, c);
     return r.erreur ? { erreur: refusOuverture(r.erreur) } : { ...r, note: noteDeDeplacement(r.deplacement, tr('the opening', 'l\'ouverture')) };
   });
-  if (piece) {
-    // Plus de formulaire pour une pièce (demandé) : son nom et sa surface ; on la renomme ou la
-    // supprime par le clic droit, dans la liste des pièces.
-    $('batimentPieceInfo').textContent = piece.nom + (formes.has(piece.id) ? ` · ${surface(formes.get(piece.id).aire)}` : '');
-  }
   if (m) {
     $('batimentMurLongueur').textContent = tr(`Length: ${metres(longueurDuMur(m))}`, `Longueur : ${metres(longueurDuMur(m))}`);
     if (document.activeElement !== $('batimentMurEpaisseur')) $('batimentMurEpaisseur').value = Math.round(m.epaisseur * 100);
@@ -1197,6 +1194,13 @@ function cablerPlan(){
       } else if (nouveauGeste) E.historique.pop();
       return;
     }
+    // L'outil Escalier : la molette change le type de l'escalier à poser (demandé) ; Ctrl + molette zoome.
+    if (E.outil === 'escalier' && !e.ctrlKey) {
+      const types = TYPES_D_ESCALIER, i = types.indexOf(E.reglagesEscalier.type);
+      E.reglagesEscalier = { ...E.reglagesEscalier, type: types[(i + (e.deltaY > 0 ? 1 : types.length - 1)) % types.length] };
+      remplirPanneau(); survoler(e);
+      return;
+    }
     const r = c.getBoundingClientRect();
     E.vue = zoomerAutour(E.vue, r.width, r.height, { x: e.clientX - r.left, y: e.clientY - r.top }, Math.exp(-e.deltaY * 0.0015));
     survoler(e);
@@ -1301,7 +1305,13 @@ function cablerPlan(){
         const reglages = { ...E.reglagesEscalier, depart, angle };
         const essai = ajouterEscalier(JSON.parse(JSON.stringify(E.batiment)), E.niveauId, reglages);
         if (essai.erreur) statut(refusEscalier(essai.erreur));
-        else { statut(''); modifier(b => ajouterEscalier(b, E.niveauId, reglages)); }
+        else {
+          // Posé : il est choisi, et l'outil Sélection est pris (demandé).
+          statut('');
+          let id = null;
+          modifier(b => { const r = ajouterEscalier(b, E.niveauId, reglages); id = r.escalier && r.escalier.id; });
+          if (id) { choisirOutil('selection'); E.selection = { escalierId: id }; remplirPanneau(); dessinerPlan(); }
+        }
       }
       dessinerPlan();
     }
@@ -1322,7 +1332,12 @@ function cablerPlan(){
     if (E.geste) {
       const { bouge } = E.geste;
       E.geste = null;
-      if (!bouge && e && e.type === 'pointerup') { if (!finirLaChaine() && E.outil === 'selection') { E.selection = null; remplirPanneau(); dessinerPlan(); } }
+      // L'outil Escalier : un clic droit sans glisser fait tourner l'escalier à poser d'un quart de tour (demandé).
+      if (!bouge && e && e.type === 'pointerup' && E.outil === 'escalier') {
+        E.reglagesEscalier = { ...E.reglagesEscalier, angle: E.reglagesEscalier.angle + Math.PI / 2 };
+        if (E.poseEscalier && E.poseEscalier.angle != null) E.poseEscalier.angle += Math.PI / 2;
+        remplirPanneau(); survoler(e);
+      } else if (!bouge && e && e.type === 'pointerup') { if (!finirLaChaine() && E.outil === 'selection') { E.selection = null; remplirPanneau(); dessinerPlan(); } }
     }
   };
   c.addEventListener('pointerup', fin);

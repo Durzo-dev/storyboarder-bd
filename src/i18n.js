@@ -61,7 +61,7 @@ export const I18N_TEXT = [
   ['#batimentOutilEscalier', null, null, 'title', 'Stairs (S)', 'Escaliers (S)'],
   ['#batimentSectionEscalier', 'Staircase to place', 'Escalier à poser'],
   ['#batimentSectionAideEscalier', 'Controls', 'Commandes'],
-  ['#batimentAideEscalier', "Click at the foot and drag the way it goes up; a simple click keeps the last direction.\n\nIt snaps to nearby walls and links the current level to the one above.\n\nIn red: no level above, or it would cross a wall.", "Cliquez au pied et tirez dans la direction où il monte ; un simple clic reprend la dernière direction.\n\nIl s'aimante aux murs proches et relie le niveau courant à celui du dessus.\n\nEn rouge : pas d'étage au-dessus, ou il traverserait un mur."],
+  ['#batimentAideEscalier', "Click: place and select it. Drag: orient it.\n\nRight-click: turn it. Wheel: change the type.\n\nIt snaps to nearby walls and links the current level to the one above.\n\nIn red: no level above, or it would cross a wall.", "Clic : le poser et le choisir. Tirer : l'orienter.\n\nClic droit : le tourner. Molette : changer de type.\n\nIl s'aimante aux murs proches et relie le niveau courant à celui du dessus.\n\nEn rouge : pas d'étage au-dessus, ou il traverserait un mur."],
   ['#batimentEscalierTourner', 'Turn by 90° (R)', 'Tourner de 90° (R)'],
   ['#batimentEscalierSupprimer', 'Delete the staircase', "Supprimer l'escalier"],
   ['#batimentSectionOuverture', 'Opening to place', 'Ouverture à poser'],

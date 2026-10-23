@@ -290,7 +290,7 @@ export const HELP_MANUAL_EN = [
     'Wall tool (M): click to start, then one click per corner; the chain stops on an existing corner, or with a double-click, Enter, a right-click or Esc. Ending on the middle of a wall makes a T junction. Corners join cleanly, at any angle.',
     'The angle snaps by 15°, the length to the centimetre, existing corners and alignments too (dashed guides); hold Alt to place freely. A wall that would cross another shows in red and is refused.',
     'Selection tool (V): click a wall to pick it (its length and thickness show in the menu, Del deletes it), drag a corner to move it along with every wall attached to it. Ctrl+Z and Ctrl+Y undo and redo inside the editor.',
-    'Rooms: every closed contour of walls is a room, named Room 1, Room 2… with its area. Drag with the Wall tool to draw a rectangular room in one go. Click a room in the Rooms list to select it; right-click it to rename or delete it. It keeps its name when its walls move.',
+    'Rooms: every closed contour of walls is a room, named Room 1, Room 2… with its area. Drag with the Wall tool to draw a rectangular room in one go. Click a room in the Rooms list to select it (the base menu stays); right-click it to rename or delete it. It keeps its name when its walls move.',
   ]},
   { id: 'batiments_ouvertures', title: 'Doors and windows', paragraphs: [
     'Opening tool (O): choose a door, a window, a bay window or a passage in the right-hand menu, with its width, height and sill height, its leaves (1 or 2), sliding or not, glazed or not.',
@@ -305,7 +305,7 @@ export const HELP_MANUAL_EN = [
   ]},
   { id: 'batiments_escaliers', title: 'Staircases', paragraphs: [
     'Stairs tool (S): straight, L-shaped or U-shaped, with its width, the side it turns to, risers or open steps, and a rail on one side, both or none. The steps are computed from the height to climb (about 17 cm high, 24 to 30 cm deep).',
-    'Click at the foot and drag the way it goes up (by 15°); a simple click places it in the last direction. It links the current level to the one above and pierces its floor, shown dashed on the upper level. It is refused (in red) with no level above, or if it would cross a wall.',
+    'Click to place it: it is selected and the Selection tool is taken. Drag from the foot to orient it (by 15°); right-click turns it by 90°, the wheel changes its type (Ctrl + wheel zooms). It links the current level to the one above and pierces its floor, shown dashed on the upper level. It is refused (in red) with no level above, or if it would cross a wall.',
     'It snaps to nearby walls when placed or dragged (Alt: free). With Selection, click a staircase to adjust it in the menu, drag it to move it, R to turn it by 90°, Del to delete it. A change that does not fit moves it within its room, keeping the walls it touched if it can, then letting go of one, then two; if nothing fits in the room, the button is greyed.',
   ]},
 ];
@@ -548,7 +548,7 @@ export const HELP_MANUAL_FR = [
     "Outil Mur (M) : un clic pour commencer, puis un clic par angle ; la chaîne s'arrête sur un angle existant, ou par un double-clic, Entrée, un clic droit ou Échap. Finir au milieu d'un mur fait une jonction en T. Les angles se raccordent proprement, quel que soit l'angle.",
     "L'angle s'aimante par 15°, la longueur au centimètre, les angles existants et les alignements aussi (guides en pointillés) ; Alt maintenu pour poser librement. Un mur qui en traverserait un autre s'affiche en rouge et est refusé.",
     "Outil Sélection (V) : un clic sur un mur le choisit (sa longueur et son épaisseur s'affichent dans le menu, Suppr le supprime), tirer un angle le déplace avec tous les murs qui y sont attachés. Ctrl+Z et Ctrl+Y annulent et rétablissent dans l'éditeur.",
-    "Les pièces : chaque contour de murs fermé est une pièce, nommée Pièce 1, Pièce 2… avec sa surface. Glisser avec l'outil Mur trace une pièce rectangulaire d'un coup. Un clic sur une pièce de la liste Pièces la sélectionne ; un clic droit la renomme ou la supprime. Elle garde son nom quand ses murs bougent.",
+    "Les pièces : chaque contour de murs fermé est une pièce, nommée Pièce 1, Pièce 2… avec sa surface. Glisser avec l'outil Mur trace une pièce rectangulaire d'un coup. Un clic sur une pièce de la liste Pièces la sélectionne (le menu de base reste) ; un clic droit la renomme ou la supprime. Elle garde son nom quand ses murs bougent.",
   ]},
   { id: 'batiments_ouvertures', title: 'Portes et fenêtres', paragraphs: [
     "Outil Ouverture (O) : choisissez une porte, une fenêtre, une baie vitrée ou un passage dans le menu de droite, avec sa largeur, sa hauteur et sa hauteur d'allège, ses battants (1 ou 2), coulissante ou non, vitrée ou non.",
@@ -563,7 +563,7 @@ export const HELP_MANUAL_FR = [
   ]},
   { id: 'batiments_escaliers', title: 'Escaliers', paragraphs: [
     "Outil Escalier (S) : droit, en L ou en U, avec sa largeur, le côté où il tourne, des marches pleines (contremarches) ou ouvertes, et une rampe d'un côté, des deux ou aucune. Les marches se calculent d'après la hauteur à franchir (environ 17 cm de haut, 24 à 30 cm de profondeur).",
-    "Cliquez au pied et tirez dans la direction où il monte (par 15°) ; un simple clic le pose dans la dernière direction. Il relie le niveau courant à celui du dessus et perce son plancher, dessiné en pointillés à l'étage. Il est refusé (en rouge) sans niveau au-dessus, ou s'il traverserait un mur.",
+    "Un clic le pose : il est choisi et l'outil Sélection est pris. Tirer depuis le pied l'oriente (par 15°) ; le clic droit le tourne de 90°, la molette change son type (Ctrl + molette zoome). Il relie le niveau courant à celui du dessus et perce son plancher, dessiné en pointillés à l'étage. Il est refusé (en rouge) sans niveau au-dessus, ou s'il traverserait un mur.",
     "Il s'aimante aux murs proches quand on le pose ou le tire (Alt : libre). Avec Sélection, un clic sur un escalier le retouche dans le menu ; le tirer le déplace, R le tourne de 90°, Suppr le supprime. Une retouche qui ne tient pas le déplace dans sa pièce, en gardant les murs qu'il touchait si possible, puis en en lâchant un, puis deux ; si rien ne tient dans la pièce, le bouton est grisé.",
   ]},
 ];
