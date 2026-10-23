@@ -20,12 +20,20 @@ describe('le système de design suit style.css', () => {
     const p = page();
     // Signalé : une première version ne montrait que l'éditeur de bâtiment.
     for (const t of ['L\'application', 'Menus de droite', 'Menus contextuels', 'Modales', 'Bibliothèques', 'Éditeurs', 'Contrôles']) {
-      assert.ok(p.includes(`<h2 class="ds-titre">${t}</h2>`), `la section « ${t} » a disparu`);
+      assert.ok(p.includes(`<h2 class="ds-titre"><span class="ds-fr">${t}</span>`), `la section « ${t} » a disparu`);
     }
     const corps = p.slice(p.indexOf('<body>')).replace(/<!--[\s\S]*?-->/g, '');
     assert.equal((corps.match(/<div\b/g) || []).length, (corps.match(/<\/div>/g) || []).length,
       'un fragment déséquilibré ferait sortir la suite de la page de sa mise en page');
     assert.ok(p.includes('LA COULEUR D\'UN BOUTON DIT CE QU\'IL FAIT'), 'la page doit embarquer src/style.css tel quel');
+  });
+  test('la page est bilingue : ses textes en deux langues, et les traductions de l\'application embarquées', () => {
+    const p = page();
+    // Signalé : le système de design n'était qu'en français.
+    assert.ok(p.includes('data-langue="en"'), 'la bascule de langue a disparu');
+    assert.ok((p.match(/class="ds-en"/g) || []).length > 150, 'trop peu de textes traduits');
+    assert.equal((p.match(/class="ds-fr"/g) || []).length, (p.match(/class="ds-en"/g) || []).length, 'chaque texte a ses deux langues');
+    assert.ok(p.includes('"Undo (Ctrl+Z)"'), 'les tables de src/i18n.js doivent être embarquées');
   });
   test('un fragment se lit par son identifiant, balises équilibrées', () => {
     const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
