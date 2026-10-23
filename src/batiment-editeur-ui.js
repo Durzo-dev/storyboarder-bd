@@ -724,50 +724,59 @@ function choisirOutil(outil){
 }
 /**
  * Le texte de « Commandes », selon l'outil et ce qui est choisi (demandé : il est contextuel).
- * Les paragraphes sont séparés par une ligne vide (le style garde les retours à la ligne).
+ * Une action par ligne (le style garde les retours à la ligne).
  */
 function commandes({ m, piece, ouv, esc }){
-  const lignes = (...l) => l.join('\n\n');
-  const vue = tr('Top view: wheel to zoom, hold the right button to move.', 'Vue de dessus : molette pour zoomer, clic droit maintenu pour déplacer.');
+  // Une action par ligne, sans ligne vide (demandé).
+  const lignes = (...l) => l.join('\n');
+  const vue = [tr('Wheel: zoom.', 'Molette : zoomer.'), tr('Hold right button: move the view.', 'Clic droit maintenu : déplacer la vue.')];
   const sortir = tr('Esc: leave the tool.', 'Échap : quitter l\'outil.');
+  const deselect = tr('Esc: deselect.', 'Échap : désélectionner.');
   if (E.outil === 'mur') return lignes(
-    tr('One click per corner; a click on an existing wall makes a T junction.', 'Un clic par angle ; un clic sur un mur existant fait une jonction en T.'),
-    tr('Drag: a rectangular room in one go.', 'Glisser : une pièce rectangulaire d\'un coup.'),
+    tr('Click: place a corner.', 'Clic : poser un angle.'),
+    tr('Click on a wall: T junction.', 'Clic sur un mur : jonction en T.'),
+    tr('Drag: rectangular room.', 'Glisser : pièce rectangulaire.'),
     tr('Double-click or right-click: end the line.', 'Double-clic ou clic droit : finir le tracé.'),
-    tr('Corners, lengths and alignments snap; hold Alt to draw freely.', 'Les angles, les longueurs et les alignements s\'aimantent ; Alt maintenu pour tracer librement.'),
-    tr('In red: the wall would cross another one.', 'En rouge : le mur en traverserait un autre.'), sortir);
+    tr('Alt: draw without snapping.', 'Alt : tracer sans aimant.'),
+    tr('In red: crosses another wall.', 'En rouge : traverse un autre mur.'), sortir);
   if (E.outil === 'ouverture') return lignes(
-    tr('Hover over a wall: the opening sits there, centred under the mouse.', 'Survolez un mur : l\'ouverture s\'y place, centrée sous la souris.'),
+    tr('Hover a wall: preview the opening.', 'Survol d\'un mur : aperçu de l\'ouverture.'),
     tr('Click: place it.', 'Clic : la poser.'),
-    tr('In red: it does not fit (too close to a corner or another opening).', 'En rouge : elle ne tient pas (trop près d\'un angle ou d\'une autre ouverture).'), sortir);
+    tr('In red: does not fit.', 'En rouge : ne tient pas.'), sortir);
   if (E.outil === 'escalier') return lignes(
-    tr('Click: place and select it. Drag: orient it.', 'Clic : le poser et le choisir. Tirer : l\'orienter.'),
-    tr('Right-click: turn it. Wheel: change the type (Ctrl + wheel zooms).', 'Clic droit : le tourner. Molette : changer de type (Ctrl + molette zoome).'),
-    tr('It snaps to nearby walls and links the current level to the one above.', 'Il s\'aimante aux murs proches et relie le niveau courant à celui du dessus.'),
-    tr('In red: no level above, or it would cross a wall.', 'En rouge : pas d\'étage au-dessus, ou il traverserait un mur.'), sortir);
+    tr('Click: place and select it.', 'Clic : le poser et le choisir.'),
+    tr('Drag: orient it.', 'Tirer : l\'orienter.'),
+    tr('Right-click: turn it.', 'Clic droit : le tourner.'),
+    tr('Wheel: change the type.', 'Molette : changer de type.'),
+    tr('Ctrl + wheel: zoom.', 'Ctrl + molette : zoomer.'),
+    tr('Alt: place without snapping.', 'Alt : poser sans aimant.'),
+    tr('In red: no level above, or crosses a wall.', 'En rouge : pas d\'étage au-dessus, ou traverse un mur.'), sortir);
   if (E.outil === 'selection') {
     if (ouv) return lignes(
-      tr('Drag: slide it along its wall. Wheel: raise or lower it (Shift: by 1 cm).', 'Tirer : la faire glisser sur son mur. Molette : la monter ou la descendre (Maj : au centimètre).'),
-      tr('Del: delete it. Esc: deselect.', 'Suppr : la supprimer. Échap : désélectionner.'));
+      tr('Drag: slide it along its wall.', 'Tirer : la faire glisser sur son mur.'),
+      tr('Wheel: raise or lower it.', 'Molette : la monter ou la descendre.'),
+      tr('Shift + wheel: by 1 cm.', 'Maj + molette : au centimètre.'),
+      tr('Del: delete it.', 'Suppr : la supprimer.'), deselect);
     if (esc) return lignes(
-      tr('Drag: move it. R: turn it by 90°.', 'Tirer : le déplacer. R : le tourner de 90°.'),
-      tr('Del: delete it. Esc: deselect.', 'Suppr : le supprimer. Échap : désélectionner.'));
+      tr('Drag: move it.', 'Tirer : le déplacer.'),
+      tr('R: turn it by 90°.', 'R : le tourner de 90°.'),
+      tr('Del: delete it.', 'Suppr : le supprimer.'), deselect);
     if (m) return lignes(
       tr('Drag a corner: move it with its walls.', 'Tirer un angle : le déplacer avec ses murs.'),
-      tr('Del: delete the wall. Esc: deselect.', 'Suppr : supprimer le mur. Échap : désélectionner.'));
+      tr('Del: delete the wall.', 'Suppr : supprimer le mur.'), deselect);
     if (piece) return lignes(
-      tr('Right-click the room in the Rooms list: rename or delete it.', 'Clic droit sur la pièce dans la liste Pièces : la renommer ou la supprimer.'),
-      tr('Esc: deselect.', 'Échap : désélectionner.'));
+      tr('Right-click in the Rooms list: rename or delete.', 'Clic droit dans la liste Pièces : renommer ou supprimer.'), deselect);
     return lignes(
-      tr('Click: pick a wall, a room, an opening or a staircase.', 'Clic : choisir un mur, une pièce, une ouverture ou un escalier.'),
-      tr('Drag a corner: move it with its walls. Drag an opening or a staircase: move it.', 'Tirer un angle : le déplacer avec ses murs. Tirer une ouverture ou un escalier : le déplacer.'),
-      vue, sortir);
+      tr('Click: pick a wall, room, opening or staircase.', 'Clic : choisir un mur, une pièce, une ouverture ou un escalier.'),
+      tr('Drag a corner: move it with its walls.', 'Tirer un angle : le déplacer avec ses murs.'),
+      tr('Drag an opening or a staircase: move it.', 'Tirer une ouverture ou un escalier : le déplacer.'),
+      ...vue, sortir);
   }
   return lignes(
-    tr('Pick a tool at the bottom of the view: walls, doors and windows, stairs, or selection.', 'Choisissez un outil en bas de la vue : murs, portes et fenêtres, escaliers, ou sélection.'),
-    tr('Switch level with the round buttons on the left.', 'Changez de niveau avec les pastilles à gauche.'),
-    vue,
-    tr('3D preview: hold the left button to turn, the right button to move. Drag its bar to another corner.', 'Aperçu 3D : clic gauche maintenu pour tourner, clic droit pour déplacer. Tirez sa barre vers un autre coin.'));
+    tr('Buttons at the bottom of the view: pick a tool.', 'Boutons en bas de la vue : choisir un outil.'),
+    tr('Round buttons on the left: change level.', 'Pastilles à gauche : changer de niveau.'),
+    ...vue,
+    tr('3D preview: left drag turns, right drag moves.', 'Aperçu 3D : clic gauche tourne, clic droit déplace.'));
 }
 
 /** Un clic sur un outil : le prend, ou le quitte s'il était déjà pris. */
