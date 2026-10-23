@@ -48,6 +48,7 @@ down.
 | [planche-importee.md](planche-importee.md) | Imported pages: a page image, its Panels detected then checked, the framing of the whole, what is locked, the added fields. |
 | [panel-images.md](panel-images.md) | An image in a panel instead of a 3D scene: settled decisions, what the code already provides, what is left to measure (tasks #403a to #403d). |
 | [colour-accessibility.md](colour-accessibility.md) | Colour that depicts against colour that signals, measured collisions per deficiency, why a theme is not the main remedy (tasks #409a to #409d). |
+| [interface.md](interface.md) | The interface rules set through feedback: button colours, the four gaps, one menu with a contextual section, Controls, label-free icons, tooltips, placing gestures, modals, labels (task #454). |
 | [lighting.md](lighting.md) | Lighting a panel and a Scene: what "off" must mean, the data model, why sun and ambient move together, what is out of scope (tasks #414a to #414g). |
 | [positioned-lights.md](positioned-lights.md) | Light sources placed in a Scene: why a light is an `objet3d` and not a new type (70 sites measured), the persisted fields, the shared-scene leak, the four intended exclusions (task #420). |
 | [cast-shadows.md](cast-shadows.md) | Cast shadows: what the sun costs (1.0 ms) and what eight casting sources cost (3.9 ms), the 2,004 ms of compiling that ruled the latter out, and why a shadow spread over the 12,000-unit Ground changes 0.00% of the pixels (task #422). |
