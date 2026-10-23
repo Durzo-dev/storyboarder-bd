@@ -3,7 +3,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   MARGE_OUVERTURE, hauteurDuMur, intervalleDe, placement, reglagesParDefaut, ajouterOuverture,
-  deplacerOuverture, modifierOuverture, ouvertureSous, supprimerOuverture,
+  deplacerOuverture, modifierOuverture, ouvertureSous, supprimerOuverture, monterOuverture, PAS_ALLEGE,
 } from '../src/batiment-ouvertures.js';
 import { morceauxDuMur, trancher, polygonesDesMurs } from '../src/batiment-geometrie.js';
 import { creerBatiment, normaliserBatiment, DEFAUTS_OUVERTURE } from '../src/batiment.js';
@@ -75,6 +75,18 @@ describe('déplacer, retoucher, trouver, supprimer', () => {
     assert.equal(o.largeur, 1.2, 'rien n’a changé');
     modifierOuverture(b, o.id, { type: 'passage' });
     assert.equal(o.battants, 0);
+  });
+  test('la molette : monter et descendre, entre le sol et le plafond', () => {
+    const { b, mur } = unMur(5);
+    const o = ajouterOuverture(b, mur.id, 0.5, reglagesParDefaut('fenetre')).ouverture;
+    assert.equal(monterOuverture(b, o.id, PAS_ALLEGE), true);
+    proche(o.y, 0.95);
+    monterOuverture(b, o.id, 10);
+    proche(o.y, 2.8 - 0.05 - 1.2, 1e-9);
+    assert.equal(monterOuverture(b, o.id, 1), false, 'au plafond');
+    monterOuverture(b, o.id, -10);
+    assert.equal(o.y, 0);
+    assert.equal(o.hauteur, 1.2, 'sa hauteur ne change pas');
   });
   test('la trouver sous la souris, puis la supprimer', () => {
     const { b, mur } = unMur(5);

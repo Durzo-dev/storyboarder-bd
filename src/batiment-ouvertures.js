@@ -139,3 +139,22 @@ export function ouvertureSous(batiment, niveauId, p, tol){
 export function supprimerOuverture(batiment, id){
   batiment.ouvertures = (batiment.ouvertures || []).filter(o => o.id !== id);
 }
+
+/** Le pas de la molette sur une ouverture choisie, en mètres (5 cm ; 1 cm avec Maj). */
+export const PAS_ALLEGE = 0.05;
+
+/**
+ * Monte ou descend l'ouverture `id` de `delta` mètres (la molette, demandé) : son allège reste entre
+ * le sol et ce que le plafond laisse au-dessus d'elle, sa hauteur ne change pas. Rend vrai si elle a
+ * bougé.
+ */
+export function monterOuverture(batiment, id, delta){
+  const o = (batiment.ouvertures || []).find(x => x.id === id);
+  const mur = o && batiment.murs.find(m => m.id === o.murId);
+  if (!mur) return false;
+  const max = Math.max(0, hauteurDuMur(batiment, mur) - SOUS_PLAFOND - o.hauteur);
+  const y = Math.round(Math.min(max, Math.max(0, o.y + delta)) * 1000) / 1000;
+  if (Math.abs(y - o.y) < 1e-9) return false;
+  o.y = y;
+  return true;
+}

@@ -294,7 +294,7 @@ export const HELP_MANUAL_EN = [
   { id: 'batiments_ouvertures', title: 'Doors and windows', paragraphs: [
     'Opening tool (O): choose a door, a window, a bay window or a passage in the right-hand menu, with its width, height and sill height, its leaves (1 or 2), sliding or not, glazed or not.',
     'Hover over a wall: the opening sits there, centred under the mouse; it shows in red if it does not fit (too close to a corner or another opening). Click to place it. The wall is cut in the top view, like an architect\'s plan, and pierced in 3D with a simple frame, glass and leaves.',
-    'With Selection, click an opening to adjust it in the menu (changing its type takes that type\'s sizes), drag it along its wall, flip the side or the hinge of a door, or delete it (Del).',
+    'With Selection, click an opening to adjust it in the menu (changing its type takes that type\'s sizes), drag it along its wall, raise or lower it with the scroll wheel (5 cm per notch, 1 cm with Shift), flip the side or the hinge of a door, or delete it (Del).',
   ]},
 ];
 
@@ -540,7 +540,7 @@ export const HELP_MANUAL_FR = [
   { id: 'batiments_ouvertures', title: 'Portes et fenêtres', paragraphs: [
     "Outil Ouverture (O) : choisissez une porte, une fenêtre, une baie vitrée ou un passage dans le menu de droite, avec sa largeur, sa hauteur et sa hauteur d'allège, ses battants (1 ou 2), coulissante ou non, vitrée ou non.",
     "Survolez un mur : l'ouverture s'y place, centrée sous la souris ; elle s'affiche en rouge si elle ne tient pas (trop près d'un angle ou d'une autre ouverture). Un clic la pose. Le mur est coupé dans la vue de dessus, comme sur un plan d'architecte, et percé en 3D, avec un cadre, du verre et des battants simples.",
-    "Avec Sélection, un clic sur une ouverture la retouche dans le menu (changer de type reprend les dimensions de ce type), la tirer la fait glisser le long de son mur ; on peut inverser le côté ou la charnière d'une porte, ou la supprimer (Suppr).",
+    "Avec Sélection, un clic sur une ouverture la retouche dans le menu (changer de type reprend les dimensions de ce type), la tirer la fait glisser le long de son mur, la molette la monte ou la descend (5 cm par cran, 1 cm avec Maj) ; on peut inverser le côté ou la charnière d'une porte, ou la supprimer (Suppr).",
   ]},
 ];
 

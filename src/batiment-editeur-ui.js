@@ -27,7 +27,7 @@ import {
 import { polygonesDesMurs, morceauxDuMur } from './batiment-geometrie.js';
 import {
   placement, reglagesParDefaut, ajouterOuverture, deplacerOuverture, modifierOuverture, ouvertureSous,
-  supprimerOuverture, intervalleDe, hauteurDuMur,
+  supprimerOuverture, intervalleDe, hauteurDuMur, monterOuverture, PAS_ALLEGE,
 } from './batiment-ouvertures.js';
 import {
   aimanter, ajouterMur, ajouterRectangle, croiseUnMur, deplacerSommet, supprimerMur, sommetSous, murSous,
@@ -629,6 +629,23 @@ function cablerPlan(){
   c.addEventListener('wheel', (e) => {
     if (!E) return;
     e.preventDefault();
+    // Une ouverture choisie : la molette la MONTE ou la DESCEND au lieu de zoomer (demandé ; 5 cm par
+    // cran, 1 cm avec Maj). Les crans rapprochés ne font qu'un point d'annulation. L'aperçu 3D, lui,
+    // garde sa molette pour zoomer.
+    const ouv = E.outil === 'selection' && ouvertureSelectionnee();
+    if (ouv) {
+      const maintenant = Date.now();
+      const nouveauGeste = !E.molette || E.molette.id !== ouv.id || maintenant - E.molette.t > 800;
+      if (nouveauGeste) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; }
+      const pas = (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 0.01 : PAS_ALLEGE);
+      if (monterOuverture(E.batiment, ouv.id, pas)) {
+        E.modifie = true;
+        E.molette = { id: ouv.id, t: maintenant };
+        statut(tr(`Sill height: ${metres(ouv.y)}`, `Hauteur d'allège : ${metres(ouv.y)}`));
+        apresModification();
+      } else if (nouveauGeste) E.historique.pop();
+      return;
+    }
     const r = c.getBoundingClientRect();
     E.vue = zoomerAutour(E.vue, r.width, r.height, { x: e.clientX - r.left, y: e.clientY - r.top }, Math.exp(-e.deltaY * 0.0015));
     survoler(e);
