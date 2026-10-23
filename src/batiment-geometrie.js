@@ -59,7 +59,15 @@ export function polygonesDesMurs(murs){
       const plus = { x: p.x + bi.n.x * e, z: p.z + bi.n.z * e };
       const moins = { x: p.x - bi.n.x * e, z: p.z - bi.n.z * e };
       let cPlus = plus, cMoins = moins;
-      if (bouts.length > 1) {
+      // ⚠️ UN MUR TRAVERSANT RESTE CARRÉ (signalé : des « triangles » aux jonctions en T). Une
+      // jonction en T coupe le mur traversant en deux moitiés dans le prolongement l'une de l'autre.
+      // Biseauter chaque moitié contre la branche laissait entre elles un triangle vide sous la
+      // branche, visible en 3D sur le dessus des murs. Une moitié qui a un mur dans son prolongement
+      // exact s'arrête donc net au sommet, des deux côtés : les deux moitiés se raccordent sans
+      // jour, et c'est la branche qui vient buter contre leur face (son coin, calculé ci-dessous,
+      // est l'intersection avec cette face).
+      const traversant = bouts.some(bj => bj !== bi && Math.abs(Math.abs(bj.angle - bi.angle) - Math.PI) < 1e-3);
+      if (bouts.length > 1 && !traversant) {
         // Le voisin suivant (sens trigonométrique) fait face au côté +, le précédent au côté −.
         const suivant = bouts[(i + 1) % bouts.length], precedent = bouts[(i - 1 + bouts.length) % bouts.length];
         const es = suivant.m.epaisseur / 2, ep = precedent.m.epaisseur / 2;

@@ -43,6 +43,19 @@ describe('les jonctions', () => {
     const gauche = g.get('g').map(r3);
     assert.ok(gauche.some(q => q[0] === 2 && q[1] === -0.1), 'face arrière continue, sans coin');
   });
+  test('RÉGRESSION (signalé) : un T ne laisse pas de triangle vide sous la branche', () => {
+    const g = polygonesDesMurs([
+      mur('g', { x: 0, z: 0 }, { x: 2, z: 0 }), mur('d', { x: 2, z: 0 }, { x: 4, z: 0 }),
+      mur('t', { x: 2, z: 0 }, { x: 2, z: 3 }),
+    ]);
+    // Les deux moitiés s'arrêtent net en x = 2, sur leurs deux faces : elles se touchent sur toute
+    // leur épaisseur, sans jour entre elles.
+    assert.deepEqual(g.get('g').map(r3), [[0, 0.1], [2, 0.1], [2, -0.1], [0, -0.1]]);
+    assert.deepEqual(g.get('d').map(r3), [[2, 0.1], [4, 0.1], [4, -0.1], [2, -0.1]]);
+    // La branche commence pile sur leur face (z = 0,1), sur toute sa largeur.
+    const t = g.get('t').map(r3);
+    assert.ok(t.some(q => q[0] === 1.9 && q[1] === 0.1) && t.some(q => q[0] === 2.1 && q[1] === 0.1), JSON.stringify(t));
+  });
   test('deux murs dans le prolongement : raccord droit', () => {
     const g = polygonesDesMurs([mur('a', { x: 0, z: 0 }, { x: 2, z: 0 }), mur('b', { x: 2, z: 0 }, { x: 5, z: 0 })]);
     assert.deepEqual(g.get('a').map(r3), [[0, 0.1], [2, 0.1], [2, -0.1], [0, -0.1]]);
