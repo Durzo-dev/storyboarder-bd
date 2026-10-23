@@ -154,8 +154,16 @@ function differeBiblio(){
 }
 /** … de la copie placée dans la Scène ? */
 function differeScene(){ return signatureDuBatiment(E.batiment) !== E.refScene; }
-/** Des modifications seraient-elles perdues en fermant ? Ni enregistrées, ni parties dans la Scène. */
-function nonSauve(){ return differeBiblio() && (!E.destination || differeScene()); }
+/**
+ * Des modifications seraient-elles perdues en fermant ? Seulement si le bâtiment a CHANGÉ depuis
+ * l'ouverture et n'a pas été enregistré depuis. ⚠️ Pas `differeBiblio()` : celle-ci répond « oui »
+ * pour tout bâtiment absent de la bibliothèque (un neuf, une copie placée), même intact, et quitter
+ * sans rien toucher demandait confirmation (signalé).
+ */
+function nonSauve(){
+  const sig = signatureDuBatiment(E.batiment);
+  return sig !== E.refScene && sig !== E.refBiblio;
+}
 
 function majBoutonsDeSortie(){
   const b = E.batiment, sansMur = !b.murs.length;
