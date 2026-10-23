@@ -7,6 +7,10 @@
 > document gathers them. The checkable ones are held by `tests/interface.test.mjs`. The values' source
 > of truth stays `src/style.css`: if a figure here and the stylesheet disagree, the stylesheet wins
 > and this document is behind.
+>
+> The **design system** (the four renderings' tokens, typography, gaps, radii, components, icons) is a
+> page generated from the code: [design-system.html](../design-system.html), by
+> `node tools/design-system.mjs`. A test checks it is up to date.
 
 ## Colours
 

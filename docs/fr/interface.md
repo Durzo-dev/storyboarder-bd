@@ -7,6 +7,10 @@
 > dans les conversations ; ce document les rassemble. Celles qui se vérifient sont tenues par
 > `tests/interface.test.mjs`. La source de vérité des valeurs reste `src/style.css` : si un chiffre
 > d'ici et la feuille divergent, c'est la feuille qui fait foi et ce document qui est en retard.
+>
+> Le **système de design** (jetons des quatre rendus, typographie, écarts, rayons, composants,
+> icônes) est une page générée depuis le code : [design-system.html](../design-system.html), par
+> `node tools/design-system.mjs`. Un test vérifie qu'elle est à jour.
 
 ## Couleurs
 
