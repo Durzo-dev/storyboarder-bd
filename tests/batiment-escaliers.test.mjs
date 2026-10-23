@@ -3,7 +3,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   decoupage, hauteurAFranchir, formeDeLEscalier, tremieDeLEscalier, validiteDeLEscalier, ajouterEscalier,
-  modifierEscalier, supprimerEscalier, escalierSous, normaliserEscalier,
+  modifierEscalier, supprimerEscalier, escalierSous, normaliserEscalier, essayerEscalier,
 } from '../src/batiment-escaliers.js';
 import { creerBatiment, normaliserBatiment } from '../src/batiment.js';
 import { ajouterRectangle } from '../src/batiment-trace.js';
@@ -87,5 +87,23 @@ describe('poser, retoucher, retrouver', () => {
     assert.deepEqual(normaliserEscalier({ id: 'e', type: 'spirale', largeur: 9 }).type, 'droit');
     const { batiment } = normaliserBatiment({ escaliers: [{ id: 'e0', niveauId: 'n0', type: 'U', largeur: 0.1, rampe: 'x' }] }, fr);
     assert.deepEqual([batiment.escaliers[0].type, batiment.escaliers[0].largeur, batiment.escaliers[0].rampe], ['U', 0.5, 'droite']);
+  });
+});
+
+describe('une retouche qui ne tient pas déplace l’escalier à la place la plus proche', () => {
+  test('tourné contre un mur : il se décale juste assez', () => {
+    const b = maison();
+    const { escalier } = ajouterEscalier(b, 'n0', { depart: { x: 4, z: 5.8 }, angle: angleHaut });
+    const r = essayerEscalier(b, escalier.id, { angle: 0 });
+    assert.ok(r.changements && r.deplacement > 0 && r.deplacement <= 1.5, JSON.stringify(r));
+    assert.deepEqual(modifierEscalier(b, escalier.id, r.changements), { ok: true });
+    assert.equal(escalier.angle, 0);
+  });
+  test('ce qui tient ne bouge pas ; sans étage, rien à chercher', () => {
+    const b = maison();
+    const { escalier } = ajouterEscalier(b, 'n0', { depart: { x: 4, z: 5.8 }, angle: angleHaut });
+    assert.deepEqual(essayerEscalier(b, escalier.id, { largeur: 1 }), { changements: { largeur: 1 }, deplacement: 0 });
+    b.niveaux = b.niveaux.slice(0, 1);
+    assert.equal(essayerEscalier(b, escalier.id, { largeur: 1 }).erreur, 'sansEtage');
   });
 });

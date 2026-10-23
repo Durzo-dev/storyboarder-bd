@@ -158,3 +158,30 @@ export function monterOuverture(batiment, id, delta){
   o.y = y;
   return true;
 }
+
+/**
+ * Essaie une retouche de l'ouverture `id` (#454c, demandé : plutôt qu'un bouton éteint, la retouche
+ * qui ne tient pas là où est l'ouverture la DÉPLACE à la place la plus proche où elle tient, sur le
+ * même mur). Ne modifie rien. Rend `{ changements, deplacement }` (les changements à appliquer, la
+ * position comprise, et la distance parcourue en mètres, 0 si elle ne bouge pas), ou `{ erreur }`
+ * si aucune place du mur ne convient.
+ */
+export function essayerOuverture(batiment, id, changements){
+  const copie = () => JSON.parse(JSON.stringify(batiment));
+  const r = modifierOuverture(copie(), id, changements);
+  if (!r.erreur) return { changements, deplacement: 0 };
+  if (r.erreur !== 'chevauche') return r;
+  const o = batiment.ouvertures.find(x => x.id === id);
+  const mur = batiment.murs.find(m => m.id === o.murId);
+  const L = dist(mur.a, mur.b);
+  let meilleur = null;
+  for (let k = 0; k * 0.01 <= L; k++) {
+    const le = (k * 0.01) / L;
+    const c = { ...changements, le };
+    if (!modifierOuverture(copie(), id, c).erreur) {
+      const d = Math.abs(le - o.le) * L;
+      if (!meilleur || d < meilleur.deplacement) meilleur = { changements: c, deplacement: d };
+    }
+  }
+  return meilleur || r;
+}

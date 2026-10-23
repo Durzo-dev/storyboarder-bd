@@ -29,7 +29,7 @@ import {
 import { polygonesDesMurs, morceauxDuMur } from './batiment-geometrie.js';
 import {
   placement, reglagesParDefaut, ajouterOuverture, deplacerOuverture, modifierOuverture, ouvertureSous,
-  supprimerOuverture, intervalleDe, hauteurDuMur, monterOuverture, PAS_ALLEGE,
+  supprimerOuverture, intervalleDe, hauteurDuMur, monterOuverture, PAS_ALLEGE, essayerOuverture,
 } from './batiment-ouvertures.js';
 import {
   aimanter, ajouterMur, ajouterRectangle, croiseUnMur, deplacerSommet, supprimerMur, sommetSous, murSous,
@@ -38,7 +38,7 @@ import {
 import { actualiserPieces, formesDesPieces, pieceSous } from './batiment-pieces.js';
 import {
   formeDeLEscalier, tremieDeLEscalier, validiteDeLEscalier, ajouterEscalier, modifierEscalier, supprimerEscalier,
-  escalierSous, decoupage, hauteurAFranchir, DEFAUTS_ESCALIER,
+  escalierSous, decoupage, hauteurAFranchir, DEFAUTS_ESCALIER, essayerEscalier,
 } from './batiment-escaliers.js';
 import {
   niveauxTries, niveauDessous, niveauDessus, ajouterEtage, dupliquerNiveau, supprimerNiveau, modifierNiveau,
@@ -247,11 +247,12 @@ function remplirPanneau(){
     E.reglagesEscalier = { ...E.reglagesEscalier, ...c }; remplirPanneau(); dessinerPlan();
   });
   if (esc) {
-    formulaireEscalier($('batimentFormEscalier'), esc, (c) => retoucherEscalier(esc.id, c), (c) => raisonDuRefusEscalier(esc.id, c));
-    // Tourner : éteint si l'escalier tourné traverserait un mur, avec la raison en infobulle.
-    const refus = raisonDuRefusEscalier(esc.id, { angle: esc.angle + Math.PI / 2 });
-    $('batimentEscalierTourner').disabled = !!refus;
-    $('batimentEscalierTourner').title = refus || '';
+    // Pendant qu'on le fait glisser, pas de recherche de place : elle serait refaite à chaque mouvement.
+    formulaireEscalier($('batimentFormEscalier'), esc, (c) => retoucherEscalier(esc.id, c), E.glisserEscalier ? null : (c) => essaiEscalier(esc.id, c));
+    // Tourner : décalé au besoin pour tenir, éteint seulement si aucune place proche ne convient.
+    const t = essaiEscalier(esc.id, { angle: esc.angle + Math.PI / 2 });
+    $('batimentEscalierTourner').disabled = !!t.erreur;
+    $('batimentEscalierTourner').title = t.erreur || t.note || '';
   }
   // Les deux formulaires d'ouverture : celle qu'on va poser (outil Ouverture), celle qu'on a choisie.
   if (E.outil === 'ouverture') formulaireOuverture($('batimentReglagesOuverture'), E.reglagesOuverture, (c) => {
@@ -259,8 +260,8 @@ function remplirPanneau(){
     remplirPanneau(); dessinerPlan();
   });
   if (ouv) formulaireOuverture($('batimentFormOuverture'), ouv, (c) => retoucherOuverture(ouv.id, c), (c) => {
-    const r = modifierOuverture(JSON.parse(JSON.stringify(E.batiment)), ouv.id, c);
-    return r.erreur ? refusOuverture(r.erreur) : null;
+    const r = essayerOuverture(E.batiment, ouv.id, c);
+    return r.erreur ? { erreur: refusOuverture(r.erreur) } : { ...r, note: noteDeDeplacement(r.deplacement, tr('the opening', 'l\'ouverture')) };
   });
   if (piece) {
     if (document.activeElement !== $('batimentPieceNom')) $('batimentPieceNom').value = piece.nom;
@@ -427,10 +428,17 @@ function refusEscalier(erreur){
     : tr('This staircase would cross a wall.', 'Cet escalier traverserait un mur.');
 }
 
-/** La raison pour laquelle cette retouche de l'escalier serait refusée, ou null si elle tient. */
-function raisonDuRefusEscalier(id, changements){
-  const r = modifierEscalier(JSON.parse(JSON.stringify(E.batiment)), id, changements);
-  return r.erreur ? refusEscalier(r.erreur) : null;
+/** « Déplacera l'escalier de 40 cm » (vide s'il ne bouge pas). */
+function noteDeDeplacement(d, quoi){
+  if (!(d > 0)) return '';
+  const cm = Math.round(d * 100);
+  return tr(`Moves ${quoi} by ${cm} cm so that it fits`, `Déplacera ${quoi} de ${cm} cm pour que ça tienne`);
+}
+
+/** Cette retouche de l'escalier : `{ erreur }` (raison lisible) ou `{ changements, deplacement, note }`. */
+function essaiEscalier(id, changements){
+  const r = essayerEscalier(E.batiment, id, changements);
+  return r.erreur ? { erreur: refusEscalier(r.erreur) } : { ...r, note: noteDeDeplacement(r.deplacement, tr('the staircase', 'l\'escalier')) };
 }
 
 /** Retouche l'escalier choisi, essayé d'abord sur une copie (cf. retoucherOuverture). */
@@ -447,17 +455,18 @@ function retoucherEscalier(id, changements){
  * (L et U), les contremarches, la rampe, et le nombre de marches qui en résulte.
  */
 function formulaireEscalier(conteneur, v, changer, essayer = null){
-  // `essayer(changements)` (un escalier posé) rend la raison d'un refus, ou null : un choix qui ne
-  // tiendrait pas est ÉTEINT, sa raison en infobulle (demandé, plutôt qu'un message après coup).
+  // `essayer(changements)` (un escalier posé) rend `{ erreur }` (la raison d'un refus : le choix est
+  // ÉTEINT, la raison en infobulle) ou `{ changements, note }` : ce qu'il faut appliquer, position
+  // comprise si l'escalier doit se décaler pour que le choix tienne (demandé), et l'infobulle qui le dit.
   const choix = (valeurs, actuelle, quoi) => {
     const d = document.createElement('div'); d.className = 'batiment-choix';
     valeurs.forEach(([val, lib]) => {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = lib;
       b.classList.toggle('actif', actuelle === val);
-      const refus = essayer && actuelle !== val ? essayer({ [quoi]: val }) : null;
-      b.disabled = !!refus;
-      b.title = refus || '';
-      b.onclick = () => changer({ [quoi]: val });
+      const essai = essayer && actuelle !== val ? essayer({ [quoi]: val }) : null;
+      b.disabled = !!(essai && essai.erreur);
+      b.title = essai ? (essai.erreur || essai.note || '') : '';
+      b.onclick = () => changer(essai && essai.changements ? essai.changements : { [quoi]: val });
       d.appendChild(b);
     });
     return d;
@@ -470,9 +479,9 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
   li.addEventListener('change', () => {
     const n = Number(li.value);
     if (!Number.isFinite(n)) { li.value = Math.round(v.largeur * 100); return; }
-    const refus = essayer ? essayer({ largeur: n / 100 }) : null;
-    if (refus) { li.value = Math.round(v.largeur * 100); li.title = refus; li.classList.add('refuse'); return; }
-    changer({ largeur: n / 100 });
+    const essai = essayer ? essayer({ largeur: n / 100 }) : null;
+    if (essai && essai.erreur) { li.value = Math.round(v.largeur * 100); li.title = essai.erreur; li.classList.add('refuse'); return; }
+    changer(essai ? essai.changements : { largeur: n / 100 });
   });
   lw.append(li, document.createTextNode(' cm')); l.append(lt, lw);
   const c = document.createElement('label'); c.className = 'batiment-case';
@@ -521,19 +530,19 @@ function retoucherOuverture(id, changements){
  * centimètres, les battants, coulissante, vitrée. `changer(partiel)` reçoit chaque modification.
  */
 function formulaireOuverture(conteneur, v, changer, essayer = null){
-  // `essayer(changements)` (une ouverture posée) rend la raison d'un refus, ou null : un choix qui ne
-  // tiendrait pas est ÉTEINT, sa raison en infobulle ; une valeur refusée revient et le dit au survol
-  // (demandé, comme pour les escaliers, plutôt qu'un message en bas du menu).
+  // `essayer(changements)` (une ouverture posée) : comme pour les escaliers, `{ erreur }` (éteint, la
+  // raison en infobulle ; une valeur refusée revient et le dit) ou `{ changements, note }` (l'ouverture
+  // glisse sur son mur à la place libre la plus proche si le choix l'exige, l'infobulle le dit).
   const types = [['porte', tr('Door', 'Porte')], ['fenetre', tr('Window', 'Fenêtre')], ['baie', tr('Bay window', 'Baie vitrée')], ['passage', tr('Passage', 'Passage')]];
   const choix = (valeurs, actuelle, quoi) => {
     const d = document.createElement('div'); d.className = 'batiment-choix';
     valeurs.forEach(([val, lib]) => {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = lib;
       b.classList.toggle('actif', actuelle === val);
-      const refus = essayer && actuelle !== val ? essayer({ [quoi]: val }) : null;
-      b.disabled = !!refus;
-      b.title = refus || '';
-      b.onclick = () => changer({ [quoi]: val });
+      const essai = essayer && actuelle !== val ? essayer({ [quoi]: val }) : null;
+      b.disabled = !!(essai && essai.erreur);
+      b.title = essai ? (essai.erreur || essai.note || '') : '';
+      b.onclick = () => changer(essai && essai.changements ? essai.changements : { [quoi]: val });
       d.appendChild(b);
     });
     return d;
@@ -546,9 +555,9 @@ function formulaireOuverture(conteneur, v, changer, essayer = null){
     i.addEventListener('change', () => {
       const n = Number(i.value);
       if (!Number.isFinite(n) || n < 0) { i.value = Math.round(valeur * 100); return; }
-      const refus = essayer ? essayer({ [quoi]: n / 100 }) : null;
-      if (refus) { i.value = Math.round(valeur * 100); i.title = refus; i.classList.add('refuse'); return; }
-      changer({ [quoi]: n / 100 });
+      const essai = essayer ? essayer({ [quoi]: n / 100 }) : null;
+      if (essai && essai.erreur) { i.value = Math.round(valeur * 100); i.title = essai.erreur; i.classList.add('refuse'); return; }
+      changer(essai ? essai.changements : { [quoi]: n / 100 });
     });
     w.append(i, document.createTextNode(' cm'));
     l.append(t, w);
@@ -1446,8 +1455,8 @@ function clavier(e){
   else if (touche === 'o') basculerOutil('ouverture');
   else if (touche === 's') basculerOutil('escalier');
   else if (touche === 'r' && escalierSelectionne()) {
-    const x = escalierSelectionne(), c = { angle: x.angle + Math.PI / 2 };
-    if (!raisonDuRefusEscalier(x.id, c)) retoucherEscalier(x.id, c);
+    const x = escalierSelectionne(), t = essaiEscalier(x.id, { angle: x.angle + Math.PI / 2 });
+    if (!t.erreur) retoucherEscalier(x.id, t.changements);
   }
   else if (e.key === 'PageUp') changerDeNiveau(1);
   else if (e.key === 'PageDown') changerDeNiveau(-1);
@@ -1493,7 +1502,11 @@ export function initEditeurDeBatiment(){
   });
   $('batimentPieceNom').addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
   // #454c : l'escalier choisi.
-  $('batimentEscalierTourner').onclick = () => { const x = escalierSelectionne(); if (x) retoucherEscalier(x.id, { angle: x.angle + Math.PI / 2 }); };
+  $('batimentEscalierTourner').onclick = () => {
+    const x = escalierSelectionne(); if (!x) return;
+    const t = essaiEscalier(x.id, { angle: x.angle + Math.PI / 2 });
+    if (!t.erreur) retoucherEscalier(x.id, t.changements);
+  };
   $('batimentEscalierSupprimer').onclick = () => { const x = escalierSelectionne(); if (x) modifier(b => supprimerEscalier(b, x.id)); };
   // #454a-3c : l'ouverture choisie.
   $('batimentOuvertureSupprimer').onclick = () => { const o = ouvertureSelectionnee(); if (o) modifier(b => supprimerOuverture(b, o.id)); };

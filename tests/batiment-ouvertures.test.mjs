@@ -3,7 +3,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   MARGE_OUVERTURE, hauteurDuMur, intervalleDe, placement, reglagesParDefaut, ajouterOuverture,
-  deplacerOuverture, modifierOuverture, ouvertureSous, supprimerOuverture, monterOuverture, PAS_ALLEGE,
+  deplacerOuverture, modifierOuverture, ouvertureSous, supprimerOuverture, monterOuverture, PAS_ALLEGE, essayerOuverture,
 } from '../src/batiment-ouvertures.js';
 import { morceauxDuMur, trancher, polygonesDesMurs } from '../src/batiment-geometrie.js';
 import { creerBatiment, normaliserBatiment, DEFAUTS_OUVERTURE } from '../src/batiment.js';
@@ -120,5 +120,23 @@ describe('les murs percés', () => {
     assert.equal(percees.length, 2);
     const largeur = (pts) => Math.max(...pts.map(p => p.x)) - Math.min(...pts.map(p => p.x));
     proche(pleins.reduce((s, p) => s + largeur(p), 0) + percees.reduce((s, p) => s + largeur(p), 0), 6);
+  });
+});
+
+describe('une retouche qui chevaucherait glisse l’ouverture à la place libre la plus proche', () => {
+  test('élargie contre sa voisine : elle s’en écarte, sur le même mur', () => {
+    const { b, mur } = unMur(8);
+    const a = ajouterOuverture(b, mur.id, 0.3, reglagesParDefaut('porte')).ouverture;
+    ajouterOuverture(b, mur.id, 0.5, reglagesParDefaut('porte'));
+    const r = essayerOuverture(b, a.id, { largeur: 2.2 });
+    assert.ok(r.changements && r.deplacement > 0, JSON.stringify(r));
+    assert.deepEqual(modifierOuverture(b, a.id, r.changements), { ok: true });
+    assert.equal(a.largeur, 2.2);
+  });
+  test('trop large pour le mur entier : refusé, rien ne bouge', () => {
+    const { b, mur } = unMur(2);
+    const a = ajouterOuverture(b, mur.id, 0.5, reglagesParDefaut('porte')).ouverture;
+    assert.equal(essayerOuverture(b, a.id, { largeur: 3 }).erreur, 'large');
+    assert.deepEqual(essayerOuverture(b, a.id, { largeur: 1 }), { changements: { largeur: 1 }, deplacement: 0 });
   });
 });

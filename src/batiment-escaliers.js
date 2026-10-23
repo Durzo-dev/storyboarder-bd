@@ -194,3 +194,32 @@ export function modifierEscalier(b, id, changements){
 export function supprimerEscalier(b, id){
   b.escaliers = (b.escaliers || []).filter(e => e.id !== id);
 }
+
+/** Le rayon et le pas de la recherche d'une place pour un escalier (m). */
+const RAYON_RECHERCHE = 1.5, PAS_RECHERCHE = 0.1;
+
+/**
+ * Essaie une retouche de l'escalier `id` ; si elle ne tient pas là où il est (un mur le traverserait),
+ * cherche la place la plus proche où elle tient, à 1,5 m au plus, par pas de 10 cm (demandé, comme
+ * pour les ouvertures). Ne modifie rien. Rend `{ changements, deplacement }` ou `{ erreur }`.
+ */
+export function essayerEscalier(b, id, changements){
+  const e = (b.escaliers || []).find(x => x.id === id);
+  if (!e) return { erreur: 'inconnu' };
+  const neuf = normaliserEscalier({ ...e, ...changements });
+  const v = validiteDeLEscalier(b, neuf);
+  if (v.ok) return { changements, deplacement: 0 };
+  if (v.erreur !== 'mur') return v;
+  const n = Math.round(RAYON_RECHERCHE / PAS_RECHERCHE);
+  const essais = [];
+  for (let i = -n; i <= n; i++) for (let j = -n; j <= n; j++) {
+    const d = Math.hypot(i, j) * PAS_RECHERCHE;
+    if (d > 0 && d <= RAYON_RECHERCHE + 1e-9) essais.push({ dx: i * PAS_RECHERCHE, dz: j * PAS_RECHERCHE, d });
+  }
+  essais.sort((x, y) => x.d - y.d);
+  for (const t of essais) {
+    const depart = { x: neuf.depart.x + t.dx, z: neuf.depart.z + t.dz };
+    if (validiteDeLEscalier(b, { ...neuf, depart }).ok) return { changements: { ...changements, depart }, deplacement: t.d };
+  }
+  return v;
+}
