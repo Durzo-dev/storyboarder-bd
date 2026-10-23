@@ -602,7 +602,8 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
     });
     return d;
   };
-  const l = document.createElement('label'); l.className = 'batiment-champ';
+  // La largeur : le champ prend toute la place restante (demandé), avec l'écart d'une sous-section dessous.
+  const l = document.createElement('label'); l.className = 'batiment-champ batiment-champ-large';
   const lt = document.createElement('span'); lt.textContent = tr('Width', 'Largeur');
   const lw = document.createElement('span'); lw.className = 'batiment-champ-valeur';
   const li = document.createElement('input'); li.type = 'number'; li.min = '50'; li.max = '300'; li.step = '1'; li.value = Math.round(v.largeur * 100);
@@ -618,7 +619,7 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
   const c = document.createElement('label'); c.className = 'batiment-case';
   const ci = document.createElement('input'); ci.type = 'checkbox'; ci.checked = !!v.contremarches;
   ci.onchange = () => changer({ contremarches: ci.checked });
-  c.append(ci, document.createTextNode(tr('Risers (solid steps)', 'Contremarches (marches pleines)')));
+  c.append(ci, document.createTextNode(tr('Solid steps', 'Marches pleines')));
   // Deux sous-sections (demandé) : Type (la forme et le côté où il tourne), Marches (la rampe et
   // les contremarches) ; la largeur dessous (demandé). Le détail des marches n'est plus affiché.
   const sousSection = (titre, ...contenu) => {

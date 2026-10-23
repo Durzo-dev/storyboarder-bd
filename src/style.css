@@ -2760,3 +2760,8 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 /* Dans une sous-section, seul son `gap` espace les rangées : Contremarches est à la même distance
    des boutons de rampe que les deux rangées de Type entre elles (demandé). */
 .batiment-sous-section > .batiment-choix, .batiment-sous-section > .batiment-case{ margin:0; }
+/* 4 px + les 6 px du haut de « Tourner » : les 10 px qui séparent deux sous-sections (demandé). */
+.batiment-champ.batiment-champ-large{ margin:0 0 4px; }
+#batimentReglagesEscalier .batiment-champ-large{ margin-bottom:0; }
+.batiment-champ-large .batiment-champ-valeur{ flex:1 1 auto; }
+.batiment-champ-large .batiment-champ-valeur input[type=number]{ flex:1 1 auto; width:auto; min-width:0; }
