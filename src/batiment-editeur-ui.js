@@ -261,10 +261,11 @@ function remplirPanneau(){
   const m = murSelectionne(), piece = pieceSelectionnee(), ouv = ouvertureSelectionnee(), esc = escalierSelectionne();
   $('batimentSelectionOuverture').hidden = !ouv;
   $('batimentSelectionEscalier').hidden = !esc;
-  $('batimentSelectionVide').hidden = !!(ouv || esc);
-  // Une pièce ou un mur choisi n'a pas de menu à lui (demandé) : le menu de base revient, l'élément
-  // reste surligné et l'outil Sélection reste pris (Suppr supprime le mur).
-  $('batimentPanneau').dataset.outil = (E.outil === 'selection' && (piece || m)) ? 'aucun' : (E.outil || 'aucun');
+  // Un seul menu (demandé) : la section contextuelle s'ajoute au besoin, les commandes suivent.
+  $('batimentSectionSelection').hidden = !(ouv || esc);
+  $('batimentContexteOuverture').hidden = E.outil !== 'ouverture';
+  $('batimentContexteEscalier').hidden = E.outil !== 'escalier';
+  $('batimentAide').textContent = commandes({ m, piece, ouv, esc });
   $('batimentSelectionTitre').textContent = ouv ? tr('Selected opening', 'Ouverture sélectionnée') : esc ? tr('Selected staircase', 'Escalier sélectionné') : tr('Selection', 'Sélection');
   if (E.outil === 'escalier') formulaireEscalier($('batimentReglagesEscalier'), E.reglagesEscalier, (c) => {
     E.reglagesEscalier = { ...E.reglagesEscalier, ...c }; remplirPanneau(); dessinerPlan();
@@ -716,12 +717,59 @@ function choisirOutil(outil){
   E.outil = outil || null; E.chaine = null; E.survol = null;
   if (E.outil !== 'selection') E.selection = null;
   document.querySelectorAll('.batiment-outil').forEach(b => b.classList.toggle('actif', b.dataset.outil === E.outil));
-  $('batimentPanneau').dataset.outil = E.outil || 'aucun';
   $('batimentPlan').classList.toggle('outil-mur', E.outil === 'mur' || E.outil === 'ouverture' || E.outil === 'escalier');
   E.fantomeEscalier = null;
   remplirPanneau();
   dessinerPlan();
 }
+/**
+ * Le texte de « Commandes », selon l'outil et ce qui est choisi (demandé : il est contextuel).
+ * Les paragraphes sont séparés par une ligne vide (le style garde les retours à la ligne).
+ */
+function commandes({ m, piece, ouv, esc }){
+  const lignes = (...l) => l.join('\n\n');
+  const vue = tr('Top view: wheel to zoom, hold the right button to move.', 'Vue de dessus : molette pour zoomer, clic droit maintenu pour déplacer.');
+  const sortir = tr('Esc: leave the tool.', 'Échap : quitter l\'outil.');
+  if (E.outil === 'mur') return lignes(
+    tr('One click per corner; a click on an existing wall makes a T junction.', 'Un clic par angle ; un clic sur un mur existant fait une jonction en T.'),
+    tr('Drag: a rectangular room in one go.', 'Glisser : une pièce rectangulaire d\'un coup.'),
+    tr('Double-click or right-click: end the line.', 'Double-clic ou clic droit : finir le tracé.'),
+    tr('Corners, lengths and alignments snap; hold Alt to draw freely.', 'Les angles, les longueurs et les alignements s\'aimantent ; Alt maintenu pour tracer librement.'),
+    tr('In red: the wall would cross another one.', 'En rouge : le mur en traverserait un autre.'), sortir);
+  if (E.outil === 'ouverture') return lignes(
+    tr('Hover over a wall: the opening sits there, centred under the mouse.', 'Survolez un mur : l\'ouverture s\'y place, centrée sous la souris.'),
+    tr('Click: place it.', 'Clic : la poser.'),
+    tr('In red: it does not fit (too close to a corner or another opening).', 'En rouge : elle ne tient pas (trop près d\'un angle ou d\'une autre ouverture).'), sortir);
+  if (E.outil === 'escalier') return lignes(
+    tr('Click: place and select it. Drag: orient it.', 'Clic : le poser et le choisir. Tirer : l\'orienter.'),
+    tr('Right-click: turn it. Wheel: change the type (Ctrl + wheel zooms).', 'Clic droit : le tourner. Molette : changer de type (Ctrl + molette zoome).'),
+    tr('It snaps to nearby walls and links the current level to the one above.', 'Il s\'aimante aux murs proches et relie le niveau courant à celui du dessus.'),
+    tr('In red: no level above, or it would cross a wall.', 'En rouge : pas d\'étage au-dessus, ou il traverserait un mur.'), sortir);
+  if (E.outil === 'selection') {
+    if (ouv) return lignes(
+      tr('Drag: slide it along its wall. Wheel: raise or lower it (Shift: by 1 cm).', 'Tirer : la faire glisser sur son mur. Molette : la monter ou la descendre (Maj : au centimètre).'),
+      tr('Del: delete it. Esc: deselect.', 'Suppr : la supprimer. Échap : désélectionner.'));
+    if (esc) return lignes(
+      tr('Drag: move it. R: turn it by 90°.', 'Tirer : le déplacer. R : le tourner de 90°.'),
+      tr('Del: delete it. Esc: deselect.', 'Suppr : le supprimer. Échap : désélectionner.'));
+    if (m) return lignes(
+      tr('Drag a corner: move it with its walls.', 'Tirer un angle : le déplacer avec ses murs.'),
+      tr('Del: delete the wall. Esc: deselect.', 'Suppr : supprimer le mur. Échap : désélectionner.'));
+    if (piece) return lignes(
+      tr('Right-click the room in the Rooms list: rename or delete it.', 'Clic droit sur la pièce dans la liste Pièces : la renommer ou la supprimer.'),
+      tr('Esc: deselect.', 'Échap : désélectionner.'));
+    return lignes(
+      tr('Click: pick a wall, a room, an opening or a staircase.', 'Clic : choisir un mur, une pièce, une ouverture ou un escalier.'),
+      tr('Drag a corner: move it with its walls. Drag an opening or a staircase: move it.', 'Tirer un angle : le déplacer avec ses murs. Tirer une ouverture ou un escalier : le déplacer.'),
+      vue, sortir);
+  }
+  return lignes(
+    tr('Pick a tool at the bottom of the view: walls, doors and windows, stairs, or selection.', 'Choisissez un outil en bas de la vue : murs, portes et fenêtres, escaliers, ou sélection.'),
+    tr('Switch level with the round buttons on the left.', 'Changez de niveau avec les pastilles à gauche.'),
+    vue,
+    tr('3D preview: hold the left button to turn, the right button to move. Drag its bar to another corner.', 'Aperçu 3D : clic gauche maintenu pour tourner, clic droit pour déplacer. Tirez sa barre vers un autre coin.'));
+}
+
 /** Un clic sur un outil : le prend, ou le quitte s'il était déjà pris. */
 function basculerOutil(outil){ if (E) choisirOutil(E.outil === outil ? null : outil); }
 
@@ -1623,7 +1671,6 @@ export function initEditeurDeBatiment(){
   if (!$('batimentEditeur')) return;
   $('batimentEditeurFermerX').onclick = () => fermerEditeurDeBatiment();
   $('batimentQuitterBtn').onclick = () => fermerEditeurDeBatiment();
-  $('batimentFermerOutilBtn').onclick = () => choisirOutil(null);
   $('batimentRecadrerBtn').onclick = () => recadrer();
   $('batimentEnregistrerBtn').onclick = () => enregistrer();
   $('batimentPlacerBtn').onclick = () => versLaScene();

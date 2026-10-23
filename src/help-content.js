@@ -286,11 +286,11 @@ export const HELP_MANUAL_EN = [
     'Esc or "Quit" leaves the editor; if the building has unsaved changes, you are asked first.',
   ]},
   { id: 'batiments_trace', title: 'Drawing walls', paragraphs: [
-    'The tools sit at the bottom centre of the top view: Wall (M) and Selection (V). The right-hand menu follows the tool; clicking the active tool again, or Close, leaves it and brings back the editor\'s base menu (Save to the library, Reframe, Quit).',
+    'The tools sit at the bottom centre of the top view: Wall (M) and Selection (V). The right-hand menu stays the same (Building, Levels, Rooms, Save to the library, Reframe, Quit); a section is added when needed (the opening or staircase to place or the one selected) and Controls follows the tool and the selection. Clicking the active tool again, or Esc, leaves it.',
     'Wall tool (M): click to start, then one click per corner; the chain stops on an existing corner, or with a double-click, Enter, a right-click or Esc. Ending on the middle of a wall makes a T junction. Corners join cleanly, at any angle.',
     'The angle snaps by 15°, the length to the centimetre, existing corners and alignments too (dashed guides); hold Alt to place freely. A wall that would cross another shows in red and is refused.',
     'Selection tool (V): click a wall to pick it (Del deletes it; walls have a fixed thickness), drag a corner to move it along with every wall attached to it. Ctrl+Z and Ctrl+Y undo and redo inside the editor.',
-    'Rooms: every closed contour of walls is a room, named Room 1, Room 2… with its area. Drag with the Wall tool to draw a rectangular room in one go. Click a room in the Rooms list to select it (the base menu stays); right-click it to rename or delete it. It keeps its name when its walls move.',
+    'Rooms: every closed contour of walls is a room, named Room 1, Room 2… with its area. Drag with the Wall tool to draw a rectangular room in one go. Click a room in the Rooms list to select it; right-click it to rename or delete it. It keeps its name when its walls move.',
   ]},
   { id: 'batiments_ouvertures', title: 'Doors and windows', paragraphs: [
     'Opening tool (O): choose a door, a window, a bay window or a passage in the right-hand menu, with its width, height and sill height, its leaves (1 or 2), sliding or not, glazed or not.',
@@ -299,7 +299,7 @@ export const HELP_MANUAL_EN = [
   ]},
   { id: 'batiments_niveaux', title: 'Building levels', paragraphs: [
     'The round buttons on the left of the top view switch level (Page Up / Page Down too); the level below shows faintly under the current one, and its walls and corners snap too, to draw a floor over the one beneath.',
-    'In the base menu, "Levels": rename a level, set its ceiling height (the levels above move with it), drag it to change its place in the stack, delete it (with what it holds). "Add a floor" adds an empty level on top; "Duplicate the floor" copies the current level, walls, openings and rooms, just above it.',
+    'In the right-hand menu, "Levels": rename a level, set its ceiling height (the levels above move with it), drag it to change its place in the stack, delete it (with what it holds). "Add a floor" adds an empty level on top; "Duplicate the floor" copies the current level, walls, openings and rooms, just above it.',
     'If a staircase would no longer fit after such a change, a window names it with the reason, and offers to delete it to go on.',
     'In 3D, every room is covered: by the floor of the room above, or else by a flat roof; the walls run through the slabs. The layers button of the preview cuts it at the current level, to see inside.',
   ]},
@@ -544,11 +544,11 @@ export const HELP_MANUAL_FR = [
     "Échap ou « Quitter » quitte l'éditeur ; si le bâtiment a des modifications non enregistrées, la question est posée d'abord.",
   ]},
   { id: 'batiments_trace', title: 'Tracer les murs', paragraphs: [
-    "Les outils sont en bas au centre de la vue de dessus : Mur (M) et Sélection (V). Le menu de droite suit l'outil ; un nouveau clic sur l'outil actif, ou « Fermer », le quitte et ramène le menu de base de l'éditeur (Enregistrer dans la bibliothèque, Recadrer, Quitter).",
+    "Les outils sont en bas au centre de la vue de dessus : Mur (M) et Sélection (V). Le menu de droite reste le même (Bâtiment, Niveaux, Pièces, Enregistrer dans la bibliothèque, Recadrer, Quitter) ; une section s'y ajoute au besoin (l'ouverture ou l'escalier à poser ou celui choisi) et Commandes suit l'outil et la sélection. Un nouveau clic sur l'outil actif, ou Échap, le quitte.",
     "Outil Mur (M) : un clic pour commencer, puis un clic par angle ; la chaîne s'arrête sur un angle existant, ou par un double-clic, Entrée, un clic droit ou Échap. Finir au milieu d'un mur fait une jonction en T. Les angles se raccordent proprement, quel que soit l'angle.",
     "L'angle s'aimante par 15°, la longueur au centimètre, les angles existants et les alignements aussi (guides en pointillés) ; Alt maintenu pour poser librement. Un mur qui en traverserait un autre s'affiche en rouge et est refusé.",
     "Outil Sélection (V) : un clic sur un mur le choisit (Suppr le supprime ; les murs ont une épaisseur fixe), tirer un angle le déplace avec tous les murs qui y sont attachés. Ctrl+Z et Ctrl+Y annulent et rétablissent dans l'éditeur.",
-    "Les pièces : chaque contour de murs fermé est une pièce, nommée Pièce 1, Pièce 2… avec sa surface. Glisser avec l'outil Mur trace une pièce rectangulaire d'un coup. Un clic sur une pièce de la liste Pièces la sélectionne (le menu de base reste) ; un clic droit la renomme ou la supprime. Elle garde son nom quand ses murs bougent.",
+    "Les pièces : chaque contour de murs fermé est une pièce, nommée Pièce 1, Pièce 2… avec sa surface. Glisser avec l'outil Mur trace une pièce rectangulaire d'un coup. Un clic sur une pièce de la liste Pièces la sélectionne ; un clic droit la renomme ou la supprime. Elle garde son nom quand ses murs bougent.",
   ]},
   { id: 'batiments_ouvertures', title: 'Portes et fenêtres', paragraphs: [
     "Outil Ouverture (O) : choisissez une porte, une fenêtre, une baie vitrée ou un passage dans le menu de droite, avec sa largeur, sa hauteur et sa hauteur d'allège, ses battants (1 ou 2), coulissante ou non, vitrée ou non.",
@@ -557,7 +557,7 @@ export const HELP_MANUAL_FR = [
   ]},
   { id: 'batiments_niveaux', title: 'Niveaux d\'un bâtiment', paragraphs: [
     "Les boutons ronds à gauche de la vue de dessus changent de niveau (Page haut / Page bas aussi) ; le niveau du dessous s'affiche en transparence sous le niveau courant, et ses murs et ses angles aimantent aussi, pour tracer un étage par-dessus celui d'en dessous.",
-    "Dans le menu de base, « Niveaux » : renommer un niveau, régler sa hauteur sous plafond (les niveaux du dessus suivent), le glisser pour changer sa place dans la pile, le supprimer (avec ce qu'il porte). « Ajouter un étage » ajoute un niveau vide en haut ; « Dupliquer l'étage » copie le niveau courant, murs, ouvertures et pièces, juste au-dessus.",
+    "Dans le menu de droite, « Niveaux » : renommer un niveau, régler sa hauteur sous plafond (les niveaux du dessus suivent), le glisser pour changer sa place dans la pile, le supprimer (avec ce qu'il porte). « Ajouter un étage » ajoute un niveau vide en haut ; « Dupliquer l'étage » copie le niveau courant, murs, ouvertures et pièces, juste au-dessus.",
     "Si un escalier ne tiendrait plus après un tel changement, une fenêtre le cite avec la raison, et propose de le supprimer pour continuer.",
     "En 3D, chaque pièce est couverte : par le plancher de la pièce du dessus, sinon par un toit plat ; les murs traversent les dalles. Le bouton des calques de l'aperçu le coupe au niveau courant, pour voir dedans.",
   ]},

@@ -239,86 +239,43 @@
           </svg>
         </button>
       </div>
-      <aside class="batiment-editeur-panneau" id="batimentPanneau" data-outil="aucun">
+      <aside class="batiment-editeur-panneau" id="batimentPanneau">
         <div class="menu-header">
           <span></span>
           <span class="menu-title" id="batimentEditeurTitre">Éditeur de bâtiment</span>
           <button id="batimentEditeurFermerX" class="menu-close-btn" type="button" title="Fermer l'éditeur (Échap)">&times;</button>
         </div>
-        <!-- LE CONTENU SUIT L'OUTIL (demandé) : `data-outil` sur le panneau, et chaque section dit pour
-             quel outil elle s'affiche (pour-aucun, pour-mur, pour-selection). Sans outil : le menu
-             de base. Les boutons du bas restent, quel que soit l'outil. -->
-        <section class="side-section pour-aucun">
+        <!-- UN SEUL MENU (demandé) : Bâtiment, Niveaux et Pièces restent toujours ; une section
+             CONTEXTUELLE s'ajoute au besoin (l'ouverture ou l'escalier à poser, l'ouverture ou
+             l'escalier choisi), et « Commandes » dit ce qu'on peut faire selon l'outil et la sélection.
+             Le code montre la section (hidden) et écrit les commandes. -->
+        <section class="side-section">
           <h2 id="batimentSectionNom">Bâtiment</h2>
           <input type="text" id="batimentNom" class="modal-input batiment-nom" autocomplete="off" spellcheck="false">
           <p id="batimentFichier" class="batiment-fichier"></p>
         </section>
-        <section class="side-section pour-aucun">
+        <section class="side-section">
           <h2 id="batimentSectionNiveaux">Niveaux</h2>
           <div id="batimentNiveaux" class="batiment-liste"></div>
         </section>
-        <section class="side-section pour-aucun">
+        <section class="side-section">
           <h2 id="batimentSectionPieces">Pièces</h2>
           <div id="batimentPieces" class="batiment-liste"></div>
-        </section>
-        <section class="side-section pour-aucun">
-          <h2 id="batimentSectionAide">Commandes</h2>
-          <p id="batimentAide" class="batiment-aide">Choisissez un outil en bas de la vue : murs, portes et fenêtres, escaliers, ou sélection.
-
-Changez de niveau avec les pastilles à gauche.
-
-Vue de dessus : molette pour zoomer, clic droit maintenu pour déplacer.
-
-Aperçu 3D : clic gauche maintenu pour tourner, clic droit pour déplacer. Tirez sa barre vers un autre coin.</p>
-        </section>
-
-        <section class="side-section pour-mur">
-          <h2 id="batimentSectionAideMur">Commandes</h2>
-          <p id="batimentAideMur" class="batiment-aide">Un clic par angle ; un clic sur un mur existant fait une jonction en T.
-
-Glisser : une pièce rectangulaire d'un coup.
-
-Double-clic ou clic droit : finir le tracé.
-
-Les angles, les longueurs et les alignements s'aimantent ; Alt maintenu pour tracer librement.
-
-En rouge : le mur en traverserait un autre.</p>
         </section>
 
         <!-- #454a-3c : l'outil Ouverture. Les réglages des ouvertures à poser ; le formulaire est
              construit par batiment-editeur-ui.js (le même sert à retoucher une ouverture choisie). -->
-        <section class="side-section pour-ouverture">
+        <section class="side-section" id="batimentContexteOuverture" hidden>
           <h2 id="batimentSectionOuverture">Ouverture à poser</h2>
           <div id="batimentReglagesOuverture"></div>
         </section>
-        <section class="side-section pour-ouverture">
-          <h2 id="batimentSectionAideOuverture">Commandes</h2>
-          <p id="batimentAideOuverture" class="batiment-aide">Survolez un mur : l'ouverture s'y place, centrée sous la souris.
-
-Clic : la poser.
-
-En rouge : elle ne tient pas (trop près d'un angle ou d'une autre ouverture).</p>
-        </section>
-
         <!-- #454c : l'outil Escalier. Les réglages de l'escalier à poser ; formulaire construit par le code. -->
-        <section class="side-section pour-escalier">
+        <section class="side-section" id="batimentContexteEscalier" hidden>
           <h2 id="batimentSectionEscalier">Escalier à poser</h2>
           <div id="batimentReglagesEscalier"></div>
         </section>
-        <section class="side-section pour-escalier">
-          <h2 id="batimentSectionAideEscalier">Commandes</h2>
-          <p id="batimentAideEscalier" class="batiment-aide">Clic : le poser et le choisir. Tirer : l'orienter.
-
-Clic droit : le tourner. Molette : changer de type.
-
-Il s'aimante aux murs proches et relie le niveau courant à celui du dessus.
-
-En rouge : pas d'étage au-dessus, ou il traverserait un mur.</p>
-        </section>
-
-        <section class="side-section pour-selection" id="batimentSectionSelection">
+        <section class="side-section" id="batimentSectionSelection" hidden>
           <h2 id="batimentSelectionTitre">Sélection</h2>
-          <p id="batimentSelectionVide" class="batiment-vide">Cliquez sur un mur, une ouverture ou dans une pièce pour le choisir.</p>
           <!-- #454a-3c : une ouverture choisie se retouche ici. -->
           <div id="batimentSelectionOuverture">
             <div id="batimentFormOuverture"></div>
@@ -337,27 +294,20 @@ En rouge : pas d'étage au-dessus, ou il traverserait un mur.</p>
             <button type="button" class="full-btn delete-btn" id="batimentEscalierSupprimer">Supprimer l'escalier</button>
           </div>
         </section>
-        <section class="side-section pour-selection">
-          <h2 id="batimentSectionAideSelection">Commandes</h2>
-          <p id="batimentAideSelection" class="batiment-aide">Clic : choisir un mur, une pièce, une ouverture ou un escalier.
 
-Tirer un angle : le déplacer avec ses murs.
-
-Tirer une ouverture : la faire glisser sur son mur ; la molette la monte ou la descend.
-
-Tirer un escalier : le déplacer.</p>
+        <section class="side-section">
+          <h2 id="batimentSectionAide">Commandes</h2>
+          <p id="batimentAide" class="batiment-aide"></p>
         </section>
 
         <p id="batimentStatut" class="batiment-statut"></p>
-        <!-- Le menu de base : enregistrer, recadrer, quitter l'éditeur. Avec un outil : « Fermer »
-             quitte l'OUTIL et ramène le menu de base (demandé). -->
+        <!-- Enregistrer, recadrer, quitter l'éditeur : toujours là (Échap quitte d'abord l'outil). -->
         <!-- #454a-4 : ouvert depuis une Scène, le bâtiment y retourne. Texte posé par le code
              (« Placer dans la scène » ou « Appliquer les modifications »). -->
-        <button id="batimentPlacerBtn" type="button" class="full-btn pour-aucun" hidden>Placer dans la scène</button>
-        <button id="batimentEnregistrerBtn" type="button" class="full-btn pour-aucun">Enregistrer dans la bibliothèque</button>
-        <button id="batimentRecadrerBtn" type="button" class="nav-btn pour-aucun">Recadrer</button>
-        <button id="batimentQuitterBtn" type="button" class="nav-btn pour-aucun">Quitter</button>
-        <button id="batimentFermerOutilBtn" type="button" class="nav-btn pour-outil">Fermer</button>
+        <button id="batimentPlacerBtn" type="button" class="full-btn" hidden>Placer dans la scène</button>
+        <button id="batimentEnregistrerBtn" type="button" class="full-btn">Enregistrer dans la bibliothèque</button>
+        <button id="batimentRecadrerBtn" type="button" class="nav-btn">Recadrer</button>
+        <button id="batimentQuitterBtn" type="button" class="nav-btn">Quitter</button>
       </aside>
     </div>
   </div>
