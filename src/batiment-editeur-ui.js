@@ -241,6 +241,7 @@ const surface = (v) => `${(Math.round(v * 10) / 10).toLocaleString(tr('en', 'fr'
 
 function remplirPanneau(){
   const b = E.batiment;
+  majOutilEscalier();
   majBoutonsDeSortie();
   remplirNiveaux();
   construireColonneDesNiveaux();
@@ -761,8 +762,27 @@ function murSelectionne(){
  * Choisit l'outil (null : aucun). Le menu de droite suit (demandé) : le panneau porte `data-outil`,
  * et chaque section dit pour quel outil elle s'affiche. Quitter la Sélection désélectionne.
  */
+/**
+ * L'outil Escalier n'a de sens qu'avec un niveau au-dessus (demandé) : sans lui, son bouton est
+ * éteint et son infobulle dit pourquoi, au lieu d'un message d'erreur dans le menu. Pris alors qu'on
+ * passe au dernier niveau, il est quitté.
+ */
+function majOutilEscalier(){
+  const bouton = $('batimentOutilEscalier');
+  const possible = !!niveauDessus(E.batiment, E.niveauId);
+  if (bouton) {
+    bouton.disabled = !possible;
+    bouton.title = possible ? tr('Stairs (S)', 'Escaliers (S)')
+      : tr('Stairs: a staircase needs a level above. Add a floor first (N).', 'Escaliers : un escalier a besoin d\'un niveau au-dessus. Ajoutez d\'abord un étage (N).');
+  }
+  if (!possible && E.outil === 'escalier') { E.outil = null; E.fantomeEscalier = null; E.poseEscalier = null;
+    if (bouton) bouton.classList.remove('actif');
+    $('batimentPlan').classList.remove('outil-mur'); }
+}
+
 function choisirOutil(outil){
   if (!E) return;
+  if (outil === 'escalier' && !niveauDessus(E.batiment, E.niveauId)) return;
   E.outil = outil || null; E.chaine = null; E.survol = null;
   if (E.outil !== 'selection') E.selection = null;
   document.querySelectorAll('.batiment-outil').forEach(b => b.classList.toggle('actif', b.dataset.outil === E.outil));
