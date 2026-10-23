@@ -384,6 +384,12 @@ preview and the Panels' rendering). "Create a building" in a Scene opens the edi
 the scene"; "Edit" (right-click on its row) or a double-click on a placed building opens it with
 "Apply to the scene".
 
+**The library** (#454a-4b, done): `src/batiment-bibliotheque.js` (the My models entries, category
+`architecture` by default; the saving rule: same name → replace after confirmation, renamed → new
+model), `src/batiment-vignettes.js` (the thumbnail, rendered on the fly, kept in memory). A building
+placed from the library keeps `batimentSource` (an added, informative field), through which its
+details list where it is used.
+
 Buildings already traced in Scenes (wall Elements, `pieceId`, `batimentNames`, `batimentRotY`)
 remain READ and are **converted** on opening into one-level buildings, in the same place: nothing
 moves on screen.

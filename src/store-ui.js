@@ -23,6 +23,10 @@ import { preparerVignettes, vignetteLocale, metasLocales, imageDeFiche } from '.
 import { usageLabel } from './model-usages.js';
 import { groupeReplie, memoriserGroupe } from './section-memory.js';
 import { ouvrirApercu3D } from './store-apercu-3d.js';
+// #454a-4b : les bâtiments, rangés à part (Batiments/) mais listés avec les modèles.
+import { listerBatiments, lireBatimentDuDisque } from './batiment-store.js';
+import { entreesBatiments } from './batiment-bibliotheque.js';
+import { vignetteDuBatiment } from './batiment-vignettes.js';
 import { textesStore, PLAFONDS_FACES, nombreCourt, poidsLisible, estLourd, phrasesLicence, lignesDetails } from './store-texts.js';
 
 /**
@@ -647,7 +651,7 @@ function infosLocales(){
 
 let entreesAffichees = [];
 let bibliotheque = null;        // catégories choisies et tags (bibliotheque-modeles.js)
-let donneesLocales = { fichiers: [], attributions: [] };
+let donneesLocales = { fichiers: [], attributions: [], batiments: [] };
 let afficherLocal = null;       // refait la grille locale sans relire le disque
 let listePerimee = false;       // une catégorie ou un tag a changé depuis la fiche : la grille suit
 let tagsFiltre = [];            // les tags du filtre (le modèle doit les porter TOUS)
@@ -657,15 +661,16 @@ const cartesLocales = new Map();
 async function chercherLocal(moi){
   const t = textesStore(langue());
   const pont = window.storyboarderAPI || {};
-  const [fichiers, attributions, biblio] = await Promise.all([
+  const [fichiers, attributions, biblio, batiments] = await Promise.all([
     pont.modelesInfos ? pont.modelesInfos() : [],
     pont.storeTelecharges ? pont.storeTelecharges() : [],
     pont.bibliothequeLire ? pont.bibliothequeLire() : null,
+    lireLesBatiments(),
   ]);
   if (moi !== generation) return;
   enCours = false;
   bibliotheque = biblio;
-  donneesLocales = { fichiers, attributions };
+  donneesLocales = { fichiers, attributions, batiments };
   rendreFiltreTags();
   const afficher = () => {
     const toutes = toutesLesEntrees();
@@ -691,9 +696,130 @@ async function chercherLocal(moi){
   });
 }
 
+/** Les bâtiments de la bibliothèque (#454a-4b), lus en entier : il en faut la vignette et la fiche. */
+async function lireLesBatiments(){
+  const fichiers = await listerBatiments();
+  return Promise.all(fichiers.map(async fichier => {
+    const r = await lireBatimentDuDisque(fichier);
+    return { fichier, batiment: r.ok ? r.batiment : null };
+  }));
+}
+
 /** Les entrées locales, d'après les dernières données lues (disque, attributions, bibliothèque). */
 function toutesLesEntrees(){
-  return entreesLocales({ ...donneesLocales, projet: { tomes: S.tomes, scenes: S.scenes }, metas: metasLocales(), bibliotheque });
+  const projet = { tomes: S.tomes, scenes: S.scenes };
+  return [
+    ...entreesLocales({ ...donneesLocales, projet, metas: metasLocales(), bibliotheque }),
+    ...entreesBatiments(donneesLocales.batiments || [], projet),
+  ];
+}
+
+/** Le bâtiment lu d'une entrée, ou null. */
+function batimentDe(fichier){
+  const x = (donneesLocales.batiments || []).find(b => b.fichier === fichier);
+  return x ? x.batiment : null;
+}
+
+/**
+ * La pastille « bâtiment », en haut à gauche de la vignette (demandé : une icône le distingue d'un
+ * modèle importé, dans la même catégorie). Une maison, construite comme la pastille « articulé ».
+ */
+function pastilleBatiment(t){
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 16 16');
+  svg.setAttribute('aria-hidden', 'true');
+  const trait = document.createElementNS(NS, 'path');
+  trait.setAttribute('d', 'M2.5 7.5L8 3l5.5 4.5M4 6.5V13h8V6.5M6.8 13V9.5h2.4V13');
+  trait.setAttribute('fill', 'none');
+  trait.setAttribute('stroke', 'currentColor');
+  trait.setAttribute('stroke-width', '1.6');
+  trait.setAttribute('stroke-linecap', 'round');
+  trait.setAttribute('stroke-linejoin', 'round');
+  svg.appendChild(trait);
+  return el('span', { classe: 'store-articule store-batiment', attrs: { title: t.batiment, role: 'img', 'aria-label': t.batiment } }, [svg]);
+}
+
+/** La carte d'un bâtiment : sa vignette, l'icône, son nom, où il sert, sa catégorie et ses pièces. */
+function carteBatiment(e){
+  const t = textesStore(langue());
+  const url = e.introuvable ? null : vignetteDuBatiment(batimentDe(e.fichier));
+  const c = el('button', { classe: 'store-carte store-carte-locale' + (e.introuvable ? ' store-carte-introuvable' : ''), attrs: { type: 'button', title: e.fichier } }, [
+    url ? el('img', { attrs: { src: url, alt: '' } }) : el('div', { classe: 'store-sans-vignette' }),
+    pastilleBatiment(t),
+    el('span', { texte: e.titre, classe: 'store-carte-nom' }),
+    el('span', { texte: e.introuvable ? '⚠ ' + t.batimentIllisible : t.resumeUsages(e.scenes.length, e.cases.length), classe: 'store-carte-auteur' }),
+    el('span', { classe: 'store-carte-infos' }, [
+      el('span', { texte: nomCategorie(e.categorie), classe: 'store-badge' }),
+      e.introuvable ? null : el('span', { texte: t.nombrePieces(e.pieces) }),
+    ]),
+  ]);
+  // En mode choix (l'Éditeur de modèle choisit une figure), un bâtiment n'a rien à poser.
+  if (choix) { c.classList.add('store-carte-inactive'); c.title = e.fichier + ' · ' + t.statiqueNonPosable; }
+  c.onclick = () => { if (!choix) ouvrirFiche(e); };
+  c.addEventListener('contextmenu', (ev) => {
+    ev.preventDefault();
+    if (!choix && _rappels.menuBatiment) _rappels.menuBatiment(ev, e.fichier);
+  });
+  cartesLocales.set(e.fichier, c);
+  return c;
+}
+
+/** La fiche d'un bâtiment : sa grande vignette, où il sert, ses caractéristiques, et les actions. */
+function ficheBatiment(e){
+  const t = textesStore(langue());
+  const fiche = $('storeFiche');
+  const url = e.introuvable ? null : vignetteDuBatiment(batimentDe(e.fichier));
+  const visuel = el('div', { classe: 'store-fiche-visuel' }, url ? [el('img', { attrs: { src: url, alt: '' } })] : []);
+  const section = (titre, enfants) => el('section', { classe: 'store-fiche-section' }, [el('h5', { texte: titre }), ...enfants]);
+  const liste = (lignes) => el('ul', {}, lignes.filter(Boolean).map(p => el('li', { texte: p })));
+  const endroit = (g) => {
+    const n = g.elements.length;
+    const b = el('button', { texte: usageLabel(g, (en, fr) => (langue() === 'en' ? en : fr)) + (n > 1 ? ` ×${n}` : ''), classe: 'image-row-where', attrs: { type: 'button' } });
+    b.onclick = () => { fermerStore(); if (_rappels.ouvrirEndroitModele) _rappels.ouvrirEndroitModele(e.fichier, g); };
+    return b;
+  };
+  const endroits = [...e.scenes, ...e.cases];
+  const droite = [
+    el('h4', { texte: e.titre }),
+    el('p', { texte: t.batimentConstruit }),
+    el('div', { classe: 'store-classement' }, [el('div', { classe: 'store-classement-ligne' },
+      [el('span', { texte: nomCategorie(e.categorie), classe: 'store-chip store-chip-categorie' })])]),
+    e.introuvable ? el('p', { texte: t.batimentIllisible, classe: 'store-avertissement' }) : null,
+    section(t.utilisation, endroits.length
+      ? [el('p', { texte: t.batimentCopies, classe: 'store-fiche-texte' }), el('div', { classe: 'store-usages-liste' }, endroits.map(endroit))]
+      : [el('p', { texte: t.nullePart, classe: 'store-fiche-texte' })]),
+    section(t.caracteristiques, [liste([
+      t.ligneFichier(e.fichier),
+      e.dimensions ? t.dimensions(e.dimensions) : null,
+      e.introuvable ? null : t.ligneBatiment(e.niveaux, e.pieces, e.ouvertures),
+    ])]),
+  ];
+  const retour = el('button', { texte: t.fermerFiche, classe: 'nav-btn', attrs: { type: 'button' } });
+  retour.onclick = fermerFiche;
+  const action = (texte, rappel, classe = 'nav-btn') => {
+    const b = el('button', { texte, classe, attrs: { type: 'button' } });
+    b.onclick = () => { if (_rappels[rappel]) _rappels[rappel](e.fichier); };
+    return b;
+  };
+  const actions = e.introuvable
+    ? [retour, action(t.supprimer, 'supprimerBatiment', 'full-btn delete-btn store-action-blanc')]
+    : [retour, action(t.editeur, 'editerBatiment'), action(t.placer, 'placerBatiment', 'full-btn'),
+      action(t.renommer, 'renommerBatiment', 'full-btn edit-btn store-action-blanc'),
+      action(t.supprimer, 'supprimerBatiment', 'full-btn delete-btn store-action-blanc')];
+  fiche.replaceChildren(
+    el('div', { classe: 'store-fiche-corps' }, [
+      el('div', { classe: 'store-fiche-gauche' }, [visuel]),
+      el('div', { classe: 'store-fiche-droite' }, droite.filter(Boolean)),
+    ]),
+    el('div', { classe: 'store-fiche-pied' }, [el('div', { classe: 'store-fiche-actions store-fiche-actions-locales' }, actions)]),
+  );
+  positionListe = $('storeDefilement').scrollTop;
+  $('storeGrille').hidden = true;
+  $('storeFormulaire').hidden = true;
+  message('');
+  fiche.hidden = false;
+  $('storeDefilement').scrollTop = 0;
 }
 
 function poserVignette(carteEl, nom){
@@ -888,6 +1014,7 @@ function nomCategorie(slug){
 }
 
 function carteLocale(e){
+  if (e.batiment) return carteBatiment(e);
   const t = textesStore(langue());
   const url = vignetteLocale(e.fichier);
   const c = el('button', { classe: 'store-carte store-carte-locale' + (e.introuvable ? ' store-carte-introuvable' : ''), attrs: { type: 'button', title: e.fichier } }, [
@@ -926,6 +1053,7 @@ function carteLocale(e){
 }
 
 function ficheLocale(e){
+  if (e.batiment) { ficheBatiment(e); return; }
   const t = textesStore(langue());
   const fiche = $('storeFiche');
   const a = e.attribution;

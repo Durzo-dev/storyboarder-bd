@@ -272,13 +272,9 @@ const EN_ATTENTE = {
    * exemptions qui ne surveilleraient rien.
    */
   particulesDeLaBulle: '#425p — axe retiré de la fiche, code conservé sur demande',
-  // #454a-1 — LE RANGEMENT DES BÂTIMENTS ARRIVE AVANT L'ÉDITEUR, comme le magasin d'images de
-  // #403a : le format et le pont sont écrits et testés (tests/batiment.test.mjs) pendant que l'écran
-  // qui s'en servira reste à faire. #454a-2 en a branché deux (l'éditeur enregistre et affiche le nom
-  // du fichier) ; restent trois, pour #454a-4 (la bibliothèque des modèles ouvre, renomme, supprime).
-  lireBatimentDuDisque: '#454a-4 — la bibliothèque des modèles ouvre un bâtiment dans l\'éditeur',
-  renommerBatiment: '#454a-4 — la bibliothèque des modèles renomme un bâtiment',
-  supprimerBatiment: '#454a-4 — la bibliothèque des modèles supprime un bâtiment',
+  // #454a-1 — LE RANGEMENT DES BÂTIMENTS EST ARRIVÉ AVANT L'ÉDITEUR, et sa dette est SOLDÉE : #454a-2
+  // a branché l'enregistrement, #454a-4b la lecture, le renommage et la suppression (la bibliothèque
+  // « Mes modèles »). Aucune entrée ne reste ici.
 
   // #435b — LE CRITÈRE QUI RESTE APRÈS LE DÉFAUT QU'IL AURAIT ÉVITÉ. Le Sol portait un déplacement
   // qui n'a jamais produit de relief : sa carte se répétait des dizaines de fois entre deux sommets
@@ -419,8 +415,8 @@ describe('Aucun export de src/ ne reste sans appelant', () => {
     // #436c pour la même raison : `elevationDuCiel3D` est le modèle de `cielDirection`.
     // Remonté à 17 en #454a-1 : cinq fonctions du rangement des bâtiments, EN AVANCE sur l'éditeur,
     // chacune avec son numéro de tâche pour échéance (cf. leur entrée plus haut). Redescendu à 15 en
-    // #454a-2, qui en branche deux.
-    assert.equal(Object.keys(EN_ATTENTE).length, 15,
+    // #454a-2, qui en branche deux, puis à 12 en #454a-4b, qui branche les trois dernières.
+    assert.equal(Object.keys(EN_ATTENTE).length, 12,
       'une décision de plus a été REPORTÉE au lieu d\'être prise');
   });
 });

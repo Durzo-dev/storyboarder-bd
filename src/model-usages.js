@@ -43,12 +43,17 @@ export function setModelUsagesCallbacks(callbacks){ _cb = callbacks || {}; }
  * composées ici : elles demandent la langue, et une fonction qui rend du texte traduit ne se
  * compare plus qu'à elle-même (cf. usageLabel plus bas).
  */
-export function modelUsageLocations(fichier, { tomes = [], scenes = [] } = {}){
+// `utilise(o, fichier)` : ce qui fait qu'un Élément « utilise » le fichier. Par défaut, un modèle
+// importé qui le porte ; #454a-4b passe celui des bâtiments placés depuis la bibliothèque (leur
+// `batimentSource`), pour que leur fiche dise où ils servent avec la même liste.
+const utiliseLeModele = (o, fichier) => isImportedModel(o) && o.modelFile === fichier;
+
+export function modelUsageLocations(fichier, { tomes = [], scenes = [] } = {}, utilise = utiliseLeModele){
   if (!fichier) return [];
   const groupes = [];
 
   (scenes || []).forEach(scene => {
-    const elements = elementsUtilisant(scene, fichier);
+    const elements = elementsUtilisant(scene, fichier, utilise);
     if (elements.length) {
       groupes.push({ kind: 'scene', sceneId: scene.id, sceneName: scene.name || '', elements });
     }
@@ -60,7 +65,7 @@ export function modelUsageLocations(fichier, { tomes = [], scenes = [] } = {}){
       // création. Une Map préserve cet ordre d'insertion, une clé numérique l'aurait perdu.
       const parCase = new Map();
       (page.objects || []).forEach(o => {
-        if (!isImportedModel(o) || o.modelFile !== fichier) return;
+        if (!utilise(o, fichier)) return;
         // `homePanelId` peut désigner une Case supprimée depuis : on ne devine pas, on l'assume.
         // La clé `null` regroupe alors ces Éléments sous la Page seule, les taire les rendrait
         // introuvables, ce qui est précisément ce que cette liste doit empêcher.
@@ -87,11 +92,11 @@ export function modelUsageLocations(fichier, { tomes = [], scenes = [] } = {}){
 }
 
 /** Les Éléments d'un volume (Scène) qui utilisent ce fichier. */
-function elementsUtilisant(volume, fichier){
+function elementsUtilisant(volume, fichier, utilise = utiliseLeModele){
   const out = [];
   ((volume && volume.pages) || []).forEach(page => {
     (page.objects || []).forEach(o => {
-      if (isImportedModel(o) && o.modelFile === fichier) out.push({ id: o.id, name: o.name || '' });
+      if (utilise(o, fichier)) out.push({ id: o.id, name: o.name || '' });
     });
   });
   return out;

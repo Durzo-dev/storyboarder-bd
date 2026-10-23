@@ -37,7 +37,8 @@ written by a newer version loses nothing by passing through this one.
 
 **Placed buildings** (#454a-4, October 2026, see [building-research.md](building-research.md)): an
 `objet3d` with `objType: 'batiment'` (an ADDED value) that embeds its copy of the building in the
-ADDED field `batiment` (the shape of `.batiment.json` files). A version that ignores this type draws
+ADDED field `batiment` (the shape of `.batiment.json` files), and `batimentSource` (the library file
+it was placed from, informative). A version that ignores this type draws
 it as an unknown object, losing nothing of the field.
 
 **Project level**: `projectName`, `tomes`, `formats`, `scenes`, `currentTomeIndex`, `currentPageIndex`,

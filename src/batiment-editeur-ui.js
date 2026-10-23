@@ -19,6 +19,7 @@
  */
 import { tr } from './state.js';
 import { creerBatiment, nomAfficheDuFichier } from './batiment.js';
+import { actionDEnregistrement } from './batiment-bibliotheque.js';
 import { enregistrerBatiment } from './batiment-store.js';
 import {
   versEcran, versBatiment, pasDeGrille, zoomerAutour, glisserVue, boiteDesMurs, cadrerSur,
@@ -928,16 +929,38 @@ function versLaScene(){
   destination.valider(JSON.parse(JSON.stringify(batiment)));
 }
 
+/**
+ * « Enregistrer dans la bibliothèque » (#454a-4b, demandé : pas d'« Enregistrer sous ») :
+ *   - un bâtiment neuf devient un modèle, nommé d'après lui ;
+ *   - ouvert depuis la bibliothèque et toujours du même nom : il REMPLACE le modèle, après une
+ *     confirmation qui le dit (les copies déjà placées ne changent pas) ; demandée une fois par
+ *     ouverture de l'éditeur ;
+ *   - RENOMMÉ dans l'éditeur : il devient un NOUVEAU modèle, l'ancien reste tel quel. C'est ainsi
+ *     qu'on fait une variante (cf. actionDEnregistrement).
+ */
 async function enregistrer(){
   if (!E) return;
   const ed = E;
-  const r = await enregistrerBatiment(ed.batiment, ed.fichier);
+  const action = actionDEnregistrement(ed.fichier, ed.batiment.nom);
+  if (action === 'remplacer' && !ed.remplacementAccepte) {
+    const ok = await _rappels.confirmer(tr(
+      `This replaces the model "${nomAfficheDuFichier(ed.fichier)}" in the library. The buildings already placed in your Scenes are copies: they do not change. To keep the model as it is and make a new one, give this building another name first.`,
+      `Ceci remplace le modèle « ${nomAfficheDuFichier(ed.fichier)} » de la bibliothèque. Les bâtiments déjà placés dans vos Scènes sont des copies : ils ne changent pas. Pour garder le modèle tel quel et en faire un nouveau, donnez d'abord un autre nom à ce bâtiment.`),
+    tr('Replace the model', 'Remplacer le modèle'));
+    if (!ok || E !== ed) return;
+    ed.remplacementAccepte = true;
+  }
+  const r = await enregistrerBatiment(ed.batiment, action === 'remplacer' ? ed.fichier : null);
   if (E !== ed) return;
   if (!r.ok) { statut(tr(`Could not save: ${r.error}`, `Échec de l'enregistrement : ${r.error}`)); return; }
+  const nouveau = action === 'nouveau' && ed.fichier;
   ed.fichier = r.fichier;
   ed.modifie = false;
+  ed.remplacementAccepte = ed.remplacementAccepte && !nouveau;
   remplirPanneau();
-  statut(tr(`Saved as "${nomAfficheDuFichier(r.fichier)}".`, `Enregistré sous « ${nomAfficheDuFichier(r.fichier)} ».`));
+  statut(nouveau
+    ? tr(`Saved as a new model, "${nomAfficheDuFichier(r.fichier)}"; the previous one is unchanged.`, `Enregistré comme nouveau modèle, « ${nomAfficheDuFichier(r.fichier)} » ; le précédent est inchangé.`)
+    : tr(`Saved as "${nomAfficheDuFichier(r.fichier)}".`, `Enregistré sous « ${nomAfficheDuFichier(r.fichier)} ».`));
 }
 
 function clavier(e){

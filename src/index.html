@@ -1077,6 +1077,14 @@ Tirer un angle : le déplacer, avec tous les murs qui y sont attachés (Alt : sa
   <button id="ctxDeleteFont"><span class="ctx-icon">🗑</span> Supprimer la police</button>
 </div>
 
+<!-- #454a-4b : le clic droit sur un bâtiment de « Mes modèles ». -->
+<div class="context-menu hidden" id="batimentBiblioMenu">
+  <button id="ctxBiblioEditerBatiment"><span class="ctx-icon">✏️</span> Ouvrir dans l'éditeur</button>
+  <button id="ctxBiblioPlacerBatiment"><span class="ctx-icon">🏠</span> Placer</button>
+  <button id="ctxBiblioRenommerBatiment"><span class="ctx-icon">🔤</span> Renommer…</button>
+  <button id="ctxBiblioSupprimerBatiment"><span class="ctx-icon">🗑</span> Supprimer du disque</button>
+</div>
+
 <div class="context-menu hidden" id="modelContextMenu">
   <!-- La correspondance vise le FICHIER, pas un Élément : ce menu est donc son point d'entrée
        naturel, et le seul qui reste atteignable pour un .glb importé comme Scène — lequel n'a aucun

@@ -57,6 +57,11 @@ describe('placer, puis appliquer une retouche', () => {
     assert.deepEqual([o.wxFloor, o.rotY], [3, 1]);
     assert.notEqual(o.batiment, plus);
   });
+  test('placé depuis la bibliothèque : il garde le nom du fichier', () => {
+    const o = creerElementBatiment({ panel, page, batiment: maison(), source: 'Maison.batiment.json' });
+    assert.equal(o.batimentSource, 'Maison.batiment.json');
+    assert.equal(creerElementBatiment({ panel, page, batiment: maison() }).batimentSource, undefined);
+  });
   test('la signature change avec le bâtiment, pas avec une copie identique', () => {
     const b = maison();
     assert.equal(signatureDuBatiment(b), signatureDuBatiment(JSON.parse(JSON.stringify(b))));

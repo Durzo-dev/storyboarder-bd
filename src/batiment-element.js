@@ -55,11 +55,11 @@ function cadre2D(b, page){
 
 /**
  * L'Élément d'un bâtiment posé au centre de la Case `panel` (ou du canevas d'une Scène). Le
- * bâtiment est COPIÉ. Fonction PURE : l'appelant le range dans la Page et finalise sa création.
+ * bâtiment est COPIÉ ; `source` : le fichier de la bibliothèque d'où il vient, s'il en vient. Fonction PURE : l'appelant le range dans la Page et finalise sa création.
  */
-export function creerElementBatiment({ panel, page, batiment }){
+export function creerElementBatiment({ panel, page, batiment, source = null }){
   const { w, h, realH } = cadre2D(batiment, page);
-  return {
+  const o = {
     id: newId(), type: 'objet3d', objType: OBJ_TYPE_BATIMENT,
     batiment: JSON.parse(JSON.stringify(batiment)),
     x: clamp(panel.x + panel.w / 2 - w / 2, 0, page.w - w),
@@ -71,6 +71,10 @@ export function creerElementBatiment({ panel, page, batiment }){
     magnetGround: true,
     homePanelId: panel.id,
   };
+  // #454a-4b : placé depuis la bibliothèque, il garde le nom du fichier d'où il vient (informatif :
+  // sa fiche dit où il sert). Une copie reste une copie : rien ne le relie au fichier pour la suite.
+  if (source) o.batimentSource = source;
+  return o;
 }
 
 /**

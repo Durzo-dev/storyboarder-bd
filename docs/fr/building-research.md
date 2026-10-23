@@ -403,6 +403,12 @@ l'aperçu de l'éditeur et le rendu des Cases). « Créer un bâtiment » dans u
 avec « Placer dans la scène » ; « Modifier » (clic droit sur sa ligne) ou un double-clic sur un
 bâtiment placé l'ouvre avec « Appliquer à la scène ».
 
+**La bibliothèque** (#454a-4b, fait) : `src/batiment-bibliotheque.js` (les entrées de « Mes
+modèles », catégorie `architecture` d'office ; la règle d'enregistrement : même nom → remplacer après
+confirmation, renommé → nouveau modèle), `src/batiment-vignettes.js` (la vignette, rendue à la volée,
+en mémoire). Un bâtiment placé depuis la bibliothèque garde `batimentSource` (champ ajouté,
+informatif), par lequel sa fiche liste où il sert.
+
 Les bâtiments déjà tracés dans les Scènes (murs Éléments, `pieceId`, `batimentNames`,
 `batimentRotY`) restent LUS et sont **convertis** à l'ouverture en bâtiments d'un niveau, à la même
 place : rien ne bouge à l'écran.

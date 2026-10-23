@@ -38,7 +38,8 @@ si bien qu'un fichier écrit par une version plus récente ne perd rien en passa
 
 **Bâtiments placés** (#454a-4, octobre 2026, cf. [building-research.md](building-research.md)) : un
 `objet3d` d'`objType: 'batiment'` (valeur AJOUTÉE) qui embarque sa copie du bâtiment dans le champ
-AJOUTÉ `batiment` (la forme des fichiers `.batiment.json`). Une version qui ignore ce type le dessine
+AJOUTÉ `batiment` (la forme des fichiers `.batiment.json`), et `batimentSource` (le fichier de la
+bibliothèque d'où il a été placé, informatif). Une version qui ignore ce type le dessine
 comme un objet inconnu, sans rien perdre du champ.
 
 **Niveau projet** : `projectName`, `tomes`, `formats`, `scenes`, `currentTomeIndex`, `currentPageIndex`,

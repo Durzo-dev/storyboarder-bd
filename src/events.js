@@ -136,6 +136,11 @@ import {
 import { batimentDesPieces } from './batiment.js';
 import { creerElementBatiment, appliquerBatiment, estUnBatimentPlace } from './batiment-element.js';
 import {
+  listerBatiments, lireBatimentDuDisque, enregistrerBatiment, renommerBatiment as renommerFichierBatiment,
+  supprimerBatiment as supprimerFichierBatiment,
+} from './batiment-store.js';
+import { nomAfficheDuFichier } from './batiment.js';
+import {
   cloneJoints, disposeObjectRig3D, disposePersonaRig3D, disposeWallRenderRig3D, ensurePersonaScene3D,
   frameOrthoCameraToBox, ensureObjectRigEntry3D, getWallPanRect2D, wallOpeningRect, personaCameraOrtho3D,
   personaScene3D, personaRenderer3D, getMaxAnisotropy3D,
@@ -9328,7 +9333,89 @@ cablerStore({
   },
   // Confirmer la suppression d'un tag : la fenêtre de confirmation habituelle, devant la bibliothèque.
   confirmer: (message) => confirmAction(message),
+  // #454a-4b : les bâtiments de la bibliothèque.
+  menuBatiment: (e, fichier) => openBatimentBiblioMenu(e, fichier),
+  editerBatiment: (fichier) => editerBatimentDeLaBibliotheque(fichier),
+  placerBatiment: (fichier) => placerBatimentDeLaBibliotheque(fichier),
+  renommerBatiment: (fichier) => renommerBatimentDeLaBibliotheque(fichier),
+  supprimerBatiment: (fichier) => supprimerBatimentDeLaBibliotheque(fichier),
 });
+
+// ── #454a-4b : les bâtiments de « Mes modèles » ──
+let _ctxBiblioBatiment = null;
+function openBatimentBiblioMenu(e, fichier){
+  _ctxBiblioBatiment = fichier;
+  hideContextMenu();
+  placerMenu3D(document.getElementById('batimentBiblioMenu'), e.clientX, e.clientY);
+}
+[['ctxBiblioEditerBatiment', editerBatimentDeLaBibliotheque], ['ctxBiblioPlacerBatiment', placerBatimentDeLaBibliotheque],
+  ['ctxBiblioRenommerBatiment', renommerBatimentDeLaBibliotheque], ['ctxBiblioSupprimerBatiment', supprimerBatimentDeLaBibliotheque]]
+  .forEach(([id, faire]) => { document.getElementById(id).onclick = () => { hideContextMenu(); if (_ctxBiblioBatiment) faire(_ctxBiblioBatiment); }; });
+
+/** Ouvre un bâtiment de la bibliothèque dans l'éditeur ; « Enregistrer » réécrira son fichier. */
+async function editerBatimentDeLaBibliotheque(fichier){
+  const r = await lireBatimentDuDisque(fichier, tr);
+  if (!r.ok) { alertAction(tr(`This building could not be read: ${r.error}`, `Ce bâtiment n'a pas pu être lu : ${r.error}`)); return; }
+  fermerStore();
+  ouvrirEditeurDeBatiment({ batiment: r.batiment, fichier });
+}
+
+/**
+ * La Case où placer : le canevas de la Scène ouverte, sinon la Case sélectionnée (ou celle de
+ * l'Élément sélectionné), sinon aucune.
+ */
+function caseOuPlacer(){
+  const page = currentPage();
+  if (S.editingSceneId) return page.objects.find(o => o.type === 'panel' && isLockedScenePanel(o)) || null;
+  const sel = page.objects.find(o => o.id === S.selectedId);
+  if (sel && sel.type === 'panel') return sel;
+  if (sel && sel.homePanelId) return page.objects.find(o => o.id === sel.homePanelId && o.type === 'panel') || null;
+  return null;
+}
+
+/** Place une copie d'un bâtiment de la bibliothèque dans la Scène ouverte ou la Case choisie. */
+async function placerBatimentDeLaBibliotheque(fichier){
+  const panel = caseOuPlacer();
+  if (!panel) {
+    alertAction(tr('Open a Scene, or select a panel, to place this building in it.', 'Ouvrez une Scène, ou sélectionnez une Case, pour y placer ce bâtiment.'));
+    return;
+  }
+  const r = await lireBatimentDuDisque(fichier, tr);
+  if (!r.ok) { alertAction(tr(`This building could not be read: ${r.error}`, `Ce bâtiment n'a pas pu être lu : ${r.error}`)); return; }
+  fermerStore();
+  const page = currentPage();
+  snapshot();
+  const el = creerElementBatiment({ panel, page, batiment: r.batiment, source: fichier });
+  page.objects.push(el);
+  S.selectedId = el.id; S.selectedRoomId = null;
+  finaliserCreationDansCase3D(el, panel, page);
+  renderAll();
+}
+
+/** Renomme le fichier, et le nom du bâtiment qu'il contient (les deux se lisent ensemble). */
+async function renommerBatimentDeLaBibliotheque(fichier){
+  const actuel = nomAfficheDuFichier(fichier);
+  const pris = (await listerBatiments()).map(nomAfficheDuFichier);
+  openRenameEntityModal('batiment', actuel, actuel, { pris, appliquer: async (nom) => {
+    const r = await renommerFichierBatiment(fichier, nom);
+    if (!r.ok) { alertAction(tr(`Renaming failed: ${r.error}`, `Le renommage a échoué : ${r.error}`)); return; }
+    const lu = await lireBatimentDuDisque(r.fichier, tr);
+    if (lu.ok) { lu.batiment.nom = nom; await enregistrerBatiment(lu.batiment, r.fichier); }
+    rafraichirBibliothequeLocale();
+  } });
+}
+
+/** Supprime le fichier, après confirmation. Les bâtiments déjà placés n'en dépendent pas. */
+async function supprimerBatimentDeLaBibliotheque(fichier){
+  const ok = await confirmAction(tr(
+    `Delete the building "${nomAfficheDuFichier(fichier)}" from disk? The buildings already placed in your Scenes are copies: they do not change.`,
+    `Supprimer le bâtiment « ${nomAfficheDuFichier(fichier)} » du disque ? Les bâtiments déjà placés dans vos Scènes sont des copies : ils ne changent pas.`),
+  tr('Delete a building', 'Supprimer un bâtiment'));
+  if (!ok) return;
+  const r = await supprimerFichierBatiment(fichier);
+  if (!r.ok) alertAction(tr(`Deletion failed: ${r.error}`, `La suppression a échoué : ${r.error}`));
+  rafraichirBibliothequeLocale();
+}
 
 // #423 : la fenêtre des Polices. Une police ajoutée, renommée ou supprimée redessine les Bulles et
 // refait la liste des polices de la fiche ouverte.
