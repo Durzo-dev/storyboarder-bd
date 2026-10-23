@@ -240,3 +240,22 @@ Les icônes vivent dans `src/batiment-icones.js`.
   d'allège » est devenu « Élévation » (« Distance entre le sol et le bas de l'ouverture »).
 - Les noms de l'application gardent leur majuscule : Projet, Tome, Planche, Case, Bulle, Scène,
   Élément.
+
+## Harmonisations prévues (#460)
+
+Relevées en analysant le système de design ; à faire plus tard. Une fois tranchée, chaque règle
+rejoint ce document avec son test.
+
+- **#460a** Curseurs et cases à cocher natifs encore bleus : `accent-color: var(--accent)` global.
+- **#460b** L'orange sert aussi à informer (pastilles de dimensions et d'avancement, badges de
+  licence, numéros de niveau) : passer à une pastille neutre.
+- **#460c** Deux composants de choix presque identiques (éditeur de bâtiment, Lecteur) : les
+  fusionner.
+- **#460d** Trois styles de ligne active et deux traits de dépôt : n'en garder qu'un de chaque.
+- **#460e** Deux mises en page de champ (libellé au-dessus ou à gauche) : trancher la règle.
+- **#460f** Deux vocabulaires de section (panneaux, modale d'un Élément) : une seule hiérarchie.
+- **#460g** Deux composants d'onglets (store, Configuration) : les fusionner.
+- **#460h** Deux états vides : les fusionner.
+- **#460i** 22 tailles de texte : passer à six.
+- **#460j** 11 rayons : passer à trois.
+- **#460k** Icônes : une seule famille au trait (en-tête, menus contextuels).

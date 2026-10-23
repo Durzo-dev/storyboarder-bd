@@ -234,3 +234,21 @@ The icons live in `src/batiment-icones.js`.
   "Elevation" ("Distance between the floor and the bottom of the opening").
 - In French, the application's nouns keep their capital: Projet, Tome, Planche, Case, Bulle, Scène,
   Élément.
+
+## Planned harmonisations (#460)
+
+Found while analysing the design system; to do later. Once settled, each rule joins this document
+with its test.
+
+- **#460a** Native sliders and checkboxes still blue: a global `accent-color: var(--accent)`.
+- **#460b** Orange also informs (dimension and progress chips, licence badges, level numbers): move
+  to a neutral chip.
+- **#460c** Two nearly identical choice components (building editor, Reader): merge them.
+- **#460d** Three active-row styles and two drop lines: keep one of each.
+- **#460e** Two field layouts (label above or on the left): settle the rule.
+- **#460f** Two section vocabularies (panels, an Element's modal): one hierarchy.
+- **#460g** Two tab components (store, Settings): merge them.
+- **#460h** Two empty states: merge them.
+- **#460i** 22 text sizes: move to six.
+- **#460j** 11 radii: move to three.
+- **#460k** Icons: a single line-icon family (header, context menus).
