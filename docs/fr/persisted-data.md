@@ -36,6 +36,11 @@ sont celles d'aucun format en reçoit un à ses dimensions (seule sa clé change
 règle que les Projets : ses champs ne se renomment pas, et un champ inconnu est gardé à la lecture,
 si bien qu'un fichier écrit par une version plus récente ne perd rien en passant par celle-ci.
 
+**Bâtiments placés** (#454a-4, octobre 2026, cf. [building-research.md](building-research.md)) : un
+`objet3d` d'`objType: 'batiment'` (valeur AJOUTÉE) qui embarque sa copie du bâtiment dans le champ
+AJOUTÉ `batiment` (la forme des fichiers `.batiment.json`). Une version qui ignore ce type le dessine
+comme un objet inconnu, sans rien perdre du champ.
+
 **Niveau projet** : `projectName`, `tomes`, `formats`, `scenes`, `currentTomeIndex`, `currentPageIndex`,
 `poses` (bibliothèque de poses : `[{ id, name, skeleton, joints }]`).
 
@@ -82,7 +87,7 @@ Les chaînes qui servent à reconnaître la nature d'un objet sont aussi figées
 
 ```
 type      : 'perso' | 'objet3d' | 'panel' | 'tracé' | 'terrain' | 'bulle'
-objType   : 'mur' | 'mur_coin' | 'dalle' | 'fenetre_ouverte' | 'porte_ouverte' | 'modele' | …
+objType   : 'mur' | 'mur_coin' | 'dalle' | 'fenetre_ouverte' | 'porte_ouverte' | 'modele' | 'batiment' | …
 tracéType : 'muret' | 'cloture' | 'haie' | 'barriere' | 'route' | 'chemin' | 'terrain'
 wallSide  : 'avant' | 'arriere'
 état porte/fenêtre : 'gauche' | 'droite' | 'fermee'

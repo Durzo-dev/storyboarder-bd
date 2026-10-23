@@ -2716,3 +2716,4 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-champ input[type=number] { width: 64px; }
 #batimentSectionSelection .full-btn { margin-top: 6px; }
 .batiment-editeur-plan canvas.outil-mur { cursor: crosshair; }
+#batimentPlacerBtn[hidden] { display: none; }

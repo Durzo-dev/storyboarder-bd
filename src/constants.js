@@ -281,6 +281,9 @@ export const OBJECT_TYPE_LABELS = {
   // est le fichier qu'ils portent (`modelFile`), pas leur type. Absent des menus d'ajout, qui sont
   // figés dans index.html, on y arrive par « Importer un modèle », pas par la liste des Objets.
   modele: 'Modèle importé',
+  // #454a-4 : un bâtiment construit dans l'Éditeur de bâtiment, placé dans une Scène (il embarque sa
+  // copie du bâtiment, cf. batiment-element.js). Absent des menus d'ajout, comme le modèle importé.
+  batiment: 'Bâtiment',
 };
 
 // Les MÊMES types, en anglais. Deux tables plutôt qu'une table de paires : `OBJECT_TYPE_LABELS` est
@@ -304,6 +307,7 @@ export const OBJECT_TYPE_LABELS_EN = {
   tombe: 'Grave', pierre_tombale: 'Headstone', caveau: 'Vault',
   banc_eglise: 'Pew', autel: 'Altar',
   modele: 'Imported model',
+  batiment: 'Building',
 };
 
 // ---------- Wall magnetism ----------
@@ -504,6 +508,7 @@ export const OBJECT_TYPE_EMOJI = {
   tombe: '⬛', pierre_tombale: '🪦', caveau: '🏛️',
   banc_eglise: '🪑', autel: '✝️',
   modele: '📦',
+  batiment: '🏠',
 };
 
 

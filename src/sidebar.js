@@ -564,6 +564,8 @@ export function renderSideElementRow(p, panel, page){
   row.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     e.stopPropagation();
+    // #454a-4 : un bâtiment placé propose « Modifier » (l'Éditeur de bâtiment, sur sa copie).
+    if (p.type === 'objet3d' && p.objType === 'batiment' && p.batiment && _openBatimentMenu) _openBatimentMenu(e, { element: p });
   });
   return row;
 }

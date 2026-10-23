@@ -397,6 +397,12 @@ maçonnerie aux bouts et entre deux ouvertures, sous le plafond). `morceauxDuMur
 linteau en 3D. Gardés pour plus tard : porte de garage, vitrine, œil-de-bœuf, bow-window, verrière,
 haut cintré, volets.
 
+**Le placement** (#454a-4a, fait) : `src/batiment-element.js` (l'Élément `objType: 'batiment'`, sa
+copie, sa hauteur réelle, son cadre 2D) et `src/batiment-3d.js` (le constructeur 3D partagé par
+l'aperçu de l'éditeur et le rendu des Cases). « Créer un bâtiment » dans une Scène ouvre l'éditeur
+avec « Placer dans la scène » ; « Modifier » (clic droit sur sa ligne) ou un double-clic sur un
+bâtiment placé l'ouvre avec « Appliquer à la scène ».
+
 Les bâtiments déjà tracés dans les Scènes (murs Éléments, `pieceId`, `batimentNames`,
 `batimentRotY`) restent LUS et sont **convertis** à l'ouverture en bâtiments d'un niveau, à la même
 place : rien ne bouge à l'écran.

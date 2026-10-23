@@ -282,6 +282,7 @@ export const HELP_MANUAL_EN = [
     '"Edit" opens a COPY of the walls already drawn in the Scene: the Scene does not change. "Save to the library" stores the building with your models, in the Batiments folder next to your projects.',
     'The top view of the current level fills the editor: scroll wheel to zoom, hold the right button to move the view. The 3D preview is a window over it: hold the left button to turn, the right button to move, scroll wheel to zoom. "Reframe" fits both views to the building.',
     'Drag the preview by its bar to anchor it to another corner. − minimises it to an icon that reopens it, ⤢ (or a double-click on the bar) switches it to full screen and back. The choice is remembered.',
+    'Opened with "Create a building" in a Scene, the editor offers "Place in the scene": the building is placed at the centre, as an independent copy. On a placed building, "Edit" (right-click on its row) or a double-click reopens the editor with "Apply to the scene".',
     'Esc or "Quit" leaves the editor; if the building has unsaved changes, you are asked first.',
   ]},
   { id: 'batiments_trace', title: 'Drawing walls', paragraphs: [
@@ -528,6 +529,7 @@ export const HELP_MANUAL_FR = [
     "« Modifier » ouvre une COPIE des murs déjà tracés dans la Scène : la Scène ne change pas. « Enregistrer dans la bibliothèque » range le bâtiment avec vos modèles, dans le dossier Batiments à côté de vos projets.",
     "La vue de dessus du niveau courant occupe l'éditeur : molette pour zoomer, clic droit maintenu pour déplacer la vue. L'aperçu 3D est une fenêtre par-dessus : clic gauche maintenu pour tourner, clic droit maintenu pour déplacer, molette pour zoomer. « Recadrer » ajuste les deux vues au bâtiment.",
     "Tirez l'aperçu par sa barre pour l'ancrer à un autre coin. − le réduit à une icône qui le rouvre, ⤢ (ou un double-clic sur la barre) le passe en plein écran et retour. Le choix est retenu.",
+    "Ouvert par « Créer un bâtiment » dans une Scène, l'éditeur propose « Placer dans la scène » : le bâtiment s'y pose au centre, en copie indépendante. Sur un bâtiment placé, « Modifier » (clic droit sur sa ligne) ou un double-clic rouvre l'éditeur avec « Appliquer à la scène ».",
     "Échap ou « Quitter » quitte l'éditeur ; si le bâtiment a des modifications non enregistrées, la question est posée d'abord.",
   ]},
   { id: 'batiments_trace', title: 'Tracer les murs', paragraphs: [

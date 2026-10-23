@@ -44,6 +44,9 @@ import {
 // lieu à l'ouverture du Projet ; ce module ne fait jamais attendre le chemin de dessin.
 import { getLoadedModel, loadedModelNames, modelState } from './model-cache.js';
 import { isImportedModel } from './model-store.js';
+// #454a-4 : le bâtiment placé, dessiné par le MÊME constructeur que l'aperçu de l'éditeur.
+import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
+import { OBJ_TYPE_BATIMENT, signatureDuBatiment } from './batiment-element.js';
 // cf. son en-tête : Object3D.clone() casse le lien SkinnedMesh↔Skeleton, faussant l'échelle
 // appliquée par placeRigCentered3D pour tout modèle importé articulé.
 import { cloneSkinned } from './vendor/SkeletonUtils.js';
@@ -4271,8 +4274,30 @@ const PROP_RIG_BUILDERS_3D = {
   [OBJ_TYPE_LUMIERE]: buildLumiereRig3D,
 };
 
+// Les matières des bâtiments placés : créées une fois, partagées par tous (elles ne se libèrent pas
+// avec un bâtiment, seules ses géométries le font, cf. libererGeometries3D).
+let _materiauxBatiment3D = null;
+
+/** Libère les géométries d'un rig (un bâtiment en porte des centaines) ; ses matières restent. */
+function libererGeometries3D(groupe){
+  if (groupe) groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); });
+}
+
 // ↳ src/constants.js
 export function buildPropRig3D(objType, colorHex, o){
+  // #454a-4 : un bâtiment placé. Le rig est le bâtiment lui-même, en mètres ; la signature dit de
+  // quelle version il a été construit, pour qu'ensureObjectRigEntry3D le refasse après « Modifier ».
+  if (objType === OBJ_TYPE_BATIMENT) {
+    if (!_materiauxBatiment3D) _materiauxBatiment3D = materiauxBatiment3D(THREE);
+    const groupe = construireBatiment3D(THREE, (o && o.batiment) || { niveaux: [], murs: [] }, _materiauxBatiment3D);
+    // Un bâtiment sans mur reste visible et sélectionnable : un repère d'un mètre.
+    if (!groupe.children.length) {
+      const repere = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), _materiauxBatiment3D.cadre);
+      repere.position.y = 0.5;
+      groupe.add(repere);
+    }
+    return { figureGroup: groupe, batimentSig: signatureDuBatiment(o && o.batiment) };
+  }
   const builder = PROP_RIG_BUILDERS_3D[objType] || buildCarRig3D;
   if (WALL_TYPES.includes(objType) && o && o.w && o.h) {
     const lenUnits = Math.max(0.3, o.w / WALL_PX_PER_UNIT_3D);
@@ -4793,8 +4818,11 @@ export function ensureObjectRigEntry3D(o){
   // au prix d'un coût négligeable (un redimensionnement est un geste rare, pas un événement par
   // image).
   const heightChanged = entry && objType === 'modele' && entry.realHeightFloor !== (o && o.realHeightFloor);
-  if (!entry || entry.objType !== objType || entry.color !== color || dimsChanged || doorStateChanged || windowStateChanged || modelChanged || heightChanged) {
+  // #454a-4 : un bâtiment placé se reconstruit quand son bâtiment change (« Modifier », annuler).
+  const batimentChanged = entry && objType === OBJ_TYPE_BATIMENT && entry.batimentSig !== signatureDuBatiment(o && o.batiment);
+  if (!entry || entry.objType !== objType || entry.color !== color || dimsChanged || doorStateChanged || windowStateChanged || modelChanged || batimentChanged || heightChanged) {
     if (entry) personaScene3D.remove(entry.figureGroup);
+    if (entry && entry.objType === OBJ_TYPE_BATIMENT) libererGeometries3D(entry.figureGroup);
     const built = buildPropRig3D(objType, color, o);
     personaScene3D.add(built.figureGroup);
     entry = Object.assign(built, { objType, color, realHeightFloor: o && o.realHeightFloor });
@@ -4849,6 +4877,7 @@ export function disposeObjectRig3D(id){
   const entry = objectRigCache3D.get(id);
   if (!entry) return;
   if (personaScene3D) personaScene3D.remove(entry.figureGroup);
+  if (entry.objType === OBJ_TYPE_BATIMENT) libererGeometries3D(entry.figureGroup);
   objectRigCache3D.delete(id);
 }
 

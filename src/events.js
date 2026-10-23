@@ -134,6 +134,7 @@ import {
   editeurDeBatimentOuvert,
 } from './batiment-editeur-ui.js';
 import { batimentDesPieces } from './batiment.js';
+import { creerElementBatiment, appliquerBatiment, estUnBatimentPlace } from './batiment-element.js';
 import {
   cloneJoints, disposeObjectRig3D, disposePersonaRig3D, disposeWallRenderRig3D, ensurePersonaScene3D,
   frameOrthoCameraToBox, ensureObjectRigEntry3D, getWallPanRect2D, wallOpeningRect, personaCameraOrtho3D,
@@ -197,7 +198,7 @@ import {
 
   openHelpModal, closeHelpModal, rafraichirManuelOuvert,
 } from './modals.js';
-setModalsCallbacks({ snapshot });
+setModalsCallbacks({ snapshot, editerBatimentPlace });
 // Collapses/expands a section of the Persona/Object modal (cf. .modal-section, per user
 // request). headerEl is the clicked .modal-section-header element; its direct parent is the
 // .modal-section whose "collapsed" class drives the content display (cf. CSS).
@@ -6400,7 +6401,37 @@ document.getElementById('openBatimentEditorBtn').onclick = () => {
 // Un bouton du bandeau rend le focus après un clic : gardé, il s'entourait de la bague orange du
 // clavier à la première touche frappée ensuite (signalé avec les raccourcis H, E, B, P).
 document.querySelectorAll('header button').forEach(b => b.addEventListener('click', () => b.blur()));
-document.getElementById('ctxCreerBatiment').onclick = () => { hideContextMenu(); ouvrirEditeurDeBatiment(); };
+// « Créer un bâtiment » dans une Scène (#454a-4) : l'éditeur s'ouvre, et « Placer dans la scène »
+// y pose le bâtiment, au centre du canevas, comme un modèle importé.
+document.getElementById('ctxCreerBatiment').onclick = () => {
+  const { panel } = _cibleDuMenu();
+  hideContextMenu();
+  const panelId = panel && panel.id;
+  ouvrirEditeurDeBatiment({ destination: { mode: 'placer', valider: (batiment) => {
+    const page = currentPage();
+    const cible = page.objects.find(o => o.id === panelId);
+    if (!cible) return;
+    snapshot();
+    const el = creerElementBatiment({ panel: cible, page, batiment });
+    page.objects.push(el);
+    S.selectedId = el.id; S.selectedRoomId = null;
+    finaliserCreationDansCase3D(el, cible, page);
+    renderAll();
+  } } });
+};
+// « Modifier » un bâtiment PLACÉ (#454a-4) : l'éditeur s'ouvre sur sa copie, et « Appliquer à la
+// scène » la remplace. L'Élément est retrouvé par son id au retour : un Ctrl+Z a pu le remplacer.
+function editerBatimentPlace(o){
+  const id = o.id;
+  ouvrirEditeurDeBatiment({ batiment: o.batiment, destination: { mode: 'appliquer', valider: (batiment) => {
+    const page = currentPage();
+    const el = page.objects.find(x => x.id === id);
+    if (!el || !estUnBatimentPlace(el)) return;
+    snapshot();
+    appliquerBatiment(el, batiment, page);
+    renderAll();
+  } } });
+}
 // Le clic droit sur un Bâtiment ou une Pièce du menu de droite (sidebar.js) : « Modifier » ouvre
 // l'éditeur sur une COPIE de ses murs (batimentDesPieces) ; la Scène n'est pas touchée (#454f).
 let _ctxBatiment = null;
@@ -6412,8 +6443,9 @@ function openBatimentMenu(e, cible){
 document.getElementById('ctxModifierBatiment').onclick = () => {
   hideContextMenu();
   if (!_ctxBatiment) return;
-  const { objets, pieceIds, nom } = _ctxBatiment;
+  const { objets, pieceIds, nom, element } = _ctxBatiment;
   _ctxBatiment = null;
+  if (element) { editerBatimentPlace(element); return; }
   ouvrirEditeurDeBatiment({ batiment: batimentDesPieces(objets, pieceIds, nom, tr) });
 };
 // Ce qui, dans le menu de gauche et le bandeau, mène AILLEURS ferme l'éditeur (comme le Lecteur).

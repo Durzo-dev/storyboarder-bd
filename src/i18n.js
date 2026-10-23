@@ -75,6 +75,7 @@ export const I18N_TEXT = [
   ['#batimentApercuPlein', null, null, 'title', 'Full-screen preview', 'Aperçu en plein écran'],
   ['#batimentApercuIcone', null, null, 'title', 'Show the 3D preview', "Afficher l'aperçu 3D"],
   ['#batimentEnregistrerBtn', 'Save to the library', 'Enregistrer dans la bibliothèque'],
+  ['#batimentPlacerBtn', 'Place in the scene', 'Placer dans la scène'],
   ['#batimentRecadrerBtn', 'Reframe', 'Recadrer'],
   ['#batimentQuitterBtn', 'Quit', 'Quitter'],
   ['#batimentFermerOutilBtn', 'Close', 'Fermer'],

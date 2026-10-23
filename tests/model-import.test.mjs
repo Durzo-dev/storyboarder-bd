@@ -608,6 +608,8 @@ describe('l\'aperçu de la fiche reçoit ce que le rig lit sur un Élément', ()
       + 'rapprochant la caméra (cf. sizePercent), pour ne pas casser le cadrage centré',
     h: 'idem w',
     realHeightFloor: 'idem w — la hauteur réelle ne concerne que le placement dans une Case',
+    batiment: 'un bâtiment placé (#454a-4) n\'a pas d\'aperçu de fiche : sa « fiche » est l\'Éditeur '
+      + 'de bâtiment, qui a son propre aperçu 3D (cf. batiment-editeur-ui.js)',
   };
 
   test('RÉGRESSION : aucun champ lu par le rig ne s\'arrête en chemin', () => {

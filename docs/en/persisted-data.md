@@ -35,6 +35,11 @@ gets one with its dimensions (only its key changes).
 rule as Projects: its fields are never renamed, and an unknown field is kept on reading, so a file
 written by a newer version loses nothing by passing through this one.
 
+**Placed buildings** (#454a-4, October 2026, see [building-research.md](building-research.md)): an
+`objet3d` with `objType: 'batiment'` (an ADDED value) that embeds its copy of the building in the
+ADDED field `batiment` (the shape of `.batiment.json` files). A version that ignores this type draws
+it as an unknown object, losing nothing of the field.
+
 **Project level**: `projectName`, `tomes`, `formats`, `scenes`, `currentTomeIndex`, `currentPageIndex`,
 `poses` (pose library: `[{ id, name, skeleton, joints }]`).
 
@@ -92,7 +97,7 @@ The strings used to recognise the nature of an object are as frozen as the field
 
 ```
 type      : 'perso' | 'objet3d' | 'panel' | 'tracé' | 'terrain' | 'bulle'
-objType   : 'mur' | 'mur_coin' | 'dalle' | 'fenetre_ouverte' | 'porte_ouverte' | 'modele' | …
+objType   : 'mur' | 'mur_coin' | 'dalle' | 'fenetre_ouverte' | 'porte_ouverte' | 'modele' | 'batiment' | …
 tracéType : 'muret' | 'cloture' | 'haie' | 'barriere' | 'route' | 'chemin' | 'terrain'
 wallSide  : 'avant' | 'arriere'
 door/window state : 'gauche' | 'droite' | 'fermee'

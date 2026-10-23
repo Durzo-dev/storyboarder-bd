@@ -378,6 +378,12 @@ between two openings, below the ceiling). `morceauxDuMur` (`src/batiment-geometr
 wall's polygon at its openings: cut in plan, sill and lintel in 3D. Kept for later: garage door,
 shop front, round window, bow window, glass wall, arched top, shutters.
 
+**Placement** (#454a-4a, done): `src/batiment-element.js` (the `objType: 'batiment'` Element, its
+copy, its real height, its 2D frame) and `src/batiment-3d.js` (the 3D builder shared by the editor's
+preview and the Panels' rendering). "Create a building" in a Scene opens the editor with "Place in
+the scene"; "Edit" (right-click on its row) or a double-click on a placed building opens it with
+"Apply to the scene".
+
 Buildings already traced in Scenes (wall Elements, `pieceId`, `batimentNames`, `batimentRotY`)
 remain READ and are **converted** on opening into one-level buildings, in the same place: nothing
 moves on screen.

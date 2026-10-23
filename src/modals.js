@@ -75,7 +75,12 @@ import { I18N_PREV_LABEL } from './i18n.js';
 // stack, which lives in events.js. Injected rather than imported, events.js already imports this
 // module, so the import would close a cycle (cf. docs/en/architecture.md rule #2).
 let _snapshot = () => {};
-export function setModalsCallbacks({ snapshot }) { _snapshot = snapshot; }
+// #454a-4 : la « fiche » d'un bâtiment placé est l'Éditeur de bâtiment (cf. events.js).
+let _editerBatimentPlace = null;
+export function setModalsCallbacks({ snapshot, editerBatimentPlace }) {
+  _snapshot = snapshot;
+  if (editerBatimentPlace) _editerBatimentPlace = editerBatimentPlace;
+}
 
 // ── DOM references (Persona / Object / Room / Building modals) ────────────────────────────────
 const buildingModal       = document.getElementById('buildingModal');
@@ -1184,6 +1189,12 @@ export function ecrireChoixEgares(cible, afficher){
 }
 
 export function openObjectModal(obj, isNew){
+  // #454a-4 : un bâtiment placé n'a pas de fiche d'objet ; tous les chemins qui l'ouvriraient
+  // (double-clic, Entrée, menu) mènent à l'Éditeur de bâtiment, sur sa copie.
+  if (obj && obj.type === 'objet3d' && obj.objType === 'batiment' && obj.batiment && _editerBatimentPlace) {
+    _editerBatimentPlace(obj);
+    return;
+  }
   S.modalTarget = obj;
   S.modalDirty = false;
   S.modalIsNew = !!isNew;
