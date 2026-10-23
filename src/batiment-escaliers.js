@@ -197,29 +197,146 @@ export function supprimerEscalier(b, id){
 
 /** Le rayon et le pas de la recherche d'une place pour un escalier (m). */
 const RAYON_RECHERCHE = 1.5, PAS_RECHERCHE = 0.1;
+/** La distance sous laquelle un côté d'escalier TOUCHE la face d'un mur (m). */
+const CONTACT = 0.03;
 
 /**
- * Essaie une retouche de l'escalier `id` ; si elle ne tient pas là où il est (un mur le traverserait),
- * cherche la place la plus proche où elle tient, à 1,5 m au plus, par pas de 10 cm (demandé, comme
- * pour les ouvertures). Ne modifie rien. Rend `{ changements, deplacement }` ou `{ erreur }`.
+ * Les côtés de l'emprise d'un escalier, dans son repère (s le long de la montée, t vers le côté où il
+ * tourne) : bas, haut, et les deux flancs. Chacun : la droite qui le porte (un point, sa direction) et
+ * la normale vers l'EXTÉRIEUR, en plan.
  */
-export function essayerEscalier(b, id, changements){
+function cotesDeLEmprise(f){
+  const { e } = f;
+  const u = { x: Math.cos(e.angle), z: Math.sin(e.angle) };
+  const n = { x: -u.z * e.sens, z: u.x * e.sens };
+  const loc = f.emprise.map(p => ({ s: (p.x - e.depart.x) * u.x + (p.z - e.depart.z) * u.z, t: (p.x - e.depart.x) * n.x + (p.z - e.depart.z) * n.z }));
+  const s0 = Math.min(...loc.map(q => q.s)), s1 = Math.max(...loc.map(q => q.s));
+  const t0 = Math.min(...loc.map(q => q.t)), t1 = Math.max(...loc.map(q => q.t));
+  return [
+    { cote: 'bas', ext: { x: -u.x, z: -u.z }, d: s0, de: [t0, t1], axe: 's' },
+    { cote: 'haut', ext: u, d: s1, de: [t0, t1], axe: 's' },
+    { cote: 'flanc0', ext: { x: -n.x, z: -n.z }, d: t0, de: [s0, s1], axe: 't' },
+    { cote: 'flanc1', ext: n, d: t1, de: [s0, s1], axe: 't' },
+  ].map(c => ({ ...c, u, n }));
+}
+
+/**
+ * Pour chaque côté de l'escalier, la face de mur parallèle la plus proche devant lui (dans la
+ * direction de sa normale extérieure), et la distance qui les sépare (négative si le côté est déjà
+ * dans le mur). Seules comptent les faces qui le recouvrent sur une partie de sa longueur.
+ */
+function facesEnFace(b, f){
+  const cotes = cotesDeLEmprise(f);
+  const { e } = f;
+  const murs = (b.murs || []).filter(m => m.niveauId === e.niveauId);
+  return cotes.map(c => {
+    let meilleur = null;
+    for (const m of murs) {
+      const L = Math.hypot(m.b.x - m.a.x, m.b.z - m.a.z) || 1;
+      const w = { x: (m.b.x - m.a.x) / L, z: (m.b.z - m.a.z) / L };
+      // Parallèle au côté : le mur est perpendiculaire à sa normale extérieure.
+      if (Math.abs(w.x * c.ext.x + w.z * c.ext.z) > 0.02) continue;
+      // La position du mur (son axe) le long de la normale du côté, depuis le départ de l'escalier.
+      const proj = (p) => (p.x - e.depart.x) * c.ext.x + (p.z - e.depart.z) * c.ext.z;
+      const signe = c.cote === 'bas' || c.cote === 'flanc0' ? -1 : 1;   // d est compté le long de u ou n
+      const face = proj(m.a) - m.epaisseur / 2;                          // la face tournée vers l'escalier
+      const ecart = face - signe * c.d;
+      // Le recouvrement : l'étendue du mur le long du côté.
+      const axe = c.axe === 's' ? c.n : c.u;
+      const ta = (m.a.x - e.depart.x) * axe.x + (m.a.z - e.depart.z) * axe.z, tb = (m.b.x - e.depart.x) * axe.x + (m.b.z - e.depart.z) * axe.z;
+      if (Math.min(ta, tb) > c.de[1] - 0.01 || Math.max(ta, tb) < c.de[0] + 0.01) continue;
+      if (ecart < -m.epaisseur) continue;   // le mur est derrière le côté, pas devant
+      if (!meilleur || Math.abs(ecart) < Math.abs(meilleur.ecart)) meilleur = { ecart, ext: c.ext };
+    }
+    return { cote: c.cote, face: meilleur };
+  });
+}
+
+/** Les côtés de l'escalier qui touchent un mur (#454c, demandé) : 'bas', 'haut', 'flanc0', 'flanc1'. */
+export function contactsDeLEscalier(b, esc){
+  const f = formeDeLEscalier(b, esc);
+  if (!f) return [];
+  return facesEnFace(b, f).filter(x => x.face && Math.abs(x.face.ecart) <= CONTACT).map(x => x.cote);
+}
+
+/**
+ * L'AIMANT (demandé) : rapproche l'escalier des murs à moins de `tol` de ses côtés, jusqu'à toucher
+ * leur face. Au plus un aimant par direction (le long de la montée, et en travers). Rend le nouveau
+ * `depart` (inchangé s'il n'y a rien à moins de `tol`).
+ */
+export function aimanterEscalier(b, esc, tol = 0.15){
+  const f = formeDeLEscalier(b, esc);
+  if (!f) return esc.depart;
+  let ds = null, dt = null;
+  for (const x of facesEnFace(b, f)) {
+    if (!x.face || Math.abs(x.face.ecart) > tol) continue;
+    const v = { x: x.face.ext.x * x.face.ecart, z: x.face.ext.z * x.face.ecart };
+    if (x.cote === 'bas' || x.cote === 'haut') { if (!ds || Math.abs(x.face.ecart) < ds.n) ds = { v, n: Math.abs(x.face.ecart) }; }
+    else if (!dt || Math.abs(x.face.ecart) < dt.n) dt = { v, n: Math.abs(x.face.ecart) };
+  }
+  const d = { x: (ds ? ds.v.x : 0) + (dt ? dt.v.x : 0), z: (ds ? ds.v.z : 0) + (dt ? dt.v.z : 0) };
+  return { x: Math.round((esc.depart.x + d.x) * 1000) / 1000, z: Math.round((esc.depart.z + d.z) * 1000) / 1000 };
+}
+
+/** La pièce du niveau qui contient TOUTE l'emprise de l'escalier, ou null. */
+function pieceDeLEscalier(b, esc, faces){
+  const f = formeDeLEscalier(b, esc);
+  if (!f) return null;
+  // Un rien vers l'intérieur : un escalier posé contre un mur a ses coins sur la face, pas dans le mur.
+  const cx = f.emprise.reduce((t, p) => t + p.x, 0) / f.emprise.length, cz = f.emprise.reduce((t, p) => t + p.z, 0) / f.emprise.length;
+  const pts = f.emprise.map(p => ({ x: p.x + (cx - p.x) * 0.002, z: p.z + (cz - p.z) * 0.002 }));
+  return faces.find(face => pts.every(p => dedansFace(p, face))) || null;
+}
+const dedansFace = (p, face) => dedans(p, face.points) && !(face.trous || []).some(t => dedans(p, t));
+
+/**
+ * Essaie une retouche de l'escalier `id` ; si elle ne tient pas là où il est, cherche la place la plus
+ * proche où elle tient, à 1,5 m au plus, par pas de 10 cm. Deux CONTRAINTES sont gardées (demandé) :
+ * un escalier qui était dans le bâtiment (dans une pièce) y reste, et les murs qu'il touchait, il
+ * essaie de les toucher encore (chaque contact perdu pèse comme un mètre de plus). Chaque place essayée
+ * passe par l'aimant. `faces` : les formes des pièces du niveau (formesDesPieces), fournies par
+ * l'appelant pour éviter une dépendance circulaire. Ne modifie rien. Rend `{ changements, deplacement }`
+ * ou `{ erreur }` ('mur', 'sansEtage', 'hors').
+ */
+export function essayerEscalier(b, id, changements, faces = []){
   const e = (b.escaliers || []).find(x => x.id === id);
   if (!e) return { erreur: 'inconnu' };
+  const dansUnePiece = faces.length && !!pieceDeLEscalier(b, e, faces);
+  const contacts = contactsDeLEscalier(b, e);
   const neuf = normaliserEscalier({ ...e, ...changements });
-  const v = validiteDeLEscalier(b, neuf);
-  if (v.ok) return { changements, deplacement: 0 };
-  if (v.erreur !== 'mur') return v;
+  if (!formeDeLEscalier(b, neuf)) return { erreur: 'sansEtage' };
+  const evaluer = (depart) => {
+    const essai = { ...neuf, depart };
+    if (!validiteDeLEscalier(b, essai).ok) return null;
+    if (dansUnePiece && !pieceDeLEscalier(b, essai, faces)) return null;
+    const perdus = contacts.filter(c => !contactsDeLEscalier(b, essai).includes(c)).length;
+    return { depart, perdus };
+  };
   const n = Math.round(RAYON_RECHERCHE / PAS_RECHERCHE);
-  const essais = [];
+  const essais = [{ dx: 0, dz: 0, d: 0 }];
   for (let i = -n; i <= n; i++) for (let j = -n; j <= n; j++) {
     const d = Math.hypot(i, j) * PAS_RECHERCHE;
     if (d > 0 && d <= RAYON_RECHERCHE + 1e-9) essais.push({ dx: i * PAS_RECHERCHE, dz: j * PAS_RECHERCHE, d });
   }
-  essais.sort((x, y) => x.d - y.d);
+  let meilleur = null;
   for (const t of essais) {
-    const depart = { x: neuf.depart.x + t.dx, z: neuf.depart.z + t.dz };
-    if (validiteDeLEscalier(b, { ...neuf, depart }).ok) return { changements: { ...changements, depart }, deplacement: t.d };
+    // Sans contrainte de contact, la première place valide (la plus proche) suffit.
+    if (meilleur && !contacts.length) break;
+    if (meilleur && t.d >= meilleur.score) break;
+    const brut = { x: neuf.depart.x + t.dx, z: neuf.depart.z + t.dz };
+    // Sur place, la position telle quelle d'abord (une retouche qui tient ne bouge rien) ; ailleurs,
+    // la position aimantée d'abord (on recolle l'escalier aux murs).
+    const aimante = aimanterEscalier(b, { ...neuf, depart: brut });
+    for (const depart of (t.d === 0 ? [brut, aimante] : [aimante, brut])) {
+      const r = evaluer(depart);
+      if (!r) continue;
+      const deplacement = Math.hypot(depart.x - e.depart.x, depart.z - e.depart.z);
+      const score = deplacement + r.perdus;
+      if (!meilleur || score < meilleur.score - 1e-9) meilleur = { depart, deplacement, score };
+      break;
+    }
   }
-  return v;
+  if (!meilleur) return { erreur: dansUnePiece ? 'hors' : 'mur' };
+  const memePlace = Math.hypot(meilleur.depart.x - neuf.depart.x, meilleur.depart.z - neuf.depart.z) < 1e-9;
+  return memePlace ? { changements, deplacement: 0 } : { changements: { ...changements, depart: meilleur.depart }, deplacement: meilleur.deplacement };
 }

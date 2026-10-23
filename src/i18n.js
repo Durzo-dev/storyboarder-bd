@@ -62,7 +62,7 @@ export const I18N_TEXT = [
   ['#batimentOutilEscalier', null, null, 'title', 'Stairs (S)', 'Escaliers (S)'],
   ['#batimentSectionEscalier', 'Staircase to place', 'Escalier à poser'],
   ['#batimentSectionAideEscalier', 'Controls', 'Commandes'],
-  ['#batimentAideEscalier', 'Click at the foot of the staircase and drag the way it goes up (by 15°); a simple click places it in the last direction.\nIt links the current level to the one above, and pierces its floor. In red: no level above, or it would cross a wall.\nEsc: leave the tool.', "Cliquez au pied de l'escalier et tirez dans la direction où il monte (par 15°) ; un simple clic le pose dans la dernière direction.\nIl relie le niveau courant à celui du dessus, et perce son plancher. En rouge : pas d'étage au-dessus, ou il traverserait un mur.\nÉchap : quitter l'outil."],
+  ['#batimentAideEscalier', 'Click at the foot of the staircase and drag the way it goes up (by 15°); a simple click places it in the last direction.\nIt snaps to nearby walls (Alt: free). It links the current level to the one above, and pierces its floor. In red: no level above, or it would cross a wall.\nEsc: leave the tool.', "Cliquez au pied de l'escalier et tirez dans la direction où il monte (par 15°) ; un simple clic le pose dans la dernière direction.\nIl s'aimante aux murs proches (Alt : libre). Il relie le niveau courant à celui du dessus, et perce son plancher. En rouge : pas d'étage au-dessus, ou il traverserait un mur.\nÉchap : quitter l'outil."],
   ['#batimentEscalierTourner', 'Turn by 90° (R)', 'Tourner de 90° (R)'],
   ['#batimentEscalierSupprimer', 'Delete the staircase', "Supprimer l'escalier"],
   ['#batimentSectionOuverture', 'Opening to place', 'Ouverture à poser'],

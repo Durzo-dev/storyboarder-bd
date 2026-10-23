@@ -38,7 +38,7 @@ import {
 import { actualiserPieces, formesDesPieces, pieceSous } from './batiment-pieces.js';
 import {
   formeDeLEscalier, tremieDeLEscalier, validiteDeLEscalier, ajouterEscalier, modifierEscalier, supprimerEscalier,
-  escalierSous, decoupage, hauteurAFranchir, DEFAUTS_ESCALIER, essayerEscalier,
+  escalierSous, decoupage, hauteurAFranchir, DEFAUTS_ESCALIER, essayerEscalier, aimanterEscalier,
 } from './batiment-escaliers.js';
 import {
   niveauxTries, niveauDessous, niveauDessus, ajouterEtage, dupliquerNiveau, supprimerNiveau, modifierNiveau,
@@ -424,6 +424,7 @@ function escalierSelectionne(){
 
 /** Le message d'un refus d'escalier. */
 function refusEscalier(erreur){
+  if (erreur === 'hors') return tr('It would leave the building: no place nearby in its room fits.', 'Il sortirait du bâtiment : aucune place proche ne convient dans sa pièce.');
   return erreur === 'sansEtage' ? tr('A staircase needs a level above: add a floor first.', 'Un escalier a besoin d\'un niveau au-dessus : ajoutez d\'abord un étage.')
     : tr('This staircase would cross a wall.', 'Cet escalier traverserait un mur.');
 }
@@ -437,7 +438,7 @@ function noteDeDeplacement(d, quoi){
 
 /** Cette retouche de l'escalier : `{ erreur }` (raison lisible) ou `{ changements, deplacement, note }`. */
 function essaiEscalier(id, changements){
-  const r = essayerEscalier(E.batiment, id, changements);
+  const r = essayerEscalier(E.batiment, id, changements, [...formesDesPieces(E.batiment, E.niveauId).values()]);
   return r.erreur ? { erreur: refusEscalier(r.erreur) } : { ...r, note: noteDeDeplacement(r.deplacement, tr('the staircase', 'l\'escalier')) };
 }
 
@@ -1012,6 +1013,8 @@ function survoler(e){
       } else if (E.poseEscalier.angle != null) angle = E.poseEscalier.angle;
     }
     const fantome = { ...E.reglagesEscalier, niveauId: E.niveauId, depart, angle };
+    // L'aimant (demandé) : un côté à moins de 15 px d'une face de mur s'y colle. Alt : libre.
+    if (!e.altKey) fantome.depart = aimanterEscalier(E.batiment, fantome, 15 / E.vue.echelle);
     fantome.ok = !validiteDeLEscalier(E.batiment, fantome).erreur;
     E.fantomeEscalier = fantome;
   } else if (E.outil === 'ouverture') {
@@ -1027,7 +1030,9 @@ function survoler(e){
     if (E.glisserEscalier) {
       // Le déplacement suit la souris ; une position où il traverserait un mur est sautée.
       const g = E.glisserEscalier;
-      const depart = { x: g.depart.x + p.x - g.p.x, z: g.depart.z + p.z - g.p.z };
+      let depart = { x: g.depart.x + p.x - g.p.x, z: g.depart.z + p.z - g.p.z };
+      const x = E.batiment.escaliers.find(q => q.id === g.id);
+      if (x && !e.altKey) depart = aimanterEscalier(E.batiment, { ...x, depart }, 15 / E.vue.echelle);
       if (!modifierEscalier(E.batiment, g.id, { depart }).erreur) { g.bouge = true; apresModification(); }
       return;
     }
@@ -1165,7 +1170,9 @@ function cablerPlan(){
       if (e && e.type === 'pointerup') {
         const angle = pose.angle != null ? pose.angle : E.reglagesEscalier.angle;
         E.reglagesEscalier.angle = angle;   // le prochain simple clic reprend cette direction
-        const reglages = { ...E.reglagesEscalier, depart: pose.depart, angle };
+        // La position aimantée du fantôme, s'il est toujours là ; sinon le pied tel que posé.
+        const depart = E.fantomeEscalier && E.fantomeEscalier.angle === angle ? E.fantomeEscalier.depart : pose.depart;
+        const reglages = { ...E.reglagesEscalier, depart, angle };
         const essai = ajouterEscalier(JSON.parse(JSON.stringify(E.batiment)), E.niveauId, reglages);
         if (essai.erreur) statut(refusEscalier(essai.erreur));
         else { statut(''); modifier(b => ajouterEscalier(b, E.niveauId, reglages)); }

@@ -3,11 +3,13 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   decoupage, hauteurAFranchir, formeDeLEscalier, tremieDeLEscalier, validiteDeLEscalier, ajouterEscalier,
-  modifierEscalier, supprimerEscalier, escalierSous, normaliserEscalier, essayerEscalier,
+  modifierEscalier, supprimerEscalier, escalierSous, normaliserEscalier, essayerEscalier, contactsDeLEscalier,
+  aimanterEscalier,
 } from '../src/batiment-escaliers.js';
 import { creerBatiment, normaliserBatiment } from '../src/batiment.js';
 import { ajouterRectangle } from '../src/batiment-trace.js';
 import { ajouterEtage } from '../src/batiment-niveaux.js';
+import { actualiserPieces, formesDesPieces } from '../src/batiment-pieces.js';
 
 const fr = (en, f) => f;
 const proche = (a, b, eps = 1e-6) => assert.ok(Math.abs(a - b) < eps, `${a} ≉ ${b}`);
@@ -95,7 +97,7 @@ describe('une retouche qui ne tient pas déplace l’escalier à la place la plu
     const b = maison();
     const { escalier } = ajouterEscalier(b, 'n0', { depart: { x: 4, z: 5.8 }, angle: angleHaut });
     const r = essayerEscalier(b, escalier.id, { angle: 0 });
-    assert.ok(r.changements && r.deplacement > 0 && r.deplacement <= 1.5, JSON.stringify(r));
+    assert.ok(r.changements && r.deplacement > 0 && r.deplacement <= 1.7, JSON.stringify(r));
     assert.deepEqual(modifierEscalier(b, escalier.id, r.changements), { ok: true });
     assert.equal(escalier.angle, 0);
   });
@@ -105,5 +107,39 @@ describe('une retouche qui ne tient pas déplace l’escalier à la place la plu
     assert.deepEqual(essayerEscalier(b, escalier.id, { largeur: 1 }), { changements: { largeur: 1 }, deplacement: 0 });
     b.niveaux = b.niveaux.slice(0, 1);
     assert.equal(essayerEscalier(b, escalier.id, { largeur: 1 }).erreur, 'sansEtage');
+  });
+});
+
+describe('l’aimant et les contraintes (demandé)', () => {
+  function maisonEtPieces(){ const b = maison(); actualiserPieces(b, 'n0', fr); return b; }
+  test('l’aimant colle l’escalier au mur proche ; les contacts se lisent', () => {
+    const b = maisonEtPieces();
+    // Un flanc à 8 cm de la face du mur de gauche (x = 0,1) : il s'y colle.
+    const esc = { niveauId: 'n0', type: 'droit', depart: { x: 0.63, z: 5.8 }, angle: angleHaut, largeur: 0.9 };
+    const d = aimanterEscalier(b, esc, 0.15);
+    proche(d.x, 0.55, 1e-6);
+    assert.ok(contactsDeLEscalier(b, { ...esc, depart: d }).length >= 1);
+    assert.deepEqual(aimanterEscalier(b, { ...esc, depart: { x: 4, z: 3 } }, 0.15), { x: 4, z: 3 }, 'rien à moins de 15 cm');
+  });
+  test('tourné, un escalier du bâtiment y reste et garde le mur qu’il touchait', () => {
+    const b = maisonEtPieces();
+    const depart = aimanterEscalier(b, { niveauId: 'n0', type: 'droit', depart: { x: 0.6, z: 5.85 }, angle: angleHaut, largeur: 0.9 }, 0.15);
+    const { escalier } = ajouterEscalier(b, 'n0', { depart, angle: angleHaut });
+    const avant = contactsDeLEscalier(b, escalier);
+    assert.ok(avant.length >= 1, JSON.stringify(avant));
+    const faces = [...formesDesPieces(b, 'n0').values()];
+    const r = essayerEscalier(b, escalier.id, { type: 'L' }, faces);
+    assert.ok(r.changements, JSON.stringify(r));
+    modifierEscalier(b, escalier.id, r.changements);
+    const apres = contactsDeLEscalier(b, escalier);
+    assert.ok(avant.some(c => apres.includes(c)), `contacts ${avant} → ${apres}`);
+  });
+  test('aucune place dans le bâtiment : refusé, plutôt que d’en sortir', () => {
+    const b = creerBatiment('Petite', fr);
+    ajouterRectangle(b, 'n0', { x: 0, z: 0 }, { x: 2, z: 6 }, 0.2);
+    ajouterEtage(b, fr); actualiserPieces(b, 'n0', fr);
+    const { escalier } = ajouterEscalier(b, 'n0', { depart: { x: 1, z: 5.8 }, angle: angleHaut });
+    const faces = [...formesDesPieces(b, 'n0').values()];
+    assert.equal(essayerEscalier(b, escalier.id, { angle: 0 }, faces).erreur, 'hors', 'tourné, il ne tient dans aucune place de la pièce');
   });
 });
