@@ -38,7 +38,7 @@ import {
 import { actualiserPieces, formesDesPieces, pieceSous, supprimerPiece } from './batiment-pieces.js';
 import {
   formeDeLEscalier, tremieDeLEscalier, validiteDeLEscalier, ajouterEscalier, modifierEscalier, supprimerEscalier,
-  escalierSous, decoupage, hauteurAFranchir, DEFAUTS_ESCALIER, TYPES_D_ESCALIER, essayerEscalier, aimanterEscalier, escaliersBloques,
+  escalierSous, hauteurAFranchir, DEFAUTS_ESCALIER, TYPES_D_ESCALIER, essayerEscalier, aimanterEscalier, escaliersBloques,
 } from './batiment-escaliers.js';
 import {
   niveauxTries, niveauDessous, niveauDessus, ajouterEtage, dupliquerNiveau, supprimerNiveau, modifierNiveau,
@@ -241,9 +241,6 @@ const surface = (v) => `${(Math.round(v * 10) / 10).toLocaleString(tr('en', 'fr'
 function remplirPanneau(){
   const b = E.batiment;
   majBoutonsDeSortie();
-  $('batimentFichier').textContent = E.fichier
-    ? tr(`In the library: ${nomAfficheDuFichier(E.fichier)}`, `Dans la bibliothèque : ${nomAfficheDuFichier(E.fichier)}`)
-    : tr('Not yet in the library', 'Pas encore dans la bibliothèque');
   remplirNiveaux();
   construireColonneDesNiveaux();
   // Les pièces du niveau, avec leur surface ; un clic en choisit une (outil Sélection).
@@ -311,6 +308,17 @@ function choisirNiveau(id){
   if (E.apercu) E.apercu.reconstruire(E.batiment);
 }
 /** Page haut / Page bas, et les flèches de la colonne. */
+/** Ajoute un étage vide en haut, y passe, et prend l'outil Mur (demandé : il est vide). Raccourci N. */
+function ajouterUnEtage(){
+  let n = null; modifier(b => { n = ajouterEtage(b, tr); });
+  if (n) { choisirNiveau(n.id); choisirOutil('mur'); }
+}
+/** Copie le niveau courant juste au-dessus, et y passe. Raccourci D. */
+function dupliquerLEtage(){
+  let n = null; const src = E.niveauId; modifier(b => { n = dupliquerNiveau(b, src, tr); });
+  if (n) choisirNiveau(n.id);
+}
+
 function changerDeNiveau(sens){
   const v = sens > 0 ? niveauDessus(E.batiment, E.niveauId) : niveauDessous(E.batiment, E.niveauId);
   if (v) choisirNiveau(v.id);
@@ -343,9 +351,9 @@ function construireColonneDesNiveaux(){
     else { const vide = document.createElement('span'); vide.className = 'batiment-niveau-vide'; places.push(vide); }
   }
   col.replaceChildren(
-    bouton('▲', tr('Level above (Page Up)', 'Niveau du dessus (Page haut)'), 'batiment-niveau-fleche', () => changerDeNiveau(1), false, !niveauDessus(E.batiment, E.niveauId)),
+    bouton('▲', tr('Level above (↑ or Page Up)', 'Niveau du dessus (↑ ou Page haut)'), 'batiment-niveau-fleche', () => changerDeNiveau(1), false, !niveauDessus(E.batiment, E.niveauId)),
     ...places,
-    bouton('▼', tr('Level below (Page Down)', 'Niveau du dessous (Page bas)'), 'batiment-niveau-fleche', () => changerDeNiveau(-1), false, !niveauDessous(E.batiment, E.niveauId)),
+    bouton('▼', tr('Level below (↓ or Page Down)', 'Niveau du dessous (↓ ou Page bas)'), 'batiment-niveau-fleche', () => changerDeNiveau(-1), false, !niveauDessous(E.batiment, E.niveauId)),
   );
 }
 
@@ -433,16 +441,17 @@ function remplirNiveaux(){
     });
     return d;
   });
+  // L'un SOUS l'autre, « Ajouter » en haut (demandé).
   const actions = document.createElement('div');
-  actions.className = 'batiment-boutons';
+  actions.className = 'batiment-boutons-pile';
   const ajouter = document.createElement('button');
   ajouter.type = 'button'; ajouter.className = 'nav-btn'; ajouter.textContent = tr('Add a floor', 'Ajouter un étage');
-  // Un nouvel étage est vide : l'outil Mur est pris (demandé).
-  ajouter.onclick = () => { let n = null; modifier(b => { n = ajouterEtage(b, tr); }); if (n) { choisirNiveau(n.id); choisirOutil('mur'); } };
+  ajouter.title = tr('Add an empty level on top (N)', 'Ajouter un niveau vide en haut (N)');
+  ajouter.onclick = ajouterUnEtage;
   const dupliquer = document.createElement('button');
   dupliquer.type = 'button'; dupliquer.className = 'nav-btn'; dupliquer.textContent = tr('Duplicate the floor', 'Dupliquer l\'étage');
-  dupliquer.title = tr('Copy the current level (walls, openings, rooms) just above it', 'Copier le niveau courant (murs, ouvertures, pièces) juste au-dessus');
-  dupliquer.onclick = () => { let n = null; const src = E.niveauId; modifier(b => { n = dupliquerNiveau(b, src, tr); }); if (n) choisirNiveau(n.id); };
+  dupliquer.title = tr('Copy the current level (walls, openings, rooms) just above it (D)', 'Copier le niveau courant (murs, ouvertures, pièces) juste au-dessus (D)');
+  dupliquer.onclick = dupliquerLEtage;
   actions.append(ajouter, dupliquer);
   zone.replaceChildren(...lignes, actions);
 }
@@ -609,17 +618,28 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
   const ci = document.createElement('input'); ci.type = 'checkbox'; ci.checked = !!v.contremarches;
   ci.onchange = () => changer({ contremarches: ci.checked });
   c.append(ci, document.createTextNode(tr('Risers (solid steps)', 'Contremarches (marches pleines)')));
-  const H = hauteurAFranchir(E.batiment, v.niveauId || E.niveauId);
-  const info = document.createElement('p'); info.className = 'batiment-info';
-  info.textContent = H > 0
-    ? (() => { const d = decoupage(H); return tr(`${d.nombre} steps of ${Math.round(d.hauteur * 1000) / 10} cm, ${Math.round(d.giron * 100)} cm deep.`, `${d.nombre} marches de ${(Math.round(d.hauteur * 1000) / 10).toLocaleString('fr')} cm, ${Math.round(d.giron * 100)} cm de profondeur.`); })()
-    : tr('No level above: add a floor first.', 'Pas de niveau au-dessus : ajoutez d\'abord un étage.');
+  // Deux sous-sections (demandé) : Type (la forme et le côté où il tourne), Marches (la rampe et
+  // les contremarches) ; la largeur entre les deux. Le détail des marches n'est plus affiché.
+  const sousSection = (titre, ...contenu) => {
+    const d = document.createElement('div'); d.className = 'batiment-sous-section';
+    const h = document.createElement('h3'); h.textContent = titre;
+    d.append(h, ...contenu);
+    return d;
+  };
+  const type = [choix([['droit', tr('Straight', 'Droit')], ['L', tr('L-shaped', 'En L')], ['U', tr('U-shaped', 'En U')]], v.type, 'type')];
+  if (v.type !== 'droit') type.push(choix([[1, tr('Turns left', 'Tourne à gauche')], [-1, tr('Turns right', 'Tourne à droite')]], v.sens, 'sens'));
   const elements = [
-    choix([['droit', tr('Straight', 'Droit')], ['L', tr('L-shaped', 'En L')], ['U', tr('U-shaped', 'En U')]], v.type, 'type'),
+    sousSection(tr('Type', 'Type'), ...type),
     l,
+    sousSection(tr('Steps', 'Marches'),
+      choix([['aucune', tr('No rail', 'Sans rampe')], ['gauche', tr('Left', 'Gauche')], ['droite', tr('Right', 'Droite')], ['deux', tr('Both', 'Les deux')]], v.rampe, 'rampe'), c),
   ];
-  if (v.type !== 'droit') elements.push(choix([[1, tr('Turns left', 'Tourne à gauche')], [-1, tr('Turns right', 'Tourne à droite')]], v.sens, 'sens'));
-  elements.push(c, choix([['aucune', tr('No rail', 'Sans rampe')], ['gauche', tr('Left', 'Gauche')], ['droite', tr('Right', 'Droite')], ['deux', tr('Both', 'Les deux')]], v.rampe, 'rampe'), info);
+  // Seul reste l'avertissement utile : sans niveau au-dessus, l'escalier ne peut pas se poser.
+  if (!(hauteurAFranchir(E.batiment, v.niveauId || E.niveauId) > 0)) {
+    const info = document.createElement('p'); info.className = 'batiment-info';
+    info.textContent = tr('No level above: add a floor first.', 'Pas de niveau au-dessus : ajoutez d\'abord un étage.');
+    elements.push(info);
+  }
   conteneur.replaceChildren(...elements);
 }
 
@@ -1656,8 +1676,10 @@ function clavier(e){
     const x = escalierSelectionne(), t = essaiEscalier(x.id, { angle: x.angle + Math.PI / 2 });
     if (!t.erreur) retoucherEscalier(x.id, t.changements);
   }
-  else if (e.key === 'PageUp') changerDeNiveau(1);
-  else if (e.key === 'PageDown') changerDeNiveau(-1);
+  else if (e.key === 'PageUp' || e.key === 'ArrowUp') changerDeNiveau(1);
+  else if (e.key === 'PageDown' || e.key === 'ArrowDown') changerDeNiveau(-1);
+  else if (touche === 'n') ajouterUnEtage();
+  else if (touche === 'd') dupliquerLEtage();
   else if (touche === 'v') basculerOutil('selection');
   else if (e.key === 'Enter') finirLaChaine();
   else if ((e.key === 'Delete' || e.key === 'Backspace') && escalierSelectionne()) {

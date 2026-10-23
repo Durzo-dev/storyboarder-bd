@@ -2676,7 +2676,7 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-editeur-panneau h2 { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; color: var(--ink-soft); margin: 0 0 8px;
                                text-transform: uppercase; letter-spacing: .05em; }
 .batiment-editeur-panneau .modal-input.batiment-nom { margin-top: 0; }
-.batiment-fichier, .batiment-statut { margin: 4px 0 0; font-size: 11.5px; color: var(--ink-soft); min-height: 1.2em; }
+.batiment-statut { margin: 4px 0 0; font-size: 11.5px; color: var(--ink-soft); min-height: 1.2em; }
 .batiment-statut { margin: 0 0 8px; }
 .batiment-liste { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
 .batiment-liste .batiment-ligne { display: flex; justify-content: space-between; gap: 8px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; }
@@ -2749,3 +2749,10 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 /* Les boutons du bas du menu de l'éditeur : le même écart entre chacun (demandé). */
 .batiment-editeur-panneau > .full-btn, .batiment-editeur-panneau > .nav-btn { margin: 0 0 8px; width: 100%; }
 #batimentPieceMenu{ z-index:1100; }
+/* Éditeur de bâtiment : « Ajouter un étage » au-dessus de « Dupliquer l'étage » (demandé). */
+.batiment-boutons-pile{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+.batiment-boutons-pile > button{ width:100%; }
+/* Les sous-sections d'un formulaire (Type, Marches d'un escalier) : un creux, un titre un cran sous
+   celui de la section, comme les sous-sections de l'Éditeur de modèle. */
+.batiment-sous-section{ background:var(--creux); border-radius:5px; padding:7px 9px 9px; margin:0 0 10px; display:flex; flex-direction:column; gap:8px; }
+.batiment-sous-section > h3{ margin:0; font-size:13px; font-weight:600; color:var(--ink-mid); }
