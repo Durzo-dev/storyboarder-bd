@@ -289,7 +289,7 @@ export const HELP_MANUAL_EN = [
     'The tools sit at the bottom centre of the top view: Wall (M) and Selection (V). The right-hand menu follows the tool; clicking the active tool again, or Close, leaves it and brings back the editor\'s base menu (Save to the library, Reframe, Quit).',
     'Wall tool (M): click to start, then one click per corner; the chain stops on an existing corner, or with a double-click, Enter, a right-click or Esc. Ending on the middle of a wall makes a T junction. Corners join cleanly, at any angle.',
     'The angle snaps by 15°, the length to the centimetre, existing corners and alignments too (dashed guides); hold Alt to place freely. A wall that would cross another shows in red and is refused.',
-    'Selection tool (V): click a wall to pick it (its length and thickness show in the menu, Del deletes it), drag a corner to move it along with every wall attached to it. Ctrl+Z and Ctrl+Y undo and redo inside the editor.',
+    'Selection tool (V): click a wall to pick it (Del deletes it; walls have a fixed thickness), drag a corner to move it along with every wall attached to it. Ctrl+Z and Ctrl+Y undo and redo inside the editor.',
     'Rooms: every closed contour of walls is a room, named Room 1, Room 2… with its area. Drag with the Wall tool to draw a rectangular room in one go. Click a room in the Rooms list to select it (the base menu stays); right-click it to rename or delete it. It keeps its name when its walls move.',
   ]},
   { id: 'batiments_ouvertures', title: 'Doors and windows', paragraphs: [
@@ -547,7 +547,7 @@ export const HELP_MANUAL_FR = [
     "Les outils sont en bas au centre de la vue de dessus : Mur (M) et Sélection (V). Le menu de droite suit l'outil ; un nouveau clic sur l'outil actif, ou « Fermer », le quitte et ramène le menu de base de l'éditeur (Enregistrer dans la bibliothèque, Recadrer, Quitter).",
     "Outil Mur (M) : un clic pour commencer, puis un clic par angle ; la chaîne s'arrête sur un angle existant, ou par un double-clic, Entrée, un clic droit ou Échap. Finir au milieu d'un mur fait une jonction en T. Les angles se raccordent proprement, quel que soit l'angle.",
     "L'angle s'aimante par 15°, la longueur au centimètre, les angles existants et les alignements aussi (guides en pointillés) ; Alt maintenu pour poser librement. Un mur qui en traverserait un autre s'affiche en rouge et est refusé.",
-    "Outil Sélection (V) : un clic sur un mur le choisit (sa longueur et son épaisseur s'affichent dans le menu, Suppr le supprime), tirer un angle le déplace avec tous les murs qui y sont attachés. Ctrl+Z et Ctrl+Y annulent et rétablissent dans l'éditeur.",
+    "Outil Sélection (V) : un clic sur un mur le choisit (Suppr le supprime ; les murs ont une épaisseur fixe), tirer un angle le déplace avec tous les murs qui y sont attachés. Ctrl+Z et Ctrl+Y annulent et rétablissent dans l'éditeur.",
     "Les pièces : chaque contour de murs fermé est une pièce, nommée Pièce 1, Pièce 2… avec sa surface. Glisser avec l'outil Mur trace une pièce rectangulaire d'un coup. Un clic sur une pièce de la liste Pièces la sélectionne (le menu de base reste) ; un clic droit la renomme ou la supprime. Elle garde son nom quand ses murs bougent.",
   ]},
   { id: 'batiments_ouvertures', title: 'Portes et fenêtres', paragraphs: [

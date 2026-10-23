@@ -18,7 +18,7 @@
  * dessine à la demande et libère tout à la fermeture.
  */
 import { tr } from './state.js';
-import { creerBatiment, nomAfficheDuFichier } from './batiment.js';
+import { creerBatiment, nomAfficheDuFichier, DEFAUTS_BATIMENT } from './batiment.js';
 import { actionDEnregistrement } from './batiment-bibliotheque.js';
 import { signatureDuBatiment, signatureDeStructure } from './batiment-element.js';
 import { enregistrerBatiment, listerBatiments, lireBatimentDuDisque } from './batiment-store.js';
@@ -33,7 +33,7 @@ import {
 } from './batiment-ouvertures.js';
 import {
   aimanter, ajouterMur, ajouterRectangle, croiseUnMur, deplacerSommet, supprimerMur, sommetSous, murSous,
-  sommetsDuNiveau, longueurDuMur,
+  sommetsDuNiveau,
 } from './batiment-trace.js';
 import { actualiserPieces, formesDesPieces, pieceSous, supprimerPiece } from './batiment-pieces.js';
 import {
@@ -115,7 +115,8 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null, desti
   $('batimentApercuCoupe').classList.remove('actif');
   $('batimentNom').value = b.nom;
   statut('');
-  choisirOutil(null);
+  // Un bâtiment vide s'ouvre sur l'outil Mur (demandé) : il n'y a rien d'autre à faire.
+  choisirOutil(b.murs.length ? null : 'mur');
   recadrer();
   appliquerAffichage();
   E.apercu = ouvrirApercu($('batimentApercu'), b);
@@ -258,15 +259,13 @@ function remplirPanneau(){
     return l;
   }) : [vide(tr('No room yet: close a contour of walls.', 'Aucune pièce : fermez un contour de murs.'))]));
   const m = murSelectionne(), piece = pieceSelectionnee(), ouv = ouvertureSelectionnee(), esc = escalierSelectionne();
-  $('batimentSelectionMur').hidden = !m;
   $('batimentSelectionOuverture').hidden = !ouv;
   $('batimentSelectionEscalier').hidden = !esc;
-  $('batimentSelectionVide').hidden = !!(m || ouv || esc);
-  // Une pièce choisie n'a pas de menu à elle (demandé) : le menu de base revient, la pièce reste
-  // surlignée et l'outil Sélection reste pris.
-  $('batimentPanneau').dataset.outil = (E.outil === 'selection' && piece) ? 'aucun' : (E.outil || 'aucun');
-  $('batimentSelectionTitre').textContent = m ? tr('Selected wall', 'Mur sélectionné')
-    : ouv ? tr('Selected opening', 'Ouverture sélectionnée') : esc ? tr('Selected staircase', 'Escalier sélectionné') : tr('Selection', 'Sélection');
+  $('batimentSelectionVide').hidden = !!(ouv || esc);
+  // Une pièce ou un mur choisi n'a pas de menu à lui (demandé) : le menu de base revient, l'élément
+  // reste surligné et l'outil Sélection reste pris (Suppr supprime le mur).
+  $('batimentPanneau').dataset.outil = (E.outil === 'selection' && (piece || m)) ? 'aucun' : (E.outil || 'aucun');
+  $('batimentSelectionTitre').textContent = ouv ? tr('Selected opening', 'Ouverture sélectionnée') : esc ? tr('Selected staircase', 'Escalier sélectionné') : tr('Selection', 'Sélection');
   if (E.outil === 'escalier') formulaireEscalier($('batimentReglagesEscalier'), E.reglagesEscalier, (c) => {
     E.reglagesEscalier = { ...E.reglagesEscalier, ...c }; remplirPanneau(); dessinerPlan();
   });
@@ -287,10 +286,6 @@ function remplirPanneau(){
     const r = essayerOuverture(E.batiment, ouv.id, c);
     return r.erreur ? { erreur: refusOuverture(r.erreur) } : { ...r, note: noteDeDeplacement(r.deplacement, tr('the opening', 'l\'ouverture')) };
   });
-  if (m) {
-    $('batimentMurLongueur').textContent = tr(`Length: ${metres(longueurDuMur(m))}`, `Longueur : ${metres(longueurDuMur(m))}`);
-    if (document.activeElement !== $('batimentMurEpaisseur')) $('batimentMurEpaisseur').value = Math.round(m.epaisseur * 100);
-  }
 }
 
 // ── Les niveaux (#454b) ────────────────────────────────────────────────────────────────────────
@@ -441,7 +436,8 @@ function remplirNiveaux(){
   actions.className = 'batiment-boutons';
   const ajouter = document.createElement('button');
   ajouter.type = 'button'; ajouter.className = 'nav-btn'; ajouter.textContent = tr('Add a floor', 'Ajouter un étage');
-  ajouter.onclick = () => { let n = null; modifier(b => { n = ajouterEtage(b, tr); }); if (n) choisirNiveau(n.id); };
+  // Un nouvel étage est vide : l'outil Mur est pris (demandé).
+  ajouter.onclick = () => { let n = null; modifier(b => { n = ajouterEtage(b, tr); }); if (n) { choisirNiveau(n.id); choisirOutil('mur'); } };
   const dupliquer = document.createElement('button');
   dupliquer.type = 'button'; dupliquer.className = 'nav-btn'; dupliquer.textContent = tr('Duplicate the floor', 'Dupliquer l\'étage');
   dupliquer.title = tr('Copy the current level (walls, openings, rooms) just above it', 'Copier le niveau courant (murs, ouvertures, pièces) juste au-dessus');
@@ -729,11 +725,8 @@ function choisirOutil(outil){
 /** Un clic sur un outil : le prend, ou le quitte s'il était déjà pris. */
 function basculerOutil(outil){ if (E) choisirOutil(E.outil === outil ? null : outil); }
 
-/** L'épaisseur des nouveaux murs, en mètres (le champ est en centimètres). */
-function epaisseurDesNouveaux(){
-  const v = Number($('batimentEpaisseur').value);
-  return Number.isFinite(v) ? Math.min(1, Math.max(0.05, v / 100)) : 0.2;
-}
+/** L'épaisseur des nouveaux murs, en mètres : fixe (demandé, elle ne se règle plus). */
+function epaisseurDesNouveaux(){ return DEFAUTS_BATIMENT.epaisseur; }
 
 /** Un point d'annulation, puis la modification, puis tout se redessine. */
 function modifier(faire){
@@ -1653,13 +1646,6 @@ export function initEditeurDeBatiment(){
   $('batimentOuvertureSupprimer').onclick = () => { const o = ouvertureSelectionnee(); if (o) modifier(b => supprimerOuverture(b, o.id)); };
   $('batimentOuvertureSens').onclick = () => { const o = ouvertureSelectionnee(); if (o) retoucherOuverture(o.id, { sens: o.sens === -1 ? 1 : -1 }); };
   $('batimentOuvertureCharniere').onclick = () => { const o = ouvertureSelectionnee(); if (o) retoucherOuverture(o.id, { charniere: o.charniere === 'fin' ? 'debut' : 'fin' }); };
-  $('batimentMurSupprimer').onclick = () => { const m = murSelectionne(); if (m) modifier(b => supprimerMur(b, m.id)); };
-  $('batimentMurEpaisseur').addEventListener('change', (e) => {
-    const m = murSelectionne(); const v = Number(e.target.value);
-    if (!m || !Number.isFinite(v)) return;
-    modifier(() => { m.epaisseur = Math.min(1, Math.max(0.05, v / 100)); });
-  });
-  $('batimentEpaisseur').addEventListener('change', () => { $('batimentEpaisseur').value = Math.round(epaisseurDesNouveaux() * 100); dessinerPlan(); });
   cablerPlan();
   cablerFenetreApercu();
 }

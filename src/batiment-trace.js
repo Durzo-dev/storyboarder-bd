@@ -263,9 +263,6 @@ export function deplacerSommet(batiment, niveauId, ancien, nouveau){
   return deplaces;
 }
 
-/** La longueur d'un mur, en mètres. */
-export function longueurDuMur(m){ return dist(m.a, m.b); }
-
 /**
  * Les parties du segment [u, v] que NE COUVRE aucun mur existant posé sur la même droite : des
  * intervalles de fraction [t0, t1] de u à v. Un côté de pièce accolé à un mur existant n'en double

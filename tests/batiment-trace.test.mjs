@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { polygonesDesMurs } from '../src/batiment-geometrie.js';
 import {
   aimanter, ajouterMur, couperMur, croiseUnMur, deplacerSommet, supprimerMur, sommetSous, murSous,
-  sommetsDuNiveau, longueurDuMur, projeter,
+  sommetsDuNiveau, projeter,
 } from '../src/batiment-trace.js';
 import { creerBatiment } from '../src/batiment.js';
 
@@ -175,7 +175,6 @@ describe('construire', () => {
     assert.deepEqual(sommetSous(b, 'n0', { x: 3.95, z: 0 }, 0.1), { x: 4, z: 0 });
     assert.equal(murSous(b, 'n0', { x: 2, z: 0.15 }, 0.1).mur.id, b.murs[0].id);
     assert.equal(murSous(b, 'n0', { x: 2, z: 0.5 }, 0.1), null);
-    assert.equal(longueurDuMur(b.murs[0]), 4);
     assert.equal(projeter({ x: 9, z: 1 }, { x: 0, z: 0 }, { x: 4, z: 0 }).t, 1);
   });
 });
