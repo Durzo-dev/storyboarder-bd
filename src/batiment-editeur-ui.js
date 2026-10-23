@@ -274,7 +274,7 @@ function remplirPanneau(){
     // Tourner : décalé au besoin pour tenir, éteint seulement si aucune place proche ne convient.
     const t = essaiEscalier(esc.id, { angle: esc.angle + Math.PI / 2 });
     $('batimentEscalierTourner').disabled = !!t.erreur;
-    $('batimentEscalierTourner').title = '';   // pas d'infobulle contextuelle (demandé)
+    $('batimentEscalierTourner').title = t.erreur || '';   // la raison d'un refus, pas le déplacement (demandé)
   }
   // Les deux formulaires d'ouverture : celle qu'on va poser (outil Ouverture), celle qu'on a choisie.
   if (E.outil === 'ouverture') formulaireOuverture($('batimentReglagesOuverture'), E.reglagesOuverture, (c) => {
@@ -600,9 +600,9 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
       b.classList.toggle('actif', actuelle === val);
       const essai = essayer && actuelle !== val ? essayer({ [quoi]: val }) : null;
       b.disabled = !!(essai && essai.erreur);
-      // L'infobulle n'est PAS contextuelle (demandé) : elle nomme le choix, sans le déplacement
-      // éventuel ni la raison d'un refus.
-      b.title = icone ? (bulle || lib) : (bulle || '');
+      // L'infobulle nomme le choix, sans le déplacement éventuel (demandé) ; un choix IMPOSSIBLE
+      // (grisé) donne sa raison.
+      b.title = essai && essai.erreur ? `${icone ? (bulle || lib) + ' : ' : ''}${essai.erreur}` : icone ? (bulle || lib) : (bulle || '');
       b.onclick = () => changer(essai && essai.changements ? essai.changements : { [quoi]: val });
       d.appendChild(b);
     });
@@ -709,9 +709,9 @@ function formulaireOuverture(conteneur, v, changer, essayer = null){
       b.classList.toggle('actif', actuelle === val);
       const essai = essayer && actuelle !== val ? essayer({ [quoi]: val }) : null;
       b.disabled = !!(essai && essai.erreur);
-      // L'infobulle n'est PAS contextuelle (demandé) : elle nomme le choix, sans le déplacement
-      // éventuel ni la raison d'un refus.
-      b.title = icone ? (bulle || lib) : (bulle || '');
+      // L'infobulle nomme le choix, sans le déplacement éventuel (demandé) ; un choix IMPOSSIBLE
+      // (grisé) donne sa raison.
+      b.title = essai && essai.erreur ? `${icone ? (bulle || lib) + ' : ' : ''}${essai.erreur}` : icone ? (bulle || lib) : (bulle || '');
       b.onclick = () => changer(essai && essai.changements ? essai.changements : { [quoi]: val });
       d.appendChild(b);
     });
