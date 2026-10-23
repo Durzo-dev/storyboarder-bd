@@ -6398,6 +6398,7 @@ document.getElementById('ctxDeleteScene').onclick = () => {
 initEditeurDeBatiment();
 setBatimentEditeurCallbacks({
   confirmer: confirmAction,
+  alerter: alertAction,
   // Un seul écran au centre : l'Éditeur de modèle et le Lecteur se ferment.
   avantOuverture: () => { if (isPersonaEditorOpen()) hidePersonaEditor(); if (lecteurOuvert()) fermerLecteur(); },
   apresFermeture: () => renderAll(),

@@ -4,11 +4,11 @@ import assert from 'node:assert/strict';
 import {
   decoupage, hauteurAFranchir, formeDeLEscalier, tremieDeLEscalier, validiteDeLEscalier, ajouterEscalier,
   modifierEscalier, supprimerEscalier, escalierSous, normaliserEscalier, essayerEscalier, contactsDeLEscalier,
-  aimanterEscalier,
+  aimanterEscalier, escaliersBloques,
 } from '../src/batiment-escaliers.js';
 import { creerBatiment, normaliserBatiment } from '../src/batiment.js';
 import { ajouterRectangle } from '../src/batiment-trace.js';
-import { ajouterEtage } from '../src/batiment-niveaux.js';
+import { ajouterEtage, deplacerNiveau } from '../src/batiment-niveaux.js';
 import { actualiserPieces, formesDesPieces } from '../src/batiment-pieces.js';
 
 const fr = (en, f) => f;
@@ -153,5 +153,24 @@ describe('l’aimant et les contraintes (demandé)', () => {
     const { escalier } = ajouterEscalier(b, 'n0', { depart: { x: 1, z: 5.8 }, angle: angleHaut });
     const faces = [...formesDesPieces(b, 'n0').values()];
     assert.equal(essayerEscalier(b, escalier.id, { angle: 0 }, faces).erreur, 'hors', 'tourné, il ne tient dans aucune place de la pièce');
+  });
+});
+
+describe('réordonner les niveaux ne doit pas casser un escalier', () => {
+  test('l’étage passé dessous : l’escalier du rez-de-chaussée n’a plus rien au-dessus', () => {
+    const b = maison(); actualiserPieces(b, 'n0', fr);
+    const { escalier } = ajouterEscalier(b, 'n0', { depart: { x: 4, z: 5.8 }, angle: angleHaut });
+    const apres = JSON.parse(JSON.stringify(b));
+    deplacerNiveau(apres, 'n0', 1, fr);
+    const p = escaliersBloques(b, apres, (id) => [...formesDesPieces(b, id).values()], (id) => [...formesDesPieces(apres, id).values()]);
+    assert.deepEqual(p.map(x => [x.escalier.id, x.raison]), [[escalier.id, 'sansEtage']]);
+  });
+  test('rien de cassé : liste vide', () => {
+    const b = maison(); ajouterEtage(b, fr);
+    ajouterEscalier(b, 'n0', { depart: { x: 4, z: 5.8 }, angle: angleHaut });
+    const apres = JSON.parse(JSON.stringify(b));
+    const t = apres.niveaux.slice().sort((x, y) => x.elevation - y.elevation);
+    deplacerNiveau(apres, t[2].id, 1, fr);
+    assert.deepEqual(escaliersBloques(b, apres, () => [], () => []), []);
   });
 });

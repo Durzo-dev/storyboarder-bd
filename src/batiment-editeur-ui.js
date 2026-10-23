@@ -38,7 +38,7 @@ import {
 import { actualiserPieces, formesDesPieces, pieceSous } from './batiment-pieces.js';
 import {
   formeDeLEscalier, tremieDeLEscalier, validiteDeLEscalier, ajouterEscalier, modifierEscalier, supprimerEscalier,
-  escalierSous, decoupage, hauteurAFranchir, DEFAUTS_ESCALIER, essayerEscalier, aimanterEscalier,
+  escalierSous, decoupage, hauteurAFranchir, DEFAUTS_ESCALIER, essayerEscalier, aimanterEscalier, escaliersBloques,
 } from './batiment-escaliers.js';
 import {
   niveauxTries, niveauDessous, niveauDessus, ajouterEtage, dupliquerNiveau, supprimerNiveau, modifierNiveau,
@@ -49,7 +49,7 @@ import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
 
 const $ = (id) => document.getElementById(id);
 
-let _rappels = { confirmer: async () => true, avantOuverture: () => {}, apresFermeture: () => {} };
+let _rappels = { confirmer: async () => true, alerter: async () => {}, avantOuverture: () => {}, apresFermeture: () => {} };
 /** Les rappels d'events.js (règle n°2 : pas d'import circulaire). */
 export function setBatimentEditeurCallbacks(r){ _rappels = { ..._rappels, ...r }; }
 
@@ -407,6 +407,12 @@ function remplirNiveaux(){
       const pile = niveauxTries(E.batiment).filter(x => x.id !== tire);
       const k = pile.findIndex(x => x.id === n.id);
       const rang = dessus ? k + 1 : k;
+      // Essayé d'abord sur une copie (demandé) : si un escalier ne tiendrait plus, rien ne change et
+      // une fenêtre dit lesquels, et pourquoi.
+      const apres = JSON.parse(JSON.stringify(E.batiment));
+      deplacerNiveau(apres, tire, rang, tr);
+      const bloques = escaliersBloques(E.batiment, apres, (id) => [...formesDesPieces(E.batiment, id).values()], (id) => [...formesDesPieces(apres, id).values()]);
+      if (bloques.length) { signalerEscaliersBloques(bloques); return; }
       modifier(b => deplacerNiveau(b, tire, rang, tr));
     });
     return d;
@@ -422,6 +428,26 @@ function remplirNiveaux(){
   dupliquer.onclick = () => { let n = null; const src = E.niveauId; modifier(b => { n = dupliquerNiveau(b, src, tr); }); if (n) choisirNiveau(n.id); };
   actions.append(ajouter, dupliquer);
   zone.replaceChildren(...lignes, actions);
+}
+
+/** La fenêtre qui dit pourquoi un changement de la pile des niveaux est refusé : un escalier par ligne. */
+function signalerEscaliersBloques(bloques){
+  const types = { droit: tr('straight', 'droit'), L: tr('L-shaped', 'en L'), U: tr('U-shaped', 'en U') };
+  const raisons = {
+    sansEtage: tr('it would have no level above to lead to', 'il n\'aurait plus de niveau au-dessus où mener'),
+    mur: tr('with the new height, it would cross a wall', 'avec la nouvelle hauteur, il traverserait un mur'),
+    hors: tr('with the new height, it would no longer fit in its room', 'avec la nouvelle hauteur, il ne tiendrait plus dans sa pièce'),
+  };
+  const lignes = bloques.map(({ escalier, niveau, raison }) => {
+    const rang = E.batiment.escaliers.filter(x => x.niveauId === escalier.niveauId).findIndex(x => x.id === escalier.id) + 1;
+    const nom = tr(`Staircase ${rang} (${types[escalier.type]}, ${Math.round(escalier.largeur * 100)} cm), on "${niveau ? niveau.nom : '?'}"`,
+      `Escalier ${rang} (${types[escalier.type]}, ${Math.round(escalier.largeur * 100)} cm), au niveau « ${niveau ? niveau.nom : '?'} »`);
+    return `• ${nom} : ${raisons[raison] || raison}.`;
+  });
+  _rappels.alerter(
+    tr('The levels cannot be reordered this way:', 'L\'ordre des niveaux ne peut pas changer ainsi :') + '\n\n' + lignes.join('\n')
+      + '\n\n' + tr('Move or delete these staircases first.', 'Déplacez ou supprimez d\'abord ces escaliers.'),
+    tr('Reordering refused', 'Changement d\'ordre refusé'));
 }
 
 /** Supprime un niveau qui porte quelque chose après confirmation ; un niveau vide, directement. */

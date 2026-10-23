@@ -358,3 +358,27 @@ export function essayerEscalier(b, id, changements, faces = []){
   const memePlace = Math.hypot(depart.x - neuf.depart.x, depart.z - neuf.depart.z) < 1e-9;
   return memePlace ? { changements, deplacement: 0 } : { changements: { ...changements, depart }, deplacement };
 }
+
+/**
+ * Ce qu'un changement de la pile des niveaux casserait pour les escaliers (#454b, demandé : réordonner
+ * les niveaux est refusé s'il bloque un escalier, avec la liste des escaliers gênants et la raison de
+ * chacun). Compare le bâtiment `avant` et le bâtiment `apres` : un escalier qui tenait et ne tient
+ * plus (plus de niveau au-dessus, plus long au point de traverser un mur, ou de sortir de sa pièce).
+ * `facesAvant(niveauId)` / `facesApres(niveauId)` : les formes des pièces (formesDesPieces), fournies
+ * par l'appelant. Rend `[{ escalier, niveau, raison: 'sansEtage' | 'mur' | 'hors' }]`.
+ */
+export function escaliersBloques(avant, apres, facesAvant, facesApres){
+  const problemes = [];
+  for (const e of apres.escaliers || []) {
+    const ancien = (avant.escaliers || []).find(x => x.id === e.id);
+    if (!ancien || !validiteDeLEscalier(avant, ancien).ok) continue;   // il ne tenait déjà pas : pas notre affaire
+    const niveau = (apres.niveaux || []).find(n => n.id === e.niveauId);
+    const v = validiteDeLEscalier(apres, e);
+    if (v.erreur) { problemes.push({ escalier: e, niveau, raison: v.erreur }); continue; }
+    const avantFaces = facesAvant(e.niveauId), apresFaces = facesApres(e.niveauId);
+    if (avantFaces.length && pieceDeLEscalier(avant, ancien, avantFaces) && !pieceDeLEscalier(apres, e, apresFaces)) {
+      problemes.push({ escalier: e, niveau, raison: 'hors' });
+    }
+  }
+  return problemes;
+}
