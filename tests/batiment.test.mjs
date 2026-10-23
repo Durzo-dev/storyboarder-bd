@@ -38,7 +38,7 @@ describe('relire', () => {
   test('un bâtiment créé se relit à l’identique (aller-retour par le texte)', () => {
     const b = creerBatiment('Maison', fr);
     b.murs.push({ ...mur('m0', { x: 0, z: 0 }, { x: 5, z: 0 }), revetement: { interieur: 'papier-peint', exterieur: null } });
-    b.ouvertures.push({ id: 'o0', murId: 'm0', type: 'fenetre', le: 0.5, y: 1, largeur: 1.2, hauteur: 1.1 });
+    b.ouvertures.push({ id: 'o0', murId: 'm0', type: 'fenetre', le: 0.5, y: 1, largeur: 1.2, hauteur: 1.1, battants: 2, coulissant: false, vitre: true, sens: 1, charniere: 'debut' });
     const lu = lireBatiment(ecrireBatiment(b), fr);
     assert.deepEqual(lu, { batiment: b });
   });
@@ -73,7 +73,7 @@ describe('relire', () => {
       murs: [mur('m0', { x: 0, z: 0 }, { x: 4, z: 0 })],
       ouvertures: [{ id: 'o0', murId: 'm0', type: 'hublot', le: 3 }, { id: 'o1', murId: 'parti' }],
     }, fr);
-    assert.deepEqual(batiment.ouvertures, [{ id: 'o0', murId: 'm0', type: 'porte', le: 1, y: 0, largeur: 0.9, hauteur: 2.1 }]);
+    assert.deepEqual(batiment.ouvertures, [{ id: 'o0', murId: 'm0', type: 'porte', le: 1, y: 0, largeur: 0.9, hauteur: 2.1, battants: 1, coulissant: false, vitre: false, sens: 1, charniere: 'debut' }]);
   });
   test('les niveaux sont triés par élévation et nommés selon leur rang ; une élévation manquante se pose sur le précédent', () => {
     const { batiment } = normaliserBatiment({

@@ -24,7 +24,11 @@ import {
   versEcran, versBatiment, pasDeGrille, zoomerAutour, glisserVue, boiteDesMurs, cadrerSur,
   affichageApercuLu, coinLePlusProche,
 } from './batiment-plan.js';
-import { polygonesDesMurs } from './batiment-geometrie.js';
+import { polygonesDesMurs, morceauxDuMur } from './batiment-geometrie.js';
+import {
+  placement, reglagesParDefaut, ajouterOuverture, deplacerOuverture, modifierOuverture, ouvertureSous,
+  supprimerOuverture, intervalleDe, hauteurDuMur,
+} from './batiment-ouvertures.js';
 import {
   aimanter, ajouterMur, ajouterRectangle, croiseUnMur, deplacerSommet, supprimerMur, sommetSous, murSous,
   sommetsDuNiveau, longueurDuMur,
@@ -60,6 +64,8 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null } = {}
     outil: null, chaine: null, survol: null, selection: null,
     glisserSommet: null, historique: [], refaire: [],
     appui: null, rectangle: null,   // #454a-3b : un glisser de l'outil Mur trace une pièce rectangulaire
+    // #454a-3c : les réglages de l'ouverture à poser, et l'ouverture qu'on fait glisser.
+    reglagesOuverture: reglagesParDefaut('porte'), glisserOuverture: null,
   };
   $('batimentEditeur').classList.remove('hidden');
   $('batimentNom').value = b.nom;
@@ -136,11 +142,19 @@ function remplirPanneau(){
     l.onclick = () => { choisirOutil('selection'); E.selection = { pieceId: p.id }; remplirPanneau(); dessinerPlan(); };
     return l;
   }) : [vide(tr('No room yet: close a contour of walls.', 'Aucune pièce : fermez un contour de murs.'))]));
-  const m = murSelectionne(), piece = pieceSelectionnee();
+  const m = murSelectionne(), piece = pieceSelectionnee(), ouv = ouvertureSelectionnee();
   $('batimentSelectionMur').hidden = !m;
   $('batimentSelectionPiece').hidden = !piece;
-  $('batimentSelectionVide').hidden = !!(m || piece);
-  $('batimentSelectionTitre').textContent = m ? tr('Selected wall', 'Mur sélectionné') : piece ? tr('Selected room', 'Pièce sélectionnée') : tr('Selection', 'Sélection');
+  $('batimentSelectionOuverture').hidden = !ouv;
+  $('batimentSelectionVide').hidden = !!(m || piece || ouv);
+  $('batimentSelectionTitre').textContent = m ? tr('Selected wall', 'Mur sélectionné') : piece ? tr('Selected room', 'Pièce sélectionnée')
+    : ouv ? tr('Selected opening', 'Ouverture sélectionnée') : tr('Selection', 'Sélection');
+  // Les deux formulaires d'ouverture : celle qu'on va poser (outil Ouverture), celle qu'on a choisie.
+  if (E.outil === 'ouverture') formulaireOuverture($('batimentReglagesOuverture'), E.reglagesOuverture, (c) => {
+    E.reglagesOuverture = c.type && c.type !== E.reglagesOuverture.type ? { ...reglagesParDefaut(c.type), sens: E.reglagesOuverture.sens, charniere: E.reglagesOuverture.charniere } : { ...E.reglagesOuverture, ...c };
+    remplirPanneau(); dessinerPlan();
+  });
+  if (ouv) formulaireOuverture($('batimentFormOuverture'), ouv, (c) => retoucherOuverture(ouv.id, c));
   if (piece) {
     if (document.activeElement !== $('batimentPieceNom')) $('batimentPieceNom').value = piece.nom;
     $('batimentPieceSurface').textContent = formes.has(piece.id) ? tr(`Area: ${surface(formes.get(piece.id).aire)}`, `Surface : ${surface(formes.get(piece.id).aire)}`) : '';
@@ -159,6 +173,73 @@ function pieceSelectionnee(){
   return E.batiment.pieces.find(p => p.id === E.selection.pieceId) || null;
 }
 
+/** L'ouverture sélectionnée, si elle existe encore. */
+function ouvertureSelectionnee(){
+  if (!E || !E.selection || !E.selection.ouvertureId) return null;
+  return (E.batiment.ouvertures || []).find(o => o.id === E.selection.ouvertureId) || null;
+}
+
+/** Le message d'un refus de pose ou de retouche d'une ouverture. */
+function refusOuverture(erreur){
+  return erreur === 'large' ? tr('This opening is too wide for the wall.', 'Cette ouverture est trop large pour le mur.')
+    : erreur === 'chevauche' ? tr('It would overlap another opening.', 'Elle chevaucherait une autre ouverture.')
+    : erreur === 'haute' ? tr('It would go through the ceiling.', 'Elle traverserait le plafond.')
+    : tr('This opening does not fit here.', 'Cette ouverture ne tient pas ici.');
+}
+
+/** Retouche l'ouverture choisie ; essayée d'abord sur une copie, pour ne pas laisser de point d'annulation vide. */
+function retoucherOuverture(id, changements){
+  const essai = JSON.parse(JSON.stringify(E.batiment));
+  const r = modifierOuverture(essai, id, changements);
+  if (r.erreur) { statut(refusOuverture(r.erreur)); remplirPanneau(); return; }
+  statut('');
+  modifier(b => modifierOuverture(b, id, changements));
+}
+
+/**
+ * Le formulaire d'une ouverture (#454a-3c), construit dans `conteneur` : le type, les dimensions en
+ * centimètres, les battants, coulissante, vitrée. `changer(partiel)` reçoit chaque modification.
+ */
+function formulaireOuverture(conteneur, v, changer){
+  const types = [['porte', tr('Door', 'Porte')], ['fenetre', tr('Window', 'Fenêtre')], ['baie', tr('Bay window', 'Baie vitrée')], ['passage', tr('Passage', 'Passage')]];
+  const choix = (valeurs, actuelle, quoi) => {
+    const d = document.createElement('div'); d.className = 'batiment-choix';
+    valeurs.forEach(([val, lib]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = lib;
+      b.classList.toggle('actif', actuelle === val);
+      b.onclick = () => changer({ [quoi]: val });
+      d.appendChild(b);
+    });
+    return d;
+  };
+  const champ = (libelle, valeur, quoi) => {
+    const l = document.createElement('label'); l.className = 'batiment-champ';
+    const t = document.createElement('span'); t.textContent = libelle;
+    const w = document.createElement('span'); w.className = 'batiment-champ-valeur';
+    const i = document.createElement('input'); i.type = 'number'; i.min = '0'; i.step = '1'; i.value = Math.round(valeur * 100);
+    i.addEventListener('change', () => { const n = Number(i.value); if (Number.isFinite(n) && n >= 0) changer({ [quoi]: n / 100 }); });
+    w.append(i, document.createTextNode(' cm'));
+    l.append(t, w);
+    return l;
+  };
+  const caseACocher = (libelle, valeur, quoi) => {
+    const l = document.createElement('label'); l.className = 'batiment-case';
+    const i = document.createElement('input'); i.type = 'checkbox'; i.checked = !!valeur;
+    i.onchange = () => changer({ [quoi]: i.checked });
+    l.append(i, document.createTextNode(libelle));
+    return l;
+  };
+  const elements = [choix(types, v.type, 'type'),
+    champ(tr('Width', 'Largeur'), v.largeur, 'largeur'), champ(tr('Height', 'Hauteur'), v.hauteur, 'hauteur'),
+    champ(tr('Sill height', 'Hauteur d\'allège'), v.y, 'y')];
+  if (v.type !== 'passage') {
+    elements.push(choix([[1, tr('1 leaf', '1 battant')], [2, tr('2 leaves', '2 battants')]], v.battants, 'battants'));
+    elements.push(caseACocher(tr('Sliding', 'Coulissante'), v.coulissant, 'coulissant'));
+    elements.push(caseACocher(tr('Glazed', 'Vitrée'), v.vitre, 'vitre'));
+  }
+  conteneur.replaceChildren(...elements);
+}
+
 /** Le mur sélectionné, s'il existe encore. */
 function murSelectionne(){
   if (!E || !E.selection || !E.selection.murId) return null;
@@ -175,7 +256,7 @@ function choisirOutil(outil){
   if (E.outil !== 'selection') E.selection = null;
   document.querySelectorAll('.batiment-outil').forEach(b => b.classList.toggle('actif', b.dataset.outil === E.outil));
   $('batimentPanneau').dataset.outil = E.outil || 'aucun';
-  $('batimentPlan').classList.toggle('outil-mur', E.outil === 'mur');
+  $('batimentPlan').classList.toggle('outil-mur', E.outil === 'mur' || E.outil === 'ouverture');
   remplirPanneau();
   dessinerPlan();
 }
@@ -200,7 +281,8 @@ function modifier(faire){
 }
 
 function apresModification(){
-  if (E.selection && ((E.selection.murId && !murSelectionne()) || (E.selection.pieceId && !pieceSelectionnee()))) E.selection = null;
+  if (E.selection && ((E.selection.murId && !murSelectionne()) || (E.selection.pieceId && !pieceSelectionnee())
+    || (E.selection.ouvertureId && !ouvertureSelectionnee()))) E.selection = null;
   remplirPanneau();
   dessinerPlan();
   if (E.apercu) E.apercu.reconstruire(E.batiment);
@@ -283,6 +365,52 @@ function couleur(nom, repli){
   return v || repli;
 }
 
+/**
+ * Le symbole d'une ouverture dans la vue de dessus, dans la découpe `tranche` de son mur : les deux
+ * tableaux (les bords du mur coupé), puis selon le type le vitrage (deux traits fins), le battant et
+ * son arc d'ouverture (une porte), deux vantaux décalés (coulissante), ou les deux faces en pointillés
+ * (un passage). `pleine` : la découpe est teintée (ouverture choisie, ou à poser).
+ */
+function dessinerOuverture(g, versE, echelle, mur, o, tranche, teinte, pleine){
+  const L = Math.hypot(mur.b.x - mur.a.x, mur.b.z - mur.a.z) || 1;
+  const u = { x: (mur.b.x - mur.a.x) / L, z: (mur.b.z - mur.a.z) / L }, n = { x: -u.z, z: u.x };
+  const { s0, s1 } = intervalleDe(o, mur), e = mur.epaisseur / 2;
+  const P = (s, d) => versE({ x: mur.a.x + u.x * s + n.x * d, z: mur.a.z + u.z * s + n.z * d });
+  const trait = (p, q) => { g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke(); };
+  if (pleine && tranche) {
+    g.beginPath(); tranche.forEach((p, i) => { const q = versE(p); if (i) g.lineTo(q.x, q.y); else g.moveTo(q.x, q.y); }); g.closePath();
+    g.globalAlpha = 0.25; g.fillStyle = teinte; g.fill(); g.globalAlpha = 1;
+  }
+  g.strokeStyle = teinte; g.lineWidth = 1.5;
+  trait(P(s0, -e), P(s0, e)); trait(P(s1, -e), P(s1, e));
+  const milieu = (s0 + s1) / 2;
+  if (o.type === 'passage') {
+    g.save(); g.setLineDash([4, 3]); trait(P(s0, e), P(s1, e)); trait(P(s0, -e), P(s1, -e)); g.restore();
+    return;
+  }
+  if (o.type !== 'porte' || o.coulissant) {
+    // Vitrage, ou vantaux coulissants : deux traits parallèles à l'axe, décalés s'ils coulissent.
+    const d = e * 0.35;
+    if (o.coulissant) { trait(P(s0, d), P(milieu + 0.05, d)); trait(P(milieu - 0.05, -d), P(s1, -d)); }
+    else { trait(P(s0, d), P(s1, d)); trait(P(s0, -d), P(s1, -d)); if (o.battants === 2) trait(P(milieu, -d), P(milieu, d)); }
+    return;
+  }
+  // Une porte battante : le battant ouvert à 90° du côté `sens`, et l'arc qu'il décrit.
+  const cote = (o.sens === -1 ? -1 : 1);
+  const vantaux = o.battants === 2
+    ? [{ s: s0, dir: 1, l: (s1 - s0) / 2 }, { s: s1, dir: -1, l: (s1 - s0) / 2 }]
+    : [o.charniere === 'fin' ? { s: s1, dir: -1, l: s1 - s0 } : { s: s0, dir: 1, l: s1 - s0 }];
+  for (const v of vantaux) {
+    const H = P(v.s, cote * e), ouvert = P(v.s, cote * (e + v.l)), ferme = P(v.s + v.dir * v.l, cote * e);
+    trait(H, ouvert);
+    const a0 = Math.atan2(ferme.y - H.y, ferme.x - H.x), a1 = Math.atan2(ouvert.y - H.y, ouvert.x - H.x);
+    let d = a1 - a0; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
+    g.save(); g.setLineDash([3, 3]); g.lineWidth = 1;
+    g.beginPath(); g.arc(H.x, H.y, v.l * echelle, a0, a0 + d, d < 0); g.stroke();
+    g.restore();
+  }
+}
+
 function dessinerPlan(){
   if (!E || !E.vue) return;
   const { c, l, h } = taillePlan();
@@ -335,13 +463,35 @@ function dessinerPlan(){
     g.globalAlpha = 1;
   }
   const survole = E.outil === 'selection' && E.survol && E.survol.murId;
+  // Chaque mur est coupé à ses ouvertures (#454a-3c), comme sur un plan d'architecte ; chaque
+  // ouverture y dessine son symbole.
+  const ouvertures = E.batiment.ouvertures || [];
+  const versE = (p) => versEcran(vue, l, h, p);
   murs.forEach(m => {
     const f = formes.get(m.id); if (!f) return;
-    poly(f);
-    g.fillStyle = (E.selection && E.selection.murId === m.id) ? accent : encre;
-    g.fill();
-    if (survole === m.id) { g.strokeStyle = accent; g.lineWidth = 2; g.stroke(); }
+    const siennes = ouvertures.filter(o => o.murId === m.id);
+    const { pleins, percees } = morceauxDuMur(f, m, siennes.map(o => intervalleDe(o, m)));
+    pleins.forEach(q => {
+      poly(q);
+      g.fillStyle = (E.selection && E.selection.murId === m.id) ? accent : encre;
+      g.fill();
+      if (survole === m.id) { g.strokeStyle = accent; g.lineWidth = 2; g.stroke(); }
+    });
+    siennes.forEach((o, i) => {
+      const choisie = E.selection && E.selection.ouvertureId === o.id;
+      const survolee = E.outil === 'selection' && E.survol && E.survol.ouvertureId === o.id;
+      dessinerOuverture(g, versE, vue.echelle, m, o, percees[i], (choisie || survolee) ? accent : couleur('--ink-soft', '#9a9aa2'), choisie);
+    });
   });
+  // L'ouverture à poser, sous la souris (outil Ouverture) : en accent, ou en rouge si elle ne tient pas.
+  if (E.outil === 'ouverture' && E.survol && E.survol.murId) {
+    const m = murs.find(x => x.id === E.survol.murId), f = m && formes.get(m.id);
+    if (f) {
+      const o = { ...E.reglagesOuverture, id: '_', murId: m.id, le: E.survol.le };
+      const { percees } = morceauxDuMur(f, m, [intervalleDe(o, m)]);
+      dessinerOuverture(g, versE, vue.echelle, m, o, percees[0], E.survol.ok ? accent : couleur('--danger', '#c0392b'), true);
+    }
+  }
 
   // Les sommets, en Sélection : des poignées.
   if (E.outil === 'selection') {
@@ -451,11 +601,25 @@ function survoler(e){
     const s = aimanter(E.batiment, E.niveauId, p, { tol, libre: e.altKey, depuis: E.chaine && E.chaine.depuis });
     s.croise = !!E.chaine && croiseUnMur(E.batiment, E.niveauId, E.chaine.depuis, s.point);
     E.survol = s;
+  } else if (E.outil === 'ouverture') {
+    // L'ouverture à poser suit la souris le long du mur survolé (#454a-3c).
+    const m = murSous(E.batiment, E.niveauId, p, tol);
+    if (m) {
+      const r = placement(E.batiment, m.mur, m.t, E.reglagesOuverture.largeur);
+      const H = hauteurDuMur(E.batiment, m.mur);
+      E.survol = { murId: m.mur.id, le: r.le, ok: r.ok && E.reglagesOuverture.y <= H - 0.25, raison: r.raison || (r.ok ? null : 'large') };
+      if (r.ok && E.reglagesOuverture.y > H - 0.25) E.survol.raison = 'haute';
+    } else E.survol = null;
   } else if (E.outil === 'selection') {
+    if (E.glisserOuverture) {
+      if (deplacerOuverture(E.batiment, E.glisserOuverture.id, p)) { E.glisserOuverture.bouge = true; apresModification(); }
+      return;
+    }
     const sommet = sommetSous(E.batiment, E.niveauId, p, tol);
-    const m = sommet ? null : murSous(E.batiment, E.niveauId, p, tol / 2);
-    const pieceId = (sommet || m) ? null : pieceSous(E.batiment, E.niveauId, p);
-    E.survol = { sommet, murId: m ? m.mur.id : null, pieceId };
+    const ouvertureId = sommet ? null : ouvertureSous(E.batiment, E.niveauId, p, tol / 2);
+    const m = (sommet || ouvertureId) ? null : murSous(E.batiment, E.niveauId, p, tol / 2);
+    const pieceId = (sommet || m || ouvertureId) ? null : pieceSous(E.batiment, E.niveauId, p);
+    E.survol = { sommet, murId: m ? m.mur.id : null, pieceId, ouvertureId };
   } else E.survol = null;
   dessinerPlan();
 }
@@ -485,11 +649,30 @@ function cablerPlan(){
       c.setPointerCapture(e.pointerId);
       return;
     }
+    if (E.outil === 'ouverture') {
+      const m = murSous(E.batiment, E.niveauId, p, tol);
+      if (!m) return;
+      const essai = ajouterOuverture(JSON.parse(JSON.stringify(E.batiment)), m.mur.id, m.t, E.reglagesOuverture);
+      if (essai.erreur) { statut(refusOuverture(essai.erreur)); return; }
+      statut('');
+      modifier(b => ajouterOuverture(b, m.mur.id, m.t, E.reglagesOuverture));
+      return;
+    }
     const sommet = sommetSous(E.batiment, E.niveauId, p, tol);
     if (sommet) {
       E.historique.push(JSON.stringify(E.batiment)); E.refaire = [];
       E.glisserSommet = { depart: sommet, actuel: sommet };
       c.setPointerCapture(e.pointerId);
+      return;
+    }
+    // Une ouverture : la choisir, et la faire glisser le long de son mur si on tire.
+    const ouvertureId = ouvertureSous(E.batiment, E.niveauId, p, tol / 2);
+    if (ouvertureId) {
+      E.selection = { ouvertureId };
+      E.historique.push(JSON.stringify(E.batiment)); E.refaire = [];
+      E.glisserOuverture = { id: ouvertureId, bouge: false };
+      c.setPointerCapture(e.pointerId);
+      remplirPanneau(); dessinerPlan();
       return;
     }
     const m = murSous(E.batiment, E.niveauId, p, tol / 2);
@@ -515,6 +698,13 @@ function cablerPlan(){
       E.appui = null;
       if (E.rectangle) { if (e && e.type === 'pointerup' && E.rectangle.vers) poserLeRectangle(); else { E.rectangle = null; dessinerPlan(); } }
       else if (e && e.type === 'pointerup') poserUnPoint(point);
+    }
+    if (E.glisserOuverture) {
+      const { bouge } = E.glisserOuverture;
+      E.glisserOuverture = null;
+      // Un clic sans glisser n'a rien changé : le point d'annulation est retiré.
+      if (bouge) E.modifie = true; else E.historique.pop();
+      apresModification();
     }
     if (E.glisserSommet) {
       const { depart, actuel } = E.glisserSommet;
@@ -609,7 +799,46 @@ const CHAMP = 35;
  * Les murs EXTRUDÉS depuis les mêmes polygones que la vue de dessus (jonctions comprises), posés à
  * l'élévation de leur niveau.
  */
-function construireMurs(T, b, matiere, matiereSol){
+/**
+ * La menuiserie d'une ouverture (#454a-3c), simple en attendant les modèles du store : un cadre, du
+ * verre pour ce qui est vitré, un battant de bois pour une porte pleine, deux vantaux décalés pour ce
+ * qui coulisse, un meneau entre deux battants. Rien pour un passage. Les portes sont dessinées
+ * fermées. Construite dans le repère du mur (x le long, y vers le haut, z à travers), puis posée.
+ */
+function construireMenuiserie(T, mur, o, mats){
+  const g = new T.Group();
+  const L = Math.hypot(mur.b.x - mur.a.x, mur.b.z - mur.a.z) || 1;
+  const u = { x: (mur.b.x - mur.a.x) / L, z: (mur.b.z - mur.a.z) / L };
+  const c = o.le * L, w = o.largeur, h = o.hauteur, prof = mur.epaisseur * 0.6, ep = 0.05;
+  g.position.set(mur.a.x + u.x * c, o.y, mur.a.z + u.z * c);
+  g.rotation.y = -Math.atan2(u.z, u.x);
+  if (o.type === 'passage') return g;
+  const boite = (lx, ly, lz, x, y, z, mat) => {
+    const b = new T.Mesh(new T.BoxGeometry(lx, ly, lz), mat);
+    b.position.set(x, y, z);
+    g.add(b);
+  };
+  // Le cadre : deux montants, la traverse haute, et l'appui d'une fenêtre.
+  boite(ep, h, prof, -w / 2 + ep / 2, h / 2, 0, mats.cadre);
+  boite(ep, h, prof, w / 2 - ep / 2, h / 2, 0, mats.cadre);
+  boite(w, ep, prof, 0, h - ep / 2, 0, mats.cadre);
+  if (o.type !== 'porte') boite(w, ep, prof, 0, ep / 2, 0, mats.cadre);
+  const interieur = w - 2 * ep, hi = h - (o.type === 'porte' ? ep : 2 * ep), y0 = o.type === 'porte' ? hi / 2 : ep + hi / 2;
+  const remplissage = (o.vitre || o.type !== 'porte') ? mats.verre : mats.bois;
+  const epPanneau = remplissage === mats.verre ? 0.01 : 0.04;
+  if (o.coulissant) {
+    // Deux vantaux qui se recouvrent un peu, l'un devant l'autre.
+    const lv = interieur / 2 + 0.03;
+    boite(lv, hi, epPanneau, -interieur / 4, y0, prof * 0.18, remplissage);
+    boite(lv, hi, epPanneau, interieur / 4, y0, -prof * 0.18, remplissage);
+  } else {
+    boite(interieur, hi, epPanneau, 0, y0, 0, remplissage);
+    if (o.battants === 2) boite(ep, hi, prof * 0.8, 0, y0, 0, mats.cadre);
+  }
+  return g;
+}
+
+function construireMurs(T, b, mats){
   const groupe = new T.Group();
   b.niveaux.forEach(n => {
     // Le sol de chaque pièce (#454a-3b), un peu au-dessus de la grille pour ne pas scintiller avec elle.
@@ -618,23 +847,37 @@ function construireMurs(T, b, matiere, matiereSol){
       (f.trous || []).forEach(t => forme.holes.push(new T.Path(t.map(p => new T.Vector2(p.x, -p.z)))));
       const geo = new T.ShapeGeometry(forme);
       geo.rotateX(-Math.PI / 2);
-      const sol = new T.Mesh(geo, matiereSol);
+      const sol = new T.Mesh(geo, mats.sol);
       sol.position.y = n.elevation + 0.005;
       groupe.add(sol);
     }
     const murs = b.murs.filter(m => m.niveauId === n.id);
     const formes = polygonesDesMurs(murs);
+    // La forme est tracée dans (x, −z) puis extrudée vers le haut : la rotation de −90° autour de x
+    // envoie (x, y, profondeur) sur (x, profondeur, −y).
+    const extruder = (pts, y0, y1) => {
+      if (y1 - y0 < 1e-3) return;
+      const geo = new T.ExtrudeGeometry(new T.Shape(pts.map(p => new T.Vector2(p.x, -p.z))), { depth: y1 - y0, bevelEnabled: false });
+      geo.rotateX(-Math.PI / 2);
+      const maillage = new T.Mesh(geo, mats.mur);
+      maillage.position.y = n.elevation + y0;
+      groupe.add(maillage);
+    };
     murs.forEach(m => {
       const f = formes.get(m.id); if (!f) return;
       const hauteur = m.hauteurPropre || n.hauteur;
-      // La forme est tracée dans (x, −z) puis extrudée vers le haut : la rotation de −90° autour de x
-      // envoie (x, y, profondeur) sur (x, profondeur, −y).
-      const forme = new T.Shape(f.map(p => new T.Vector2(p.x, -p.z)));
-      const geo = new T.ExtrudeGeometry(forme, { depth: hauteur, bevelEnabled: false });
-      geo.rotateX(-Math.PI / 2);
-      const maillage = new T.Mesh(geo, matiere);
-      maillage.position.y = n.elevation;
-      groupe.add(maillage);
+      // #454a-3c : le mur tranché à ses ouvertures ; sous et au-dessus de chacune, l'allège et le linteau.
+      const siennes = (b.ouvertures || []).filter(o => o.murId === m.id);
+      const { pleins, percees } = morceauxDuMur(f, m, siennes.map(o => intervalleDe(o, m)));
+      pleins.forEach(q => extruder(q, 0, hauteur));
+      siennes.forEach((o, i) => {
+        if (!percees[i]) return;
+        extruder(percees[i], 0, o.y);
+        extruder(percees[i], Math.min(hauteur, o.y + o.hauteur), hauteur);
+        const menuiserie = construireMenuiserie(T, m, o, mats);
+        menuiserie.position.y += n.elevation;
+        groupe.add(menuiserie);
+      });
     });
   });
   return groupe;
@@ -649,9 +892,14 @@ function ouvrirApercu(conteneur, b){
   scene.add(cle);
   const grille = new T.GridHelper(40, 40, 0x888888, 0x555555);
   scene.add(grille);
-  const matiere = new T.MeshStandardMaterial({ color: 0xd9d4c7, roughness: 0.9 });
-  const matiereSol = new T.MeshStandardMaterial({ color: 0xa89c86, roughness: 1, side: T.DoubleSide });
-  let groupe = construireMurs(T, b, matiere, matiereSol);
+  const mats = {
+    mur: new T.MeshStandardMaterial({ color: 0xd9d4c7, roughness: 0.9 }),
+    sol: new T.MeshStandardMaterial({ color: 0xa89c86, roughness: 1, side: T.DoubleSide }),
+    cadre: new T.MeshStandardMaterial({ color: 0xf2f0ea, roughness: 0.6 }),
+    bois: new T.MeshStandardMaterial({ color: 0x8b6b4a, roughness: 0.8 }),
+    verre: new T.MeshStandardMaterial({ color: 0x9fc6d8, roughness: 0.1, metalness: 0.1, transparent: true, opacity: 0.35, side: T.DoubleSide }),
+  };
+  let groupe = construireMurs(T, b, mats);
   scene.add(groupe);
 
   let centre = [0, 1.4, 0], distance = 20, distanceCadrage = 20;
@@ -714,7 +962,7 @@ function ouvrirApercu(conteneur, b){
     reconstruire(nouveau){
       scene.remove(groupe);
       groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); });
-      groupe = construireMurs(T, nouveau, matiere, matiereSol);
+      groupe = construireMurs(T, nouveau, mats);
       scene.add(groupe);
       redessiner();
     },
@@ -722,7 +970,7 @@ function ouvrirApercu(conteneur, b){
       if (demande) cancelAnimationFrame(demande);
       if (observateur) observateur.disconnect();
       groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); });
-      matiere.dispose(); matiereSol.dispose();
+      Object.values(mats).forEach(m => m.dispose());
       grille.geometry.dispose(); grille.material.dispose();
       rendu.dispose();
       if (rendu.forceContextLoss) rendu.forceContextLoss();
@@ -778,8 +1026,13 @@ function clavier(e){
   // (events.js) : confirmation si le bâtiment n'est pas enregistré, puis le clic est rejoué.
   else if (touche === 'e') $('openPoseEditorBtn').click();
   else if (touche === 'm') basculerOutil('mur');
+  else if (touche === 'o') basculerOutil('ouverture');
   else if (touche === 'v') basculerOutil('selection');
   else if (e.key === 'Enter') finirLaChaine();
+  else if ((e.key === 'Delete' || e.key === 'Backspace') && ouvertureSelectionnee()) {
+    const id = E.selection.ouvertureId;
+    modifier(b => supprimerOuverture(b, id));
+  }
   else if ((e.key === 'Delete' || e.key === 'Backspace') && murSelectionne()) {
     const id = E.selection.murId;
     modifier(b => supprimerMur(b, id));
@@ -809,6 +1062,10 @@ export function initEditeurDeBatiment(){
     modifier(b => { const p = b.pieces.find(q => q.id === piece.id); if (p) p.nom = nom; });
   });
   $('batimentPieceNom').addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
+  // #454a-3c : l'ouverture choisie.
+  $('batimentOuvertureSupprimer').onclick = () => { const o = ouvertureSelectionnee(); if (o) modifier(b => supprimerOuverture(b, o.id)); };
+  $('batimentOuvertureSens').onclick = () => { const o = ouvertureSelectionnee(); if (o) retoucherOuverture(o.id, { sens: o.sens === -1 ? 1 : -1 }); };
+  $('batimentOuvertureCharniere').onclick = () => { const o = ouvertureSelectionnee(); if (o) retoucherOuverture(o.id, { charniere: o.charniere === 'fin' ? 'debut' : 'fin' }); };
   $('batimentMurSupprimer').onclick = () => { const m = murSelectionne(); if (m) modifier(b => supprimerMur(b, m.id)); };
   $('batimentMurEpaisseur').addEventListener('change', (e) => {
     const m = murSelectionne(); const v = Number(e.target.value);

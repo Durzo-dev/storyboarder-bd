@@ -372,6 +372,12 @@ it after a change inherits its name. A room placed inside another with no wall l
 island) pierces it: its outline becomes a hole of the other. Dragging with the Wall tool draws a rectangular room
 (`ajouterRectangle`), whose side against an existing wall is not doubled.
 
+**Openings** (#454a-3c, done): `src/batiment-ouvertures.js` (door, window, bay window, passage;
+leaves, sliding, glazed, side, hinge; placed in the wall with 10 cm of masonry at the ends and
+between two openings, below the ceiling). `morceauxDuMur` (`src/batiment-geometrie.js`) slices the
+wall's polygon at its openings: cut in plan, sill and lintel in 3D. Kept for later: garage door,
+shop front, round window, bow window, glass wall, arched top, shutters.
+
 Buildings already traced in Scenes (wall Elements, `pieceId`, `batimentNames`, `batimentRotY`)
 remain READ and are **converted** on opening into one-level buildings, in the same place: nothing
 moves on screen.

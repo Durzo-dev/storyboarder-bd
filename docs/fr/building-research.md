@@ -390,6 +390,13 @@ autre sans mur qui les relie (un îlot) la perce : son contour devient un trou d
 une pièce rectangulaire (`ajouterRectangle`), dont un côté accolé à un mur existant n'est pas
 doublé.
 
+**Les ouvertures** (#454a-3c, fait) : `src/batiment-ouvertures.js` (porte, fenêtre, baie vitrée,
+passage ; battants, coulissante, vitrée, sens, charnière ; placement dans le mur avec 10 cm de
+maçonnerie aux bouts et entre deux ouvertures, sous le plafond). `morceauxDuMur`
+(`src/batiment-geometrie.js`) tranche le polygone du mur aux ouvertures : coupé en plan, allège et
+linteau en 3D. Gardés pour plus tard : porte de garage, vitrine, œil-de-bœuf, bow-window, verrière,
+haut cintré, volets.
+
 Les bâtiments déjà tracés dans les Scènes (murs Éléments, `pieceId`, `batimentNames`,
 `batimentRotY`) restent LUS et sont **convertis** à l'ouverture en bâtiments d'un niveau, à la même
 place : rien ne bouge à l'écran.

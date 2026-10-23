@@ -2694,10 +2694,20 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-outil:hover { color: var(--accent); border-color: var(--accent); }
 .batiment-outil.actif { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
 /* Le menu de droite suit l'outil (demandé). */
-.batiment-editeur-panneau[data-outil="aucun"] .pour-mur, .batiment-editeur-panneau[data-outil="aucun"] .pour-selection,
-.batiment-editeur-panneau[data-outil="mur"] .pour-aucun, .batiment-editeur-panneau[data-outil="mur"] .pour-selection,
-.batiment-editeur-panneau[data-outil="selection"] .pour-aucun, .batiment-editeur-panneau[data-outil="selection"] .pour-mur,
+.batiment-editeur-panneau:not([data-outil="aucun"]) .pour-aucun,
+.batiment-editeur-panneau:not([data-outil="mur"]) .pour-mur,
+.batiment-editeur-panneau:not([data-outil="ouverture"]) .pour-ouverture,
+.batiment-editeur-panneau:not([data-outil="selection"]) .pour-selection,
 .batiment-editeur-panneau[data-outil="aucun"] .pour-outil { display: none; }
+/* #454a-3c : le formulaire d'une ouverture. */
+.batiment-choix { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.batiment-choix button { flex: 1 1 0; padding: 5px 6px; border-radius: 6px; border: 1px solid var(--line-strong); background: var(--white);
+                         color: var(--ink); font-size: 11.5px; cursor: pointer; white-space: nowrap; }
+.batiment-choix button.actif { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.batiment-case { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink); margin: 6px 0; cursor: pointer; }
+.batiment-boutons { display: flex; gap: 6px; margin-top: 6px; }
+.batiment-boutons .nav-btn { flex: 1 1 0; margin: 0; font-size: 11.5px; }
+#batimentSelectionOuverture[hidden] { display: none; }
 #batimentSelectionMur[hidden], #batimentSelectionVide[hidden], #batimentSelectionPiece[hidden] { display: none; }
 .batiment-liste .batiment-ligne.cliquable { cursor: pointer; }
 .batiment-liste .batiment-ligne.cliquable:hover { border-color: var(--accent); }

@@ -83,3 +83,56 @@ export function polygonesDesMurs(murs){
   }
   return resultat;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// LES MURS PERCÉS (#454a-3c)
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+//
+// Une ouverture occupe un intervalle [s0, s1] le long de l'axe du mur (en mètres depuis `a`). Le
+// polygone du mur (jonctions comprises) est TRANCHÉ par des droites perpendiculaires à l'axe : les
+// tranches hors des ouvertures sont pleines sur toute la hauteur, celles des ouvertures ne gardent
+// que l'allège (sous l'ouverture) et le linteau (au-dessus). La vue de dessus coupe le mur à chaque
+// ouverture, comme un plan d'architecte ; l'aperçu 3D extrude chaque tranche sur sa hauteur.
+
+/** Le polygone `poly` limité aux points dont l'abscisse le long de l'axe (a, u) est dans [s0, s1]. */
+export function trancher(poly, a, u, s0, s1){
+  const s = (p) => (p.x - a.x) * u.x + (p.z - a.z) * u.z;
+  const couper = (pts, garder, limite) => {
+    const r = [];
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i], q = pts[(i + 1) % pts.length];
+      const sp = s(p), sq = s(q);
+      if (garder(sp)) r.push(p);
+      if (garder(sp) !== garder(sq)) {
+        const t = (limite - sp) / (sq - sp);
+        r.push({ x: p.x + (q.x - p.x) * t, z: p.z + (q.z - p.z) * t });
+      }
+    }
+    return r;
+  };
+  let r = couper(poly, v => v >= s0, s0);
+  if (r.length) r = couper(r, v => v <= s1, s1);
+  return r.length >= 3 ? r : null;
+}
+
+/**
+ * Les morceaux du mur `mur` (de polygone `poly`) autour des intervalles `intervalles` ([{ s0, s1 }],
+ * en mètres le long de l'axe) : `pleins` (les tranches hors ouvertures) et `percees` (une tranche par
+ * intervalle, dans le même ordre).
+ */
+export function morceauxDuMur(poly, mur, intervalles){
+  const L = Math.hypot(mur.b.x - mur.a.x, mur.b.z - mur.a.z) || 1;
+  const u = { x: (mur.b.x - mur.a.x) / L, z: (mur.b.z - mur.a.z) / L };
+  const tries = intervalles.map((iv, i) => ({ ...iv, i })).sort((x, y) => x.s0 - y.s0);
+  const pleins = [], percees = new Array(intervalles.length).fill(null);
+  let debut = -1e9;
+  for (const iv of tries) {
+    const plein = trancher(poly, mur.a, u, debut, iv.s0);
+    if (plein) pleins.push(plein);
+    percees[iv.i] = trancher(poly, mur.a, u, iv.s0, iv.s1);
+    debut = iv.s1;
+  }
+  const fin = trancher(poly, mur.a, u, debut, 1e9);
+  if (fin) pleins.push(fin);
+  return { pleins, percees };
+}

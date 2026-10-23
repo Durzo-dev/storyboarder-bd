@@ -210,6 +210,11 @@
               <rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 12h18M9 5v7M15 12v7"/>
             </svg>
           </button>
+          <button type="button" class="batiment-outil" id="batimentOutilOuverture" data-outil="ouverture" title="Portes et fenêtres (O)">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+              <path d="M5 21V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v17"/><path d="M3 21h18"/><path d="M15 12h.01"/>
+            </svg>
+          </button>
           <button type="button" class="batiment-outil" id="batimentOutilSelection" data-outil="selection" title="Sélection (V)">
             <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
               <path d="M5 3l6 17 2.5-7.5L21 10Z"/>
@@ -246,7 +251,7 @@
         </section>
         <section class="side-section pour-aucun">
           <h2 id="batimentSectionAide">Commandes</h2>
-          <p id="batimentAide" class="batiment-aide">Les outils sont en bas : Mur (M) pour tracer, Sélection (V) pour retoucher. Un nouveau clic sur l'outil actif, ou « Fermer », le quitte.
+          <p id="batimentAide" class="batiment-aide">Les outils sont en bas : Mur (M) pour tracer, Ouverture (O) pour les portes et fenêtres, Sélection (V) pour retoucher. Un nouveau clic sur l'outil actif, ou « Fermer », le quitte.
 Vue de dessus : molette pour zoomer, clic droit maintenu pour déplacer la vue.
 Aperçu 3D : clic gauche maintenu pour tourner, clic droit maintenu pour déplacer, molette pour zoomer. Sa barre : la tirer pour l'ancrer à un autre coin, − pour le réduire, ⤢ pour le plein écran.
 Ctrl+Z / Ctrl+Y : annuler / rétablir. H ou Échap : fermer l'éditeur.</p>
@@ -267,9 +272,31 @@ Un mur qui en traverserait un autre s'affiche en rouge et est refusé.
 Échap : finir la chaîne, puis quitter l'outil.</p>
         </section>
 
+        <!-- #454a-3c : l'outil Ouverture. Les réglages des ouvertures à poser ; le formulaire est
+             construit par batiment-editeur-ui.js (le même sert à retoucher une ouverture choisie). -->
+        <section class="side-section pour-ouverture">
+          <h2 id="batimentSectionOuverture">Ouverture à poser</h2>
+          <div id="batimentReglagesOuverture"></div>
+        </section>
+        <section class="side-section pour-ouverture">
+          <h2 id="batimentSectionAideOuverture">Commandes</h2>
+          <p id="batimentAideOuverture" class="batiment-aide">Survolez un mur : l'ouverture s'y place, centrée sous la souris (en rouge si elle ne tient pas : trop près d'un angle ou d'une autre ouverture).
+Clic : la poser. Pour la déplacer ou la retoucher : outil Sélection.
+Échap : quitter l'outil.</p>
+        </section>
+
         <section class="side-section pour-selection" id="batimentSectionSelection">
           <h2 id="batimentSelectionTitre">Sélection</h2>
-          <p id="batimentSelectionVide" class="batiment-vide">Cliquez sur un mur ou dans une pièce pour le choisir.</p>
+          <p id="batimentSelectionVide" class="batiment-vide">Cliquez sur un mur, une ouverture ou dans une pièce pour le choisir.</p>
+          <!-- #454a-3c : une ouverture choisie se retouche ici. -->
+          <div id="batimentSelectionOuverture">
+            <div id="batimentFormOuverture"></div>
+            <div class="batiment-boutons">
+              <button type="button" class="nav-btn" id="batimentOuvertureSens">Inverser le côté</button>
+              <button type="button" class="nav-btn" id="batimentOuvertureCharniere">Inverser la charnière</button>
+            </div>
+            <button type="button" class="full-btn delete-btn" id="batimentOuvertureSupprimer">Supprimer l'ouverture</button>
+          </div>
           <!-- #454a-3b : une pièce sélectionnée (clic à l'intérieur) se renomme ici. -->
           <div id="batimentSelectionPiece">
             <input type="text" id="batimentPieceNom" class="modal-input batiment-nom" autocomplete="off" spellcheck="false">
@@ -285,6 +312,7 @@ Un mur qui en traverserait un autre s'affiche en rouge et est refusé.
         <section class="side-section pour-selection">
           <h2 id="batimentSectionAideSelection">Commandes</h2>
           <p id="batimentAideSelection" class="batiment-aide">Clic sur un mur : le choisir. Suppr : le supprimer.
+Clic sur une ouverture : la choisir ; la tirer la fait glisser le long de son mur.
 Clic dans une pièce : la choisir, pour la renommer.
 Tirer un angle : le déplacer, avec tous les murs qui y sont attachés (Alt : sans aimantation).
 Échap : désélectionner, puis quitter l'outil.</p>
@@ -997,6 +1025,9 @@ Tirer un angle : le déplacer, avec tous les murs qui y sont attachés (Alt : sa
             </button>
             <button type="button" class="help-group" data-help="batiments_trace">
               <span class="help-group-title">Tracer les murs</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="batiments_ouvertures">
+              <span class="help-group-title">Portes et fenêtres</span><span class="help-group-compte"></span>
             </button>
           </div>
         </div>

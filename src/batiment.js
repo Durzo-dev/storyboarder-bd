@@ -43,8 +43,24 @@ export const BORNES_BATIMENT = {
 export const DEFAUTS_BATIMENT = { hauteur: 2.8, dalle: 0.2, epaisseur: 0.2 };
 /** Les types de toit (#458). */
 export const TYPES_DE_TOIT = ['plat', 'un-pan', 'deux-pans', 'quatre-pans'];
-/** Les types d'ouverture. */
-export const TYPES_D_OUVERTURE = ['porte', 'fenetre', 'baie'];
+/**
+ * Les types d'ouverture (#454a-3c, décidé avec Valentin le 23 octobre 2026). Gardés pour plus tard,
+ * dans TACHES.md : porte de garage, vitrine, œil-de-bœuf, bow-window, verrière ; et l'option « haut
+ * cintré », les volets.
+ */
+export const TYPES_D_OUVERTURE = ['porte', 'fenetre', 'baie', 'passage'];
+/**
+ * Les valeurs d'une ouverture neuve, par type. `y` : la hauteur d'allège (le bas de l'ouverture,
+ * depuis le sol du niveau) ; `battants` : 1 ou 2 ; `coulissant` : coulisse au lieu de pivoter ;
+ * `vitre` : vitrée ou pleine ; `sens` : de quel côté du mur elle s'ouvre (1 ou -1) ; `charniere` :
+ * à quel bout elle pivote ('debut' ou 'fin', le long du mur).
+ */
+export const DEFAUTS_OUVERTURE = {
+  porte: { largeur: 0.9, hauteur: 2.1, y: 0, battants: 1, coulissant: false, vitre: false },
+  fenetre: { largeur: 1.2, hauteur: 1.2, y: 0.9, battants: 2, coulissant: false, vitre: true },
+  baie: { largeur: 2.4, hauteur: 2.2, y: 0, battants: 2, coulissant: true, vitre: true },
+  passage: { largeur: 1.2, hauteur: 2.3, y: 0, battants: 0, coulissant: false, vitre: false },
+};
 
 const TOIT_DEFAUT = { type: 'deux-pans', pente: 35, debord: 0.3, matiere: null, couleur: null, terrasse: false, gardeCorps: false };
 
@@ -140,14 +156,23 @@ function normaliserOuvertures(liste, murs){
   const ids = new Set(murs.map(m => m.id));
   return avecIdentifiants(liste)
     .filter(o => ids.has(o.murId))
-    .map(o => ({
-      ...o,
-      type: TYPES_D_OUVERTURE.includes(o.type) ? o.type : 'porte',
-      le: borne(o.le, [0, 1], 0.5),
-      y: borne(o.y, [0, BORNES_BATIMENT.hauteur[1]], 0),
-      largeur: borne(o.largeur, [0.2, 20], 0.9),
-      hauteur: borne(o.hauteur, [0.2, BORNES_BATIMENT.hauteur[1]], 2.1),
-    }));
+    .map(o => {
+      const type = TYPES_D_OUVERTURE.includes(o.type) ? o.type : 'porte';
+      const d = DEFAUTS_OUVERTURE[type];
+      return {
+        ...o,
+        type,
+        le: borne(o.le, [0, 1], 0.5),
+        y: borne(o.y, [0, BORNES_BATIMENT.hauteur[1]], d.y),
+        largeur: borne(o.largeur, [0.2, 20], d.largeur),
+        hauteur: borne(o.hauteur, [0.2, BORNES_BATIMENT.hauteur[1]], d.hauteur),
+        battants: type === 'passage' ? 0 : (o.battants === 2 ? 2 : o.battants === 1 ? 1 : d.battants),
+        coulissant: typeof o.coulissant === 'boolean' ? o.coulissant : d.coulissant,
+        vitre: typeof o.vitre === 'boolean' ? o.vitre : d.vitre,
+        sens: o.sens === -1 ? -1 : 1,
+        charniere: o.charniere === 'fin' ? 'fin' : 'debut',
+      };
+    });
 }
 
 function rattacherAuNiveau(liste, niveaux){
@@ -251,11 +276,6 @@ export function nomAfficheDuFichier(fichier){
 // ceux que calcule `getRoomConnectedComponents` (sidebar.js). Son épaisseur était 6 % de sa hauteur.
 
 const OUVERTURES_DE_LA_SCENE = { porte_ouverte: 'porte', fenetre_ouverte: 'fenetre', baie_vitree: 'baie' };
-const TAILLES_D_OUVERTURE = {
-  porte: { largeur: 0.9, hauteur: 2.1, y: 0 },
-  fenetre: { largeur: 1.2, hauteur: 1.2, y: 0.9 },
-  baie: { largeur: 2.4, hauteur: 2.2, y: 0 },
-};
 
 /**
  * Le bâtiment d'un niveau qui reprend les pièces `pieceIds` des Éléments `objets` (ceux d'une Case
@@ -294,8 +314,7 @@ export function batimentDesPieces(objets, pieceIds, nom, traduire){
     const type = o && OUVERTURES_DE_LA_SCENE[o.objType];
     const murId = o && idDuMur.get(o.magnetWallId);
     if (!type || !murId) return;
-    const t = TAILLES_D_OUVERTURE[type];
-    b.ouvertures.push({ id: 'o' + i, murId, type, le: fini(o.wallAlongFrac) ? o.wallAlongFrac : 0.5, y: t.y, largeur: t.largeur, hauteur: t.hauteur });
+    b.ouvertures.push({ id: 'o' + i, murId, type, le: fini(o.wallAlongFrac) ? o.wallAlongFrac : 0.5, ...DEFAUTS_OUVERTURE[type], sens: 1, charniere: 'debut' });
   });
   [...voulues].forEach((pid, i) => {
     const rep = tous.find(o => o && o.pieceId === pid && o.pieceLabel);
