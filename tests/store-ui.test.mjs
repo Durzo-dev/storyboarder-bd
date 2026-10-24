@@ -192,7 +192,7 @@ describe('le câblage', () => {
     for (const id of ['renameEntityModal', 'confirmActionModal', 'skeletonMapModal', 'modelUsagesModal']) {
       assert.ok(store < html.indexOf(`id="${id}"`), `${id} s'ouvrirait DERRIÈRE la bibliothèque`);
     }
-    assert.match(lire('src/style.css'), /#modelContextMenu\{ z-index:1100; \}/);
+    assert.match(lire('src/style.css'), /\.context-menu\{\n  position:fixed; z-index:1100;/);
   });
   test('« Mes modèles » : les actions de la fiche sont celles de l\'application, injectées', () => {
     const ev = sans(lire('src/events.js'));

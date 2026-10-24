@@ -188,3 +188,10 @@ describe('retours du 24 octobre', () => {
     assert.match(EDITEUR, /\$\('batimentApercuCoupe'\)\.classList\.toggle\('actif', E\.coupe\);/);
   });
 });
+
+describe('les menus contextuels passent devant tout', () => {
+  test('RÉGRESSION : un seul z-index pour tous les menus, au-dessus des éditeurs (900) et des modales (1000)', () => {
+    assert.match(regle('.context-menu'), /z-index:1100;/);
+    assert.ok(!/#\w+(ContextMenu|Menu)\{ z-index:/.test(CSS), 'un menu a de nouveau son z-index à lui');
+  });
+});
