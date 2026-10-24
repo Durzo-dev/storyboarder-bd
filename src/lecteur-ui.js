@@ -436,9 +436,9 @@ function section(titre, enfants){
  * pictogramme (`[valeur, libellé, icône]`), le bouton n'a pas de texte : son nom passe en infobulle
  * et en aria-label, comme dans l'éditeur de bâtiment (demandé : « des boutons plus visuels »).
  */
-function choix(cle, valeurs, desactive = false){
+function choix(cle, valeurs, desactive = false, variante = ''){
   const g = document.createElement('div');
-  g.className = 'choix';   // #460c : le composant de choix commun
+  g.className = 'choix' + (variante ? ` choix-${variante}` : '');   // #460c : le composant de choix commun
   valeurs.forEach(([v, libelle, icone]) => {
     const b = document.createElement('button');
     b.type = 'button';
@@ -460,6 +460,18 @@ function bascule(cle, libelle, icone, desactive = false){
   b.disabled = desactive;
   b.onclick = () => changer(cle, !options[cle]);
   return b;
+}
+function groupeOptions(rangee){
+  const g = document.createElement('div');
+  g.className = 'choix-options-groupe';
+  g.append(rangee);
+  return g;
+}
+function separe(rangee){
+  const g = document.createElement('div');
+  g.className = 'lecteur-separe';
+  g.append(rangee);
+  return g;
 }
 function ligneDeBascules(...boutons){
   const g = document.createElement('div');
@@ -508,9 +520,12 @@ function construirePanneau(){
     section(tr('Display', 'Affichage'), [
       // Des pictogrammes, nom en infobulle (demandé) : une page / deux, la première à droite ou à
       // gauche, la page entière ou en largeur ; puis les deux vues, en bascules.
-      choix('double', [[false, tr('One page', 'Une page'), ICONES_DOUBLE.false], [true, tr('Two pages', 'Deux pages'), ICONES_DOUBLE.true]], options.guide),
-      choix('debut', [['droite', tr('First page on the right', 'Première page à droite'), ICONES_DEBUT.droite], ['gauche', tr('First page on the left', 'Première page à gauche'), ICONES_DEBUT.gauche]], options.guide || !options.double),
-      choix('ajustement', [['hauteur', tr('Whole page', 'Page entière'), ICONES_AJUSTEMENT.hauteur], ['largeur', tr('Fit width', 'Largeur'), ICONES_AJUSTEMENT.largeur]], options.guide),
+      choix('double', [[false, tr('One page', 'Une page'), ICONES_DOUBLE.false], [true, tr('Two pages', 'Deux pages'), ICONES_DOUBLE.true]], options.guide, 'types'),
+      // La première page à droite ou à gauche est une OPTION de « Deux pages » (demandé) : plus
+      // petite, sous un trait, et absente en une page (elle n'y voulait rien dire).
+      options.double && !options.guide && groupeOptions(choix('debut', [['droite', tr('First page on the right', 'Première page à droite'), ICONES_DEBUT.droite], ['gauche', tr('First page on the left', 'Première page à gauche'), ICONES_DEBUT.gauche]], false, 'options')),
+      // Un trait au-dessus de l'ajustement (demandé) : c'est un autre réglage que le nombre de pages.
+      separe(choix('ajustement', [['hauteur', tr('Whole page', 'Page entière'), ICONES_AJUSTEMENT.hauteur], ['largeur', tr('Fit width', 'Largeur'), ICONES_AJUSTEMENT.largeur]], options.guide)),
       ligneDeBascules(
         bascule('livre', tr('Book view: the page turns', 'Vue livre : la page se tourne'), ICONE_LIVRE, options.guide),
         bascule('guide', tr('Guided view, panel by panel', 'Vue guidée, case par case'), ICONE_GUIDE),

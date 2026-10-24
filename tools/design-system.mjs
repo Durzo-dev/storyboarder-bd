@@ -225,9 +225,9 @@ const lchoix = (liste, actif) => `<div class="choix">${liste.map((l, i) => `<but
 const lsection = (t, c) => `<section class="side-section lecteur-section"><h2>${t}</h2>${c}</section>`;
 const licone = (liste, actif, classe = '') => `<div class="choix${classe}">${liste.map(([svg, fr, en], i) => `<button type="button" class="icone${(Array.isArray(actif) ? actif.includes(i) : i === actif) ? ' actif' : ''}" title="${fr}" aria-label="${fr}" data-ds-titre-fr="${fr}" data-ds-titre-en="${en}">${svg}</button>`).join('')}</div>`;
 const LECTEUR = lsection(L('Affichage', 'Display'),
-  licone([[LI.ICONES_DOUBLE.false, 'Une page', 'One page'], [LI.ICONES_DOUBLE.true, 'Deux pages', 'Two pages']], 1)
-  + licone([[LI.ICONES_DEBUT.droite, 'Première page à droite', 'First page on the right'], [LI.ICONES_DEBUT.gauche, 'Première page à gauche', 'First page on the left']], 0)
-  + licone([[LI.ICONES_AJUSTEMENT.hauteur, 'Page entière', 'Whole page'], [LI.ICONES_AJUSTEMENT.largeur, 'Largeur', 'Fit width']], 0)
+  licone([[LI.ICONES_DOUBLE.false, 'Une page', 'One page'], [LI.ICONES_DOUBLE.true, 'Deux pages', 'Two pages']], 1, ' choix-types')
+  + `<div class="choix-options-groupe">${licone([[LI.ICONES_DEBUT.droite, 'Première page à droite', 'First page on the right'], [LI.ICONES_DEBUT.gauche, 'Première page à gauche', 'First page on the left']], 0, ' choix-options')}</div>`
+  + `<div class="lecteur-separe">${licone([[LI.ICONES_AJUSTEMENT.hauteur, 'Page entière', 'Whole page'], [LI.ICONES_AJUSTEMENT.largeur, 'Largeur', 'Fit width']], 0)}</div>`
   + licone([[LI.ICONE_LIVRE, 'Vue livre : la page se tourne', 'Book view: the page turns'], [LI.ICONE_GUIDE, 'Vue guidée, case par case', 'Guided view, panel by panel']], [0], ' choix-bascules'))
   + lsection(L('Sens de lecture', 'Reading direction'), licone([[LI.ICONES_SENS.rtl, 'Vers la gauche', 'To the left'], [LI.ICONES_SENS.ltr, 'Vers la droite', 'To the right']], 1))
   + lsection(L('Défilement automatique', 'Automatic scrolling'), `<div class="lecteur-vitesse"><label>${L('Vitesse : 6 s par page', 'Speed: 6 s per page')}</label><input type="range" min="2" max="20" value="6"></div><button type="button" class="full-btn lecteur-lecture">${L('▶ Lecture (Espace)', '▶ Play (Space)')}</button>`)
