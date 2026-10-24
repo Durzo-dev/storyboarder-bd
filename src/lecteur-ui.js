@@ -472,9 +472,10 @@ function groupeOptions(...rangees){
   g.append(...rangees.filter(Boolean));
   return g;
 }
+/** Une bascule seule sur sa ligne, de toute la largeur (demandé), comme les choix au-dessus. */
 function ligneDeBascules(...boutons){
   const g = document.createElement('div');
-  g.className = 'choix choix-bascules';
+  g.className = 'choix';
   g.append(...boutons);
   return g;
 }
@@ -535,7 +536,9 @@ function construirePanneau(){
     // case est une façon de lire, pas une mise en page.
     section(tr('Reading', 'Lecture'), [
       // « Vers la gauche » à gauche, « Vers la droite » à droite (demandé).
-      choix('sens', [['rtl', tr('To the left', 'Vers la gauche'), ICONES_SENS.rtl], ['ltr', tr('To the right', 'Vers la droite'), ICONES_SENS.ltr]]),
+      // En grand comme « Une page / Deux pages » (demandé : la même hauteur) : ce sont les deux choix
+      // principaux du menu.
+      choix('sens', [['rtl', tr('To the left', 'Vers la gauche'), ICONES_SENS.rtl], ['ltr', tr('To the right', 'Vers la droite'), ICONES_SENS.ltr]], false, 'types'),
       ligneDeBascules(
         bascule('guide', tr('Guided view, panel by panel', 'Vue guidée, case par case'), ICONE_GUIDE),
       ),

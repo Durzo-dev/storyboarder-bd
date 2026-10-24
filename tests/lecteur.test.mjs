@@ -112,7 +112,7 @@ describe('Le branchement', () => {
     assert.match(UI, /function surRedimension\(\)\{\n  if \(!L\) return;\n  retailler\(\);\n  clearTimeout\(_redimension\);\n  _redimension = setTimeout\(afficher, 250\);/);
     assert.match(UI, /window\.addEventListener\('resize', surRedimension\);/);
     // « Vers la gauche » à gauche (des pictogrammes depuis, nom en infobulle).
-    assert.match(UI, /choix\('sens', \[\['rtl', tr\('To the left', 'Vers la gauche'\), ICONES_SENS\.rtl\], \['ltr', tr\('To the right', 'Vers la droite'\), ICONES_SENS\.ltr\]\]\)/);
+    assert.match(UI, /choix\('sens', \[\['rtl', tr\('To the left', 'Vers la gauche'\), ICONES_SENS\.rtl\], \['ltr', tr\('To the right', 'Vers la droite'\), ICONES_SENS\.ltr\]\], false, 'types'\)/);
     assert.match(UI, /\[vitesse, lecture\]/);
     const HTML = lire('src/index.html');
     assert.doesNotMatch(HTML, /lecteur-bar/);
@@ -165,5 +165,9 @@ describe('le menu du Lecteur en pictogrammes (demandé : « comme l\'éditeur de
   });
   test('la section « Lecture » (ex-« Sens de lecture ») porte le sens et la vue guidée', () => {
     assert.match(UI, /section\(tr\('Reading', 'Lecture'\), \[[\s\S]*?choix\('sens'[\s\S]*?bascule\('guide'/);
+  });
+  test('le sens en grand comme le nombre de pages ; les bascules de toute la largeur', () => {
+    assert.match(UI, /ICONES_SENS\.ltr\]\], false, 'types'\)/);
+    assert.match(UI, /function ligneDeBascules\(\.\.\.boutons\)\{\n  const g = document\.createElement\('div'\);\n  g\.className = 'choix';/);
   });
 });
