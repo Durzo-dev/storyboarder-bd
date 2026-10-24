@@ -231,6 +231,9 @@ Les icônes vivent dans `src/batiment-icones.js`.
 - Un éditeur vide s'ouvre sur l'outil qui le remplit (l'outil Mur), et un nouvel étage aussi.
 - Un clic **n'importe où** dans une ligne de liste la choisit ; le clic droit ouvre son menu
   (Renommer, Supprimer).
+- **Une ligne active** (#460d) a partout le même aspect : bord orange, fond `--accent-soft`, texte
+  orange en gras. **Glisser pour réordonner** montre un trait orange de 3 px au-dessus ou au-dessous
+  de la ligne visée.
 
 ### Modales
 
@@ -258,7 +261,7 @@ rejoint ce document avec son test.
   licence, numéros de niveau) : passer à une pastille neutre.
 - **#460c** ✅ Un seul composant de choix, `.choix` (éditeur de bâtiment, Lecteur), avec ses variantes
   `.choix-types`, `.choix-options` et `.choix-bascules`.
-- **#460d** Trois styles de ligne active et deux traits de dépôt : n'en garder qu'un de chaque.
+- **#460d** ✅ Un seul style de ligne active et un seul trait de dépôt.
 - **#460e** Deux mises en page de champ (libellé au-dessus ou à gauche) : trancher la règle.
 - **#460f** Deux vocabulaires de section (panneaux, modale d'un Élément) : une seule hiérarchie.
 - **#460g** Deux composants d'onglets (store, Configuration) : les fusionner.

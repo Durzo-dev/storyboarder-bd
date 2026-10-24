@@ -223,6 +223,8 @@ The icons live in `src/batiment-icones.js`.
 
 - An empty editor opens on the tool that fills it (the Wall tool), and so does a new floor.
 - A click **anywhere** in a list row picks it; right-click opens its menu (Rename, Delete).
+- **An active row** (#460d) looks the same everywhere: orange border, `--accent-soft` fill, bold
+  orange text. **Dragging to reorder** shows a 3 px orange line above or below the target row.
 
 ### Modals
 
@@ -250,7 +252,7 @@ with its test.
   to a neutral chip.
 - **#460c** ✅ One choice component, `.choix` (building editor, Reader), with its variants
   `.choix-types`, `.choix-options` and `.choix-bascules`.
-- **#460d** Three active-row styles and two drop lines: keep one of each.
+- **#460d** ✅ One active-row style and one drop line.
 - **#460e** Two field layouts (label above or on the left): settle the rule.
 - **#460f** Two section vocabularies (panels, an Element's modal): one hierarchy.
 - **#460g** Two tab components (store, Settings): merge them.
