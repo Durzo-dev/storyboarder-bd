@@ -30,7 +30,7 @@ import {
   PANEL_CAM_DEFAULT_DIST_3D,
   POSE_3D, PREVIEW_OBJECT_ID, PERSONA_SKELETON_3D, ARCHETYPES_3D, GROUND_TYPE_DEFS, GROUND_Y_DEFAULT_3D, TRACÉ_DEFAULTS,
   PERSONA_PREVIEW_MAX_PX,
-  TRACÉ_EMOJI, TRAVERSANT_TYPES, WALL_PX_PER_UNIT_3D, WALL_TYPES,
+  TRAVERSANT_TYPES, WALL_PX_PER_UNIT_3D, WALL_TYPES,
 } from './constants.js';
 import {
   clamp, getElementDepth, repairElementBase3D, unknownPoseKey3D,
@@ -1331,7 +1331,7 @@ export function openObjectModal(obj, isNew){
   const linkedName = getLinkedElementName(obj, currentPage());
   if (linkedName) {
     objectLinkedField.style.display = '';
-    objectLinkedValue.textContent = '🧲 ' + linkedName;
+    objectLinkedValue.textContent = linkedName;
   } else {
     objectLinkedField.style.display = 'none';
   }
@@ -1545,7 +1545,7 @@ export function populateMagnetWallOptions(obj){
     opt.value = w.id;
     // Path wall
     if (w.type === 'tracé') {
-      opt.textContent = w.name || ((TRACÉ_EMOJI[w.tracéType] || '') + ' ' + (tracéMurLabel[w.tracéType] || tr('Path', 'Tracé')));
+      opt.textContent = w.name || ((tracéMurLabel[w.tracéType] || tr('Path', 'Tracé')));
       objectMagnetWallSelect.appendChild(opt);
       return;
     }
@@ -1620,7 +1620,7 @@ export function openRoomModal(pieceId, panel, page, inBuilding = false) {
   if (!members.length) return;
   const first = members[0];
   // Title
-  roomModalTitle.textContent = '🧱 ' + (first.pieceLabel || tr('Room', 'Pièce'));
+  roomModalTitle.textContent = first.pieceLabel || tr('Room', 'Pièce');
   // Name
   roomNameInput.value = first.pieceLabel || '';
   // Real size (editable inputs)
@@ -1688,7 +1688,7 @@ export function openBuildingModal(buildingKey, roomIds, panel, page) {
   S.buildingModalPanelRef  = panel;
   S.buildingModalPageRef   = page;
   document.getElementById('buildingModalTitle').textContent =
-    '🏠 ' + (panel.batimentNames?.[buildingKey] || tr('Building', 'Bâtiment'));
+    (panel.batimentNames?.[buildingKey] || tr('Building', 'Bâtiment'));
   buildingNameInput.value = panel.batimentNames?.[buildingKey] || '';
   const bb = getBuildingBoundingBoxXZ(roomIds, page);
   const buildingWidthInput = document.getElementById('buildingWidthInput');
@@ -1738,11 +1738,11 @@ export function closeBuildingModal() {
 export function openTracéModal(obj){
   S.tracéModalTarget = obj;
   const _tracéTitles = {
-    route: '🛣️ Route', chemin: '🟤 Chemin de terre',
-    muret: '🧱 ' + tr('Low wall', 'Muret'), cloture: '⛓️ ' + tr('Fence', 'Clôture'),
-    haie: '🌳 ' + tr('Hedge', 'Haie végétale'), barriere: '🚧 ' + tr('Road barrier', 'Barrière de route'),
+    route: tr('Road', 'Route'), chemin: tr('Dirt path', 'Chemin de terre'),
+    muret: tr('Low wall', 'Muret'), cloture: tr('Fence', 'Clôture'),
+    haie: tr('Hedge', 'Haie végétale'), barriere: tr('Road barrier', 'Barrière de route'),
   };
-  document.getElementById('tracéModalTitle').textContent = _tracéTitles[obj.tracéType] || ('📍 ' + tr('Path', 'Tracé'));
+  document.getElementById('tracéModalTitle').textContent = _tracéTitles[obj.tracéType] || tr('Path', 'Tracé');
   document.getElementById('tracéNameInput').value  = obj.name  || '';
   const _def = TRACÉ_DEFAULTS[obj.tracéType] || {};
   document.getElementById('tracéColorInput').value = obj.color || _def.color || '#888888';

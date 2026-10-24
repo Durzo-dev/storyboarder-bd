@@ -286,3 +286,4 @@ with its test.
 - **#460i** ✅ Six text sizes, as `--texte-*` tokens.
 - **#460j** ✅ Three radii, as tokens: `--rayon-petit` (6 px: field, choice, menu entry), `--rayon-moyen` (8 px: button, row, menu, sub-section), `--rayon-grand` (10 px: section, modal), plus `--rayon-pilule` and round (50 %). Only very small elements keep 3 px.
 - **#460k** ✅ A single line-icon family (24 grid, 2 px stroke): header (Fonts, Undo, Manual) and the 106 context-menu entries. "Rename" (a field) and "Edit" (a pencil) no longer look alike.
+- **#460l** ✅ No emoji left: list rows (Elements, Paths, Room, Building) and icon buttons take an icon from `src/icones.js` (a Character shows the face of its emotion); drop-down lists and text buttons only have their text. Typographic signs ✓ ⚠ ✖ ▶ ⏸ remain.

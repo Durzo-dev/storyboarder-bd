@@ -20,6 +20,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import * as ICONES from '../src/batiment-icones.js';
+import { icone, ICONE_EMOTION } from '../src/icones.js';
+import { EMOTIONS } from '../src/constants.js';
 import { HELP_MANUAL_EN, HELP_MANUAL_FR } from '../src/help-content.js';
 
 // Les TRADUCTIONS DE L'APPLICATION, lues dans src/i18n.js (et non recopiées) : la page les rejoue
@@ -248,6 +250,15 @@ function specimens(html){
   const panneau = (contenu) => `<div class="right-panel" id="rightPanel"><div class="right-panel-scroll" id="rightPanelScroll">${equilibrer(montrer(contenu))}</div></div>`;
   let case_ = remplir(montrer(groupes.panelMenuHeader), 'sideDims', DIMENSIONS);
   case_ = texte(case_, 'sideStackLevel', 'Encrage', 'Inking');
+  // #460l : la liste des Éléments d'une Case, remplie par sidebar.js (renderSideElementRow), avec
+  // ses icônes au trait : le visage d'un Personnage selon son émotion, le type d'un Objet.
+  const ligneElement = (ic, fr, en, actif, sous = '') => `<div class="perso-row${actif ? ' active' : ''}"><span class="perso-icone">${icone(ic)}</span><span class="perso-name"><span class="perso-name-main">${L(fr, en)}</span>${sous}</span></div>`;
+  case_ = remplir(case_, 'sidePersonas', [
+    ligneElement('visage_content', 'Lina', 'Lina', true),
+    ligneElement('visage_surpris', 'Le gardien', 'The keeper', false),
+    ligneElement('chaise', 'Objet', 'Object', false),
+    ligneElement('porte', 'Porte', 'Door', false, `<span class="perso-link">${L('Lié à : Mur 2', 'Linked to: Wall 2')}</span>`),
+  ].join(''));
   case_ = texte(case_, 'panelMenuNumber', ' 3');
   case_ = texte(case_, 'panelMenuTitle', 'Case', 'Panel');   // posé par sidebar.js selon la langue
 
@@ -514,6 +525,7 @@ ${s.polices}
 <p class="ds-chapo">${L(`Une seule famille, au trait et en <code>currentColor</code> (#460k). Le <b>bandeau</b> et les <b>menus contextuels</b> (<code>.ctx-icon</code>) : grille de 24, trait de 2, bouts arrondis ; une action garde la même icône partout. Les <b>choix visuels</b> : pictogrammes au trait de 1,6 px en <code>currentColor</code>, sans libellé (nom en infobulle), dessinés dans la vue où la différence se lit : de dessus pour le plan, de face pour les ouvertures, de profil pour les marches.`,
   `A single line family in <code>currentColor</code> (#460k). The <b>header</b> and <b>context menus</b> (<code>.ctx-icon</code>): 24 grid, 2 px stroke, round caps; an action keeps the same icon everywhere. <b>Visual choices</b>: 1.6 px line pictograms in <code>currentColor</code>, without a label (name in the tooltip), drawn in the view where the difference reads: from above for the plan, from the front for openings, from the side for steps.`)}</p>
 <div class="context-menu ds-icones" style="position:static;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));width:auto;margin-bottom:12px">${iconesDeMenu(html)}</div>
+<div class="side-persos ds-icones" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-bottom:12px">${EMOTIONS.map(e => `<div class="perso-row"><span class="perso-icone">${icone(ICONE_EMOTION[e.key])}</span><span class="perso-name"><span class="perso-name-main">${L(e.label, e.labelEn)}</span></span></div>`).join('')}</div>
 <div class="right-panel ds-icones" style="width:auto;height:auto"><div class="right-panel-scroll">${Object.entries(ICONES).filter(([, o]) => typeof o === 'object').map(([g, o]) => `<section class="side-section"><h2>${g}</h2>${choixIcones(Object.entries(o).map(([k, v]) => [v, k]), 0)}</section>`).join('')}<section class="side-section"><h2>iconeSensPorte(sens, charniere, geste)</h2>${choixIcones([[1, 'debut'], [1, 'fin'], [-1, 'debut'], [-1, 'fin']].map(([a, b]) => [ICONES.iconeSensPorte(a, b), `${a}, ${b}`]), 0)}</section></div></div>
 
 <h2 class="ds-titre">${L('Règles d\'usage, en bref', 'Usage rules, in short')}</h2>

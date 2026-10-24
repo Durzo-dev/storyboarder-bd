@@ -25,7 +25,7 @@ import {
   ajouterRenommage3D, modelesARepointer3D, messageRepointageModeles, repointerModele3D,
 } from './model-library.js';
 import { disposeAllRigs3D, findOwningPanel, ensureElementWorldPos3D, panelDepthToDistance3D } from './scene3d.js';
-import { motDeSuppressionProjet3D, suppressionProjetConfirmee3D, vaguesDePrechargement3D } from './utils.js';
+import { motDeSuppressionProjet3D, suppressionProjetConfirmee3D, vaguesDePrechargement3D, posesSansEmoji3D } from './utils.js';
 import { reparerLumiereChangeeEnVoiture3D } from './light-source-3d.js';
 import {
   getElementDepth, repairElementBase3D,
@@ -209,7 +209,12 @@ export async function loadPoseLibrary(builtins, poseTable, skeleton){
       stored = settings ? settings[POSE_LIBRARY_SETTING_KEY] : null;
     } catch { stored = null; }
   }
-  if (Array.isArray(stored)) { S.poses = normalizePoses3D(stored); return S.poses; }
+  if (Array.isArray(stored)) {
+    const poses = normalizePoses3D(stored);
+    const propres = posesSansEmoji3D(poses, builtins);
+    if (propres !== poses) return setPoseLibrary(propres);
+    S.poses = poses; return S.poses;
+  }
   return setPoseLibrary(seedPoseLibrary3D(builtins, poseTable, skeleton, tr));
 }
 

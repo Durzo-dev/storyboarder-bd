@@ -3,7 +3,7 @@
  * Pure utility functions for Storyboarder.
  * No side effects, no global state, safe to import from any module.
  *
- * Data lookups:    getStyle3D, getEmotion, getPosition
+ * Data lookups:    getStyle3D, getPosition
  * Poses:           unknownPoseKey3D, jointsEqual3D, resolvePoseLabel3D
  * Pose sliders:    poseSliderSpecs3D, readPoseSliderDeg3D, writePoseSliderDeg3D
  * Math helpers:    clamp, wrapAngle, clampAngle
@@ -11,7 +11,7 @@
  * Element helpers: getElementDepth
  */
 
-import { EMOTIONS, POSITIONS, POSE_3D, POSE_HANDLES, WALL_PX_PER_UNIT_3D,
+import { POSITIONS, POSE_3D, POSE_HANDLES, WALL_PX_PER_UNIT_3D,
   OBJECT_TYPE_LABELS, OBJECT_TYPE_LABELS_EN, ANIMAL_LABELS_EN, JOINT_LABELS, JOINT_LABELS_EN,
   ANIMAL_ARCHETYPES_3D } from './constants.js';
 
@@ -25,7 +25,6 @@ import { EMOTIONS, POSITIONS, POSE_3D, POSE_HANDLES, WALL_PX_PER_UNIT_3D,
 // `getStyle3D` A ÉTÉ RETIRÉE (#402d) : `resolveStyle3D` (rig3d.js) est le chemin vivant, et deux
 // façons de résoudre un style, c'était deux replis à tenir d'accord.
 
-export function getEmotion(key){ return EMOTIONS.find(e => e.key === key) || EMOTIONS[0]; }
 
 // `getPosition` A ÉTÉ RETIRÉE (#402d) : elle rendait l'entrée d'une pose INTÉGRÉE, avec repli sur la
 // première. Les poses viennent maintenant de la bibliothèque, `nameOfPose3D` et
@@ -831,6 +830,26 @@ export function poseJointsByKey3D(key, poseTable, poses){
 //
 // Une clé sans angles dans la table est ignorée : elle donnerait une entrée inapplicable. ⚠️ Appeler
 // APRÈS le chargement de draw.js, qui complète POSE_3D avec 'allonge' et 'vaincu' (cf. Fix 54).
+/**
+ * #460l : les libellés des poses intégrées ont perdu leur emoji (« 🧍 Debout » → « Debout »). Le
+ * semis les avait COPIÉS dans le nom des poses, qui est une donnée : une bibliothèque déjà écrite
+ * les garde. On ne retire l'emoji que si le reste est EXACTEMENT le libellé intégré, en français ou
+ * en anglais : un nom choisi par l'utilisateur n'est jamais touché. Renvoie la même liste si rien
+ * ne change (l'appelant n'écrit alors rien).
+ */
+export function posesSansEmoji3D(poses, builtins){
+  if (!Array.isArray(poses)) return poses;
+  const libelles = new Map((builtins || []).map(b => [b.key, [b.label, b.labelEn].filter(Boolean)]));
+  let change = false;
+  const sortie = poses.map(p => {
+    const m = p && typeof p.name === 'string' && p.name.match(/^[^\p{L}\p{N}\s]+\s+(.+)$/u);
+    if (!m || !(libelles.get(p.id) || []).includes(m[1])) return p;
+    change = true;
+    return { ...p, name: m[1] };
+  });
+  return change ? sortie : poses;
+}
+
 export function seedPoseLibrary3D(builtins, poseTable, skeleton, traduire){
   return (builtins || [])
     .filter(p => p && p.key && poseTable && poseTable[p.key])

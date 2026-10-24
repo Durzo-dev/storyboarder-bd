@@ -735,7 +735,7 @@
         <!-- Uniquement pour le canevas d'une Scène (cf. isLockedScenePanel), pas pour les Cases
              normales : sur demande utilisateur, un bouton pour basculer en vue de dessus, et y
              rebasculer fait revenir à la vue qui était active juste avant le premier clic. -->
-        <button id="sceneTopDownBtn" type="button" style="display:none;">📐 Vue de dessus</button>
+        <button id="sceneTopDownBtn" type="button" style="display:none;">Vue de dessus</button>
       </div>
 
       <div class="side-section" id="sideCameraRotSection">
@@ -770,7 +770,7 @@
 
       <!-- Section Mesure : visible uniquement en vue de dessus, gérée par startMeasureTool/stopMeasureTool -->
       <div class="side-section" id="sideMesureSection" style="display:none;">
-        <h2>📏 Mesure</h2>
+        <h2>Mesure</h2>
         <div id="sideMesureStatus" style="font-size:var(--texte-libelle); color:var(--text-muted,#aaa); margin-bottom:6px;">Cliquez un 1er point sur le sol.</div>
         <div id="sideMesureResult" style="font-size:20px; font-weight:bold; text-align:center; padding:4px 0; display:none;"></div>
         <button id="sideMesureEffacer" type="button" style="width:100%; margin-top:6px;">✖ Terminer</button>
@@ -1364,15 +1364,15 @@
   <div class="modal-box">
     <button class="modal-close-btn" id="projectModalCornerClose" type="button" title="Fermer (Échap)">×</button>
     <h3 id="projectModalCurrentName">Projet</h3>
-    <button class="project-modal-btn edit-btn" id="projectModalRename" type="button">✏️ Renommer le projet</button>
-    <button class="project-modal-btn" id="projectModalNew" type="button">📄 Nouveau projet</button>
-    <button class="project-modal-btn nav-btn" id="projectModalLoad" type="button">📂 Charger un projet existant</button>
-    <button class="project-modal-btn" id="projectModalSave" type="button">💾 Enregistrer le projet</button>
+    <button class="project-modal-btn edit-btn" id="projectModalRename" type="button">Renommer le projet</button>
+    <button class="project-modal-btn" id="projectModalNew" type="button">Nouveau projet</button>
+    <button class="project-modal-btn nav-btn" id="projectModalLoad" type="button">Charger un projet existant</button>
+    <button class="project-modal-btn" id="projectModalSave" type="button">Enregistrer le projet</button>
     <!-- ⚠️ LA SEULE ACTION DE L'APPLICATION QUI DETRUIT UN FICHIER DE L'UTILISATEUR SANS RECOURS
          (#399) : pas de corbeille applicative, aucune annulation ne ramene un Projet supprime. Elle
          passe donc par une modale ou il faut ECRIRE le mot, et son survol est rouge (cf. #398).
          Masquee tant qu'aucun fichier n'existe : un Projet jamais enregistre n'a rien a supprimer. -->
-    <button class="project-modal-btn delete-btn" id="projectModalDelete" type="button" style="display:none;">🗑 Supprimer le projet</button>
+    <button class="project-modal-btn delete-btn" id="projectModalDelete" type="button" style="display:none;">Supprimer le projet</button>
     <!-- Retour des opérations de fichier : « Enregistré à 14:32 », « Échec de l'enregistrement du
          Projet »… setProjectModalStatus (io.js) l'alimente depuis quatorze endroits. L'élément
          MANQUAIT : la fonction cherchait un id absent du document, sa garde `if (el)` absorbait
@@ -1380,7 +1380,7 @@
          nulle part. Trouvé par le contrôle croisé de tests/dom-ids.test.mjs. -->
     <p class="project-modal-status" id="projectModalStatus" role="status" aria-live="polite"></p>
     <div class="modal-actions">
-      <button class="nav-btn" id="projectModalClose" type="button" style="width:100%;">🚪 Fermer l'application</button>
+      <button class="nav-btn" id="projectModalClose" type="button" style="width:100%;">Fermer l'application</button>
     </div>
   </div>
 </div>
@@ -1631,8 +1631,8 @@
       <div class="modal-field-row">
         <label class="modal-field-label">Thème de l'interface</label>
         <select id="themeSelect">
-          <option value="dark">🌑 Sombre</option>
-          <option value="light">☀️ Clair</option>
+          <option value="dark">Sombre</option>
+          <option value="light">Clair</option>
         </select>
         <label class="modal-field-aside">
           <input type="checkbox" id="contrastCheckbox"> <span id="contrastCheckboxLabel">Contraste renforcé</span>
@@ -1680,7 +1680,7 @@
       <label class="modal-field-label">Dossier des Projets</label>
       <p id="projectsDirDisplay" style="font-size:var(--texte-libelle); color:var(--ink-soft); word-break:break-all; margin:0 0 8px; padding:7px 8px; border:1px solid var(--line); border-radius:var(--rayon-petit); background:var(--white);"></p>
       <div style="display:flex; gap:8px;">
-        <button class="project-modal-btn nav-btn" id="projectsDirBrowse" type="button" style="margin-top:0; flex:1;">📂 Choisir...</button>
+        <button class="project-modal-btn nav-btn" id="projectsDirBrowse" type="button" style="margin-top:0; flex:1;">Choisir...</button>
         <button class="project-modal-btn nav-btn" id="projectsDirReset" type="button" style="margin-top:0; flex:1;">↺ Dossier par défaut</button>
       </div>
       <!-- Section "Exportation" (cf. exportShowCaseBadges/exportShowCaseDescriptions, persistés via
@@ -1772,8 +1772,8 @@
   <div class="modal-box">
     <h3>Quitter l'application</h3>
     <p style="font-size:var(--texte-courant); color:var(--ink-soft); margin:0 0 14px;">Le Projet contient des modifications non enregistrées.</p>
-    <button class="full-btn" id="quitConfirmSave" type="button" style="margin-top:0;">💾 Enregistrer et quitter</button>
-    <button class="project-modal-btn nav-btn" id="quitConfirmDiscard" type="button">🚪 Quitter sans enregistrer</button>
+    <button class="full-btn" id="quitConfirmSave" type="button" style="margin-top:0;">Enregistrer et quitter</button>
+    <button class="project-modal-btn nav-btn" id="quitConfirmDiscard" type="button">Quitter sans enregistrer</button>
     <button class="nav-btn" id="quitConfirmCancel" type="button" style="margin-top:6px;">Annuler</button>
   </div>
 </div>
@@ -1879,7 +1879,7 @@
                agit SUR cet aperçu, le placer dessus le dit sans qu'un libellé ait à l'expliquer.
                `title` porte le nom complet au survol. -->
           <button id="personaEditorOpenBtn" type="button" class="preview-corner-btn"
-                  title="Éditeur de modèle" aria-label="Éditeur de modèle">✏️</button>
+                  title="Éditeur de modèle" aria-label="Éditeur de modèle"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m14 6 4 4"/></svg></button>
         </div>
         <label style="display:flex; align-items:center; gap:6px; font-size:var(--texte-courant); margin:8px 0 0; cursor:pointer;">
           <input type="checkbox" id="personaHidden3dCheckbox"> Invisible dans la scène 3D
@@ -1951,40 +1951,40 @@
         </div>
         <label class="modal-field-label" id="objectTypeLabel">Type</label>
         <select id="objectTypeSelect">
-          <option value="voiture">🚗 Voiture</option>
-          <option value="velo">🚲 Vélo</option>
-          <option value="table">🍽️ Table</option>
-          <option value="chaise">🪑 Chaise</option>
-          <option value="etagere">📚 Étagère</option>
-          <option value="armoire">🚪 Armoire</option>
-          <option value="canape">🛋️ Canapé</option>
-          <option value="bureau">🗄️ Bureau</option>
-          <option value="lit">🛏️ Lit</option>
-          <option value="fenetre_ouverte">🪟 Fenêtre</option>
-          <option value="porte_ouverte">🚪 Porte</option>
-          <option value="escalier">🪜 Escalier</option>
-          <option value="baie_vitree">🪟 Baie vitrée</option>
-          <option value="mur">🧱 Mur simple</option>
-          <option value="mur_coin">📐 Mur en coin</option>
-          <option value="buisson">🌳 Buisson</option>
-          <option value="arbre">🌲 Arbre</option>
-          <option value="arbuste">🌿 Arbuste</option>
-          <option value="fleur">🌸 Fleur</option>
-          <option value="pot_fleur">🪴 Pot de fleur</option>
-          <option value="oiseau">🐦 Oiseau</option>
-          <option value="lezard">🦎 Lézard</option>
-          <option value="loup">🐺 Loup</option>
-          <option value="griffon">🦅 Griffon</option>
-          <option value="singe">🐒 Singe</option>
-          <option value="piscine">🏊 Piscine</option>
-          <option value="barbecue">🔥 Barbecue</option>
-          <option value="lampadaire">💡 Lampadaire</option>
-          <option value="panneau_signalisation">🚦 Panneau de signalisation</option>
-          <option value="tombe">⬛ Tombe</option>
-          <option value="pierre_tombale">🪦 Pierre tombale</option>
-          <option value="caveau">🏛️ Caveau</option>
-          <option value="banc_eglise">🪑 Banc d'église</option>
-          <option value="autel">✝️ Autel</option>
+          <option value="voiture">Voiture</option>
+          <option value="velo">Vélo</option>
+          <option value="table">Table</option>
+          <option value="chaise">Chaise</option>
+          <option value="etagere">Étagère</option>
+          <option value="armoire">Armoire</option>
+          <option value="canape">Canapé</option>
+          <option value="bureau">Bureau</option>
+          <option value="lit">Lit</option>
+          <option value="fenetre_ouverte">Fenêtre</option>
+          <option value="porte_ouverte">Porte</option>
+          <option value="escalier">Escalier</option>
+          <option value="baie_vitree">Baie vitrée</option>
+          <option value="mur">Mur simple</option>
+          <option value="mur_coin">Mur en coin</option>
+          <option value="buisson">Buisson</option>
+          <option value="arbre">Arbre</option>
+          <option value="arbuste">Arbuste</option>
+          <option value="fleur">Fleur</option>
+          <option value="pot_fleur">Pot de fleur</option>
+          <option value="oiseau">Oiseau</option>
+          <option value="lezard">Lézard</option>
+          <option value="loup">Loup</option>
+          <option value="griffon">Griffon</option>
+          <option value="singe">Singe</option>
+          <option value="piscine">Piscine</option>
+          <option value="barbecue">Barbecue</option>
+          <option value="lampadaire">Lampadaire</option>
+          <option value="panneau_signalisation">Panneau de signalisation</option>
+          <option value="tombe">Tombe</option>
+          <option value="pierre_tombale">Pierre tombale</option>
+          <option value="caveau">Caveau</option>
+          <option value="banc_eglise">Banc d'église</option>
+          <option value="autel">Autel</option>
         </select>
         <div id="objectMagnetWallField" style="display:none;">
           <label class="modal-field-label">Mur lié</label>
@@ -2017,9 +2017,9 @@
         <div id="objectDoorField" style="display:none;">
           <label class="modal-field-label">Ouverture de la porte</label>
           <select id="objectDoorStateSelect">
-            <option value="gauche">⬅️ Ouverte vers la gauche</option>
-            <option value="droite">➡️ Ouverte vers la droite</option>
-            <option value="fermee">🚪 Fermée</option>
+            <option value="gauche">Ouverte vers la gauche</option>
+            <option value="droite">Ouverte vers la droite</option>
+            <option value="fermee">Fermée</option>
           </select>
           <div id="objectDoorAngleField">
             <label class="modal-field-label">Angle d'ouverture</label>
@@ -2029,9 +2029,9 @@
         <div id="objectWindowField" style="display:none;">
           <label class="modal-field-label">Ouverture de la fenêtre</label>
           <select id="objectWindowStateSelect">
-            <option value="gauche">⬅️ Ouverte vers la gauche</option>
-            <option value="droite">➡️ Ouverte vers la droite</option>
-            <option value="fermee">🪟 Fermée</option>
+            <option value="gauche">Ouverte vers la gauche</option>
+            <option value="droite">Ouverte vers la droite</option>
+            <option value="fermee">Fermée</option>
           </select>
           <div id="objectWindowAngleField">
             <label class="modal-field-label">Angle d'ouverture</label>
@@ -2068,7 +2068,7 @@
         <div id="objectTraversantField" style="display:none;">
           <label class="modal-field-label" id="objectTraversantLabel">Traversant</label>
           <div id="objectTraversantHint" style="font-size:var(--texte-courant); opacity:.85; margin:0 0 4px; line-height:1.4;">
-            ✅ Oui — cet Élément perce un vrai trou dans le Mur auquel il est aimanté : on peut voir à travers le Mur à cet endroit. (Propriété fixe, non modifiable.)
+            Oui — cet Élément perce un vrai trou dans le Mur auquel il est aimanté : on peut voir à travers le Mur à cet endroit. (Propriété fixe, non modifiable.)
           </div>
         </div>
         <div id="objectLinkedField" style="display:none;">
@@ -2136,7 +2136,7 @@
                (cf. personaEditorOpenBtn) : deux corps qui se posent pareil doivent s'éditer pareil.
                Masqué pour tout le reste — une chaise n'a rien à poser. -->
           <button id="objectEditorOpenBtn" type="button" class="preview-corner-btn"
-                  style="display:none" title="Éditeur de modèle" aria-label="Éditeur de modèle">✏️</button>
+                  style="display:none" title="Éditeur de modèle" aria-label="Éditeur de modèle"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m14 6 4 4"/></svg></button>
         </div>
         <label style="display:flex; align-items:center; gap:6px; font-size:var(--texte-courant); margin:8px 0 0; cursor:pointer;">
           <input type="checkbox" id="objectHidden3dCheckbox"> Invisible dans la scène 3D
@@ -2232,7 +2232,7 @@
      Permet de renommer, afficher/cacher le plafond, positionner et (à terme) orienter la Pièce. -->
 <div class="modal-overlay hidden" id="roomModal">
   <div class="modal-box modal-box-2col">
-    <h3 id="roomModalTitle">🧱 Pièce</h3>
+    <h3 id="roomModalTitle">Pièce</h3>
 
     <div class="modal-columns">
     <div class="modal-col">
@@ -2328,7 +2328,7 @@
 
 <div class="modal-overlay hidden" id="buildingModal">
   <div class="modal-box modal-box-2col">
-    <h3 id="buildingModalTitle">🏠 Bâtiment</h3>
+    <h3 id="buildingModalTitle">Bâtiment</h3>
 
     <div class="modal-columns">
     <div class="modal-col">
@@ -2416,7 +2416,7 @@
      Permet de renommer, changer la couleur et l'épaisseur du tracé, ou le supprimer. -->
 <div class="modal-overlay hidden" id="tracéModal">
   <div class="modal-box" style="max-width:360px;">
-    <h3 id="tracéModalTitle">🛣️ Tracé</h3>
+    <h3 id="tracéModalTitle">Tracé</h3>
     <div class="modal-section">
       <div class="modal-section-header" onclick="toggleModalSection(this)">
         <span class="modal-section-title">Caractéristiques</span>
@@ -2450,7 +2450,7 @@
      Permet de renommer, changer le type de sol et le label affiché. -->
 <div class="modal-overlay hidden" id="terrainModal">
   <div class="modal-box" style="max-width:380px;">
-    <h3>🌿 Zone de terrain</h3>
+    <h3>Zone de terrain</h3>
     <div class="modal-section">
       <div class="modal-section-header" onclick="toggleModalSection(this)">
         <span class="modal-section-title">Caractéristiques</span>

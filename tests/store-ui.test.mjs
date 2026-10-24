@@ -243,7 +243,7 @@ describe('le câblage', () => {
     const html = lire('src/index.html');
     assert.ok(html.indexOf('id="storeTagsZone"') > html.indexOf('id="storeCategorie"') && html.indexOf('id="storeTagsZone"') < html.indexOf('id="storeTri"'));
     assert.match(lire('src/style.css'), /\.store-tags-zone \.store-menu-flottant\{ left:0; right:auto; \}/);
-    assert.match(lire('src/style.css'), /\.store-tag-corbeille\{ color:var\(--ink\);/);
+    assert.match(lire('src/style.css'), /\.store-tag-outil\{[^}]*color:var\(--ink\);/);
     // La même liste de tags (créer, renommer, supprimer) dans la fiche ET dans le filtre.
     assert.equal((UI.match(/remplirListeTags\(menu, \{/g) || []).length, 3);   // la définition, la fiche, le filtre
     assert.doesNotMatch(UI, /texte: '🗑'/);

@@ -29,11 +29,12 @@ import { queuePeutSInverser3D, queueInverseeDeLaBulle3D } from './bubble-tail.js
 import { bibliothequeLue3D, styleCorrespondant3D, peutEnregistrerLeStyle3D } from './bubble-library.js';
 import { bulleEstFusionnable3D, groupeDeLaBulle3D } from './bubble-merge.js';
 import {
-  TRACÉ_EMOJI, OBJECT_TYPE_LABELS, OBJECT_TYPE_EMOJI,
+  OBJECT_TYPE_LABELS,
   BUBBLE_PADDING_DEFAULT, GROUND_TYPE_DEFS,
   WALL_TYPES,
 } from './constants.js';
-import { clamp, getEmotion, libelleTable3D, libelleTypeObjet3D } from './utils.js';
+import { clamp, libelleTable3D, libelleTypeObjet3D } from './utils.js';
+import { icone, ICONE_TYPE_OBJET, ICONE_TRACÉ, ICONE_EMOTION } from './icones.js';
 import { pxParMm, trouverFormat } from './formats.js';
 import { estUneLumiere3D } from './light-source-3d.js';
 import { groupeReplie, memoriserGroupe } from './section-memory.js';
@@ -398,7 +399,7 @@ export function getLinkedElementName(o, page){
   if (wall.type === 'tracé') {
     const tracéLabel = { muret: tr('Low wall', 'Muret'), cloture: tr('Fence', 'Clôture'),
     haie: tr('Hedge', 'Haie végétale'), barriere: tr('Road barrier', 'Barrière de route') };
-    return wall.name || ((TRACÉ_EMOJI[wall.tracéType] || '') + ' ' + (tracéLabel[wall.tracéType] || 'Tracé'));
+    return wall.name || tracéLabel[wall.tracéType] || 'Tracé';
   }
   const wallName = wall.name || OBJECT_TYPE_LABELS[wall.objType] || 'Mur';
   // For a corner Wall, its two perpendicular sides are two distinct magnetism anchors
@@ -458,14 +459,15 @@ let horsChampAlerteDonnee = false;
 export function renderSideElementRow(p, panel, page){
   const row = document.createElement('div');
   row.className = 'perso-row' + (p.id === S.selectedId ? ' active' : '');
-  const emoji = p.type === 'perso' ? getEmotion(p.emotion).label.split(' ')[0] : (OBJECT_TYPE_EMOJI[p.objType] || '📦');
+  // #460l : une icône au trait de la famille commune. Un Personnage montre le visage de son émotion.
+  const nomIcone = p.type === 'perso' ? (ICONE_EMOTION[p.emotion] || ICONE_EMOTION.neutre) : (ICONE_TYPE_OBJET[p.objType] || 'modele');
   const nameSpan = document.createElement('span');
   nameSpan.className = 'perso-name';
   const nameMainSpan = document.createElement('span');
   nameMainSpan.className = 'perso-name-main';
   // ⚠️ « OBJET » EST LE REPLI DE TOUS LES OBJETS, ET IL RESTE. Une lumière fait exception parce
   // qu'elle vit dans un bloc à elle : trois lignes « Objet » sous un séparateur ne diraient plus
-  // rien du tout, alors que dans la liste principale le voisinage et l'emoji suffisent. Étendre le
+  // rien du tout, alors que dans la liste principale le voisinage et l'icône suffisent. Étendre le
   // vrai libellé à TOUS les types serait un autre chantier, et un changement que personne n'a
   // demandé.
   nameMainSpan.textContent = p.name || (p.type === 'perso' ? 'Personnage'
@@ -492,13 +494,13 @@ export function renderSideElementRow(p, panel, page){
   if (linkedName) {
     const linkSpan = document.createElement('span');
     linkSpan.className = 'perso-link';
-    linkSpan.textContent = '🧲 ' + tr('Linked to: ', 'Lié à : ') + linkedName;
+    linkSpan.textContent = tr('Linked to: ', 'Lié à : ') + linkedName;
     nameSpan.appendChild(linkSpan);
   }
-  const emojiSpan = document.createElement('span');
-  emojiSpan.className = 'perso-emoji';
-  emojiSpan.textContent = emoji;
-  row.appendChild(emojiSpan); row.appendChild(nameSpan);
+  const iconeSpan = document.createElement('span');
+  iconeSpan.className = 'perso-icone';
+  iconeSpan.innerHTML = icone(nomIcone);
+  row.appendChild(iconeSpan); row.appendChild(nameSpan);
   // A click selects the Element (on the Panel and in the list); a double-click directly
   // opens its edit modal (persona or object depending on the type). "mousedown" is used
   // rather than "click": a global handler window.addEventListener('mouseup', ...)
@@ -718,7 +720,8 @@ export function renderSidePersonas(panel, page, horsChampFn = elementNonVisible3
     const header = document.createElement('div');
     header.className = 'piece-group-header' + (S.selectedRoomId === p.pieceId ? ' active' : '');
 
-    const labelNode = document.createTextNode('🧱 ' + (p.pieceLabel || 'Pièce'));
+    header.insertAdjacentHTML('beforeend', icone('piece'));
+    const labelNode = document.createTextNode(p.pieceLabel || 'Pièce');
     header.appendChild(labelNode);
 
     const toggle = document.createElement('span');
@@ -788,7 +791,8 @@ export function renderSidePersonas(panel, page, horsChampFn = elementNonVisible3
 
       const buildingHeader = document.createElement('div');
       buildingHeader.className = 'batiment-group-header' + (S.selectedBuildingKey === buildingKey ? ' active' : '');
-      buildingHeader.appendChild(document.createTextNode('🏠 ' + buildingName));
+      buildingHeader.insertAdjacentHTML('beforeend', icone('batiment'));
+      buildingHeader.appendChild(document.createTextNode(buildingName));
       const buildingToggle = document.createElement('span');
       buildingToggle.className = 'batiment-toggle';
       buildingToggle.textContent = buildingCollapsed ? '▸' : '▾';
@@ -948,16 +952,16 @@ export function renderSidePersonas(panel, page, horsChampFn = elementNonVisible3
 export function renderTracéSideRow(t, panel, page){
   const row = document.createElement('div');
   row.className = 'perso-row' + (t.id === S.selectedId ? ' active' : '');
-  const emojiSpan = document.createElement('span');
-  emojiSpan.className = 'perso-emoji';
-  emojiSpan.textContent = TRACÉ_EMOJI[t.tracéType] || '📍';
+  const iconeSpan = document.createElement('span');
+  iconeSpan.className = 'perso-icone';
+  iconeSpan.innerHTML = icone(ICONE_TRACÉ[t.tracéType] || 'tracer');
   const nameSpan = document.createElement('span');
   nameSpan.className = 'perso-name';
   const nameMainSpan = document.createElement('span');
   nameMainSpan.className = 'perso-name-main';
   nameMainSpan.textContent = t.name || (t.tracéType === 'terrain' ? 'Terrain' : 'Tracé');
   nameSpan.appendChild(nameMainSpan);
-  row.appendChild(emojiSpan);
+  row.appendChild(iconeSpan);
   row.appendChild(nameSpan);
   row.addEventListener('mousedown', (e) => {
     e.preventDefault(); e.stopPropagation();
@@ -1655,11 +1659,12 @@ export function refreshCameraSliders(panel){
     if (o.pieceId) {
       if (!seenRooms.has(o.pieceId)) {
         seenRooms.add(o.pieceId);
-        options.push({ value: 'piece:' + o.pieceId, label: '🏠 ' + (o.pieceLabel || o.pieceId) });
+        options.push({ value: 'piece:' + o.pieceId, label: tr('Room: ', 'Pièce : ') + (o.pieceLabel || o.pieceId) });
       }
     } else {
-      const icon = o.type === 'perso' ? '🧍' : (OBJECT_TYPE_EMOJI[o.objType] || '📦');
-      options.push({ value: 'el:' + o.id, label: icon + ' ' + (o.name || o.id) });
+      // #460l : pas d'icône dans une liste déroulante ; un Élément sans nom y prend celui de son type.
+      const type = o.type === 'perso' ? tr('Character', 'Personnage') : (libelleTypeObjet3D(o.objType, tr) || o.id);
+      options.push({ value: 'el:' + o.id, label: o.name || type });
     }
   }
   // Rebuild the select's options only if they changed (avoids unnecessary flicker)
@@ -1701,7 +1706,7 @@ export function refreshSceneTopDownBtn(panel){
   const isTD = isSceneTopDownView(panel);
   sceneTopDownBtn.style.display = 'block';
   sceneTopDownBtn.classList.toggle('active', isTD);
-  sceneTopDownBtn.textContent = isTD ? '📐 ' + tr('Top-down view (click to go back)', 'Vue de dessus (cliquer pour revenir)') : '📐 Vue de dessus';
+  sceneTopDownBtn.textContent = isTD ? tr('Top-down view (click to go back)', 'Vue de dessus (cliquer pour revenir)') : tr('Top-down view', 'Vue de dessus');
 }
 
 export function closeRightPanelMenu(){

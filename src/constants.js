@@ -39,17 +39,17 @@ export const STYLES_3D = [
 
 // ── Character emotions, poses, hand states ──────────────────────
 export const EMOTIONS = [
-  {key:'neutre', label:'😐 Neutre', labelEn:'😐 Neutral'},
-  {key:'content', label:'🙂 Content', labelEn:'🙂 Happy'},
-  {key:'triste', label:'🙁 Triste', labelEn:'🙁 Sad'},
-  {key:'colere', label:'😠 En colère', labelEn:'😠 Angry'},
-  {key:'surpris', label:'😮 Surpris', labelEn:'😮 Surprised'},
-  {key:'rire', label:'😂 Rire', labelEn:'😂 Laughing'},
-  {key:'degout', label:'🤢 Dégoût', labelEn:'🤢 Disgusted'},
-  {key:'fier', label:'😏 Fier', labelEn:'😏 Proud'},
-  {key:'peur', label:'😨 Peur', labelEn:'😨 Afraid'},
-  {key:'confus', label:'😕 Confus', labelEn:'😕 Confused'},
-  {key:'fatigue', label:'😪 Fatigué', labelEn:'😪 Tired'},
+  {key:'neutre', label:'Neutre', labelEn:'Neutral'},
+  {key:'content', label:'Content', labelEn:'Happy'},
+  {key:'triste', label:'Triste', labelEn:'Sad'},
+  {key:'colere', label:'En colère', labelEn:'Angry'},
+  {key:'surpris', label:'Surpris', labelEn:'Surprised'},
+  {key:'rire', label:'Rire', labelEn:'Laughing'},
+  {key:'degout', label:'Dégoût', labelEn:'Disgusted'},
+  {key:'fier', label:'Fier', labelEn:'Proud'},
+  {key:'peur', label:'Peur', labelEn:'Afraid'},
+  {key:'confus', label:'Confus', labelEn:'Confused'},
+  {key:'fatigue', label:'Fatigué', labelEn:'Tired'},
 ];
 
 export const HAND_STATES = [
@@ -85,12 +85,12 @@ export const HAND_STATES = [
 // c'est voulu, renommer d'office écraserait le nom que l'utilisateur a pu choisir. Seuls le semis
 // d'une installation neuve et le repli de nameOfPose3D suivent la langue.
 export const POSITIONS = [
-  {key:'debout', label:'🧍 Debout', labelEn:'🧍 Standing'},
-  {key:'assis', label:'🪑 Assis', labelEn:'🪑 Sitting'},
-  {key:'allonge', label:'🛌 Allongé', labelEn:'🛌 Lying down'},
-  {key:'course', label:'🏃 Course', labelEn:'🏃 Running'},
-  {key:'accroupi', label:'🥷 Accroupi / furtif', labelEn:'🥷 Crouching / stealth'},
-  {key:'genoux', label:'🛡️ À genoux', labelEn:'🛡️ Kneeling'},
+  {key:'debout', label:'Debout', labelEn:'Standing'},
+  {key:'assis', label:'Assis', labelEn:'Sitting'},
+  {key:'allonge', label:'Allongé', labelEn:'Lying down'},
+  {key:'course', label:'Course', labelEn:'Running'},
+  {key:'accroupi', label:'Accroupi / furtif', labelEn:'Crouching / stealth'},
+  {key:'genoux', label:'À genoux', labelEn:'Kneeling'},
 ];
 
 
@@ -466,13 +466,6 @@ export function couleurDeTrace3D(type, couleur){
   return c;
 }
 
-// Emoji for each type, used in the sidebar.
-export const TRACÉ_EMOJI = {
-  route: '🛣️', chemin: '🟤', terrain: '🌿',
-  muret: '🧱', cloture: '⛓️', haie: '🌳', barriere: '🚧',
-};
-
-
 // ── Canvas zoom & rendering ─────────────────────────────────────
 export const ZOOM_MIN = 0.25, ZOOM_MAX = 4;
 
@@ -493,24 +486,6 @@ export const CURSOR_MAP = { tl: 'nwse-resize', br: 'nwse-resize', tr: 'nesw-resi
 // ── Floor types (Room) ─────────────────────────────────────────
 // IDs of the floor types shown in the Room modal (indoor subset of GROUND_TYPE_DEFS)
 export const ROOM_FLOOR_TYPE_IDS = ['neutre', 'carrelage', 'plancher', 'marbre', 'moquette', 'béton'];
-
-// Icon for each Element type, reusing the same emoji as in the "add" context menu.
-export const OBJECT_TYPE_EMOJI = {
-  lumiere: '💡',
-  voiture: '🚗', velo: '🚲',
-  table: '🍽️', chaise: '🪑', etagere: '📚', armoire: '🚪', canape: '🛋️', bureau: '🗄️', lit: '🛏️',
-  fenetre_ouverte: '🪟', porte_ouverte: '🚪',
-  escalier: '🪜', baie_vitree: '🪟', mur: '🧱', mur_coin: '📐',
-  buisson: '🌳', arbre: '🌲', arbuste: '🌿', fleur: '🌸', pot_fleur: '🪴',
-  oiseau: '🐦', lezard: '🦎', loup: '🐺', griffon: '🦅', singe: '🐒',
-  piscine: '🏊', barbecue: '🔥',
-  lampadaire: '💡', panneau_signalisation: '🚦',
-  tombe: '⬛', pierre_tombale: '🪦', caveau: '🏛️',
-  banc_eglise: '🪑', autel: '✝️',
-  modele: '📦',
-  batiment: '🏠',
-};
-
 
 // ── Speech bubbles ─────────────────────────────────────
 // Default angle (radians, ellipse parametrization) and length of a Bubble's tail when it has
@@ -1158,20 +1133,20 @@ export const GROUND_TYPE_DEFS = [
   // recette dessinée au canevas, en attendant d'être sourcées. La distinction est DÉCLARÉE plutôt
   // que devinée d'un fichier présent ou non : un grain manquant doit se voir comme un manque, pas
   // se rattraper tout seul. tests/ground-3d.test.mjs exige que chaque grain déclaré existe.
-  { id: 'neutre',    label: 'Neutre', labelEn: 'Neutral',        icon: '⬜', swatch: '#B8A890', roughness: 0.85, metalness: 0,    repeat: 1 , plaques: 0 },
-  { id: 'herbe',     label: 'Herbe', labelEn: 'Grass',         icon: '🌿', swatch: '#4a9c52', roughness: 0.95, metalness: 0,    repeat: 3000, plaques: 0.16, grain: 'herbe' , pavage: true },
-  { id: 'gazon',     label: 'Gazon', labelEn: 'Lawn',         icon: '⛳', swatch: '#2D7A36', roughness: 0.92, metalness: 0,    repeat: 3000, plaques: 0.16 , grain: 'gazon' , pavage: true },
-  { id: 'terre',     label: 'Terre', labelEn: 'Dirt',         icon: '🟤', swatch: '#7B5230', roughness: 0.99, metalness: 0,    repeat: 3000 , plaques: 0.34 , grain: 'terre.couleur' , pavage: true },
-  { id: 'sable',     label: 'Sable', labelEn: 'Sand',         icon: '🏖️', swatch: '#C4A060', roughness: 0.98, metalness: 0,    repeat: 3000 , plaques: 0.22 , grain: 'sable.couleur' , pavage: true },
-  { id: 'gravier',   label: 'Gravier', labelEn: 'Gravel',       icon: '🪨', swatch: '#8A8A8A', roughness: 0.9,  metalness: 0,    repeat: 3000 , plaques: 0.24 , grain: 'gravier' , pavage: true },
-  { id: 'bitume',    label: 'Bitume', labelEn: 'Asphalt',        icon: '🛣️', swatch: '#282828', roughness: 0.85, metalness: 0.05, repeat: 3000 , plaques: 0.14 , grain: 'bitume' , pavage: true },
-  { id: 'béton',     label: 'Béton', labelEn: 'Concrete',         icon: '🏗️', swatch: '#969696', roughness: 0.9,  metalness: 0,    repeat: 3000 , plaques: 0.12 , grain: 'beton' , pavage: true },
-  { id: 'neige',     label: 'Neige', labelEn: 'Snow',         icon: '❄️', swatch: '#E8EFFA', roughness: 0.98, metalness: 0,    repeat: 3000 , plaques: 0.18 , grain: 'neige' , pavage: true },
-  { id: 'eau',       label: 'Eau', labelEn: 'Water',           icon: '💧', swatch: '#1A6090', roughness: 0.15, metalness: 0,    repeat: 3000 , plaques: 0.1 , eau: true },
-  { id: 'carrelage', label: 'Carrelage', labelEn: 'Tiles',     icon: '🔲', swatch: '#D8D8D8', roughness: 0.3,  metalness: 0.05, repeat: 3000 , plaques: 0.05 , grain: 'carrelage.couleur' },
-  { id: 'plancher',  label: 'Plancher bois', labelEn: 'Wood floor', icon: '🪵', swatch: '#8B5E3C', roughness: 0.85, metalness: 0,    repeat: 3000 , plaques: 0.06 , grain: 'plancher' },
-  { id: 'marbre',    label: 'Marbre', labelEn: 'Marble',        icon: '🏛️', swatch: '#F0EBE0', roughness: 0.18, metalness: 0.12, repeat: 3000 , plaques: 0.04 , grain: 'marbre.couleur' },
-  { id: 'moquette',  label: 'Moquette', labelEn: 'Carpet',      icon: '🟫', swatch: '#9E8E7E', roughness: 0.99, metalness: 0,    repeat: 3000 , plaques: 0.08 , grain: 'moquette' , pavage: true },
+  { id: 'neutre',    label: 'Neutre', labelEn: 'Neutral', swatch: '#B8A890', roughness: 0.85, metalness: 0,    repeat: 1 , plaques: 0 },
+  { id: 'herbe',     label: 'Herbe', labelEn: 'Grass', swatch: '#4a9c52', roughness: 0.95, metalness: 0,    repeat: 3000, plaques: 0.16, grain: 'herbe' , pavage: true },
+  { id: 'gazon',     label: 'Gazon', labelEn: 'Lawn', swatch: '#2D7A36', roughness: 0.92, metalness: 0,    repeat: 3000, plaques: 0.16 , grain: 'gazon' , pavage: true },
+  { id: 'terre',     label: 'Terre', labelEn: 'Dirt', swatch: '#7B5230', roughness: 0.99, metalness: 0,    repeat: 3000 , plaques: 0.34 , grain: 'terre.couleur' , pavage: true },
+  { id: 'sable',     label: 'Sable', labelEn: 'Sand', swatch: '#C4A060', roughness: 0.98, metalness: 0,    repeat: 3000 , plaques: 0.22 , grain: 'sable.couleur' , pavage: true },
+  { id: 'gravier',   label: 'Gravier', labelEn: 'Gravel', swatch: '#8A8A8A', roughness: 0.9,  metalness: 0,    repeat: 3000 , plaques: 0.24 , grain: 'gravier' , pavage: true },
+  { id: 'bitume',    label: 'Bitume', labelEn: 'Asphalt', swatch: '#282828', roughness: 0.85, metalness: 0.05, repeat: 3000 , plaques: 0.14 , grain: 'bitume' , pavage: true },
+  { id: 'béton',     label: 'Béton', labelEn: 'Concrete', swatch: '#969696', roughness: 0.9,  metalness: 0,    repeat: 3000 , plaques: 0.12 , grain: 'beton' , pavage: true },
+  { id: 'neige',     label: 'Neige', labelEn: 'Snow', swatch: '#E8EFFA', roughness: 0.98, metalness: 0,    repeat: 3000 , plaques: 0.18 , grain: 'neige' , pavage: true },
+  { id: 'eau',       label: 'Eau', labelEn: 'Water', swatch: '#1A6090', roughness: 0.15, metalness: 0,    repeat: 3000 , plaques: 0.1 , eau: true },
+  { id: 'carrelage', label: 'Carrelage', labelEn: 'Tiles', swatch: '#D8D8D8', roughness: 0.3,  metalness: 0.05, repeat: 3000 , plaques: 0.05 , grain: 'carrelage.couleur' },
+  { id: 'plancher',  label: 'Plancher bois', labelEn: 'Wood floor', swatch: '#8B5E3C', roughness: 0.85, metalness: 0,    repeat: 3000 , plaques: 0.06 , grain: 'plancher' },
+  { id: 'marbre',    label: 'Marbre', labelEn: 'Marble', swatch: '#F0EBE0', roughness: 0.18, metalness: 0.12, repeat: 3000 , plaques: 0.04 , grain: 'marbre.couleur' },
+  { id: 'moquette',  label: 'Moquette', labelEn: 'Carpet', swatch: '#9E8E7E', roughness: 0.99, metalness: 0,    repeat: 3000 , plaques: 0.08 , grain: 'moquette' , pavage: true },
 ];
 
 

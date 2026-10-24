@@ -295,3 +295,4 @@ rejoint ce document avec son test.
 - **#460i** ✅ Six tailles de texte, en jetons `--texte-*`.
 - **#460j** ✅ Trois rayons, en jetons : `--rayon-petit` (6 px : champ, choix, entrée de menu), `--rayon-moyen` (8 px : bouton, ligne, menu, sous-section), `--rayon-grand` (10 px : section, modale), plus `--rayon-pilule` et le rond (50 %). Seuls les très petits éléments gardent 3 px.
 - **#460k** ✅ Une seule famille d'icônes au trait (grille 24, trait 2) : bandeau (Polices, Annuler, Manuel) et les 106 entrées des menus contextuels. « Renommer » (un champ) et « Modifier » (un crayon) ne se confondent plus.
+- **#460l** ✅ Plus aucun emoji : les lignes de liste (Éléments, Tracés, Pièce, Bâtiment) et les boutons-icônes prennent une icône de `src/icones.js` (un Personnage montre le visage de son émotion) ; les listes déroulantes et les boutons texte n'ont que leur texte. Restent les signes typographiques ✓ ⚠ ✖ ▶ ⏸.

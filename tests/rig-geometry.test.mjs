@@ -25,6 +25,7 @@
  * fichier garde.
  * ─────────────────────────────────────────────────────────────────────────────
  */
+import { ICONE_TYPE_OBJET } from '../src/icones.js';
 import './helpers/dom-stub.mjs';
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -32,7 +33,7 @@ import * as THREE from 'three';
 
 import * as R from '../src/rig3d.js';
 import {
-  OBJECT_REAL_HEIGHT_M, ANIMAL_TYPES, ANIMAL_JOINT_DEFS, OBJECT_TYPE_LABELS, OBJECT_TYPE_EMOJI,
+  OBJECT_REAL_HEIGHT_M, ANIMAL_TYPES, ANIMAL_JOINT_DEFS, OBJECT_TYPE_LABELS,
 } from '../src/constants.js';
 
 // Le constructeur de chaque type d'Objet. Cette table est elle-même l'objet d'un test : une entrée
@@ -91,7 +92,7 @@ describe('Rigs 3D : l\'énumération est complète des deux côtés', () => {
     const types = Object.keys(OBJECT_REAL_HEIGHT_M);
     assert.deepEqual(types.filter(t => !OBJECT_TYPE_LABELS[t]), [],
       'type(s) sans libellé : ils s\'afficheraient « Objet »');
-    assert.deepEqual(types.filter(t => !OBJECT_TYPE_EMOJI[t]), [],
+    assert.deepEqual(types.filter(t => !ICONE_TYPE_OBJET[t]), [],
       'type(s) sans émoji dans le panneau latéral');
   });
 

@@ -385,7 +385,7 @@ describe('applyProjectData : les poses du fichier FUSIONNENT dans la bibliothèq
     // La bibliothèque appartient à l'Application. Remplacer S.poses par le contenu du fichier
     // ferait qu'ouvrir un projet ancien détruirait tout le travail accumulé, poses semées
     // comprises, et sans le moindre avertissement.
-    S.poses = [{ id: 'debout', name: '🧍 Debout', skeleton: 'humain', joints: {} }];
+    S.poses = [{ id: 'debout', name: 'Debout', skeleton: 'humain', joints: {} }];
     applyProjectData({ projectName: 'P', tomes: [] });
     assert.equal(S.poses.length, 1, 'projet sans poses : la bibliothèque est intacte');
     applyProjectData({ projectName: 'P', tomes: [], scenes: [],

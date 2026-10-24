@@ -11,6 +11,7 @@
  * This module is now the application's real entry point: app.js is now just a
  * simple redirect (`import './events.js'`) kept so index.html doesn't have to change.
  */
+import { icone } from './icones.js';
 import { demarrer as sondeDemarrer, arreter as sondeArreter, rapport as sondeRapport, synthese as sondeSynthese } from './perf-probe.js';
 import {
   setScenesCallbacks, createScene, openScene, disableSceneCameraMode, loadSceneIntoPanel,
@@ -218,7 +219,7 @@ window.toggleModalSection = toggleModalSection;
 // ════════════════════════════════════════════════════════════
 // UI HELPERS
 // ════════════════════════════════════════════════════════════
-// ↳ src/utils.js (getStyle3D, getEmotion, getPosition)
+// ↳ src/utils.js (getStyle3D, getPosition)
 // A set of Volumes/Pages/Panels makes up a "Project" (default name "Projet"), shown at the
 // top of the left-hand menu (cf. #projectNameHeader) above the Volumes section.
 // [STATE→S] let S.projectName = 'Projet';
@@ -4459,7 +4460,9 @@ canvas.addEventListener('contextmenu', (e) => {
   }
   // The label reflects the CURRENT state of the targeted Panel (cf. ctxToggleCamera): a checkmark
   // when Camera mode (and thus the X/Y/Z 3D gizmo, cf. drawPanelAxisGizmo) is already active on it.
-  ctxToggleCamera.textContent = (hit.cameraMode ? '✅ ' : '🎥 ') + tr('Camera', 'Caméra');
+  // #460l : l'icône de la famille commune ; le mode actif se dit par la coche, comme une case.
+  ctxToggleCamera.innerHTML = `<span class="ctx-icon">${icone(hit.cameraMode ? 'coche' : 'camera')}</span>`;
+  ctxToggleCamera.appendChild(document.createTextNode(tr('Camera', 'Caméra')));
   // The Camera option only makes sense if there's at least one Element to frame in the Panel (cf.
   // elementsInPanel), per user request ("I don't want Camera to appear if there isn't at least
   // one Element in the Panel").

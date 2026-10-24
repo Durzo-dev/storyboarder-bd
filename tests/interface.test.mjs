@@ -132,7 +132,34 @@ describe('#460k : une seule famille d\'icônes au trait', () => {
     boutons.forEach(b => assert.match(b, /^<svg /, `un bouton du bandeau n'est pas une icône : ${b.slice(0, 20)}`));
   });
   test('l\'icône prend la couleur du libellé (trait de 2 en currentColor)', () => {
-    assert.match(regle('.ctx-icon svg'), /stroke:currentColor; stroke-width:2;/);
+    assert.match(regle('.ctx-icon svg, svg.icone'), /stroke:currentColor; stroke-width:2;/);
+  });
+  test('chaque icône d\'un menu contextuel est l\'une de celles de src/icones.js (une seule source)', async () => {
+    const { ICONES } = await import('../src/icones.js');
+    const connues = new Set(Object.values(ICONES));
+    const corps = [...HTML.matchAll(/<span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true">([\s\S]*?)<\/svg>/g)].map(m => m[1]);
+    assert.deepEqual([...new Set(corps.filter(c => !connues.has(c)))], [], 'une icône de menu dessinée hors de src/icones.js');
+  });
+});
+
+describe('#460l : plus aucun emoji dans l\'interface', () => {
+  // Les signes typographiques restent : ils s'affichent comme une lettre, dans la couleur du texte.
+  const PERMIS = new Set(['✓', '✖', '⚠', '⛶', '⚙']);
+  const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B05}-\u{2B07}\u{2B1B}]/gu;
+  const sansCommentaires = (t) => t.replace(/<!--[\s\S]*?-->/g, '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`])\/\/.*$/gm, '$1');
+  test('ni dans index.html ni dans le code de src/ (hors commentaires)', async () => {
+    const { readdirSync } = await import('node:fs');
+    const fichiers = ['src/index.html', ...readdirSync(new URL('../src/', import.meta.url)).filter(f => f.endsWith('.js')).map(f => `src/${f}`)];
+    const trouves = fichiers.flatMap(f => [...new Set((sansCommentaires(lire(f)).match(EMOJI) || []).filter(c => !PERMIS.has(c)))].map(c => `${f} : ${c}`));
+    assert.deepEqual(trouves, [], 'un emoji est revenu : utiliser une icône de src/icones.js, ou le texte seul dans une liste déroulante');
+  });
+  test('chaque type d\'Élément, de Tracé et chaque émotion a son icône', async () => {
+    const { ICONES, ICONE_TYPE_OBJET, ICONE_TRACÉ, ICONE_EMOTION } = await import('../src/icones.js');
+    const { EMOTIONS } = await import('../src/constants.js');
+    for (const table of [ICONE_TYPE_OBJET, ICONE_TRACÉ, ICONE_EMOTION]) {
+      Object.values(table).forEach(n => assert.ok(ICONES[n], `icône inconnue : ${n}`));
+    }
+    EMOTIONS.forEach(e => assert.ok(ICONE_EMOTION[e.key], `émotion sans visage : ${e.key}`));
   });
 });
 

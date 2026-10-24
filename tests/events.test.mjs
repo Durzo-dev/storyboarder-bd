@@ -1200,9 +1200,9 @@ describe('éditeur de Personnage : appliquer une pose (Fix 54)', () => {
     const langue = S.appLang;
     try {
       S.appLang = 'fr';
-      assert.match(personaEditorPoseLabel().label, /^🪑 Assis \(modifié\)$/, 'informé, en français');
+      assert.match(personaEditorPoseLabel().label, /^Assis \(modifié\)$/, 'informé, en français');
       S.appLang = 'en';
-      assert.match(personaEditorPoseLabel().label, /^🪑 Sitting \(modified\)$/, 'et en anglais');
+      assert.match(personaEditorPoseLabel().label, /^Sitting \(modified\)$/, 'et en anglais');
     } finally { S.appLang = langue; }
     assert.equal(S.personaEditorPoseKey, 'assis', 'la provenance est conservée, pas effacée');
   });

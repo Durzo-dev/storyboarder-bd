@@ -764,7 +764,9 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
   border: 1px solid var(--bord-actif); background:var(--white); cursor:pointer; font-size:var(--texte-courant); color:var(--ink);
 }
 .perso-row.active{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
-.perso-row .perso-emoji{ font-size:var(--texte-titre-modale); }
+.perso-row .perso-icone{ display:flex; color:var(--ink-mid); }
+.perso-row.active .perso-icone{ color:inherit; }
+.perso-row .perso-icone svg.icone{ width:16px; height:16px; }
 .perso-row .perso-name{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; overflow:hidden; }
 .perso-row .perso-name-main{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .perso-row .perso-link{ font-size:var(--texte-micro); color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -947,7 +949,7 @@ button.context-menu-submenu-trigger{ display:flex; align-items:center; justify-c
 .ctx-icon{ display:inline-block; width:15px; height:15px; margin-right:8px; vertical-align:-3px; }
 /* #460k : une seule famille d'icônes, au trait comme celles du bandeau (grille 24, trait 2, bouts
    ronds, currentColor) : l'icône prend la couleur du libellé, au survol comme au repos. */
-.ctx-icon svg{ display:block; width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.ctx-icon svg, svg.icone{ display:block; flex-shrink:0; width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .help-text{ width:290px; padding:8px 10px; font-size:var(--texte-libelle); line-height:1.55; color:var(--ink-soft); }
 .help-text p{ margin:0 0 6px; }
 .help-text p:last-child{ margin-bottom:0; }
@@ -2429,12 +2431,10 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-tag-coche{ flex:1 1 auto; display:flex; align-items:center; gap:8px; padding:5px 6px; border-radius:var(--rayon-petit); cursor:pointer; font-size:var(--texte-courant); color:var(--ink); }
 .store-tag-coche:hover{ background:var(--accent-soft); }
 .store-tag-nom{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.store-tag-outil{ flex:none; border:0; background:none; cursor:pointer; padding:3px 5px; border-radius:var(--rayon-petit); font-size:var(--texte-libelle); opacity:.6; }
+.store-tag-outil{ flex:none; border:0; background:none; cursor:pointer; padding:3px 5px; border-radius:var(--rayon-petit); opacity:.6; color:var(--ink); display:inline-flex; align-items:center; }
 .store-tag-outil:hover{ opacity:1; background:var(--line); }
 /* La corbeille en trait de la couleur du texte (l'émoji sortait noir sur fond sombre, signalé),
    rouge au survol. */
-.store-tag-corbeille{ color:var(--ink); display:inline-flex; align-items:center; }
-.store-tag-corbeille svg{ width:14px; height:14px; display:block; }
 .store-tag-corbeille:hover{ color:var(--danger); }
 /* Un champ de MENU, pas de formulaire : il ne suit pas l'espacement des champs de modale (même
    spécificité que `.modal-box input[type=text]`, déclarée après : elle l'emporte). */

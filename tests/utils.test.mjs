@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import {
   makeFrameScheduler, vaguesDePrechargement3D,
   wrapAngle, clamp, memeContenu, getBBox,
-  getEmotion,
+  posesSansEmoji3D,
   getElementDepth, getHandles, repairElementBase3D, unknownPoseKey3D,
   jointsEqual3D, resolvePoseLabel3D,
   poseSliderSpecs3D, readPoseSliderDeg3D, writePoseSliderDeg3D, poseSliderSignature3D,
@@ -144,15 +144,18 @@ describe('getBBox', () => {
 // ⚠️ `getStyle3D` ET `getPosition` ONT ÉTÉ RETIRÉES (#402d) : deux des trois recherches de cette
 // famille n'avaient aucun appelant. `resolveStyle3D` (rig3d.js) résout un style, `nameOfPose3D` et
 // `poseJointsByKey3D` lisent une pose dans la BIBLIOTHÈQUE, qui a remplacé la liste figée des poses
-// intégrées. `getEmotion` reste : elle, on l'appelle.
-describe('getEmotion : lookup avec repli sur la première entrée', () => {
-  test('clé connue : renvoie l\'entrée correspondante', () => {
-    assert.equal(getEmotion('content').key, 'content');
-  });
+// intégrées. `getEmotion` est partie à son tour (#460l) : le visage d'un Personnage vient de
+// ICONE_EMOTION (src/icones.js), plus d'un emoji tiré de son libellé.
 
-  test('clé inconnue ou absente : repli silencieux sur la première entrée de la liste', () => {
-    assert.equal(getEmotion('nope').key, 'neutre');
-    assert.equal(getEmotion(undefined).key, 'neutre');
+describe('#460l : posesSansEmoji3D, les poses semées avant le retrait des emojis', () => {
+  const B = [{ key: 'debout', label: 'Debout', labelEn: 'Standing' }];
+  test('un nom de semis (emoji + libellé intégré, FR ou EN) perd son emoji', () => {
+    const r = posesSansEmoji3D([{ id: 'debout', name: '🧍 Debout' }, { id: 'debout', name: '🧍 Standing' }], B);
+    assert.deepEqual(r.map(p => p.name), ['Debout', 'Standing']);
+  });
+  test('un nom choisi par l\'utilisateur, ou une pose personnelle, n\'est jamais touché', () => {
+    const poses = [{ id: 'debout', name: '🧍 Debout fier' }, { id: 'perso1', name: '🧍 Debout' }, { id: 'debout', name: 'Debout' }];
+    assert.equal(posesSansEmoji3D(poses, B), poses, 'même liste : rien à réécrire');
   });
 });
 
@@ -728,7 +731,7 @@ describe('Fix 53 : la taille demandée atteint bien le renderer', () => {
 describe('personaEditorPoseList3D : la liste vient de la seule bibliothèque (Fix 57)', () => {
   test('chaque entrée de la bibliothèque devient une entrée de liste', () => {
     const l = personaEditorPoseList3D([
-      { id: 'debout', name: '🧍 Debout', joints: {} },
+      { id: 'debout', name: 'Debout', joints: {} },
       { id: 'pose1', name: 'Salut militaire', joints: {} },
     ]);
     assert.deepEqual(l.map(e => e.key), ['debout', 'pose1']);
@@ -739,7 +742,7 @@ describe('personaEditorPoseList3D : la liste vient de la seule bibliothèque (Fi
     // Les 15 poses de base sont SEMÉES dans la bibliothèque au premier lancement
     // (cf. seedPoseLibrary3D) et n'ont plus de statut particulier. C'est ce qui rend leur
     // traitement uniforme, plus de bouton grisé à expliquer.
-    const l = personaEditorPoseList3D([{ id: 'debout', name: '🧍 Debout', joints: {} }]);
+    const l = personaEditorPoseList3D([{ id: 'debout', name: 'Debout', joints: {} }]);
     assert.equal(l[0].builtin, undefined, 'aucune entrée n\'est marquée comme intégrée');
   });
 
@@ -986,7 +989,7 @@ describe('seedPoseLibrary3D : les poses intégrées deviennent des entrées ordi
     const graine = seedPoseLibrary3D(POSITIONS, POSE_3D, 'humain');
     const assis = graine.find(p => p.id === 'assis');
     assert.ok(assis, 'la clé intégrée sert d\'id');
-    assert.equal(assis.name, '🪑 Assis', 'et le libellé intégré sert de nom initial');
+    assert.equal(assis.name, 'Assis', 'et le libellé intégré sert de nom initial');
   });
 
   test('les angles sont copiés depuis la table, pas référencés', () => {
@@ -1013,7 +1016,7 @@ describe('seedPoseLibrary3D : les poses intégrées deviennent des entrées ordi
 });
 
 describe('mergePoseLibrary3D : fusion des poses d\'un fichier dans la bibliothèque', () => {
-  const biblio = () => [{ id: 'debout', name: '🧍 Debout', joints: {} }];
+  const biblio = () => [{ id: 'debout', name: 'Debout', joints: {} }];
 
   test('une pose inconnue du fichier est ajoutée', () => {
     const next = mergePoseLibrary3D(biblio(), [{ id: 'pose1', name: 'Salut', joints: {} }]);
@@ -1239,7 +1242,7 @@ describe('nameOfPose3D : dernier nom connu, pour positionLabel (Fix 60)', () => 
   });
 
   test('pose intégrée non renommée : son libellé', () => {
-    assert.equal(nameOfPose3D('assis', [], POSITIONS), '🪑 Assis');
+    assert.equal(nameOfPose3D('assis', [], POSITIONS), 'Assis');
   });
 
   test('la bibliothèque prime : un renommage est bien capturé', () => {
