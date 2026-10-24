@@ -40,6 +40,15 @@ No interface colour is hard-coded: `--paper`, `--ink`, `--accent`, `--danger`…
 (Dark, Light, and each one's high contrast) redefine the same tokens. A hard-coded value is wrong in
 three themes out of four.
 
+## Typography
+
+### Six sizes
+
+**The scale** (#460i): `--texte-micro` 10 px, `--texte-capitales` 11 px, `--texte-libelle` 12 px,
+`--texte-courant` 13 px (buttons, list rows), `--texte-titre-modale` 14.5 px, `--texte-titre` 16 px.
+No other size enters the interface (a test checks it); only font previews, a store page title and the
+Measure result step outside it, on purpose.
+
 ## Spacing
 
 ### The four gaps
@@ -274,6 +283,6 @@ with its test.
 - **#460f** ✅ One hierarchy: screen > section (panel style) > sub-section.
 - **#460g** ✅ One tab component, `.onglets` / `.onglet` (store, fonts, Settings).
 - **#460h** ✅ One empty state, `.empty-hint`: 12 px, grey `--ink-soft`, no italics.
-- **#460i** 22 text sizes: move to six.
+- **#460i** ✅ Six text sizes, as `--texte-*` tokens.
 - **#460j** 11 radii: move to three.
 - **#460k** Icons: a single line-icon family (header, context menus).

@@ -725,11 +725,12 @@ describe('#400 : les articulations dans le panneau de l\'Éditeur', () => {
     // La garantie qui autorise le reste. Sans elle, agrandir le panneau agrandirait aussi les
     // sous-sections des fiches, qui n'ont pas la place.
     const general = declarationsOuNull('.joint-group-details summary');
-    assert.match(general, /font-size:\s*11\.5px/,
+    // #460i : l'échelle typographique ; la modale reste un cran sous le panneau (libellé < courant).
+    assert.match(general, /font-size:\s*var\(--texte-libelle\)/,
       'la taille générale a bougé : les modales viennent de grandir avec le panneau');
     const panneau = declarationsOuNull('.persona-editor-panel .joint-group-details summary');
     assert.ok(panneau, 'le panneau n\'a plus de taille à lui');
-    assert.match(panneau, /font-size:\s*13px/, 'le panneau a reperdu sa taille propre');
+    assert.match(panneau, /font-size:\s*var\(--texte-courant\)/, 'le panneau a reperdu sa taille propre');
   });
 
   test('#401b : TROIS NIVEAUX DE CLARTÉ, et rien d\'autre pour hiérarchiser', () => {
@@ -745,9 +746,9 @@ describe('#400 : les articulations dans le panneau de l\'Éditeur', () => {
       'l\'ancre s\'est redonné une couleur à elle : deux codes pour une seule information');
     const chaine = declarationsOuNull('.persona-editor-panel .joint-group-details .joint-group-details > summary');
     assert.match(chaine, /color:\s*var\(--ink-mid\)/, 'la sous-section n\'est plus au deuxième niveau');
-    assert.match(chaine, /font-size:\s*13px/, 'le titre d\'une sous-section a rapetissé');
+    assert.match(chaine, /font-size:\s*var\(--texte-courant\)/, 'le titre d\'une sous-section a rapetissé');
     assert.match(declarationsOuNull('.persona-editor-panel .joint-slider-row .joint-slider-label'),
-      /font-size:\s*12px/, 'l\'attribut a changé de taille');
+      /font-size:\s*var\(--texte-libelle\)/, 'l\'attribut a changé de taille');
     assert.match(declarationsOuNull('.joint-slider-row .joint-slider-label'),
       /color:\s*var\(--ink-soft\)/, 'l\'attribut n\'est plus au troisième niveau');
   });

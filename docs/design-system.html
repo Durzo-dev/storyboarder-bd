@@ -20,6 +20,16 @@
 :root{
   /* Taille de l'interface (#410). 1 = telle qu'elle a toujours été. */
   --echelle-ui:1;
+  /* #460i : L'ÉCHELLE TYPOGRAPHIQUE, six tailles et pas une de plus (il y en avait 22, dont des
+     demi-pixels qui se lisaient comme des erreurs). Hors échelle, et voulus : les aperçus de polices,
+     le titre d'une fiche du store, et deux astuces techniques (séparateur de liste, zone de clic du
+     Lecteur). Un test refuse toute autre taille en pixels. */
+  --texte-micro:10px;          /* flèche de sous-menu, libellés de champ en capitales, badges */
+  --texte-capitales:11px;      /* titres de section en capitales, pastilles, comptes */
+  --texte-libelle:12px;        /* libellés, aides, textes secondaires */
+  --texte-courant:13px;        /* boutons, lignes de liste, menus contextuels, texte des modales */
+  --texte-titre-modale:14.5px; /* titres de modale */
+  --texte-titre:16px;          /* titres de menu, nom de l'application */
   --focus:#FF9A5C;
   --bord-actif:#6E6E77;
   --fond-3d:#CFCBC2;
@@ -289,12 +299,12 @@ header{
   border-bottom:1px solid var(--line);
 }
 header h1{
-  font-family:'Inter',sans-serif; font-size:16px; font-weight:700; letter-spacing:.02em; margin:0;
+  font-family:'Inter',sans-serif; font-size:var(--texte-titre); font-weight:700; letter-spacing:.02em; margin:0;
 }
-header span{ font-size:12px; color:var(--ink-soft); }
+header span{ font-size:var(--texte-libelle); color:var(--ink-soft); }
 .help-round-btn{
   width:32px; height:32px; border-radius:50%; border: 1px solid var(--bord-actif); background:var(--white);
-  color:var(--ink-soft); font-size:16px; font-weight:700; line-height:1; cursor:pointer;
+  color:var(--ink-soft); font-size:var(--texte-titre); font-weight:700; line-height:1; cursor:pointer;
   display:flex; align-items:center; justify-content:center; padding:0;
 }
 .help-round-btn svg{ width:16px; height:16px; stroke:currentColor; fill:none; }
@@ -324,7 +334,7 @@ header span{ font-size:12px; color:var(--ink-soft); }
   width:var(--sidebar-w); background:var(--paper-dark); border-right:1px solid var(--line);
   flex-shrink:0; display:flex; flex-direction:column; min-height:0;
 }
-.sidebar h2{ font-family:'Inter',sans-serif; font-size:11px; font-weight:600; color:var(--ink-soft); margin:0 0 8px; text-transform:uppercase; letter-spacing:.05em;}
+.sidebar h2{ font-family:'Inter',sans-serif; font-size:var(--texte-capitales); font-weight:600; color:var(--ink-soft); margin:0 0 8px; text-transform:uppercase; letter-spacing:.05em;}
 .sidebar hr{ border:none; border-top:1px solid var(--line); margin:14px 0; }
 /* Contenu défilant du menu de gauche, séparé du pied de page fixe ci-dessous (cf. #lastSavedIndicator,
    déplacé du menu de droite vers le menu de gauche — sur demande utilisateur) qui doit rester visible
@@ -334,13 +344,13 @@ header span{ font-size:12px; color:var(--ink-soft); }
 }
 .sidebar-footer{
   flex-shrink:0; padding:9px 12px 18px; border-top:1px solid var(--line);
-  font-size:11.5px; color:var(--ink-soft); text-align:center;
+  font-size:var(--texte-libelle); color:var(--ink-soft); text-align:center;
 }
 /* Nom du Projet (ensemble Tomes/Planches/Cases en cours, cf. projectName) affiché en haut du menu de
    gauche, au-dessus de la section des Tomes — sur demande utilisateur ("On doit pouvoir voir le nom
    du Projet en cours en haut du Menu de gauche, au dessus de la section des Tomes"). */
 #projectNameHeader{
-  font-family:'Inter',sans-serif; font-size:14.5px; font-weight:700; color:var(--ink);
+  font-family:'Inter',sans-serif; font-size:var(--texte-titre-modale); font-weight:700; color:var(--ink);
   padding:7px 10px; margin-bottom:14px; border:1px solid var(--line); border-radius:8px;
   /* Superpose un voile noir semi-transparent à --paper-dark pour obscurcir le fond indépendamment du
      thème Clair/Sombre (sur demande utilisateur), plutôt qu'une couleur fixe qui ne s'adapterait pas. */
@@ -350,7 +360,7 @@ header span{ font-size:12px; color:var(--ink-soft); }
 }
 #projectNameHeader:hover{ color:var(--accent); background:var(--accent-soft); border-color:var(--accent); }
 #projectNameText{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.project-name-chevron{ flex:none; font-size:16px; font-weight:700; opacity:.65; }
+.project-name-chevron{ flex:none; font-size:var(--texte-titre); font-weight:700; opacity:.65; }
 #projectNameHeader:hover .project-name-chevron{ opacity:1; }
 
 /* `.tool-btn` ET `.side-btn` ONT ÉTÉ RETIRÉES (#402d) : les boutons du menu de gauche portent
@@ -358,7 +368,7 @@ header span{ font-size:12px; color:var(--ink-soft); }
    deux classes-ci, ni le HTML ni le JS. */
 
 select, input[type=number]{
-  font-family:'Inter',sans-serif; border: 1px solid var(--bord-actif); border-radius:6px; padding:5px 6px; font-size:12.5px; background:var(--white); color:var(--ink);
+  font-family:'Inter',sans-serif; border: 1px solid var(--bord-actif); border-radius:6px; padding:5px 6px; font-size:var(--texte-courant); background:var(--white); color:var(--ink);
 }
 /* ═══════════════════════════════════════════════════════════════════════════════════════════════
    LA COULEUR D'UN BOUTON DIT CE QU'IL FAIT (#398)
@@ -382,7 +392,7 @@ select, input[type=number]{
    changent pas d'un pixel : seul le nom devient vrai. */
 .full-btn{
   width:100%; margin-top:6px; padding:8px; border:1px solid var(--accent); background:var(--accent); color:var(--sur-accent);
-  font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px; border-radius:7px; cursor:pointer;
+  font-family:'Inter',sans-serif; font-weight:600; font-size:var(--texte-courant); border-radius:7px; cursor:pointer;
 }
 .full-btn:hover{ filter:brightness(1.08); }
 .full-btn:disabled{ background:var(--line); border-color: var(--bord-actif); color:var(--ink-soft); cursor:not-allowed; filter:none; }
@@ -401,7 +411,7 @@ select, input[type=number]{
      « Annuler » d'une modale, et la remarque était juste.
      Un contour indépendant du remplissage tient dans les quatre thèmes (WCAG 1.4.11). */
   width:100%; margin-bottom:6px; padding:8px 12px; border:1px solid var(--line-strong); background:var(--nav-bg);
-  color:var(--ink); border-radius:7px; font-size:12.5px; cursor:pointer;
+  color:var(--ink); border-radius:7px; font-size:var(--texte-courant); cursor:pointer;
 }
 /* ⚠️ LE SURVOL N'EST PLUS ORANGE, et c'est la convention qui l'exige (#398a) : l'orange annonce une
    action qui valide ou qui ajoute. Le poser au survol d'un bouton qui ne fait que refermer un écran
@@ -414,7 +424,7 @@ select, input[type=number]{
      reste donc en blanc fixe plutôt que var(--ink), qui deviendrait illisible sur fond sombre en thème
      Clair (où var(--ink) est une encre foncée). */
   width:100%; margin-top:6px; padding:8px; border: 1px solid var(--bord-actif); background:#3A3B40; color:#fff;
-  font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px; border-radius:7px; cursor:pointer;
+  font-family:'Inter',sans-serif; font-weight:600; font-size:var(--texte-courant); border-radius:7px; cursor:pointer;
 }
 /* ═══════════════════════════════════════════════════════════════════════════════════════════════
    LA MODALE PROJET GARDE SON FOND UNIFORME : C'EST LE SURVOL QUI DIT LE RÔLE (#398a)
@@ -442,7 +452,7 @@ select, input[type=number]{
 /* Retour des opérations de fichier dans la modale Projet. Vide par défaut : il n'occupe de la
    place que lorsqu'il a quelque chose à dire (`:empty` → display:none), sinon un blanc
    inexpliqué s'installerait entre les boutons et « Fermer l'application ». */
-.project-modal-status { margin: 10px 0 0; font-size: 12px; color: var(--sepia);
+.project-modal-status { margin: 10px 0 0; font-size: var(--texte-libelle); color: var(--sepia);
                         text-align: center; min-height: 1em; }
 .project-modal-status:empty { display: none; }
 
@@ -457,10 +467,10 @@ select, input[type=number]{
 .dropdown-trigger{
   width:100%; display:flex; justify-content:space-between; align-items:center;
   padding:9px 11px; border: 1px solid var(--bord-actif); background:var(--white); border-radius:8px;
-  cursor:pointer; font-size:11.5px; font-weight:600; color:var(--ink); text-transform:uppercase; letter-spacing:.04em;
+  cursor:pointer; font-size:var(--texte-libelle); font-weight:600; color:var(--ink); text-transform:uppercase; letter-spacing:.04em;
 }
 .dropdown-trigger:hover{ border-color:var(--ink-soft); }
-.dropdown-trigger .caret{ font-size:10px; color:var(--sepia); transition:transform .15s; }
+.dropdown-trigger .caret{ font-size:var(--texte-micro); color:var(--sepia); transition:transform .15s; }
 .dropdown-trigger.open .caret{ transform:rotate(180deg); }
 /* Rembourrage bas nul, pour la même raison : sous le dernier élément, il n'y a plus rien à
    séparer. Le haut, lui, sépare bien du bouton — d'où la dissymétrie, volontaire. */
@@ -480,13 +490,13 @@ select, input[type=number]{
 .tome-row{
   display:flex; align-items:center; justify-content:space-between; gap:6px;
   background:var(--white); border: 1px solid var(--bord-actif); border-left:3px solid var(--ink-soft);
-  padding:8px 10px; margin-bottom:5px; border-radius:7px; cursor:pointer; font-size:12.5px;
+  padding:8px 10px; margin-bottom:5px; border-radius:7px; cursor:pointer; font-size:var(--texte-courant);
 }
 .tome-row.active{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:600; }
 /* #460d : UN SEUL STYLE DE LIGNE ACTIVE dans toute l'application — bord orange, fond orange léger,
    texte orange en gras 600. Le Tome actif n'avait que sa barre de gauche et du gras 700 ; les
    curseurs d'articulation et les poses, un jaune à part (rgba(224,165,60)). */
-.tome-row .caret{ font-size:10px; color:var(--sepia); }
+.tome-row .caret{ font-size:var(--texte-micro); color:var(--sepia); }
 .tome-format,
 .tome-pages{
   margin:0 0 8px 9px; padding:9px 10px; border-radius:8px;
@@ -516,7 +526,7 @@ select, input[type=number]{
    Signalé à l'usage. Le panneau droit ne contient qu'un seul `.nav-btn`, donc la portée est sûre. */
 #rightPanel .nav-btn{ margin-top:6px; margin-bottom:0; }
 .page-row{
-  padding:7px 9px; margin-bottom:4px; font-size:12px; border-radius:6px; cursor:pointer;
+  padding:7px 9px; margin-bottom:4px; font-size:var(--texte-libelle); border-radius:6px; cursor:pointer;
   color:var(--ink); background:var(--white); border: 1px solid var(--bord-actif);
 }
 .page-row:last-of-type{ margin-bottom:0; }
@@ -533,10 +543,10 @@ select, input[type=number]{
    s'y range (contour plein, `drag-into`). */
 .chapter-row{
   display:flex; align-items:center; gap:6px; margin:8px 0 4px; padding:4px 2px; cursor:pointer;
-  font-size:12px; font-weight:600; color:var(--ink); border-radius:6px; user-select:none;
+  font-size:var(--texte-libelle); font-weight:600; color:var(--ink); border-radius:6px; user-select:none;
 }
 .chapter-row:hover .chapter-name{ color:var(--accent); }
-.chapter-row .caret{ font-size:11px; color:var(--ink-soft); width:10px; }
+.chapter-row .caret{ font-size:var(--texte-capitales); color:var(--ink-soft); width:10px; }
 .chapter-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .chapter-count{ color:var(--ink-soft); font-weight:400; }
 .chapter-pages{ margin-left:12px; padding-left:8px; border-left:1px solid var(--line); }
@@ -545,7 +555,7 @@ select, input[type=number]{
 .chapter-row.drag-into{ outline:2px solid var(--accent); outline-offset:1px; }
 .add-page-btn{
   width:100%; margin-bottom:6px; padding:7px 9px; border:1px dashed var(--ink-soft); background:transparent;
-  color:var(--ink-soft); border-radius:6px; font-size:11.5px; cursor:pointer; text-align:left; font-weight:600;
+  color:var(--ink-soft); border-radius:6px; font-size:var(--texte-libelle); cursor:pointer; text-align:left; font-weight:600;
 }
 .add-page-btn:hover{ color:var(--accent); border-color:var(--accent); }
 /* ⚠️ « TOUTES LES LABEL D'UN ENCART » ÉTAIT UN RACCOURCI, ET IL A FINI PAR ATTRAPER AUTRE CHOSE.
@@ -557,7 +567,7 @@ select, input[type=number]{
    s'est vu à l'écran entre « Inverser la pointe » et « Afficher la bordure ».
    La règle dit donc maintenant ce qu'elle veut dire : les libellés QUI NE SONT PAS des cases à
    cocher. `.side-bulle-tail` redevient la source unique de leur apparence. */
-.tome-format label:not(.side-bulle-tail), .tome-pages > label{ font-size:10px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:5px; font-weight:700; }
+.tome-format label:not(.side-bulle-tail), .tome-pages > label{ font-size:var(--texte-micro); color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:5px; font-weight:700; }
 .tome-format select{ width:100%; }
 /* ⚠️ LA CONTREPARTIE DES SELECTS, ET ELLE N'AVAIT JAMAIS ÉTÉ ÉCRITE. Un `input[type=range]` a une
    largeur INTRINSÈQUE d'environ 129 px : dans un bloc qui en fait 250, il s'arrêtait à mi-chemin,
@@ -601,8 +611,8 @@ select, input[type=number]{
 .curseur-gradue-ligne input[type=range]{ flex:1 1 auto; min-width:0; margin:0; padding:0; appearance:none; -webkit-appearance:none; background:transparent; }
 .curseur-gradue-ligne input[type=range]::-webkit-slider-runnable-track{ height:4px; border-radius:2px; background:var(--line-strong); }
 .curseur-gradue-ligne input[type=range]::-webkit-slider-thumb{ appearance:none; -webkit-appearance:none; width:var(--pouce-curseur); height:var(--pouce-curseur); background:var(--accent); clip-path:polygon(50% 100%, 0 0, 100% 0); margin-top:calc((4px - var(--pouce-curseur)) / 2); }
-.curseur-gradue-ligne > span{ flex:0 0 auto; min-width:var(--valeur-largeur); text-align:right; font-size:13px; font-variant-numeric:tabular-nums; }
-.curseur-gradue-crans{ position:relative; height:1.2em; margin:6px calc(var(--valeur-largeur) + var(--valeur-ecart) + var(--pouce-curseur) / 2) 0 calc(var(--pouce-curseur) / 2); font-size:10px; color:var(--ink-soft); font-variant-numeric:tabular-nums; }
+.curseur-gradue-ligne > span{ flex:0 0 auto; min-width:var(--valeur-largeur); text-align:right; font-size:var(--texte-courant); font-variant-numeric:tabular-nums; }
+.curseur-gradue-crans{ position:relative; height:1.2em; margin:6px calc(var(--valeur-largeur) + var(--valeur-ecart) + var(--pouce-curseur) / 2) 0 calc(var(--pouce-curseur) / 2); font-size:var(--texte-micro); color:var(--ink-soft); font-variant-numeric:tabular-nums; }
 .curseur-gradue-crans > span{ position:absolute; left:calc(var(--i) / var(--crans-moins-un) * 100%); transform:translateX(-50%); }
 
 /* L'infobulle maison (#412). Celle du navigateur se fait couper par le bord de la fenêtre : elle
@@ -646,8 +656,8 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
    fait d'être écrite après, et écrasait donc la marge que .side-section h2 pose juste en
    dessous. Un seul endroit, plus de fantôme. */
 .right-panel h2,
-.persona-editor-panel h2{ font-family:'Inter',sans-serif; font-size:11px; font-weight:600; color:var(--ink-soft); margin:0 0 10px; text-transform:uppercase; letter-spacing:.05em; }
-.empty-hint{ font-size:12px; line-height:1.5; color:var(--ink-soft); font-style:normal; margin:4px 0; }
+.persona-editor-panel h2{ font-family:'Inter',sans-serif; font-size:var(--texte-capitales); font-weight:600; color:var(--ink-soft); margin:0 0 10px; text-transform:uppercase; letter-spacing:.05em; }
+.empty-hint{ font-size:var(--texte-libelle); line-height:1.5; color:var(--ink-soft); font-style:normal; margin:4px 0; }
 /* #460h : UN SEUL ÉTAT VIDE (« Aucune Scène pour l'instant », « Aucune pièce : fermez un contour de
    murs »…). Il n'avait pas de règle de base : quatre variantes (sépia dans le panneau droit, gris et
    décalé dans les Images, italique dans l'éditeur de bâtiment, rien du tout dans les Scènes). */
@@ -673,7 +683,7 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 /* Sections collapsables du menu de droite (cf. initRightPanelCollapse) */
 #rightPanel .side-section > h2{ cursor:pointer; user-select:none; }
 #rightPanel .side-section > h2::after{
-  content:'▾'; margin-left:auto; font-size:10px; color:var(--ink-soft);
+  content:'▾'; margin-left:auto; font-size:var(--texte-micro); color:var(--ink-soft);
   display:inline-block; line-height:1; flex-shrink:0;
   transition:transform .18s ease; transform-origin:center;
 }
@@ -689,11 +699,11 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
   display:grid; grid-template-columns:22px 1fr 22px; align-items:center; margin-bottom:14px; gap:8px;
 }
 .menu-title{
-  grid-column:2; text-align:center; font-size:13px; font-weight:700; color:var(--ink);
+  grid-column:2; text-align:center; font-size:var(--texte-courant); font-weight:700; color:var(--ink);
 }
 .menu-close-btn{
   grid-column:3; width:22px; height:22px; border-radius:50%; border: 1px solid var(--bord-actif); background:var(--white);
-  color:var(--ink-soft); font-size:13px; font-weight:700; line-height:1; cursor:pointer;
+  color:var(--ink-soft); font-size:var(--texte-courant); font-weight:700; line-height:1; cursor:pointer;
   display:flex; align-items:center; justify-content:center; padding:0; flex-shrink:0;
 }
 .menu-close-btn:hover{ color:var(--accent); border-color:var(--accent); }
@@ -701,7 +711,7 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
   display:flex; flex-wrap:wrap; gap:6px; margin-bottom:0;
 }
 .dim-chip{
-  font-size:11px; font-weight:500; color:var(--ink-mid);
+  font-size:var(--texte-capitales); font-weight:500; color:var(--ink-mid);
   background:var(--creux); border-radius:6px; padding:4px 8px;   /* neutre : elle informe (#460b) */
 }
 .dim-chip b{ font-weight:700; }
@@ -714,16 +724,16 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 .side-planche-cases{ display:flex; flex-direction:column; gap:6px; }
 .planche-case-row{
   display:flex; align-items:flex-start; gap:8px; padding:7px 9px; border-radius:7px;
-  border: 1px solid var(--bord-actif); background:var(--white); cursor:grab; font-size:12.5px; color:var(--ink);
+  border: 1px solid var(--bord-actif); background:var(--white); cursor:grab; font-size:var(--texte-courant); color:var(--ink);
 }
 .planche-case-row.active{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
 .planche-case-row .planche-case-num{
   font-weight:700; color:var(--ink-mid); background:var(--creux); border-radius:6px;   /* neutre (#460b) */
-  padding:2px 7px; font-size:11px; flex-shrink:0; min-width:20px; text-align:center; margin-top:1px;
+  padding:2px 7px; font-size:var(--texte-capitales); flex-shrink:0; min-width:20px; text-align:center; margin-top:1px;
 }
 .planche-case-row.active .planche-case-num{ background:var(--white); color:var(--accent); }   /* l'orange revient avec la ligne active */
 .planche-case-row .planche-case-desc{
-  flex:1; min-width:0; color:var(--ink-soft); font-size:11px;
+  flex:1; min-width:0; color:var(--ink-soft); font-size:var(--texte-capitales);
   white-space:pre-wrap; word-break:break-word; line-height:1.5;
   max-height:96px; overflow-y:auto;
 }
@@ -751,13 +761,13 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 .side-liste-sep{ border-top:1px solid var(--line-strong); margin:4px 2px; }
 .perso-row{
   display:flex; align-items:center; gap:8px; padding:7px 9px; border-radius:7px;
-  border: 1px solid var(--bord-actif); background:var(--white); cursor:pointer; font-size:12.5px; color:var(--ink);
+  border: 1px solid var(--bord-actif); background:var(--white); cursor:pointer; font-size:var(--texte-courant); color:var(--ink);
 }
 .perso-row.active{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
-.perso-row .perso-emoji{ font-size:14px; }
+.perso-row .perso-emoji{ font-size:var(--texte-titre-modale); }
 .perso-row .perso-name{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; overflow:hidden; }
 .perso-row .perso-name-main{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.perso-row .perso-link{ font-size:10.5px; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.perso-row .perso-link{ font-size:var(--texte-micro); color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .perso-row.active .perso-link{ color:var(--accent); opacity:.8; }
 /* `.perso-scene-badge` ET `.perso-edit` ONT ÉTÉ RETIRÉES (#402d) : une pastille qui nommait la
    Scène d'un Personnage dans la liste, et son crayon d'édition. Ni l'une ni l'autre n'est posée
@@ -769,7 +779,7 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
    Le titre reprend la graisse et la casse des autres en-têtes du panneau, pour se lire comme une
    subdivision de la liste et non comme une section indépendante. */
 .side-hors-champ-titre{
-  font-size:10.5px; font-weight:600; color:var(--ink-soft);
+  font-size:var(--texte-micro); font-weight:600; color:var(--ink-soft);
   text-transform:uppercase; letter-spacing:.04em;
   margin:2px 2px 0; opacity:.75;
 }
@@ -782,7 +792,7 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 .piece-group-header{
   display:flex; align-items:center; gap:8px; padding:6px 9px; border-radius:7px;
   border:1px dashed var(--line); background:var(--paper-dark); cursor:pointer;
-  font-size:11.5px; font-weight:600; color:var(--ink); letter-spacing:.2px;
+  font-size:var(--texte-libelle); font-weight:600; color:var(--ink); letter-spacing:.2px;
 }
 .piece-group-header.active{ border-color:var(--accent); border-style:solid; background:var(--accent-soft); color:var(--accent); }
 .piece-group-members{
@@ -792,16 +802,16 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 .piece-group-members.collapsed{ display:none; }
 /* Toggle repli (▾/▸) sur l'en-tête de Pièce */
 .piece-toggle{
-  margin-left:auto; font-size:10px; color:var(--ink-soft); padding:0 2px;
+  margin-left:auto; font-size:var(--texte-micro); color:var(--ink-soft); padding:0 2px;
   flex-shrink:0; line-height:1;
 }
 /* En-tête de Bâtiment (wrapper multi-Pièces, cf. renderSidePersos) */
 .batiment-group-header{
   display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:7px;
   border:1px solid var(--line); background:var(--paper-dark); cursor:pointer;
-  font-size:12px; font-weight:700; color:var(--ink); letter-spacing:.15px;
+  font-size:var(--texte-libelle); font-weight:700; color:var(--ink); letter-spacing:.15px;
 }
-.batiment-toggle{ margin-left:auto; font-size:10px; color:var(--ink-soft); flex-shrink:0; }
+.batiment-toggle{ margin-left:auto; font-size:var(--texte-micro); color:var(--ink-soft); flex-shrink:0; }
 .batiment-group-header.active{ border-color:var(--accent); border-style:solid; background:var(--accent-soft); color:var(--accent); }
 .batiment-group-members{
   display:flex; flex-direction:column; gap:6px; padding-left:12px;
@@ -815,7 +825,7 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
    élément créé en JavaScript ; une classe, si. Même leçon que les quatre `margin-left:0` un peu
    plus haut : la règle se pose une fois, à l'endroit qui vaut pour tous ses usages. */
 .side-desc-input{
-  width:100%; min-height:220px; resize:vertical; font-family:'Inter',sans-serif; font-size:13px;
+  width:100%; min-height:220px; resize:vertical; font-family:'Inter',sans-serif; font-size:var(--texte-courant);
   border: 1px solid var(--bord-actif); border-radius:8px; padding:9px; background:var(--white); color:var(--ink);
   box-sizing:border-box;
 }
@@ -862,13 +872,13 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
    deux libellés s'étaient mis à différer. */
 .side-bulle-tail{
   display:flex; align-items:center; gap:6px;
-  font-size:12.5px; font-weight:400; text-transform:none; letter-spacing:normal;
+  font-size:var(--texte-courant); font-weight:400; text-transform:none; letter-spacing:normal;
   color:var(--ink-soft);
   margin-bottom:8px; cursor:pointer; user-select:none;
 }
 .side-bulle-tail input{ cursor:pointer; }
 .side-bulle-font{ margin-bottom:12px; }
-.side-bulle-font select{ font-size:13px; }
+.side-bulle-font select{ font-size:var(--texte-courant); }
 /* Gras et italique du texte d'une Bulle (#423) : deux interrupteurs sous la police, cumulables.
    Enfoncé = accent ; « simulé » (la police n'a pas la variante, le navigateur la fabrique) se
    signale par un ~ orange dans le coin, et l'infobulle le dit en toutes lettres. */
@@ -876,7 +886,7 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 .interrupteur-style{
   position:relative; width:30px; height:26px; padding:0; border-radius:6px; cursor:pointer;
   border:1px solid var(--line-strong); background:var(--white); color:var(--ink);
-  font-family:Georgia, serif; font-size:14px; line-height:1;
+  font-family:Georgia, serif; font-size:var(--texte-titre-modale); line-height:1;
 }
 .interrupteur-gras{ font-weight:700; }
 .interrupteur-italique{ font-style:italic; }
@@ -884,7 +894,7 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 .interrupteur-style[aria-pressed="true"]{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
 .interrupteur-style.simule::after{
   content:'~'; position:absolute; top:-3px; right:2px; font-family:Inter, sans-serif; font-style:normal;
-  font-weight:700; font-size:11px; color:var(--ink-soft);   /* un repère, pas une action (#460b) */
+  font-weight:700; font-size:var(--texte-capitales); color:var(--ink-soft);   /* un repère, pas une action (#460b) */
 }
 .side-bulle-appearance{ margin-bottom:8px; }
 .side-bulle-appearance .side-bulle-tail{ margin-left:0; }
@@ -906,7 +916,7 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 .sol-ground-btn{
   display:flex; align-items:center; gap:5px; padding:5px 7px;
   border: 1px solid var(--bord-actif); border-radius:6px; background:var(--white);
-  cursor:pointer; font-size:11px; color:var(--ink); text-align:left; font-weight:500;
+  cursor:pointer; font-size:var(--texte-capitales); color:var(--ink); text-align:left; font-weight:500;
 }
 .sol-ground-btn.active{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
 .sol-ground-btn:hover:not(.active){ border-color:var(--ink-soft); }
@@ -924,18 +934,18 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 .context-menu.hidden{ display:none; }
 .context-menu button{
   display:block; width:100%; text-align:left; background:none; border:none; padding:8px 10px;
-  font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; color:var(--ink-soft); cursor:pointer; border-radius:5px;
+  font-family:'Inter',sans-serif; font-size:var(--texte-courant); font-weight:600; color:var(--ink-soft); cursor:pointer; border-radius:5px;
 }
 .context-menu button:hover{ background:var(--paper); color:var(--ink); }
 /* Spécificité égale à ".context-menu button" (élément + classe) et placée après dans le fichier :
    nécessaire pour que ce display:flex l'emporte sur le display:block de la règle générique. */
 button.context-menu-submenu-trigger{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
-.submenu-arrow{ font-size:9px; opacity:.6; padding-left:10px; }
+.submenu-arrow{ font-size:var(--texte-micro); opacity:.6; padding-left:10px; }
 /* Largeur fixe pour l'icône en tête de bouton de menu contextuel : certains émojis (ex. 📤) ont une
    chasse/marge gauche plus large que d'autres (ex. 🗑) dans le rendu des polices, ce qui désaligne
    visuellement le texte qui suit. On normalise en figeant la largeur de l'icône. */
 .ctx-icon{ display:inline-block; width:1.2em; text-align:center; margin-right:6px; }
-.help-text{ width:290px; padding:8px 10px; font-size:12px; line-height:1.55; color:var(--ink-soft); }
+.help-text{ width:290px; padding:8px 10px; font-size:var(--texte-libelle); line-height:1.55; color:var(--ink-soft); }
 .help-text p{ margin:0 0 6px; }
 .help-text p:last-child{ margin-bottom:0; }
 /* Sections du manuel : des BOUTONS, plus des accordéons. Le panneau fait 290 px — y déplier des
@@ -964,7 +974,7 @@ button.context-menu-submenu-trigger{ display:flex; align-items:center; justify-c
 .help-group:hover{ background:var(--nav-bg); border-color:var(--accent); }
 .help-group-title{
   flex:1 1 auto; margin:0;
-  font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--ink);
+  font-size:var(--texte-capitales); font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--ink);
   user-select:none;
 }
 .help-group:hover .help-group-title{ color:var(--accent); }
@@ -973,13 +983,13 @@ button.context-menu-submenu-trigger{ display:flex; align-items:center; justify-c
    de modale, en plus petit (le panneau est étroit, « Rechercher dans le manuel » était coupé), et
    sa croix d'effacement à droite. */
 .help-recherche{ position:relative; margin-bottom:12px; }
-.help-recherche input.modal-input{ margin:0; box-sizing:border-box; padding-right:28px; font-size:12.5px; font-weight:500; }
+.help-recherche input.modal-input{ margin:0; box-sizing:border-box; padding-right:28px; font-size:var(--texte-courant); font-weight:500; }
 .help-recherche input::-webkit-search-cancel-button{ display:none; }
 .help-recherche-effacer{ position:absolute; right:6px; top:50%; transform:translateY(-50%); width:20px; height:20px;
-  border:0; border-radius:50%; background:none; color:var(--ink-soft); font-size:15px; line-height:1; cursor:pointer; padding:0; }
+  border:0; border-radius:50%; background:none; color:var(--ink-soft); font-size:var(--texte-titre-modale); line-height:1; cursor:pointer; padding:0; }
 .help-recherche-effacer:hover{ color:var(--accent); }
 .help-recherche-effacer[hidden], .help-recherche-vide[hidden]{ display:none; }
-.help-recherche-vide{ margin:4px 0 0; font-size:12px; color:var(--ink-soft); }
+.help-recherche-vide{ margin:4px 0 0; font-size:var(--texte-libelle); color:var(--ink-soft); }
 /* Les GROUPES du Manuel, repliables : un titre comme ceux des sections du menu de droite (point
    orange, majuscules, chevron), et ses sections dessous. */
 /* Un DÉLIMITEUR entre deux groupes (demandé) : un trait, et le même air de part et d'autre. */
@@ -988,18 +998,18 @@ button.context-menu-submenu-trigger{ display:flex; align-items:center; justify-c
 .help-categorie-titre{
   display:flex; align-items:center; gap:6px; width:100%; padding:4px 2px; margin:0 0 8px;
   border:0; background:none; cursor:pointer; text-align:left;
-  font-family:'Inter',sans-serif; font-size:11px; font-weight:600; color:var(--ink-soft);
+  font-family:'Inter',sans-serif; font-size:var(--texte-capitales); font-weight:600; color:var(--ink-soft);
   text-transform:uppercase; letter-spacing:.05em;
 }
 .help-categorie-titre::before{ content:''; width:5px; height:5px; border-radius:50%; background:var(--accent); flex-shrink:0; }
-.help-categorie-titre::after{ content:'▾'; margin-left:auto; font-size:10px; transition:transform .18s ease; }
+.help-categorie-titre::after{ content:'▾'; margin-left:auto; font-size:var(--texte-micro); transition:transform .18s ease; }
 .help-categorie-titre:hover{ color:var(--ink); }
 .help-categorie.repliee > .help-categorie-titre::after{ transform:rotate(-90deg); }
 .help-categorie.repliee > .help-categorie-titre{ margin-bottom:0; }
 .help-categorie.repliee > .help-categorie-corps{ display:none; }
 .help-group[hidden]{ display:none; }
 /* Le nombre de correspondances d'une section, pendant une recherche. */
-.help-group-compte{ flex:0 0 auto; font-size:11px; font-weight:600; color:var(--ink-soft); }   /* un compte, pas une action (#460b) */
+.help-group-compte{ flex:0 0 auto; font-size:var(--texte-capitales); font-weight:600; color:var(--ink-soft); }   /* un compte, pas une action (#460b) */
 .help-group-compte:empty{ display:none; }
 /* Les mots cherchés, surlignés dans la section ouverte. */
 /* Un aplat d'accent PLEIN (demandé, l'accent translucide se voyait mal), et le libellé du jeton
@@ -1010,13 +1020,13 @@ button.context-menu-submenu-trigger{ display:flex; align-items:center; justify-c
    `ch` plutôt que `px` — c'est la longueur de LIGNE qui fatigue l'œil, pas la largeur en pixels, et
    elle suit ainsi la taille de police du lecteur. */
 .modal-box.modal-box-help{ width:min(72ch, 92vw); }
-.help-modal-body{ font-size:13.5px; line-height:1.6; color:var(--ink); }
+.help-modal-body{ font-size:var(--texte-courant); line-height:1.6; color:var(--ink); }
 .help-modal-body p{ margin:0 0 10px; }
 .help-modal-body p:last-child{ margin-bottom:0; }
 
 #sceneTopDownBtn{
   display:block; width:100%; margin-top:10px;
-  font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; color:var(--ink);
+  font-family:'Inter',sans-serif; font-size:var(--texte-courant); font-weight:600; color:var(--ink);
   /* Mêmes jetons que .help-group, et pour la même raison (#409e) : ce bouton portait lui aussi une
      superposition blanche, invisible dès que le fond cesse d'être sombre. */
   background:var(--white); border:1px solid var(--line-strong); border-radius:6px;
@@ -1036,7 +1046,7 @@ button.context-menu-submenu-trigger{ display:flex; align-items:center; justify-c
   display:flex; flex-direction:column; align-items:center; gap:10px;
 }
 .zoom-indicator{
-  font-family:'Inter',sans-serif; font-size:11.5px; font-weight:600; color:var(--ink-soft);
+  font-family:'Inter',sans-serif; font-size:var(--texte-libelle); font-weight:600; color:var(--ink-soft);
   background:var(--paper-dark); border:1px solid var(--line); border-radius:6px;
   padding:4px 10px; letter-spacing:.02em; user-select:none;
 }
@@ -1129,14 +1139,14 @@ canvas{ background:var(--fond-3d); }
  * doublée de marges.
  */
 .modal-input{
-  width:100%; font-family:'Inter',sans-serif; font-size:14.5px; font-weight:700;
+  width:100%; font-family:'Inter',sans-serif; font-size:var(--texte-titre-modale); font-weight:700;
   padding:7px 8px; border:1px solid var(--line); border-radius:6px;
   background:var(--white); color:var(--ink); margin-top:10px; margin-bottom:2px;
 }
 /* Les modales sans ligne d'erreur sous leur champ : la marge y remplace la place réservée. */
 .modal-input.modal-input-seul{ margin-bottom:14px; }
 .modal-error{
-  margin:0; font-size:12px; color:var(--danger, #c0392b); min-height:1.2em;
+  margin:0; font-size:var(--texte-libelle); color:var(--danger, #c0392b); min-height:1.2em;
 }
 
 .modal-box{
@@ -1165,7 +1175,7 @@ canvas{ background:var(--fond-3d); }
    la modale (cf. Projet → demande utilisateur d'un petit bouton plutôt qu'un gros bouton en bas). */
 .modal-close-btn{
   position:absolute; top:12px; right:12px; width:22px; height:22px; border-radius:50%;
-  border: 1px solid var(--bord-actif); background:var(--white); color:var(--ink-soft); font-size:13px;
+  border: 1px solid var(--bord-actif); background:var(--white); color:var(--ink-soft); font-size:var(--texte-courant);
   font-weight:700; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
   padding:0; flex-shrink:0; z-index:1;
 }
@@ -1182,7 +1192,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
   transition:background .12s ease;
 }
 .joint-slider-row .joint-slider-label{
-  width:108px; flex-shrink:0; font-size:11.5px; color:var(--ink-soft);
+  width:108px; flex-shrink:0; font-size:var(--texte-libelle); color:var(--ink-soft);
 }
 /* Fix 73 — `min-width:0` est ce qui empêche la ligne de déborder de son cadre, et ce n'est pas un
    réglage cosmétique. Un enfant de conteneur flex a `min-width:auto` par défaut : il refuse de
@@ -1193,7 +1203,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    Le débordement PRÉEXISTAIT (9px), mais le Fix 70 l'a porté à 41 : passer les sections en
    `.side-section` a ajouté 14px de rembourrage de chaque côté, et le panneau 2 de plus. */
 .joint-slider-row input[type=range]{ flex:1; width:auto; min-width:0; margin-bottom:0; }
-.joint-slider-row .joint-slider-val{ width:36px; text-align:right; font-size:11px; opacity:.75; flex-shrink:0; }
+.joint-slider-row .joint-slider-val{ width:36px; text-align:right; font-size:var(--texte-capitales); opacity:.75; flex-shrink:0; }
 /* Surligne la/les ligne(s) du curseur correspondant au point d'articulation sélectionné dans la
    preview (cf. openJointGroupForHandle/highlightJointRows) — sync réciproque preview <-> sous-section. */
 .joint-slider-row.active{ background:var(--accent-soft); }   /* #460d : l'orange des lignes actives, plus un jaune à part */
@@ -1217,12 +1227,12 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
   padding:6px 10px;
 }
 .joint-group-details summary{
-  cursor:pointer; font-size:11.5px; font-weight:600; color:var(--ink); margin-bottom:6px;
+  cursor:pointer; font-size:var(--texte-libelle); font-weight:600; color:var(--ink); margin-bottom:6px;
   list-style:none; display:flex; align-items:center; justify-content:space-between; gap:8px;
 }
 .joint-group-details summary::-webkit-details-marker{ display:none; }
 .joint-group-details summary::after{
-  content:'▾'; font-size:10px; line-height:1; color:var(--ink-soft);
+  content:'▾'; font-size:var(--texte-micro); line-height:1; color:var(--ink-soft);
   transition:transform .15s ease; flex-shrink:0; transform:rotate(-90deg);
 }
 .joint-group-details[open] summary::after{ transform:rotate(0deg); }
@@ -1250,7 +1260,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 
    Les groupes respirent, et leur titre se lit à la taille du reste du panneau. */
 .persona-editor-panel .joint-group-details{ padding:8px 12px; margin-bottom:8px; }
-.persona-editor-panel .joint-group-details summary{ font-size:13px; margin-bottom:8px; }
+.persona-editor-panel .joint-group-details summary{ font-size:var(--texte-courant); margin-bottom:8px; }
 /* ⚠️ ÉGALITÉ DE SPÉCIFICITÉ, ET L'ORDRE DU FICHIER TRANCHAIT (#400b). `.joint-group-details:not([open])
    summary` et `.persona-editor-panel .joint-group-details summary` pèsent le MÊME poids — deux
    classes et un élément chacune — si bien que la seconde, écrite plus bas, écrasait la première.
@@ -1259,9 +1269,9 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    Signalé DEUX FOIS à l'usage, et ma première correction n'avait traité que l'état OUVERT — le
    déséquilibre du bloc — sans voir que l'état REPLIÉ avait une cause différente. */
 .persona-editor-panel .joint-group-details:not([open]) summary{ margin-bottom:0; }
-.persona-editor-panel .joint-group-details summary::after{ font-size:12px; }
+.persona-editor-panel .joint-group-details summary::after{ font-size:var(--texte-libelle); }
 .persona-editor-panel .joint-slider-row{ margin-bottom:6px; }
-.persona-editor-panel .joint-slider-row .joint-slider-label{ font-size:12px; }
+.persona-editor-panel .joint-slider-row .joint-slider-label{ font-size:var(--texte-libelle); }
 /* ⚠️ LA DERNIÈRE LIGNE NE GARDE PAS SA MARGE, et c'est ce qui RECENTRE le groupe (#400a). Signalé à
    l'usage : « centrer verticalement le titre des sections ». Le titre était bien centré ; c'est le
    BLOC qui ne l'était pas — 8px de rembourrage au-dessus contre 8 + 6 de marge résiduelle en
@@ -1317,10 +1327,10 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
      taille les distinguait, et sur une chaine repliee elle ne se compare a rien. `--ink-soft`, lui,
      serait alle trop loin — c'est la teinte des etiquettes en capitales, et une sous-section qui la
      porte se lit comme une legende plutot que comme un titre. */
-  font-size:13px; color:var(--ink-mid); text-transform:none; letter-spacing:0;
+  font-size:var(--texte-courant); color:var(--ink-mid); text-transform:none; letter-spacing:0;
 }
 .modal-box h3{
-  font-family:'Inter',sans-serif; font-weight:700; font-size:14.5px; margin:0; color:var(--ink);
+  font-family:'Inter',sans-serif; font-weight:700; font-size:var(--texte-titre-modale); margin:0; color:var(--ink);
 }
 /* ⚠️ LA MARGE BASSE EST AJOUTÉE ALORS QUE CETTE RÈGLE NE VISE RIEN AUJOURD'HUI (#421e), et c'est
    délibéré. Le seul <textarea> de l'application, la description d'une Case, vit désormais dans le
@@ -1330,16 +1340,16 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    <textarea> réintroduit dans une modale aurait fait mordre ce défaut une quatrième fois.
    14 px, comme tous ses voisins : la valeur n'est pas choisie, elle est celle des autres champs. */
 .modal-box textarea{
-  width:100%; min-height:120px; font-family:'Inter',sans-serif; font-size:13.5px;
+  width:100%; min-height:120px; font-family:'Inter',sans-serif; font-size:var(--texte-courant);
   border: 1px solid var(--bord-actif); border-radius:7px; padding:8px; resize:vertical;
   background:var(--white); color:var(--ink); margin-bottom:14px;
 }
 .modal-field-label{
-  display:block; font-size:10.5px; font-weight:600; color:var(--ink-soft);
+  display:block; font-size:var(--texte-micro); font-weight:600; color:var(--ink-soft);
   text-transform:uppercase; letter-spacing:.04em; margin:0 0 5px;
 }
 .modal-box input[type=text], .modal-box select{
-  width:100%; font-family:'Inter',sans-serif; font-size:13.5px;
+  width:100%; font-family:'Inter',sans-serif; font-size:var(--texte-courant);
   border: 1px solid var(--bord-actif); border-radius:7px; padding:8px;
   background:var(--white); color:var(--ink); margin-bottom:14px;
 }
@@ -1391,7 +1401,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .modal-field-row{ display:grid; grid-template-columns:1fr auto; grid-template-areas:"libelle vide" "champ cote"; column-gap:14px; margin-bottom:14px; }
 .modal-field-row > .modal-field-label{ grid-area:libelle; }
 .modal-box .modal-field-row > select{ grid-area:champ; width:100%; margin-bottom:0; }
-.modal-field-row > .modal-field-aside{ grid-area:cote; align-self:center; display:flex; align-items:center; gap:6px; margin:0; font-size:13px; cursor:pointer; white-space:nowrap; }
+.modal-field-row > .modal-field-aside{ grid-area:cote; align-self:center; display:flex; align-items:center; gap:6px; margin:0; font-size:var(--texte-courant); cursor:pointer; white-space:nowrap; }
 .modal-actions{
   display:flex; justify-content:flex-end; gap:8px; margin-top:14px;
 }
@@ -1481,14 +1491,14 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    panneau : 11 px, capitales, gris, précédé du point orange. Modale > section > sous-section. */
 .modal-section-header .modal-section-title{
   display:flex; align-items:center; gap:6px;
-  font-family:'Inter',sans-serif; font-weight:600; font-size:11px; color:var(--ink-soft);
+  font-family:'Inter',sans-serif; font-weight:600; font-size:var(--texte-capitales); color:var(--ink-soft);
   text-transform:uppercase; letter-spacing:.05em;
 }
 .modal-section-header .modal-section-title::before{
   content:''; width:5px; height:5px; border-radius:50%; background:var(--accent); flex-shrink:0;
 }
 .modal-section-header .modal-section-caret{
-  font-size:10px; line-height:1; color:var(--ink-soft); transition:transform .15s ease; flex-shrink:0;
+  font-size:var(--texte-micro); line-height:1; color:var(--ink-soft); transition:transform .15s ease; flex-shrink:0;
 }
 .modal-section.collapsed .modal-section-caret{ transform:rotate(-90deg); }
 /* ⚠️ PLUS D'`overflow:hidden` ICI (#409m). Il ne servait plus à rien : le repli se fait par
@@ -1546,13 +1556,13 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 
 /* Phrase d'explication sous un titre de section du menu de gauche. Discrète : elle dit à quoi sert
    la section, elle ne doit pas rivaliser avec le bouton qui la suit. */
-.side-hint{ font-size:11.5px; color:var(--ink-soft); margin:0 0 8px; line-height:1.4; }
+.side-hint{ font-size:var(--texte-libelle); color:var(--ink-soft); margin:0 0 8px; line-height:1.4; }
 
 /* Bouton-icône posé dans un coin d'un aperçu 3D (cf. #personaEditorOpenBtn). Discret au repos pour
    ne pas encombrer l'aperçu, franc au survol : c'est une action, pas une décoration. */
 .preview-corner-btn{
   position:absolute; right:6px; bottom:6px; z-index:2;
-  width:30px; height:30px; padding:0; line-height:1; font-size:14px; cursor:pointer;
+  width:30px; height:30px; padding:0; line-height:1; font-size:var(--texte-titre-modale); cursor:pointer;
   display:flex; align-items:center; justify-content:center;
   border: 1px solid var(--bord-actif); border-radius:7px;
   background:var(--white); color:var(--ink); opacity:.75;
@@ -1562,7 +1572,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 
 /* Version de l'application, affichée à côté de son nom dans l'en-tête (cf. src/version.js).
    Volontairement discrète : c'est une information de dépannage, pas un élément d'interface. */
-.app-version { font-size: 11px; opacity: .45; letter-spacing: .3px; align-self: center; margin-left: 8px; }
+.app-version { font-size: var(--texte-capitales); opacity: .45; letter-spacing: .3px; align-self: center; margin-left: 8px; }
 
 /* ── Éditeur de Personnage (cf. events.js, openPersonaEditor) ────────────────────────────────
    Recouvre l'application entière. z-index sous les modales : ouvrir l'éditeur depuis la modale
@@ -1588,7 +1598,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .lecteur { position: absolute; top: 0; right: 0; bottom: 0; left: var(--sidebar-w); z-index: 900;
            background: var(--paper); color: var(--ink); display: flex; flex-direction: column; }
 .lecteur.hidden { display: none; }
-.lecteur-position { display: block; color: var(--ink-soft); font-size: 12px; font-weight: 400; margin-top: 2px; }
+.lecteur-position { display: block; color: var(--ink-soft); font-size: var(--texte-libelle); font-weight: 400; margin-top: 2px; }
 .lecteur-body { flex: 1; min-height: 0; display: flex; }
 .lecteur-scene { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; position: relative;
                  background: #17181b; }
@@ -1634,16 +1644,16 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .lecteur-miniatures { flex: none; display: flex; gap: 6px; padding: 8px 10px; overflow-x: auto; background: #101113; z-index: 3; }
 .lecteur-miniatures[hidden] { display: none; }
 .lecteur-miniature { flex: none; position: relative; height: 112px; min-width: 60px; padding: 4px; border-radius: 6px; cursor: pointer;
-                     border: 2px solid transparent; background: #2b2d31; color: #ddd; font-size: 11px;
+                     border: 2px solid transparent; background: #2b2d31; color: #ddd; font-size: var(--texte-capitales);
                      display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .lecteur-miniature canvas { height: 90px; width: auto; display: block; background: #fff; }
 .lecteur-miniature.actif { border-color: var(--accent); }
 .lecteur-panneau { width: 300px; flex-shrink: 0; overflow-y: auto; padding: 14px 16px; background: var(--paper-dark);
                    border-left: 1px solid var(--line); zoom: var(--echelle-ui); }
 .lecteur-panneau .lecteur-section { margin-bottom: 14px; }
-.lecteur-panneau h2 { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; color: var(--ink-soft); margin: 0 0 8px;
+.lecteur-panneau h2 { font-family: 'Inter', sans-serif; font-size: var(--texte-capitales); font-weight: 600; color: var(--ink-soft); margin: 0 0 8px;
                       text-transform: uppercase; letter-spacing: .05em; }
-.lecteur-vitesse { font-size: 12px; }
+.lecteur-vitesse { font-size: var(--texte-libelle); }
 .lecteur-lecture { margin-top: 10px; }
 .lecteur-entete .menu-title { line-height: 1.3; }
 .lecteur-vitesse input { width: 100%; }
@@ -1702,18 +1712,18 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 /* Étiquette calculée (« Assis », « Assis (modifié) », « pose1 (inconnue) ») — jamais persistée,
    cf. resolvePoseLabel3D. */
 .persona-editor-pose-current {
-  font-size: 12.5px; font-weight: 600; color: var(--ink); margin-bottom: 8px;
+  font-size: var(--texte-courant); font-weight: 600; color: var(--ink); margin-bottom: 8px;
   padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px;
   background: var(--creux);
 }
 .persona-editor-poses { display: flex; flex-wrap: wrap; gap: 4px; }
 /* La section Modèle : la figure posée (nom, archétype), puis de quoi en changer. */
-.persona-editor-figure { font-size: 13px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.persona-editor-figure { font-size: var(--texte-courant); font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
 .persona-editor-figure-actions[hidden] { display: none; }
 .persona-editor-panel .persona-editor-figure-actions .nav-btn { margin-top: 10px; margin-bottom: 0; }
 
 .persona-editor-poses button {
-  flex: 0 0 auto; font-size: 11.5px; padding: 4px 8px; cursor: pointer;
+  flex: 0 0 auto; font-size: var(--texte-libelle); padding: 4px 8px; cursor: pointer;
   border: 1px solid var(--bord-actif); border-radius: 5px;
   background: var(--white); color: var(--ink);
 }
@@ -1723,12 +1733,12 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    nomme » — deux gestes différents, l'espace doit le dire. */
 .persona-editor-pose-edit { margin-top: 16px; }
 .persona-editor-pose-edit input {
-  width: 100%; box-sizing: border-box; font-size: 12px; padding: 5px 7px; margin-bottom: 5px;
+  width: 100%; box-sizing: border-box; font-size: var(--texte-libelle); padding: 5px 7px; margin-bottom: 5px;
   border: 1px solid var(--bord-actif); border-radius: 5px; background: var(--white); color: var(--ink);
 }
 .persona-editor-pose-actions { display: flex; gap: 4px; }
 .persona-editor-pose-actions button {
-  flex: 1; font-size: 11.5px; padding: 4px 6px; cursor: pointer;
+  flex: 1; font-size: var(--texte-libelle); padding: 4px 6px; cursor: pointer;
   border: 1px solid var(--bord-actif); border-radius: 5px; background: var(--white); color: var(--ink);
   /* Fix 69 — `margin: 0` est ce qui rend les trois boutons de MÊME hauteur, et ce n'est pas
      cosmétique. Supprimer portait la classe .nav-btn, qui déclare `margin-bottom: 6px`. Dans une
@@ -1765,7 +1775,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    Deux mentions discrètes sur la ligne d'un Élément : « chargement… » et « fichier introuvable ».
    La seconde est colorée, pas seulement écrite — un modèle manquant doit se repérer en balayant la
    liste du regard, sans lire chaque ligne. */
-.perso-name-sub { opacity: .6; font-size: 11px; margin-left: 4px; }
+.perso-name-sub { opacity: .6; font-size: var(--texte-capitales); margin-left: 4px; }
 .perso-name-sub-warn { opacity: 1; color: #C08040; }
 
 /* Une ligne de la bibliothèque de modèles : le nom de fichier, puis un endroit PAR LIGNE.
@@ -1804,14 +1814,14 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
   margin-top: 3px; padding: 4px 6px;
   border: 1px solid var(--bord-actif); border-radius: 5px;
   background: var(--white); color: var(--ink-mid);
-  font-family: 'Inter', sans-serif; font-size: 11.5px; cursor: pointer;
+  font-family: 'Inter', sans-serif; font-size: var(--texte-libelle); cursor: pointer;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .image-row-where:hover { border-color: var(--accent); color: var(--ink); }
 /* « + N autres » sous les endroits d'un modèle : un lien discret, pas un endroit de plus. */
 .model-row-plus {
   display: block; margin-top: 4px; padding: 0; border: 0; background: none; cursor: pointer;
-  font-family: 'Inter', sans-serif; font-size: 11.5px; color: var(--accent);
+  font-family: 'Inter', sans-serif; font-size: var(--texte-libelle); color: var(--accent);
 }
 .model-row-plus:hover { text-decoration: underline; }
 
@@ -1822,7 +1832,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 /* En-tête de contenant (une Scène, une Case). Même rôle que .side-group-title dans le menu de
    gauche : un repère de lecture, pas une action — d'où l'absence de curseur et de survol. */
 .model-usage-place {
-  font-size: 10px; text-transform: uppercase; letter-spacing: .06em;
+  font-size: var(--texte-micro); text-transform: uppercase; letter-spacing: .06em;
   opacity: .55; margin: 10px 0 4px;
 }
 .model-usages-list > .model-usage-place:first-child { margin-top: 0; }
@@ -1833,7 +1843,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
   padding: 7px 9px; margin-bottom: 4px;
   border: 1px solid var(--bord-actif); border-radius: 6px;
   background: var(--white); color: var(--ink);
-  font-family: 'Inter', sans-serif; font-size: 12.5px; cursor: pointer;
+  font-family: 'Inter', sans-serif; font-size: var(--texte-courant); cursor: pointer;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .model-usage-target:hover { border-color: var(--accent); }
@@ -1863,7 +1873,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .skeleton-map-list .modal-section-header,
 .skeleton-map-membres .modal-section-header { margin: 6px 0; }
 .skeleton-map-list .modal-section-title,
-.skeleton-map-membres .modal-section-title { font-size: 13px; }
+.skeleton-map-membres .modal-section-title { font-size: var(--texte-courant); }
 /* ⚠️ REPLIÉE, LE PADDING DOIT REDEVENIR SYMÉTRIQUE, et l'oublier a produit exactement le défaut que
    `.modal-section.collapsed` corrigeait déjà pour les fiches : signalé à l'usage, « le titre d'une
    section repliée n'est pas centré verticalement ». Sans contenu sous l'en-tête, les 2px du haut et
@@ -1876,18 +1886,18 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    bloc à ne ressembler à aucun autre. Le tronc est devenu une section comme les autres (#388). */
 .skeleton-map-membre { display: flex; align-items: center; gap: 6px; padding: 4px 8px;
                        flex-wrap: wrap; }
-.skeleton-map-membre input[type=text] { flex: 1; min-width: 120px; font-size: 12.5px;
+.skeleton-map-membre input[type=text] { flex: 1; min-width: 120px; font-size: var(--texte-courant);
                                         margin-bottom: 0; }
 /* Une chaîne écartée reste LISIBLE, seulement estompée : la faire disparaître empêcherait de la
    retrouver pour la recocher, et c'est le geste le plus probable après une erreur. */
 /* #384 — la case maîtresse « tout cocher ». Son libellé est cliquable comme celui d'un <label>,
    sans en être un : le <label for=...> demanderait un identifiant unique par modale, et la case
    est recréée à chaque rendu. */
-.skeleton-map-tout { font-size: 12px; cursor: pointer; user-select: none; opacity: .85; }
+.skeleton-map-tout { font-size: var(--texte-libelle); cursor: pointer; user-select: none; opacity: .85; }
 .skeleton-map-membre.ecarte { opacity: .5; }
 /* Les os traversés : sur leur propre ligne, en petit, parce qu'ils servent à VÉRIFIER un choix, pas
    à le faire. Le nom complet est dans l'infobulle, une chaîne de neuf os ne tenant pas ici. */
-.skeleton-map-chaine { flex-basis: 100%; font-size: 11px; color: var(--ink-soft);
+.skeleton-map-chaine { flex-basis: 100%; font-size: var(--texte-capitales); color: var(--ink-soft);
                        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
                        padding-left: 22px; }
 /* Morphologie : une ligne, en haut, avec sa liste déroulante et son étiquette d'origine.
@@ -1914,11 +1924,11 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
  * Seul ce qui les DISTINGUE vraiment reste écrit à part : leur fond. */
 .skeleton-map-morpho,
 .skeleton-map-reprise { display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
-                        padding: 9px 10px; border-radius: 4px; font-size: 12.5px;
+                        padding: 9px 10px; border-radius: 4px; font-size: var(--texte-courant);
                         border: 1px solid var(--line); }
 .skeleton-map-morpho { background: var(--creux); }
 .skeleton-map-morpho select { flex: 1; min-width: 0; }
-.skeleton-map-morpho label { font-size: 12.5px; color: var(--sepia); white-space: nowrap; }
+.skeleton-map-morpho label { font-size: var(--texte-courant); color: var(--sepia); white-space: nowrap; }
 /* Le bandeau de reprise (#386, remis en forme en #387).
  *
  * ⚠️ TEINTE BLEUE, PARCE QUE C'EST UNE INFORMATION. Décision de l'utilisateur, contre ma première
@@ -1954,7 +1964,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .skeleton-map-reprise-btn {
   flex: 0 0 auto; width: auto; margin: 0; padding: 5px 14px;
   border: 1px solid var(--accent); background: var(--accent); color: var(--sur-accent);
-  font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12.5px;
+  font-family: 'Inter', sans-serif; font-weight: 600; font-size: var(--texte-courant);
   border-radius: 7px; cursor: pointer; white-space: nowrap;
 }
 .skeleton-map-reprise-btn:hover { filter: brightness(1.08); }
@@ -1966,7 +1976,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    dessous — et `scrollWidth` ne dit plus la largeur qu'il faudrait pour une seule ligne. Sans repli,
    le contenu déborde, `scrollWidth` mesure ce débordement, et `replierLegendeSiNecessaire3D` tranche
    (cf. events.js). Le débordement ne se voit jamais : la classe est posée dans le même rendu. */
-.skeleton-map-legend { display: flex; flex-wrap: nowrap; gap: 10px; font-size: 11.5px;
+.skeleton-map-legend { display: flex; flex-wrap: nowrap; gap: 10px; font-size: var(--texte-libelle);
                        color: var(--sepia); margin-bottom: 10px; overflow: hidden; }
 /* Empilée : UNE légende par ligne, jamais deux. C'est le seul autre état permis. */
 .skeleton-map-legend.empilee { flex-direction: column; gap: 3px; overflow: visible; }
@@ -2001,7 +2011,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    basse de la légende, avec laquelle une marge haute FUSIONNERAIT (les marges verticales adjacentes
    prennent le maximum des deux, elles ne s'ajoutent pas) : les écrire des deux côtés serait donc
    trompeur, et seule celle du bas est à dire ici. */
-#skeletonMapLegendNote { font-size: 11.5px; color: var(--sepia); margin: 0 0 10px; }
+#skeletonMapLegendNote { font-size: var(--texte-libelle); color: var(--sepia); margin: 0 0 10px; }
 /* ⚠️ CETTE CLASSE N'A JAMAIS PORTÉ SA TAILLE : elle l'héritait de `.skeleton-map-legend`, son seul
    parent jusqu'ici. Sortie de la légende pour vivre sous un titre de section, elle a hérité de la
    taille de base de la modale et s'est affichée bien trop grosse. Signalé à l'usage. La taille est
@@ -2009,7 +2019,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    L'écart bas égale l'écart haut, qui vient de la marge basse de l'en-tête de section : le texte
    se lit comme un préambule de la liste, et non comme une ligne collée à celle qui suit. */
 .skeleton-map-membres .skeleton-map-legend-note {
-  font-size: 11.5px; color: var(--sepia); margin: 0 0 6px;
+  font-size: var(--texte-libelle); color: var(--sepia); margin: 0 0 6px;
 }
 /* LES ÉCARTS DE LA SOUS-SECTION D'UN MODÈLE IMPORTÉ ONT ÉTÉ RETIRÉS (#402a). Ils réglaient au pixel
    l'espace autour du bouton « Tableau de correspondance » quand il vivait dans la fiche ; il est
@@ -2027,7 +2037,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
   display: flex; align-items: center; gap: 10px; padding: 5px 8px; margin-bottom: 4px;
   border: 1px solid var(--bord-actif); border-radius: var(--radius, 6px);
 }
-.skeleton-map-row .skeleton-map-slot { font-size: 12.5px; width: 92px; flex-shrink: 0; color: var(--ink-soft); }
+.skeleton-map-row .skeleton-map-slot { font-size: var(--texte-courant); width: 92px; flex-shrink: 0; color: var(--ink-soft); }
 /* `margin-bottom: 0` n'est pas cosmétique : `.modal-box select` porte 14px de marge basse, faite
    pour des champs EMPILÉS. Dans une ligne flex, cette marge fait partie de la boîte : le champ
    paraissait collé en haut de son encadré alors que `align-items: center` centrait bien — il
@@ -2041,12 +2051,12 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .skeleton-map-row select,
 .skeleton-map-morpho select,
 .skeleton-map-reprise select { margin-bottom: 0; }
-.skeleton-map-row select { flex: 1; min-width: 0; font-size: 12.5px; }
+.skeleton-map-row select { flex: 1; min-width: 0; font-size: var(--texte-courant); }
 /* L'étiquette d'origine, et c'est la pièce maîtresse de cet écran. Une proposition « structure »
    signifie : le vocabulaire du fichier ne confirmait pas, j'ai suivi la forme du squelette. C'est
    exactement là que l'utilisateur doit regarder — d'où une teinte, pas seulement un mot. */
 .skeleton-map-origin {
-  font-size: 10.5px; padding: 1px 6px; border-radius: var(--radius, 6px); flex-shrink: 0;
+  font-size: var(--texte-micro); padding: 1px 6px; border-radius: var(--radius, 6px); flex-shrink: 0;
 }
 .skeleton-map-origin.origine-nom       { background: rgba(90,160,110,.18); color: #4a8a5e; }
 .skeleton-map-origin.origine-structure { background: rgba(224,165,60,.22); color: #a06a10; }
@@ -2112,14 +2122,14 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 }
 .modal-field-curseur input[type=range] { flex: 1; margin: 0; }
 .modal-field-curseur .modal-field-valeur {
-  font-size: 13px; opacity: .85; width: 42px; text-align: right; flex-shrink: 0;
+  font-size: var(--texte-courant); opacity: .85; width: 42px; text-align: right; flex-shrink: 0;
 }
 
 /* La section Image d'une Case (#403c). Le nom du fichier est la seule information avec laquelle
    l'utilisateur peut retrouver ce qui manque : il se coupe plutôt que de déborder, et son titre
    complet reste lisible au survol. */
 .side-image-name{
-  font-size:12px; color:var(--ink-mid); background:var(--creux);
+  font-size:var(--texte-libelle); color:var(--ink-mid); background:var(--creux);
   border:1px solid var(--line); border-radius:6px; padding:6px 8px; margin-bottom:8px;
   overflow-wrap:anywhere;
 }
@@ -2133,7 +2143,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    le précède. */
 .modal-checkbox-line {
   display: flex; align-items: center; gap: 7px;
-  margin-bottom: 6px; cursor: pointer; font-size: 13px;
+  margin-bottom: 6px; cursor: pointer; font-size: var(--texte-courant);
 }
 .modal-checkbox-line input[type=checkbox] { margin: 0; cursor: pointer; }
 
@@ -2141,7 +2151,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    devinable, elle ne doit pas peser autant que le réglage lui-même. */
 .modal-field-hint {
   margin-bottom: 14px;
-  font-size: 11px; opacity: .7; line-height: 1.4;
+  font-size: var(--texte-capitales); opacity: .7; line-height: 1.4;
 }
 
 /* Titre de groupe dans une liste du menu de gauche (bibliothèque de modèles : « Utilisés par des
@@ -2151,7 +2161,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    PRÉCÉDENT. C'est cet écart qui dit à quel groupe appartient une ligne : les deux égaux, un titre
    flotterait entre deux blocs sans qu'on sache lequel il annonce. */
 .side-group-title {
-  font-size: 10px; text-transform: uppercase; letter-spacing: .06em;
+  font-size: var(--texte-micro); text-transform: uppercase; letter-spacing: .06em;
   opacity: .5; margin: 10px 0 5px 2px;
 }
 /* Le PREMIER titre n'a pas de groupe au-dessus de lui — seulement le bouton de la section. Son
@@ -2182,35 +2192,35 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .maj-btn{
   align-self:center; margin-left:8px; padding:3px 10px; border-radius:999px; cursor:pointer;
   border:1px solid var(--accent); background:var(--accent-soft); color:var(--accent);
-  font-family:'Inter',sans-serif; font-size:11px; font-weight:600;
+  font-family:'Inter',sans-serif; font-size:var(--texte-capitales); font-weight:600;
 }
 .maj-btn:hover{ background:var(--accent); color:var(--sur-accent); }
-.maj-texte p{ font-size:13px; line-height:1.45; margin:0 0 10px; }
-.maj-notes{ max-height:40vh; overflow:auto; font-size:13px; line-height:1.45; }
+.maj-texte p{ font-size:var(--texte-courant); line-height:1.45; margin:0 0 10px; }
+.maj-notes{ max-height:40vh; overflow:auto; font-size:var(--texte-courant); line-height:1.45; }
 .maj-notes:empty{ display:none; }
-.maj-notes .maj-version h4{ margin:10px 0 6px; font-size:13px; }
+.maj-notes .maj-version h4{ margin:10px 0 6px; font-size:var(--texte-courant); }
 .maj-notes .maj-version:first-child h4{ margin-top:0; }
 .maj-notes ul{ margin:0 0 8px; padding-left:18px; }
 .maj-notes p{ margin:0 0 8px; }
 .maj-badge{
-  display:inline-block; margin-left:6px; padding:1px 7px; border-radius:999px; font-size:10.5px;
+  display:inline-block; margin-left:6px; padding:1px 7px; border-radius:999px; font-size:var(--texte-micro);
   background:var(--warn); color:var(--sur-warn); vertical-align:middle;
 }
 .maj-progression{ width:100%; margin-top:10px; }   /* son orange vient de `accent-color` sur <body> (#460a) */
-.maj-message{ font-size:12.5px; color:var(--ink-soft); min-height:1em; margin:8px 0 0; }
+.maj-message{ font-size:var(--texte-courant); color:var(--ink-soft); min-height:1em; margin:8px 0 0; }
 .maj-message.erreur{ color:var(--danger); }
 
 /* ── Ressources introuvables (#443) ─────────────────────────────────────────────────────────
    Des chemins Windows longs : ils doivent se couper plutôt qu'élargir la modale. */
-.ressources-corps{ font-size:13px; line-height:1.45; max-height:60vh; overflow:auto; }
+.ressources-corps{ font-size:var(--texte-courant); line-height:1.45; max-height:60vh; overflow:auto; }
 .ressources-corps p{ margin:0 0 10px; }
-.ressources-corps h4{ margin:12px 0 6px; font-size:13px; }
+.ressources-corps h4{ margin:12px 0 6px; font-size:var(--texte-courant); }
 .ressources-corps ul, .ressources-corps ol{ margin:0 0 8px; padding-left:20px; }
-.ressources-corps code{ overflow-wrap:anywhere; font-size:12px; }
+.ressources-corps code{ overflow-wrap:anywhere; font-size:var(--texte-libelle); }
 .ressources-noms li{ overflow-wrap:anywhere; color:var(--ink-soft); }
 .ressources-indice{ padding:8px 12px; border-left:3px solid var(--accent); background:var(--accent-soft); }
 .maj-simulation{
-  padding:8px 12px; border-radius:6px; font-size:12.5px; line-height:1.4;
+  padding:8px 12px; border-radius:6px; font-size:var(--texte-courant); line-height:1.4;
   background:var(--warn); color:var(--sur-warn);
 }
 
@@ -2236,7 +2246,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 /* Le tri (« Nom » / « Récents ») n'a que des libellés courts : une largeur fixe, étroite, rend sa
    place aux autres filtres (demandé, la ligne devenait serrée). */
 .modal-box .store-filtres.store-filtres-ligne select#storeTri{ flex:0 0 110px; }
-.store-case{ font-size:12.5px; display:flex; align-items:center; gap:6px; }
+.store-case{ font-size:var(--texte-courant); display:flex; align-items:center; gap:6px; }
 .store-grille{ display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:12px; }
 /* ⚠️ `hidden` ne l'emporte pas sur un `display` posé par une classe : sans ces règles, la grille
    restait affichée sous la fiche au lieu d'être remplacée. */
@@ -2251,7 +2261,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .onglets{ display:flex; gap:4px; border-bottom:1px solid var(--line); margin:0 0 12px; }
 .onglet{
   padding:7px 14px; border:0; border-bottom:2px solid transparent; margin-bottom:-1px; background:none;
-  font-family:'Inter',sans-serif; font-size:13px; font-weight:600; color:var(--ink-soft); cursor:pointer;
+  font-family:'Inter',sans-serif; font-size:var(--texte-courant); font-weight:600; color:var(--ink-soft); cursor:pointer;
 }
 .onglet:hover{ color:var(--ink); }
 .onglet.actif{ color:var(--accent); border-bottom-color:var(--accent); cursor:default; }
@@ -2268,9 +2278,9 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 }
 .store-carte:hover{ border-color:var(--accent); }
 .store-carte img, .store-sans-vignette{ width:100%; aspect-ratio:16/9; object-fit:cover; background:var(--creux); display:block; }
-.store-carte-nom{ font-size:12.5px; font-weight:600; padding:0 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.store-carte-auteur{ font-size:11.5px; color:var(--ink-soft); padding:0 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.store-carte-infos{ display:flex; justify-content:space-between; align-items:center; gap:6px; padding:0 8px; font-size:11px; color:var(--ink-soft); }
+.store-carte-nom{ font-size:var(--texte-courant); font-weight:600; padding:0 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.store-carte-auteur{ font-size:var(--texte-libelle); color:var(--ink-soft); padding:0 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.store-carte-infos{ display:flex; justify-content:space-between; align-items:center; gap:6px; padding:0 8px; font-size:var(--texte-capitales); color:var(--ink-soft); }
 /* Toujours UNE ligne : la licence se coupe (points de suspension, libellé complet en infobulle),
    le poids ne se coupe jamais. Sans `min-width: 0`, un élément flexible refuse de rétrécir sous
    la largeur de son texte, et la ligne passait à deux. */
@@ -2297,7 +2307,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 }
 .store-articule svg{ width:15px; height:15px; display:block; }
 .store-carte-possedee img, .store-carte-possedee .store-sans-vignette{ opacity:.7; }
-.store-fiche{ font-size:13px; line-height:1.45; }
+.store-fiche{ font-size:var(--texte-courant); line-height:1.45; }
 .store-fiche h4{ margin:14px 0 4px; font-size:20px; line-height:1.25; }
 .store-fiche p{ margin:0 0 6px; }
 .store-fiche ul{ margin:0 0 8px; padding-left:18px; }
@@ -2339,7 +2349,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .store-menu-resolutions[hidden]{ display:none; }
 .store-menu-resolution{
   display:block; width:100%; text-align:left; padding:7px 10px; border:0; border-radius:5px; background:none;
-  font-family:'Inter',sans-serif; font-size:12.5px; color:var(--ink); cursor:pointer; white-space:nowrap;
+  font-family:'Inter',sans-serif; font-size:var(--texte-courant); color:var(--ink); cursor:pointer; white-space:nowrap;
 }
 .store-menu-resolution:hover{ background:var(--accent-soft); }
 .store-menu-resolution.actif{ font-weight:600; color:var(--accent); }
@@ -2347,10 +2357,10 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .store-fiche-sous-titre{
   /* Un bouton : sans `text-align` ni `justify-content`, son libellé se centrait (signalé). */
   display:flex; align-items:center; justify-content:flex-start; text-align:left; gap:6px; width:100%; margin:0; padding:2px 0; border:0; background:none; cursor:pointer;
-  font-family:'Inter',sans-serif; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft);
+  font-family:'Inter',sans-serif; font-size:var(--texte-capitales); text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft);
 }
 .store-fiche-sous-titre:hover{ color:var(--ink); }
-.store-fiche-sous-titre .model-group-caret{ font-size:12px; }
+.store-fiche-sous-titre .model-group-caret{ font-size:var(--texte-libelle); }
 /* Entre deux sous-sections, le MÊME écart qu'entre le titre de section et la première (demandé) :
    4px de marge ici comme sous le h5, plus les 2px de padding du titre, des deux côtés. */
 .store-usages-groupe + .store-usages-groupe{ margin-top:4px; }
@@ -2359,7 +2369,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .store-usages{ max-height:38vh; overflow-y:auto; padding-right:6px; }
 /* Un peu d'écart entre chaque endroit (demandé). */
 .store-fiche-section .image-row-where{ margin-top:6px; }
-.store-fiche-texte{ margin:4px 0 0; font-size:13px; color:var(--ink); }
+.store-fiche-texte{ margin:4px 0 0; font-size:var(--texte-courant); color:var(--ink); }
 /* Renommer (jaune) et Supprimer (rouge) : texte blanc sur les deux (demandé). */
 .store-fiche-actions .store-action-blanc{ color:#fff; }
 /* Catégorie et tags, sous la source (demandé). Des pastilles ; la catégorie et « + Tags » s'ouvrent. */
@@ -2367,7 +2377,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .store-classement-ligne{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
 .store-chip{
   display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-family:'Inter',sans-serif;
-  font-size:12px; border:1px solid var(--line); background:var(--white); color:var(--ink);
+  font-size:var(--texte-libelle); border:1px solid var(--line); background:var(--white); color:var(--ink);
 }
 button.store-chip{ cursor:pointer; }
 button.store-chip:hover{ border-color:var(--accent); }
@@ -2405,7 +2415,7 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-tags-zone{ flex:1 1 150px; max-width:260px; min-width:0; }
 .store-tags-btn{
   width:100%; display:block; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  font-family:'Inter',sans-serif; font-size:13.5px; line-height:normal;
+  font-family:'Inter',sans-serif; font-size:var(--texte-courant); line-height:normal;
   border:1px solid var(--bord-actif); border-radius:7px; padding:8px 28px 8px 8px;
   background:var(--white); color:var(--ink); cursor:pointer;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%238a8f98' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
@@ -2413,10 +2423,10 @@ button.store-chip:hover{ border-color:var(--accent); }
 }
 .store-tags-btn.actif{ border-color:var(--accent); color:var(--accent); }
 .store-tag-ligne{ display:flex; align-items:center; gap:4px; }
-.store-tag-coche{ flex:1 1 auto; display:flex; align-items:center; gap:8px; padding:5px 6px; border-radius:5px; cursor:pointer; font-size:13px; color:var(--ink); }
+.store-tag-coche{ flex:1 1 auto; display:flex; align-items:center; gap:8px; padding:5px 6px; border-radius:5px; cursor:pointer; font-size:var(--texte-courant); color:var(--ink); }
 .store-tag-coche:hover{ background:var(--accent-soft); }
 .store-tag-nom{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.store-tag-outil{ flex:none; border:0; background:none; cursor:pointer; padding:3px 5px; border-radius:4px; font-size:12px; opacity:.6; }
+.store-tag-outil{ flex:none; border:0; background:none; cursor:pointer; padding:3px 5px; border-radius:4px; font-size:var(--texte-libelle); opacity:.6; }
 .store-tag-outil:hover{ opacity:1; background:var(--line); }
 /* La corbeille en trait de la couleur du texte (l'émoji sortait noir sur fond sombre, signalé),
    rouge au survol. */
@@ -2425,10 +2435,10 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-tag-corbeille:hover{ color:var(--danger); }
 /* Un champ de MENU, pas de formulaire : il ne suit pas l'espacement des champs de modale (même
    spécificité que `.modal-box input[type=text]`, déclarée après : elle l'emporte). */
-.store-menu-flottant input.store-tag-champ{ width:100%; margin:6px 0 0; padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:var(--paper-dark); color:var(--ink); font-size:13px; }
-.store-menu-erreur{ margin:4px 0 0; font-size:12px; color:var(--danger); }
+.store-menu-flottant input.store-tag-champ{ width:100%; margin:6px 0 0; padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:var(--paper-dark); color:var(--ink); font-size:var(--texte-courant); }
+.store-menu-erreur{ margin:4px 0 0; font-size:var(--texte-libelle); color:var(--danger); }
 .store-menu-erreur:empty{ display:none; }
-.store-menu-vide{ margin:4px 6px; font-size:12px; color:var(--ink-soft); }
+.store-menu-vide{ margin:4px 6px; font-size:var(--texte-libelle); color:var(--ink-soft); }
 .store-carte-introuvable .store-carte-auteur{ color:var(--warn); }
 /* Mode choix de l'Éditeur : un modèle statique n'a rien à poser, sa carte reste visible mais inactive. */
 .store-carte.store-carte-inactive{ opacity:.45; cursor:default; }
@@ -2449,7 +2459,7 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-fiche-visuel{ position:relative; }
 .store-fiche-visuel .store-apercu-3d{ position:absolute; inset:0; width:100%; height:100%; display:block; cursor:grab; touch-action:none; }
 .store-fiche-visuel .store-apercu-3d:active{ cursor:grabbing; }
-.store-apercu-chargement{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; margin:0; padding:16px; text-align:center; font-size:13px; color:var(--ink-soft); }
+.store-apercu-chargement{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; margin:0; padding:16px; text-align:center; font-size:var(--texte-courant); color:var(--ink-soft); }
 .store-apercu-chargement.erreur{ color:var(--danger); }
 .store-fiche-boutons{ display:flex; gap:8px; margin-top:8px; }
 /* CHAQUE SECTION DANS SA CARTE, À L'IMAGE DES FICHES D'ÉLÉMENTS (demandé, pour un rendu homogène) :
@@ -2467,22 +2477,22 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-fiche-section > ul{ margin:0; }
 /* Moins d'écart SOUS le titre que dans une fiche d'Élément (demandé) : ici le titre est suivi d'une
    sous-section ou d'une liste, pas d'un libellé de champ qui porte déjà son propre espace. */
-.store-fiche-section h5{ margin:10px 0 2px; padding:4px 0; display:flex; align-items:center; gap:6px; font-family:'Inter',sans-serif; font-weight:600; font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em; }
+.store-fiche-section h5{ margin:10px 0 2px; padding:4px 0; display:flex; align-items:center; gap:6px; font-family:'Inter',sans-serif; font-weight:600; font-size:var(--texte-capitales); color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em; }
 .store-fiche-section h5::before{ content:''; width:5px; height:5px; border-radius:50%; background:var(--accent); flex-shrink:0; }   /* #460f */
 .store-fiche-actions{ display:flex; gap:8px; align-items:stretch; margin-top:12px; }
 .store-fiche-actions > *{ flex:1 1 0; width:auto; margin:0; }   /* parts égales (demandé) */
 .store-lien-bouton{ text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
 .store-fiche-boutons > *{ flex:1 1 0; margin:0; }
 .store-avertissement{ color:var(--warn); }
-.store-note{ font-size:12px; color:var(--ink-soft); }
+.store-note{ font-size:var(--texte-libelle); color:var(--ink-soft); }
 .store-note.erreur{ color:var(--danger); }
 .store-note:empty{ display:none; }
-.store-credit{ font-size:11.5px; color:var(--ink-soft); margin:12px 0 0; text-align:right; }
+.store-credit{ font-size:var(--texte-libelle); color:var(--ink-soft); margin:12px 0 0; text-align:right; }
 .store-credit a{ color:inherit; }
 
 /* ── La fenêtre des POLICES (#423, src/polices-ui.js) ─────────────────────────────────────────── */
 /* Le bouton du bandeau : « Aa » en lettres, au gabarit des boutons ronds à icône. */
-.help-round-btn.polices-btn{ font-family:Georgia, serif; font-size:13px; font-weight:700; letter-spacing:-.02em; }
+.help-round-btn.polices-btn{ font-family:Georgia, serif; font-size:var(--texte-courant); font-weight:700; letter-spacing:-.02em; }
 #fontContextMenu{ z-index:1100; }
 .polices-box{ position:relative; }
 .polices-barre{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:8px; }
@@ -2500,15 +2510,15 @@ button.store-chip:hover{ border-color:var(--accent); }
    pèse plus qu'une règle à deux classes. Le champ prenait toute la rangée, écrasait les boutons, et
    sa marge basse éloignait la liste. D'où ce sélecteur, plus précis que le leur. */
 .modal-box .polices-vue input.polices-phrase{ flex:1 1 auto; min-width:120px; width:auto; height:34px; margin:0 0 0 8px; padding:0 10px;
-  box-sizing:border-box; font-size:13.5px; font-weight:500; }
+  box-sizing:border-box; font-size:var(--texte-courant); font-weight:500; }
 .modal-box .polices-vue input.polices-phrase[hidden]{ display:none; }
 /* L'onglet « En ligne » : la recherche s'étire comme la phrase d'exemple, les listes et la case
    gardent leur taille. Mêmes précautions de sélecteur que la phrase (largeur 100 % et marge basse
    des champs de modale). */
 .modal-box .polices-vue input.polices-enligne-texte{ flex:1 1 auto; min-width:140px; width:auto; height:34px; margin:0 0 0 8px; padding:0 10px;
-  box-sizing:border-box; font-size:13.5px; font-weight:500; }
+  box-sizing:border-box; font-size:var(--texte-courant); font-weight:500; }
 .modal-box .polices-vue select.polices-enligne{ width:auto; height:34px; margin:0 0 0 8px; padding:0 8px; }
-.polices-vue .store-case.polices-enligne{ margin-left:8px; white-space:nowrap; font-size:13px; }
+.polices-vue .store-case.polices-enligne{ margin-left:8px; white-space:nowrap; font-size:var(--texte-courant); }
 /* En ligne : « Complètes seulement » tout à droite, et la phrase d'exemple SOUS les filtres, sur
    toute la largeur (demandé). */
 .polices-vue .polices-completes{ margin-left:auto !important; }
@@ -2524,7 +2534,7 @@ button.store-chip:hover{ border-color:var(--accent); }
 .police-apercu{ position:relative; }
 .police-carte.en-liste .police-possedee{ top:50%; right:10px; transform:translateY(-50%); }
 .police-possedee{ position:absolute; top:6px; right:6px; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-  background:var(--accent); color:var(--sur-accent); font-size:12px; font-weight:700; box-shadow:0 1px 3px rgba(0,0,0,.35); }
+  background:var(--accent); color:var(--sur-accent); font-size:var(--texte-libelle); font-weight:700; box-shadow:0 1px 3px rgba(0,0,0,.35); }
 /* « Retour », en bas du détail, hors de la zone qui défile : toujours visible (demandé). */
 .polices-pied{ display:flex; gap:8px; padding-top:10px; border-top:1px solid var(--line); margin-top:8px; }
 /* Les deux boutons se partagent la largeur à parts égales ; seul, « Retour » la prend toute. */
@@ -2539,12 +2549,12 @@ button.store-chip:hover{ border-color:var(--accent); }
 .polices-ajout-menu{ position:absolute; right:0; top:calc(100% + 4px); z-index:5; min-width:230px; padding:4px;
   background:var(--white); border:1px solid var(--line); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.35); }
 .polices-ajout-menu[hidden]{ display:none; }
-.polices-ajout-menu button{ display:block; width:100%; text-align:left; padding:7px 10px; border:0; border-radius:6px; background:none; color:var(--ink); font:inherit; font-size:13px; cursor:pointer; }
+.polices-ajout-menu button{ display:block; width:100%; text-align:left; padding:7px 10px; border:0; border-radius:6px; background:none; color:var(--ink); font:inherit; font-size:var(--texte-courant); cursor:pointer; }
 .polices-ajout-menu button:hover:not(:disabled){ background:var(--nav-bg); color:var(--accent); }
 .polices-ajout-menu button:disabled{ color:var(--ink-soft); cursor:default; }
-.polices-groupe{ font-family:'Inter',sans-serif; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin:14px 0 8px; }
+.polices-groupe{ font-family:'Inter',sans-serif; font-size:var(--texte-capitales); font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin:14px 0 8px; }
 .polices-groupe:first-child{ margin-top:0; }
-.polices-vide{ font-size:13px; color:var(--ink-soft); margin:0; }
+.polices-vide{ font-size:var(--texte-courant); color:var(--ink-soft); margin:0; }
 .polices-grille{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
 .polices-lignes{ display:flex; flex-direction:column; gap:6px; }
 /* Une vignette : « Aa » dans la police, sur un fond de bulle clair, puis son nom et ses styles. */
@@ -2554,8 +2564,8 @@ button.store-chip:hover{ border-color:var(--accent); }
 .police-apercu{ display:flex; align-items:center; justify-content:center; height:84px; font-size:42px; line-height:1;
   background:#fbfaf7; color:#23242a; white-space:nowrap; overflow:hidden; }
 .police-pied{ display:flex; flex-direction:column; gap:4px; padding:7px 9px 8px; position:relative; }
-.police-nom{ font-size:12.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:44px; }
-.police-usage{ font-size:11px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.police-nom{ font-size:var(--texte-courant); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:44px; }
+.police-usage{ font-size:var(--texte-capitales); color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* Quand le texte sous le nom passerait sous G et I, ils remontent en haut, à la hauteur du nom
    (classe posée après mesure, cf. placerVariantes, src/polices-ui.js). */
 .police-pied.variantes-en-haut .police-variantes{ top:7px; transform:none; }
@@ -2564,7 +2574,7 @@ button.store-chip:hover{ border-color:var(--accent); }
 .police-variantes{ display:inline-flex; gap:3px; position:absolute; right:8px; top:50%; transform:translateY(-50%); }
 .police-infos .police-variantes{ position:static; transform:none; }
 .police-variante{ display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 3px; border-radius:4px;
-  font-family:Georgia, serif; font-size:11px; font-weight:700; background:var(--creux); color:var(--ink-mid); }   /* neutre (#460b) */
+  font-family:Georgia, serif; font-size:var(--texte-capitales); font-weight:700; background:var(--creux); color:var(--ink-mid); }   /* neutre (#460b) */
 .police-variante + .police-variante{ font-style:italic; }
 /* Une variante simulée : un ~ après la lettre, et une pastille éteinte. */
 .police-variante.simulee{ background:var(--line); color:var(--ink-soft); }
@@ -2582,14 +2592,14 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-fiche h4.police-fiche-titre{ font-size:34px; line-height:1.15; margin:0 0 10px; color:var(--ink); }
 .police-infos{ display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
 .police-info{ display:flex; gap:10px; align-items:baseline; }
-.police-info-cle{ flex:0 0 130px; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); }
+.police-info-cle{ flex:0 0 130px; font-size:var(--texte-capitales); text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); }
 .police-info a{ color:var(--accent); word-break:break-all; }
-.police-sous-titre{ font-family:'Inter',sans-serif; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin:14px 0 6px; }
+.police-sous-titre{ font-family:'Inter',sans-serif; font-size:var(--texte-capitales); font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin:14px 0 6px; }
 .police-essai-champ{ margin:0 0 8px; box-sizing:border-box; }
 .police-essais{ background:#fbfaf7; color:#23242a; border-radius:10px; padding:10px 14px; }
 .police-essai{ display:flex; gap:12px; align-items:baseline; }
 .police-essai + .police-essai{ margin-top:6px; }
-.police-essai-style{ flex:0 0 96px; font-family:'Inter',sans-serif; font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:#77787f; }
+.police-essai-style{ flex:0 0 96px; font-family:'Inter',sans-serif; font-size:var(--texte-micro); text-transform:uppercase; letter-spacing:.05em; color:#77787f; }
 .police-essai-texte{ font-size:24px; line-height:1.25; overflow-wrap:anywhere; }
 .police-caracteres{ display:flex; flex-direction:column; gap:8px; }
 .police-jeu{ display:flex; flex-direction:column; gap:4px; }
@@ -2599,22 +2609,22 @@ button.store-chip:hover{ border-color:var(--accent); }
 .police-jeu > .police-info-cle{ flex:none; }
 .police-caracteres-texte{ font-size:26px; line-height:1.3; letter-spacing:.06em; overflow-wrap:anywhere; background:#fbfaf7; color:#23242a; border-radius:8px; padding:6px 12px; }
 
-.right-panel .side-aide{ font-size:12px; color:var(--sepia); line-height:1.5; margin:6px 0; }
+.right-panel .side-aide{ font-size:var(--texte-libelle); color:var(--sepia); line-height:1.5; margin:6px 0; }
 /* Planche importée : la description de chaque Case se tape dans la liste des Cases du menu Planche. */
-.planche-case-row textarea.planche-case-saisie{ flex:1; width:auto; min-height:46px; padding:6px 8px; font-size:12px; }
+.planche-case-row textarea.planche-case-saisie{ flex:1; width:auto; min-height:46px; padding:6px 8px; font-size:var(--texte-libelle); }
 .planche-case-row.case-importee{ cursor:grab; }
 /* L'aide de la correction des Cases : une commande par ligne. */
 #sidePageEditionHint{ white-space:pre-line; line-height:1.7; }
 
 /* #453 : la modale « Formats du projet » (src/formats-ui.js). */
-.formats-aide{ margin:0 0 12px; font-size:12.5px; color:var(--sepia); line-height:1.4; }
+.formats-aide{ margin:0 0 12px; font-size:var(--texte-courant); color:var(--sepia); line-height:1.4; }
 .formats-liste{ max-height:40vh; overflow-y:auto; display:flex; flex-direction:column; gap:6px; }
 .format-ligne{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; }
 .format-texte{ flex:1; display:flex; flex-direction:column; min-width:0; }
-.format-texte b{ font-size:13px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.format-texte small{ font-size:11.5px; color:var(--ink-soft); }
-.full-btn.format-btn{ margin:0; padding:4px 10px; font-size:12px; width:auto; }
-.formats-sous-titre{ margin:16px 0 0; font-size:13px; color:var(--ink); }
+.format-texte b{ font-size:var(--texte-courant); color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.format-texte small{ font-size:var(--texte-libelle); color:var(--ink-soft); }
+.full-btn.format-btn{ margin:0; padding:4px 10px; font-size:var(--texte-libelle); width:auto; }
+.formats-sous-titre{ margin:16px 0 0; font-size:var(--texte-courant); color:var(--ink); }
 .formats-dimensions{ display:flex; align-items:center; gap:6px; }
 .formats-dimensions .modal-input{ width:auto; flex:1; min-width:0; }
 .formats-dimensions select.modal-input{ flex:0 0 72px; }
@@ -2640,7 +2650,7 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
   background:var(--paper-dark); color:var(--ink); border:1px solid var(--bord-actif); border-radius:6px;
   padding:4px 0; margin-top:2px; box-shadow:0 8px 24px rgba(0,0,0,.45);
 }
-.select-riche option{ padding:5px 10px; font-size:12.5px; color:var(--ink); background:transparent; cursor:pointer; }
+.select-riche option{ padding:5px 10px; font-size:var(--texte-courant); color:var(--ink); background:transparent; cursor:pointer; }
 .select-riche option::checkmark{ display:none; }
 .select-riche option:checked{ color:var(--accent); }  /* le format choisi, en orange (demandé) */
 .select-riche option:hover, .select-riche option:focus-visible{ background:var(--accent-soft); }
@@ -2671,12 +2681,12 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-apercu-fenetre[data-mode="reduit"] { display: none; }
 .batiment-apercu-fenetre.en-glisser { opacity: .85; transition: none; }
 .batiment-apercu-barre { flex: none; display: flex; align-items: center; gap: 4px; padding: 4px 6px 4px 10px; cursor: move;
-                         font-size: 11px; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em;
+                         font-size: var(--texte-capitales); font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em;
                          border-bottom: 1px solid var(--line); user-select: none; zoom: var(--echelle-ui); }
 .batiment-apercu-fenetre[data-mode="plein"] .batiment-apercu-barre { cursor: default; }
 .batiment-apercu-barre > span { flex: 1; }
 .batiment-apercu-btn { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--bord-actif); background: var(--white);
-                       color: var(--ink-soft); font-size: 13px; font-weight: 700; line-height: 1; cursor: pointer; padding: 0;
+                       color: var(--ink-soft); font-size: var(--texte-courant); font-weight: 700; line-height: 1; cursor: pointer; padding: 0;
                        display: flex; align-items: center; justify-content: center; }
 .batiment-apercu-btn:hover { color: var(--accent); border-color: var(--accent); }
 .batiment-editeur-apercu { flex: 1; min-height: 0; position: relative; }
@@ -2694,13 +2704,13 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-apercu-icone[data-coin="bd"] { bottom: 12px; right: 12px; }
 .batiment-editeur-panneau { width: 300px; flex-shrink: 0; overflow-y: auto; padding: 14px 16px; background: var(--paper-dark);
                             border-left: 1px solid var(--line); zoom: var(--echelle-ui); display: flex; flex-direction: column; }
-.batiment-editeur-panneau h2 { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; color: var(--ink-soft); margin: 0 0 8px;
+.batiment-editeur-panneau h2 { font-family: 'Inter', sans-serif; font-size: var(--texte-capitales); font-weight: 600; color: var(--ink-soft); margin: 0 0 8px;
                                text-transform: uppercase; letter-spacing: .05em; }
 .batiment-editeur-panneau .modal-input.batiment-nom { margin-top: 0; }
-.batiment-liste { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
+.batiment-liste { display: flex; flex-direction: column; gap: 4px; font-size: var(--texte-courant); }
 .batiment-liste .batiment-ligne { display: flex; justify-content: space-between; gap: 8px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; }
 .batiment-liste .batiment-ligne small { color: var(--ink-soft); }
-.batiment-aide { margin: 0; font-size: 12px; color: var(--ink-soft); line-height: 1.45; white-space: pre-line; }
+.batiment-aide { margin: 0; font-size: var(--texte-libelle); color: var(--ink-soft); line-height: 1.45; white-space: pre-line; }
 /* Les outils (demandé) : des boutons ronds à icône, comme celui qui rouvre l'aperçu 3D, qui flottent
    directement sur la vue de dessus, en bas au centre. */
 .batiment-outils { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 2; display: flex; gap: 10px;
@@ -2719,16 +2729,16 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
    copies — `.batiment-choix` et `.lecteur-choix-btn` — ne différaient que par un pixel de marge et
    l'opacité de l'état éteint ; elles auraient continué de diverger. */
 .choix button { flex: 1 1 0; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line-strong); background: var(--white);
-                color: var(--ink); font-size: 12px; cursor: pointer; }
+                color: var(--ink); font-size: var(--texte-libelle); cursor: pointer; }
 .choix button.actif { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 600; }
-.batiment-case { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink); margin: 6px 0; cursor: pointer; }
+.batiment-case { display: flex; align-items: center; gap: 6px; font-size: var(--texte-libelle); color: var(--ink); margin: 6px 0; cursor: pointer; }
 .batiment-boutons { display: flex; gap: 6px; margin-top: 6px; }
-.batiment-boutons .nav-btn { flex: 1 1 0; margin: 0; font-size: 11.5px; }
+.batiment-boutons .nav-btn { flex: 1 1 0; margin: 0; font-size: var(--texte-libelle); }
 #batimentSelectionOuverture[hidden], #batimentSelectionEscalier[hidden] { display: none; }
-.batiment-info { font-size: 11.5px; color: var(--ink-soft); margin: 4px 0; }
+.batiment-info { font-size: var(--texte-libelle); color: var(--ink-soft); margin: 4px 0; }
 .batiment-liste .batiment-ligne.cliquable { cursor: pointer; }
 .batiment-liste .batiment-ligne.cliquable:hover { border-color: var(--accent); }
-.batiment-champ { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--ink); margin: 6px 0; }
+.batiment-champ { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: var(--texte-libelle); color: var(--ink); margin: 6px 0; }
 .batiment-champ-valeur { display: flex; align-items: center; gap: 4px; color: var(--ink-soft); }
 .batiment-champ input[type=number] { width: 64px; }
 #batimentSectionSelection .full-btn { margin-top: 6px; }
@@ -2744,8 +2754,8 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 /* #454b : la colonne des niveaux, à gauche de la vue de dessus, et leurs lignes dans le menu. */
 .batiment-niveaux-plan { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); z-index: 2; display: flex;
                          flex-direction: column; gap: 6px; zoom: var(--echelle-ui); }
-.batiment-outil.batiment-niveau { width: 34px; height: 34px; padding: 0; font-size: 11.5px; font-weight: 700; }
-.batiment-outil.batiment-niveau-fleche { height: 26px; font-size: 10px; border-radius: 13px; box-shadow: none; }
+.batiment-outil.batiment-niveau { width: 34px; height: 34px; padding: 0; font-size: var(--texte-libelle); font-weight: 700; }
+.batiment-outil.batiment-niveau-fleche { height: 26px; font-size: var(--texte-micro); border-radius: 13px; box-shadow: none; }
 .batiment-outil:disabled { opacity: .35; cursor: default; }
 .batiment-outil:disabled:hover { color: var(--ink-soft); border-color: var(--bord-actif); }
 .batiment-ligne.batiment-ligne-niveau { align-items: flex-start; gap: 8px; cursor: grab; }
@@ -2755,10 +2765,10 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-ligne.batiment-ligne-niveau.cible-dessous { box-shadow: 0 3px 0 0 var(--accent); }
 .batiment-niveau-gauche { flex: none; width: 30px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 4px; }
 .batiment-niveau-droite { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.batiment-niveau-pastille { font-size: 11px; font-weight: 700; color: var(--ink-soft); cursor: pointer; }
+.batiment-niveau-pastille { font-size: var(--texte-capitales); font-weight: 700; color: var(--ink-soft); cursor: pointer; }
 /* #460b : le numéro d'un niveau n'est orange que sur le niveau COURANT. */
 .batiment-ligne-niveau.actif .batiment-niveau-pastille { color: var(--accent); }
-.batiment-niveau-nom { width: 100%; box-sizing: border-box; font-size: 12px; padding: 3px 5px; border: 1px solid var(--line); border-radius: 5px;
+.batiment-niveau-nom { width: 100%; box-sizing: border-box; font-size: var(--texte-libelle); padding: 3px 5px; border: 1px solid var(--line); border-radius: 5px;
                        background: var(--white); color: var(--ink); }
 .batiment-niveau-droite input[type=number] { width: 64px; }
 .batiment-niveau-suppr { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--bord-actif); background: var(--white);
@@ -2779,7 +2789,7 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 /* Les sous-sections d'un formulaire (Type, Marches d'un escalier) : un creux, un titre un cran sous
    celui de la section, comme les sous-sections de l'Éditeur de modèle. */
 .batiment-sous-section{ background:var(--creux); border-radius:5px; padding:7px 9px 9px; margin:0 0 10px; display:flex; flex-direction:column; gap:8px; }
-.batiment-sous-section > h3{ margin:0; font-size:13px; font-weight:600; color:var(--ink-mid); }
+.batiment-sous-section > h3{ margin:0; font-size:var(--texte-courant); font-weight:600; color:var(--ink-mid); }
 /* Dans une sous-section, seul son `gap` espace les rangées : Contremarches est à la même distance
    des boutons de rampe que les deux rangées de Type entre elles (demandé). */
 .batiment-sous-section > .choix, .batiment-sous-section > .batiment-case,
@@ -2814,7 +2824,7 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .modal-field-ligne{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 14px; }
 .modal-field-ligne > .modal-field-label{ margin:0; }
 .modal-field-ligne input[type=number], .modal-field-ligne .modal-field-number{ flex:none; width:90px; margin:0; }
-.modal-field-ligne .modal-field-valeur{ display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft); }
+.modal-field-ligne .modal-field-valeur{ display:inline-flex; align-items:center; gap:6px; font-size:var(--texte-libelle); color:var(--ink-soft); }
 
 /* ── La page du système de design (préfixe ds-), posée SUR la feuille de l'application ── */
 html, body{ height:auto !important; overflow:auto !important; }
@@ -2981,15 +2991,14 @@ html[lang="fr"] .ds-en, html[lang="en"] .ds-fr{ display:none; }
 
 <h2 class="ds-titre"><span class="ds-fr">Typographie</span><span class="ds-en">Typography</span></h2>
 <p class="ds-chapo"><span class="ds-fr">Une seule famille pour l'interface : <b>Inter</b>, embarquée. Les polices de lettrage des Bulles sont un autre sujet (fenêtre des polices).</span><span class="ds-en">One family for the interface: <b>Inter</b>, embedded. The Bubbles' lettering fonts are another matter (fonts window).</span></p>
-<table class="ds-table"><tr><th><span class="ds-fr">Usage</span><span class="ds-en">Use</span></th><th><span class="ds-fr">Taille</span><span class="ds-en">Size</span></th><th><span class="ds-fr">Graisse</span><span class="ds-en">Weight</span></th><th><span class="ds-fr">Encre</span><span class="ds-en">Ink</span></th><th><span class="ds-fr">Aperçu</span><span class="ds-en">Preview</span></th></tr>
-<tr><td><span class="ds-fr">Nom de l'application, titre de menu</span><span class="ds-en">Application name, menu title</span></td><td>16 px</td><td>700</td><td><code>--ink</code></td><td style="font-size:16px;font-weight:700"><span class="ds-fr">Éditeur de bâtiment</span><span class="ds-en">Building editor</span></td></tr>
-<tr><td><span class="ds-fr">Titre de modale</span><span class="ds-en">Modal title</span></td><td><span class="ds-fr">14,5 px</span><span class="ds-en">14.5 px</span></td><td>700</td><td><code>--ink</code></td><td style="font-size:14.5px;font-weight:700"><span class="ds-fr">Configuration</span><span class="ds-en">Settings</span></td></tr>
-<tr><td><span class="ds-fr">Titre de section</span><span class="ds-en">Section title</span></td><td><span class="ds-fr">11 px, capitales, +0,05 em</span><span class="ds-en">11 px, upper case, +0.05 em</span></td><td>600</td><td><code>--ink-soft</code></td><td style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)"><span class="ds-fr">Bordure</span><span class="ds-en">Border</span></td></tr>
-<tr><td><span class="ds-fr">Titre de sous-section</span><span class="ds-en">Sub-section title</span></td><td>13 px</td><td>600</td><td><code>--ink-mid</code></td><td style="font-size:13px;font-weight:600;color:var(--ink-mid)">Dimensions</td></tr>
-<tr><td><span class="ds-fr">Bouton</span><span class="ds-en">Button</span></td><td><span class="ds-fr">12,5 px (11,5 dans une rangée)</span><span class="ds-en">12.5 px (11.5 in a row)</span></td><td>600</td><td></td><td style="font-size:12.5px;font-weight:600"><span class="ds-fr">Enregistrer dans la bibliothèque</span><span class="ds-en">Save to the library</span></td></tr>
-<tr><td><span class="ds-fr">Ligne de liste, menu contextuel</span><span class="ds-en">List row, context menu</span></td><td><span class="ds-fr">12,5 px</span><span class="ds-en">12.5 px</span></td><td><span class="ds-fr">400 à 600</span><span class="ds-en">400 to 600</span></td><td><code>--ink</code> / <code>--ink-soft</code></td><td style="font-size:12.5px"><span class="ds-fr">Planche 2</span><span class="ds-en">Page 2</span></td></tr>
-<tr><td><span class="ds-fr">Libellé, texte</span><span class="ds-en">Label, text</span></td><td>12 px</td><td>400</td><td><code>--ink</code></td><td style="font-size:12px"><span class="ds-fr">Épaisseur de la bordure</span><span class="ds-en">Border thickness</span></td></tr>
-<tr><td><span class="ds-fr">Aide, pied de page</span><span class="ds-en">Hint, footer</span></td><td><span class="ds-fr">11,5 px</span><span class="ds-en">11.5 px</span></td><td>400</td><td><code>--ink-soft</code></td><td style="font-size:11.5px;color:var(--ink-soft)"><span class="ds-fr">Enregistré il y a 2 minutes</span><span class="ds-en">Saved 2 minutes ago</span></td></tr></table>
+<table class="ds-table"><tr><th><span class="ds-fr">Jeton</span><span class="ds-en">Token</span></th><th><span class="ds-fr">Taille</span><span class="ds-en">Size</span></th><th><span class="ds-fr">Usage</span><span class="ds-en">Use</span></th><th><span class="ds-fr">Aperçu</span><span class="ds-en">Preview</span></th></tr>
+<tr><td><code>--texte-titre</code></td><td>16 px</td><td><span class="ds-fr">titres de menu, nom de l'application (700)</span><span class="ds-en">menu titles, application name (700)</span></td><td style="font-size:var(--texte-titre);font-weight:700"><span class="ds-fr">Éditeur de bâtiment</span><span class="ds-en">Building editor</span></td></tr>
+<tr><td><code>--texte-titre-modale</code></td><td><span class="ds-fr">14,5 px</span><span class="ds-en">14.5 px</span></td><td><span class="ds-fr">titres de modale (700)</span><span class="ds-en">modal titles (700)</span></td><td style="font-size:var(--texte-titre-modale);font-weight:700"><span class="ds-fr">Configuration</span><span class="ds-en">Settings</span></td></tr>
+<tr><td><code>--texte-courant</code></td><td>13 px</td><td><span class="ds-fr">boutons, lignes de liste, menus contextuels, texte des modales</span><span class="ds-en">buttons, list rows, context menus, modal text</span></td><td style="font-size:var(--texte-courant);font-weight:600"><span class="ds-fr">Enregistrer dans la bibliothèque</span><span class="ds-en">Save to the library</span></td></tr>
+<tr><td><code>--texte-libelle</code></td><td>12 px</td><td><span class="ds-fr">libellés, aides, textes secondaires</span><span class="ds-en">labels, hints, secondary text</span></td><td style="font-size:var(--texte-libelle)"><span class="ds-fr">Épaisseur de la bordure</span><span class="ds-en">Border thickness</span></td></tr>
+<tr><td><code>--texte-capitales</code></td><td>11 px</td><td><span class="ds-fr">titres de section en capitales (600, +0,05 em), pastilles, comptes</span><span class="ds-en">upper-case section titles (600, +0.05 em), chips, counts</span></td><td style="font-size:var(--texte-capitales);font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)"><span class="ds-fr">Bordure</span><span class="ds-en">Border</span></td></tr>
+<tr><td><code>--texte-micro</code></td><td>10 px</td><td><span class="ds-fr">libellés de champ en capitales, badges, flèches de sous-menu</span><span class="ds-en">upper-case field labels, badges, submenu arrows</span></td><td style="font-size:var(--texte-micro);font-weight:600;text-transform:uppercase;color:var(--ink-soft)"><span class="ds-fr">Taille réelle</span><span class="ds-en">Actual size</span></td></tr></table>
+<p class="ds-chapo"><span class="ds-fr">Six tailles et pas une de plus (#460i) ; un test refuse toute autre taille. Hors échelle, et voulus : les aperçus de polices, le titre d'une fiche du store et le résultat de la Mesure.</span><span class="ds-en">Six sizes and no more (#460i); a test refuses any other size. Off the scale, on purpose: font previews, a store page title and the Measure result.</span></p>
 
 <h2 class="ds-titre"><span class="ds-fr">Espacements et rayons</span><span class="ds-en">Spacing and radii</span></h2>
 <table class="ds-table"><tr><th><span class="ds-fr">Écart</span><span class="ds-en">Gap</span></th><th></th><th><span class="ds-fr">Entre</span><span class="ds-en">Between</span></th></tr>
@@ -3461,7 +3470,7 @@ html[lang="fr"] .ds-en, html[lang="en"] .ds-fr{ display:none; }
       
       <div class="side-section" id="sideMesureSection">
         <h2>📏 Mesure</h2>
-        <div id="sideMesureStatus" style="font-size:12px; color:var(--text-muted,#aaa); margin-bottom:6px;">Cliquez un 1er point sur le sol.</div>
+        <div id="sideMesureStatus" style="font-size:var(--texte-libelle); color:var(--text-muted,#aaa); margin-bottom:6px;">Cliquez un 1er point sur le sol.</div>
         <div id="sideMesureResult" style="font-size:20px; font-weight:bold; text-align:center; padding:4px 0; display:none;"></div>
         <button id="sideMesureEffacer" type="button" style="width:100%; margin-top:6px;">✖ Terminer</button>
       </div>
@@ -3757,7 +3766,7 @@ html[lang="fr"] .ds-en, html[lang="en"] .ds-fr{ display:none; }
   <div class="modal-box">
     <h3 id="confirmActionTitle"><span class="ds-fr">Supprimer la Planche</span><span class="ds-en">Delete the Page</span></h3>
     
-    <p id="confirmActionMessage" style="margin:0 0 14px; font-size:13.5px; color:var(--ink); line-height:1.4; white-space:pre-line;"><span class="ds-fr">Supprimer la Planche 3 et ses 6 Cases ?
+    <p id="confirmActionMessage" style="margin:0 0 14px; font-size:var(--texte-courant); color:var(--ink); line-height:1.4; white-space:pre-line;"><span class="ds-fr">Supprimer la Planche 3 et ses 6 Cases ?
 Cette action peut être annulée avec Ctrl+Z.</span><span class="ds-en">Delete Page 3 and its 6 Panels?
 This can be undone with Ctrl+Z.</span></p>
     <div class="modal-actions">
@@ -3864,17 +3873,17 @@ This can be undone with Ctrl+Z.</span></p>
         <option value="0">Désactivée</option>
       </select>
       <label class="modal-field-label">Dossier des Projets</label>
-      <p id="projectsDirDisplay" style="font-size:11.5px; color:var(--ink-soft); word-break:break-all; margin:0 0 8px; padding:7px 8px; border:1px solid var(--line); border-radius:6px; background:var(--white);"></p>
+      <p id="projectsDirDisplay" style="font-size:var(--texte-libelle); color:var(--ink-soft); word-break:break-all; margin:0 0 8px; padding:7px 8px; border:1px solid var(--line); border-radius:6px; background:var(--white);"></p>
       <div style="display:flex; gap:8px;">
         <button class="project-modal-btn nav-btn" id="projectsDirBrowse" type="button" style="margin-top:0; flex:1;">📂 Choisir...</button>
         <button class="project-modal-btn nav-btn" id="projectsDirReset" type="button" style="margin-top:0; flex:1;">↺ Dossier par défaut</button>
       </div>
       
       <label class="modal-field-label" style="margin-top:14px;">Exportation</label>
-      <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin:2px 0 8px; cursor:pointer;">
+      <label style="display:flex; align-items:center; gap:6px; font-size:var(--texte-courant); margin:2px 0 8px; cursor:pointer;">
         <input type="checkbox" id="exportShowPanelBadgesCheckbox" checked> Afficher le badge numéro sur les Cases
       </label>
-      <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin:2px 0 8px; cursor:pointer;">
+      <label style="display:flex; align-items:center; gap:6px; font-size:var(--texte-courant); margin:2px 0 8px; cursor:pointer;">
         <input type="checkbox" id="exportShowPanelDescriptionsCheckbox" checked> Afficher la description des Cases sous la Planche
       </label>
     </div>
@@ -3904,7 +3913,7 @@ This can be undone with Ctrl+Z.</span></p>
       
       <label class="modal-field-label">Bibliothèque de poses</label>
       <button class="project-modal-btn" id="restoreBuiltinPosesBtn" type="button" style="margin-top:0; width:100%;">↺ Restaurer les poses de base</button>
-      <p id="restoreBuiltinPosesHint" style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;"></p>
+      <p id="restoreBuiltinPosesHint" style="font-size:var(--texte-libelle); color:var(--ink-soft); margin:6px 0 0;"></p>
     </div>
     </div>
     <div class="modal-actions">
@@ -4056,13 +4065,13 @@ This can be undone with Ctrl+Z.</span></p>
         </div>
         <div id="objectTraversantField" style="display:none;">
           <label class="modal-field-label" id="objectTraversantLabel">Traversant</label>
-          <div id="objectTraversantHint" style="font-size:13px; opacity:.85; margin:0 0 4px; line-height:1.4;">
+          <div id="objectTraversantHint" style="font-size:var(--texte-courant); opacity:.85; margin:0 0 4px; line-height:1.4;">
             ✅ Oui — cet Élément perce un vrai trou dans le Mur auquel il est aimanté : on peut voir à travers le Mur à cet endroit. (Propriété fixe, non modifiable.)
           </div>
         </div>
         <div id="objectLinkedField" style="display:none;">
           <label class="modal-field-label">Lié à</label>
-          <div id="objectLinkedValue" style="font-size:13px; opacity:.85; margin:0 0 4px; line-height:1.4;"></div>
+          <div id="objectLinkedValue" style="font-size:var(--texte-courant); opacity:.85; margin:0 0 4px; line-height:1.4;"></div>
         </div>
       </div>
     </div>
@@ -4073,20 +4082,20 @@ This can be undone with Ctrl+Z.</span></p>
         <span class="modal-section-caret">▾</span>
       </div>
       <div class="modal-section-body">
-        <p id="objectRoomWallPosNotice" style="display:none; font-size:11px; opacity:.6; margin:0 0 8px; line-height:1.4; font-style:italic;">Position gérée par la Pièce — à modifier via la modale de la Pièce.</p>
+        <p id="objectRoomWallPosNotice" style="display:none; font-size:var(--texte-capitales); opacity:.6; margin:0 0 8px; line-height:1.4; font-style:italic;">Position gérée par la Pièce — à modifier via la modale de la Pièce.</p>
         <div id="objectPosField">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 4px;">
-            <label style="font-size:12.5px; opacity:.8; display:flex; align-items:center; gap:6px;">X <input type="number" id="objectPosXInput" step="0.01" style="width:90px;"></label>
-            <label style="font-size:12.5px; opacity:.8; display:flex; align-items:center; gap:6px;">Y <input type="number" id="objectPosYInput" step="0.01" style="width:90px;"></label>
-            <span id="objectDepthField" style="display:flex; align-items:center;"><label style="font-size:12.5px; opacity:.8; display:flex; align-items:center; gap:6px;" id="objectDepthLabel">Z <input type="number" id="objectDepthInput" step="0.01" style="width:90px;"></label></span>
+            <label style="font-size:var(--texte-courant); opacity:.8; display:flex; align-items:center; gap:6px;">X <input type="number" id="objectPosXInput" step="0.01" style="width:90px;"></label>
+            <label style="font-size:var(--texte-courant); opacity:.8; display:flex; align-items:center; gap:6px;">Y <input type="number" id="objectPosYInput" step="0.01" style="width:90px;"></label>
+            <span id="objectDepthField" style="display:flex; align-items:center;"><label style="font-size:var(--texte-courant); opacity:.8; display:flex; align-items:center; gap:6px;" id="objectDepthLabel">Z <input type="number" id="objectDepthInput" step="0.01" style="width:90px;"></label></span>
           </div>
-          <p id="objectPosHint" style="font-size:11px; opacity:.65; margin:14px 0 8px; line-height:1.4;">Ou cliquer-glisser sur l'objet dans la Case (X/Y), molette de la souris (Z — taille réelle inchangée).</p>
+          <p id="objectPosHint" style="font-size:var(--texte-capitales); opacity:.65; margin:14px 0 8px; line-height:1.4;">Ou cliquer-glisser sur l'objet dans la Case (X/Y), molette de la souris (Z — taille réelle inchangée).</p>
         </div>
         <div id="objectGroundMagnetField" style="display:none;">
-          <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin:2px 0 8px; cursor:pointer;">
+          <label style="display:flex; align-items:center; gap:6px; font-size:var(--texte-courant); margin:2px 0 8px; cursor:pointer;">
             <input type="checkbox" id="objectGroundMagnetCheckbox" checked> Aimanté au Sol (base posée au sol, déplacement vertical bloqué)
           </label>
-          <label id="objectTraverseGroundField" style="display:none; align-items:center; gap:6px; font-size:13px; margin:2px 0 8px; cursor:pointer;">
+          <label id="objectTraverseGroundField" style="display:none; align-items:center; gap:6px; font-size:var(--texte-courant); margin:2px 0 8px; cursor:pointer;">
             <input type="checkbox" id="objectTraverseGroundCheckbox"> Peut traverser le sol
           </label>
         </div>
@@ -4099,8 +4108,8 @@ This can be undone with Ctrl+Z.</span></p>
         <span class="modal-section-caret">▾</span>
       </div>
       <div class="modal-section-body">
-        <p id="objectRoomWallOrientNotice" style="display:none; font-size:11px; opacity:.6; margin:0 0 8px; line-height:1.4; font-style:italic;">Orientation gérée par la Pièce — à modifier via la modale de la Pièce.</p>
-        <p id="objectWallOpeningMagnetOrientNotice" style="display:none; font-size:11px; opacity:.6; margin:0 0 8px; line-height:1.4; font-style:italic;">Orientation gouvernée par le Mur hôte — aucune rotation manuelle possible.</p>
+        <p id="objectRoomWallOrientNotice" style="display:none; font-size:var(--texte-capitales); opacity:.6; margin:0 0 8px; line-height:1.4; font-style:italic;">Orientation gérée par la Pièce — à modifier via la modale de la Pièce.</p>
+        <p id="objectWallOpeningMagnetOrientNotice" style="display:none; font-size:var(--texte-capitales); opacity:.6; margin:0 0 8px; line-height:1.4; font-style:italic;">Orientation gouvernée par le Mur hôte — aucune rotation manuelle possible.</p>
         <label class="modal-field-label">Rotation horizontale</label>
         <input type="range" id="objectRotXInput" min="-180" max="180" step="1" value="0" style="margin-bottom:12px;">
         <label class="modal-field-label">Inclinaison</label>
@@ -4124,12 +4133,12 @@ This can be undone with Ctrl+Z.</span></p>
           <button id="objectEditorOpenBtn" type="button" class="preview-corner-btn"
                   style="display:none" title="Éditeur de modèle" aria-label="Éditeur de modèle">✏️</button>
         </div>
-        <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin:8px 0 0; cursor:pointer;">
+        <label style="display:flex; align-items:center; gap:6px; font-size:var(--texte-courant); margin:8px 0 0; cursor:pointer;">
           <input type="checkbox" id="objectHidden3dCheckbox"> Invisible dans la scène 3D
         </label>
         
         <div id="objectSphereVisibleField" style="display:none;">
-          <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin:6px 0 0; cursor:pointer;">
+          <label style="display:flex; align-items:center; gap:6px; font-size:var(--texte-courant); margin:6px 0 0; cursor:pointer;">
             <input type="checkbox" id="objectSphereVisibleCheckbox"> Afficher la sphère de la Lumière
           </label>
         </div>
@@ -4166,7 +4175,7 @@ This can be undone with Ctrl+Z.</span></p>
         <div class="modal-field-hint" id="objectLightRangeHint">0 = sans limite. Au-delà de la portée, la lumière ne porte plus du tout.</div>
         
         <div id="objectLightShadowField">
-          <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin:6px 0 0; cursor:pointer;">
+          <label style="display:flex; align-items:center; gap:6px; font-size:var(--texte-courant); margin:6px 0 0; cursor:pointer;">
             <input type="checkbox" id="objectLightShadowCheckbox"> Projette une ombre
           </label>
           <div class="modal-field-hint" id="objectLightShadowHint">Sans effet tant que les ombres portées sont éteintes dans la section Lumière de la Case.</div>
@@ -4228,7 +4237,7 @@ This can be undone with Ctrl+Z.</span></p>
         <label class="modal-field-label">Taille réelle</label>
         <div style="display:flex; align-items:center; gap:8px; margin:0 0 4px;">
           <input type="range" id="personaSizeInput" min="10" max="400" step="5" style="flex:1;">
-          <span id="personaSizeValue" style="font-size:13px; opacity:.85; width:42px; text-align:right; flex-shrink:0;">100%</span>
+          <span id="personaSizeValue" style="font-size:var(--texte-courant); opacity:.85; width:42px; text-align:right; flex-shrink:0;">100%</span>
         </div>
       </div>
     </div>
@@ -4240,15 +4249,15 @@ This can be undone with Ctrl+Z.</span></p>
       </div>
       <div class="modal-section-body">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 4px;">
-          <label style="font-size:12.5px; opacity:.8; display:flex; align-items:center; gap:6px;">X <input type="number" id="personaPosXInput" step="0.01" style="width:90px;"></label>
-          <label style="font-size:12.5px; opacity:.8; display:flex; align-items:center; gap:6px;">Y <input type="number" id="personaPosYInput" step="0.01" style="width:90px;"></label>
-          <label style="font-size:12.5px; opacity:.8; display:flex; align-items:center; gap:6px;">Z <input type="number" id="personaDepthInput" step="0.01" style="width:90px;"></label>
+          <label style="font-size:var(--texte-courant); opacity:.8; display:flex; align-items:center; gap:6px;">X <input type="number" id="personaPosXInput" step="0.01" style="width:90px;"></label>
+          <label style="font-size:var(--texte-courant); opacity:.8; display:flex; align-items:center; gap:6px;">Y <input type="number" id="personaPosYInput" step="0.01" style="width:90px;"></label>
+          <label style="font-size:var(--texte-courant); opacity:.8; display:flex; align-items:center; gap:6px;">Z <input type="number" id="personaDepthInput" step="0.01" style="width:90px;"></label>
         </div>
-        <p id="personaPosHint" style="font-size:11px; opacity:.65; margin:14px 0 8px; line-height:1.4;">Ou cliquer-glisser sur le personnage dans la Case (X/Y), molette de la souris (Z — taille réelle inchangée).</p>
-        <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin:2px 0 8px; cursor:pointer;">
+        <p id="personaPosHint" style="font-size:var(--texte-capitales); opacity:.65; margin:14px 0 8px; line-height:1.4;">Ou cliquer-glisser sur le personnage dans la Case (X/Y), molette de la souris (Z — taille réelle inchangée).</p>
+        <label style="display:flex; align-items:center; gap:6px; font-size:var(--texte-courant); margin:2px 0 8px; cursor:pointer;">
           <input type="checkbox" id="personaGroundMagnetCheckbox" checked> Aimanté au Sol (base posée au sol, déplacement vertical bloqué)
         </label>
-        <label id="personaTraverseGroundField" style="display:none; align-items:center; gap:6px; font-size:13px; margin:2px 0 8px; cursor:pointer;">
+        <label id="personaTraverseGroundField" style="display:none; align-items:center; gap:6px; font-size:var(--texte-courant); margin:2px 0 8px; cursor:pointer;">
           <input type="checkbox" id="personaTraverseGroundCheckbox"> Peut traverser le sol
         </label>
       </div>
@@ -4283,7 +4292,7 @@ This can be undone with Ctrl+Z.</span></p>
           <button id="personaEditorOpenBtn" type="button" class="preview-corner-btn"
                   title="Éditeur de modèle" aria-label="Éditeur de modèle">✏️</button>
         </div>
-        <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin:8px 0 0; cursor:pointer;">
+        <label style="display:flex; align-items:center; gap:6px; font-size:var(--texte-courant); margin:8px 0 0; cursor:pointer;">
           <input type="checkbox" id="personaHidden3dCheckbox"> Invisible dans la scène 3D
         </label>
 

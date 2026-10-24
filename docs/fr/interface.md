@@ -42,6 +42,15 @@ Aucune couleur d'interface n'est écrite en dur : `--paper`, `--ink`, `--accent`
 quatre rendus (Sombre, Clair, et le contraste renforcé de chacun) redéfinissent les mêmes jetons.
 Une valeur ajoutée en dur est fausse dans trois thèmes sur quatre.
 
+## Typographie
+
+### Six tailles
+
+**L'échelle** (#460i) : `--texte-micro` 10 px, `--texte-capitales` 11 px, `--texte-libelle` 12 px,
+`--texte-courant` 13 px (boutons, lignes de liste), `--texte-titre-modale` 14,5 px, `--texte-titre`
+16 px. Aucune autre taille n'entre dans l'interface (un test le vérifie) ; seuls les aperçus de polices,
+le titre d'une fiche du store et le résultat de la Mesure en sortent, exprès.
+
 ## Espacements
 
 ### Les quatre écarts
@@ -283,6 +292,6 @@ rejoint ce document avec son test.
 - **#460f** ✅ Une seule hiérarchie : écran > section (style des panneaux) > sous-section.
 - **#460g** ✅ Un seul composant d'onglets, `.onglets` / `.onglet` (store, polices, Configuration).
 - **#460h** ✅ Un seul état vide, `.empty-hint` : 12 px, gris `--ink-soft`, sans italique.
-- **#460i** 22 tailles de texte : passer à six.
+- **#460i** ✅ Six tailles de texte, en jetons `--texte-*`.
 - **#460j** 11 rayons : passer à trois.
 - **#460k** Icônes : une seule famille au trait (en-tête, menus contextuels).

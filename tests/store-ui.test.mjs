@@ -269,7 +269,7 @@ describe('le câblage', () => {
       assert.ok(carte.includes(decl), 'fiche du store : ' + decl);
     }
     // #460f : le titre d'une section de panneau (11 px, capitales, gris, point orange).
-    assert.match(css, /\.store-fiche-section h5\{[^}]*font-weight:600; font-size:11px; color:var\(--ink-soft\); text-transform:uppercase;/);
+    assert.match(css, /\.store-fiche-section h5\{[^}]*font-weight:600; font-size:var\(--texte-capitales\); color:var\(--ink-soft\); text-transform:uppercase;/);
     // Peu d'écart entre le titre et la première sous-section (demandé).
     assert.match(css, /\.store-fiche-section h5\{ margin:10px 0 2px; padding:4px 0;/);
   });

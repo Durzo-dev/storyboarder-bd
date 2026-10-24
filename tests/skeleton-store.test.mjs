@@ -1642,7 +1642,7 @@ describe('L\'écran montre les MEMBRES, pas seulement dix-huit emplacements (#37
     const i = CSS2.indexOf('.skeleton-map-membres .skeleton-map-legend-note');
     assert.notEqual(i, -1, 'la note reprend la taille de base de la modale');
     const regle = CSS2.slice(i, CSS2.indexOf('}', i));
-    assert.match(regle, /font-size:\s*[\d.]+px/);
+    assert.match(regle, /font-size:\s*([\d.]+px|var\(--texte-[a-z-]+\))/);   // #460i : un jeton de l'échelle
     // Autant d'écart en dessous qu'au-dessus : le texte est le préambule de la liste, pas une ligne
     // collée à celle qui suit.
     assert.match(regle, /margin:\s*0 0 [\d.]+px/);

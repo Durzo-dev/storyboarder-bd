@@ -103,3 +103,17 @@ describe('les boutons qui créent sont orange', () => {
     assert.match(f, /dupliquer\.className = 'full-btn'/);
   });
 });
+
+describe('#460i : l\'échelle typographique', () => {
+  test('aucune taille de texte en pixels hors des jetons, sauf les exceptions voulues', () => {
+    // Les exceptions : aperçus de polices (22, 24, 26, 34, 42), titre d'une fiche du store et
+    // résultat de la Mesure (20), séparateur de liste (6), zone de clic du Lecteur (46).
+    const EXCEPTIONS = new Set(['6', '20', '22', '24', '26', '34', '42', '46']);
+    const tailles = [...(CSS + HTML).matchAll(/font-size:\s*([\d.]+)px/g)].map(m => m[1]);
+    const hors = [...new Set(tailles.filter(t => !EXCEPTIONS.has(t)))];
+    assert.deepEqual(hors, [], 'une taille hors échelle : utiliser --texte-micro, -capitales, -libelle, -courant, -titre-modale ou -titre');
+  });
+  test('les six jetons existent', () => {
+    for (const j of ['micro', 'capitales', 'libelle', 'courant', 'titre-modale', 'titre']) assert.match(CSS, new RegExp(`--texte-${j}:`));
+  });
+});
