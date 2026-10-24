@@ -511,6 +511,9 @@ select{ text-overflow:ellipsis; }
 /* Le nom d'un Tome suivi de son format tient sur UNE ligne (demandé : un long nom de format faisait
    passer à la ligne et grossir la rangée). Coupé par « … », il défile au survol (texte-defilant.js). */
 .tome-row > span:first-child{ flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.tome-row-titre{ color:var(--sepia); }
+.tome-row-nom{ color:var(--ink); }
+.tome-row.active .tome-row-nom{ color:var(--accent); }
 .tome-format,
 .tome-pages{
   margin:0 0 8px 9px; padding:9px 10px; border-radius:var(--rayon-moyen);
@@ -2663,7 +2666,12 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .select-riche, .select-riche::picker(select){ appearance:base-select; }
 .select-riche{ display:flex; align-items:center; justify-content:space-between; gap:6px; cursor:pointer;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }  /* une seule ligne, comme les autres listes */
-.select-riche::picker-icon{ color:var(--ink-soft); }
+.select-riche::picker-icon{ color:var(--ink-soft); flex:none; }
+/* Le bouton qui porte le texte choisi (project-tree.js) : il prend la place, l'icône garde la sienne,
+   et son <selectedcontent> se coupe par « … » (puis défile au survol, src/texte-defilant.js). */
+.select-riche > button{ flex:1 1 auto; min-width:0; display:flex; align-items:center; padding:0; border:0;
+  background:none; color:inherit; font:inherit; text-align:left; cursor:inherit; }
+.select-riche selectedcontent{ display:block; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
 .select-riche::picker(select){
   background:var(--paper-dark); color:var(--ink); border:1px solid var(--bord-actif); border-radius:var(--rayon-petit);
   padding:4px 0; margin-top:2px; box-shadow:0 8px 24px rgba(0,0,0,.45);

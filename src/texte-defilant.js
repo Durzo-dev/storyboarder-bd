@@ -59,7 +59,8 @@ function calqueDuSelect(sel){
   const cs = getComputedStyle(sel);
   const gauche = parseFloat(cs.paddingLeft) || 0;
   const place = sel.clientWidth - gauche - Math.max(parseFloat(cs.paddingRight) || 0, PLACE_FLECHE);
-  const police = cs.font || `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  // Police écrite en entier : `cs.font` peut revenir vide, et le canevas mesurerait alors en 10 px.
+  const police = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
   if (largeurDuTexte(option.text, police) <= place + 1) return null;
   const r = sel.getBoundingClientRect();
   const calque = document.createElement('span');
@@ -74,15 +75,16 @@ function calqueDuSelect(sel){
   return calque;
 }
 
-// `actif` : l'élément survolé ; `defile` : celui qui défile (le même, ou le calque d'un select).
-let actif = null, defile = null, depart = 0, image = 0;
+// `actif` : l'élément survolé ; `defile` : celui qui défile (le même, le <selectedcontent> d'une
+// liste riche, ou le calque d'une liste native) ; `calque` : vrai si `defile` est un calque.
+let actif = null, defile = null, calque = false, depart = 0, image = 0;
 
 function arreter(){
   if (!actif) return;
   cancelAnimationFrame(image);
-  if (defile !== actif) { defile.remove(); actif.classList.remove('texte-defile-voile'); }
-  else { actif.scrollLeft = 0; actif.classList.remove('texte-defile'); }
-  actif = defile = null;
+  if (calque) { defile.remove(); actif.classList.remove('texte-defile-voile'); }
+  else { defile.scrollLeft = 0; defile.classList.remove('texte-defile'); }
+  actif = defile = null; calque = false;
 }
 
 function avancer(maintenant){
@@ -101,9 +103,17 @@ export function installerTexteDefilant(doc = document){
     const sel = e.target.closest && e.target.closest('select');
     if (sel) {
       if (reduit) { const o = sel.options[sel.selectedIndex]; if (o) sel.title = o.text; return; }
-      const calque = calqueDuSelect(sel);
-      if (!calque) return;
-      actif = sel; defile = calque;
+      // Liste riche : son texte est dans un <selectedcontent>, un vrai élément qui défile lui-même.
+      const contenu = sel.querySelector('selectedcontent');
+      if (contenu) {
+        if (contenu.scrollWidth <= contenu.clientWidth + 1) return;
+        actif = sel; defile = contenu;
+        contenu.classList.add('texte-defile');
+      } else {
+        const c = calqueDuSelect(sel);
+        if (!c) return;
+        actif = sel; defile = c; calque = true;
+      }
     } else {
       const el = elementCoupe(e.target);
       if (!el) return;
@@ -120,5 +130,11 @@ export function installerTexteDefilant(doc = document){
   // Ouvrir la liste, ou changer de choix au clavier : le calque se retire (son texte serait faux).
   doc.addEventListener('mousedown', arreter, true);
   doc.addEventListener('change', arreter, true);
-  doc.addEventListener('scroll', arreter, true);
+  // Le panneau qui CONTIENT le texte défile et le déplace : on arrête. Aucun autre « scroll » ne
+  // compte : le nôtre en émet un à chaque image (il s'arrêtait dès la première, sans que rien ne
+  // bouge), et le retour à zéro d'un texte quitté en émet un qui couperait le suivant.
+  doc.addEventListener('scroll', (e) => {
+    const t = e.target;
+    if (actif && t !== defile && typeof t.contains === 'function' && t.contains(actif)) arreter();
+  }, true);
 }

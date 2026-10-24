@@ -56,3 +56,10 @@ describe('RÉGRESSION : une liste déroulante défile aussi (le format d\'un Tom
     assert.match(src, /addEventListener\('change', arreter, true\)/);
   });
 });
+
+describe('RÉGRESSION : le défilement ne s\'arrête pas sur son propre « scroll »', () => {
+  test('l\'écoute du défilement des panneaux ignore celui du texte qui défile', () => {
+    const src = lire('src/texte-defilant.js');
+    assert.match(src, /t !== defile && typeof t\.contains === 'function' && t\.contains\(actif\)/, 'seul le défilement d\'un panneau qui contient le texte l\'arrête');
+  });
+});

@@ -133,7 +133,9 @@ export function renderTree(){
     const row = document.createElement('div');
     row.className = 'tome-row' + (ti === S.currentTomeIndex && !S.editingSceneId ? ' active' : '');
     const expanded = S.expandedVolumes.has(t.id);
-    row.innerHTML = `<span>${t.name} <small style="color:var(--sepia)">— ${nomDuFormat(trouverFormat(S.formats, t.format), tr)}</small></span><span class="caret">${expanded ? '▾' : '▸'}</span>`;
+    // Le « … » prend la couleur du bloc coupé : le bloc est donc GRIS comme le format qui finit la
+    // ligne, et le nom porte sa propre couleur (signalé : des points blancs après un texte gris).
+    row.innerHTML = `<span class="tome-row-titre"><span class="tome-row-nom">${t.name}</span> <small>— ${nomDuFormat(trouverFormat(S.formats, t.format), tr)}</small></span><span class="caret">${expanded ? '▾' : '▸'}</span>`;
     row.onclick = () => {
       if (S.expandedVolumes.has(t.id)) S.expandedVolumes.delete(t.id); else S.expandedVolumes.add(t.id);
       // #441 : l'état du Tome survit à la fermeture de l'application.
@@ -166,6 +168,12 @@ export function renderTree(){
       // (signalé quatre fois) ; sans prise en charge, le repli est une <option> éteinte en « ─ ».
       formatSelect.classList.add('select-riche');
       if (globalThis.CSS && globalThis.CSS.supports && globalThis.CSS.supports('appearance', 'base-select')) {
+        // Le texte affiché vit dans un <selectedcontent> À NOUS (un vrai élément du DOM) : il se
+        // coupe par « … » et défile au survol comme tout texte coupé (src/texte-defilant.js). Sans
+        // lui, le texte du bouton interne débordait sans « … » et ne pouvait pas défiler (signalé).
+        const bouton = document.createElement('button');
+        bouton.appendChild(document.createElement('selectedcontent'));
+        formatSelect.prepend(bouton);
         formatSelect.appendChild(document.createElement('hr'));
       } else {
         const plusLong = Math.max(...S.formats.map(f => libelleDuFormat(f, tr).length), 20);
