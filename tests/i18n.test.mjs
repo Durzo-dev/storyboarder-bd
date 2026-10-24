@@ -1021,7 +1021,8 @@ describe('#403n : un libellé porte UNE majuscule, la première', () => {
     for (const m of i18n.matchAll(/\['(#[^']+)',\s*'((?:[^'\\]|\\.)*)',\s*\n?\s*'((?:[^'\\]|\\.)*)'\]/g)) {
       // Seuls les LIBELLÉS sont concernés, pas les phrases d'aide : une indication est de la prose,
       // et la prose garde la convention de domaine (« vos Projets », « une Case »).
-      if (/Hint$|Title$|hint$/.test(m[1])) continue;
+      // Les AVIS (`…Notice`, #461) en sont aussi : « gérée par la Pièce — à modifier via la modale de la Pièce ».
+      if (/Hint$|Title$|hint$|Notice$/.test(m[1])) continue;
       for (const t of [m[2], m[3]]) {
         const mauvais = majusculesInterieures(t.replace(/\\'/g, '\''));
         if (mauvais.length) fautifs.push(`${m[1]} « ${t} » → ${mauvais.join(', ')}`);

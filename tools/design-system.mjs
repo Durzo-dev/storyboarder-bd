@@ -364,7 +364,8 @@ function traductions(){
   const source = lire('src/i18n.js');
   const sections = Object.fromEntries([...source.matchAll(/^\s+(\w+):\s+\['([^']*)', '([^']*)'\],/gm)].map(m => [m[1], [m[2], m[3]]]));
   const aide = Object.fromEntries(HELP_MANUAL_EN.map(g => [g.id, [g.title, (HELP_MANUAL_FR.find(f => f.id === g.id) || {}).title || g.title]]));
-  return { texte: I18N.I18N_TEXT, fin: I18N.I18N_TRAILING, debut: I18N.I18N_LEADING, modales: I18N.I18N_MODALS, avant: I18N.I18N_PREV_LABEL, sections, aide };
+  return { texte: I18N.I18N_TEXT, fin: I18N.I18N_TRAILING, debut: I18N.I18N_LEADING, modales: I18N.I18N_MODALS, avant: I18N.I18N_PREV_LABEL,
+    cases: I18N.I18N_CASES, nombres: I18N.I18N_AVANT_NOMBRE, sections, aide };
 }
 
 export function page(){
@@ -437,8 +438,8 @@ html[lang="fr"] .ds-en, html[lang="en"] .ds-fr{ display:none; }
 </div>
 <div class="ds-page">
 <h1>${L('Système de design', 'Design system')}</h1>
-<p class="ds-intro">${L(`Généré depuis le code par <code>node tools/design-system.mjs</code> ; un test vérifie qu'il est à jour. La page embarque <code>src/style.css</code> tel quel, et chaque écran ci-dessous est un fragment de <code>src/index.html</code> : seules les listes que le code remplit à l'exécution sont simulées. En anglais, les écrans reçoivent les traductions de l'application (<code>src/i18n.js</code>). Quelques libellés que le code écrit à l'ouverture d'un écran (champs de certaines modales, titres d'éditeurs) restent ici en français ; la tâche #461 vérifie si l'application les traduit. Les règles d'usage : <code>docs/en/interface.md</code> et sa version française. La barre du haut bascule entre les quatre rendus et les deux langues.`,
-  `Generated from the code by <code>node tools/design-system.mjs</code>; a test checks it is up to date. The page embeds <code>src/style.css</code> as is, and each screen below is a fragment of <code>src/index.html</code>: only the lists the code fills at run time are simulated. In English, the screens receive the application's own translations (<code>src/i18n.js</code>). A few labels the code writes when a screen opens (some modal fields, editor titles) stay in French here; task #461 checks whether the application translates them. The usage rules: <code>docs/en/interface.md</code> and its French version. The bar at the top switches between the four renderings and the two languages.`)}</p>
+<p class="ds-intro">${L(`Généré depuis le code par <code>node tools/design-system.mjs</code> ; un test vérifie qu'il est à jour. La page embarque <code>src/style.css</code> tel quel, et chaque écran ci-dessous est un fragment de <code>src/index.html</code> : seules les listes que le code remplit à l'exécution sont simulées. En anglais, les écrans reçoivent les traductions de l'application (<code>src/i18n.js</code>). Les quelques libellés que le code écrit à l'ouverture d'un écran (le titre d'une modale, d'un éditeur) restent ici en français : la page rejoue les tables, pas le code. Les règles d'usage : <code>docs/en/interface.md</code> et sa version française. La barre du haut bascule entre les quatre rendus et les deux langues.`,
+  `Generated from the code by <code>node tools/design-system.mjs</code>; a test checks it is up to date. The page embeds <code>src/style.css</code> as is, and each screen below is a fragment of <code>src/index.html</code>: only the lists the code fills at run time are simulated. In English, the screens receive the application's own translations (<code>src/i18n.js</code>). The few labels the code writes when a screen opens (a modal's title, an editor's title) stay in French here: the page replays the tables, not the code. The usage rules: <code>docs/en/interface.md</code> and its French version. The bar at the top switches between the four renderings and the two languages.`)}</p>
 
 <h2 class="ds-titre">${L('Couleurs', 'Colours')}</h2>
 <p class="ds-chapo">${L(`Toute couleur d'interface est un jeton. Les quatre rendus redéfinissent les mêmes jetons : Sombre (par défaut), Clair, et le contraste renforcé de chacun. L'orange <code>--accent</code> est la couleur de marque : il ne sert qu'à ce qui crée, valide ou est actif.`,
@@ -532,7 +533,15 @@ function appliquerLangue(langue){
     if (el.lastChild && el.lastChild.nodeType === 3) el.lastChild.textContent = t; else el.appendChild(document.createTextNode(t)); }));
   I18N.debut.forEach(([sel, a, b]) => dansLaPage(sel).forEach(el => { if (a === null) return; const t = (en ? a : b) + ' ';
     if (el.firstChild && el.firstChild.nodeType === 3) el.firstChild.textContent = t; else el.insertBefore(document.createTextNode(t), el.firstChild); }));
-  I18N.avant.forEach(([id, a, b]) => dansLaPage('#' + id).forEach(el => poser(el.previousElementSibling, a, b)));
+  // Le libellé d'un champ : la même recherche qu'etiquetteDuChamp (src/i18n.js).
+  const etiquette = (c) => { const pour = document.querySelector('label[for="' + c.id + '"]'); if (pour) return pour;
+    if (c.previousElementSibling) return c.previousElementSibling;
+    for (let el = c.parentElement, k = 0; k < 3 && el; k++, el = el.parentElement) { const av = el.previousElementSibling; if (av) return av.tagName === 'LABEL' ? av : null; }
+    return null; };
+  I18N.avant.forEach(([id, a, b]) => dansLaPage('#' + id).forEach(el => poser(etiquette(el), a, b)));
+  I18N.cases.forEach(([id, a, b]) => dansLaPage('#' + id).forEach(el => { const l = el.parentElement; const t = ' ' + (en ? a : b);
+    if (l.lastChild && l.lastChild.nodeType === 3) l.lastChild.textContent = t; else l.appendChild(document.createTextNode(t)); }));
+  I18N.nombres.forEach(([sel, a, b]) => dansLaPage(sel).forEach(el => { if (el.firstChild && el.firstChild.nodeType === 3) el.firstChild.textContent = en ? a : b; }));
   dansLaPage('#descModal .modal-section, #objectModal .modal-section').forEach(sec => {
     const paire = I18N.sections[sec.dataset.section]; const t = paire && sec.querySelector('.modal-section-title');
     if (t) t.textContent = en ? paire[0] : paire[1];

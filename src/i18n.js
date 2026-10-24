@@ -509,6 +509,27 @@ export const I18N_TRAILING = [
   ['#sideLightColorInput', null],
   ['#sideLightIntensityRange', null],
   ['#sideLightIntensityValue', null],   // écrit par le code, unité comprise
+  // #461 : trouvés en basculant le système de design en anglais.
+  ['#sideGroundSection > h2', 'Ground', 'Sol'],
+  ['#sideBubbleBorderSection > h2', 'Border', 'Bordure'],
+  ['label[for="sideBubbleBgColorInput"]', 'Fill color', 'Couleur du fond'],
+  ['label[for="sideBubbleBorderWidthSelect"]', 'Border thickness', 'Épaisseur de la bordure'],
+  ['label[for="sideBubbleBorderColorInput"]', 'Border color', 'Couleur de la bordure'],
+  ['label[for="camOrbitTargetSelect"]', 'Orbit center', 'Centre de rotation'],
+  ['#sideMesureSection > h2', '📏 Measure', '📏 Mesure'],
+  ['#sideMesureEffacer', '✖ Finish', '✖ Terminer'],
+  ['#sideMesureStatus', 'Click a 1st point on the ground.', 'Cliquez un 1er point sur le sol.'],
+  ['#objectRoomWallPosNotice', 'Position managed by the Room — change it in the Room\'s modal.', 'Position gérée par la Pièce — à modifier via la modale de la Pièce.'],
+  ['#objectRoomWallOrientNotice', 'Orientation managed by the Room — change it in the Room\'s modal.', 'Orientation gérée par la Pièce — à modifier via la modale de la Pièce.'],
+  ['#objectWallOpeningMagnetOrientNotice', 'Orientation governed by the host Wall — no manual rotation.', 'Orientation gouvernée par le Mur hôte — aucune rotation manuelle possible.'],
+  ['#personaPosHint', 'Or click and drag the character in the Panel (X/Y), mouse wheel (Z — actual size unchanged).', 'Ou cliquer-glisser sur le personnage dans la Case (X/Y), molette de la souris (Z — taille réelle inchangée).'],
+  ['#objectPosHint', 'Or click and drag the object in the Panel (X/Y), mouse wheel (Z — actual size unchanged).', 'Ou cliquer-glisser sur l\'objet dans la Case (X/Y), molette de la souris (Z — taille réelle inchangée).'],
+  ['#objectWallFaceSelect option[value="A"]', 'Face 1', 'Face 1'],
+  ['#objectWallFaceSelect option[value="B"]', 'Face 2 (perpendicular)', 'Face 2 (perpendiculaire)'],
+  ['#objectWallSideSelect option[value="avant"]', 'Front face', 'Face avant'],
+  ['#objectWallSideSelect option[value="arriere"]', 'Back face', 'Face arrière'],
+  ['#objectTraversantLabel', 'Pass-through', 'Traversant'],
+  ['#objectTraversantHint', '✅ Yes — this Element cuts a real hole in the Wall it is snapped to: you can see through the Wall there. (Fixed property, cannot be changed.)', '✅ Oui — cet Élément perce un vrai trou dans le Mur auquel il est aimanté : on peut voir à travers le Mur à cet endroit. (Propriété fixe, non modifiable.)'],
 ];
 
 // "Leading" text of a dropdown button ("Volumes <span class='caret'>▾</span>"): only the
@@ -687,7 +708,79 @@ export const I18N_PREV_LABEL = [
   ['objectHeightInput', 'Height (m)', 'Hauteur (m)'],
   ['personaHeightInput', 'Height (m)', 'Hauteur (m)'],
   ['objectLinkedValue', 'Linked to', 'Lié à'],
+  // #461 : trouvés en basculant le système de design en anglais. Les rotations de l'Élément, de la
+  // Pièce et du Bâtiment n'étaient traduites que pour le Personnage.
+  ['objectRotXInput', 'Horizontal rotation', 'Rotation horizontale'],
+  ['objectRotYInput', 'Tilt', 'Inclinaison'],
+  ['objectRotZInput', 'Roll', 'Roulis'],
+  ['roomRotYInput', 'Horizontal rotation', 'Rotation horizontale'],
+  ['roomRotXInput', 'Tilt', 'Inclinaison'],
+  ['roomRotZInput', 'Roll', 'Roulis'],
+  ['buildingRotYInput', 'Horizontal rotation', 'Rotation horizontale'],
+  ['buildingRotXFixe', 'Tilt', 'Inclinaison'],
+  ['buildingRotZFixe', 'Roll', 'Roulis'],
+  ['objectWallSideSelect', 'Wall side', 'Côté du mur'],
+  ['restoreBuiltinPosesBtn', 'Pose library', 'Bibliothèque de poses'],
 ];
+
+/**
+ * #461 : les cases à cocher dont le libellé n'a pas d'enveloppe identifiée. Le texte suit la case,
+ * dans son `<label>` parent : on le trouve par l'identifiant de la CASE.
+ */
+export const I18N_CASES = [
+  ['personaHidden3dCheckbox', 'Invisible in the 3D scene', 'Invisible dans la scène 3D'],
+  ['objectHidden3dCheckbox', 'Invisible in the 3D scene', 'Invisible dans la scène 3D'],
+  ['personaTraverseGroundCheckbox', 'Can pass through the ground', 'Peut traverser le sol'],
+  ['roomMagnetGroundCheckbox', 'Snapped to the ground (vertical movement locked)', 'Aimanté au Sol (déplacement vertical bloqué)'],
+  ['buildingMagnetGroundCheckbox', 'Snapped to the ground (vertical movement locked)', 'Aimanté au Sol (déplacement vertical bloqué)'],
+  ['roomCeilingVisibleCheckbox', 'Ceiling visible', 'Plafond visible'],
+  ['buildingCeilingVisibleCheckbox', 'Ceiling visible', 'Plafond visible'],
+  // Ces six-là étaient traduits un par un dans applyI18n ; une table les rend aussi lisibles par le
+  // système de design (tools/design-system.mjs), qui rejoue les tables et non le code.
+  ['exportShowPanelBadgesCheckbox', 'Show panel number badges', 'Afficher le badge numéro sur les Cases'],
+  ['exportShowPanelDescriptionsCheckbox', 'Show panel descriptions below the page', 'Afficher la description des Cases sous la Planche'],
+  ['objectLightShadowCheckbox', 'Casts a shadow', 'Projette une ombre'],
+  ['objectSphereVisibleCheckbox', 'Show the Light\'s sphere', 'Afficher la sphère de la Lumière'],
+  ['personaGroundMagnetCheckbox', 'Snapped to the ground (base resting on the ground, vertical movement locked)', 'Aimanté au Sol (base posée au sol, déplacement vertical bloqué)'],
+  ['objectGroundMagnetCheckbox', 'Snapped to the ground (base resting on the ground, vertical movement locked)', 'Aimanté au Sol (base posée au sol, déplacement vertical bloqué)'],
+];
+
+/**
+ * #461 : les libellés qui encadrent un NOMBRE écrit par le code (« Sensibilité (100 %) ») : seul le
+ * premier nœud texte change, parenthèse comprise, sans espace ajouté (I18N_LEADING en ajoute un).
+ */
+export const I18N_AVANT_NOMBRE = [
+  ['label[for="camSensRotInput"]', 'Sensitivity (', 'Sensibilité ('],
+  ['label[for="camRotYInput"]', 'Horizontal rotation (', 'Rotation horizontale ('],
+  ['label[for="camRotXInput"]', 'Vertical rotation (', 'Rotation verticale ('],
+  ['label[for="camSensPanInput"]', 'Sensitivity (', 'Sensibilité ('],
+  // Écrits un par un dans applyI18n jusqu'à #461 ; même forme, donc même table.
+  ['label[for="sideBubblePaddingInput"]', 'Inside padding (', 'Écart intérieur ('],
+  ['label[for="sideBubbleFillOpacityInput"]', 'Fill opacity (', 'Opacité du fond ('],
+  ['label[for="sideImageZoomInput"]', 'Zoom (', 'Zoom ('],
+];
+
+/**
+ * Le libellé d'un champ de I18N_PREV_LABEL (#461). C'était `input.previousElementSibling`, et ce
+ * raccourci échouait EN SILENCE dès que le champ est enveloppé (un curseur et sa valeur dans un
+ * `<div>`) : « Taille réelle », « Longueur du mur », « Intensité »… avaient une traduction
+ * écrite, jamais appliquée. On prend donc, dans l'ordre : un `<label for>`, l'élément qui précède
+ * le champ, puis, en remontant au plus trois enveloppes, un `<label>` qui précède l'enveloppe.
+ */
+export function etiquetteDuChamp(champ){
+  if (!champ) return null;
+  if (champ.id && typeof document !== 'undefined') {
+    const pour = document.querySelector(`label[for="${champ.id}"]`);
+    if (pour) return pour;
+  }
+  if (champ.previousElementSibling) return champ.previousElementSibling;
+  let el = champ.parentElement;
+  for (let k = 0; k < 3 && el; k++, el = el.parentElement) {
+    const avant = el.previousElementSibling;
+    if (avant) return avant.tagName === 'LABEL' ? avant : null;
+  }
+  return null;
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // i18n APPLICATION FUNCTIONS
@@ -740,46 +833,21 @@ export function applyI18n(lang){
     document.querySelectorAll(sel).forEach(el => applyTextEntry(el, en, fr, lang));
   });
   I18N_PREV_LABEL.forEach(([id, en, fr]) => {
-    const input = document.getElementById(id);
-    if (input && input.previousElementSibling) applyTextEntry(input.previousElementSibling, en, fr, lang);
+    applyTextEntry(etiquetteDuChamp(document.getElementById(id)), en, fr, lang);
   });
-  // Labels of the inline Export checkboxes (text after the input, inside the parent <label>
-  // which has no id of its own, so we target the checkbox's parent rather than a direct selector).
+  I18N_CASES.forEach(([id, en, fr]) => {
+    const caseACocher = document.getElementById(id);
+    if (caseACocher && caseACocher.parentElement) setTrailingText(caseACocher.parentElement, en, fr, lang);
+  });
+  I18N_AVANT_NOMBRE.forEach(([sel, en, fr]) => {
+    document.querySelectorAll(sel).forEach(el => {
+      if (el.firstChild && el.firstChild.nodeType === 3) el.firstChild.textContent = lang === 'en' ? en : fr;
+    });
+  });
   const badgesCb = document.getElementById('exportShowPanelBadgesCheckbox');
-  if (badgesCb) setTrailingText(badgesCb.parentElement, 'Show panel number badges', 'Afficher le badge numéro sur les Cases', lang);
-  // La case « projette une ombre » d'une Lumière (#422d), et son indice.
-  const ombreCb = document.getElementById('objectLightShadowCheckbox');
-  if (ombreCb) setTrailingText(ombreCb.parentElement, 'Casts a shadow', 'Projette une ombre', lang);
-  // La case de la sphère d'une Lumière : son texte suit l'input, dans le <label> parent (#421c).
-  const sphereCb = document.getElementById('objectSphereVisibleCheckbox');
-  if (sphereCb) setTrailingText(sphereCb.parentElement, 'Show the Light\'s sphere', 'Afficher la sphère de la Lumière', lang);
-  const descCb = document.getElementById('exportShowPanelDescriptionsCheckbox');
-  if (descCb) setTrailingText(descCb.parentElement, 'Show panel descriptions below the page', 'Afficher la description des Cases sous la Planche', lang);
-  const groundCbPersona = document.getElementById('personaGroundMagnetCheckbox');
-  if (groundCbPersona) setTrailingText(groundCbPersona.parentElement, 'Snapped to the ground (base resting on the ground, vertical movement locked)', 'Aimanté au Sol (base posée au sol, déplacement vertical bloqué)', lang);
-  const groundCbObject = document.getElementById('objectGroundMagnetCheckbox');
-  if (groundCbObject) setTrailingText(groundCbObject.parentElement, 'Snapped to the ground (base resting on the ground, vertical movement locked)', 'Aimanté au Sol (base posée au sol, déplacement vertical bloqué)', lang);
   // "Export" label: no id of its own, found via the parent of the checkbox that follows it.
   if (badgesCb && badgesCb.parentElement && badgesCb.parentElement.previousElementSibling) {
     applyTextEntry(badgesCb.parentElement.previousElementSibling, 'Export', 'Exportation', lang);
-  }
-  // Bubble's "Inside padding (NN%)" label: the #sideBubblePaddingValue span (the number) sits
-  // in the middle of the text, so neither setLeadingText nor setTrailingText alone is enough
-  // — we rebuild the first text node directly, keeping the opening parenthesis.
-  const bubblePaddingLabel = document.querySelector('label[for="sideBubblePaddingInput"]');
-  if (bubblePaddingLabel && bubblePaddingLabel.firstChild && bubblePaddingLabel.firstChild.nodeType === 3) {
-    bubblePaddingLabel.firstChild.textContent = (lang === 'en' ? 'Inside padding' : 'Écart intérieur') + ' (';
-  }
-  // Même dispositif pour « Opacité du fond (NN%) » (#425c) : le nombre est un span au milieu.
-  const bubbleOpacityLabel = document.querySelector('label[for="sideBubbleFillOpacityInput"]');
-  if (bubbleOpacityLabel && bubbleOpacityLabel.firstChild && bubbleOpacityLabel.firstChild.nodeType === 3) {
-    bubbleOpacityLabel.firstChild.textContent = (lang === 'en' ? 'Fill opacity' : 'Opacité du fond') + ' (';
-  }
-  // Même dispositif pour « Cadrage (zoom N,N×) » : le nombre est un span au milieu du texte, donc
-  // ni setLeadingText ni setTrailingText ne suffisent seuls.
-  const zoomLabel = document.querySelector('label[for="sideImageZoomInput"]');
-  if (zoomLabel && zoomLabel.firstChild && zoomLabel.firstChild.nodeType === 3) {
-    zoomLabel.firstChild.textContent = (lang === 'en' ? 'Zoom' : 'Zoom') + ' (';
   }
   applyI18nModalSectionTitles(lang);
   applyI18nHelpManual(lang);

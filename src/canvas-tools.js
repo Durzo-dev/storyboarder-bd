@@ -264,7 +264,7 @@ export function startMeasureTool(panel){
   const res = document.getElementById('sideMesureResult');
   if (res) res.style.display = 'none';
   const st = document.getElementById('sideMesureStatus');
-  if (st) st.textContent = tr('Click a 1st point on the ground.', tr('Click a 1st point on the ground.', 'Cliquez un 1er point sur le sol.'));
+  if (st) st.textContent = tr('Click a 1st point on the ground.', 'Cliquez un 1er point sur le sol.');
   drawCurrentPage();
 }
 

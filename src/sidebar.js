@@ -1650,7 +1650,7 @@ export function refreshCameraSliders(panel){
   const elems = page.objects.filter(o => o.homePanelId === panel.id && (o.type === 'perso' || o.type === 'objet3d'));
   // Extract the distinct Rooms (identified by pieceId) and the elements outside any Room
   const seenRooms = new Set();
-  const options = [{ value: '', label: 'Aucun (caméra libre)' }];
+  const options = [{ value: '', label: tr('None (free camera)', 'Aucun (caméra libre)') }];   // #461 : écrit en dur
   for (const o of elems) {
     if (o.pieceId) {
       if (!seenRooms.has(o.pieceId)) {
