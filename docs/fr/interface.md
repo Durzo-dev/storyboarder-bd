@@ -169,7 +169,7 @@ onglet à l'autre.
 
 ### Menus contextuels
 
-- Fond `--white`, rayon 8 px, ombre portée ; une entrée = un **emoji** puis un libellé de 12,5 px.
+- Fond `--white`, rayon 8 px, ombre portée ; une entrée = une **icône au trait** (15 px, `currentColor`) puis un libellé de 12,5 px ; une action garde la même icône partout (#460k).
 - Un sous-menu s'annonce par ▶ à droite. Supprimer vient en dernier.
 
 ### Store et fenêtre des polices
@@ -294,4 +294,4 @@ rejoint ce document avec son test.
 - **#460h** ✅ Un seul état vide, `.empty-hint` : 12 px, gris `--ink-soft`, sans italique.
 - **#460i** ✅ Six tailles de texte, en jetons `--texte-*`.
 - **#460j** ✅ Trois rayons, en jetons : `--rayon-petit` (6 px : champ, choix, entrée de menu), `--rayon-moyen` (8 px : bouton, ligne, menu, sous-section), `--rayon-grand` (10 px : section, modale), plus `--rayon-pilule` et le rond (50 %). Seuls les très petits éléments gardent 3 px.
-- **#460k** Icônes : une seule famille au trait (en-tête, menus contextuels).
+- **#460k** ✅ Une seule famille d'icônes au trait (grille 24, trait 2) : bandeau (Polices, Annuler, Manuel) et les 106 entrées des menus contextuels. « Renommer » (un champ) et « Modifier » (un crayon) ne se confondent plus.

@@ -48,11 +48,15 @@
   </button>
   <!-- Les Polices (#423, demandé) : à droite de la bibliothèque de modèles, elle-même à droite de l'Éditeur. Son infobulle est écrite par le
        code (src/polices-ui.js). -->
-  <button class="help-round-btn polices-btn" id="policesOuvrirBtn" type="button" title="Polices">Aa</button>
+  <button class="help-round-btn" id="policesOuvrirBtn" type="button" title="Polices">
+    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19 8 5l5 14M4.8 14h6.4"/><circle cx="17.5" cy="16" r="3"/><path d="M20.5 13v6"/></svg>
+  </button>
   <!-- Déplacé depuis le menu de gauche (sur demande utilisateur) : le bouton Annuler se trouve
        désormais en haut à gauche du bouton "?" qui ouvre le Manuel d'utilisation, plutôt que dans
        la barre latérale, sous le sélecteur de Tomes. -->
-  <button class="help-round-btn header-btn" id="undoBtn" title="Annuler (Ctrl+Z)" disabled>↺</button>
+  <button class="help-round-btn header-btn" id="undoBtn" title="Annuler (Ctrl+Z)" disabled>
+    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+  </button>
   <!-- Bouton Sauvegarder (cf. saveProjectFlow), entre Annuler et Manuel d'utilisation — sur demande
        utilisateur, en plus du raccourci clavier Ctrl+S et du bouton "Enregistrer le projet" de la
        modale Projet. -->
@@ -71,7 +75,9 @@
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
     </svg>
   </button>
-  <button class="help-round-btn" id="helpBtn" title="Manuel d'utilisation (F1)">?</button>
+  <button class="help-round-btn" id="helpBtn" title="Manuel d'utilisation (F1)">
+    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+  </button>
 </header>
 
 
@@ -1021,27 +1027,27 @@
 </div>
 
 <div class="context-menu hidden" id="panelContextMenu">
-  <button id="ctxAddTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">➕</span> Ajouter</span> <span class="submenu-arrow">▶</span></button>
-  <button id="ctxLoadSceneTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">🎬</span> Charger une scène</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxAddTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span> Ajouter</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxLoadSceneTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h18v10H3z"/><path d="m3 10 2-6 15 0-1 6"/><path d="m9 4-2 6M15 4l-2 6"/></svg></span> Charger une scène</span> <span class="submenu-arrow">▶</span></button>
   <!-- Import d'un modèle 3D (.glb). UNE SEULE ENTRÉE, la même dans une Case et dans une Scène.
        Un sous-menu proposait auparavant « comme Modèle » / « comme Scène » ; l'import direct en
        Scène a été retiré sur demande utilisateur — il faisait choisir entre deux choses au moment
        d'ouvrir un fichier, alors que « Nouvelle scène » puis cette même entrée y mènent, et par un
        geste qu'on relit. -->
   <!-- #454a : dans une Scène seulement, au-dessus d'« Importer un modèle » (demandé). -->
-  <button id="ctxCreerBatiment"><span class="ctx-icon">🏠</span> Créer un bâtiment</button>
-  <button id="ctxImportModel"><span class="ctx-icon">📦</span> Importer un modèle</button>
+  <button id="ctxCreerBatiment"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-6h4v6"/></svg></span> Créer un bâtiment</button>
+  <button id="ctxImportModel"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 7v10l8 4 8-4V7z"/><path d="m4 7 8 4 8-4M12 11v10"/></svg></span> Importer un modèle</button>
   <!-- Insérer / Retirer : exclusives, jamais visibles ensemble (cf. openPanelContextMenu). Une Case
        porte une image OU de la 3D, jamais les deux — cf. docs/en/panel-images.md. -->
-  <button id="ctxInsertImage"><span class="ctx-icon">🖼️</span> Insérer une image</button>
-  <button id="ctxMoveImage"><span class="ctx-icon">✋</span> Déplacer l'image</button>
-  <button id="ctxTracerTrigger" class="context-menu-submenu-trigger" style="display:none"><span><span class="ctx-icon">🛣️</span> Tracer</span> <span class="submenu-arrow">▶</span></button>
-  <button id="ctxZoneTrigger" class="context-menu-submenu-trigger" style="display:none"><span><span class="ctx-icon">🌿</span> Zone</span> <span class="submenu-arrow">▶</span></button>
-  <button id="ctxMesure" style="display:none"><span class="ctx-icon">📏</span> Mesure</button>
-  <button id="ctxToggleCamera"><span class="ctx-icon">🎥</span> Caméra</button>
-  <button id="ctxBringForward"><span class="ctx-icon">⬆</span> Avancer</button>
-  <button id="ctxSendBackward"><span class="ctx-icon">⬇</span> Reculer</button>
-  <button id="ctxClearPanel"><span class="ctx-icon">🗑</span> Vider la case</button>
+  <button id="ctxInsertImage"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg></span> Insérer une image</button>
+  <button id="ctxMoveImage"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/><path d="m9 6 3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></svg></span> Déplacer l'image</button>
+  <button id="ctxTracerTrigger" class="context-menu-submenu-trigger" style="display:none"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21 9 3M19 21 15 3"/><path d="M12 6v2M12 12v2M12 18v2"/></svg></span> Tracer</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxZoneTrigger" class="context-menu-submenu-trigger" style="display:none"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 7 8-4 8 5-2 11-12 1z" stroke-dasharray="3 3"/></svg></span> Zone</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxMesure" style="display:none"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16 16 3l5 5L8 21z"/><path d="m7 12 2 2M10 9l2 2M13 6l2 2"/></svg></span> Mesure</button>
+  <button id="ctxToggleCamera"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="12" height="10" rx="2"/><path d="m15 11 6-3v8l-6-3"/></svg></span> Caméra</button>
+  <button id="ctxBringForward"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span> Avancer</button>
+  <button id="ctxSendBackward"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span> Reculer</button>
+  <button id="ctxClearPanel"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6"/><path d="m6 7 1 13h10l1-13M9 7V4h6v3"/></svg></span> Vider la case</button>
 </div>
 
 <!-- Sous-menu "Charger une scène" : liste dynamique des Scènes existantes (peuplée à l'ouverture, cf.
@@ -1053,30 +1059,30 @@
      pas réparer (cf. docs/en/persisted-data.md). On renomme l'Élément, pas le fichier. -->
 <!-- Le clic droit sur une police importée, dans la fenêtre des Polices (#423). -->
 <div class="context-menu hidden" id="fontContextMenu">
-  <button id="ctxRenameFont"><span class="ctx-icon">✏️</span> Renommer la police…</button>
-  <button id="ctxDeleteFont"><span class="ctx-icon">🗑</span> Supprimer la police</button>
+  <button id="ctxRenameFont"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M12 4v16M10 4h4M10 20h4"/></svg></span> Renommer la police…</button>
+  <button id="ctxDeleteFont"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6"/><path d="m6 7 1 13h10l1-13M9 7V4h6v3"/></svg></span> Supprimer la police</button>
 </div>
 
 <!-- #454a-4b : le clic droit sur un bâtiment de « Mes modèles ». -->
 <!-- #454b : le clic droit sur une pièce de la liste de l'éditeur de bâtiment. -->
 <div class="context-menu hidden" id="batimentPieceMenu">
-  <button id="ctxRenommerPiece"><span class="ctx-icon">✏️</span> Renommer…</button>
-  <button id="ctxSupprimerPiece"><span class="ctx-icon">🗑</span> Supprimer</button>
+  <button id="ctxRenommerPiece"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M12 4v16M10 4h4M10 20h4"/></svg></span> Renommer…</button>
+  <button id="ctxSupprimerPiece"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6"/><path d="m6 7 1 13h10l1-13M9 7V4h6v3"/></svg></span> Supprimer</button>
 </div>
 
 <div class="context-menu hidden" id="batimentBiblioMenu">
-  <button id="ctxBiblioEditerBatiment"><span class="ctx-icon">✏️</span> Ouvrir dans l'éditeur</button>
-  <button id="ctxBiblioRenommerBatiment"><span class="ctx-icon">🔤</span> Renommer…</button>
-  <button id="ctxBiblioSupprimerBatiment"><span class="ctx-icon">🗑</span> Supprimer du disque</button>
+  <button id="ctxBiblioEditerBatiment"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m14 6 4 4"/></svg></span> Ouvrir dans l'éditeur</button>
+  <button id="ctxBiblioRenommerBatiment"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M12 4v16M10 4h4M10 20h4"/></svg></span> Renommer…</button>
+  <button id="ctxBiblioSupprimerBatiment"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6"/><path d="m6 7 1 13h10l1-13M9 7V4h6v3"/></svg></span> Supprimer du disque</button>
 </div>
 
 <div class="context-menu hidden" id="modelContextMenu">
   <!-- La correspondance vise le FICHIER, pas un Élément : ce menu est donc son point d'entrée
        naturel, et le seul qui reste atteignable pour un .glb importé comme Scène — lequel n'a aucun
        Élément dans une Case d'où on pourrait l'ouvrir. -->
-  <button id="ctxSkeletonMap"><span class="ctx-icon">🦴</span> Correspondance du squelette…</button>
-  <button id="ctxRenameModel"><span class="ctx-icon">✏️</span> Renommer le fichier…</button>
-  <button id="ctxDeleteModel"><span class="ctx-icon">🗑</span> Supprimer du disque</button>
+  <button id="ctxSkeletonMap"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></span> Correspondance du squelette…</button>
+  <button id="ctxRenameModel"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M12 4v16M10 4h4M10 20h4"/></svg></span> Renommer le fichier…</button>
+  <button id="ctxDeleteModel"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6"/><path d="m6 7 1 13h10l1-13M9 7V4h6v3"/></svg></span> Supprimer du disque</button>
 </div>
 
 <!-- Clic droit sur une ligne de la bibliothèque d'images. Deux gestes seulement, et pas de
@@ -1084,8 +1090,8 @@
      ⚠️ « Supprimer du disque » n'est PAS le geste de la section Image d'une Case, qui DÉTACHE.
      Ici le fichier part pour de bon, et le message de confirmation le dit (cf. image-library.js). -->
 <div class="context-menu hidden" id="imageContextMenu">
-  <button id="ctxRenameImage"><span class="ctx-icon">✏️</span> Renommer le fichier…</button>
-  <button id="ctxDeleteImage"><span class="ctx-icon">🗑</span> Supprimer du disque</button>
+  <button id="ctxRenameImage"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M12 4v16M10 4h4M10 20h4"/></svg></span> Renommer le fichier…</button>
+  <button id="ctxDeleteImage"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6"/><path d="m6 7 1 13h10l1-13M9 7V4h6v3"/></svg></span> Supprimer du disque</button>
 </div>
 
 
@@ -1095,168 +1101,168 @@
      section Ajouter"). Les sous-catégories (Véhicules, Mobiliers, etc.) restent inchangées, simplement
      déplacées dans ce conteneur. -->
 <div class="context-menu hidden" id="addSubmenu">
-  <button id="ctxAddPersona"><span class="ctx-icon">🙂</span> Ajouter un personnage</button>
+  <button id="ctxAddPersona"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4.5" r="2"/><path d="M12 7.5v7M12 9.5 7 12.5M12 9.5l5 3M12 14.5 8.5 21M12 14.5l3.5 6.5"/></svg></span> Ajouter un personnage</button>
   <!-- Une source de lumiere posee (#420b). Une ENTREE DIRECTE et non un sous-menu : il n'y a
        qu'une sorte de source pour l'instant, et un sous-menu a une seule ligne se lit comme une
        liste qu'on aurait oublie de remplir. -->
-  <button id="ctxAddLumiere"><span class="ctx-icon">💡</span> Ajouter une lumière</button>
-  <button id="ctxVehiclesTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">🚗</span> Véhicules</span> <span class="submenu-arrow">▶</span></button>
-  <button id="ctxFurnitureTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">🪑</span> Mobiliers</span> <span class="submenu-arrow">▶</span></button>
-  <button id="ctxWallOpeningTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">🧱</span> Parois</span> <span class="submenu-arrow">▶</span></button>
-  <button id="ctxMursTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">🧱</span> Murs</span> <span class="submenu-arrow">▶</span></button>
-  <button id="ctxPlantesTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">🌿</span> Plantes</span> <span class="submenu-arrow">▶</span></button>
-  <button id="ctxBuildingsTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">🏠</span> Bâtiments</span> <span class="submenu-arrow">▶</span></button>
-  <button id="ctxAnimauxTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">🐾</span> Animaux</span> <span class="submenu-arrow">▶</span></button>
-  <button id="ctxJardinTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">🌳</span> Jardin</span> <span class="submenu-arrow">▶</span></button>
-  <button id="ctxVilleTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">🏙️</span> Ville</span> <span class="submenu-arrow">▶</span></button>
-  <button id="ctxCimetiereTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">🪦</span> Cimetière</span> <span class="submenu-arrow">▶</span></button>
-  <button id="ctxEgliseTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">⛪</span> Église</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxAddLumiere"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/></svg></span> Ajouter une lumière</button>
+  <button id="ctxVehiclesTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17H3v-5l2-5h11l4 5h1v5h-2M9 17h6"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg></span> Véhicules</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxFurnitureTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v18M7 13h10v8"/><path d="M7 3h3v10"/></svg></span> Mobiliers</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxWallOpeningTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17"/><path d="M9 21v-8h6v8"/></svg></span> Parois</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxMursTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v15H3zM3 10h18M3 15h18M9 5v5M15 10v5M9 15v5"/></svg></span> Murs</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxPlantesTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19C5 10 11 5 20 4c0 9-5 15-14 15z"/><path d="m5 19 8-8"/></svg></span> Plantes</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxBuildingsTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-6h4v6"/></svg></span> Bâtiments</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxAnimauxTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="7" r="1.6"/><circle cx="16" cy="7" r="1.6"/><circle cx="4.5" cy="12" r="1.6"/><circle cx="19.5" cy="12" r="1.6"/><path d="M8 18a4 4 0 0 1 8 0c0 2.5-8 2.5-8 0z"/></svg></span> Animaux</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxJardinTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M12 15v6"/></svg></span> Jardin</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxVilleTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V9h6v12M9 21V4h8v17M17 21v-9h4v9M2 21h20"/></svg></span> Ville</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxCimetiereTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21v-8a3 3 0 0 1 6 0v8M11 21V9a4 4 0 0 1 8 0v12M2 21h20"/></svg></span> Cimetière</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxEgliseTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v4M10 4h4"/><path d="m12 6-6 5v10h12V11z"/><path d="M10 21v-4a2 2 0 0 1 4 0v4"/></svg></span> Église</span> <span class="submenu-arrow">▶</span></button>
 </div>
 
 <div class="context-menu hidden" id="itemContextMenu">
-  <button id="ctxItemBringForward"><span class="ctx-icon">⬆</span> Avancer</button>
-  <button id="ctxItemSendBackward"><span class="ctx-icon">⬇</span> Reculer</button>
+  <button id="ctxItemBringForward"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span> Avancer</button>
+  <button id="ctxItemSendBackward"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span> Reculer</button>
   <!-- #426k — SUPPRIMER SANS PASSER PAR LE CLAVIER. La touche Suppr était le seul chemin, ce qui
        oblige à savoir qu'elle existe et à avoir la Bulle sélectionnée. Demandé à l'usage. Ce menu
        n'est ouvert que pour une Bulle (cf. l'écouteur `contextmenu`), malgré ce que son nom
        laisse croire. -->
-  <button id="ctxItemDelete"><span class="ctx-icon">🗑</span> Supprimer la bulle</button>
+  <button id="ctxItemDelete"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6"/><path d="m6 7 1 13h10l1-13M9 7V4h6v3"/></svg></span> Supprimer la bulle</button>
 </div>
 
 <div class="context-menu hidden" id="dblclickChoiceMenu">
-  <button id="ctxCreatePanel"><span class="ctx-icon">▭</span> Créer une case</button>
-  <button id="ctxCreateBubble"><span class="ctx-icon">💬</span> Créer une bulle de dialogue</button>
-  <button id="ctxImportPageCanvas"><span class="ctx-icon">🖼️</span> Importer une planche</button>
+  <button id="ctxCreatePanel"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="1"/></svg></span> Créer une case</button>
+  <button id="ctxCreateBubble"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H10l-5 4v-4H4z"/></svg></span> Créer une bulle de dialogue</button>
+  <button id="ctxImportPageCanvas"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg></span> Importer une planche</button>
 </div>
 
 <div class="context-menu hidden" id="vehicleSubmenu">
-  <button id="ctxAddVoiture"><span class="ctx-icon">🚗</span> Ajouter une voiture</button>
-  <button id="ctxAddVelo"><span class="ctx-icon">🚲</span> Ajouter un vélo</button>
+  <button id="ctxAddVoiture"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17H3v-5l2-5h11l4 5h1v5h-2M9 17h6"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg></span> Ajouter une voiture</button>
+  <button id="ctxAddVelo"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="16" r="3.5"/><circle cx="18.5" cy="16" r="3.5"/><path d="M5.5 16 9 8h7l2.5 8M9 8l3 8h6.5M7.5 5h3M16 8l-1-3h2"/></svg></span> Ajouter un vélo</button>
 </div>
 
 <div class="context-menu hidden" id="furnitureSubmenu">
-  <button id="ctxAddTable"><span class="ctx-icon">🍽️</span> Ajouter une table</button>
-  <button id="ctxAddChaise"><span class="ctx-icon">🪑</span> Ajouter une chaise</button>
-  <button id="ctxAddEtagere"><span class="ctx-icon">📚</span> Ajouter une étagère</button>
-  <button id="ctxAddArmoire"><span class="ctx-icon">🚪</span> Ajouter une armoire</button>
-  <button id="ctxAddCanape"><span class="ctx-icon">🛋️</span> Ajouter un canapé</button>
-  <button id="ctxAddBureau"><span class="ctx-icon">🗄️</span> Ajouter un bureau</button>
-  <button id="ctxAddLit"><span class="ctx-icon">🛏️</span> Ajouter un lit</button>
+  <button id="ctxAddTable"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h18M6 8v12M18 8v12M6 13h12"/></svg></span> Ajouter une table</button>
+  <button id="ctxAddChaise"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v18M7 13h10v8"/><path d="M7 3h3v10"/></svg></span> Ajouter une chaise</button>
+  <button id="ctxAddEtagere"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v18M19 3v18M5 8h14M5 14h14M5 20h14M8 5v3M11 5.5V8M14 11v3M9 17v3"/></svg></span> Ajouter une étagère</button>
+  <button id="ctxAddArmoire"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14v18H5zM12 3v18M10 11v2M14 11v2"/></svg></span> Ajouter une armoire</button>
+  <button id="ctxAddCanape"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3"/><path d="M2 13a2 2 0 0 1 4 0v2h12v-2a2 2 0 0 1 4 0v5H2zM5 18v2M19 18v2"/></svg></span> Ajouter un canapé</button>
+  <button id="ctxAddBureau"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h18M5 8v12M19 8v12M13 8v7h6M15 11.5h2"/></svg></span> Ajouter un bureau</button>
+  <button id="ctxAddLit"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6v14M3 14h18v6M21 14v-3a2 2 0 0 0-2-2h-9v5"/><circle cx="6.5" cy="11" r="1.5"/></svg></span> Ajouter un lit</button>
 </div>
 
 <div class="context-menu hidden" id="wallOpeningSubmenu">
-  <button id="ctxAddFenetreOuverte"><span class="ctx-icon">🪟</span> Ajouter une fenêtre</button>
-  <button id="ctxAddPorteOuverte"><span class="ctx-icon">🚪</span> Ajouter une porte</button>
-  <button id="ctxAddEscalier"><span class="ctx-icon">🪜</span> Ajouter un escalier</button>
-  <button id="ctxAddBaieVitree"><span class="ctx-icon">🪟</span> Ajouter une baie vitrée</button>
+  <button id="ctxAddFenetreOuverte"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14v18H5zM12 3v18M5 12h14"/></svg></span> Ajouter une fenêtre</button>
+  <button id="ctxAddPorteOuverte"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V3h12v18M3 21h18M15 12v1"/></svg></span> Ajouter une porte</button>
+  <button id="ctxAddEscalier"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h5v-5h5v-5h5V5h3"/></svg></span> Ajouter un escalier</button>
+  <button id="ctxAddBaieVitree"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v17H3zM12 4v17M6 12h3M15 12h3"/></svg></span> Ajouter une baie vitrée</button>
 </div>
 
 <div class="context-menu hidden" id="mursSubmenu">
-  <button id="ctxAddMurSimple"><span class="ctx-icon">🧱</span> Ajouter un mur simple</button>
-  <button id="ctxAddMurCoin"><span class="ctx-icon">📐</span> Ajouter un mur en coin</button>
+  <button id="ctxAddMurSimple"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h18v8H3zM3 13h18M9 9v4M15 13v4"/></svg></span> Ajouter un mur simple</button>
+  <button id="ctxAddMurCoin"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v16h16v-6H10V4z"/></svg></span> Ajouter un mur en coin</button>
 </div>
 
 <div class="context-menu hidden" id="plantesSubmenu">
-  <button id="ctxAddBuisson"><span class="ctx-icon">🌳</span> Ajouter un buisson</button>
-  <button id="ctxAddArbre"><span class="ctx-icon">🌲</span> Ajouter un arbre</button>
-  <button id="ctxAddArbuste"><span class="ctx-icon">🌿</span> Ajouter un arbuste</button>
-  <button id="ctxAddFleur"><span class="ctx-icon">🌸</span> Ajouter une fleur</button>
-  <button id="ctxAddPotFleur"><span class="ctx-icon">🪴</span> Ajouter un pot de fleur</button>
+  <button id="ctxAddBuisson"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19a3.5 3.5 0 0 1-.5-7A5 5 0 0 1 14 9a4 4 0 0 1 5.5 5A3 3 0 0 1 19 19z"/></svg></span> Ajouter un buisson</button>
+  <button id="ctxAddArbre"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 6 11h3l-4 6h14l-4-6h3zM12 17v4"/></svg></span> Ajouter un arbre</button>
+  <button id="ctxAddArbuste"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-7M12 14c-4 0-6-3-6-7 4 0 6 3 6 7zM12 14c4 0 6-3 6-7-4 0-6 3-6 7z"/></svg></span> Ajouter un arbuste</button>
+  <button id="ctxAddFleur"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="2"/><circle cx="12" cy="4.5" r="2"/><circle cx="15.5" cy="8" r="2"/><circle cx="12" cy="11.5" r="2"/><circle cx="8.5" cy="8" r="2"/><path d="M12 13.5V21M12 18c-2 0-4-1-4-3 2 0 4 1 4 3z"/></svg></span> Ajouter une fleur</button>
+  <button id="ctxAddPotFleur"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 13h12l-1.5 8h-9zM12 13V8M12 8c-3 0-5-2-5-5 3 0 5 2 5 5zM12 10c2.5 0 4-1.5 4-4-2.5 0-4 1.5-4 4z"/></svg></span> Ajouter un pot de fleur</button>
 </div>
 
 <div class="context-menu hidden" id="buildingsSubmenu">
-  <button id="ctxAddRoom"><span class="ctx-icon">🧱</span> Ajouter une pièce</button>
-  <button id="ctxBuildMode"><span class="ctx-icon">✏️</span> Construire un bâtiment</button>
+  <button id="ctxAddRoom"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20H4V4h16v16h-4"/><path d="M10 20a6 6 0 0 1 6-6" stroke-dasharray="2 2"/></svg></span> Ajouter une pièce</button>
+  <button id="ctxBuildMode"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m14 6 4 4"/></svg></span> Construire un bâtiment</button>
 </div>
 
 <div class="context-menu hidden" id="animauxSubmenu">
-  <button id="ctxAddOiseau"><span class="ctx-icon">🐦</span> Oiseau</button>
-  <button id="ctxAddLezard"><span class="ctx-icon">🦎</span> Lézard</button>
-  <button id="ctxAddLoup"><span class="ctx-icon">🐺</span> Loup</button>
-  <button id="ctxAddGriffon"><span class="ctx-icon">🦅</span> Griffon</button>
-  <button id="ctxAddSinge"><span class="ctx-icon">🐒</span> Singe</button>
+  <button id="ctxAddOiseau"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8c4-1 7 1 10 5 3-4 6-6 10-5"/></svg></span> Oiseau</button>
+  <button id="ctxAddLezard"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 5c-2-1-4 0-5 2l-3 9c-1 3-4 5-8 4"/><path d="m14 9 3 1M13 12l-3-1M12 15l3 1M11 18l-3-1"/></svg></span> Lézard</button>
+  <button id="ctxAddLoup"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 3 3 5h8l3-5v8l-3 5-4 4-4-4-3-5z"/><path d="M9.5 12h.01M14.5 12h.01M11 16h2"/></svg></span> Loup</button>
+  <button id="ctxAddGriffon"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20c3-3 4-8 4-14 3 3 4 6 5 10 2-4 5-6 9-7-1 5-4 9-9 11z"/></svg></span> Griffon</button>
+  <button id="ctxAddSinge"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6"/><circle cx="4.5" cy="11" r="2"/><circle cx="19.5" cy="11" r="2"/><path d="M9.5 15a3 2 0 0 0 5 0M10 10.5h.01M14 10.5h.01"/></svg></span> Singe</button>
 </div>
 
 <div class="context-menu hidden" id="jardinSubmenu">
-  <button id="ctxAddPiscine"><span class="ctx-icon">🏊</span> Piscine</button>
-  <button id="ctxAddBarbecue"><span class="ctx-icon">🔥</span> Barbecue</button>
+  <button id="ctxAddPiscine"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v10M10 3v10M5 6h5M5 10h5"/><path d="M2 17c2 0 2-1.5 4-1.5s2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5M2 21c2 0 2-1.5 4-1.5s2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5"/></svg></span> Piscine</button>
+  <button id="ctxAddBarbecue"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16a8 8 0 0 1-16 0zM8 16l-2 5M16 16l2 5M12 17v4M9 3c1 1 1 2 0 3M13 3c1 1 1 2 0 3M17 3c1 1 1 2 0 3"/></svg></span> Barbecue</button>
 </div>
 
 <div class="context-menu hidden" id="villeSubmenu">
-  <button id="ctxAddLampadaire"><span class="ctx-icon">💡</span> Lampadaire</button>
-  <button id="ctxAddPanneauSignalisation"><span class="ctx-icon">🚦</span> Panneau de signalisation</button>
+  <button id="ctxAddLampadaire"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21h6M10 21V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1"/><path d="M15 6h6l-1 3h-4z"/></svg></span> Lampadaire</button>
+  <button id="ctxAddPanneauSignalisation"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 15H4z"/><path d="M12 15v6M12 8v3"/></svg></span> Panneau de signalisation</button>
 </div>
 
 <div class="context-menu hidden" id="cimetiereSubmenu">
-  <button id="ctxAddTombe"><span class="ctx-icon">⬛</span> Tombe</button>
-  <button id="ctxAddPierreTombale"><span class="ctx-icon">🪦</span> Pierre tombale</button>
-  <button id="ctxAddCaveau"><span class="ctx-icon">🏛️</span> Caveau</button>
+  <button id="ctxAddTombe"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18H7z"/><path d="M12 7v6M10 9h4"/></svg></span> Tombe</button>
+  <button id="ctxAddPierreTombale"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V9a6 6 0 0 1 12 0v12z"/><path d="M4 21h16M12 10v6M10 12h4"/></svg></span> Pierre tombale</button>
+  <button id="ctxAddCaveau"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3-9 5h18z"/><path d="M4 10h16M3 21h18M6 10v9M10 10v9M14 10v9M18 10v9"/></svg></span> Caveau</button>
 </div>
 
 <div class="context-menu hidden" id="egliseSubmenu">
-  <button id="ctxAddBancEglise"><span class="ctx-icon">🪑</span> Banc</button>
-  <button id="ctxAddAutel"><span class="ctx-icon">✝️</span> Autel</button>
+  <button id="ctxAddBancEglise"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11h18M5 11v8M19 11v8M3 6h18v5"/></svg></span> Banc</button>
+  <button id="ctxAddAutel"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v8M9 5h6M4 13h16M6 13v8M18 13v8"/></svg></span> Autel</button>
 </div>
 
 <!-- Sous-menus "Tracer" et "Zone" : uniquement visibles sur un canevas de Scène en vue de dessus
      (cf. contextmenu handler, ctxTracerTrigger/ctxZoneTrigger). -->
 <div class="context-menu hidden" id="tracerSubmenu">
-  <button id="ctxTracerCheminTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">🛣️</span> Chemin</span> <span class="submenu-arrow">▶</span></button>
-  <button id="ctxTracerMurTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">🧱</span> Mur</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxTracerCheminTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21 9 3M19 21 15 3"/><path d="M12 6v2M12 12v2M12 18v2"/></svg></span> Chemin</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxTracerMurTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v15H3zM3 10h18M3 15h18M9 5v5M15 10v5M9 15v5"/></svg></span> Mur</span> <span class="submenu-arrow">▶</span></button>
 </div>
 
 <div class="context-menu hidden" id="cheminsTracéSubmenu">
-  <button id="ctxTracerRoute"><span class="ctx-icon">🛣️</span> Route</button>
-  <button id="ctxTracerChemin"><span class="ctx-icon">🟤</span> Chemin de terre</button>
+  <button id="ctxTracerRoute"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21 9 3M19 21 15 3"/><path d="M12 6v2M12 12v2M12 18v2"/></svg></span> Route</button>
+  <button id="ctxTracerChemin"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21c0-5 10-6 10-11S13 4 12 3" stroke-dasharray="2 3"/></svg></span> Chemin de terre</button>
 </div>
 
 <div class="context-menu hidden" id="mursTracéSubmenu">
-  <button id="ctxTracerMuret"><span class="ctx-icon">🧱</span> Muret</button>
-  <button id="ctxTracerCloture"><span class="ctx-icon">⛓️</span> Clôture</button>
-  <button id="ctxTracerHaie"><span class="ctx-icon">🌳</span> Haie végétale</button>
-  <button id="ctxTracerBarriere"><span class="ctx-icon">🚧</span> Barrière de route</button>
+  <button id="ctxTracerMuret"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h18v6H3zM3 16h18M8 13v3M14 16v3M18 13v3"/></svg></span> Muret</button>
+  <button id="ctxTracerCloture"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V6l2-2 2 2v15M15 21V6l2-2 2 2v15M2 10h20M2 16h20"/></svg></span> Clôture</button>
+  <button id="ctxTracerHaie"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18v-5a3 3 0 0 1 4-3 3 3 0 0 1 5-1 3 3 0 0 1 5 1 3 3 0 0 1 4 3v5z"/><path d="M2 21h20"/></svg></span> Haie végétale</button>
+  <button id="ctxTracerBarriere"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h18v5H3zM7 9l-3 5M12 9l-3 5M17 9l-3 5M21 9l-3 5M6 14v7M18 14v7"/></svg></span> Barrière de route</button>
 </div>
 
 <div class="context-menu hidden" id="zoneSubmenu">
-  <button id="ctxZoneTerrain"><span class="ctx-icon">🌿</span> Zone de terrain</button>
+  <button id="ctxZoneTerrain"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 7 8-4 8 5-2 11-12 1z" stroke-dasharray="3 3"/></svg></span> Zone de terrain</button>
 </div>
 
 <!-- #454a : le clic droit sur un Bâtiment ou une Pièce du menu de droite (demandé). -->
 <div class="context-menu hidden" id="batimentContextMenu">
-  <button id="ctxModifierBatiment"><span class="ctx-icon">✏️</span> Modifier</button>
+  <button id="ctxModifierBatiment"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m14 6 4 4"/></svg></span> Modifier</button>
 </div>
 
 <div class="context-menu hidden" id="volumeContextMenu">
-  <button id="ctxReadVolume"><span class="ctx-icon">📖</span> Lire ce tome</button>
-  <button id="ctxRenameVolume"><span class="ctx-icon">✏️</span> Renommer ce tome</button>
-  <button id="ctxExportVolume"><span class="ctx-icon">📤</span> Exporter toutes les planches</button>
-  <button id="ctxDeleteVolume"><span class="ctx-icon">🗑</span> Supprimer ce tome</button>
+  <button id="ctxReadVolume"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2zM22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/></svg></span> Lire ce tome</button>
+  <button id="ctxRenameVolume"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M12 4v16M10 4h4M10 20h4"/></svg></span> Renommer ce tome</button>
+  <button id="ctxExportVolume"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v5h16v-5"/></svg></span> Exporter toutes les planches</button>
+  <button id="ctxDeleteVolume"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6"/><path d="m6 7 1 13h10l1-13M9 7V4h6v3"/></svg></span> Supprimer ce tome</button>
 </div>
 
 <!-- Menu d'un Chapitre (demandé), cf. src/chapitres.js et project-tree.js. -->
 <div class="context-menu hidden" id="chapterContextMenu">
-  <button id="ctxReadChapter"><span class="ctx-icon">📖</span> Lire ce chapitre</button>
-  <button id="ctxRenameChapter"><span class="ctx-icon">✏️</span> Renommer ce chapitre</button>
-  <button id="ctxExportChapter"><span class="ctx-icon">📤</span> Exporter les planches du chapitre</button>
-  <button id="ctxDeleteChapter"><span class="ctx-icon">🗑</span> Supprimer ce chapitre</button>
+  <button id="ctxReadChapter"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2zM22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/></svg></span> Lire ce chapitre</button>
+  <button id="ctxRenameChapter"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M12 4v16M10 4h4M10 20h4"/></svg></span> Renommer ce chapitre</button>
+  <button id="ctxExportChapter"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v5h16v-5"/></svg></span> Exporter les planches du chapitre</button>
+  <button id="ctxDeleteChapter"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6"/><path d="m6 7 1 13h10l1-13M9 7V4h6v3"/></svg></span> Supprimer ce chapitre</button>
 </div>
 
 <div class="context-menu hidden" id="pageContextMenu">
-  <button id="ctxDuplicatePage"><span class="ctx-icon">📋</span> Dupliquer cette planche</button>
-  <button id="ctxRemoveFromChapter"><span class="ctx-icon">↩️</span> Retirer du chapitre</button>
-  <button id="ctxExportPageTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon">📤</span> Exporter cette planche</span> <span class="submenu-arrow">▶</span></button>
-  <button id="ctxDeletePage"><span class="ctx-icon">🗑</span> Supprimer cette planche</button>
+  <button id="ctxDuplicatePage"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="1"/><path d="M4 16V4h12"/></svg></span> Dupliquer cette planche</button>
+  <button id="ctxRemoveFromChapter"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h7l2 2h9v11H3z"/><path d="M9 13h6"/></svg></span> Retirer du chapitre</button>
+  <button id="ctxExportPageTrigger" class="context-menu-submenu-trigger"><span><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v5h16v-5"/></svg></span> Exporter cette planche</span> <span class="submenu-arrow">▶</span></button>
+  <button id="ctxDeletePage"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6"/><path d="m6 7 1 13h10l1-13M9 7V4h6v3"/></svg></span> Supprimer cette planche</button>
 </div>
 
 <!-- Sous-menu "Exporter cette planche" : choix du format (PNG ou PDF), cf. ctxExportPageTrigger. -->
 <div class="context-menu hidden" id="exportPageSubmenu">
-  <button id="ctxExportPagePNG"><span class="ctx-icon">🖼️</span> Image (PNG)</button>
-  <button id="ctxExportPagePDF"><span class="ctx-icon">📄</span> Document (PDF)</button>
+  <button id="ctxExportPagePNG"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg></span> Image (PNG)</button>
+  <button id="ctxExportPagePDF"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/></svg></span> Document (PDF)</button>
 </div>
 
 <div class="context-menu hidden" id="sceneContextMenu">
-  <button id="ctxRenameScene"><span class="ctx-icon">✏️</span> Renommer cette scène</button>
-  <button id="ctxDeleteScene"><span class="ctx-icon">🗑</span> Supprimer cette scène</button>
+  <button id="ctxRenameScene"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M12 4v16M10 4h4M10 20h4"/></svg></span> Renommer cette scène</button>
+  <button id="ctxDeleteScene"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6"/><path d="m6 7 1 13h10l1-13M9 7V4h6v3"/></svg></span> Supprimer cette scène</button>
 </div>
 
 <!-- ⚠️ LA BIBLIOTHÈQUE AVANT TOUTES LES AUTRES FENÊTRES. Les modales ont toutes le même z-index :

@@ -944,7 +944,10 @@ button.context-menu-submenu-trigger{ display:flex; align-items:center; justify-c
 /* Largeur fixe pour l'icône en tête de bouton de menu contextuel : certains émojis (ex. 📤) ont une
    chasse/marge gauche plus large que d'autres (ex. 🗑) dans le rendu des polices, ce qui désaligne
    visuellement le texte qui suit. On normalise en figeant la largeur de l'icône. */
-.ctx-icon{ display:inline-block; width:1.2em; text-align:center; margin-right:6px; }
+.ctx-icon{ display:inline-block; width:15px; height:15px; margin-right:8px; vertical-align:-3px; }
+/* #460k : une seule famille d'icônes, au trait comme celles du bandeau (grille 24, trait 2, bouts
+   ronds, currentColor) : l'icône prend la couleur du libellé, au survol comme au repos. */
+.ctx-icon svg{ display:block; width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .help-text{ width:290px; padding:8px 10px; font-size:var(--texte-libelle); line-height:1.55; color:var(--ink-soft); }
 .help-text p{ margin:0 0 6px; }
 .help-text p:last-child{ margin-bottom:0; }
@@ -2491,8 +2494,6 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-credit a{ color:inherit; }
 
 /* ── La fenêtre des POLICES (#423, src/polices-ui.js) ─────────────────────────────────────────── */
-/* Le bouton du bandeau : « Aa » en lettres, au gabarit des boutons ronds à icône. */
-.help-round-btn.polices-btn{ font-family:Georgia, serif; font-size:var(--texte-courant); font-weight:700; letter-spacing:-.02em; }
 #fontContextMenu{ z-index:1100; }
 .polices-box{ position:relative; }
 .polices-barre{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:8px; }

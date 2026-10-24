@@ -610,9 +610,8 @@ export const I18N_MODALS = [
   ['#helpCat_mise_en_scene', '3D staging', 'Mise en scène 3D'],
   ['#helpCat_elements', 'Elements', 'Éléments'],
   ['#helpCat_modeles_3d', '3D models', 'Modèles 3D'],
-  // La fenêtre des Polices (#423). « Aa » est le même dans les deux langues ; l'infobulle du bouton
-  // est posée par src/polices-ui.js (rafraichirTextesPolices).
-  ['#policesOuvrirBtn', 'Aa', 'Aa'],
+  // La fenêtre des Polices (#423). Le bouton est une icône (#460k) : rien à traduire, son
+  // infobulle est posée par src/polices-ui.js (rafraichirTextesPolices).
   ['#policesTitre', 'My fonts', 'Mes polices'],
   ['#policesRetour', 'Back', 'Retour'],
   ['#policesUsagesBtn', 'All uses', 'Tous les usages'],

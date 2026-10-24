@@ -32,6 +32,15 @@ const I18N = await import('../src/i18n.js');
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
 const lire = (c) => readFileSync(join(RACINE, c), 'utf8');
 
+/** #460k : chaque icône de menu contextuel, une fois, avec le premier libellé qui la porte. */
+function iconesDeMenu(html){
+  const vues = new Map();
+  for (const m of html.matchAll(/<span class="ctx-icon">(<svg[\s\S]*?<\/svg>)<\/span>\s*([^<]*)/g)) {
+    if (!vues.has(m[1])) vues.set(m[1], m[2].trim());
+  }
+  return [...vues].map(([svg, lib]) => `<button type="button"><span class="ctx-icon">${svg}</span>${lib}</button>`).join('');
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // LES JETONS
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -502,8 +511,9 @@ ${s.polices}
 <div class="ds-groupe">${s.editeurs}</div>
 
 <h2 class="ds-titre">${L('Icônes', 'Icons')}</h2>
-<p class="ds-chapo">${L(`Deux familles. Les <b>menus contextuels</b> portent un emoji devant chaque entrée (<code>.ctx-icon</code>). Les <b>choix visuels</b> sont des pictogrammes au trait de 1,6 px en <code>currentColor</code>, sans libellé (nom en infobulle), dessinés dans la vue où la différence se lit : de dessus pour le plan, de face pour les ouvertures, de profil pour les marches.`,
-  `Two families. <b>Context menus</b> show an emoji before each entry (<code>.ctx-icon</code>). <b>Visual choices</b> are 1.6 px line pictograms in <code>currentColor</code>, without a label (name in the tooltip), drawn in the view where the difference reads: from above for the plan, from the front for openings, from the side for steps.`)}</p>
+<p class="ds-chapo">${L(`Une seule famille, au trait et en <code>currentColor</code> (#460k). Le <b>bandeau</b> et les <b>menus contextuels</b> (<code>.ctx-icon</code>) : grille de 24, trait de 2, bouts arrondis ; une action garde la même icône partout. Les <b>choix visuels</b> : pictogrammes au trait de 1,6 px en <code>currentColor</code>, sans libellé (nom en infobulle), dessinés dans la vue où la différence se lit : de dessus pour le plan, de face pour les ouvertures, de profil pour les marches.`,
+  `A single line family in <code>currentColor</code> (#460k). The <b>header</b> and <b>context menus</b> (<code>.ctx-icon</code>): 24 grid, 2 px stroke, round caps; an action keeps the same icon everywhere. <b>Visual choices</b>: 1.6 px line pictograms in <code>currentColor</code>, without a label (name in the tooltip), drawn in the view where the difference reads: from above for the plan, from the front for openings, from the side for steps.`)}</p>
+<div class="context-menu ds-icones" style="position:static;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));width:auto;margin-bottom:12px">${iconesDeMenu(html)}</div>
 <div class="right-panel ds-icones" style="width:auto;height:auto"><div class="right-panel-scroll">${Object.entries(ICONES).filter(([, o]) => typeof o === 'object').map(([g, o]) => `<section class="side-section"><h2>${g}</h2>${choixIcones(Object.entries(o).map(([k, v]) => [v, k]), 0)}</section>`).join('')}<section class="side-section"><h2>iconeSensPorte(sens, charniere, geste)</h2>${choixIcones([[1, 'debut'], [1, 'fin'], [-1, 'debut'], [-1, 'fin']].map(([a, b]) => [ICONES.iconeSensPorte(a, b), `${a}, ${b}`]), 0)}</section></div></div>
 
 <h2 class="ds-titre">${L('Règles d\'usage, en bref', 'Usage rules, in short')}</h2>

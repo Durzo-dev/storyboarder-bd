@@ -165,7 +165,7 @@ next.
 
 ### Context menus
 
-- `--white` fill, 8 px radius, drop shadow; an entry = an **emoji** then a 12.5 px label.
+- `--white` fill, 8 px radius, drop shadow; an entry = a **line icon** (15 px, `currentColor`) then a 12.5 px label; an action keeps the same icon everywhere (#460k).
 - A submenu shows a ▶ on the right. Delete comes last.
 
 ### Store and fonts window
@@ -285,4 +285,4 @@ with its test.
 - **#460h** ✅ One empty state, `.empty-hint`: 12 px, grey `--ink-soft`, no italics.
 - **#460i** ✅ Six text sizes, as `--texte-*` tokens.
 - **#460j** ✅ Three radii, as tokens: `--rayon-petit` (6 px: field, choice, menu entry), `--rayon-moyen` (8 px: button, row, menu, sub-section), `--rayon-grand` (10 px: section, modal), plus `--rayon-pilule` and round (50 %). Only very small elements keep 3 px.
-- **#460k** Icons: a single line-icon family (header, context menus).
+- **#460k** ✅ A single line-icon family (24 grid, 2 px stroke): header (Fonts, Undo, Manual) and the 106 context-menu entries. "Rename" (a field) and "Edit" (a pencil) no longer look alike.

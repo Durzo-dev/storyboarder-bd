@@ -118,6 +118,24 @@ describe('#460i : l\'échelle typographique', () => {
   });
 });
 
+describe('#460k : une seule famille d\'icônes au trait', () => {
+  test('chaque entrée de menu contextuel porte une icône SVG, plus aucun emoji', () => {
+    const icones = [...HTML.matchAll(/<span class="ctx-icon">([\s\S]*?)<\/span>/g)].map(m => m[1]);
+    assert.ok(icones.length > 100, 'les icônes des menus contextuels ont disparu');
+    const emojis = icones.filter(i => !/^<svg viewBox="0 0 24 24"/.test(i));
+    assert.deepEqual(emojis, [], 'une entrée de menu est revenue à un caractère ou un emoji');
+  });
+  test('les boutons ronds du bandeau sont tous des icônes, aucun en lettres (Aa, ↺, ?)', () => {
+    const bandeau = HTML.slice(HTML.indexOf('<header>'), HTML.indexOf('</header>'));
+    const boutons = [...bandeau.matchAll(/<button class="help-round-btn[^"]*"[^>]*>([\s\S]*?)<\/button>/g)].map(m => m[1].trim());
+    assert.ok(boutons.length >= 8);
+    boutons.forEach(b => assert.match(b, /^<svg /, `un bouton du bandeau n'est pas une icône : ${b.slice(0, 20)}`));
+  });
+  test('l\'icône prend la couleur du libellé (trait de 2 en currentColor)', () => {
+    assert.match(regle('.ctx-icon svg'), /stroke:currentColor; stroke-width:2;/);
+  });
+});
+
 describe('#460j : trois rayons', () => {
   test('aucun rayon hors des jetons, sauf les formes (rond, carré) et les très petits éléments', () => {
     // Exceptions : 50 % (rond), 0 (carré voulu), 3 px (pastille de sol de 14 px, surlignage du Manuel).
