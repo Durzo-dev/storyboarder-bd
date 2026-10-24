@@ -1434,7 +1434,8 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    utilise un voile noir semi-transparent (plutôt qu'une variable de thème) afin de rester visiblement
    plus sombre que .modal-box aussi bien en thème clair qu'en thème sombre. */
 .modal-section{
-  background:var(--creux); border:1px solid var(--line); border-radius:8px;
+  /* #460f : la MÊME carte qu'une section de panneau (fond papier, filet, rayon 10). */
+  background:var(--paper); border:1px solid var(--line); border-radius:10px;
   margin:14px 0; padding:4px 14px 12px;
 }
 .modal-box h3 + .modal-section, .modal-box h3 + .modal-columns{ margin-top:18px; }
@@ -1467,13 +1468,21 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .modal-columns .modal-col > .modal-section:first-child{ margin-top:-4px; }
 .modal-section-header{
   display:flex; align-items:center; justify-content:space-between; gap:8px;
-  cursor:pointer; user-select:none; margin:10px 0; padding:4px 0;
+  cursor:pointer; user-select:none; margin:10px 0 12px; padding:0 0 8px; border-bottom:1px solid var(--line);
 }
+/* #460f : UNE SEULE HIÉRARCHIE DE SECTIONS. Le titre d'une section de modale était en 15 px blanc
+   gras, plus gros que le titre de la modale elle-même (14,5 px). Il prend celui des sections de
+   panneau : 11 px, capitales, gris, précédé du point orange. Modale > section > sous-section. */
 .modal-section-header .modal-section-title{
-  font-family:'Inter',sans-serif; font-weight:700; font-size:15px; color:var(--ink);
+  display:flex; align-items:center; gap:6px;
+  font-family:'Inter',sans-serif; font-weight:600; font-size:11px; color:var(--ink-soft);
+  text-transform:uppercase; letter-spacing:.05em;
+}
+.modal-section-header .modal-section-title::before{
+  content:''; width:5px; height:5px; border-radius:50%; background:var(--accent); flex-shrink:0;
 }
 .modal-section-header .modal-section-caret{
-  font-size:17px; line-height:1; color:var(--ink-soft); transition:transform .15s ease; flex-shrink:0;
+  font-size:10px; line-height:1; color:var(--ink-soft); transition:transform .15s ease; flex-shrink:0;
 }
 .modal-section.collapsed .modal-section-caret{ transform:rotate(-90deg); }
 /* ⚠️ PLUS D'`overflow:hidden` ICI (#409m). Il ne servait plus à rien : le repli se fait par
@@ -1496,7 +1505,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    devenu invisible).
 */
 .modal-section.collapsed{ padding:10px; }
-.modal-section.collapsed .modal-section-header{ margin:0; }
+.modal-section.collapsed .modal-section-header{ margin:0; padding:0; border-bottom:none; }
 /* `.modal-subsection` A ÉTÉ RETIRÉE (#402a) : sa seule occupante était la sous-section des
    articulations, dans chacune des trois fiches. Aucune fiche n'imbrique plus de section. */
 .persona-rot-row{ display:flex; gap:10px; margin-top:4px; }
@@ -2440,8 +2449,8 @@ button.store-chip:hover{ border-color:var(--accent); }
    mêmes fond creusé, bordure, rayon et marges intérieures que `.modal-section`, et un titre comme
    `.modal-section-title`. Vaut pour les fiches des trois onglets. */
 .store-fiche-section{
-  margin:14px 0 0; padding:4px 14px 12px; border:1px solid var(--line); border-radius:8px;
-  background:var(--creux);
+  margin:14px 0 0; padding:4px 14px 12px; border:1px solid var(--line); border-radius:10px;
+  background:var(--paper);   /* #460f : la carte des sections de panneau et de modale */
 }
 /* ⚠️ LE MÊME ÉCART AU-DESSUS DE CHAQUE SECTION (demandé) : un paragraphe garde sinon sa marge basse
    par défaut (1em), qui s'ajoutait au-dessus de la première section et pas au-dessus des suivantes,
@@ -2451,7 +2460,8 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-fiche-section > ul{ margin:0; }
 /* Moins d'écart SOUS le titre que dans une fiche d'Élément (demandé) : ici le titre est suivi d'une
    sous-section ou d'une liste, pas d'un libellé de champ qui porte déjà son propre espace. */
-.store-fiche-section h5{ margin:10px 0 2px; padding:4px 0; font-family:'Inter',sans-serif; font-weight:700; font-size:15px; color:var(--ink); }
+.store-fiche-section h5{ margin:10px 0 2px; padding:4px 0; display:flex; align-items:center; gap:6px; font-family:'Inter',sans-serif; font-weight:600; font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em; }
+.store-fiche-section h5::before{ content:''; width:5px; height:5px; border-radius:50%; background:var(--accent); flex-shrink:0; }   /* #460f */
 .store-fiche-actions{ display:flex; gap:8px; align-items:stretch; margin-top:12px; }
 .store-fiche-actions > *{ flex:1 1 0; width:auto; margin:0; }   /* parts égales (demandé) */
 .store-lien-bouton{ text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }

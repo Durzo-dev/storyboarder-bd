@@ -264,11 +264,12 @@ describe('le câblage', () => {
     const css = lire('src/style.css');
     const corps = (sel) => css.slice(css.indexOf(sel + '{'), css.indexOf('}', css.indexOf(sel + '{')));
     const carte = corps('.store-fiche-section'), reference = corps('.modal-section');
-    for (const decl of ['background:var(--creux)', 'border:1px solid var(--line)', 'border-radius:8px', 'padding:4px 14px 12px']) {
+    for (const decl of ['background:var(--paper)', 'border:1px solid var(--line)', 'border-radius:10px', 'padding:4px 14px 12px']) {
       assert.ok(reference.includes(decl), 'référence : ' + decl);
       assert.ok(carte.includes(decl), 'fiche du store : ' + decl);
     }
-    assert.match(css, /\.store-fiche-section h5\{[^}]*font-weight:700; font-size:15px; color:var\(--ink\);/);
+    // #460f : le titre d'une section de panneau (11 px, capitales, gris, point orange).
+    assert.match(css, /\.store-fiche-section h5\{[^}]*font-weight:600; font-size:11px; color:var\(--ink-soft\); text-transform:uppercase;/);
     // Peu d'écart entre le titre et la première sous-section (demandé).
     assert.match(css, /\.store-fiche-section h5\{ margin:10px 0 2px; padding:4px 0;/);
   });

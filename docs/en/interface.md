@@ -71,6 +71,12 @@ three themes out of four.
 - An item with no settings of its own (a wall, a room) has **no** section: selecting it leaves the
   menu as it is.
 
+### Section hierarchy
+
+**One hierarchy** (#460f), in panels, modals and store pages: **screen or modal** (14.5 to 16 px
+title) > **section** (paper card, 11 px upper-case grey title after an orange dot, folding) >
+**sub-section** (well, 13 px title).
+
 ### Sub-sections
 
 A grouping inside a section (Type, Steps, Dimensions): a **well** (`--creux`), a 13 px title in
@@ -260,7 +266,7 @@ with its test.
   `.choix-types`, `.choix-options` and `.choix-bascules`.
 - **#460d** ✅ One active-row style and one drop line.
 - **#460e** ✅ Rule settled: a short number on one line, the rest above.
-- **#460f** Two section vocabularies (panels, an Element's modal): one hierarchy.
+- **#460f** ✅ One hierarchy: screen > section (panel style) > sub-section.
 - **#460g** Two tab components (store, Settings): merge them.
 - **#460h** Two empty states: merge them.
 - **#460i** 22 text sizes: move to six.

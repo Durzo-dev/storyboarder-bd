@@ -74,6 +74,12 @@ Une valeur ajoutée en dur est fausse dans trois thèmes sur quatre.
 - Un élément sans réglage propre (un mur, une pièce) n'a **pas** de section : le sélectionner laisse
   le menu tel quel.
 
+### Hiérarchie des sections
+
+**Une seule hiérarchie** (#460f), dans les panneaux, les modales et les fiches du store : **écran ou
+modale** (titre 14,5 à 16 px) > **section** (carte papier, titre 11 px en capitales grises précédé
+d'un point orange, repliable) > **sous-section** (creux, titre 13 px).
+
 ### Sous-sections
 
 Un regroupement à l'intérieur d'une section (Type, Marches, Dimensions) : un **creux** (`--creux`),
@@ -269,7 +275,7 @@ rejoint ce document avec son test.
   `.choix-types`, `.choix-options` et `.choix-bascules`.
 - **#460d** ✅ Un seul style de ligne active et un seul trait de dépôt.
 - **#460e** ✅ Règle tranchée : nombre court sur une ligne, le reste au-dessus.
-- **#460f** Deux vocabulaires de section (panneaux, modale d'un Élément) : une seule hiérarchie.
+- **#460f** ✅ Une seule hiérarchie : écran > section (style des panneaux) > sous-section.
 - **#460g** Deux composants d'onglets (store, Configuration) : les fusionner.
 - **#460h** Deux états vides : les fusionner.
 - **#460i** 22 tailles de texte : passer à six.
