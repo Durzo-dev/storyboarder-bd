@@ -41,7 +41,7 @@ describe('les quatre écarts', () => {
     assert.match(r, /gap:\s*8px/);
   });
   test('dans une sous-section, seul le gap espace : les marges propres des rangées sont à zéro', () => {
-    assert.match(CSS, /\.batiment-sous-section > \.batiment-choix, \.batiment-sous-section > \.batiment-case,\s*\n\.batiment-sous-section > \.batiment-champ\{ margin:0; \}/);
+    assert.match(CSS, /\.batiment-sous-section > \.choix, \.batiment-sous-section > \.batiment-case,\s*\n\.batiment-sous-section > \.batiment-champ\{ margin:0; \}/);
   });
   test('6 px entre deux boutons, voisins ou empilés', () => {
     assert.match(regle('.batiment-boutons'), /gap:\s*6px/);

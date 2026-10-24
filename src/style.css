@@ -1625,11 +1625,6 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .lecteur-panneau .lecteur-section { margin-bottom: 14px; }
 .lecteur-panneau h2 { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; color: var(--ink-soft); margin: 0 0 8px;
                       text-transform: uppercase; letter-spacing: .05em; }
-.lecteur-choix { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
-.lecteur-choix-btn { flex: 1 1 0; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line-strong); background: var(--white);
-                     color: var(--ink); font-size: 12px; cursor: pointer; }
-.lecteur-choix-btn.actif { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 600; }
-.lecteur-choix-btn:disabled { opacity: .45; cursor: default; }
 .lecteur-vitesse { font-size: 12px; }
 .lecteur-lecture { margin-top: 10px; }
 .lecteur-entete .menu-title { line-height: 1.3; }
@@ -2700,10 +2695,13 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 /* Le menu de droite suit l'outil (demandé). */
 .batiment-editeur-panneau .side-section[hidden] { display: none; }
 /* #454a-3c : le formulaire d'une ouverture. */
-.batiment-choix { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
-.batiment-choix button { flex: 1 1 0; padding: 5px 6px; border-radius: 6px; border: 1px solid var(--line-strong); background: var(--white);
-                         color: var(--ink); font-size: 11.5px; cursor: pointer; white-space: nowrap; }
-.batiment-choix button.actif { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.choix { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+/* #460c : UN SEUL COMPOSANT DE CHOIX (éditeur de bâtiment, Lecteur, et ce qui viendra). Les deux
+   copies — `.batiment-choix` et `.lecteur-choix-btn` — ne différaient que par un pixel de marge et
+   l'opacité de l'état éteint ; elles auraient continué de diverger. */
+.choix button { flex: 1 1 0; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line-strong); background: var(--white);
+                color: var(--ink); font-size: 12px; cursor: pointer; }
+.choix button.actif { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 600; }
 .batiment-case { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink); margin: 6px 0; cursor: pointer; }
 .batiment-boutons { display: flex; gap: 6px; margin-top: 6px; }
 .batiment-boutons .nav-btn { flex: 1 1 0; margin: 0; font-size: 11.5px; }
@@ -2750,7 +2748,7 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-niveau-suppr:disabled { opacity: .35; cursor: default; }
 .batiment-apercu-btn.actif { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
 .batiment-niveau-vide { display: block; width: 34px; height: 34px; }
-.batiment-choix button:disabled { opacity: .4; cursor: not-allowed; }
+.choix button:disabled { opacity: .4; cursor: not-allowed; }
 .batiment-champ input.refuse { border-color: var(--danger, #c0392b); }
 /* Les boutons du bas du menu de l'éditeur : le même écart entre chacun (demandé). */
 .batiment-editeur-panneau > .full-btn, .batiment-editeur-panneau > .nav-btn { margin: 0 0 8px; width: 100%; }
@@ -2765,7 +2763,7 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-sous-section > h3{ margin:0; font-size:13px; font-weight:600; color:var(--ink-mid); }
 /* Dans une sous-section, seul son `gap` espace les rangées : Contremarches est à la même distance
    des boutons de rampe que les deux rangées de Type entre elles (demandé). */
-.batiment-sous-section > .batiment-choix, .batiment-sous-section > .batiment-case,
+.batiment-sous-section > .choix, .batiment-sous-section > .batiment-case,
 .batiment-sous-section > .batiment-champ{ margin:0; }
 /* Dessous, le même écart que dessus (10 px, demandé) : la marge haute de « Tourner » (6 px) se
    confond avec celle-ci, elles ne s'additionnent pas. */
@@ -2774,20 +2772,20 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-champ-large .batiment-champ-valeur{ flex:1 1 auto; }
 .batiment-champ-large .batiment-champ-valeur input[type=number]{ flex:1 1 auto; width:auto; min-width:0; }
 /* Les choix à pictogramme (demandé) : l'icône au trait seule, le libellé en infobulle. */
-.batiment-choix button.icone{ display:flex; align-items:center; justify-content:center; padding:6px 4px; }
-.batiment-choix button.icone svg{ display:block; flex:none; }
+.choix button.icone{ display:flex; align-items:center; justify-content:center; padding:6px 4px; }
+.choix button.icone svg{ display:block; flex:none; }
 /* TYPES ET OPTIONS (demandé) : les types sont de grandes tuiles ; les options d'un type, sous un
    filet, sont des sélecteurs segmentés compacts (boutons accolés dans un même cadre). On les
    distingue par la FORME, pas seulement par la taille : à nombre égal, une option reste plus petite
    qu'un type. */
-.batiment-choix.batiment-types button.icone{ padding:9px 4px; }
-.batiment-choix.batiment-types button.icone svg{ width:36px; height:auto; }
-.batiment-options-groupe{ display:flex; flex-direction:column; align-items:center; gap:6px; border-top:1px solid var(--line-strong); padding-top:8px; }
-.batiment-choix.batiment-options{ display:inline-flex; flex-wrap:nowrap; gap:2px; margin:0; padding:2px; border:1px solid var(--line-strong); border-radius:7px; background:var(--paper); }
-.batiment-choix.batiment-options button{ flex:0 0 auto; width:40px; padding:3px 0; border:1px solid transparent; border-radius:5px; background:transparent; }
-.batiment-choix.batiment-options button:hover:not(:disabled){ background:var(--white); }
-.batiment-choix.batiment-options button.actif{ border-color:var(--accent); background:var(--accent-soft); }
-.batiment-choix.batiment-options button.icone svg{ width:24px; height:auto; }
-.batiment-sous-section > .batiment-choix.batiment-options{ align-self:flex-start; }
-.batiment-choix.batiment-bascules{ justify-content:center; gap:10px; margin:0; }
-.batiment-choix.batiment-bascules button.icone{ flex:0 0 auto; width:56px; padding:5px 0; }
+.choix.choix-types button.icone{ padding:9px 4px; }
+.choix.choix-types button.icone svg{ width:36px; height:auto; }
+.choix-options-groupe{ display:flex; flex-direction:column; align-items:center; gap:6px; border-top:1px solid var(--line-strong); padding-top:8px; }
+.choix.choix-options{ display:inline-flex; flex-wrap:nowrap; gap:2px; margin:0; padding:2px; border:1px solid var(--line-strong); border-radius:7px; background:var(--paper); }
+.choix.choix-options button{ flex:0 0 auto; width:40px; padding:3px 0; border:1px solid transparent; border-radius:5px; background:transparent; }
+.choix.choix-options button:hover:not(:disabled){ background:var(--white); }
+.choix.choix-options button.actif{ border-color:var(--accent); background:var(--accent-soft); }
+.choix.choix-options button.icone svg{ width:24px; height:auto; }
+.batiment-sous-section > .choix.choix-options{ align-self:flex-start; }
+.choix.choix-bascules{ justify-content:center; gap:10px; margin:0; }
+.choix.choix-bascules button.icone{ flex:0 0 auto; width:56px; padding:5px 0; }

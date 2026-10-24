@@ -192,24 +192,24 @@ const GRILLE = AJOUT + carte(L('Lampe tempête', 'Storm lantern'), 'atelier_k', 
 const niveau = (court, nom, nomEn, actif) => `<div class="batiment-ligne batiment-ligne-niveau cliquable${actif ? ' actif' : ''}"><div class="batiment-niveau-gauche"><span class="batiment-niveau-pastille">${court}</span><button type="button" class="batiment-niveau-suppr">×</button></div><div class="batiment-niveau-droite"><input type="text" class="batiment-niveau-nom" value="${nom}" data-ds-valeur-fr="${nom}" data-ds-valeur-en="${nomEn}"><span class="batiment-champ-valeur"><input type="number" value="280"> cm</span></div></div>`;
 const NIVEAUX = `${niveau('1', 'Étage 1', 'Floor 1', false)}${niveau('RDC', 'Rez-de-chaussée', 'Ground floor', true)}<div class="batiment-boutons-pile"><button type="button" class="full-btn">${L('Ajouter un étage', 'Add a floor')}</button><button type="button" class="full-btn">${L('Dupliquer l\'étage', 'Duplicate the floor')}</button></div>`;
 const PIECES = `<div class="batiment-ligne cliquable"><span>${L('Séjour', 'Living room')}</span><small>32,4 m²</small></div><div class="batiment-ligne cliquable"><span>${L('Cuisine', 'Kitchen')}</span><small>12,1 m²</small></div>`;
-const choixIcones = (liste, actif = -1, eteint = -1, genre = 'type') => `<div class="batiment-choix ${genre === 'option' ? 'batiment-options' : 'batiment-types'}">${liste.map(([icone, titre, en = titre], i) =>
+const choixIcones = (liste, actif = -1, eteint = -1, genre = 'type') => `<div class="choix ${genre === 'option' ? 'choix-options' : 'choix-types'}">${liste.map(([icone, titre, en = titre], i) =>
   `<button type="button" class="icone${i === actif ? ' actif' : ''}" title="${esc(titre)}" aria-label="${esc(titre)}" data-ds-titre-fr="${esc(titre)}" data-ds-titre-en="${esc(en)}"${i === eteint ? ' disabled' : ''}>${icone}</button>`).join('')}</div>`;
 const I = ICONES;
 const ESCALIER = `
 <div class="batiment-sous-section"><h3>Type</h3>${choixIcones([[I.ICONES_TYPE_ESCALIER.droit, 'Escalier droit', 'Straight staircase'], [I.ICONES_TYPE_ESCALIER.L, 'Escalier en L', 'L-shaped staircase'], [I.ICONES_TYPE_ESCALIER.U, 'Escalier en U : il ne tient pas dans cette pièce', 'U-shaped staircase: it does not fit in this room']], 1, 2)}
-<div class="batiment-options-groupe">${choixIcones([[I.ICONES_SENS_ESCALIER[1], 'Tourne à gauche', 'Turns left'], [I.ICONES_SENS_ESCALIER[-1], 'Tourne à droite', 'Turns right']], 0, -1, 'option')}</div></div>
+<div class="choix-options-groupe">${choixIcones([[I.ICONES_SENS_ESCALIER[1], 'Tourne à gauche', 'Turns left'], [I.ICONES_SENS_ESCALIER[-1], 'Tourne à droite', 'Turns right']], 0, -1, 'option')}</div></div>
 <div class="batiment-sous-section"><h3>${L('Marches', 'Steps')}</h3>${choixIcones([[I.ICONES_RAMPE.aucune, 'Sans rampe', 'No rail'], [I.ICONES_RAMPE.gauche, 'Rampe à gauche', 'Rail on the left'], [I.ICONES_RAMPE.droite, 'Rampe à droite', 'Rail on the right'], [I.ICONES_RAMPE.deux, 'Rampe des deux côtés', 'Rails on both sides']], 2)}
 ${choixIcones([[I.ICONES_MARCHES.true, 'Marches pleines', 'Solid steps'], [I.ICONES_MARCHES.false, 'Marches ouvertes', 'Open steps']], 0)}</div>
 <label class="batiment-champ batiment-champ-large"><span>${L('Largeur', 'Width')}</span><span class="batiment-champ-valeur"><input type="number" value="90"> cm</span></label>`;
 const OUVERTURE = `
 <div class="batiment-sous-section"><h3>Type</h3>${choixIcones([['porte', 'Porte', 'Door'], ['fenetre', 'Fenêtre', 'Window'], ['baie', 'Baie vitrée', 'Bay window'], ['passage', 'Passage', 'Passage']].map(([t, fr, en]) => [I.ICONES_OUVERTURE[t], fr, en]), 0)}
-<div class="batiment-options-groupe">${choixIcones([[I.ICONES_MANOEUVRE[1], 'Un battant', 'One leaf'], [I.ICONES_MANOEUVRE[2], 'Deux battants', 'Two leaves'], [I.ICONES_MANOEUVRE.coulissant, 'Coulissante', 'Sliding']], 0, -1, 'option')}
+<div class="choix-options-groupe">${choixIcones([[I.ICONES_MANOEUVRE[1], 'Un battant', 'One leaf'], [I.ICONES_MANOEUVRE[2], 'Deux battants', 'Two leaves'], [I.ICONES_MANOEUVRE.coulissant, 'Coulissante', 'Sliding']], 0, -1, 'option')}
 ${choixIcones([[I.ICONES_REMPLISSAGE.pleine, 'Porte pleine', 'Solid door'], [I.ICONES_REMPLISSAGE.vitree, 'Porte vitrée', 'Glazed door']], 0, -1, 'option')}</div></div>
-<div class="batiment-sous-section"><h3>${L('Sens d\'ouverture', 'Opening direction')}</h3>${choixIcones([[I.iconeSensPorte(-1, 'debut', 'cote'), 'Ouvrir de l\'autre côté du mur', 'Open to the other side of the wall'], [I.iconeSensPorte(1, 'fin', 'charniere'), 'Passer la charnière de l\'autre bord', 'Move the hinge to the other edge']]).replace('batiment-types', 'batiment-bascules')}</div>
+<div class="batiment-sous-section"><h3>${L('Sens d\'ouverture', 'Opening direction')}</h3>${choixIcones([[I.iconeSensPorte(-1, 'debut', 'cote'), 'Ouvrir de l\'autre côté du mur', 'Open to the other side of the wall'], [I.iconeSensPorte(1, 'fin', 'charniere'), 'Passer la charnière de l\'autre bord', 'Move the hinge to the other edge']]).replace('choix-types', 'choix-bascules')}</div>
 <div class="batiment-sous-section"><h3>Dimensions</h3><label class="batiment-champ"><span>${L('Largeur', 'Width')}</span><span class="batiment-champ-valeur"><input type="number" value="90"> cm</span></label><label class="batiment-champ"><span>${L('Hauteur', 'Height')}</span><span class="batiment-champ-valeur"><input type="number" value="210"> cm</span></label><label class="batiment-champ"><span>${L('Élévation', 'Elevation')}</span><span class="batiment-champ-valeur"><input type="number" value="0"> cm</span></label></div>`;
 
 // lecteur-ui.js : construirePanneau.
-const lchoix = (liste, actif) => `<div class="lecteur-choix">${liste.map((l, i) => `<button type="button" class="lecteur-choix-btn${i === actif ? ' actif' : ''}">${l}</button>`).join('')}</div>`;
+const lchoix = (liste, actif) => `<div class="choix">${liste.map((l, i) => `<button type="button" class="${i === actif ? 'actif' : ''}">${l}</button>`).join('')}</div>`;
 const lsection = (t, c) => `<section class="side-section lecteur-section"><h2>${t}</h2>${c}</section>`;
 const LECTEUR = lsection(L('Affichage', 'Display'), lchoix([L('Une page', 'One page'), L('Deux pages', 'Two pages')], 1) + lchoix([L('Première page à droite', 'First page on the right'), L('Première page à gauche', 'First page on the left')], 0) + lchoix([L('Page entière', 'Whole page'), L('Largeur', 'Fit width')], 0)
     + `<label class="modal-checkbox-line lecteur-case"><input type="checkbox" checked> ${L('Vue livre', 'Book view')}</label><label class="modal-checkbox-line lecteur-case"><input type="checkbox"> ${L('Vue guidée, case par case', 'Guided view, panel by panel')}</label>`)
@@ -425,7 +425,7 @@ body{ background:var(--paper); color:var(--ink); }
 .ds-feuille{ width:420px; aspect-ratio:21/29.7; background:#fff; padding:18px; display:grid; grid-template-columns:1fr 1fr; grid-auto-rows:1fr; gap:10px; box-shadow:0 6px 24px rgba(0,0,0,.35); }
 .ds-case{ border:2px solid #1B1C1F; } .ds-case-active{ outline:2px solid var(--accent); outline-offset:3px; }
 .ds-controles{ width:300px; height:auto; }
-.ds-icones .batiment-choix{ width:420px; }
+.ds-icones .choix{ width:420px; }
 .ds-regles{ max-width:900px; padding-left:20px; } .ds-regles li{ margin:5px 0; }
 .ds-separateur{ width:1px; align-self:stretch; background:var(--line-strong); margin:0 6px; }
 html[lang="fr"] .ds-en, html[lang="en"] .ds-fr{ display:none; }

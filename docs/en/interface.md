@@ -248,7 +248,8 @@ with its test.
 - **#460a** ✅ Native sliders and checkboxes in orange: `accent-color: var(--accent)` on `<body>`.
 - **#460b** ✅ Orange also informed (dimension and progress chips, licence badges, level numbers): move
   to a neutral chip.
-- **#460c** Two nearly identical choice components (building editor, Reader): merge them.
+- **#460c** ✅ One choice component, `.choix` (building editor, Reader), with its variants
+  `.choix-types`, `.choix-options` and `.choix-bascules`.
 - **#460d** Three active-row styles and two drop lines: keep one of each.
 - **#460e** Two field layouts (label above or on the left): settle the rule.
 - **#460f** Two section vocabularies (panels, an Element's modal): one hierarchy.

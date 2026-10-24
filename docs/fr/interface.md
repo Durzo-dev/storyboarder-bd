@@ -256,8 +256,8 @@ rejoint ce document avec son test.
 - **#460a** ✅ Curseurs et cases à cocher natifs à l'orange : `accent-color: var(--accent)` sur `<body>`.
 - **#460b** ✅ L'orange servait aussi à informer (pastilles de dimensions et d'avancement, badges de
   licence, numéros de niveau) : passer à une pastille neutre.
-- **#460c** Deux composants de choix presque identiques (éditeur de bâtiment, Lecteur) : les
-  fusionner.
+- **#460c** ✅ Un seul composant de choix, `.choix` (éditeur de bâtiment, Lecteur), avec ses variantes
+  `.choix-types`, `.choix-options` et `.choix-bascules`.
 - **#460d** Trois styles de ligne active et deux traits de dépôt : n'en garder qu'un de chaque.
 - **#460e** Deux mises en page de champ (libellé au-dessus ou à gauche) : trancher la règle.
 - **#460f** Deux vocabulaires de section (panneaux, modale d'un Élément) : une seule hiérarchie.

@@ -592,7 +592,7 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
   // ÉTEINT, la raison en infobulle) ou `{ changements, note }` : ce qu'il faut appliquer, position
   // comprise si l'escalier doit se décaler pour que le choix tienne (demandé), et l'infobulle qui le dit.
   const choix = (valeurs, actuelle, quoi, genre = 'type') => {
-    const d = document.createElement('div'); d.className = 'batiment-choix ' + (genre === 'option' ? 'batiment-options' : 'batiment-types');
+    const d = document.createElement('div'); d.className = 'choix ' + (genre === 'option' ? 'choix-options' : 'choix-types');
     valeurs.forEach(([val, lib, icone, bulle]) => {
       const b = document.createElement('button'); b.type = 'button';
       // Avec un pictogramme (demandé) : l'icône SEULE, le libellé passe dans l'infobulle.
@@ -665,7 +665,7 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
  * les distingue des types (grandes tuiles) par la forme et pas seulement par la taille.
  */
 function groupeOptions(...rangees){
-  const d = document.createElement('div'); d.className = 'batiment-options-groupe';
+  const d = document.createElement('div'); d.className = 'choix-options-groupe';
   d.append(...rangees.filter(Boolean));
   return d;
 }
@@ -712,7 +712,7 @@ function formulaireOuverture(conteneur, v, changer, essayer = null){
   const types = [['porte', tr('Door', 'Porte'), O.porte], ['fenetre', tr('Window', 'Fenêtre'), O.fenetre],
     ['baie', tr('Bay', 'Baie'), O.baie, tr('Bay window', 'Baie vitrée')], ['passage', tr('Passage', 'Passage'), O.passage, tr('Passage (no door)', 'Passage (sans porte)')]];
   const choix = (valeurs, actuelle, quoi, genre = 'type') => {
-    const d = document.createElement('div'); d.className = 'batiment-choix ' + (genre === 'option' ? 'batiment-options' : 'batiment-types');
+    const d = document.createElement('div'); d.className = 'choix ' + (genre === 'option' ? 'choix-options' : 'choix-types');
     // La « manœuvre » n'est pas un champ : un battant, deux, ou coulissante (demandé, un seul choix).
     const champs = (val) => quoi !== 'manoeuvre' ? { [quoi]: val } : val === 'coulissant' ? { coulissant: true } : { coulissant: false, battants: val };
     valeurs.forEach(([val, lib, icone, bulle]) => {
@@ -775,7 +775,7 @@ function formulaireOuverture(conteneur, v, changer, essayer = null){
     if (v.type === 'porte' && !v.coulissant) {
       // Deux BASCULES séparées et centrées (demandé), chacune dessinant la porte telle qu'elle sera
       // après le clic : l'autre côté du mur, ou l'autre charnière.
-      const gestes = document.createElement('div'); gestes.className = 'batiment-choix batiment-bascules';
+      const gestes = document.createElement('div'); gestes.className = 'choix choix-bascules';
       const geste = (icone, bulle, faire) => {
         const g = document.createElement('button'); g.type = 'button'; g.className = 'icone';
         g.innerHTML = icone; g.title = bulle; g.setAttribute('aria-label', bulle); g.onclick = faire;

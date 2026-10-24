@@ -433,12 +433,12 @@ function section(titre, enfants){
 /** Un choix exclusif en boutons (comme une case radio, plus lisible dans un menu étroit). */
 function choix(cle, valeurs, desactive = false){
   const g = document.createElement('div');
-  g.className = 'lecteur-choix';
+  g.className = 'choix';   // #460c : le composant de choix commun
   valeurs.forEach(([v, libelle]) => {
     const b = document.createElement('button');
     b.type = 'button';
     b.textContent = libelle;
-    b.className = 'lecteur-choix-btn' + (options[cle] === v ? ' actif' : '');
+    b.className = options[cle] === v ? 'actif' : '';
     b.disabled = desactive;
     b.onclick = () => changer(cle, v);
     g.appendChild(b);
