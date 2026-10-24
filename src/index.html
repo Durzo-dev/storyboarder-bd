@@ -1266,7 +1266,7 @@
   <div class="modal-box store-box">
     <h3 id="storeTitre"></h3>
     <!-- #445 : un onglet par source, écrit par le code (src/store-ui.js, SOURCES_STORE). -->
-    <div id="storeOnglets" class="store-onglets" role="tablist"></div>
+    <div id="storeOnglets" class="onglets" role="tablist"></div>
     <p id="storeSimulation" class="maj-simulation" hidden></p>
     <form id="storeFormulaire" class="store-filtres">
       <input id="storeTexte" class="modal-input" type="search" autocomplete="off">
@@ -1303,9 +1303,9 @@
     <h3 id="policesTitre">Mes polices</h3>
     <!-- Deux onglets (#423), au style de ceux du store de modèles : les polices qu'on a, et le store
          de polices en ligne (src/polices-store-ui.js). -->
-    <div class="store-onglets" id="policesOnglets" role="tablist">
-      <button type="button" class="store-onglet actif" role="tab" data-mode="local" id="policesOngletLocal">Mes polices</button>
-      <button type="button" class="store-onglet" role="tab" data-mode="enLigne" id="policesOngletEnLigne">En ligne</button>
+    <div class="onglets" id="policesOnglets" role="tablist">
+      <button type="button" class="onglet actif" role="tab" data-mode="local" id="policesOngletLocal">Mes polices</button>
+      <button type="button" class="onglet" role="tab" data-mode="enLigne" id="policesOngletEnLigne">En ligne</button>
     </div>
     <div class="polices-barre" id="policesBarre">
       <div class="polices-vue" role="group">
@@ -1593,10 +1593,10 @@
          s'exportent), 3D (manipuler les modèles). Le style est celui des onglets du store. Les pages
          ont la hauteur de la plus longue (grille superposée, cf. .config-pages) : la modale ne change
          pas de taille d'un onglet à l'autre. Le dernier onglet ouvert est retenu pendant la session. -->
-    <div class="config-onglets" id="configOnglets" role="tablist">
-      <button type="button" class="config-onglet actif" role="tab" data-onglet="general" id="configOngletGeneral">Général</button>
-      <button type="button" class="config-onglet" role="tab" data-onglet="projets" id="configOngletProjets">Projets</button>
-      <button type="button" class="config-onglet" role="tab" data-onglet="3d" id="configOnglet3d">3D</button>
+    <div class="onglets" id="configOnglets" role="tablist">
+      <button type="button" class="onglet actif" role="tab" data-onglet="general" id="configOngletGeneral">Général</button>
+      <button type="button" class="onglet" role="tab" data-onglet="projets" id="configOngletProjets">Projets</button>
+      <button type="button" class="onglet" role="tab" data-onglet="3d" id="configOnglet3d">3D</button>
     </div>
     <div class="config-pages">
     <div class="config-page" data-onglet="general" role="tabpanel">

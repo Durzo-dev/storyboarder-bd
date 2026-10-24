@@ -276,7 +276,7 @@ rejoint ce document avec son test.
 - **#460d** ✅ Un seul style de ligne active et un seul trait de dépôt.
 - **#460e** ✅ Règle tranchée : nombre court sur une ligne, le reste au-dessus.
 - **#460f** ✅ Une seule hiérarchie : écran > section (style des panneaux) > sous-section.
-- **#460g** Deux composants d'onglets (store, Configuration) : les fusionner.
+- **#460g** ✅ Un seul composant d'onglets, `.onglets` / `.onglet` (store, polices, Configuration).
 - **#460h** Deux états vides : les fusionner.
 - **#460i** 22 tailles de texte : passer à six.
 - **#460j** 11 rayons : passer à trois.

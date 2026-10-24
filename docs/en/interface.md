@@ -267,7 +267,7 @@ with its test.
 - **#460d** ✅ One active-row style and one drop line.
 - **#460e** ✅ Rule settled: a short number on one line, the rest above.
 - **#460f** ✅ One hierarchy: screen > section (panel style) > sub-section.
-- **#460g** Two tab components (store, Settings): merge them.
+- **#460g** ✅ One tab component, `.onglets` / `.onglet` (store, fonts, Settings).
 - **#460h** Two empty states: merge them.
 - **#460i** 22 text sizes: move to six.
 - **#460j** 11 radii: move to three.

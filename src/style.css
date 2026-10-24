@@ -2240,14 +2240,16 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .store-filtres [hidden]{ display:none; }
 /* Les onglets des sources (#445) : un soulignement, pas des boutons pleins, pour ne pas rivaliser
    avec les filtres juste en dessous. */
-/* Les onglets du store, repris par la Configuration (.config-onglets) : un seul dessin d'onglet. */
-.store-onglets, .config-onglets{ display:flex; gap:4px; border-bottom:1px solid var(--line); margin:0 0 12px; }
-.store-onglet, .config-onglet{
+/* #460g : UN SEUL COMPOSANT D'ONGLETS, `.onglets` / `.onglet` — store, polices et Configuration.
+   Le dessin était déjà partagé, mais sous deux noms (`.store-onglet`, `.config-onglet`) : le prochain
+   écran à onglets aurait pu en créer un troisième. */
+.onglets{ display:flex; gap:4px; border-bottom:1px solid var(--line); margin:0 0 12px; }
+.onglet{
   padding:7px 14px; border:0; border-bottom:2px solid transparent; margin-bottom:-1px; background:none;
   font-family:'Inter',sans-serif; font-size:13px; font-weight:600; color:var(--ink-soft); cursor:pointer;
 }
-.store-onglet:hover, .config-onglet:hover{ color:var(--ink); }
-.store-onglet.actif, .config-onglet.actif{ color:var(--accent); border-bottom-color:var(--accent); cursor:default; }
+.onglet:hover{ color:var(--ink); }
+.onglet.actif{ color:var(--accent); border-bottom-color:var(--accent); cursor:default; }
 /* Les pages de la Configuration SUPERPOSÉES dans une même case de grille : la modale prend la
    hauteur de la plus longue et ne bouge pas d'un onglet à l'autre. Une page masquée garde donc sa
    place (visibility, pas display), et devient inatteignable au clavier comme à la souris. */

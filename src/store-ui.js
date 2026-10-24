@@ -135,7 +135,7 @@ function rendreOnglets(){
   // En mode choix, le seul onglet est « Mes modèles » : on ne pose que ce qui est sur le disque.
   zone.replaceChildren(...SOURCES_STORE.filter(id => !choix || id === LOCAL).map(id => {
     const nom = id === LOCAL ? textesStore(langue()).mesModeles : ((infosPar[id] && infosPar[id].source.nom) || id);
-    const b = el('button', { texte: nom, classe: 'store-onglet' + (id === source ? ' actif' : ''),
+    const b = el('button', { texte: nom, classe: 'onglet' + (id === source ? ' actif' : ''),
       attrs: { type: 'button', role: 'tab', 'aria-selected': String(id === source) } });
     b.onclick = () => choisirSource(id);
     return b;

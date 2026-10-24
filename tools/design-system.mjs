@@ -182,7 +182,7 @@ const ARTICULATIONS = `
 <details class="joint-group-details"><summary>${L('Tête et cou', 'Head and neck')}</summary></details>`;
 
 // store-ui.js : rendreOnglets, carteAjout, carte.
-const ONGLETS = `<button type="button" class="store-onglet actif">${L('Mes modèles', 'My models')}</button><button type="button" class="store-onglet">Sketchfab</button><button type="button" class="store-onglet">Poly Haven</button>`;
+const ONGLETS = `<button type="button" class="onglet actif">${L('Mes modèles', 'My models')}</button><button type="button" class="onglet">Sketchfab</button><button type="button" class="onglet">Poly Haven</button>`;
 const carte = (nom, auteur, licence, nc = false) => `<button type="button" class="store-carte"><div class="store-sans-vignette"></div><span class="store-carte-nom">${nom}</span><span class="store-carte-auteur">${L('par', 'by')} ${auteur}</span><span class="store-carte-infos"><span class="store-badge${nc ? ' store-badge-nc' : ''}">${licence}</span><span>${L('2,4 Mo', '2.4 MB')}</span></span></button>`;
 const AJOUT = `<button type="button" class="store-carte store-carte-ajout"><svg viewBox="0 0 24 24" aria-hidden="true" class="store-ajout-icone">${['M12 3v12', 'M7 10l5 5 5-5', 'M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2'].map(d => `<path d="${d}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg><span class="store-carte-nom">${L('Importer un modèle', 'Import a model')}</span></button>`;
 const GRILLE = AJOUT + carte(L('Lampe tempête', 'Storm lantern'), 'atelier_k', 'CC BY') + carte(L('Chaise en bois', 'Wooden chair'), 'polyhaven', 'CC0') + carte(L('Vieux gréement', 'Old rigging'), 'naval3d', 'CC BY-NC', true)

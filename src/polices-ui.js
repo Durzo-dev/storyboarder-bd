@@ -209,7 +209,7 @@ function placerVariantes(){
 
 /** Les éléments de la barre selon l'onglet ; l'onglet marqué. */
 function majOnglets(){
-  document.querySelectorAll('#policesOnglets .store-onglet').forEach(b => {
+  document.querySelectorAll('#policesOnglets .onglet').forEach(b => {
     const actif = b.dataset.mode === mode;
     b.classList.toggle('actif', actif);
     b.setAttribute('aria-selected', String(actif));
@@ -548,7 +548,7 @@ export function cablerPolices(rappels = {}){
   $('policesRetour').onclick = fermerFiche;
   $('policesAjouterEnLigne').onclick = ajouterDepuisLeStore;
   $('policesAjoutEnLigne').onclick = () => { fermerMenuAjout(); choisirMode('enLigne'); };
-  document.querySelectorAll('#policesOnglets .store-onglet').forEach(b => { b.onclick = () => choisirMode(b.dataset.mode); });
+  document.querySelectorAll('#policesOnglets .onglet').forEach(b => { b.onclick = () => choisirMode(b.dataset.mode); });
   cablerStorePolices(() => { if (mode === 'enLigne' && $('policesFiche').hidden) rendreListe(); }, message,
     () => mode === 'enLigne' && $('policesFiche').hidden && !$('policesModal').classList.contains('hidden'));
   $('policesPhrase').addEventListener('input', majPhraseDExemple);

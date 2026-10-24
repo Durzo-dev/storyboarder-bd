@@ -8769,13 +8769,13 @@ function choisirOngletConfig(onglet){
   if (!pages.some(p => p.dataset.onglet === onglet)) onglet = 'general';
   ongletConfig = onglet;
   pages.forEach(p => { p.hidden = p.dataset.onglet !== onglet; });
-  document.querySelectorAll('#configOnglets .config-onglet').forEach(b => {
+  document.querySelectorAll('#configOnglets .onglet').forEach(b => {
     const actif = b.dataset.onglet === onglet;
     b.classList.toggle('actif', actif);
     b.setAttribute('aria-selected', String(actif));
   });
 }
-document.querySelectorAll('#configOnglets .config-onglet').forEach(b => {
+document.querySelectorAll('#configOnglets .onglet').forEach(b => {
   b.addEventListener('click', () => choisirOngletConfig(b.dataset.onglet));
 });
 

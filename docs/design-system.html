@@ -2244,14 +2244,16 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .store-filtres [hidden]{ display:none; }
 /* Les onglets des sources (#445) : un soulignement, pas des boutons pleins, pour ne pas rivaliser
    avec les filtres juste en dessous. */
-/* Les onglets du store, repris par la Configuration (.config-onglets) : un seul dessin d'onglet. */
-.store-onglets, .config-onglets{ display:flex; gap:4px; border-bottom:1px solid var(--line); margin:0 0 12px; }
-.store-onglet, .config-onglet{
+/* #460g : UN SEUL COMPOSANT D'ONGLETS, `.onglets` / `.onglet` — store, polices et Configuration.
+   Le dessin était déjà partagé, mais sous deux noms (`.store-onglet`, `.config-onglet`) : le prochain
+   écran à onglets aurait pu en créer un troisième. */
+.onglets{ display:flex; gap:4px; border-bottom:1px solid var(--line); margin:0 0 12px; }
+.onglet{
   padding:7px 14px; border:0; border-bottom:2px solid transparent; margin-bottom:-1px; background:none;
   font-family:'Inter',sans-serif; font-size:13px; font-weight:600; color:var(--ink-soft); cursor:pointer;
 }
-.store-onglet:hover, .config-onglet:hover{ color:var(--ink); }
-.store-onglet.actif, .config-onglet.actif{ color:var(--accent); border-bottom-color:var(--accent); cursor:default; }
+.onglet:hover{ color:var(--ink); }
+.onglet.actif{ color:var(--accent); border-bottom-color:var(--accent); cursor:default; }
 /* Les pages de la Configuration SUPERPOSÉES dans une même case de grille : la modale prend la
    hauteur de la plus longue et ne bouge pas d'un onglet à l'autre. Une page masquée garde donc sa
    place (visibility, pas display), et devient inatteignable au clavier comme à la souris. */
@@ -3806,10 +3808,10 @@ This can be undone with Ctrl+Z.</span></p>
     <button class="modal-close-btn" id="settingsModalCornerClose" type="button" title="Fermer (Échap)">×</button>
     <h3>Configuration</h3>
     
-    <div class="config-onglets" id="configOnglets" role="tablist">
-      <button type="button" class="config-onglet actif" role="tab" data-onglet="general" id="configOngletGeneral">Général</button>
-      <button type="button" class="config-onglet" role="tab" data-onglet="projets" id="configOngletProjets">Projets</button>
-      <button type="button" class="config-onglet" role="tab" data-onglet="3d" id="configOnglet3d">3D</button>
+    <div class="onglets" id="configOnglets" role="tablist">
+      <button type="button" class="onglet actif" role="tab" data-onglet="general" id="configOngletGeneral">Général</button>
+      <button type="button" class="onglet" role="tab" data-onglet="projets" id="configOngletProjets">Projets</button>
+      <button type="button" class="onglet" role="tab" data-onglet="3d" id="configOnglet3d">3D</button>
     </div>
     <div class="config-pages">
     <div class="config-page" data-onglet="general" role="tabpanel">
@@ -4333,7 +4335,7 @@ This can be undone with Ctrl+Z.</span></p>
   <div class="modal-box store-box">
     <h3 id="storeTitre"><span class="ds-fr">Bibliothèque de modèles</span><span class="ds-en">Model library</span></h3>
     
-    <div id="storeOnglets" class="store-onglets" role="tablist"><button type="button" class="store-onglet actif"><span class="ds-fr">Mes modèles</span><span class="ds-en">My models</span></button><button type="button" class="store-onglet">Sketchfab</button><button type="button" class="store-onglet">Poly Haven</button></div>
+    <div id="storeOnglets" class="onglets" role="tablist"><button type="button" class="onglet actif"><span class="ds-fr">Mes modèles</span><span class="ds-en">My models</span></button><button type="button" class="onglet">Sketchfab</button><button type="button" class="onglet">Poly Haven</button></div>
     <p id="storeSimulation" class="maj-simulation" hidden></p>
     <form id="storeFormulaire" class="store-filtres">
       <input id="storeTexte" class="modal-input" type="search" placeholder="Rechercher un modèle" data-ds-placeholder-fr="Rechercher un modèle" data-ds-placeholder-en="Search for a model" autocomplete="off">
@@ -4367,9 +4369,9 @@ This can be undone with Ctrl+Z.</span></p>
     <button class="modal-close-btn" id="policesFermer" type="button" title="Fermer (Échap)">×</button>
     <h3 id="policesTitre">Mes polices</h3>
     
-    <div class="store-onglets" id="policesOnglets" role="tablist">
-      <button type="button" class="store-onglet actif" role="tab" data-mode="local" id="policesOngletLocal">Mes polices</button>
-      <button type="button" class="store-onglet" role="tab" data-mode="enLigne" id="policesOngletEnLigne">En ligne</button>
+    <div class="onglets" id="policesOnglets" role="tablist">
+      <button type="button" class="onglet actif" role="tab" data-mode="local" id="policesOngletLocal">Mes polices</button>
+      <button type="button" class="onglet" role="tab" data-mode="enLigne" id="policesOngletEnLigne">En ligne</button>
     </div>
     <div class="polices-barre" id="policesBarre">
       <div class="polices-vue" role="group">

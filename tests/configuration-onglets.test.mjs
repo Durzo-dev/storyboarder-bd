@@ -22,7 +22,7 @@ describe('Configuration : trois onglets', () => {
     for (const [id, nom] of [['configOngletGeneral', 'general'], ['configOngletProjets', 'projets'], ['configOnglet3d', '3d']]) {
       assert.match(MODALE, new RegExp(`data-onglet="${nom}" id="${id}"`));
     }
-    assert.match(MODALE, /class="config-onglet actif" role="tab" data-onglet="general"/);
+    assert.match(MODALE, /class="onglet actif" role="tab" data-onglet="general"/);
   });
 
   test('chaque réglage est dans son onglet', () => {
