@@ -21,7 +21,7 @@
 
 | Colour | Class | Role | Examples |
 |---|---|---|---|
-| Orange | `.full-btn` | confirm, or **create** something | Save, Apply, Add a floor, Duplicate the floor |
+| Orange | `.full-btn` | confirm, or **create** something | Save, Apply, Add and Duplicate a floor |
 | Grey | `.nav-btn` | navigate, or act without creating | Cancel, Quit, Reframe, Turn by 90° |
 | Red | `.delete-btn` | delete | Delete the staircase |
 | Yellow | `.edit-btn` | rename, edit | Rename |

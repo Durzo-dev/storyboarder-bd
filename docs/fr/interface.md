@@ -21,7 +21,7 @@
 
 | Couleur | Classe | Rôle | Exemples |
 |---|---|---|---|
-| Orange | `.full-btn` | valider, ou **créer** quelque chose | Enregistrer, Appliquer, Ajouter un étage, Dupliquer l'étage |
+| Orange | `.full-btn` | valider, ou **créer** quelque chose | Enregistrer, Appliquer, Ajouter et Dupliquer un étage |
 | Gris | `.nav-btn` | naviguer, ou agir sans rien créer | Annuler, Quitter, Recadrer, Tourner de 90° |
 | Rouge | `.delete-btn` | supprimer | Supprimer l'escalier |
 | Jaune | `.edit-btn` | renommer, éditer | Renommer |

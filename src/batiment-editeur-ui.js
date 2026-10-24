@@ -444,17 +444,17 @@ function remplirNiveaux(){
     });
     return d;
   });
-  // L'un SOUS l'autre, « Ajouter » en haut (demandé).
+  // Côte à côte, libellés courts, « Ajouter » à gauche (demandé) ; le nom complet en infobulle.
   const actions = document.createElement('div');
-  actions.className = 'batiment-boutons-pile';
+  actions.className = 'batiment-boutons-ligne';
   const ajouter = document.createElement('button');
   // Orange (demandé) : ces deux boutons CRÉENT un niveau.
-  ajouter.type = 'button'; ajouter.className = 'full-btn'; ajouter.textContent = tr('Add a floor', 'Ajouter un étage');
-  ajouter.title = tr('Add an empty level on top (N)', 'Ajouter un niveau vide en haut (N)');
+  ajouter.type = 'button'; ajouter.className = 'full-btn'; ajouter.textContent = tr('Add', 'Ajouter');
+  ajouter.title = tr('Add a floor: an empty level on top (N)', 'Ajouter un étage : un niveau vide en haut (N)');
   ajouter.onclick = ajouterUnEtage;
   const dupliquer = document.createElement('button');
-  dupliquer.type = 'button'; dupliquer.className = 'full-btn'; dupliquer.textContent = tr('Duplicate the floor', 'Dupliquer l\'étage');
-  dupliquer.title = tr('Copy the current level (walls, openings, rooms) just above it (D)', 'Copier le niveau courant (murs, ouvertures, pièces) juste au-dessus (D)');
+  dupliquer.type = 'button'; dupliquer.className = 'full-btn'; dupliquer.textContent = tr('Duplicate', 'Dupliquer');
+  dupliquer.title = tr('Duplicate the floor: copy the current level (walls, openings, rooms) just above it (D)', 'Dupliquer l\'étage : copier le niveau courant (murs, ouvertures, pièces) juste au-dessus (D)');
   dupliquer.onclick = dupliquerLEtage;
   actions.append(ajouter, dupliquer);
   zone.replaceChildren(...lignes, actions);

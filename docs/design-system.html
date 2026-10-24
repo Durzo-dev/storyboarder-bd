@@ -2796,10 +2796,11 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 /* Les boutons du bas du menu de l'éditeur : le même écart entre chacun (demandé). */
 .batiment-editeur-panneau > .full-btn, .batiment-editeur-panneau > .nav-btn { margin: 0 0 8px; width: 100%; }
 #batimentPieceMenu{ z-index:1100; }
-/* Éditeur de bâtiment : « Ajouter un étage » au-dessus de « Dupliquer l'étage » (demandé). */
-.batiment-boutons-pile{ display:flex; flex-direction:column; gap:6px; margin-top:10px; }
-/* Le même écart que « Tourner » / « Supprimer » d'un escalier (6 px) : la marge propre du bouton est retirée. */
-.batiment-boutons-pile > button{ width:100%; margin:0; }
+/* Éditeur de bâtiment : « Ajouter » et « Dupliquer » CÔTE À CÔTE, à parts égales (demandé : empilés,
+   les deux blocs orange pesaient trop). Le même écart que « Tourner » / « Supprimer » d'un escalier
+   (6 px) : la marge propre du bouton est retirée. */
+.batiment-boutons-ligne{ display:flex; gap:6px; margin-top:10px; }
+.batiment-boutons-ligne > button{ flex:1 1 0; min-width:0; margin:0; }
 /* Les sous-sections d'un formulaire (Type, Marches d'un escalier) : un creux, un titre un cran sous
    celui de la section, comme les sous-sections de l'Éditeur de modèle. */
 .batiment-sous-section{ background:var(--creux); border-radius:var(--rayon-moyen); padding:7px 9px 9px; margin:0 0 10px; display:flex; flex-direction:column; gap:8px; }
@@ -4512,7 +4513,7 @@ This can be undone with Ctrl+Z.</span></p>
         </section>
         <section class="side-section">
           <h2 id="batimentSectionNiveaux">Niveaux</h2>
-          <div id="batimentNiveaux" class="batiment-liste"><div class="batiment-ligne batiment-ligne-niveau cliquable"><div class="batiment-niveau-gauche"><span class="batiment-niveau-pastille">1</span><button type="button" class="batiment-niveau-suppr">×</button></div><div class="batiment-niveau-droite"><input type="text" class="batiment-niveau-nom" value="Étage 1" data-ds-valeur-fr="Étage 1" data-ds-valeur-en="Floor 1"><span class="batiment-champ-valeur"><input type="number" value="280"> cm</span></div></div><div class="batiment-ligne batiment-ligne-niveau cliquable actif"><div class="batiment-niveau-gauche"><span class="batiment-niveau-pastille">RDC</span><button type="button" class="batiment-niveau-suppr">×</button></div><div class="batiment-niveau-droite"><input type="text" class="batiment-niveau-nom" value="Rez-de-chaussée" data-ds-valeur-fr="Rez-de-chaussée" data-ds-valeur-en="Ground floor"><span class="batiment-champ-valeur"><input type="number" value="280"> cm</span></div></div><div class="batiment-boutons-pile"><button type="button" class="full-btn"><span class="ds-fr">Ajouter un étage</span><span class="ds-en">Add a floor</span></button><button type="button" class="full-btn"><span class="ds-fr">Dupliquer l'étage</span><span class="ds-en">Duplicate the floor</span></button></div></div>
+          <div id="batimentNiveaux" class="batiment-liste"><div class="batiment-ligne batiment-ligne-niveau cliquable"><div class="batiment-niveau-gauche"><span class="batiment-niveau-pastille">1</span><button type="button" class="batiment-niveau-suppr">×</button></div><div class="batiment-niveau-droite"><input type="text" class="batiment-niveau-nom" value="Étage 1" data-ds-valeur-fr="Étage 1" data-ds-valeur-en="Floor 1"><span class="batiment-champ-valeur"><input type="number" value="280"> cm</span></div></div><div class="batiment-ligne batiment-ligne-niveau cliquable actif"><div class="batiment-niveau-gauche"><span class="batiment-niveau-pastille">RDC</span><button type="button" class="batiment-niveau-suppr">×</button></div><div class="batiment-niveau-droite"><input type="text" class="batiment-niveau-nom" value="Rez-de-chaussée" data-ds-valeur-fr="Rez-de-chaussée" data-ds-valeur-en="Ground floor"><span class="batiment-champ-valeur"><input type="number" value="280"> cm</span></div></div><div class="batiment-boutons-ligne"><button type="button" class="full-btn"><span class="ds-fr">Ajouter</span><span class="ds-en">Add</span></button><button type="button" class="full-btn"><span class="ds-fr">Dupliquer</span><span class="ds-en">Duplicate</span></button></div></div>
         </section>
         <section class="side-section">
           <h2 id="batimentSectionPieces">Pièces</h2>

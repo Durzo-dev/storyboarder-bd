@@ -45,8 +45,8 @@ describe('les quatre écarts', () => {
   });
   test('6 px entre deux boutons, voisins ou empilés', () => {
     assert.match(regle('.batiment-boutons'), /gap:\s*6px/);
-    assert.match(regle('.batiment-boutons-pile'), /gap:\s*6px/);
-    assert.match(regle('.batiment-boutons-pile > button'), /margin:\s*0/, 'la marge propre du bouton doublerait l\'écart');
+    assert.match(regle('.batiment-boutons-ligne'), /gap:6px/);
+    assert.match(regle('.batiment-boutons-ligne > button'), /margin:0/, 'la marge propre du bouton doublerait l\'écart');
   });
 });
 
