@@ -51,6 +51,13 @@ Une valeur ajoutée en dur est fausse dans trois thèmes sur quatre.
 16 px. Aucune autre taille n'entre dans l'interface (un test le vérifie) ; seuls les aperçus de polices,
 le titre d'une fiche du store et le résultat de la Mesure en sortent, exprès.
 
+### Une ligne reste une ligne
+
+Un texte qui doit tenir sur une ligne (nom de Tome et son format, nom d'Élément) ne passe pas à la
+ligne et ne grossit pas sa rangée : il est **coupé par « … »** (`white-space:nowrap`,
+`text-overflow:ellipsis`). **Au survol, il défile** jusqu'au bout pour se lire en entier, marque une
+pause, revient (src/texte-defilant.js, valable pour tout texte coupé ainsi, sans rien à poser).
+
 ## Espacements
 
 ### Les quatre écarts

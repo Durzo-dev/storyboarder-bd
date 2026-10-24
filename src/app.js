@@ -8,3 +8,7 @@
  * réexécuter events.js comme point d'entrée réel de l'application.
  */
 import './events.js';
+import { installerTexteDefilant } from './texte-defilant.js';
+
+// Le texte coupé par « … » défile au survol, partout (src/texte-defilant.js).
+installerTexteDefilant();

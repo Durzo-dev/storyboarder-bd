@@ -486,6 +486,10 @@ select, input[type=number]{
 /* `#tomeList` A ÉTÉ RETIRÉ (#402d) : cet identifiant n'existe ni dans le HTML ni dans le JS. */
 /* `.dropdown-item` A ÉTÉ RETIRÉE (#402d) : plus aucun menu ne pose cette classe. */
 
+/* Le texte coupé qui défile au survol (src/texte-defilant.js) : coupe nette pendant le défilement,
+   sans quoi le « … » resterait collé au bord droit et masquerait la fin qu'on veut lire. */
+.texte-defile{ text-overflow:clip !important; }
+
 /* TREE (tomes / pages) */
 .tome-row{
   display:flex; align-items:center; justify-content:space-between; gap:6px;
@@ -497,6 +501,9 @@ select, input[type=number]{
    texte orange en gras 600. Le Tome actif n'avait que sa barre de gauche et du gras 700 ; les
    curseurs d'articulation et les poses, un jaune à part (rgba(224,165,60)). */
 .tome-row .caret{ font-size:var(--texte-micro); color:var(--sepia); }
+/* Le nom d'un Tome suivi de son format tient sur UNE ligne (demandé : un long nom de format faisait
+   passer à la ligne et grossir la rangée). Coupé par « … », il défile au survol (texte-defilant.js). */
+.tome-row > span:first-child{ flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
 .tome-format,
 .tome-pages{
   margin:0 0 8px 9px; padding:9px 10px; border-radius:var(--rayon-moyen);
