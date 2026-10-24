@@ -39,3 +39,20 @@ describe('le câblage', () => {
     assert.match(css, /\.texte-defile\{ text-overflow:clip !important; \}/);
   });
 });
+
+describe('RÉGRESSION : une liste déroulante défile aussi (le format d\'un Tome dépassait sans défiler)', () => {
+  const src = lire('src/texte-defilant.js');
+  const css = lire('src/style.css');
+  test('le survol d\'un <select> passe par un calque mesuré, puisque son texte n\'est pas dans le DOM', () => {
+    assert.match(src, /closest\('select'\)/);
+    assert.match(src, /measureText\(texte\)/);
+  });
+  test('le calque laisse passer le clic, et le select se voile le temps du survol', () => {
+    assert.match(css, /\.texte-defile-calque\{[^}]*pointer-events:none;/);
+    assert.match(css, /select\.texte-defile-voile\{ color:transparent !important; \}/);
+  });
+  test('ouvrir la liste ou changer de choix retire le calque', () => {
+    assert.match(src, /addEventListener\('mousedown', arreter, true\)/);
+    assert.match(src, /addEventListener\('change', arreter, true\)/);
+  });
+});

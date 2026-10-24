@@ -57,7 +57,8 @@ le titre d'une fiche du store et le résultat de la Mesure en sortent, exprès.
 Un texte qui doit tenir sur une ligne (nom de Tome et son format, nom d'Élément) ne passe pas à la
 ligne et ne grossit pas sa rangée : il est **coupé par « … »** (`white-space:nowrap`,
 `text-overflow:ellipsis`). **Au survol, il défile** jusqu'au bout pour se lire en entier, marque une
-pause, revient (src/texte-defilant.js, valable pour tout texte coupé ainsi, sans rien à poser).
+pause, revient (src/texte-defilant.js, valable pour tout texte coupé ainsi, sans rien à poser). Une **liste déroulante** trop étroite
+finit aussi par « … » et défile de même au survol (un calque reprend son texte, le clic le traverse).
 
 ## Espacements
 

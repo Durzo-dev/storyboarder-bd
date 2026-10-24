@@ -493,6 +493,13 @@ select, input[type=number]{
 /* Le texte coupé qui défile au survol (src/texte-defilant.js) : coupe nette pendant le défilement,
    sans quoi le « … » resterait collé au bord droit et masquerait la fin qu'on veut lire. */
 .texte-defile{ text-overflow:clip !important; }
+/* Le même défilement pour une liste déroulante (son texte n'est pas dans le DOM) : un calque le
+   reprend par-dessus, le clic le traverse, le select passe en texte transparent le temps du survol. */
+.texte-defile-calque{ position:fixed; z-index:1050; display:flex; align-items:center; overflow:hidden;
+  white-space:nowrap; pointer-events:none; }
+select.texte-defile-voile{ color:transparent !important; }
+/* Une liste déroulante trop étroite finit par « … » plutôt que d'être coupée net. */
+select{ text-overflow:ellipsis; }
 
 /* TREE (tomes / pages) */
 .tome-row{

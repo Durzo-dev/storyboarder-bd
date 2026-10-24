@@ -56,7 +56,8 @@ Measure result step outside it, on purpose.
 Text that must fit on one line (a Volume's name and format, an Element's name) does not wrap or make
 its row taller: it is **cut with "…"** (`white-space:nowrap`, `text-overflow:ellipsis`). **On hover,
 it scrolls** to the end so it can be read in full, pauses, and comes back (src/texte-defilant.js,
-applies to any text cut this way, nothing to set up).
+applies to any text cut this way, nothing to set up). A **drop-down list** that is too narrow
+also ends with "…" and scrolls the same way on hover (an overlay repeats its text, clicks go through).
 
 ## Spacing
 

@@ -39,19 +39,55 @@ function elementCoupe(cible){
   return null;
 }
 
-let actif = null, depart = 0, image = 0;
+/**
+ * UNE LISTE DÉROULANTE NE DÉFILE PAS (signalé : le format d'un Tome dépassait sans défiler). Un
+ * <select> natif n'a ni `scrollLeft` ni `scrollWidth` utilisables : son texte affiché n'est pas dans
+ * le DOM. On le mesure donc (police calculée), et s'il dépasse la place laissée par la flèche, un
+ * calque reprend ce texte par-dessus le temps du survol (le select passe en texte transparent) et
+ * c'est lui qui défile. Le clic traverse le calque (`pointer-events:none`) et ouvre la liste.
+ */
+const PLACE_FLECHE = 22;   // px laissés à la flèche d'un <select> (style.css : padding droit)
+let mesureur = null;
+function largeurDuTexte(texte, police){
+  mesureur = mesureur || document.createElement('canvas').getContext('2d');
+  mesureur.font = police;
+  return mesureur.measureText(texte).width;
+}
+function calqueDuSelect(sel){
+  const option = sel.options[sel.selectedIndex];
+  if (!option) return null;
+  const cs = getComputedStyle(sel);
+  const gauche = parseFloat(cs.paddingLeft) || 0;
+  const place = sel.clientWidth - gauche - Math.max(parseFloat(cs.paddingRight) || 0, PLACE_FLECHE);
+  const police = cs.font || `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  if (largeurDuTexte(option.text, police) <= place + 1) return null;
+  const r = sel.getBoundingClientRect();
+  const calque = document.createElement('span');
+  calque.className = 'texte-defile-calque';
+  calque.textContent = option.text;
+  Object.assign(calque.style, {
+    left: `${r.left + (parseFloat(cs.borderLeftWidth) || 0) + gauche}px`, top: `${r.top}px`,
+    width: `${place}px`, height: `${r.height}px`, font: police, color: cs.color,
+  });
+  document.body.appendChild(calque);
+  sel.classList.add('texte-defile-voile');
+  return calque;
+}
+
+// `actif` : l'élément survolé ; `defile` : celui qui défile (le même, ou le calque d'un select).
+let actif = null, defile = null, depart = 0, image = 0;
 
 function arreter(){
   if (!actif) return;
   cancelAnimationFrame(image);
-  actif.scrollLeft = 0;
-  actif.classList.remove('texte-defile');
-  actif = null;
+  if (defile !== actif) { defile.remove(); actif.classList.remove('texte-defile-voile'); }
+  else { actif.scrollLeft = 0; actif.classList.remove('texte-defile'); }
+  actif = defile = null;
 }
 
 function avancer(maintenant){
-  if (!actif) return;
-  actif.scrollLeft = positionDuDefilement(maintenant - depart, actif.scrollWidth - actif.clientWidth);
+  if (!defile) return;
+  defile.scrollLeft = positionDuDefilement(maintenant - depart, defile.scrollWidth - defile.clientWidth);
   image = requestAnimationFrame(avancer);
 }
 
@@ -61,16 +97,28 @@ export function installerTexteDefilant(doc = document){
     // D'un enfant à l'autre du même texte (le « — format » est un <small>) : il continue. Sans ce
     // test, l'élément actif, passé en coupe nette, ne serait plus reconnu et repartirait de zéro.
     if (actif && actif.contains(e.target)) return;
-    const el = elementCoupe(e.target);
-    if (el === actif) return;
     arreter();
-    if (!el) return;
-    if (reduit) { if (!el.title) el.title = el.textContent.trim(); return; }
-    actif = el; depart = performance.now();
-    el.classList.add('texte-defile');
+    const sel = e.target.closest && e.target.closest('select');
+    if (sel) {
+      if (reduit) { const o = sel.options[sel.selectedIndex]; if (o) sel.title = o.text; return; }
+      const calque = calqueDuSelect(sel);
+      if (!calque) return;
+      actif = sel; defile = calque;
+    } else {
+      const el = elementCoupe(e.target);
+      if (!el) return;
+      if (reduit) { if (!el.title) el.title = el.textContent.trim(); return; }
+      actif = defile = el;
+      el.classList.add('texte-defile');
+    }
+    depart = performance.now();
     image = requestAnimationFrame(avancer);
   });
   doc.addEventListener('mouseout', (e) => {
     if (actif && !(e.relatedTarget && actif.contains(e.relatedTarget))) arreter();
   });
+  // Ouvrir la liste, ou changer de choix au clavier : le calque se retire (son texte serait faux).
+  doc.addEventListener('mousedown', arreter, true);
+  doc.addEventListener('change', arreter, true);
+  doc.addEventListener('scroll', arreter, true);
 }
