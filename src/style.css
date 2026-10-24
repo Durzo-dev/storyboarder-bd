@@ -20,6 +20,10 @@
      demi-pixels qui se lisaient comme des erreurs). Hors échelle, et voulus : les aperçus de polices,
      le titre d'une fiche du store, et deux astuces techniques (séparateur de liste, zone de clic du
      Lecteur). Un test refuse toute autre taille en pixels. */
+  --rayon-petit:6px;           /* champ, bouton de choix, entrée de menu contextuel */
+  --rayon-moyen:8px;           /* bouton, ligne de liste, menu contextuel, sous-section */
+  --rayon-grand:10px;          /* section, modale, fenêtre */
+  --rayon-pilule:999px;        /* badge, puce, poignée, bouton « Mise à jour » */
   --texte-micro:10px;          /* flèche de sous-menu, libellés de champ en capitales, badges */
   --texte-capitales:11px;      /* titres de section en capitales, pastilles, comptes */
   --texte-libelle:12px;        /* libellés, aides, textes secondaires */
@@ -276,7 +280,7 @@ header, .sidebar, .right-panel, .modal-box, .context-menu, .persona-editor-panel
 /* La bordure transparente + `background-clip` donnent l'épaisseur visible de 4px du curseur tout en
    gardant une zone de préhension de 8px : fin à l'œil, attrapable à la souris. */
 *::-webkit-scrollbar-thumb{
-  background:var(--scroll-thumb); border-radius:99px;
+  background:var(--scroll-thumb); border-radius:var(--rayon-pilule);
   border:2px solid transparent; background-clip:content-box;
 }
 *::-webkit-scrollbar-thumb:hover{ background:var(--scroll-thumb-hover); background-clip:content-box; }
@@ -347,7 +351,7 @@ header span{ font-size:var(--texte-libelle); color:var(--ink-soft); }
    du Projet en cours en haut du Menu de gauche, au dessus de la section des Tomes"). */
 #projectNameHeader{
   font-family:'Inter',sans-serif; font-size:var(--texte-titre-modale); font-weight:700; color:var(--ink);
-  padding:7px 10px; margin-bottom:14px; border:1px solid var(--line); border-radius:8px;
+  padding:7px 10px; margin-bottom:14px; border:1px solid var(--line); border-radius:var(--rayon-moyen);
   /* Superpose un voile noir semi-transparent à --paper-dark pour obscurcir le fond indépendamment du
      thème Clair/Sombre (sur demande utilisateur), plutôt qu'une couleur fixe qui ne s'adapterait pas. */
   background:var(--creux);
@@ -364,7 +368,7 @@ header span{ font-size:var(--texte-libelle); color:var(--ink-soft); }
    deux classes-ci, ni le HTML ni le JS. */
 
 select, input[type=number]{
-  font-family:'Inter',sans-serif; border: 1px solid var(--bord-actif); border-radius:6px; padding:5px 6px; font-size:var(--texte-courant); background:var(--white); color:var(--ink);
+  font-family:'Inter',sans-serif; border: 1px solid var(--bord-actif); border-radius:var(--rayon-petit); padding:5px 6px; font-size:var(--texte-courant); background:var(--white); color:var(--ink);
 }
 /* ═══════════════════════════════════════════════════════════════════════════════════════════════
    LA COULEUR D'UN BOUTON DIT CE QU'IL FAIT (#398)
@@ -388,7 +392,7 @@ select, input[type=number]{
    changent pas d'un pixel : seul le nom devient vrai. */
 .full-btn{
   width:100%; margin-top:6px; padding:8px; border:1px solid var(--accent); background:var(--accent); color:var(--sur-accent);
-  font-family:'Inter',sans-serif; font-weight:600; font-size:var(--texte-courant); border-radius:7px; cursor:pointer;
+  font-family:'Inter',sans-serif; font-weight:600; font-size:var(--texte-courant); border-radius:var(--rayon-moyen); cursor:pointer;
 }
 .full-btn:hover{ filter:brightness(1.08); }
 .full-btn:disabled{ background:var(--line); border-color: var(--bord-actif); color:var(--ink-soft); cursor:not-allowed; filter:none; }
@@ -407,7 +411,7 @@ select, input[type=number]{
      « Annuler » d'une modale, et la remarque était juste.
      Un contour indépendant du remplissage tient dans les quatre thèmes (WCAG 1.4.11). */
   width:100%; margin-bottom:6px; padding:8px 12px; border:1px solid var(--line-strong); background:var(--nav-bg);
-  color:var(--ink); border-radius:7px; font-size:var(--texte-courant); cursor:pointer;
+  color:var(--ink); border-radius:var(--rayon-moyen); font-size:var(--texte-courant); cursor:pointer;
 }
 /* ⚠️ LE SURVOL N'EST PLUS ORANGE, et c'est la convention qui l'exige (#398a) : l'orange annonce une
    action qui valide ou qui ajoute. Le poser au survol d'un bouton qui ne fait que refermer un écran
@@ -420,7 +424,7 @@ select, input[type=number]{
      reste donc en blanc fixe plutôt que var(--ink), qui deviendrait illisible sur fond sombre en thème
      Clair (où var(--ink) est une encre foncée). */
   width:100%; margin-top:6px; padding:8px; border: 1px solid var(--bord-actif); background:#3A3B40; color:#fff;
-  font-family:'Inter',sans-serif; font-weight:600; font-size:var(--texte-courant); border-radius:7px; cursor:pointer;
+  font-family:'Inter',sans-serif; font-weight:600; font-size:var(--texte-courant); border-radius:var(--rayon-moyen); cursor:pointer;
 }
 /* ═══════════════════════════════════════════════════════════════════════════════════════════════
    LA MODALE PROJET GARDE SON FOND UNIFORME : C'EST LE SURVOL QUI DIT LE RÔLE (#398a)
@@ -462,7 +466,7 @@ select, input[type=number]{
 .dropdown:last-child{ margin-bottom:0; }
 .dropdown-trigger{
   width:100%; display:flex; justify-content:space-between; align-items:center;
-  padding:9px 11px; border: 1px solid var(--bord-actif); background:var(--white); border-radius:8px;
+  padding:9px 11px; border: 1px solid var(--bord-actif); background:var(--white); border-radius:var(--rayon-moyen);
   cursor:pointer; font-size:var(--texte-libelle); font-weight:600; color:var(--ink); text-transform:uppercase; letter-spacing:.04em;
 }
 .dropdown-trigger:hover{ border-color:var(--ink-soft); }
@@ -486,7 +490,7 @@ select, input[type=number]{
 .tome-row{
   display:flex; align-items:center; justify-content:space-between; gap:6px;
   background:var(--white); border: 1px solid var(--bord-actif); border-left:3px solid var(--ink-soft);
-  padding:8px 10px; margin-bottom:5px; border-radius:7px; cursor:pointer; font-size:var(--texte-courant);
+  padding:8px 10px; margin-bottom:5px; border-radius:var(--rayon-moyen); cursor:pointer; font-size:var(--texte-courant);
 }
 .tome-row.active{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:600; }
 /* #460d : UN SEUL STYLE DE LIGNE ACTIVE dans toute l'application — bord orange, fond orange léger,
@@ -495,7 +499,7 @@ select, input[type=number]{
 .tome-row .caret{ font-size:var(--texte-micro); color:var(--sepia); }
 .tome-format,
 .tome-pages{
-  margin:0 0 8px 9px; padding:9px 10px; border-radius:8px;
+  margin:0 0 8px 9px; padding:9px 10px; border-radius:var(--rayon-moyen);
   background:var(--paper); border:1px solid var(--line);
 }
 /* ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -522,7 +526,7 @@ select, input[type=number]{
    Signalé à l'usage. Le panneau droit ne contient qu'un seul `.nav-btn`, donc la portée est sûre. */
 #rightPanel .nav-btn{ margin-top:6px; margin-bottom:0; }
 .page-row{
-  padding:7px 9px; margin-bottom:4px; font-size:var(--texte-libelle); border-radius:6px; cursor:pointer;
+  padding:7px 9px; margin-bottom:4px; font-size:var(--texte-libelle); border-radius:var(--rayon-petit); cursor:pointer;
   color:var(--ink); background:var(--white); border: 1px solid var(--bord-actif);
 }
 .page-row:last-of-type{ margin-bottom:0; }
@@ -539,7 +543,7 @@ select, input[type=number]{
    s'y range (contour plein, `drag-into`). */
 .chapter-row{
   display:flex; align-items:center; gap:6px; margin:8px 0 4px; padding:4px 2px; cursor:pointer;
-  font-size:var(--texte-libelle); font-weight:600; color:var(--ink); border-radius:6px; user-select:none;
+  font-size:var(--texte-libelle); font-weight:600; color:var(--ink); border-radius:var(--rayon-petit); user-select:none;
 }
 .chapter-row:hover .chapter-name{ color:var(--accent); }
 .chapter-row .caret{ font-size:var(--texte-capitales); color:var(--ink-soft); width:10px; }
@@ -551,7 +555,7 @@ select, input[type=number]{
 .chapter-row.drag-into{ outline:2px solid var(--accent); outline-offset:1px; }
 .add-page-btn{
   width:100%; margin-bottom:6px; padding:7px 9px; border:1px dashed var(--ink-soft); background:transparent;
-  color:var(--ink-soft); border-radius:6px; font-size:var(--texte-libelle); cursor:pointer; text-align:left; font-weight:600;
+  color:var(--ink-soft); border-radius:var(--rayon-petit); font-size:var(--texte-libelle); cursor:pointer; text-align:left; font-weight:600;
 }
 .add-page-btn:hover{ color:var(--accent); border-color:var(--accent); }
 /* ⚠️ « TOUTES LES LABEL D'UN ENCART » ÉTAIT UN RACCOURCI, ET IL A FINI PAR ATTRAPER AUTRE CHOSE.
@@ -605,7 +609,7 @@ select, input[type=number]{
 .curseur-gradue{ --pouce-curseur:16px; --valeur-largeur:72px; --valeur-ecart:12px; --crans-moins-un:6; margin-bottom:14px; }
 .curseur-gradue-ligne{ display:flex; align-items:center; gap:var(--valeur-ecart); }
 .curseur-gradue-ligne input[type=range]{ flex:1 1 auto; min-width:0; margin:0; padding:0; appearance:none; -webkit-appearance:none; background:transparent; }
-.curseur-gradue-ligne input[type=range]::-webkit-slider-runnable-track{ height:4px; border-radius:2px; background:var(--line-strong); }
+.curseur-gradue-ligne input[type=range]::-webkit-slider-runnable-track{ height:4px; border-radius:var(--rayon-pilule); background:var(--line-strong); }
 .curseur-gradue-ligne input[type=range]::-webkit-slider-thumb{ appearance:none; -webkit-appearance:none; width:var(--pouce-curseur); height:var(--pouce-curseur); background:var(--accent); clip-path:polygon(50% 100%, 0 0, 100% 0); margin-top:calc((4px - var(--pouce-curseur)) / 2); }
 .curseur-gradue-ligne > span{ flex:0 0 auto; min-width:var(--valeur-largeur); text-align:right; font-size:var(--texte-courant); font-variant-numeric:tabular-nums; }
 .curseur-gradue-crans{ position:relative; height:1.2em; margin:6px calc(var(--valeur-largeur) + var(--valeur-ecart) + var(--pouce-curseur) / 2) 0 calc(var(--pouce-curseur) / 2); font-size:var(--texte-micro); color:var(--ink-soft); font-variant-numeric:tabular-nums; }
@@ -625,7 +629,7 @@ select, input[type=number]{
 .infobulle{
   position:fixed; z-index:9000; pointer-events:none; opacity:0; visibility:hidden;
   max-width:min(320px, calc(100vw - 32px)); padding:calc(5px * var(--echelle-ui)) calc(9px * var(--echelle-ui));
-  border-radius:6px; border:1px solid var(--line-strong); background:var(--paper); color:var(--ink);
+  border-radius:var(--rayon-petit); border:1px solid var(--line-strong); background:var(--paper); color:var(--ink);
   font-size:calc(12px * var(--echelle-ui)); line-height:1.35; box-shadow:0 4px 14px rgba(0,0,0,.28);
   white-space:normal;
 }
@@ -665,7 +669,7 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
    référence, il n'a donc plus rien de particulier à déclarer. */
 .right-panel-scroll{ flex:1 1 auto; overflow-y:auto; min-height:0; padding:18px 16px; }
 .side-section{
-  background:var(--paper); border:1px solid var(--line); border-radius:10px;
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--rayon-grand);
   padding:14px 14px; margin-bottom:14px;
 }
 .side-section:last-child{ margin-bottom:0; }
@@ -708,7 +712,7 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 }
 .dim-chip{
   font-size:var(--texte-capitales); font-weight:500; color:var(--ink-mid);
-  background:var(--creux); border-radius:6px; padding:4px 8px;   /* neutre : elle informe (#460b) */
+  background:var(--creux); border-radius:var(--rayon-petit); padding:4px 8px;   /* neutre : elle informe (#460b) */
 }
 .dim-chip b{ font-weight:700; }
 /* Numéro de la Case/Planche (cf. caseNumber / Planche ${pi+1}), affiché juste à côté du titre de son
@@ -719,12 +723,12 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
    — même principe visuel que le glisser-déposer des Planches (cf. .page-row) — sur demande utilisateur. */
 .side-planche-cases{ display:flex; flex-direction:column; gap:6px; }
 .planche-case-row{
-  display:flex; align-items:flex-start; gap:8px; padding:7px 9px; border-radius:7px;
+  display:flex; align-items:flex-start; gap:8px; padding:7px 9px; border-radius:var(--rayon-moyen);
   border: 1px solid var(--bord-actif); background:var(--white); cursor:grab; font-size:var(--texte-courant); color:var(--ink);
 }
 .planche-case-row.active{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
 .planche-case-row .planche-case-num{
-  font-weight:700; color:var(--ink-mid); background:var(--creux); border-radius:6px;   /* neutre (#460b) */
+  font-weight:700; color:var(--ink-mid); background:var(--creux); border-radius:var(--rayon-petit);   /* neutre (#460b) */
   padding:2px 7px; font-size:var(--texte-capitales); flex-shrink:0; min-width:20px; text-align:center; margin-top:1px;
 }
 .planche-case-row.active .planche-case-num{ background:var(--white); color:var(--accent); }   /* l'orange revient avec la ligne active */
@@ -756,7 +760,7 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
    feuille de style, ce qui est précisément ce qui avait laissé passer 1,11. */
 .side-liste-sep{ border-top:1px solid var(--line-strong); margin:4px 2px; }
 .perso-row{
-  display:flex; align-items:center; gap:8px; padding:7px 9px; border-radius:7px;
+  display:flex; align-items:center; gap:8px; padding:7px 9px; border-radius:var(--rayon-moyen);
   border: 1px solid var(--bord-actif); background:var(--white); cursor:pointer; font-size:var(--texte-courant); color:var(--ink);
 }
 .perso-row.active{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
@@ -786,7 +790,7 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 /* En-tête de groupe d'une Pièce (cf. renderSidePersos/pieceId) : visuellement distinct d'une ligne
    d'Élément normale, pour signaler qu'un clic ici sélectionne les 6 Murs ENSEMBLE plutôt qu'un seul. */
 .piece-group-header{
-  display:flex; align-items:center; gap:8px; padding:6px 9px; border-radius:7px;
+  display:flex; align-items:center; gap:8px; padding:6px 9px; border-radius:var(--rayon-moyen);
   border:1px dashed var(--line); background:var(--paper-dark); cursor:pointer;
   font-size:var(--texte-libelle); font-weight:600; color:var(--ink); letter-spacing:.2px;
 }
@@ -803,7 +807,7 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 }
 /* En-tête de Bâtiment (wrapper multi-Pièces, cf. renderSidePersos) */
 .batiment-group-header{
-  display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:7px;
+  display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:var(--rayon-moyen);
   border:1px solid var(--line); background:var(--paper-dark); cursor:pointer;
   font-size:var(--texte-libelle); font-weight:700; color:var(--ink); letter-spacing:.15px;
 }
@@ -822,7 +826,7 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
    plus haut : la règle se pose une fois, à l'endroit qui vaut pour tous ses usages. */
 .side-desc-input{
   width:100%; min-height:220px; resize:vertical; font-family:'Inter',sans-serif; font-size:var(--texte-courant);
-  border: 1px solid var(--bord-actif); border-radius:8px; padding:9px; background:var(--white); color:var(--ink);
+  border: 1px solid var(--bord-actif); border-radius:var(--rayon-moyen); padding:9px; background:var(--white); color:var(--ink);
   box-sizing:border-box;
 }
 /* ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -880,7 +884,7 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
    signale par un ~ orange dans le coin, et l'infobulle le dit en toutes lettres. */
 .bulle-style-texte{ display:flex; gap:6px; margin-top:6px; }
 .interrupteur-style{
-  position:relative; width:30px; height:26px; padding:0; border-radius:6px; cursor:pointer;
+  position:relative; width:30px; height:26px; padding:0; border-radius:var(--rayon-petit); cursor:pointer;
   border:1px solid var(--line-strong); background:var(--white); color:var(--ink);
   font-family:Georgia, serif; font-size:var(--texte-titre-modale); line-height:1;
 }
@@ -911,26 +915,26 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 }
 .sol-ground-btn{
   display:flex; align-items:center; gap:5px; padding:5px 7px;
-  border: 1px solid var(--bord-actif); border-radius:6px; background:var(--white);
+  border: 1px solid var(--bord-actif); border-radius:var(--rayon-petit); background:var(--white);
   cursor:pointer; font-size:var(--texte-capitales); color:var(--ink); text-align:left; font-weight:500;
 }
 .sol-ground-btn.active{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
 .sol-ground-btn:hover:not(.active){ border-color:var(--ink-soft); }
 .sol-ground-swatch{ width:14px; height:14px; border-radius:3px; flex-shrink:0; border:1px solid var(--line); }
 .side-border-color input[type="color"]{
-  width:100%; height:30px; padding:2px; border-radius:6px; border: 1px solid var(--bord-actif);
+  width:100%; height:30px; padding:2px; border-radius:var(--rayon-petit); border: 1px solid var(--bord-actif);
   background:var(--white); cursor:pointer;
 }
 
 /* CONTEXT MENU (clic droit sur une case) */
 .context-menu{
   position:fixed; z-index:50; background:var(--white); border:1px solid var(--line);
-  border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.5); padding:4px; min-width:140px;
+  border-radius:var(--rayon-moyen); box-shadow:0 8px 24px rgba(0,0,0,.5); padding:4px; min-width:140px;
 }
 .context-menu.hidden{ display:none; }
 .context-menu button{
   display:block; width:100%; text-align:left; background:none; border:none; padding:8px 10px;
-  font-family:'Inter',sans-serif; font-size:var(--texte-courant); font-weight:600; color:var(--ink-soft); cursor:pointer; border-radius:5px;
+  font-family:'Inter',sans-serif; font-size:var(--texte-courant); font-weight:600; color:var(--ink-soft); cursor:pointer; border-radius:var(--rayon-petit);
 }
 .context-menu button:hover{ background:var(--paper); color:var(--ink); }
 /* Spécificité égale à ".context-menu button" (élément + classe) et placée après dans le fichier :
@@ -958,7 +962,7 @@ button.context-menu-submenu-trigger{ display:flex; align-items:center; justify-c
    Un jeton suit le thème, une valeur absolue ne le peut pas. */
 .help-group{
   display:flex; align-items:center; gap:8px; width:100%; text-align:left;
-  margin-bottom:8px; padding:10px 12px; border-radius:8px;
+  margin-bottom:8px; padding:10px 12px; border-radius:var(--rayon-moyen);
   background:var(--white); border:1px solid var(--line-strong);
   cursor:pointer; font-family:inherit;
 }
@@ -1025,7 +1029,7 @@ button.context-menu-submenu-trigger{ display:flex; align-items:center; justify-c
   font-family:'Inter',sans-serif; font-size:var(--texte-courant); font-weight:600; color:var(--ink);
   /* Mêmes jetons que .help-group, et pour la même raison (#409e) : ce bouton portait lui aussi une
      superposition blanche, invisible dès que le fond cesse d'être sombre. */
-  background:var(--white); border:1px solid var(--line-strong); border-radius:6px;
+  background:var(--white); border:1px solid var(--line-strong); border-radius:var(--rayon-petit);
   padding:7px 10px; cursor:pointer; transition:opacity .12s, background .12s, color .12s;
 }
 #sceneTopDownBtn:hover{ opacity:.85; }
@@ -1043,7 +1047,7 @@ button.context-menu-submenu-trigger{ display:flex; align-items:center; justify-c
 }
 .zoom-indicator{
   font-family:'Inter',sans-serif; font-size:var(--texte-libelle); font-weight:600; color:var(--ink-soft);
-  background:var(--paper-dark); border:1px solid var(--line); border-radius:6px;
+  background:var(--paper-dark); border:1px solid var(--line); border-radius:var(--rayon-petit);
   padding:4px 10px; letter-spacing:.02em; user-select:none;
 }
 /* L'encart de zoom ne doit plus suivre le rendu (qui peut être recentré/défiler avec lui, en Scène
@@ -1136,7 +1140,7 @@ canvas{ background:var(--fond-3d); }
  */
 .modal-input{
   width:100%; font-family:'Inter',sans-serif; font-size:var(--texte-titre-modale); font-weight:700;
-  padding:7px 8px; border:1px solid var(--line); border-radius:6px;
+  padding:7px 8px; border:1px solid var(--line); border-radius:var(--rayon-petit);
   background:var(--white); color:var(--ink); margin-top:10px; margin-bottom:2px;
 }
 /* Les modales sans ligne d'erreur sous leur champ : la marge y remplace la place réservée. */
@@ -1146,7 +1150,7 @@ canvas{ background:var(--fond-3d); }
 }
 
 .modal-box{
-  position:relative; background:var(--paper-dark); border:1px solid var(--line); border-radius:10px;
+  position:relative; background:var(--paper-dark); border:1px solid var(--line); border-radius:var(--rayon-grand);
   width:min(480px, 90vw); max-height:90vh; overflow-y:auto;
   padding:18px 20px; box-shadow:0 16px 40px rgba(0,0,0,.55);
 }
@@ -1184,7 +1188,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    de l'Éditeur n'a jamais utilisé cette classe, il porte ses propres sections. */
 .joint-slider-row{
   display:flex; align-items:center; gap:8px; margin-bottom:6px;
-  border-radius:5px; padding:2px 4px; margin-left:-4px; margin-right:-4px;
+  border-radius:var(--rayon-petit); padding:2px 4px; margin-left:-4px; margin-right:-4px;
   transition:background .12s ease;
 }
 .joint-slider-row .joint-slider-label{
@@ -1219,7 +1223,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    `.modal-subsection`, retirée en #402a : les valeurs sont donc écrites ici, elles ne sont plus
    héritées d'un modèle. */
 .joint-group-details{
-  margin:0 0 8px; background:var(--creux); border: 1px solid var(--bord-actif); border-radius:6px;
+  margin:0 0 8px; background:var(--creux); border: 1px solid var(--bord-actif); border-radius:var(--rayon-petit);
   padding:6px 10px;
 }
 .joint-group-details summary{
@@ -1306,7 +1310,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
   padding-bottom:7px; margin-bottom:9px; border-bottom: 1px solid var(--bord-actif);
 }
 .persona-editor-panel .joint-group-details .joint-group-details{
-  border-left:none; background:var(--creux); border-radius:5px;
+  border-left:none; background:var(--creux); border-radius:var(--rayon-moyen);
   padding:7px 9px; margin:0 0 7px;
 }
 .persona-editor-panel .joint-group-details .joint-group-details:last-child{ margin-bottom:0; }
@@ -1337,7 +1341,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    14 px, comme tous ses voisins : la valeur n'est pas choisie, elle est celle des autres champs. */
 .modal-box textarea{
   width:100%; min-height:120px; font-family:'Inter',sans-serif; font-size:var(--texte-courant);
-  border: 1px solid var(--bord-actif); border-radius:7px; padding:8px; resize:vertical;
+  border: 1px solid var(--bord-actif); border-radius:var(--rayon-moyen); padding:8px; resize:vertical;
   background:var(--white); color:var(--ink); margin-bottom:14px;
 }
 .modal-field-label{
@@ -1346,7 +1350,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 }
 .modal-box input[type=text], .modal-box select{
   width:100%; font-family:'Inter',sans-serif; font-size:var(--texte-courant);
-  border: 1px solid var(--bord-actif); border-radius:7px; padding:8px;
+  border: 1px solid var(--bord-actif); border-radius:var(--rayon-moyen); padding:8px;
   background:var(--white); color:var(--ink); margin-bottom:14px;
 }
 /* ⚠️ LE SÉLECTEUR DE COULEUR D'UNE MODALE N'ÉTAIT COUVERT PAR AUCUNE RÈGLE (#421e), et les deux
@@ -1359,7 +1363,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    `padding` réduit et non nul : à zéro, le carré de couleur touche la bordure et l'avale. */
 .modal-box input[type=color]{
   width:100%; height:34px; display:block;
-  border: 1px solid var(--bord-actif); border-radius:7px; padding:3px;
+  border: 1px solid var(--bord-actif); border-radius:var(--rayon-moyen); padding:3px;
   background:var(--white); margin-bottom:14px; cursor:pointer;
 }
 
@@ -1447,7 +1451,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    plus sombre que .modal-box aussi bien en thème clair qu'en thème sombre. */
 .modal-section{
   /* #460f : la MÊME carte qu'une section de panneau (fond papier, filet, rayon 10). */
-  background:var(--paper); border:1px solid var(--line); border-radius:10px;
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--rayon-grand);
   margin:14px 0; padding:4px 14px 12px;
 }
 .modal-box h3 + .modal-section, .modal-box h3 + .modal-columns{ margin-top:18px; }
@@ -1525,7 +1529,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .persona-rot-col input[type=range]{ width:100%; }
 .persona-preview-wrap{
   position:relative; margin:10px 0 4px; height:276px;
-  background:var(--paper-dark); border:1px solid var(--line); border-radius:8px;
+  background:var(--paper-dark); border:1px solid var(--line); border-radius:var(--rayon-moyen);
   /* ⚠️ `overflow:hidden` N'EST PAS UNE PRÉCAUTION, IL EST LE SEUL À DONNER SES COINS À CET ENCART
      (#409i). Le canevas fait 100 % × 100 % et porte un fond blanc, mais SES coins sont carrés : il
      repeignait donc les quatre angles arrondis, par-dessus la bordure. Les côtés droits se
@@ -1560,7 +1564,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
   position:absolute; right:6px; bottom:6px; z-index:2;
   width:30px; height:30px; padding:0; line-height:1; font-size:var(--texte-titre-modale); cursor:pointer;
   display:flex; align-items:center; justify-content:center;
-  border: 1px solid var(--bord-actif); border-radius:7px;
+  border: 1px solid var(--bord-actif); border-radius:var(--rayon-moyen);
   background:var(--white); color:var(--ink); opacity:.75;
   transition:opacity .12s ease, border-color .12s ease;
 }
@@ -1639,7 +1643,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .lecteur[data-fond="clair"] .lecteur-bord:hover { color: rgba(0,0,0,.6); }
 .lecteur-miniatures { flex: none; display: flex; gap: 6px; padding: 8px 10px; overflow-x: auto; background: #101113; z-index: 3; }
 .lecteur-miniatures[hidden] { display: none; }
-.lecteur-miniature { flex: none; position: relative; height: 112px; min-width: 60px; padding: 4px; border-radius: 6px; cursor: pointer;
+.lecteur-miniature { flex: none; position: relative; height: 112px; min-width: 60px; padding: 4px; border-radius: var(--rayon-petit); cursor: pointer;
                      border: 2px solid transparent; background: #2b2d31; color: #ddd; font-size: var(--texte-capitales);
                      display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .lecteur-miniature canvas { height: 90px; width: auto; display: block; background: #fff; }
@@ -1709,7 +1713,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    cf. resolvePoseLabel3D. */
 .persona-editor-pose-current {
   font-size: var(--texte-courant); font-weight: 600; color: var(--ink); margin-bottom: 8px;
-  padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px;
+  padding: 5px 8px; border: 1px solid var(--line); border-radius: var(--rayon-petit);
   background: var(--creux);
 }
 .persona-editor-poses { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -1720,7 +1724,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 
 .persona-editor-poses button {
   flex: 0 0 auto; font-size: var(--texte-libelle); padding: 4px 8px; cursor: pointer;
-  border: 1px solid var(--bord-actif); border-radius: 5px;
+  border: 1px solid var(--bord-actif); border-radius: var(--rayon-petit);
   background: var(--white); color: var(--ink);
 }
 .persona-editor-poses button:hover { border-color: var(--ink-soft); }
@@ -1730,12 +1734,12 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .persona-editor-pose-edit { margin-top: 16px; }
 .persona-editor-pose-edit input {
   width: 100%; box-sizing: border-box; font-size: var(--texte-libelle); padding: 5px 7px; margin-bottom: 5px;
-  border: 1px solid var(--bord-actif); border-radius: 5px; background: var(--white); color: var(--ink);
+  border: 1px solid var(--bord-actif); border-radius: var(--rayon-petit); background: var(--white); color: var(--ink);
 }
 .persona-editor-pose-actions { display: flex; gap: 4px; }
 .persona-editor-pose-actions button {
   flex: 1; font-size: var(--texte-libelle); padding: 4px 6px; cursor: pointer;
-  border: 1px solid var(--bord-actif); border-radius: 5px; background: var(--white); color: var(--ink);
+  border: 1px solid var(--bord-actif); border-radius: var(--rayon-petit); background: var(--white); color: var(--ink);
   /* Fix 69 — `margin: 0` est ce qui rend les trois boutons de MÊME hauteur, et ce n'est pas
      cosmétique. Supprimer portait la classe .nav-btn, qui déclare `margin-bottom: 6px`. Dans une
      ligne flex, `align-items` vaut `stretch` par défaut : chaque bouton est étiré à la hauteur de
@@ -1808,7 +1812,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .image-row-where {
   display: block; width: 100%; text-align: left;
   margin-top: 3px; padding: 4px 6px;
-  border: 1px solid var(--bord-actif); border-radius: 5px;
+  border: 1px solid var(--bord-actif); border-radius: var(--rayon-petit);
   background: var(--white); color: var(--ink-mid);
   font-family: 'Inter', sans-serif; font-size: var(--texte-libelle); cursor: pointer;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -1837,7 +1841,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .model-usage-target {
   display: block; width: 100%; text-align: left;
   padding: 7px 9px; margin-bottom: 4px;
-  border: 1px solid var(--bord-actif); border-radius: 6px;
+  border: 1px solid var(--bord-actif); border-radius: var(--rayon-petit);
   background: var(--white); color: var(--ink);
   font-family: 'Inter', sans-serif; font-size: var(--texte-courant); cursor: pointer;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -1920,7 +1924,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
  * Seul ce qui les DISTINGUE vraiment reste écrit à part : leur fond. */
 .skeleton-map-morpho,
 .skeleton-map-reprise { display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
-                        padding: 9px 10px; border-radius: 4px; font-size: var(--texte-courant);
+                        padding: 9px 10px; border-radius: var(--rayon-petit); font-size: var(--texte-courant);
                         border: 1px solid var(--line); }
 .skeleton-map-morpho { background: var(--creux); }
 .skeleton-map-morpho select { flex: 1; min-width: 0; }
@@ -1961,7 +1965,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
   flex: 0 0 auto; width: auto; margin: 0; padding: 5px 14px;
   border: 1px solid var(--accent); background: var(--accent); color: var(--sur-accent);
   font-family: 'Inter', sans-serif; font-weight: 600; font-size: var(--texte-courant);
-  border-radius: 7px; cursor: pointer; white-space: nowrap;
+  border-radius: var(--rayon-moyen); cursor: pointer; white-space: nowrap;
 }
 .skeleton-map-reprise-btn:hover { filter: brightness(1.08); }
 /* Après la reprise, le bandeau n'a plus ni menu ni bouton : il RACONTE. La phrase prend toute la
@@ -2031,7 +2035,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    partout ailleurs, et ces règles n'avaient plus d'élément à habiller. */
 .skeleton-map-row {
   display: flex; align-items: center; gap: 10px; padding: 5px 8px; margin-bottom: 4px;
-  border: 1px solid var(--bord-actif); border-radius: var(--radius, 6px);
+  border: 1px solid var(--bord-actif); border-radius: var(--rayon-petit);
 }
 .skeleton-map-row .skeleton-map-slot { font-size: var(--texte-courant); width: 92px; flex-shrink: 0; color: var(--ink-soft); }
 /* `margin-bottom: 0` n'est pas cosmétique : `.modal-box select` porte 14px de marge basse, faite
@@ -2052,7 +2056,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    signifie : le vocabulaire du fichier ne confirmait pas, j'ai suivi la forme du squelette. C'est
    exactement là que l'utilisateur doit regarder — d'où une teinte, pas seulement un mot. */
 .skeleton-map-origin {
-  font-size: var(--texte-micro); padding: 1px 6px; border-radius: var(--radius, 6px); flex-shrink: 0;
+  font-size: var(--texte-micro); padding: 1px 6px; border-radius: var(--rayon-petit); flex-shrink: 0;
 }
 .skeleton-map-origin.origine-nom       { background: rgba(90,160,110,.18); color: #4a8a5e; }
 .skeleton-map-origin.origine-structure { background: rgba(224,165,60,.22); color: #a06a10; }
@@ -2126,7 +2130,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    complet reste lisible au survol. */
 .side-image-name{
   font-size:var(--texte-libelle); color:var(--ink-mid); background:var(--creux);
-  border:1px solid var(--line); border-radius:6px; padding:6px 8px; margin-bottom:8px;
+  border:1px solid var(--line); border-radius:var(--rayon-petit); padding:6px 8px; margin-bottom:8px;
   overflow-wrap:anywhere;
 }
 
@@ -2186,7 +2190,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    récente existe, donc il doit se voir sans crier. La modale et l'écran bloquant (blocage.html)
    partagent la présentation des nouveautés. */
 .maj-btn{
-  align-self:center; margin-left:8px; padding:3px 10px; border-radius:999px; cursor:pointer;
+  align-self:center; margin-left:8px; padding:3px 10px; border-radius:var(--rayon-pilule); cursor:pointer;
   border:1px solid var(--accent); background:var(--accent-soft); color:var(--accent);
   font-family:'Inter',sans-serif; font-size:var(--texte-capitales); font-weight:600;
 }
@@ -2199,7 +2203,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .maj-notes ul{ margin:0 0 8px; padding-left:18px; }
 .maj-notes p{ margin:0 0 8px; }
 .maj-badge{
-  display:inline-block; margin-left:6px; padding:1px 7px; border-radius:999px; font-size:var(--texte-micro);
+  display:inline-block; margin-left:6px; padding:1px 7px; border-radius:var(--rayon-pilule); font-size:var(--texte-micro);
   background:var(--warn); color:var(--sur-warn); vertical-align:middle;
 }
 .maj-progression{ width:100%; margin-top:10px; }   /* son orange vient de `accent-color` sur <body> (#460a) */
@@ -2216,7 +2220,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .ressources-noms li{ overflow-wrap:anywhere; color:var(--ink-soft); }
 .ressources-indice{ padding:8px 12px; border-left:3px solid var(--accent); background:var(--accent-soft); }
 .maj-simulation{
-  padding:8px 12px; border-radius:6px; font-size:var(--texte-courant); line-height:1.4;
+  padding:8px 12px; border-radius:var(--rayon-petit); font-size:var(--texte-courant); line-height:1.4;
   background:var(--warn); color:var(--sur-warn);
 }
 
@@ -2269,7 +2273,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .config-page[hidden]{ display:block; visibility:hidden; }
 .store-carte{
   display:flex; flex-direction:column; gap:4px; text-align:left; padding:0 0 8px; cursor:pointer;
-  background:var(--white); border:1px solid var(--line); border-radius:8px; overflow:hidden; color:var(--ink);
+  background:var(--white); border:1px solid var(--line); border-radius:var(--rayon-moyen); overflow:hidden; color:var(--ink);
   font-family:inherit;
 }
 .store-carte:hover{ border-color:var(--accent); }
@@ -2280,7 +2284,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 /* Toujours UNE ligne : la licence se coupe (points de suspension, libellé complet en infobulle),
    le poids ne se coupe jamais. Sans `min-width: 0`, un élément flexible refuse de rétrécir sous
    la largeur de son texte, et la ligne passait à deux. */
-.store-badge{ min-width:0; flex:0 1 auto; padding:1px 6px; border-radius:999px; background:var(--creux); color:var(--ink-mid); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.store-badge{ min-width:0; flex:0 1 auto; padding:1px 6px; border-radius:var(--rayon-pilule); background:var(--creux); color:var(--ink-mid); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .store-carte-infos > :not(.store-badge){ flex:none; white-space:nowrap; }
 .store-badge.store-badge-nc{ background:transparent; color:var(--ink-soft); box-shadow:inset 0 0 0 1px var(--line-strong); }
 /* #460b : la licence INFORME, elle ne se clique pas : plus d'orange. « Usage commercial permis » en
@@ -2308,7 +2312,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .store-fiche p{ margin:0 0 6px; }
 .store-fiche ul{ margin:0 0 8px; padding-left:18px; }
 .store-fiche a{ color:var(--accent); }
-.store-fiche-visuel{ width:100%; aspect-ratio:16/9; background:var(--creux); border-radius:8px; overflow:hidden; }
+.store-fiche-visuel{ width:100%; aspect-ratio:16/9; background:var(--creux); border-radius:var(--rayon-moyen); overflow:hidden; }
 /* Deux colonnes : aperçu à gauche, description à droite ; empilées si la fenêtre est étroite. */
 /* La fiche OCCUPE toute la hauteur de la zone qui défile (demandé : la fenêtre paraissait vide) :
    l'aperçu, à gauche sur 60 % de la largeur, s'étire jusqu'au-dessus de ses boutons, et le pied
@@ -2340,11 +2344,11 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 /* Le menu s'ouvre VERS LE HAUT : le bouton est au bas de la fenêtre. */
 .store-menu-resolutions{
   position:absolute; right:0; bottom:calc(100% + 6px); z-index:5; min-width:220px; padding:4px;
-  background:var(--white); border:1px solid var(--line); border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,.35);
+  background:var(--white); border:1px solid var(--line); border-radius:var(--rayon-moyen); box-shadow:0 6px 18px rgba(0,0,0,.35);
 }
 .store-menu-resolutions[hidden]{ display:none; }
 .store-menu-resolution{
-  display:block; width:100%; text-align:left; padding:7px 10px; border:0; border-radius:5px; background:none;
+  display:block; width:100%; text-align:left; padding:7px 10px; border:0; border-radius:var(--rayon-petit); background:none;
   font-family:'Inter',sans-serif; font-size:var(--texte-courant); color:var(--ink); cursor:pointer; white-space:nowrap;
 }
 .store-menu-resolution:hover{ background:var(--accent-soft); }
@@ -2372,7 +2376,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .store-classement{ position:relative; margin-top:10px; display:flex; flex-direction:column; gap:6px; }
 .store-classement-ligne{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
 .store-chip{
-  display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-family:'Inter',sans-serif;
+  display:inline-flex; align-items:center; padding:3px 10px; border-radius:var(--rayon-pilule); font-family:'Inter',sans-serif;
   font-size:var(--texte-libelle); border:1px solid var(--line); background:var(--white); color:var(--ink);
 }
 button.store-chip{ cursor:pointer; }
@@ -2398,7 +2402,7 @@ button.store-chip:hover{ border-color:var(--accent); }
 /* Les menus flottants de la fiche et du filtre par tags. */
 .store-menu-flottant{
   position:absolute; left:0; top:100%; margin-top:4px; z-index:6; min-width:240px; max-height:320px; overflow-y:auto; padding:6px;
-  background:var(--white); border:1px solid var(--line); border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,.35);
+  background:var(--white); border:1px solid var(--line); border-radius:var(--rayon-moyen); box-shadow:0 6px 18px rgba(0,0,0,.35);
 }
 .store-tags-zone{ position:relative; }
 .store-tags-zone[hidden]{ display:none; }
@@ -2412,17 +2416,17 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-tags-btn{
   width:100%; display:block; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   font-family:'Inter',sans-serif; font-size:var(--texte-courant); line-height:normal;
-  border:1px solid var(--bord-actif); border-radius:7px; padding:8px 28px 8px 8px;
+  border:1px solid var(--bord-actif); border-radius:var(--rayon-moyen); padding:8px 28px 8px 8px;
   background:var(--white); color:var(--ink); cursor:pointer;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%238a8f98' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
   background-repeat:no-repeat; background-position:right 8px center; background-size:10px 6px;
 }
 .store-tags-btn.actif{ border-color:var(--accent); color:var(--accent); }
 .store-tag-ligne{ display:flex; align-items:center; gap:4px; }
-.store-tag-coche{ flex:1 1 auto; display:flex; align-items:center; gap:8px; padding:5px 6px; border-radius:5px; cursor:pointer; font-size:var(--texte-courant); color:var(--ink); }
+.store-tag-coche{ flex:1 1 auto; display:flex; align-items:center; gap:8px; padding:5px 6px; border-radius:var(--rayon-petit); cursor:pointer; font-size:var(--texte-courant); color:var(--ink); }
 .store-tag-coche:hover{ background:var(--accent-soft); }
 .store-tag-nom{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.store-tag-outil{ flex:none; border:0; background:none; cursor:pointer; padding:3px 5px; border-radius:4px; font-size:var(--texte-libelle); opacity:.6; }
+.store-tag-outil{ flex:none; border:0; background:none; cursor:pointer; padding:3px 5px; border-radius:var(--rayon-petit); font-size:var(--texte-libelle); opacity:.6; }
 .store-tag-outil:hover{ opacity:1; background:var(--line); }
 /* La corbeille en trait de la couleur du texte (l'émoji sortait noir sur fond sombre, signalé),
    rouge au survol. */
@@ -2431,7 +2435,7 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-tag-corbeille:hover{ color:var(--danger); }
 /* Un champ de MENU, pas de formulaire : il ne suit pas l'espacement des champs de modale (même
    spécificité que `.modal-box input[type=text]`, déclarée après : elle l'emporte). */
-.store-menu-flottant input.store-tag-champ{ width:100%; margin:6px 0 0; padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:var(--paper-dark); color:var(--ink); font-size:var(--texte-courant); }
+.store-menu-flottant input.store-tag-champ{ width:100%; margin:6px 0 0; padding:6px 8px; border:1px solid var(--line); border-radius:var(--rayon-petit); background:var(--paper-dark); color:var(--ink); font-size:var(--texte-courant); }
 .store-menu-erreur{ margin:4px 0 0; font-size:var(--texte-libelle); color:var(--danger); }
 .store-menu-erreur:empty{ display:none; }
 .store-menu-vide{ margin:4px 6px; font-size:var(--texte-libelle); color:var(--ink-soft); }
@@ -2462,7 +2466,7 @@ button.store-chip:hover{ border-color:var(--accent); }
    mêmes fond creusé, bordure, rayon et marges intérieures que `.modal-section`, et un titre comme
    `.modal-section-title`. Vaut pour les fiches des trois onglets. */
 .store-fiche-section{
-  margin:14px 0 0; padding:4px 14px 12px; border:1px solid var(--line); border-radius:10px;
+  margin:14px 0 0; padding:4px 14px 12px; border:1px solid var(--line); border-radius:var(--rayon-grand);
   background:var(--paper);   /* #460f : la carte des sections de panneau et de modale */
 }
 /* ⚠️ LE MÊME ÉCART AU-DESSUS DE CHAQUE SECTION (demandé) : un paragraphe garde sinon sa marge basse
@@ -2537,15 +2541,15 @@ button.store-chip:hover{ border-color:var(--accent); }
 .polices-pied > button{ flex:1 1 0; margin:0; min-width:0; }
 .polices-pied > button[hidden]{ display:none; }
 .police-usages .store-classement-ligne{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
-.polices-vue-btn{ width:32px; height:30px; padding:0; border-radius:6px; border:1px solid var(--line-strong); background:var(--white); color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.polices-vue-btn{ width:32px; height:30px; padding:0; border-radius:var(--rayon-petit); border:1px solid var(--line-strong); background:var(--white); color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; }
 .polices-vue-btn svg{ width:16px; height:16px; stroke:currentColor; fill:none; }
 .polices-vue-btn[aria-pressed="true"]{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
 .polices-ajout{ position:relative; flex:none; }
 .polices-ajout .project-modal-btn{ margin:0; width:auto; padding:7px 14px; }
 .polices-ajout-menu{ position:absolute; right:0; top:calc(100% + 4px); z-index:5; min-width:230px; padding:4px;
-  background:var(--white); border:1px solid var(--line); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.35); }
+  background:var(--white); border:1px solid var(--line); border-radius:var(--rayon-moyen); box-shadow:0 8px 24px rgba(0,0,0,.35); }
 .polices-ajout-menu[hidden]{ display:none; }
-.polices-ajout-menu button{ display:block; width:100%; text-align:left; padding:7px 10px; border:0; border-radius:6px; background:none; color:var(--ink); font:inherit; font-size:var(--texte-courant); cursor:pointer; }
+.polices-ajout-menu button{ display:block; width:100%; text-align:left; padding:7px 10px; border:0; border-radius:var(--rayon-petit); background:none; color:var(--ink); font:inherit; font-size:var(--texte-courant); cursor:pointer; }
 .polices-ajout-menu button:hover:not(:disabled){ background:var(--nav-bg); color:var(--accent); }
 .polices-ajout-menu button:disabled{ color:var(--ink-soft); cursor:default; }
 .polices-groupe{ font-family:'Inter',sans-serif; font-size:var(--texte-capitales); font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin:14px 0 8px; }
@@ -2555,7 +2559,7 @@ button.store-chip:hover{ border-color:var(--accent); }
 .polices-lignes{ display:flex; flex-direction:column; gap:6px; }
 /* Une vignette : « Aa » dans la police, sur un fond de bulle clair, puis son nom et ses styles. */
 .police-carte{ display:flex; flex-direction:column; text-align:left; padding:0; cursor:pointer; overflow:hidden;
-  background:var(--white); border:1px solid var(--line); border-radius:8px; color:var(--ink); font-family:inherit; }
+  background:var(--white); border:1px solid var(--line); border-radius:var(--rayon-moyen); color:var(--ink); font-family:inherit; }
 .police-carte:hover{ border-color:var(--accent); }
 .police-apercu{ display:flex; align-items:center; justify-content:center; height:84px; font-size:42px; line-height:1;
   background:#fbfaf7; color:#23242a; white-space:nowrap; overflow:hidden; }
@@ -2569,7 +2573,7 @@ button.store-chip:hover{ border-color:var(--accent); }
 /* G et I CENTRÉS verticalement dans le pied de la vignette (demandé), en grille comme en liste. */
 .police-variantes{ display:inline-flex; gap:3px; position:absolute; right:8px; top:50%; transform:translateY(-50%); }
 .police-infos .police-variantes{ position:static; transform:none; }
-.police-variante{ display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 3px; border-radius:4px;
+.police-variante{ display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 3px; border-radius:var(--rayon-petit);
   font-family:Georgia, serif; font-size:var(--texte-capitales); font-weight:700; background:var(--creux); color:var(--ink-mid); }   /* neutre (#460b) */
 .police-variante + .police-variante{ font-style:italic; }
 /* Une variante simulée : un ~ après la lettre, et une pastille éteinte. */
@@ -2592,7 +2596,7 @@ button.store-chip:hover{ border-color:var(--accent); }
 .police-info a{ color:var(--accent); word-break:break-all; }
 .police-sous-titre{ font-family:'Inter',sans-serif; font-size:var(--texte-capitales); font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin:14px 0 6px; }
 .police-essai-champ{ margin:0 0 8px; box-sizing:border-box; }
-.police-essais{ background:#fbfaf7; color:#23242a; border-radius:10px; padding:10px 14px; }
+.police-essais{ background:#fbfaf7; color:#23242a; border-radius:var(--rayon-grand); padding:10px 14px; }
 .police-essai{ display:flex; gap:12px; align-items:baseline; }
 .police-essai + .police-essai{ margin-top:6px; }
 .police-essai-style{ flex:0 0 96px; font-family:'Inter',sans-serif; font-size:var(--texte-micro); text-transform:uppercase; letter-spacing:.05em; color:#77787f; }
@@ -2603,7 +2607,7 @@ button.store-chip:hover{ border-color:var(--accent); }
    détail, qui ont une LARGEUR fixe en ligne (flex 0 0 130px) : en colonne, cette base devenait une
    HAUTEUR de 130 px, d'où le grand vide sous « Majuscules » (signalé). */
 .police-jeu > .police-info-cle{ flex:none; }
-.police-caracteres-texte{ font-size:26px; line-height:1.3; letter-spacing:.06em; overflow-wrap:anywhere; background:#fbfaf7; color:#23242a; border-radius:8px; padding:6px 12px; }
+.police-caracteres-texte{ font-size:26px; line-height:1.3; letter-spacing:.06em; overflow-wrap:anywhere; background:#fbfaf7; color:#23242a; border-radius:var(--rayon-moyen); padding:6px 12px; }
 
 .right-panel .side-aide{ font-size:var(--texte-libelle); color:var(--sepia); line-height:1.5; margin:6px 0; }
 /* Planche importée : la description de chaque Case se tape dans la liste des Cases du menu Planche. */
@@ -2615,7 +2619,7 @@ button.store-chip:hover{ border-color:var(--accent); }
 /* #453 : la modale « Formats du projet » (src/formats-ui.js). */
 .formats-aide{ margin:0 0 12px; font-size:var(--texte-courant); color:var(--sepia); line-height:1.4; }
 .formats-liste{ max-height:40vh; overflow-y:auto; display:flex; flex-direction:column; gap:6px; }
-.format-ligne{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; }
+.format-ligne{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid var(--line); border-radius:var(--rayon-petit); }
 .format-texte{ flex:1; display:flex; flex-direction:column; min-width:0; }
 .format-texte b{ font-size:var(--texte-courant); color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .format-texte small{ font-size:var(--texte-libelle); color:var(--ink-soft); }
@@ -2643,7 +2647,7 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }  /* une seule ligne, comme les autres listes */
 .select-riche::picker-icon{ color:var(--ink-soft); }
 .select-riche::picker(select){
-  background:var(--paper-dark); color:var(--ink); border:1px solid var(--bord-actif); border-radius:6px;
+  background:var(--paper-dark); color:var(--ink); border:1px solid var(--bord-actif); border-radius:var(--rayon-petit);
   padding:4px 0; margin-top:2px; box-shadow:0 8px 24px rgba(0,0,0,.45);
 }
 .select-riche option{ padding:5px 10px; font-size:var(--texte-courant); color:var(--ink); background:transparent; cursor:pointer; }
@@ -2667,7 +2671,7 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 /* LA FENÊTRE DE L'APERÇU 3D (demandé) : ancrée à un coin, en plein écran, ou réduite à une icône. */
 .batiment-apercu-fenetre { position: absolute; width: 34%; height: 40%; min-width: 260px; min-height: 200px; z-index: 2;
                            display: flex; flex-direction: column; background: var(--paper-dark);
-                           border: 1px solid var(--bord-actif); border-radius: 8px; overflow: hidden;
+                           border: 1px solid var(--bord-actif); border-radius: var(--rayon-moyen); overflow: hidden;
                            box-shadow: 0 10px 30px rgba(0,0,0,.4); }
 .batiment-apercu-fenetre[data-coin="hg"] { top: 12px; left: 12px; }
 .batiment-apercu-fenetre[data-coin="hd"] { top: 12px; right: 12px; }
@@ -2704,7 +2708,7 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
                                text-transform: uppercase; letter-spacing: .05em; }
 .batiment-editeur-panneau .modal-input.batiment-nom { margin-top: 0; }
 .batiment-liste { display: flex; flex-direction: column; gap: 4px; font-size: var(--texte-courant); }
-.batiment-liste .batiment-ligne { display: flex; justify-content: space-between; gap: 8px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; }
+.batiment-liste .batiment-ligne { display: flex; justify-content: space-between; gap: 8px; padding: 5px 8px; border: 1px solid var(--line); border-radius: var(--rayon-petit); }
 .batiment-liste .batiment-ligne small { color: var(--ink-soft); }
 .batiment-aide { margin: 0; font-size: var(--texte-libelle); color: var(--ink-soft); line-height: 1.45; white-space: pre-line; }
 /* Les outils (demandé) : des boutons ronds à icône, comme celui qui rouvre l'aperçu 3D, qui flottent
@@ -2724,7 +2728,7 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 /* #460c : UN SEUL COMPOSANT DE CHOIX (éditeur de bâtiment, Lecteur, et ce qui viendra). Les deux
    copies — `.batiment-choix` et `.lecteur-choix-btn` — ne différaient que par un pixel de marge et
    l'opacité de l'état éteint ; elles auraient continué de diverger. */
-.choix button { flex: 1 1 0; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line-strong); background: var(--white);
+.choix button { flex: 1 1 0; padding: 6px 8px; border-radius: var(--rayon-petit); border: 1px solid var(--line-strong); background: var(--white);
                 color: var(--ink); font-size: var(--texte-libelle); cursor: pointer; }
 .choix button.actif { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 600; }
 .batiment-case { display: flex; align-items: center; gap: 6px; font-size: var(--texte-libelle); color: var(--ink); margin: 6px 0; cursor: pointer; }
@@ -2751,7 +2755,7 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-niveaux-plan { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); z-index: 2; display: flex;
                          flex-direction: column; gap: 6px; zoom: var(--echelle-ui); }
 .batiment-outil.batiment-niveau { width: 34px; height: 34px; padding: 0; font-size: var(--texte-libelle); font-weight: 700; }
-.batiment-outil.batiment-niveau-fleche { height: 26px; font-size: var(--texte-micro); border-radius: 13px; box-shadow: none; }
+.batiment-outil.batiment-niveau-fleche { height: 26px; font-size: var(--texte-micro); border-radius: var(--rayon-pilule); box-shadow: none; }
 .batiment-outil:disabled { opacity: .35; cursor: default; }
 .batiment-outil:disabled:hover { color: var(--ink-soft); border-color: var(--bord-actif); }
 .batiment-ligne.batiment-ligne-niveau { align-items: flex-start; gap: 8px; cursor: grab; }
@@ -2764,7 +2768,7 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-niveau-pastille { font-size: var(--texte-capitales); font-weight: 700; color: var(--ink-soft); cursor: pointer; }
 /* #460b : le numéro d'un niveau n'est orange que sur le niveau COURANT. */
 .batiment-ligne-niveau.actif .batiment-niveau-pastille { color: var(--accent); }
-.batiment-niveau-nom { width: 100%; box-sizing: border-box; font-size: var(--texte-libelle); padding: 3px 5px; border: 1px solid var(--line); border-radius: 5px;
+.batiment-niveau-nom { width: 100%; box-sizing: border-box; font-size: var(--texte-libelle); padding: 3px 5px; border: 1px solid var(--line); border-radius: var(--rayon-petit);
                        background: var(--white); color: var(--ink); }
 .batiment-niveau-droite input[type=number] { width: 64px; }
 .batiment-niveau-suppr { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--bord-actif); background: var(--white);
@@ -2784,7 +2788,7 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-boutons-pile > button{ width:100%; margin:0; }
 /* Les sous-sections d'un formulaire (Type, Marches d'un escalier) : un creux, un titre un cran sous
    celui de la section, comme les sous-sections de l'Éditeur de modèle. */
-.batiment-sous-section{ background:var(--creux); border-radius:5px; padding:7px 9px 9px; margin:0 0 10px; display:flex; flex-direction:column; gap:8px; }
+.batiment-sous-section{ background:var(--creux); border-radius:var(--rayon-moyen); padding:7px 9px 9px; margin:0 0 10px; display:flex; flex-direction:column; gap:8px; }
 .batiment-sous-section > h3{ margin:0; font-size:var(--texte-courant); font-weight:600; color:var(--ink-mid); }
 /* Dans une sous-section, seul son `gap` espace les rangées : Contremarches est à la même distance
    des boutons de rampe que les deux rangées de Type entre elles (demandé). */
@@ -2806,8 +2810,8 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .choix.choix-types button.icone{ padding:9px 4px; }
 .choix.choix-types button.icone svg{ width:36px; height:auto; }
 .choix-options-groupe{ display:flex; flex-direction:column; align-items:center; gap:6px; border-top:1px solid var(--line-strong); padding-top:8px; }
-.choix.choix-options{ display:inline-flex; flex-wrap:nowrap; gap:2px; margin:0; padding:2px; border:1px solid var(--line-strong); border-radius:7px; background:var(--paper); }
-.choix.choix-options button{ flex:0 0 auto; width:40px; padding:3px 0; border:1px solid transparent; border-radius:5px; background:transparent; }
+.choix.choix-options{ display:inline-flex; flex-wrap:nowrap; gap:2px; margin:0; padding:2px; border:1px solid var(--line-strong); border-radius:var(--rayon-moyen); background:var(--paper); }
+.choix.choix-options button{ flex:0 0 auto; width:40px; padding:3px 0; border:1px solid transparent; border-radius:var(--rayon-petit); background:transparent; }
 .choix.choix-options button:hover:not(:disabled){ background:var(--white); }
 .choix.choix-options button.actif{ border-color:var(--accent); background:var(--accent-soft); }
 .choix.choix-options button.icone svg{ width:24px; height:auto; }

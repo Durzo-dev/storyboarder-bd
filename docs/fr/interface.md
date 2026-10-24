@@ -293,5 +293,5 @@ rejoint ce document avec son test.
 - **#460g** ✅ Un seul composant d'onglets, `.onglets` / `.onglet` (store, polices, Configuration).
 - **#460h** ✅ Un seul état vide, `.empty-hint` : 12 px, gris `--ink-soft`, sans italique.
 - **#460i** ✅ Six tailles de texte, en jetons `--texte-*`.
-- **#460j** 11 rayons : passer à trois.
+- **#460j** ✅ Trois rayons, en jetons : `--rayon-petit` (6 px : champ, choix, entrée de menu), `--rayon-moyen` (8 px : bouton, ligne, menu, sous-section), `--rayon-grand` (10 px : section, modale), plus `--rayon-pilule` et le rond (50 %). Seuls les très petits éléments gardent 3 px.
 - **#460k** Icônes : une seule famille au trait (en-tête, menus contextuels).

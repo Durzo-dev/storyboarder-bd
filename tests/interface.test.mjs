@@ -117,3 +117,19 @@ describe('#460i : l\'échelle typographique', () => {
     for (const j of ['micro', 'capitales', 'libelle', 'courant', 'titre-modale', 'titre']) assert.match(CSS, new RegExp(`--texte-${j}:`));
   });
 });
+
+describe('#460j : trois rayons', () => {
+  test('aucun rayon hors des jetons, sauf les formes (rond, carré) et les très petits éléments', () => {
+    // Exceptions : 50 % (rond), 0 (carré voulu), 3 px (pastille de sol de 14 px, surlignage du Manuel).
+    const EXCEPTIONS = new Set(['50%', '0', '3px']);
+    const rayons = [...(CSS + HTML).matchAll(/border-radius:\s*([^;}"]+?)\s*[;}"]/g)].map(m => m[1]);
+    const hors = [...new Set(rayons.filter(r => !EXCEPTIONS.has(r) && !/^var\(--rayon-(petit|moyen|grand|pilule)\)$/.test(r)))];
+    assert.deepEqual(hors, [], 'un rayon hors échelle : utiliser --rayon-petit, -moyen, -grand ou -pilule');
+  });
+  test('les quatre jetons valent 6, 8, 10 px et la pilule', () => {
+    assert.match(CSS, /--rayon-petit:6px;/);
+    assert.match(CSS, /--rayon-moyen:8px;/);
+    assert.match(CSS, /--rayon-grand:10px;/);
+    assert.match(CSS, /--rayon-pilule:999px;/);
+  });
+});

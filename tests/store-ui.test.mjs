@@ -251,7 +251,7 @@ describe('le câblage', () => {
   test('retours sur les tags (2) : bouton à l\'allure des listes, une seule ligne, tags en jaune', () => {
     const css = lire('src/style.css');
     const bouton = css.slice(css.indexOf('.store-tags-btn{'), css.indexOf('.store-tags-btn.actif'));
-    assert.match(bouton, /border:1px solid var\(--bord-actif\); border-radius:7px; padding:8px 28px 8px 8px;/);
+    assert.match(bouton, /border:1px solid var\(--bord-actif\); border-radius:var\(--rayon-moyen\); padding:8px 28px 8px 8px;/);
     assert.match(bouton, /background-position:right 8px center/);
     assert.doesNotMatch(UI, /t\.tousLesTags\) \+ ' ▾'/);
     assert.match(UI, /classList\.toggle\('store-filtres-ligne', source === LOCAL\)/);
@@ -264,7 +264,7 @@ describe('le câblage', () => {
     const css = lire('src/style.css');
     const corps = (sel) => css.slice(css.indexOf(sel + '{'), css.indexOf('}', css.indexOf(sel + '{')));
     const carte = corps('.store-fiche-section'), reference = corps('.modal-section');
-    for (const decl of ['background:var(--paper)', 'border:1px solid var(--line)', 'border-radius:10px', 'padding:4px 14px 12px']) {
+    for (const decl of ['background:var(--paper)', 'border:1px solid var(--line)', 'border-radius:var(--rayon-grand)', 'padding:4px 14px 12px']) {
       assert.ok(reference.includes(decl), 'référence : ' + decl);
       assert.ok(carte.includes(decl), 'fiche du store : ' + decl);
     }

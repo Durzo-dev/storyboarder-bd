@@ -465,11 +465,10 @@ html[lang="fr"] .ds-en, html[lang="en"] .ds-fr{ display:none; }
 <tr><td>8 px</td><td><span class="ds-barre-ecart" style="width:32px"></span></td><td>${L('rangées d\'une sous-section (son gap seul)', 'rows of a sub-section (its gap only)')}</td></tr>
 <tr><td>6 px</td><td><span class="ds-barre-ecart" style="width:24px"></span></td><td>${L('deux boutons voisins ou empilés', 'two neighbouring or stacked buttons')}</td></tr></table>
 <table class="ds-table"><tr><th>${L('Rayon', 'Radius')}</th><th></th><th>${L('Pour', 'For')}</th></tr>
-<tr><td>10 px</td><td><span class="ds-rayon" style="border-radius:10px"></span></td><td>${L('section, modale', 'section, modal')}</td></tr>
-<tr><td>8 px</td><td><span class="ds-rayon" style="border-radius:8px"></span></td><td>${L('menu contextuel', 'context menu')}</td></tr>
-<tr><td>7 px</td><td><span class="ds-rayon" style="border-radius:7px"></span></td><td>${L('bouton, ligne de liste', 'button, list row')}</td></tr>
-<tr><td>6 px</td><td><span class="ds-rayon" style="border-radius:6px"></span></td><td>${L('champ, bouton de choix', 'field, choice button')}</td></tr>
-<tr><td>5 px</td><td><span class="ds-rayon" style="border-radius:5px"></span></td><td>${L('sous-section, entrée de menu contextuel', 'sub-section, context menu entry')}</td></tr>
+<tr><td><code>--rayon-grand</code> 10 px</td><td><span class="ds-rayon" style="border-radius:10px"></span></td><td>${L('section, modale, fenêtre', 'section, modal, window')}</td></tr>
+<tr><td><code>--rayon-moyen</code> 8 px</td><td><span class="ds-rayon" style="border-radius:8px"></span></td><td>${L('bouton, ligne de liste, menu contextuel, sous-section', 'button, list row, context menu, sub-section')}</td></tr>
+<tr><td><code>--rayon-petit</code> 6 px</td><td><span class="ds-rayon" style="border-radius:6px"></span></td><td>${L('champ, bouton de choix, entrée de menu contextuel', 'field, choice button, context menu entry')}</td></tr>
+<tr><td><code>--rayon-pilule</code></td><td><span class="ds-rayon" style="border-radius:999px"></span></td><td>${L('badge, puce, poignée, bouton « Mise à jour »', 'badge, chip, thumb, “Update” button')}</td></tr>
 <tr><td>50 %</td><td><span class="ds-rayon" style="border-radius:50%;width:28px"></span></td><td>${L('boutons ronds de l\'en-tête, pastilles de niveau', 'header round buttons, level badges')}</td></tr></table>
 
 <h2 class="ds-titre">${L('Contrôles', 'Controls')}</h2>

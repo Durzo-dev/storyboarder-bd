@@ -284,5 +284,5 @@ with its test.
 - **#460g** ✅ One tab component, `.onglets` / `.onglet` (store, fonts, Settings).
 - **#460h** ✅ One empty state, `.empty-hint`: 12 px, grey `--ink-soft`, no italics.
 - **#460i** ✅ Six text sizes, as `--texte-*` tokens.
-- **#460j** 11 radii: move to three.
+- **#460j** ✅ Three radii, as tokens: `--rayon-petit` (6 px: field, choice, menu entry), `--rayon-moyen` (8 px: button, row, menu, sub-section), `--rayon-grand` (10 px: section, modal), plus `--rayon-pilule` and round (50 %). Only very small elements keep 3 px.
 - **#460k** Icons: a single line-icon family (header, context menus).
