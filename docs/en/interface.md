@@ -181,6 +181,12 @@ banner is, not what a button will do.
 A setting enlarges the interface (`--echelle-ui`): header, menus, modals and context menus. **The
 Page is not enlarged**, nor the modals' veil: only what is read.
 
+### Fields
+
+**The field rule** (#460e): a **short number** with its unit sits on one line, label on the left,
+field on the right (`.modal-field-ligne`, `.batiment-champ`). A **list**, a **slider**, a **colour**
+or a **text** keep their label above, full-width field.
+
 ## Choices and icons
 
 ### Pictograms rather than words
@@ -253,7 +259,7 @@ with its test.
 - **#460c** ✅ One choice component, `.choix` (building editor, Reader), with its variants
   `.choix-types`, `.choix-options` and `.choix-bascules`.
 - **#460d** ✅ One active-row style and one drop line.
-- **#460e** Two field layouts (label above or on the left): settle the rule.
+- **#460e** ✅ Rule settled: a short number on one line, the rest above.
 - **#460f** Two section vocabularies (panels, an Element's modal): one hierarchy.
 - **#460g** Two tab components (store, Settings): merge them.
 - **#460h** Two empty states: merge them.

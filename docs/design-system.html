@@ -2796,6 +2796,13 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-sous-section > .choix.choix-options{ align-self:flex-start; }
 .choix.choix-bascules{ justify-content:center; gap:10px; margin:0; }
 .choix.choix-bascules button.icone{ flex:0 0 auto; width:56px; padding:5px 0; }
+/* #460e : LA RÈGLE DES CHAMPS. Un NOMBRE COURT (avec son unité) se règle sur une ligne, libellé à
+   gauche, champ à droite — comme Largeur / Hauteur / Élévation de l'éditeur de bâtiment. Une liste,
+   un curseur, une couleur ou un texte gardent leur libellé AU-DESSUS, champ pleine largeur. */
+.modal-field-ligne{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 14px; }
+.modal-field-ligne > .modal-field-label{ margin:0; }
+.modal-field-ligne input[type=number], .modal-field-ligne .modal-field-number{ flex:none; width:90px; margin:0; }
+.modal-field-ligne .modal-field-valeur{ display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft); }
 
 /* ── La page du système de design (préfixe ds-), posée SUR la feuille de l'application ── */
 html, body{ height:auto !important; overflow:auto !important; }
@@ -3985,15 +3992,13 @@ This can be undone with Ctrl+Z.</span></p>
           </select>
         </div>
         <div id="objectWallSizeField" style="display:none;">
-          <label class="modal-field-label">Longueur du mur</label>
-          <div style="display:flex; align-items:center; gap:6px; margin:0 0 4px;">
-            <input type="number" id="objectWallLengthInput" min="20" max="2000" step="5" style="width:70px;">
-            <span style="font-size:14px; opacity:.85;">px</span>
+          <div class="modal-field-ligne">
+            <label class="modal-field-label">Longueur du mur</label>
+            <span class="modal-field-valeur"><input type="number" id="objectWallLengthInput" min="20" max="2000" step="5"> px</span>
           </div>
-          <label class="modal-field-label">Hauteur du mur</label>
-          <div style="display:flex; align-items:center; gap:6px; margin:0 0 4px;">
-            <input type="number" id="objectWallHeightInput" min="20" max="2000" step="5" style="width:70px;">
-            <span style="font-size:14px; opacity:.85;">px</span>
+          <div class="modal-field-ligne">
+            <label class="modal-field-label">Hauteur du mur</label>
+            <span class="modal-field-valeur"><input type="number" id="objectWallHeightInput" min="20" max="2000" step="5"> px</span>
           </div>
         </div>
         <div id="objectDoorField" style="display:none;">
@@ -4023,8 +4028,10 @@ This can be undone with Ctrl+Z.</span></p>
         <div id="objectSizeField">
           
           <div id="objectHeightField" style="display:none">
+            <div class="modal-field-ligne">
             <label class="modal-field-label" id="objectHeightLabel">Hauteur (m)</label>
             <input type="number" id="objectHeightInput" class="modal-field-number" step="0.01">
+            </div>
           </div>
           
           <div id="objectSizePercentField">
@@ -4140,8 +4147,10 @@ This can be undone with Ctrl+Z.</span></p>
         </div>
 
         
+        <div class="modal-field-ligne">
         <label class="modal-field-label">Portée (m)</label>
         <input type="number" id="objectLightRangeInput" class="modal-field-number" min="0" step="0.1" value="0">
+        </div>
         <div class="modal-field-hint" id="objectLightRangeHint">0 = sans limite. Au-delà de la portée, la lumière ne porte plus du tout.</div>
         
         <div id="objectLightShadowField">
@@ -4199,8 +4208,10 @@ This can be undone with Ctrl+Z.</span></p>
         </div>
         
         <div id="personaHeightField" style="display:none">
+          <div class="modal-field-ligne">
           <label class="modal-field-label" id="personaHeightLabel">Hauteur (m)</label>
           <input type="number" id="personaHeightInput" class="modal-field-number" step="0.01">
+          </div>
         </div>
         <label class="modal-field-label">Taille réelle</label>
         <div style="display:flex; align-items:center; gap:8px; margin:0 0 4px;">

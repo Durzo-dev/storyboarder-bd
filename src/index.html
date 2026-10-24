@@ -1809,8 +1809,10 @@
              une hauteur réelle (1,75 m par défaut) qui EST la valeur enregistrée. La saisir en
              mètres évite de passer par un pourcentage dont le pas de 5 % vaut ~9 cm. -->
         <div id="personaHeightField" style="display:none">
+          <div class="modal-field-ligne">
           <label class="modal-field-label" id="personaHeightLabel">Hauteur (m)</label>
           <input type="number" id="personaHeightInput" class="modal-field-number" step="0.01">
+          </div>
         </div>
         <label class="modal-field-label">Taille réelle</label>
         <div style="display:flex; align-items:center; gap:8px; margin:0 0 4px;">
@@ -1997,15 +1999,13 @@
           </select>
         </div>
         <div id="objectWallSizeField" style="display:none;">
-          <label class="modal-field-label">Longueur du mur</label>
-          <div style="display:flex; align-items:center; gap:6px; margin:0 0 4px;">
-            <input type="number" id="objectWallLengthInput" min="20" max="2000" step="5" style="width:70px;">
-            <span style="font-size:14px; opacity:.85;">px</span>
+          <div class="modal-field-ligne">
+            <label class="modal-field-label">Longueur du mur</label>
+            <span class="modal-field-valeur"><input type="number" id="objectWallLengthInput" min="20" max="2000" step="5"> px</span>
           </div>
-          <label class="modal-field-label">Hauteur du mur</label>
-          <div style="display:flex; align-items:center; gap:6px; margin:0 0 4px;">
-            <input type="number" id="objectWallHeightInput" min="20" max="2000" step="5" style="width:70px;">
-            <span style="font-size:14px; opacity:.85;">px</span>
+          <div class="modal-field-ligne">
+            <label class="modal-field-label">Hauteur du mur</label>
+            <span class="modal-field-valeur"><input type="number" id="objectWallHeightInput" min="20" max="2000" step="5"> px</span>
           </div>
         </div>
         <div id="objectDoorField" style="display:none;">
@@ -2041,8 +2041,10 @@
                ⚠️ Le libellé doit rester le frère PRÉCÉDENT de l'input : c'est ainsi que l'i18n le
                retrouve (cf. src/i18n.js, previousElementSibling). -->
           <div id="objectHeightField" style="display:none">
+            <div class="modal-field-ligne">
             <label class="modal-field-label" id="objectHeightLabel">Hauteur (m)</label>
             <input type="number" id="objectHeightInput" class="modal-field-number" step="0.01">
+            </div>
           </div>
           <!-- ⚠️ ENVELOPPE AJOUTÉE EN #421c, ET ELLE RÉPARE UN ORPHELIN. Le curseur, son étiquette et
                son afficheur sont TROIS éléments pour UNE donnée : masquer le seul <input> laissait
@@ -2191,8 +2193,10 @@
              spontanément comme « éteinte ». Dans Three.js, une portée nulle rend un facteur
              d'atténuation de 1,0 à TOUTE distance — mesuré en #420f, une source à 900 m éclaire
              aussi fort qu'à un mètre. C'est l'inverse de ce que « 0 » suggère. -->
+        <div class="modal-field-ligne">
         <label class="modal-field-label">Portée (m)</label>
         <input type="number" id="objectLightRangeInput" class="modal-field-number" min="0" step="0.1" value="0">
+        </div>
         <div class="modal-field-hint" id="objectLightRangeHint">0 = sans limite. Au-delà de la portée, la lumière ne porte plus du tout.</div>
         <!-- ⚠️ SOUS LA PORTÉE, ET CE N'EST PAS UN HASARD (#422d) : une caméra d'ombre exige un plan
              éloigné FINI, que la portée donne quand elle en a un. À portée nulle, il est dérivé du
@@ -2417,11 +2421,15 @@
         <input type="text" id="tracéNameInput" placeholder="Ex. Route principale">
         <label class="modal-field-label">Couleur</label>
         <input type="color" id="tracéColorInput" style="width:48px; height:28px; padding:2px; cursor:pointer;">
-        <label class="modal-field-label" style="margin-top:10px;">Épaisseur (px)</label>
-        <input type="number" id="tracéWidthInput" min="2" max="60" step="1" style="width:80px;">
+        <div class="modal-field-ligne" style="margin-top:10px;">
+          <label class="modal-field-label">Épaisseur (px)</label>
+          <input type="number" id="tracéWidthInput" min="2" max="60" step="1">
+        </div>
         <div id="tracéHeightField" style="display:none;">
-          <label class="modal-field-label" style="margin-top:10px;">Hauteur (m)</label>
-          <input type="number" id="tracéHeightInput" min="0.1" max="10" step="0.1" style="width:80px;">
+          <div class="modal-field-ligne">
+            <label class="modal-field-label">Hauteur (m)</label>
+            <input type="number" id="tracéHeightInput" min="0.1" max="10" step="0.1">
+          </div>
         </div>
       </div>
     </div>

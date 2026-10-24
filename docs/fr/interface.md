@@ -185,6 +185,12 @@ couleur dit la nature du bandeau, pas la conséquence d'un bouton.
 Un réglage agrandit l'interface (`--echelle-ui`) : en-tête, menus, modales et menus contextuels.
 **La Planche n'est pas agrandie**, ni le voile des modales : seulement ce qui se lit.
 
+### Champs
+
+**La règle des champs** (#460e) : un **nombre court** avec son unité se règle sur une ligne, libellé
+à gauche, champ à droite (`.modal-field-ligne`, `.batiment-champ`). Une **liste**, un **curseur**, une
+**couleur** ou un **texte** gardent leur libellé au-dessus, champ pleine largeur.
+
 ## Choix et icônes
 
 ### Des pictogrammes plutôt que des mots
@@ -262,7 +268,7 @@ rejoint ce document avec son test.
 - **#460c** ✅ Un seul composant de choix, `.choix` (éditeur de bâtiment, Lecteur), avec ses variantes
   `.choix-types`, `.choix-options` et `.choix-bascules`.
 - **#460d** ✅ Un seul style de ligne active et un seul trait de dépôt.
-- **#460e** Deux mises en page de champ (libellé au-dessus ou à gauche) : trancher la règle.
+- **#460e** ✅ Règle tranchée : nombre court sur une ligne, le reste au-dessus.
 - **#460f** Deux vocabulaires de section (panneaux, modale d'un Élément) : une seule hiérarchie.
 - **#460g** Deux composants d'onglets (store, Configuration) : les fusionner.
 - **#460h** Deux états vides : les fusionner.

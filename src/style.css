@@ -2792,3 +2792,10 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-sous-section > .choix.choix-options{ align-self:flex-start; }
 .choix.choix-bascules{ justify-content:center; gap:10px; margin:0; }
 .choix.choix-bascules button.icone{ flex:0 0 auto; width:56px; padding:5px 0; }
+/* #460e : LA RÈGLE DES CHAMPS. Un NOMBRE COURT (avec son unité) se règle sur une ligne, libellé à
+   gauche, champ à droite — comme Largeur / Hauteur / Élévation de l'éditeur de bâtiment. Une liste,
+   un curseur, une couleur ou un texte gardent leur libellé AU-DESSUS, champ pleine largeur. */
+.modal-field-ligne{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 14px; }
+.modal-field-ligne > .modal-field-label{ margin:0; }
+.modal-field-ligne input[type=number], .modal-field-ligne .modal-field-number{ flex:none; width:90px; margin:0; }
+.modal-field-ligne .modal-field-valeur{ display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft); }
