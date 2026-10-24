@@ -27,6 +27,15 @@ export const OPTIONS_LECTEUR = Object.freeze({
 export const VITESSE_MIN = 1, VITESSE_MAX = 60;
 
 /** Des options lues d'ailleurs (localStorage), ramenées aux valeurs admises. */
+/**
+ * L'ajustement qui s'applique VRAIMENT : en deux pages, toujours la page entière (demandé : la
+ * largeur y changeait trop peu, le réglage n'y est plus proposé). Le choix fait en une page est
+ * gardé et revient avec elle.
+ */
+export function ajustementEffectif(o){
+  return o && !o.double && o.ajustement === 'largeur' ? 'largeur' : 'hauteur';
+}
+
 export function optionsValides(brut){
   const o = { ...OPTIONS_LECTEUR };
   const b = brut && typeof brut === 'object' ? brut : {};

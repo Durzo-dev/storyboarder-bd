@@ -17,6 +17,7 @@ import { rendrePlancheEnImage } from './draw.js';
 import {
   optionsValides, etalements, etalementDeLaPage, pasDuCote, etapesGuidees, etapeDeLaPage,
   cadrageDansLaVue, avancer, coteQuiTourne, VITESSE_MIN, VITESSE_MAX,
+  ajustementEffectif,
 } from './lecteur.js';
 
 const CLE_OPTIONS = 'lecteur:options';
@@ -131,7 +132,7 @@ async function planche(pi, hauteurPx){
 
 /** Hauteur affichée d'une page : la vue entière (« page entière »), ou ce qui remplit la largeur. */
 function hauteurParPage(zone, nb, t){
-  return options.ajustement === 'largeur'
+  return ajustementEffectif(options) === 'largeur'
     ? (zone.w * 0.98 / nb) * (t.h / t.w)
     : Math.min(zone.h * 0.96, (zone.w * 0.98 / nb) * (t.h / t.w));
 }
@@ -191,7 +192,7 @@ async function afficher(){
   const dpr = globalThis.devicePixelRatio || 1;
   $('lecteurOverlay').dataset.fond = options.fond;
   vue.classList.toggle('lecteur-guide', options.guide);
-  vue.classList.toggle('lecteur-largeur', !options.guide && options.ajustement === 'largeur');
+  vue.classList.toggle('lecteur-largeur', !options.guide && ajustementEffectif(options) === 'largeur');
   majPosition();
   if (options.guide) {
     const etape = etapes()[L.index];
@@ -515,14 +516,13 @@ function construirePanneau(){
       // Des pictogrammes, nom en infobulle (demandé) : une page / deux, la première à droite ou à
       // gauche, la page entière ou en largeur ; puis les deux vues, en bascules.
       choix('double', [[false, tr('One page', 'Une page'), ICONES_DOUBLE.false], [true, tr('Two pages', 'Deux pages'), ICONES_DOUBLE.true]], options.guide, 'types'),
-      // Les OPTIONS du nombre de pages, petites, sous un trait (demandé) : l'ajustement (page entière
-      // ou largeur) en une page comme en deux ; la première page à droite ou à gauche en deux pages
-      // seulement (en une page, elle ne voulait rien dire). La vue guidée les éteint (elle cadre case
-      // par case).
-      !options.guide && groupeOptions(
-        options.double && choix('debut', [['droite', tr('First page on the right', 'Première page à droite'), ICONES_DEBUT.droite], ['gauche', tr('First page on the left', 'Première page à gauche'), ICONES_DEBUT.gauche]], false, 'options'),
-        choix('ajustement', [['hauteur', tr('Whole page', 'Page entière'), ICONES_AJUSTEMENT.hauteur], ['largeur', tr('Fit width', 'Largeur'), ICONES_AJUSTEMENT.largeur]], false, 'options'),
-      ),
+      // Les OPTIONS du nombre de pages, petites, sous un trait (demandé) : en une page, l'ajustement
+      // (page entière ou largeur) ; en deux pages, la première page à droite ou à gauche (la largeur
+      // y changeait trop peu : retirée, cf. ajustementEffectif). La vue guidée les éteint (elle
+      // cadre case par case).
+      !options.guide && groupeOptions(options.double
+        ? choix('debut', [['droite', tr('First page on the right', 'Première page à droite'), ICONES_DEBUT.droite], ['gauche', tr('First page on the left', 'Première page à gauche'), ICONES_DEBUT.gauche]], false, 'options')
+        : choix('ajustement', [['hauteur', tr('Whole page', 'Page entière'), ICONES_AJUSTEMENT.hauteur], ['largeur', tr('Fit width', 'Largeur'), ICONES_AJUSTEMENT.largeur]], false, 'options')),
       ligneDeBascules(
         bascule('livre', tr('Book view: the page turns', 'Vue livre : la page se tourne'), ICONE_LIVRE, options.guide),
         bascule('guide', tr('Guided view, panel by panel', 'Vue guidée, case par case'), ICONE_GUIDE),

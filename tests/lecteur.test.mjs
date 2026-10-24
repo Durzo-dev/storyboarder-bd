@@ -149,8 +149,14 @@ describe('le menu du Lecteur en pictogrammes (demandé : « comme l\'éditeur de
     assert.match(I, /stroke="currentColor" stroke-width="1\.6"/);
     assert.ok(!/#[0-9a-fA-F]{3,6}\b/.test(I));
   });
-  test('options sous un trait : l\'ajustement toujours, la première page en deux pages seulement', () => {
-    assert.match(UI, /!options\.guide && groupeOptions\(\n\s+options\.double && choix\('debut'/);
-    assert.match(UI, /choix\('ajustement', [^\n]+, false, 'options'\)/);
+  test('options sous un trait : l\'ajustement en une page, la première page en deux pages', () => {
+    assert.match(UI, /!options\.guide && groupeOptions\(options\.double\n\s+\? choix\('debut'[^\n]+\n\s+: choix\('ajustement'/);
+  });
+  test('ajustementEffectif : en deux pages, toujours la page entière ; le choix d\'une page est gardé', async () => {
+    const { ajustementEffectif } = await import('../src/lecteur.js');
+    assert.equal(ajustementEffectif({ double: true, ajustement: 'largeur' }), 'hauteur');
+    assert.equal(ajustementEffectif({ double: false, ajustement: 'largeur' }), 'largeur');
+    assert.equal(ajustementEffectif({ double: false, ajustement: 'hauteur' }), 'hauteur');
+    assert.doesNotMatch(UI, /options\.ajustement === 'largeur'/, 'l\'ajustement se lit par ajustementEffectif');
   });
 });
