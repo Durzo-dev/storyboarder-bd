@@ -2774,10 +2774,12 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
    qu'un type. */
 .batiment-choix.batiment-types button.icone{ padding:9px 4px; }
 .batiment-choix.batiment-types button.icone svg{ width:36px; height:auto; }
-.batiment-options-groupe{ display:flex; flex-direction:column; align-items:flex-start; gap:6px; border-top:1px solid var(--line-strong); padding-top:8px; }
+.batiment-options-groupe{ display:flex; flex-direction:column; align-items:center; gap:6px; border-top:1px solid var(--line-strong); padding-top:8px; }
 .batiment-choix.batiment-options{ display:inline-flex; flex-wrap:nowrap; gap:2px; margin:0; padding:2px; border:1px solid var(--line-strong); border-radius:7px; background:var(--paper); }
 .batiment-choix.batiment-options button{ flex:0 0 auto; width:40px; padding:3px 0; border:1px solid transparent; border-radius:5px; background:transparent; }
 .batiment-choix.batiment-options button:hover:not(:disabled){ background:var(--white); }
 .batiment-choix.batiment-options button.actif{ border-color:var(--accent); background:var(--accent-soft); }
 .batiment-choix.batiment-options button.icone svg{ width:24px; height:auto; }
 .batiment-sous-section > .batiment-choix.batiment-options{ align-self:flex-start; }
+.batiment-choix.batiment-bascules{ justify-content:center; gap:10px; margin:0; }
+.batiment-choix.batiment-bascules button.icone{ flex:0 0 auto; width:56px; padding:5px 0; }

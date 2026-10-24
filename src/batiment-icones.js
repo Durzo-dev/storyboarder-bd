@@ -72,8 +72,18 @@ export const ICONES_DESSUS = {
   arche: svg(32, 28, '<path d="M2 26h28"/><path d="M10 26V11a6 6 0 0 1 12 0v15" stroke-width="2.2"/>'),
 };
 
-/** Les deux gestes d'une porte battante, vus de dessus : changer de côté, changer de charnière. */
-export const ICONES_INVERSER = {
-  cote: svg(32, 30, '<path d="M2 14h8M22 14h8" stroke-width="3"/><path d="M10 14V4"/><path d="M10 4a10 10 0 0 1 10 10" stroke-dasharray="2 2"/><path d="M16 18v9m-3-3 3 3 3-3"/>'),
-  charniere: svg(32, 30, '<path d="M2 14h8M22 14h8" stroke-width="3"/><path d="M10 14V4"/><path d="M10 4a10 10 0 0 1 10 10" stroke-dasharray="2 2"/><path d="M9 24h14m-3-3 3 3-3 3M12 21l-3 3 3 3"/>'),
-};
+/**
+ * Le sens d'une porte battante, vu de dessus (demandé : les deux boutons de « Sens d'ouverture »
+ * sont des bascules, et chacun DESSINE LA PORTE TELLE QU'ELLE SERA après le clic). `sens` : 1 ou -1
+ * (le côté du mur où le battant s'ouvre), `charniere` : 'debut' ou 'fin'. `geste` ajoute dessous la
+ * petite flèche qui dit ce que le bouton change : 'cote' (↕) ou 'charniere' (↔).
+ */
+export function iconeSensPorte(sens, charniere, geste){
+  const mur = 11, hx = charniere === 'fin' ? 20 : 12, ox = charniere === 'fin' ? 12 : 20, haut = sens !== -1;
+  const bout = haut ? mur - 8 : mur + 8;
+  const balayage = haut === (hx < ox) ? 1 : 0;
+  const fleche = geste === 'cote' ? '<path d="M16 23v6m-2-2 2 2 2-2M14 25l2-2 2 2" stroke-width="1.3"/>'
+    : geste === 'charniere' ? '<path d="M11 26.5h10m-2-2 2 2-2 2M13 24.5l-2 2 2 2" stroke-width="1.3"/>' : '';
+  return svg(32, 30, `<path d="M2 ${mur}h10M20 ${mur}h10" stroke-width="3"/><path d="M${hx} ${mur}V${bout}"/>`
+    + `<path d="M${hx} ${bout}A8 8 0 0 ${balayage} ${ox} ${mur}" stroke-dasharray="2 2"/>${fleche}`);
+}

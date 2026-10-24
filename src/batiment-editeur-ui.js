@@ -21,7 +21,7 @@ import { tr } from './state.js';
 import { creerBatiment, nomAfficheDuFichier, DEFAUTS_BATIMENT, TYPES_D_OUVERTURE } from './batiment.js';
 import {
   ICONES_TYPE_ESCALIER, ICONES_SENS_ESCALIER, ICONES_RAMPE, ICONES_MARCHES, ICONES_OUVERTURE, ICONES_MANOEUVRE,
-  ICONES_REMPLISSAGE, ICONES_DESSUS, ICONES_INVERSER,
+  ICONES_REMPLISSAGE, ICONES_DESSUS, iconeSensPorte,
 } from './batiment-icones.js';
 import { actionDEnregistrement } from './batiment-bibliotheque.js';
 import { signatureDuBatiment, signatureDeStructure } from './batiment-element.js';
@@ -773,14 +773,17 @@ function formulaireOuverture(conteneur, v, changer, essayer = null){
     // Le sens d'une porte battante (demandé : visuel plutôt que « Inverser le côté / la charnière ») :
     // deux gestes, le côté où elle s'ouvre, et la charnière (un seul battant).
     if (v.type === 'porte' && !v.coulissant) {
-      const gestes = document.createElement('div'); gestes.className = 'batiment-choix batiment-options';
+      // Deux BASCULES séparées et centrées (demandé), chacune dessinant la porte telle qu'elle sera
+      // après le clic : l'autre côté du mur, ou l'autre charnière.
+      const gestes = document.createElement('div'); gestes.className = 'batiment-choix batiment-bascules';
       const geste = (icone, bulle, faire) => {
         const g = document.createElement('button'); g.type = 'button'; g.className = 'icone';
         g.innerHTML = icone; g.title = bulle; g.setAttribute('aria-label', bulle); g.onclick = faire;
         gestes.appendChild(g);
       };
-      geste(ICONES_INVERSER.cote, tr('Open to the other side of the wall', 'Ouvrir de l\'autre côté du mur'), () => changer({ sens: v.sens === -1 ? 1 : -1 }));
-      if (v.battants !== 2) geste(ICONES_INVERSER.charniere, tr('Move the hinge to the other edge', 'Passer la charnière de l\'autre bord'), () => changer({ charniere: v.charniere === 'fin' ? 'debut' : 'fin' }));
+      const autreSens = v.sens === -1 ? 1 : -1, autreCharniere = v.charniere === 'fin' ? 'debut' : 'fin';
+      geste(iconeSensPorte(autreSens, v.charniere, 'cote'), tr('Open to the other side of the wall', 'Ouvrir de l\'autre côté du mur'), () => changer({ sens: autreSens }));
+      if (v.battants !== 2) geste(iconeSensPorte(v.sens, autreCharniere, 'charniere'), tr('Move the hinge to the other edge', 'Passer la charnière de l\'autre bord'), () => changer({ charniere: autreCharniere }));
       // Leur propre sous-section (demandé), « Sens d'ouverture ».
       sens = sousSection(tr('Opening direction', 'Sens d\'ouverture'), gestes);
     }
