@@ -188,11 +188,15 @@ async function afficher(){
   const gen = ++L.generation;
   const t = S.tomes[L.ti];
   const vue = $('lecteurVue');
+  // Les classes d'abord, la mesure ensuite (signalé : un second clic sur « Largeur » rétrécissait
+  // la page). Mesurée avant, la vue n'avait pas encore sa place réservée à l'ascenseur, ou l'avait
+  // déjà selon le dessin d'avant : la largeur changeait d'un clic à l'autre. `scrollbar-gutter`
+  // (style.css) rend cette place constante, qu'il y ait un ascenseur ou non.
+  vue.classList.toggle('lecteur-guide', options.guide);
+  vue.classList.toggle('lecteur-largeur', !options.guide && ajustementEffectif(options) === 'largeur');
   const zone = vueRect();
   const dpr = globalThis.devicePixelRatio || 1;
   $('lecteurOverlay').dataset.fond = options.fond;
-  vue.classList.toggle('lecteur-guide', options.guide);
-  vue.classList.toggle('lecteur-largeur', !options.guide && ajustementEffectif(options) === 'largeur');
   majPosition();
   if (options.guide) {
     const etape = etapes()[L.index];
@@ -525,12 +529,16 @@ function construirePanneau(){
         : choix('ajustement', [['hauteur', tr('Whole page', 'Page entière'), ICONES_AJUSTEMENT.hauteur], ['largeur', tr('Fit width', 'Largeur'), ICONES_AJUSTEMENT.largeur]], false, 'options')),
       ligneDeBascules(
         bascule('livre', tr('Book view: the page turns', 'Vue livre : la page se tourne'), ICONE_LIVRE, options.guide),
-        bascule('guide', tr('Guided view, panel by panel', 'Vue guidée, case par case'), ICONE_GUIDE),
       ),
     ]),
-    section(tr('Reading direction', 'Sens de lecture'), [
+    // « Sens de lecture » devient « Lecture » et accueille la vue guidée (demandé) : lire case par
+    // case est une façon de lire, pas une mise en page.
+    section(tr('Reading', 'Lecture'), [
       // « Vers la gauche » à gauche, « Vers la droite » à droite (demandé).
       choix('sens', [['rtl', tr('To the left', 'Vers la gauche'), ICONES_SENS.rtl], ['ltr', tr('To the right', 'Vers la droite'), ICONES_SENS.ltr]]),
+      ligneDeBascules(
+        bascule('guide', tr('Guided view, panel by panel', 'Vue guidée, case par case'), ICONE_GUIDE),
+      ),
     ]),
     // Le bouton de lecture SOUS le réglage de la vitesse (demandé).
     section(tr('Automatic scrolling', 'Défilement automatique'), [vitesse, lecture]),

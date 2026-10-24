@@ -227,8 +227,9 @@ const licone = (liste, actif, classe = '') => `<div class="choix${classe}">${lis
 const LECTEUR = lsection(L('Affichage', 'Display'),
   licone([[LI.ICONES_DOUBLE.false, 'Une page', 'One page'], [LI.ICONES_DOUBLE.true, 'Deux pages', 'Two pages']], 1, ' choix-types')
   + `<div class="choix-options-groupe">${licone([[LI.ICONES_DEBUT.droite, 'Première page à droite', 'First page on the right'], [LI.ICONES_DEBUT.gauche, 'Première page à gauche', 'First page on the left']], 0, ' choix-options')}</div>`
-  + licone([[LI.ICONE_LIVRE, 'Vue livre : la page se tourne', 'Book view: the page turns'], [LI.ICONE_GUIDE, 'Vue guidée, case par case', 'Guided view, panel by panel']], [0], ' choix-bascules'))
-  + lsection(L('Sens de lecture', 'Reading direction'), licone([[LI.ICONES_SENS.rtl, 'Vers la gauche', 'To the left'], [LI.ICONES_SENS.ltr, 'Vers la droite', 'To the right']], 1))
+  + licone([[LI.ICONE_LIVRE, 'Vue livre : la page se tourne', 'Book view: the page turns']], [0], ' choix-bascules'))
+  + lsection(L('Lecture', 'Reading'), licone([[LI.ICONES_SENS.rtl, 'Vers la gauche', 'To the left'], [LI.ICONES_SENS.ltr, 'Vers la droite', 'To the right']], 1)
+    + licone([[LI.ICONE_GUIDE, 'Vue guidée, case par case', 'Guided view, panel by panel']], [], ' choix-bascules'))
   + lsection(L('Défilement automatique', 'Automatic scrolling'), `<div class="lecteur-vitesse"><label>${L('Vitesse : 6 s par page', 'Speed: 6 s per page')}</label><input type="range" min="2" max="20" value="6"></div><button type="button" class="full-btn lecteur-lecture">${L('▶ Lecture (Espace)', '▶ Play (Space)')}</button>`)
   + lsection(L('Apparence', 'Look'), lchoix([L('Sombre', 'Dark'), L('Gris', 'Grey'), L('Clair', 'Light')], 0))
   + `<button type="button" class="nav-btn">${L('⛶ Plein écran (F)', '⛶ Full screen (F)')}</button><p class="side-hint">${L('← → ou clic sur les bords pour tourner les pages · Origine / Fin · Échap pour sortir.', '← → or click the edges to turn pages · Home / End · Esc to leave.')}</p>`;

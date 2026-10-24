@@ -1632,7 +1632,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .lecteur[data-fond="clair"] .lecteur-scene { background: #ecebe7; }
 .lecteur-vue { flex: 1; min-height: 0; position: relative; overflow: hidden; display: flex; align-items: center;
                justify-content: center; }
-.lecteur-vue.lecteur-largeur { overflow-y: auto; align-items: flex-start; }
+.lecteur-vue.lecteur-largeur { overflow-y: auto; align-items: flex-start; scrollbar-gutter: stable; }  /* largeur constante, ascenseur ou non */
 .lecteur-etalement { display: flex; gap: 0; margin: auto; }
 /* Une FEUILLE par page, le canevas dedans. À plat (vue livre décochée) : les pages collées, sans
    aucun effet (demandé). La page blanche qui comble un vide prend la couleur du fond, sans ombre. */

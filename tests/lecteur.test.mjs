@@ -159,4 +159,11 @@ describe('le menu du Lecteur en pictogrammes (demandé : « comme l\'éditeur de
     assert.equal(ajustementEffectif({ double: false, ajustement: 'hauteur' }), 'hauteur');
     assert.doesNotMatch(UI, /options\.ajustement === 'largeur'/, 'l\'ajustement se lit par ajustementEffectif');
   });
+  test('RÉGRESSION : un second clic sur « Largeur » ne rétrécit plus la page (mesure après les classes, place de l\'ascenseur constante)', () => {
+    assert.match(UI, /vue\.classList\.toggle\('lecteur-largeur'[^\n]+\n\s+const zone = vueRect\(\);/);
+    assert.match(lire('src/style.css'), /\.lecteur-vue\.lecteur-largeur \{[^}]*scrollbar-gutter: stable;/);
+  });
+  test('la section « Lecture » (ex-« Sens de lecture ») porte le sens et la vue guidée', () => {
+    assert.match(UI, /section\(tr\('Reading', 'Lecture'\), \[[\s\S]*?choix\('sens'[\s\S]*?bascule\('guide'/);
+  });
 });
