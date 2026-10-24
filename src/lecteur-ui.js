@@ -11,7 +11,7 @@
  * Les Planches sont dessinées à la demande (rendrePlancheEnImage, draw.js) et gardées le temps de la
  * lecture ; les miniatures sont préparées en arrière-plan, une à une, pour ne pas figer l'écran.
  */
-import { ICONES_DOUBLE, ICONES_DEBUT, ICONES_AJUSTEMENT, ICONES_SENS, ICONE_LIVRE, ICONE_GUIDE } from './lecteur-icones.js';
+import { ICONES_DOUBLE, ICONES_DEBUT, ICONES_AJUSTEMENT, ICONES_SENS, ICONE_LIVRE, ICONE_GUIDE, ICONE_MINIATURES } from './lecteur-icones.js';
 import { S, tr, panelsInPage } from './state.js';
 import { rendrePlancheEnImage } from './draw.js';
 import {
@@ -479,15 +479,6 @@ function ligneDeBascules(...boutons){
   g.append(...boutons);
   return g;
 }
-function caseACocher(cle, libelle, desactive = false){
-  const l = document.createElement('label');
-  l.className = 'modal-checkbox-line lecteur-case' + (desactive ? ' desactive' : '');
-  const i = document.createElement('input');
-  i.type = 'checkbox'; i.checked = !!options[cle]; i.disabled = desactive;
-  i.onchange = () => changer(cle, i.checked);
-  l.append(i, document.createTextNode(' ' + libelle));
-  return l;
-}
 
 function construirePanneau(){
   const p = $('lecteurPanneau');
@@ -547,7 +538,8 @@ function construirePanneau(){
     section(tr('Automatic scrolling', 'Défilement automatique'), [vitesse, lecture]),
     section(tr('Look', 'Apparence'), [
       choix('fond', [['sombre', tr('Dark', 'Sombre')], ['gris', tr('Grey', 'Gris')], ['clair', tr('Light', 'Clair')]]),
-      caseACocher('miniatures', tr('Thumbnail strip', 'Bandeau de miniatures')),
+      // Une bascule de toute la largeur plutôt qu'une case à cocher (demandé), comme les vues.
+      ligneDeBascules(bascule('miniatures', tr('Thumbnail strip', 'Bandeau de miniatures'), ICONE_MINIATURES)),
       plein,
     ]),
     aide,

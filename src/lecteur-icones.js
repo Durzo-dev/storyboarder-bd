@@ -38,3 +38,6 @@ export const ICONE_LIVRE = svg('<path d="M16 6c-3-2-8-2.5-12-1.5v15c4-1 9-.5 12 
 
 /** Vue guidée : une planche et ses cases, l'une d'elles en lumière. */
 export const ICONE_GUIDE = svg(`<rect x="9" y="2" width="14" height="20" rx="1"/><rect x="11" y="4" width="10" height="6" ${PLEINE}/><path d="M11 12h4v8h-4zM17 12h4v8h-4z"/>`);
+
+/** Le bandeau de miniatures : l'écran (le cadre), et sous lui une rangée de petites pages, l'une en lumière. */
+export const ICONE_MINIATURES = svg(`<rect x="3" y="2" width="26" height="13" rx="1.5" stroke-opacity=".55"/><rect x="4" y="17.5" width="5" height="4.5" rx=".5"/><rect x="10.5" y="17.5" width="5" height="4.5" rx=".5" ${PLEINE}/><rect x="17" y="17.5" width="5" height="4.5" rx=".5"/><rect x="23.5" y="17.5" width="5" height="4.5" rx=".5"/>`);

@@ -231,7 +231,7 @@ const LECTEUR = lsection(L('Affichage', 'Display'),
   + lsection(L('Lecture', 'Reading'), licone([[LI.ICONES_SENS.rtl, 'Vers la gauche', 'To the left'], [LI.ICONES_SENS.ltr, 'Vers la droite', 'To the right']], 1, ' choix-types')
     + licone([[LI.ICONE_GUIDE, 'Vue guidée, case par case', 'Guided view, panel by panel']], []))
   + lsection(L('Défilement automatique', 'Automatic scrolling'), `<div class="lecteur-vitesse"><label>${L('Vitesse : 6 s par page', 'Speed: 6 s per page')}</label><input type="range" min="2" max="20" value="6"></div><button type="button" class="full-btn lecteur-lecture">${L('▶ Lecture (Espace)', '▶ Play (Space)')}</button>`)
-  + lsection(L('Apparence', 'Look'), lchoix([L('Sombre', 'Dark'), L('Gris', 'Grey'), L('Clair', 'Light')], 0))
+  + lsection(L('Apparence', 'Look'), lchoix([L('Sombre', 'Dark'), L('Gris', 'Grey'), L('Clair', 'Light')], 0) + licone([[LI.ICONE_MINIATURES, 'Bandeau de miniatures', 'Thumbnail strip']], [0]))
   + `<button type="button" class="nav-btn">${L('⛶ Plein écran (F)', '⛶ Full screen (F)')}</button><p class="side-hint">${L('← → ou clic sur les bords pour tourner les pages · Origine / Fin · Échap pour sortir.', '← → or click the edges to turn pages · Home / End · Esc to leave.')}</p>`;
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════

@@ -170,4 +170,8 @@ describe('le menu du Lecteur en pictogrammes (demandé : « comme l\'éditeur de
     assert.match(UI, /ICONES_SENS\.ltr\]\], false, 'types'\)/);
     assert.match(UI, /function ligneDeBascules\(\.\.\.boutons\)\{\n  const g = document\.createElement\('div'\);\n  g\.className = 'choix';/);
   });
+  test('le bandeau de miniatures est une bascule de toute la largeur, plus une case à cocher', () => {
+    assert.match(UI, /ligneDeBascules\(bascule\('miniatures', tr\('Thumbnail strip', 'Bandeau de miniatures'\), ICONE_MINIATURES\)\)/);
+    assert.doesNotMatch(UI, /caseACocher/);
+  });
 });

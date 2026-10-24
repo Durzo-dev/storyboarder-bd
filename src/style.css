@@ -1654,7 +1654,6 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .lecteur-face-dos { transform: rotateY(180deg); }
 .lecteur-face-blanche { background: transparent; box-shadow: none; }
 .lecteur-cache-page { position: absolute; z-index: 1; pointer-events: none; background: #fff; }
-.lecteur-case.desactive { opacity: .45; }
 .lecteur-vue.lecteur-guide { display: block; }
 .lecteur-page-guidee { position: absolute; left: 0; top: 0; transform-origin: 0 0; background: #fff;
                        transition: transform .35s ease, width .35s ease, height .35s ease;
