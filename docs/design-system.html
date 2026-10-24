@@ -2300,7 +2300,9 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 /* Toujours UNE ligne : la licence se coupe (points de suspension, libellé complet en infobulle),
    le poids ne se coupe jamais. Sans `min-width: 0`, un élément flexible refuse de rétrécir sous
    la largeur de son texte, et la ligne passait à deux. */
-.store-badge{ min-width:0; flex:0 1 auto; padding:1px 6px; border-radius:var(--rayon-pilule); background:var(--creux); color:var(--ink-mid); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* Les badges de catégorie et de licence du store restent ORANGE (demandé après #460b : en gris, ils ne
+   ressortaient plus des vignettes). Seule exception à « ce qui informe n'est pas orange ». */
+.store-badge{ min-width:0; flex:0 1 auto; padding:1px 6px; border-radius:var(--rayon-pilule); background:var(--accent-soft); color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .store-carte-infos > :not(.store-badge){ flex:none; white-space:nowrap; }
 .store-badge.store-badge-nc{ background:transparent; color:var(--ink-soft); box-shadow:inset 0 0 0 1px var(--line-strong); }
 /* #460b : la licence INFORME, elle ne se clique pas : plus d'orange. « Usage commercial permis » en

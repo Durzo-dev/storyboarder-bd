@@ -107,7 +107,7 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null, desti
     appui: null, rectangle: null,   // #454a-3b : un glisser de l'outil Mur trace une pièce rectangulaire
     // #454a-3c : les réglages de l'ouverture à poser, et l'ouverture qu'on fait glisser.
     reglagesOuverture: reglagesParDefaut('porte'), glisserOuverture: null,
-    coupe: false,   // #454b : l'aperçu 3D coupé au niveau courant
+    coupe: true,   // #454b : l'aperçu 3D coupé au niveau courant ; coché par défaut (demandé)
     // #454c : les réglages de l'escalier à poser (et sa dernière direction), le geste de pose, le
     // fantôme sous la souris, l'escalier qu'on fait glisser.
     reglagesEscalier: { ...DEFAUTS_ESCALIER, angle: -Math.PI / 2 }, poseEscalier: null, fantomeEscalier: null, glisserEscalier: null,
@@ -116,7 +116,7 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null, desti
     destination,
   };
   $('batimentEditeur').classList.remove('hidden');
-  $('batimentApercuCoupe').classList.remove('actif');
+  $('batimentApercuCoupe').classList.toggle('actif', E.coupe);
   $('batimentNom').value = b.nom;
   // Un bâtiment vide s'ouvre sur l'outil Mur (demandé) : il n'y a rien d'autre à faire.
   choisirOutil(b.murs.length ? null : 'mur');

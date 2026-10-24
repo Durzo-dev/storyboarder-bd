@@ -31,6 +31,8 @@
 - Hovering a grey button is **never orange**: orange promises a creation or a confirmation.
 - **What informs is not orange** (#460b): an information chip (dimensions, progress, licence,
   count, number) is neutral, `--ink-mid` on `--creux`. Orange only comes back when its row is active.
+  **Exception**: the category and licence badges of store cards (`.store-badge`) stay orange, so
+  they stand out from the thumbnails.
 - Colour never carries the meaning alone: the label or the tooltip says it too (colour blindness,
   see [colour-accessibility.md](colour-accessibility.md)).
 

@@ -178,3 +178,13 @@ describe('#460j : trois rayons', () => {
     assert.match(CSS, /--rayon-pilule:999px;/);
   });
 });
+
+describe('retours du 24 octobre', () => {
+  test('les badges du store restent orange (exception voulue à #460b)', () => {
+    assert.match(regle('.store-badge'), /background:var\(--accent-soft\); color:var\(--accent\);/);
+  });
+  test('l\'aperçu 3D de l\'éditeur de bâtiment s\'ouvre coupé au niveau courant', () => {
+    assert.match(EDITEUR, /coupe: true,/);
+    assert.match(EDITEUR, /\$\('batimentApercuCoupe'\)\.classList\.toggle\('actif', E\.coupe\);/);
+  });
+});

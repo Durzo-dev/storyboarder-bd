@@ -32,7 +32,8 @@
   validation.
 - **Ce qui informe n'est pas orange** (#460b) : une pastille d'information (dimensions, avancement,
   licence, compte, numéro) est neutre, `--ink-mid` sur `--creux`. L'orange y revient seulement quand
-  sa ligne est active.
+  sa ligne est active. **Exception** : les badges de catégorie et de licence des cartes du store
+  (`.store-badge`) restent orange, pour ressortir des vignettes.
 - La couleur ne porte jamais seule le sens : le libellé ou l'infobulle le dit aussi (daltonisme,
   cf. [colour-accessibility.md](colour-accessibility.md)).
 
