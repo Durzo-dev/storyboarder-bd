@@ -92,6 +92,11 @@ ensemble.
 - **Une action par ligne**, sous la forme « Geste : effet. », sans ligne vide entre elles.
 - Des phrases courtes : une ligne qui passe à la ligne est trop longue.
 
+### États vides
+
+Une liste vide le dit en une phrase qui invite à agir (« Aucune pièce : fermez un contour de murs »),
+avec un seul style, `.empty-hint` (#460h) : 12 px, gris `--ink-soft`, sans italique.
+
 ### Pas de message d'état dans un menu
 
 - Un geste refusé ne produit **aucun message** : l'aperçu était déjà rouge.
@@ -277,7 +282,7 @@ rejoint ce document avec son test.
 - **#460e** ✅ Règle tranchée : nombre court sur une ligne, le reste au-dessus.
 - **#460f** ✅ Une seule hiérarchie : écran > section (style des panneaux) > sous-section.
 - **#460g** ✅ Un seul composant d'onglets, `.onglets` / `.onglet` (store, polices, Configuration).
-- **#460h** Deux états vides : les fusionner.
+- **#460h** ✅ Un seul état vide, `.empty-hint` : 12 px, gris `--ink-soft`, sans italique.
 - **#460i** 22 tailles de texte : passer à six.
 - **#460j** 11 rayons : passer à trois.
 - **#460k** Icônes : une seule famille au trait (en-tête, menus contextuels).

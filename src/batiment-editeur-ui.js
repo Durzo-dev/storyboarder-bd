@@ -233,7 +233,7 @@ function ligne(nom, detail){
 }
 function vide(texte){
   const d = document.createElement('div');
-  d.className = 'batiment-vide';
+  d.className = 'empty-hint';   // #460h : l'état vide commun
   d.textContent = texte;
   return d;
 }

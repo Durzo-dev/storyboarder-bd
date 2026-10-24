@@ -643,7 +643,10 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
    dessous. Un seul endroit, plus de fantôme. */
 .right-panel h2,
 .persona-editor-panel h2{ font-family:'Inter',sans-serif; font-size:11px; font-weight:600; color:var(--ink-soft); margin:0 0 10px; text-transform:uppercase; letter-spacing:.05em; }
-.right-panel .empty-hint{ font-size:12px; color:var(--sepia); font-style:normal; line-height:1.5; }
+.empty-hint{ font-size:12px; line-height:1.5; color:var(--ink-soft); font-style:normal; margin:4px 0; }
+/* #460h : UN SEUL ÉTAT VIDE (« Aucune Scène pour l'instant », « Aucune pièce : fermez un contour de
+   murs »…). Il n'avait pas de règle de base : quatre variantes (sépia dans le panneau droit, gris et
+   décalé dans les Images, italique dans l'éditeur de bâtiment, rien du tout dans les Scènes). */
 /* Contenu défilant de l'encart de droite (tous les menus Case/Bulle/Caméra/Aide...), désormais séparé
    du pied de page fixe ci-dessous (cf. #lastSavedIndicator) qui doit rester visible en bas, sur demande
    utilisateur ("En bas dans le menu de droite je veut voir afficher depuis combien de temps date la
@@ -755,7 +758,6 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 /* `.perso-scene-badge` ET `.perso-edit` ONT ÉTÉ RETIRÉES (#402d) : une pastille qui nommait la
    Scène d'un Personnage dans la liste, et son crayon d'édition. Ni l'une ni l'autre n'est posée
    nulle part ; la liste construit ses lignes autrement. */
-.side-persos .empty-hint{ font-size:11.5px; }
 
 /* Les Éléments qui ne montrent rien d'eux-mêmes dans la Case (cf. estHorsChamp3D).
    ATTÉNUÉS, PAS CACHÉS : ils restent lisibles, sélectionnables et nommés — c'est souvent par cette
@@ -2168,7 +2170,6 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    règle `.dropdown-panel > *:last-child > *:last-child`, qui s'arrête un niveau plus haut). */
 #imageList > .model-group:last-child > :last-child { margin-bottom: 0; }
 /* Sans règle, le message héritait de la taille du panneau : trop gros, et collé au titre. */
-#imageList .empty-hint { font-size: 12px; line-height: 1.5; color: var(--ink-soft); margin-top: 10px; }
 
 /* ── Mises à jour (#442) ─────────────────────────────────────────────────────────────────────
    Le bouton du bandeau, à côté du numéro de version : visible seulement quand une version plus
@@ -2695,7 +2696,6 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-liste { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
 .batiment-liste .batiment-ligne { display: flex; justify-content: space-between; gap: 8px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; }
 .batiment-liste .batiment-ligne small { color: var(--ink-soft); }
-.batiment-liste .batiment-vide { color: var(--ink-soft); font-style: italic; }
 .batiment-aide { margin: 0; font-size: 12px; color: var(--ink-soft); line-height: 1.45; white-space: pre-line; }
 /* Les outils (demandé) : des boutons ronds à icône, comme celui qui rouvre l'aperçu 3D, qui flottent
    directement sur la vue de dessus, en bas au centre. */

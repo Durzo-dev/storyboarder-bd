@@ -88,6 +88,11 @@ A grouping inside a section (Type, Steps, Dimensions): a **well** (`--creux`), a
 - **One action per line**, as "Gesture: effect.", with no blank line between them.
 - Short sentences: a line that wraps is too long.
 
+### Empty states
+
+An empty list says so in one sentence that invites action ("No room yet: close a contour of
+walls"), with a single style, `.empty-hint` (#460h): 12 px, grey `--ink-soft`, no italics.
+
 ### No status message in a menu
 
 - A refused gesture produces **no message**: the preview was already red.
@@ -268,7 +273,7 @@ with its test.
 - **#460e** ✅ Rule settled: a short number on one line, the rest above.
 - **#460f** ✅ One hierarchy: screen > section (panel style) > sub-section.
 - **#460g** ✅ One tab component, `.onglets` / `.onglet` (store, fonts, Settings).
-- **#460h** Two empty states: merge them.
+- **#460h** ✅ One empty state, `.empty-hint`: 12 px, grey `--ink-soft`, no italics.
 - **#460i** 22 text sizes: move to six.
 - **#460j** 11 radii: move to three.
 - **#460k** Icons: a single line-icon family (header, context menus).
