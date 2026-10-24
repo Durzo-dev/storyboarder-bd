@@ -193,6 +193,10 @@ Un réglage agrandit l'interface (`--echelle-ui`) : en-tête, menus, modales et 
   - **de face** pour les ouvertures (porte, fenêtre, baie, passage, battants, arche) ;
   - **de profil** pour les marches (pleines ou ouvertes).
 - Le choix actif est **orange** : bordure `--accent`, fond `--accent-soft`.
+- **Types et options** : les types (porte, fenêtre…) sont de grandes tuiles ; les options d'un type
+  (battants, pleine ou vitrée, côté où tourne un escalier) viennent sous un filet, en sélecteurs
+  segmentés compacts. À nombre égal, une option reste plus petite qu'un type, et sa forme la
+  distingue d'un type sans avoir à comparer les tailles.
 - Une case à cocher devient deux icônes quand les deux états se dessinent (Pleines / Ouvertes,
   Pleine / Vitrée).
 - Un choix qui ne change rien de visible pour ce type n'est **pas proposé** (le nombre de battants

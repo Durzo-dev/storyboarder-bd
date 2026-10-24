@@ -591,8 +591,8 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
   // `essayer(changements)` (un escalier posé) rend `{ erreur }` (la raison d'un refus : le choix est
   // ÉTEINT, la raison en infobulle) ou `{ changements, note }` : ce qu'il faut appliquer, position
   // comprise si l'escalier doit se décaler pour que le choix tienne (demandé), et l'infobulle qui le dit.
-  const choix = (valeurs, actuelle, quoi) => {
-    const d = document.createElement('div'); d.className = 'batiment-choix';
+  const choix = (valeurs, actuelle, quoi, genre = 'type') => {
+    const d = document.createElement('div'); d.className = 'batiment-choix ' + (genre === 'option' ? 'batiment-options' : 'batiment-types');
     valeurs.forEach(([val, lib, icone, bulle]) => {
       const b = document.createElement('button'); b.type = 'button';
       // Avec un pictogramme (demandé) : l'icône SEULE, le libellé passe dans l'infobulle.
@@ -631,10 +631,10 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
     ['L', tr('L', 'En L'), I.L, tr('L-shaped staircase (quarter turn)', 'Escalier en L (quart tournant)')],
     ['U', tr('U', 'En U'), I.U, tr('U-shaped staircase (half turn)', 'Escalier en U (demi-tour)')],
   ], v.type, 'type')];
-  if (v.type !== 'droit') type.push(choix([
+  if (v.type !== 'droit') type.push(groupeOptions(choix([
     [1, tr('Left', 'Gauche'), S[1], tr('Turns left', 'Tourne à gauche')],
     [-1, tr('Right', 'Droite'), S[-1], tr('Turns right', 'Tourne à droite')],
-  ], v.sens, 'sens'));
+  ], v.sens, 'sens', 'option')));
   const elements = [
     sousSection(tr('Type', 'Type'), ...type),
     sousSection(tr('Steps', 'Marches'),
@@ -658,6 +658,16 @@ function formulaireEscalier(conteneur, v, changer, essayer = null){
     elements.push(info);
   }
   conteneur.replaceChildren(...elements);
+}
+
+/**
+ * Les OPTIONS d'un type (demandé) : sous un filet, en sélecteurs segmentés compacts, pour qu'on
+ * les distingue des types (grandes tuiles) par la forme et pas seulement par la taille.
+ */
+function groupeOptions(...rangees){
+  const d = document.createElement('div'); d.className = 'batiment-options-groupe';
+  d.append(...rangees.filter(Boolean));
+  return d;
 }
 
 /** Une sous-section de formulaire (Type, Marches, Dimensions…) : un creux titré. */
@@ -701,8 +711,8 @@ function formulaireOuverture(conteneur, v, changer, essayer = null){
   const O = ICONES_OUVERTURE;
   const types = [['porte', tr('Door', 'Porte'), O.porte], ['fenetre', tr('Window', 'Fenêtre'), O.fenetre],
     ['baie', tr('Bay', 'Baie'), O.baie, tr('Bay window', 'Baie vitrée')], ['passage', tr('Passage', 'Passage'), O.passage, tr('Passage (no door)', 'Passage (sans porte)')]];
-  const choix = (valeurs, actuelle, quoi) => {
-    const d = document.createElement('div'); d.className = 'batiment-choix';
+  const choix = (valeurs, actuelle, quoi, genre = 'type') => {
+    const d = document.createElement('div'); d.className = 'batiment-choix ' + (genre === 'option' ? 'batiment-options' : 'batiment-types');
     // La « manœuvre » n'est pas un champ : un battant, deux, ou coulissante (demandé, un seul choix).
     const champs = (val) => quoi !== 'manoeuvre' ? { [quoi]: val } : val === 'coulissant' ? { coulissant: true } : { coulissant: false, battants: val };
     valeurs.forEach(([val, lib, icone, bulle]) => {
@@ -739,12 +749,13 @@ function formulaireOuverture(conteneur, v, changer, essayer = null){
   };
   // Deux sous-sections (demandé) : Type (des pictogrammes seulement), Dimensions.
   const type = [choix(types, v.type, 'type')];
+  let sens = null;
   if (v.type === 'passage') {
     // Le dessus d'un passage : droit ou en arche (demandé).
-    type.push(choix([
+    type.push(groupeOptions(choix([
       ['droit', tr('Straight', 'Droit'), ICONES_DESSUS.droit, tr('Straight top', 'Dessus droit')],
       ['arche', tr('Arch', 'Arche'), ICONES_DESSUS.arche, tr('Arched top', 'Dessus en arche')],
-    ], v.dessus === 'arche' ? 'arche' : 'droit', 'dessus'));
+    ], v.dessus === 'arche' ? 'arche' : 'droit', 'dessus', 'option')));
   } else {
     // Un battant, deux, ou coulissante : un seul choix (la baie coulissante ignorait ses battants).
     const manoeuvre = v.coulissant ? 'coulissant' : (v.battants === 2 ? 2 : 1);
@@ -752,17 +763,17 @@ function formulaireOuverture(conteneur, v, changer, essayer = null){
       [1, tr('1 leaf', '1 battant'), ICONES_MANOEUVRE[1], tr('One leaf', 'Un battant')],
       [2, tr('2 leaves', '2 battants'), ICONES_MANOEUVRE[2], tr('Two leaves', 'Deux battants')],
       ['coulissant', tr('Sliding', 'Coulissante'), ICONES_MANOEUVRE.coulissant, tr('Sliding', 'Coulissante')],
-    ], manoeuvre, 'manoeuvre');
-    type.push(m);
+    ], manoeuvre, 'manoeuvre', 'option');
     // Le remplissage n'a de sens que pour une porte : fenêtres et baies sont toujours vitrées.
-    if (v.type === 'porte') type.push(choix([
+    const remplissage = v.type === 'porte' ? choix([
       [false, tr('Solid', 'Pleine'), ICONES_REMPLISSAGE.pleine, tr('Solid door', 'Porte pleine')],
       [true, tr('Glazed', 'Vitrée'), ICONES_REMPLISSAGE.vitree, tr('Glazed door', 'Porte vitrée')],
-    ], !!v.vitre, 'vitre'));
+    ], !!v.vitre, 'vitre', 'option') : null;
+    type.push(groupeOptions(m, remplissage));
     // Le sens d'une porte battante (demandé : visuel plutôt que « Inverser le côté / la charnière ») :
     // deux gestes, le côté où elle s'ouvre, et la charnière (un seul battant).
     if (v.type === 'porte' && !v.coulissant) {
-      const gestes = document.createElement('div'); gestes.className = 'batiment-choix';
+      const gestes = document.createElement('div'); gestes.className = 'batiment-choix batiment-options';
       const geste = (icone, bulle, faire) => {
         const g = document.createElement('button'); g.type = 'button'; g.className = 'icone';
         g.innerHTML = icone; g.title = bulle; g.setAttribute('aria-label', bulle); g.onclick = faire;
@@ -770,16 +781,19 @@ function formulaireOuverture(conteneur, v, changer, essayer = null){
       };
       geste(ICONES_INVERSER.cote, tr('Open to the other side of the wall', 'Ouvrir de l\'autre côté du mur'), () => changer({ sens: v.sens === -1 ? 1 : -1 }));
       if (v.battants !== 2) geste(ICONES_INVERSER.charniere, tr('Move the hinge to the other edge', 'Passer la charnière de l\'autre bord'), () => changer({ charniere: v.charniere === 'fin' ? 'debut' : 'fin' }));
-      type.push(gestes);
+      // Leur propre sous-section (demandé), « Sens d'ouverture ».
+      sens = sousSection(tr('Opening direction', 'Sens d\'ouverture'), gestes);
     }
   }
   // « Hauteur d'allège », puis « Hauteur depuis le sol », trop long (demandé) : « Élévation », expliquée en infobulle.
   const bas = champ(tr('Elevation', 'Élévation'), v.y, 'y');
   bas.title = tr('Distance between the floor and the bottom of the opening', 'Distance entre le sol et le bas de l\'ouverture');
-  conteneur.replaceChildren(
+  conteneur.replaceChildren(...[
     sousSection(tr('Type', 'Type'), ...type),
+    sens,
     sousSection(tr('Dimensions', 'Dimensions'),
-      champ(tr('Width', 'Largeur'), v.largeur, 'largeur'), champ(tr('Height', 'Hauteur'), v.hauteur, 'hauteur'), bas));
+      champ(tr('Width', 'Largeur'), v.largeur, 'largeur'), champ(tr('Height', 'Hauteur'), v.hauteur, 'hauteur'), bas),
+  ].filter(Boolean));
 }
 
 /** Le mur sélectionné, s'il existe encore. */

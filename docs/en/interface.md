@@ -190,6 +190,9 @@ Page is not enlarged**, nor the modals' veil: only what is read.
   - **from the front** for openings (door, window, bay, passage, leaves, arch);
   - **from the side** for steps (solid or open).
 - The active choice is **orange**: `--accent` border, `--accent-soft` fill.
+- **Types and options**: types (door, window…) are large tiles; a type's options (leaves, solid or
+  glazed, the side a staircase turns to) come below a rule, as compact segmented selectors. At equal
+  count, an option stays smaller than a type, and its shape sets it apart without comparing sizes.
 - A checkbox becomes two icons when both states can be drawn (Solid / Open, Solid / Glazed).
 - A choice that changes nothing visible for that type is **not offered** (the number of leaves of a
   sliding bay, the filling of a window).

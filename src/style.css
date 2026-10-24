@@ -2768,3 +2768,16 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 /* Les choix à pictogramme (demandé) : l'icône au trait seule, le libellé en infobulle. */
 .batiment-choix button.icone{ display:flex; align-items:center; justify-content:center; padding:6px 4px; }
 .batiment-choix button.icone svg{ display:block; flex:none; }
+/* TYPES ET OPTIONS (demandé) : les types sont de grandes tuiles ; les options d'un type, sous un
+   filet, sont des sélecteurs segmentés compacts (boutons accolés dans un même cadre). On les
+   distingue par la FORME, pas seulement par la taille : à nombre égal, une option reste plus petite
+   qu'un type. */
+.batiment-choix.batiment-types button.icone{ padding:9px 4px; }
+.batiment-choix.batiment-types button.icone svg{ width:36px; height:auto; }
+.batiment-options-groupe{ display:flex; flex-direction:column; align-items:flex-start; gap:6px; border-top:1px solid var(--line-strong); padding-top:8px; }
+.batiment-choix.batiment-options{ display:inline-flex; flex-wrap:nowrap; gap:2px; margin:0; padding:2px; border:1px solid var(--line-strong); border-radius:7px; background:var(--paper); }
+.batiment-choix.batiment-options button{ flex:0 0 auto; width:40px; padding:3px 0; border:1px solid transparent; border-radius:5px; background:transparent; }
+.batiment-choix.batiment-options button:hover:not(:disabled){ background:var(--white); }
+.batiment-choix.batiment-options button.actif{ border-color:var(--accent); background:var(--accent-soft); }
+.batiment-choix.batiment-options button.icone svg{ width:24px; height:auto; }
+.batiment-sous-section > .batiment-choix.batiment-options{ align-self:flex-start; }
