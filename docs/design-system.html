@@ -695,8 +695,8 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
   display:flex; flex-wrap:wrap; gap:6px; margin-bottom:0;
 }
 .dim-chip{
-  font-size:11px; font-weight:500; color:var(--accent);
-  background:var(--accent-soft); border-radius:6px; padding:4px 8px;
+  font-size:11px; font-weight:500; color:var(--ink-mid);
+  background:var(--creux); border-radius:6px; padding:4px 8px;   /* neutre : elle informe (#460b) */
 }
 .dim-chip b{ font-weight:700; }
 /* Numéro de la Case/Planche (cf. caseNumber / Planche ${pi+1}), affiché juste à côté du titre de son
@@ -712,10 +712,10 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 }
 .planche-case-row.active{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
 .planche-case-row .planche-case-num{
-  font-weight:700; color:var(--accent); background:var(--accent-soft); border-radius:6px;
+  font-weight:700; color:var(--ink-mid); background:var(--creux); border-radius:6px;   /* neutre (#460b) */
   padding:2px 7px; font-size:11px; flex-shrink:0; min-width:20px; text-align:center; margin-top:1px;
 }
-.planche-case-row.active .planche-case-num{ background:var(--white); }
+.planche-case-row.active .planche-case-num{ background:var(--white); color:var(--accent); }   /* l'orange revient avec la ligne active */
 .planche-case-row .planche-case-desc{
   flex:1; min-width:0; color:var(--ink-soft); font-size:11px;
   white-space:pre-wrap; word-break:break-word; line-height:1.5;
@@ -879,7 +879,7 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 .interrupteur-style[aria-pressed="true"]{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
 .interrupteur-style.simule::after{
   content:'~'; position:absolute; top:-3px; right:2px; font-family:Inter, sans-serif; font-style:normal;
-  font-weight:700; font-size:11px; color:var(--accent);
+  font-weight:700; font-size:11px; color:var(--ink-soft);   /* un repère, pas une action (#460b) */
 }
 .side-bulle-appearance{ margin-bottom:8px; }
 .side-bulle-appearance .side-bulle-tail{ margin-left:0; }
@@ -994,7 +994,7 @@ button.context-menu-submenu-trigger{ display:flex; align-items:center; justify-c
 .help-categorie.repliee > .help-categorie-corps{ display:none; }
 .help-group[hidden]{ display:none; }
 /* Le nombre de correspondances d'une section, pendant une recherche. */
-.help-group-compte{ flex:0 0 auto; font-size:11px; font-weight:600; color:var(--accent); }
+.help-group-compte{ flex:0 0 auto; font-size:11px; font-weight:600; color:var(--ink-soft); }   /* un compte, pas une action (#460b) */
 .help-group-compte:empty{ display:none; }
 /* Les mots cherchés, surlignés dans la section ouverte. */
 /* Un aplat d'accent PLEIN (demandé, l'accent translucide se voyait mal), et le libellé du jeton
@@ -2264,9 +2264,11 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 /* Toujours UNE ligne : la licence se coupe (points de suspension, libellé complet en infobulle),
    le poids ne se coupe jamais. Sans `min-width: 0`, un élément flexible refuse de rétrécir sous
    la largeur de son texte, et la ligne passait à deux. */
-.store-badge{ min-width:0; flex:0 1 auto; padding:1px 6px; border-radius:999px; background:var(--accent-soft); color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.store-badge{ min-width:0; flex:0 1 auto; padding:1px 6px; border-radius:999px; background:var(--creux); color:var(--ink-mid); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .store-carte-infos > :not(.store-badge){ flex:none; white-space:nowrap; }
-.store-badge.store-badge-nc{ background:var(--line); color:var(--ink-soft); }
+.store-badge.store-badge-nc{ background:transparent; color:var(--ink-soft); box-shadow:inset 0 0 0 1px var(--line-strong); }
+/* #460b : la licence INFORME, elle ne se clique pas : plus d'orange. « Usage commercial permis » en
+   pastille pleine, « non commercial » en pastille creuse : la différence se lit sans la couleur. */
 /* Un modèle déjà téléchargé : une pastille posée sur la vignette, et une carte un peu effacée. Elle
    reste cliquable : la fiche dit sous quel nom le fichier est rangé. */
 .store-carte{ position:relative; }
@@ -2551,7 +2553,7 @@ button.store-chip:hover{ border-color:var(--accent); }
 .police-variantes{ display:inline-flex; gap:3px; position:absolute; right:8px; top:50%; transform:translateY(-50%); }
 .police-infos .police-variantes{ position:static; transform:none; }
 .police-variante{ display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 3px; border-radius:4px;
-  font-family:Georgia, serif; font-size:11px; font-weight:700; background:var(--accent-soft); color:var(--accent); }
+  font-family:Georgia, serif; font-size:11px; font-weight:700; background:var(--creux); color:var(--ink-mid); }   /* neutre (#460b) */
 .police-variante + .police-variante{ font-style:italic; }
 /* Une variante simulée : un ~ après la lettre, et une pastille éteinte. */
 .police-variante.simulee{ background:var(--line); color:var(--ink-soft); }
@@ -2740,7 +2742,9 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-ligne.batiment-ligne-niveau.cible-dessous { box-shadow: inset 0 -3px 0 var(--accent); }
 .batiment-niveau-gauche { flex: none; width: 30px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 4px; }
 .batiment-niveau-droite { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.batiment-niveau-pastille { font-size: 11px; font-weight: 700; color: var(--accent); cursor: pointer; }
+.batiment-niveau-pastille { font-size: 11px; font-weight: 700; color: var(--ink-soft); cursor: pointer; }
+/* #460b : le numéro d'un niveau n'est orange que sur le niveau COURANT. */
+.batiment-ligne-niveau.actif .batiment-niveau-pastille { color: var(--accent); }
 .batiment-niveau-nom { width: 100%; box-sizing: border-box; font-size: 12px; padding: 3px 5px; border: 1px solid var(--line); border-radius: 5px;
                        background: var(--white); color: var(--ink); }
 .batiment-niveau-droite input[type=number] { width: 64px; }

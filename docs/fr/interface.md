@@ -30,6 +30,9 @@
   ce qu'il ne peut pas faire.
 - Le survol d'un bouton gris n'est **jamais orange** : l'orange promet une création ou une
   validation.
+- **Ce qui informe n'est pas orange** (#460b) : une pastille d'information (dimensions, avancement,
+  licence, compte, numéro) est neutre, `--ink-mid` sur `--creux`. L'orange y revient seulement quand
+  sa ligne est active.
 - La couleur ne porte jamais seule le sens : le libellé ou l'infobulle le dit aussi (daltonisme,
   cf. [colour-accessibility.md](colour-accessibility.md)).
 
@@ -250,8 +253,8 @@ Les icônes vivent dans `src/batiment-icones.js`.
 Relevées en analysant le système de design ; à faire plus tard. Une fois tranchée, chaque règle
 rejoint ce document avec son test.
 
-- **#460a** Curseurs et cases à cocher natifs encore bleus : `accent-color: var(--accent)` global.
-- **#460b** L'orange sert aussi à informer (pastilles de dimensions et d'avancement, badges de
+- **#460a** ✅ Curseurs et cases à cocher natifs à l'orange : `accent-color: var(--accent)` sur `<body>`.
+- **#460b** ✅ L'orange servait aussi à informer (pastilles de dimensions et d'avancement, badges de
   licence, numéros de niveau) : passer à une pastille neutre.
 - **#460c** Deux composants de choix presque identiques (éditeur de bâtiment, Lecteur) : les
   fusionner.

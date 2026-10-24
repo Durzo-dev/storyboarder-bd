@@ -29,6 +29,8 @@
 - A **disabled** button is dark grey whatever its class: its colour does not announce what it cannot
   do.
 - Hovering a grey button is **never orange**: orange promises a creation or a confirmation.
+- **What informs is not orange** (#460b): an information chip (dimensions, progress, licence,
+  count, number) is neutral, `--ink-mid` on `--creux`. Orange only comes back when its row is active.
 - Colour never carries the meaning alone: the label or the tooltip says it too (colour blindness,
   see [colour-accessibility.md](colour-accessibility.md)).
 
@@ -243,8 +245,8 @@ The icons live in `src/batiment-icones.js`.
 Found while analysing the design system; to do later. Once settled, each rule joins this document
 with its test.
 
-- **#460a** Native sliders and checkboxes still blue: a global `accent-color: var(--accent)`.
-- **#460b** Orange also informs (dimension and progress chips, licence badges, level numbers): move
+- **#460a** ✅ Native sliders and checkboxes in orange: `accent-color: var(--accent)` on `<body>`.
+- **#460b** ✅ Orange also informed (dimension and progress chips, licence badges, level numbers): move
   to a neutral chip.
 - **#460c** Two nearly identical choice components (building editor, Reader): merge them.
 - **#460d** Three active-row styles and two drop lines: keep one of each.
