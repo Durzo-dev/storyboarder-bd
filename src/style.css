@@ -274,6 +274,10 @@ header, .sidebar, .right-panel, .modal-box, .context-menu, .persona-editor-panel
 body{
   margin:0; font-family:'Inter',sans-serif; background:var(--paper); color:var(--ink);
   height:100vh; overflow:hidden;
+  /* #460a : les contrôles NATIFS (curseurs, cases à cocher, boutons radio, barres de progression)
+     prennent l'orange de l'application au lieu du bleu du système. Posé sur <body>, et non sur
+     <html>, parce que les thèmes redéfinissent --accent sur <body> ; la propriété s'hérite. */
+  accent-color:var(--accent);
 }
 header{
   display:flex; align-items:center; gap:14px; padding:14px 22px;
@@ -2180,7 +2184,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
   display:inline-block; margin-left:6px; padding:1px 7px; border-radius:999px; font-size:10.5px;
   background:var(--warn); color:var(--sur-warn); vertical-align:middle;
 }
-.maj-progression{ width:100%; margin-top:10px; accent-color:var(--accent); }
+.maj-progression{ width:100%; margin-top:10px; }   /* son orange vient de `accent-color` sur <body> (#460a) */
 .maj-message{ font-size:12.5px; color:var(--ink-soft); min-height:1em; margin:8px 0 0; }
 .maj-message.erreur{ color:var(--danger); }
 
