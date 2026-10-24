@@ -111,7 +111,8 @@ describe('Le branchement', () => {
     // Plein écran et fenêtre : recalage immédiat sans redessin, dessin une fois la taille stable.
     assert.match(UI, /function surRedimension\(\)\{\n  if \(!L\) return;\n  retailler\(\);\n  clearTimeout\(_redimension\);\n  _redimension = setTimeout\(afficher, 250\);/);
     assert.match(UI, /window\.addEventListener\('resize', surRedimension\);/);
-    assert.match(UI, /choix\('sens', \[\['rtl', tr\('To the left', 'Vers la gauche'\)\], \['ltr', tr\('To the right', 'Vers la droite'\)\]\]\)/);
+    // « Vers la gauche » à gauche (des pictogrammes depuis, nom en infobulle).
+    assert.match(UI, /choix\('sens', \[\['rtl', tr\('To the left', 'Vers la gauche'\), ICONES_SENS\.rtl\], \['ltr', tr\('To the right', 'Vers la droite'\), ICONES_SENS\.ltr\]\]\)/);
     assert.match(UI, /\[vitesse, lecture\]/);
     const HTML = lire('src/index.html');
     assert.doesNotMatch(HTML, /lecteur-bar/);
@@ -125,10 +126,27 @@ describe('Le branchement', () => {
     assert.equal(coteQuiTourne(0, 'ltr'), null, 'un saut ne tourne rien');
     const UI = lire('src/lecteur-ui.js');
     assert.match(UI, /const cote = options\.livre && L\.pas \? coteQuiTourne\(L\.pas, options\.sens\) : null;/);
-    assert.match(UI, /caseACocher\('livre', tr\('Book view', 'Vue livre'\), options\.guide\)/);
+    assert.match(UI, /bascule\('livre', tr\('Book view: the page turns', 'Vue livre : la page se tourne'\), ICONE_LIVRE, options\.guide\)/);
     const CSS = lire('src/style.css');
     assert.match(CSS, /\.lecteur-bord-gauche \{ left: 0; justify-content: flex-end; padding-right: 32px; \}/);
     assert.match(CSS, /\.lecteur-bord-droite \{ right: 0; justify-content: flex-start; padding-left: 32px; \}/);
     assert.doesNotMatch(CSS, /\.lecteur-page \{[^}]*box-shadow/, 'à plat, aucune ombre');
+  });
+});
+
+describe('le menu du Lecteur en pictogrammes (demandé : « comme l\'éditeur de bâtiment »)', () => {
+  const lire = (f) => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
+  const UI = lire('src/lecteur-ui.js');
+  test('un choix à pictogramme n\'a pas de texte : son nom passe en infobulle et en aria-label', () => {
+    assert.match(UI, /if \(icone\) \{ b\.innerHTML = icone; b\.title = libelle; b\.setAttribute\('aria-label', libelle\); \}/);
+  });
+  test('les deux vues sont des bascules, et aria-pressed dit leur état', () => {
+    assert.match(UI, /setAttribute\('aria-pressed', String\(!!options\[cle\]\)\)/);
+    assert.match(UI, /bascule\('guide', /);
+  });
+  test('les icônes sont au trait, en currentColor, sans couleur écrite en dur', () => {
+    const I = lire('src/lecteur-icones.js');
+    assert.match(I, /stroke="currentColor" stroke-width="1\.6"/);
+    assert.ok(!/#[0-9a-fA-F]{3,6}\b/.test(I));
   });
 });

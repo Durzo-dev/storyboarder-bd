@@ -11,6 +11,7 @@
  * Les Planches sont dessinées à la demande (rendrePlancheEnImage, draw.js) et gardées le temps de la
  * lecture ; les miniatures sont préparées en arrière-plan, une à une, pour ne pas figer l'écran.
  */
+import { ICONES_DOUBLE, ICONES_DEBUT, ICONES_AJUSTEMENT, ICONES_SENS, ICONE_LIVRE, ICONE_GUIDE } from './lecteur-icones.js';
 import { S, tr, panelsInPage } from './state.js';
 import { rendrePlancheEnImage } from './draw.js';
 import {
@@ -430,19 +431,40 @@ function section(titre, enfants){
   s.append(h, ...enfants.filter(Boolean));
   return s;
 }
-/** Un choix exclusif en boutons (comme une case radio, plus lisible dans un menu étroit). */
+/**
+ * Un choix exclusif en boutons (comme une case radio, plus lisible dans un menu étroit). Avec un
+ * pictogramme (`[valeur, libellé, icône]`), le bouton n'a pas de texte : son nom passe en infobulle
+ * et en aria-label, comme dans l'éditeur de bâtiment (demandé : « des boutons plus visuels »).
+ */
 function choix(cle, valeurs, desactive = false){
   const g = document.createElement('div');
   g.className = 'choix';   // #460c : le composant de choix commun
-  valeurs.forEach(([v, libelle]) => {
+  valeurs.forEach(([v, libelle, icone]) => {
     const b = document.createElement('button');
     b.type = 'button';
-    b.textContent = libelle;
-    b.className = options[cle] === v ? 'actif' : '';
+    if (icone) { b.innerHTML = icone; b.title = libelle; b.setAttribute('aria-label', libelle); }
+    else b.textContent = libelle;
+    b.className = (icone ? 'icone' : '') + (options[cle] === v ? ' actif' : '');
     b.disabled = desactive;
     b.onclick = () => changer(cle, v);
     g.appendChild(b);
   });
+  return g;
+}
+/** Un réglage marche / arrêt en pictogramme : orange quand il est actif (aria-pressed le dit aussi). */
+function bascule(cle, libelle, icone, desactive = false){
+  const b = document.createElement('button');
+  b.type = 'button'; b.innerHTML = icone; b.title = libelle;
+  b.setAttribute('aria-label', libelle); b.setAttribute('aria-pressed', String(!!options[cle]));
+  b.className = 'icone' + (options[cle] ? ' actif' : '');
+  b.disabled = desactive;
+  b.onclick = () => changer(cle, !options[cle]);
+  return b;
+}
+function ligneDeBascules(...boutons){
+  const g = document.createElement('div');
+  g.className = 'choix choix-bascules';
+  g.append(...boutons);
   return g;
 }
 function caseACocher(cle, libelle, desactive = false){
@@ -484,15 +506,19 @@ function construirePanneau(){
     '← → ou clic sur les bords pour tourner les pages · Origine / Fin · Échap pour sortir.');
   p.replaceChildren(
     section(tr('Display', 'Affichage'), [
-      choix('double', [[false, tr('One page', 'Une page')], [true, tr('Two pages', 'Deux pages')]], options.guide),
-      choix('debut', [['droite', tr('First page on the right', 'Première page à droite')], ['gauche', tr('First page on the left', 'Première page à gauche')]], options.guide || !options.double),
-      choix('ajustement', [['hauteur', tr('Whole page', 'Page entière')], ['largeur', tr('Fit width', 'Largeur')]], options.guide),
-      caseACocher('livre', tr('Book view', 'Vue livre'), options.guide),
-      caseACocher('guide', tr('Guided view, panel by panel', 'Vue guidée, case par case')),
+      // Des pictogrammes, nom en infobulle (demandé) : une page / deux, la première à droite ou à
+      // gauche, la page entière ou en largeur ; puis les deux vues, en bascules.
+      choix('double', [[false, tr('One page', 'Une page'), ICONES_DOUBLE.false], [true, tr('Two pages', 'Deux pages'), ICONES_DOUBLE.true]], options.guide),
+      choix('debut', [['droite', tr('First page on the right', 'Première page à droite'), ICONES_DEBUT.droite], ['gauche', tr('First page on the left', 'Première page à gauche'), ICONES_DEBUT.gauche]], options.guide || !options.double),
+      choix('ajustement', [['hauteur', tr('Whole page', 'Page entière'), ICONES_AJUSTEMENT.hauteur], ['largeur', tr('Fit width', 'Largeur'), ICONES_AJUSTEMENT.largeur]], options.guide),
+      ligneDeBascules(
+        bascule('livre', tr('Book view: the page turns', 'Vue livre : la page se tourne'), ICONE_LIVRE, options.guide),
+        bascule('guide', tr('Guided view, panel by panel', 'Vue guidée, case par case'), ICONE_GUIDE),
+      ),
     ]),
     section(tr('Reading direction', 'Sens de lecture'), [
       // « Vers la gauche » à gauche, « Vers la droite » à droite (demandé).
-      choix('sens', [['rtl', tr('To the left', 'Vers la gauche')], ['ltr', tr('To the right', 'Vers la droite')]]),
+      choix('sens', [['rtl', tr('To the left', 'Vers la gauche'), ICONES_SENS.rtl], ['ltr', tr('To the right', 'Vers la droite'), ICONES_SENS.ltr]]),
     ]),
     // Le bouton de lecture SOUS le réglage de la vitesse (demandé).
     section(tr('Automatic scrolling', 'Défilement automatique'), [vitesse, lecture]),
