@@ -461,16 +461,10 @@ function bascule(cle, libelle, icone, desactive = false){
   b.onclick = () => changer(cle, !options[cle]);
   return b;
 }
-function groupeOptions(rangee){
+function groupeOptions(...rangees){
   const g = document.createElement('div');
   g.className = 'choix-options-groupe';
-  g.append(rangee);
-  return g;
-}
-function separe(rangee){
-  const g = document.createElement('div');
-  g.className = 'lecteur-separe';
-  g.append(rangee);
+  g.append(...rangees.filter(Boolean));
   return g;
 }
 function ligneDeBascules(...boutons){
@@ -521,11 +515,14 @@ function construirePanneau(){
       // Des pictogrammes, nom en infobulle (demandé) : une page / deux, la première à droite ou à
       // gauche, la page entière ou en largeur ; puis les deux vues, en bascules.
       choix('double', [[false, tr('One page', 'Une page'), ICONES_DOUBLE.false], [true, tr('Two pages', 'Deux pages'), ICONES_DOUBLE.true]], options.guide, 'types'),
-      // La première page à droite ou à gauche est une OPTION de « Deux pages » (demandé) : plus
-      // petite, sous un trait, et absente en une page (elle n'y voulait rien dire).
-      options.double && !options.guide && groupeOptions(choix('debut', [['droite', tr('First page on the right', 'Première page à droite'), ICONES_DEBUT.droite], ['gauche', tr('First page on the left', 'Première page à gauche'), ICONES_DEBUT.gauche]], false, 'options')),
-      // Un trait au-dessus de l'ajustement (demandé) : c'est un autre réglage que le nombre de pages.
-      separe(choix('ajustement', [['hauteur', tr('Whole page', 'Page entière'), ICONES_AJUSTEMENT.hauteur], ['largeur', tr('Fit width', 'Largeur'), ICONES_AJUSTEMENT.largeur]], options.guide)),
+      // Les OPTIONS du nombre de pages, petites, sous un trait (demandé) : l'ajustement (page entière
+      // ou largeur) en une page comme en deux ; la première page à droite ou à gauche en deux pages
+      // seulement (en une page, elle ne voulait rien dire). La vue guidée les éteint (elle cadre case
+      // par case).
+      !options.guide && groupeOptions(
+        options.double && choix('debut', [['droite', tr('First page on the right', 'Première page à droite'), ICONES_DEBUT.droite], ['gauche', tr('First page on the left', 'Première page à gauche'), ICONES_DEBUT.gauche]], false, 'options'),
+        choix('ajustement', [['hauteur', tr('Whole page', 'Page entière'), ICONES_AJUSTEMENT.hauteur], ['largeur', tr('Fit width', 'Largeur'), ICONES_AJUSTEMENT.largeur]], false, 'options'),
+      ),
       ligneDeBascules(
         bascule('livre', tr('Book view: the page turns', 'Vue livre : la page se tourne'), ICONE_LIVRE, options.guide),
         bascule('guide', tr('Guided view, panel by panel', 'Vue guidée, case par case'), ICONE_GUIDE),

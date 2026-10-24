@@ -2842,9 +2842,8 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .choix.choix-options button.icone svg{ width:24px; height:auto; }
 .batiment-sous-section > .choix.choix-options{ align-self:flex-start; }
 .choix.choix-bascules{ justify-content:center; gap:10px; margin:0; }
-/* Lecteur : l'option « première page » sous « Deux pages », puis un trait avant l'ajustement (demandé). */
-.lecteur-section .choix-options-groupe{ margin-bottom:8px; }
-.lecteur-separe{ border-top:1px solid var(--line-strong); padding-top:8px; }
+/* Lecteur : les options du nombre de pages (première page, ajustement) sous un trait (demandé). */
+.lecteur-section .choix-options-groupe{ margin-bottom:10px; }
 .choix.choix-bascules button.icone{ flex:0 0 auto; width:56px; padding:5px 0; }
 /* #460e : LA RÈGLE DES CHAMPS. Un NOMBRE COURT (avec son unité) se règle sur une ligne, libellé à
    gauche, champ à droite — comme Largeur / Hauteur / Élévation de l'éditeur de bâtiment. Une liste,

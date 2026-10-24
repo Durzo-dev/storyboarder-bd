@@ -149,9 +149,8 @@ describe('le menu du Lecteur en pictogrammes (demandé : « comme l\'éditeur de
     assert.match(I, /stroke="currentColor" stroke-width="1\.6"/);
     assert.ok(!/#[0-9a-fA-F]{3,6}\b/.test(I));
   });
-  test('« première page » est une option de « Deux pages », absente en une page ; un trait avant l\'ajustement', () => {
-    assert.match(UI, /options\.double && !options\.guide && groupeOptions\(choix\('debut'/);
-    assert.match(UI, /separe\(choix\('ajustement'/);
-    assert.match(lire('src/style.css'), /\.lecteur-separe\{ border-top:1px solid var\(--line-strong\); padding-top:8px; \}/);
+  test('options sous un trait : l\'ajustement toujours, la première page en deux pages seulement', () => {
+    assert.match(UI, /!options\.guide && groupeOptions\(\n\s+options\.double && choix\('debut'/);
+    assert.match(UI, /choix\('ajustement', [^\n]+, false, 'options'\)/);
   });
 });
