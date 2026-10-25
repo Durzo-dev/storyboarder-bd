@@ -7739,9 +7739,41 @@ document.getElementById('tracéModalCancel').addEventListener('click', () => {
     const o = S.tracéModalOrigine;
     if (!o || !document.getElementById('tracéModal').classList.contains('hidden')) return;
     S.tracéModalOrigine = null;
-    if (o.color === undefined) delete o.target.color; else o.target.color = o.color;
+    rendreTrace(o);
     drawCurrentPage();
   }).observe(document.getElementById('tracéModal'), { attributes: true, attributeFilter: ['class'] });
+}
+
+/** Rend à une Trace ce que l'aperçu en direct a changé : couleur, largeur (2D et 3D), hauteur. */
+function rendreTrace(o){
+  const t = o.target;
+  for (const k of ['color', 'width', 'wallHeight']) { if (o[k] === undefined) delete t[k]; else t[k] = o[k]; }
+  if (t.world && o.largeur !== undefined) t.world.width = o.largeur;
+}
+
+// La LARGEUR (route, chemin) et la HAUTEUR (muret, clôture, haie, barrière, dont l'épaisseur suit)
+// en direct, comme la couleur (demandé). Calculées depuis l'ORIGINE à chaque frappe, pas depuis la
+// valeur précédente : le trait 2D garde la proportion de départ, sans dérive d'arrondi.
+{
+  const largeur = document.getElementById('tracéWidthInput');
+  const hauteur = document.getElementById('tracéHeightInput');
+  largeur.addEventListener('input', () => {
+    const o = S.tracéModalOrigine;
+    if (!o || !o.target.world || o.largeur === undefined) return;
+    const l = largeurDeTrace3D({ width: o.width, world: { width: o.largeur } }, largeur.value);
+    if (!l) return;
+    o.target.world.width = l.world;
+    o.target.width = l.width;
+    drawCurrentPage();
+  });
+  hauteur.addEventListener('input', () => {
+    const o = S.tracéModalOrigine;
+    if (!o) return;
+    const h = parseFloat(String(hauteur.value).replace(',', '.'));
+    if (!(isFinite(h) && h > 0)) return;
+    o.target.wallHeight = h;
+    drawCurrentPage();
+  });
 }
 
 document.getElementById('tracéModalSave').addEventListener('click', () => {
@@ -7750,7 +7782,7 @@ document.getElementById('tracéModalSave').addEventListener('click', () => {
   // photographier, puis la saisie l'écrase ci-dessous. Et plus rien à rendre à la fermeture.
   const _o = S.tracéModalOrigine;
   S.tracéModalOrigine = null;
-  if (_o) { if (_o.color === undefined) delete _o.target.color; else _o.target.color = _o.color; }
+  if (_o) rendreTrace(_o);
   snapshot();
   S.tracéModalTarget.name  = document.getElementById('tracéNameInput').value.trim() || null;
   S.tracéModalTarget.color = document.getElementById('tracéColorInput').value;

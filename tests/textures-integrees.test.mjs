@@ -139,7 +139,8 @@ describe('la couleur EN DIRECT, et « Origine » (demandé)', () => {
     assert.match(ev, /saisie\.addEventListener\('input', \(\) => \{ cancelAnimationFrame\(image\); image = requestAnimationFrame\(apercu\); \}\)/);
     assert.match(ev, /new MutationObserver\(\(\) => \{\s*const o = S\.tracéModalOrigine;/);
     // L'annulation photographie la couleur d'AVANT l'aperçu.
-    assert.match(ev, /if \(_o\) \{ if \(_o\.color === undefined\) delete _o\.target\.color; else _o\.target\.color = _o\.color; \}\s*snapshot\(\);/);
+    // (rendreTrace : la couleur, et depuis, la largeur et la hauteur aussi.)
+    assert.match(ev, /if \(_o\) rendreTrace\(_o\);\s*snapshot\(\);/);
     assert.match(lire('modals.js'), /document\.getElementById\('tracéColorInput'\)\.couleurOrigine = \(\) => _def\.color \|\| null;/);
     // Le bouton sous la couleur a été retiré (demandé) : la remise se fait dans le sélecteur.
     assert.doesNotMatch(lire('index.html'), /tracéColorReset|sideGroundColorReset/);
@@ -189,5 +190,17 @@ describe('la largeur d\'une route ou d\'un chemin, en mètres (à la place de «
     assert.match(lire('modals.js'), /\(obj\.tracéType === 'route' \|\| obj\.tracéType === 'chemin'\) && obj\.world && obj\.world\.width > 0/);
     assert.doesNotMatch(lire('events.js'), /parseInt\(document\.getElementById\('tracéWidthInput'\)\.value\)/);
     assert.match(lire('index.html'), /id="tracéWidthLabel">Largeur \(m\)</);
+  });
+});
+
+describe('la largeur et la hauteur d\'un Tracé, EN DIRECT (demandé)', () => {
+  const lire = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
+  test('appliquées à la frappe, depuis l\'ORIGINE (pas de dérive), rendues si l\'on ferme sans enregistrer', () => {
+    const ev = lire('events.js');
+    assert.match(ev, /largeurDeTrace3D\(\{ width: o\.width, world: \{ width: o\.largeur \} \}, largeur\.value\)/);
+    assert.match(ev, /hauteur\.addEventListener\('input'/);
+    assert.match(ev, /for \(const k of \['color', 'width', 'wallHeight'\]\)/);
+    assert.match(ev, /if \(t\.world && o\.largeur !== undefined\) t\.world\.width = o\.largeur;/);
+    assert.match(lire('modals.js'), /largeur: obj\.world \? obj\.world\.width : undefined/);
   });
 });
