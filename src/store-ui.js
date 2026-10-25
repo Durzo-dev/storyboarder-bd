@@ -255,7 +255,7 @@ if (globalThis.document && document.addEventListener) {
     const c = img.closest && img.closest('.store-carte');
     if (!c || img !== c.querySelector('img')) return;
     img.dataset.recadree = '1';
-    const origine = img.currentSrc || img.src;
+    const origine = img.src;
     // ⚠️ L'image d'origine n'est JAMAIS montrée (style.css : invisible tant qu'elle n'est pas
     // recadrée) : la remplacer sous les yeux faisait clignoter chaque carte (signalé).
     const montrer = (url) => { if (url) img.src = url; else img.classList.add('recadree-origine'); img.classList.add('recadree'); };
@@ -277,6 +277,26 @@ if (globalThis.document && document.addEventListener) {
       if (img.isConnected) montrer(url);
     } catch (err) { montrer(null); /* l'image d'origine, contenue avec sa marge */ }
   }, true);
+
+  // ⚠️ LA GRILLE EST REFAITE EN ENTIER à chaque page ajoutée au défilement (les deux stores) : chaque
+  // carte déjà vue revenait cachée puis en fondu, d'où un clignotement (signalé, surtout ambientCG
+  // dont les pages arrivent lentement). Une carte qui entre dans la page reprend sa vignette en
+  // mémoire AVANT d'être dessinée (un observateur passe avant l'affichage) : ni attente ni fondu.
+  const reprendre = (img) => {
+    if (img.dataset.recadree || img.classList.contains('texture-a-plat') || !recadrees.has(img.src)) return;
+    const c = img.closest('.store-carte');
+    if (!c || img !== c.querySelector('img')) return;
+    img.dataset.recadree = '1';
+    img.classList.add('recadree', 'recadree-immediate');
+    img.src = recadrees.get(img.src);
+  };
+  if (globalThis.MutationObserver) new MutationObserver((changements) => {
+    for (const ch of changements) for (const n of ch.addedNodes) {
+      if (n.nodeType !== 1) continue;
+      if (n.tagName === 'IMG') reprendre(n);
+      else n.querySelectorAll('.store-carte img').forEach(reprendre);
+    }
+  }).observe(document.documentElement, { childList: true, subtree: true });
 }
 
 function carte(r){

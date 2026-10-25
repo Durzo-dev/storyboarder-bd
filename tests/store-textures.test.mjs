@@ -499,7 +499,9 @@ describe('la marge des vignettes : portée par le recadrage (signalé : fonds cl
     assert.match(css, /\.store-carte img:not\(\.texture-a-plat\)\{ opacity:0;/);   // l'originale n'est jamais vue
     assert.match(css, /\.store-carte img\.recadree\{ opacity:1; \}/);
     assert.match(ui, /recadrees\.has\(origine\)/);                                  // reprise immédiate, sans recalcul
-    assert.match(ui, /recadree-origine/);                                             // échec : l'originale, montrée
+    assert.match(ui, /recadree-origine/);
+    assert.match(ui, /new MutationObserver/);                                        // grille refaite : reprise avant affichage
+    assert.match(css, /\.store-carte img\.recadree-immediate\{ transition:none; \}/);                                             // échec : l'originale, montrée
     assert.match(r, /source\.naturalWidth \|\| source\.width/);                     // taille naturelle d'une <img>
     assert.doesNotMatch(lire('src/style.css'), /border-image:var\(--fond-vignette\)/);
   });
