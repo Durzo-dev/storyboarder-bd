@@ -335,6 +335,8 @@ function boutonTelecharger(r, note){
   let options = [], choisie = null;
   const majTexte = () => {
     const x = options.find(y => y.resolution === choisie);
+    const li = $('texturesFiche').querySelector('.texture-poids');
+    if (li && x) { li.hidden = false; li.textContent = `${tr('Weight', 'Poids')} : ${poids(x.octets)} (${choisie.toLowerCase()})`; }
     telecharger.textContent = x ? `${tr('Download', 'Télécharger')} ${choisie.toLowerCase()} (${poids(x.octets)})` : tr('Download', 'Télécharger');
   };
   const rendreMenu = () => menu.replaceChildren(...options.map(x => {
@@ -496,12 +498,18 @@ async function ouvrirFiche(r, local){
   const auteur = r.auteur && r.auteur.nom;
   const caracteristiques = [
     tailleReelle(dims) ? `${tr('Real size of one tile', 'Taille réelle d\'une tuile')} : ${tailleReelle(dims)}${importee ? tr(' (unknown: by default)', ' (inconnue : par défaut)') : ''}` : null,
-    t && t.cartes && t.cartes.length ? `${tr('Maps', 'Cartes')} : ${t.cartes.map(c => (NOMS_CARTES[c] || [c, c])[langue() === 'en' ? 0 : 1]).join(', ')}` : null,
+    // « Images » plutôt que « Cartes » (jargon 3D, signalé) : les images qui composent la matière.
+    t && t.cartes && t.cartes.length ? `${tr('Images', 'Images')} : ${t.cartes.map(c => (NOMS_CARTES[c] || [c, c])[langue() === 'en' ? 0 : 1]).join(', ')}` : null,
+    t && t.poids ? `${tr('Weight', 'Poids')} : ${poids(t.poids)}` : null,
     t && t.resolution ? `${tr('Resolution', 'Résolution')} : ${t.resolution.toLowerCase()}` : null,
     t ? (t.grain ? tr('Ground and path grain: ready', 'Grain du Sol et des Tracés : prêt') : tr('No grain (neither displacement nor normal map): building finishes only', 'Pas de grain (ni déplacement ni normale) : revêtements de bâtiment seulement')) : null,
     t && t.raccordVisible ? tr('Visible seam: it does not tile perfectly', 'Raccord visible : elle ne se répète pas parfaitement') : null,
+    // Le dossier, comme le fichier d'un modèle : où la retrouver sur le disque.
+    t ? `${tr('Folder', 'Dossier')} : Textures/${t.dossier}` : null,
     t ? (importee ? tr('Imported from a folder', 'Importée d\'un dossier') : tr(`Downloaded from ${nomSource(r.source)}`, `Téléchargée depuis ${nomSource(r.source)}`)) : null,
   ];
+  // En ligne : le poids de la résolution choisie, posé quand la source l'a donné (boutonTelecharger).
+  const lignePoids = !t ? el('li', { classe: 'texture-poids', attrs: { hidden: '' } }) : null;
   const droite = el('div', { classe: 'store-fiche-droite' }, [
     el('h4', { texte: r.nom }),
     importee ? el('p', { texte: tr('Imported from a folder', 'Importée d\'un dossier') })
@@ -513,7 +521,7 @@ async function ouvrirFiche(r, local){
     section(tr('Licence', 'Licence'), importee
       ? [el('p', { classe: 'store-fiche-texte', texte: tr('Unknown: imported from a folder. Check the conditions where it comes from.', 'Inconnue : importée d\'un dossier. Vérifiez les conditions de sa provenance.') })]
       : [el('p', {}, [lien(CC0.libelle, CC0.url)]), liste(phrasesLicence(CC0, langue()))]),
-    section(tr('Characteristics', 'Caractéristiques'), [liste(caracteristiques)]),
+    section(tr('Characteristics', 'Caractéristiques'), [(() => { const ul = liste(caracteristiques); if (lignePoids) ul.appendChild(lignePoids); return ul; })()]),
   ]);
   const retour = el('button', { texte: tr('Back', 'Retour'), classe: 'nav-btn', attrs: { type: 'button' } });
   retour.onclick = fermerFiche;

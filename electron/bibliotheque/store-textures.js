@@ -193,7 +193,12 @@ function mesTextures(dossierProjets){
   const racine = path.join(dossierProjets, B.DOSSIER);
   let dossiers = [];
   try { dossiers = fs.readdirSync(racine, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name); } catch (e) { /* aucun */ }
-  return B.presentes(lireBiblio(dossierProjets), dossiers);
+  // Le poids sur le disque de chaque texture (demandé, dans ses Caractéristiques) : la somme de son dossier.
+  return B.presentes(lireBiblio(dossierProjets), dossiers).map(t => {
+    let poids = 0;
+    try { for (const f of fs.readdirSync(path.join(racine, t.dossier))) poids += fs.statSync(path.join(racine, t.dossier, f)).size; } catch (e) { /* illisible : 0 */ }
+    return { ...t, poids };
+  });
 }
 
 /**

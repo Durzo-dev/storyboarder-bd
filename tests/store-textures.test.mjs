@@ -406,3 +406,14 @@ describe('les tags de « Mes textures » (purs)', () => {
     assert.equal(B.retirer(b, 'p:a').tags.length, 1);
   });
 });
+
+describe('Caractéristiques d\'une texture : poids, images, dossier', () => {
+  const ui = readFileSync(new URL('../src/textures-store-ui.js', import.meta.url), 'utf8');
+  test('le poids (sur le disque, ou de la résolution choisie en ligne), le dossier, et « Images » au lieu de « Cartes »', () => {
+    assert.match(ui, /\$\{tr\('Weight', 'Poids'\)\} : \$\{poids\(t\.poids\)\}/);
+    assert.match(ui, /\$\{tr\('Folder', 'Dossier'\)\} : Textures\/\$\{t\.dossier\}/);
+    assert.match(ui, /\$\{tr\('Images', 'Images'\)\} : /);
+    assert.doesNotMatch(ui, /tr\('Maps', 'Cartes'\)/);
+    assert.match(readFileSync(new URL('../electron/bibliotheque/store-textures.js', import.meta.url), 'utf8'), /return \{ \.\.\.t, poids \};/);
+  });
+});
