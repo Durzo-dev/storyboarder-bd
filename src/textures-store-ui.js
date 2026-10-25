@@ -268,6 +268,7 @@ function fermerFiche(){
   $('texturesGrille').hidden = false;
   // Ni recherche ni filtres sur une fiche (comme le store de modèles) : ils reviennent avec la liste.
   $('texturesFormulaire').hidden = false;
+  $('texturesCredit').hidden = false;
   // La grille est refaite : une texture téléchargée depuis la fiche y porte désormais sa coche.
   if (ouverte) { rendreGrille(); $('texturesDefilement').scrollTop = positionListe; }
 }
@@ -496,16 +497,17 @@ async function ouvrirFiche(r, local){
   const liste = (lignes) => el('ul', {}, lignes.filter(Boolean).map(p => el('li', { texte: p })));
   const importee = r.source === 'import';
   const auteur = r.auteur && r.auteur.nom;
+  // Dans L'ORDRE de la fiche d'un modèle (demandé) : fichier (ici le dossier), taille, poids, ce qui
+  // la compose, la résolution, et d'où elle vient.
   const caracteristiques = [
+    t ? `${tr('Folder', 'Dossier')} : Textures/${t.dossier}` : null,
     tailleReelle(dims) ? `${tr('Real size of one tile', 'Taille réelle d\'une tuile')} : ${tailleReelle(dims)}${importee ? tr(' (unknown: by default)', ' (inconnue : par défaut)') : ''}` : null,
+    t && t.poids ? `${tr('Weight', 'Poids')} : ${poids(t.poids)}` : null,
     // « Images » plutôt que « Cartes » (jargon 3D, signalé) : les images qui composent la matière.
     t && t.cartes && t.cartes.length ? `${tr('Images', 'Images')} : ${t.cartes.map(c => (NOMS_CARTES[c] || [c, c])[langue() === 'en' ? 0 : 1]).join(', ')}` : null,
-    t && t.poids ? `${tr('Weight', 'Poids')} : ${poids(t.poids)}` : null,
-    t && t.resolution ? `${tr('Resolution', 'Résolution')} : ${t.resolution.toLowerCase()}` : null,
     t ? (t.grain ? tr('Ground and path grain: ready', 'Grain du Sol et des Tracés : prêt') : tr('No grain (neither displacement nor normal map): building finishes only', 'Pas de grain (ni déplacement ni normale) : revêtements de bâtiment seulement')) : null,
     t && t.raccordVisible ? tr('Visible seam: it does not tile perfectly', 'Raccord visible : elle ne se répète pas parfaitement') : null,
-    // Le dossier, comme le fichier d'un modèle : où la retrouver sur le disque.
-    t ? `${tr('Folder', 'Dossier')} : Textures/${t.dossier}` : null,
+    t && t.resolution ? `${tr('Resolution', 'Résolution')} : ${t.resolution.toLowerCase()}` : null,
     t ? (importee ? tr('Imported from a folder', 'Importée d\'un dossier') : tr(`Downloaded from ${nomSource(r.source)}`, `Téléchargée depuis ${nomSource(r.source)}`)) : null,
   ];
   // En ligne : le poids de la résolution choisie, posé quand la source l'a donné (boutonTelecharger).
@@ -533,6 +535,8 @@ async function ouvrirFiche(r, local){
   if ($('texturesFiche').hidden) positionListe = $('texturesDefilement').scrollTop;
   $('texturesGrille').hidden = true;
   $('texturesFormulaire').hidden = true;
+  // Rien sous les boutons d'une fiche (demandé) : la licence et la source y sont déjà dites.
+  $('texturesCredit').hidden = true;
   fiche.hidden = false;
   $('texturesDefilement').scrollTop = 0;
 }

@@ -417,3 +417,15 @@ describe('Caractéristiques d\'une texture : poids, images, dossier', () => {
     assert.match(readFileSync(new URL('../electron/bibliotheque/store-textures.js', import.meta.url), 'utf8'), /return \{ \.\.\.t, poids \};/);
   });
 });
+
+describe('retours : ordre des Caractéristiques et rien sous les boutons', () => {
+  const ui = readFileSync(new URL('../src/textures-store-ui.js', import.meta.url), 'utf8');
+  test('dossier, taille, poids, images, grain, résolution, provenance : l\'ordre de la fiche d\'un modèle', () => {
+    const bloc = ui.slice(ui.indexOf('const caracteristiques = ['), ui.indexOf('];', ui.indexOf('const caracteristiques = [')));
+    const ordre = ["'Folder'", "'Real size of one tile'", "'Weight'", "'Images'", 'grain', "'Resolution'", 'Downloaded from'].map(m => bloc.indexOf(m));
+    assert.ok(ordre.every(i => i >= 0) && ordre.every((v, k) => !k || v > ordre[k - 1]), 'ordre attendu');
+  });
+  test('la mention de la source est cachée sur une fiche', () => {
+    assert.match(ui, /\$\('texturesCredit'\)\.hidden = true;/);
+  });
+});
