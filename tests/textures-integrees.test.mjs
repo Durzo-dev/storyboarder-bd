@@ -99,3 +99,24 @@ describe('renommer une texture, la supprimer (clic droit, demandé)', async () =
     assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /\.texture-fiche-tuile\{[^}]*background-repeat:repeat/);
   });
 });
+
+describe('la couleur du Sol d\'une Case (demandé, comme un Tracé)', async () => {
+  const { teinteDuSol3D, GROUND_TYPE_DEFS: D } = await import('../src/constants.js');
+  const herbe = D.find(d => d.id === 'herbe'), eau = D.find(d => d.id === 'eau');
+  test('absente, illisible ou égale à la naturelle : pas de teinte ; une autre : elle', () => {
+    assert.equal(teinteDuSol3D(herbe, undefined), null);
+    assert.equal(teinteDuSol3D(herbe, 'vert'), null);
+    assert.equal(teinteDuSol3D(herbe, herbe.swatch.toUpperCase()), null);
+    assert.equal(teinteDuSol3D(herbe, '#A0B0C0'), '#a0b0c0');
+    assert.equal(teinteDuSol3D(eau, '#A0B0C0'), null);   // l'Eau a son propre rendu
+  });
+  test('câblage : la couleur SOUS la texture, dans le Sol et dans un Tracé ; le rendu et la signature la lisent', () => {
+    const lire = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
+    const html = lire('index.html');
+    assert.ok(html.indexOf('id="sideGroundGrid"') < html.indexOf('id="sideGroundColor"'));
+    assert.ok(html.indexOf('id="tracéTextureGrid"') < html.indexOf('id="tracéColorInput"'));
+    assert.match(lire('rig3d.js'), /buildGroundTexture\(type, teinteDuSol3D\(def, panel\.groundColor\)\)/);
+    assert.match(lire('scene3d.js'), /groundColor: panel\.groundColor \|\| null,/);
+    assert.match(lire('sidebar.js'), /delete sel\.groundColor;/);   // une autre texture repart du naturel
+  });
+});

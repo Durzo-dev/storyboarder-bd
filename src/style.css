@@ -2903,3 +2903,8 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 /* L'image d'une texture de « Mes textures » sur sa fiche : RÉPÉTÉE pour remplir le cadre (signalé :
    floue, entre deux bandes noires), deux tuiles dans la largeur. */
 .texture-fiche-tuile{ position:absolute; inset:0; background-repeat:repeat; background-size:50% auto; background-position:center; }
+
+/* La couleur du Sol, sous son carré de texture (demandé, comme dans la fenêtre d'un Tracé). */
+.sol-couleur{ margin-top:10px; }
+.sol-couleur-saisie{ display:block; width:100%; height:36px; padding:3px; cursor:pointer; margin-top:6px;
+  border:1px solid var(--bord-actif); border-radius:var(--rayon-moyen); background:var(--white); }   /* comme dans une fenêtre */

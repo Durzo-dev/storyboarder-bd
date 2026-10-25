@@ -120,7 +120,9 @@ drawn: for real if the font has the style, simulated otherwise.
 Since #446d, three fields may also name a texture from “My textures”: `groundType` (the Ground of
 a Panel or Scene), `terrainType` (a terrain zone), and `traceTexture`, ADDED on a path (absent: its
 type's original texture). The value is `tex:<folder>`, the texture's folder name in `Textures/`
-(`tex:polyhaven-rocky_trail`). A missing texture (deleted, another machine) is not found: the
+(`tex:polyhaven-rocky_trail`). A fourth field is ADDED on the Panel: `groundColor` (`#rrggbb`), its
+Ground colour, which tints its texture like a path's; absent, the material's natural colour.
+Changing texture removes it. A missing texture (deleted, another machine) is not found: the
 Ground falls back to the first material, the path to its original texture, and the file keeps the
 id, which brings it back as soon as it is downloaded again.
 

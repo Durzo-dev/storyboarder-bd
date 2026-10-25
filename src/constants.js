@@ -1563,6 +1563,18 @@ export const ARCHETYPES_3D = [
 // pas.
 
 /**
+ * LA COULEUR DU SOL D'UNE CASE (demandé, comme celle d'un Tracé) : `groundColor`, champ AJOUTÉ sur la
+ * Case. Rend la teinte à appliquer, ou null pour la couleur naturelle de la matière : champ absent,
+ * illisible, ou égal à sa teinte (choisir la couleur d'origine, c'est ne rien choisir). L'Eau a son
+ * propre rendu et n'en prend pas. Fonction PURE.
+ */
+export function teinteDuSol3D(def, couleur){
+  if (!def || def.eau || typeof couleur !== 'string' || !/^#[0-9a-f]{6}$/i.test(couleur.trim())) return null;
+  const c = couleur.trim().toLowerCase();
+  return c === String(def.swatch || '').toLowerCase() ? null : c;
+}
+
+/**
  * Les grains à charger pour le Sol, dérivés du registre. Fonction PURE.
  *
  * Dérivée et non écrite à la main : une seconde liste se périmerait au premier grain ajouté, et ce

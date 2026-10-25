@@ -1991,6 +1991,7 @@ function computePanelSceneSignature3D(panel, page, styleKey){
     camWx: panel.camWx, camWy: panel.camWy, camWz: panel.camWz,
     pageW: page.w, pageH: page.h,
     groundType: panel.groundType || 'herbe',
+    groundColor: panel.groundColor || null,
     // Phase 12: cameraMode in the signature so activation/deactivation invalidates the cache.
     cameraMode: panel.cameraMode || false,
     // Le repère pendant une rotation dans une Scène (qui n'a plus de mode Caméra) : il apparaît et

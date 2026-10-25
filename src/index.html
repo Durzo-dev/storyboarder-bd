@@ -532,6 +532,12 @@
     <div id="sideGroundSection" class="side-section" style="display:none;">
       <h2>Sol</h2>
       <div id="sideGroundGrid" class="sol-ground-grid"></div>
+      <!-- La couleur du Sol (demandé, comme celle d'un Tracé), SOUS la texture. Hors de la grille, que le
+           menu refait à chaque relâchement de souris : la fenêtre du sélecteur se fermerait. -->
+      <div id="sideGroundColorField" class="sol-couleur">
+        <label class="modal-field-label" for="sideGroundColor" id="sideGroundColorLabel">Couleur</label>
+        <input type="color" id="sideGroundColor" class="sol-couleur-saisie">
+      </div>
     </div>
     <div id="sidePersonasSection" class="side-section" style="display:none;">
       <h2 id="sidePersonasTitle">Éléments</h2>
@@ -2467,13 +2473,14 @@
       <div class="modal-section-body">
         <label class="modal-field-label">Nom</label>
         <input type="text" id="tracéNameInput" placeholder="Ex. Route principale">
-        <label class="modal-field-label">Couleur</label>
-        <input type="color" id="tracéColorInput" style="width:100%; height:36px; padding:2px; cursor:pointer;">
         <!-- #446d : la texture du Tracé, en grand carré ; un clic ouvre le store de textures (modals.js). -->
-        <div id="tracéTextureField" style="display:none; margin-top:10px;">
+        <div id="tracéTextureField" style="display:none;">
           <label class="modal-field-label" id="tracéTextureLabel">Texture</label>
           <div id="tracéTextureGrid" class="texture-carre-zone" style="margin-top:6px;"></div>
         </div>
+        <!-- La couleur SOUS la texture (demandé) : elle la teinte. -->
+        <label class="modal-field-label" style="margin-top:14px;">Couleur</label>
+        <input type="color" id="tracéColorInput" style="width:100%; height:36px; padding:2px; cursor:pointer;">
         <div class="modal-field-ligne" style="margin-top:10px;">
           <label class="modal-field-label">Épaisseur (px)</label>
           <input type="number" id="tracéWidthInput" min="2" max="60" step="1">

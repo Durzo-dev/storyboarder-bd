@@ -10,7 +10,7 @@
  */
 
 import {
-  ANIMAL_TYPES, BUILD_WALL_THICKNESS_RATIO_3D, CHILD_DESIGN_SIZE_3D, FIXED_COLOR, PERSONA_3D_H, PERSONA_3D_W, POSE_3D, GROUND_COLOR_DEFAULT_3D, GROUND_TYPE_DEFS, GROUND_PLANE_SIZE_3D, GROUND_PLANE_SEGMENTS_3D, GROUND_MODULATION_REPEAT_3D,
+  ANIMAL_TYPES, BUILD_WALL_THICKNESS_RATIO_3D, CHILD_DESIGN_SIZE_3D, FIXED_COLOR, PERSONA_3D_H, PERSONA_3D_W, POSE_3D, GROUND_COLOR_DEFAULT_3D, GROUND_TYPE_DEFS, teinteDuSol3D, GROUND_PLANE_SIZE_3D, GROUND_PLANE_SEGMENTS_3D, GROUND_MODULATION_REPEAT_3D,
   GROUND_MODULATION_TAILLE_3D, GROUND_PLAQUE_CELLULE_PX_3D, GROUND_PLAQUE_OCTAVES_3D, repeatMacro3D,
   GROUND_MACRO_SOUS_ECHELLE_3D, GROUND_MACRO_POIDS_3D,
   formatCoucheMacro3D, canauxDuFormat3D, tailleDuTampon3D,
@@ -872,14 +872,17 @@ function tuileDuGrainDuSol3D(def) {
   return tuile;
 }
 
-export function buildGroundTexture(type) {
+export function buildGroundTexture(type, teinte = null) {
   const trouve = GROUND_TYPE_DEFS.find(d => d.id === type);
-  const def = trouve || GROUND_TYPE_DEFS[0];
+  // La couleur choisie pour le Sol (teinteDuSol3D) remplace la teinte naturelle du grain : c'est elle
+  // que tuileDuGrainDuSol3D applique. Une entrée de cache par (matière, couleur).
+  const def = trouve && teinte ? { ...trouve, swatch: teinte } : (trouve || GROUND_TYPE_DEFS[0]);
   // ⚠️ UN IDENTIFIANT INCONNU SE RANGE SOUS LA MATIÈRE DE REPLI, pas sous lui-même (#446d). Une
   // texture de « Mes textures » pas encore inscrite (ou absente sur cette machine) prenait la
   // recette de « Neutre » ET la gardait pour la session, même une fois inscrite.
   if (!trouve) type = def.id;
-  const garde = _groundTexCache[type];
+  const cleCache = teinte && trouve ? `${type}|${teinte}` : type;
+  const garde = _groundTexCache[cleCache];
   // ⚠️ UNE ENTRÉE PEUT ÊTRE PÉRIMÉE PAR L'ARRIVÉE DE SON GRAIN, et c'est un test qui l'a exigé. Le
   // préchargement est ASYNCHRONE : la première Planche peut se dessiner avant lui, et la recette
   // dessinée serait alors figée pour toute la session. Le redessin déclenché par la fin du
@@ -899,7 +902,7 @@ export function buildGroundTexture(type) {
       carte.repeat.set(def.repeat || 60, def.repeat || 60);
       carte.needsUpdate = true;
       const entree = { map: carte, enAttenteDeGrain: false, moyenne: tuile.moyenne || null };
-      _groundTexCache[type] = entree;
+      _groundTexCache[cleCache] = entree;
       return entree;
     }
   }
@@ -915,7 +918,7 @@ export function buildGroundTexture(type) {
 
   if (type === 'neutre') {
     // Neutral ground: solid color identical to the one used for Room Slabs (#B8A890).
-    ctx.fillStyle = '#B8A890'; ctx.fillRect(0,0,S,S);
+    ctx.fillStyle = (trouve && teinte) || '#B8A890'; ctx.fillRect(0,0,S,S);
 
   } else if (type === 'herbe') {
     // Diffuse: green background + tufts + light variation
@@ -1162,7 +1165,7 @@ export function buildGroundTexture(type) {
   // les grains arrivent avant le premier rendu, et réel au premier lancement sur une autre machine :
   // la famille du #370, un état que l'application produit et qu'aucune fixture ne reproduisait.
   const entry = { map, enAttenteDeGrain: !!def.grain };
-  _groundTexCache[type] = entry;
+  _groundTexCache[cleCache] = entry;
   return entry;
 }
 
@@ -1192,7 +1195,7 @@ export function applyGroundType(panel, ciel) {
   const type = panel.groundType || 'herbe';
   const def = GROUND_TYPE_DEFS.find(d => d.id === type) || GROUND_TYPE_DEFS[0];
   const mat = groundMesh3D.material;
-  const entreeSol = buildGroundTexture(type);
+  const entreeSol = buildGroundTexture(type, teinteDuSol3D(def, panel.groundColor));
   const { map } = entreeSol;
   const plaques = modulationDuSol3D(def);
   // Le pavage n'agit que si la matière l'autorise ET que sa moyenne est connue : sans elle, le

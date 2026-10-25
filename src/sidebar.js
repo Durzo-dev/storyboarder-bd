@@ -30,7 +30,7 @@ import { bibliothequeLue3D, styleCorrespondant3D, peutEnregistrerLeStyle3D } fro
 import { bulleEstFusionnable3D, groupeDeLaBulle3D } from './bubble-merge.js';
 import {
   OBJECT_TYPE_LABELS,
-  BUBBLE_PADDING_DEFAULT,
+  BUBBLE_PADDING_DEFAULT, GROUND_TYPE_DEFS, teinteDuSol3D,
   WALL_TYPES,
 } from './constants.js';
 import { carreDeTexture } from './textures-store-ui.js';
@@ -1338,11 +1338,30 @@ function updateSidePanelImpl(){
         appliquer: (id) => {
           _snapshot();
           sel.groundType = id;
+          // Une autre texture repart de sa couleur naturelle : le vert choisi pour une herbe
+          // n'a rien à faire sur du sable.
+          delete sel.groundColor;
           panelSceneCache3D.delete(sel.id);
           updateSidePanel();
           drawCurrentPage();
         },
       }));
+      // La couleur du Sol, sous la texture : la naturelle de la matière tant qu'on n'en a pas choisi.
+      // L'Eau a son propre rendu, sans couleur à choisir.
+      {
+        const def = GROUND_TYPE_DEFS.find(d => d.id === (sel.groundType || 'herbe')) || GROUND_TYPE_DEFS[0];
+        const champ = document.getElementById('sideGroundColorField');
+        const saisie = document.getElementById('sideGroundColor');
+        champ.style.display = def.eau ? 'none' : '';
+        if (document.activeElement !== saisie) saisie.value = teinteDuSol3D(def, sel.groundColor) || def.swatch;
+        saisie.onchange = () => {
+          _snapshot();
+          const t = teinteDuSol3D(def, saisie.value);
+          if (t) sel.groundColor = t; else delete sel.groundColor;
+          panelSceneCache3D.delete(sel.id);
+          drawCurrentPage();
+        };
+      }
       sideGroundSection.style.display = 'block';
       sideLightSection.style.display = 'block';
       rafraichirSectionLumiere();
