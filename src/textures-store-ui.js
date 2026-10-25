@@ -917,14 +917,14 @@ export async function choisirTexture({ usage, actuelle = null, appliquer, titre 
 
 /**
  * LE CARRÉ DE TEXTURE (demandé, à la place d'une liste à rallonge) : l'image de la texture posée,
- * son nom et « Changer » dessous ; un clic ouvre le store pour en choisir une autre.
+ * son nom centré dessous ; un clic ouvre le store pour en choisir une autre.
  * `{ valeur, usage, titre, appliquer(valeur) }`. Rend le bouton ; l'image arrive ensuite.
  */
 export function carreDeTexture({ valeur, usage, titre, appliquer }){
   const image = el('span', { classe: 'texture-carre-image' });
   const nom = el('span', { texte: '…' });
   const b = el('button', { classe: 'texture-carre', attrs: { type: 'button', title: tr('Choose another texture', 'Choisir une autre texture') } },
-    [image, el('span', { classe: 'texture-carre-nom' }, [nom, el('span', { texte: tr('Change', 'Changer') })])]);
+    [image, el('span', { classe: 'texture-carre-nom' }, [nom])]);   // le nom seul, centré (demandé : plus de « Changer »)
   textureActuelle(valeur, usage).then(async (t) => {
     if (!t) { nom.textContent = tr('Unknown texture', 'Texture introuvable'); return; }
     nom.textContent = t.nom;
