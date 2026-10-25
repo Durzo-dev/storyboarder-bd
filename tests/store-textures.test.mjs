@@ -478,9 +478,9 @@ describe('retours : rangée du haut, mention de la source', () => {
 describe('RÉGRESSION : vignettes entières et nettes (signalé : coupées ou floues)', () => {
   const lire = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
   test('cartes en 16:9 (le carré a été écarté), contain avec une marge, sauf une texture à plat ; vignettes de 512 px', () => {
-    assert.match(lire('src/style.css'), /\.store-carte img, \.store-sans-vignette\{ width:100%; aspect-ratio:16\/9; object-fit:contain;/);
+    assert.match(lire('src/style.css'), /\.store-carte img, \.store-sans-vignette\{ width:100%; aspect-ratio:3\/2; object-fit:contain;/);
     assert.match(lire('src/style.css'), /\.store-carte img\{ box-sizing:border-box; padding:8px; \}/);
-    assert.match(lire('src/model-thumbnails.js'), /export const HAUTEUR_VIGNETTE = 288;/);
+    assert.match(lire('src/model-thumbnails.js'), /export const HAUTEUR_VIGNETTE = 341;/);
     assert.match(lire('src/style.css'), /\.store-carte img\.texture-a-plat\{ object-fit:cover; padding:0; \}/);
     for (const f of ['store-polyhaven.js', 'store-textures-polyhaven.js', 'store-textures-ambientcg.js', 'store-sketchfab.js']) {
       assert.match(lire(`electron/bibliotheque/${f}`), /petite: vignette\w*\([^)]*, 512\)/, f);
@@ -491,7 +491,7 @@ describe('RÉGRESSION : vignettes entières et nettes (signalé : coupées ou fl
 describe('la marge des vignettes ne se voit pas (signalé : fonds clairs de Sketchfab)', () => {
   const lire = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
   test('le coin de l\'image, très agrandi, colore sa propre marge, posée au chargement pour toutes les cartes', () => {
-    assert.match(lire('src/style.css'), /\.store-carte img\.avec-fond-vignette\{ background:var\(--fond-vignette\) left top \/ 5000% 5000% no-repeat, var\(--creux\); \}/);
+    assert.match(lire('src/style.css'), /\.store-carte img\.avec-fond-vignette\{ padding:0; border:8px solid transparent; border-image:var\(--fond-vignette\) 6 stretch;/);
     assert.match(lire('src/store-ui.js'), /document\.addEventListener\('load', \(e\) => \{[\s\S]{0,400}img\.classList\.add\('avec-fond-vignette'\);/);
   });
 });

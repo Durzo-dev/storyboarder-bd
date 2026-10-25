@@ -29,7 +29,7 @@ import { box3FromObjectSkinAware3D } from './skinned-box-3d.js';
  * sans rien perdre. (Des cartes carrées ont été essayées le 25 octobre 2026, puis écartées.)
  */
 export const LARGEUR_VIGNETTE = 512;
-export const HAUTEUR_VIGNETTE = 288;
+export const HAUTEUR_VIGNETTE = 341;   // 3:2 depuis le 25 octobre 2026 (cartes un peu plus hautes, demandé)
 /** L'angle de la photo : de trois quarts, un peu au-dessus, comme l'aperçu 3D à son ouverture. */
 const ANGLES = { lacet: 0.6, tangage: 0.25 };
 

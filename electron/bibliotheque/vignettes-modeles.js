@@ -48,7 +48,7 @@ const entrees = (index) => (index && typeof index === 'object' && index.vignette
  * cadrage sur la boîte qui suit le squelette (les personnages articulés étaient décentrés ou
  * minuscules), et mesure des dimensions.
  */
-const VERSION_RENDU = 6;   // 3 : 16:9 ; 4 : cadrage sur la boîte ; 5 : carrées (essai) ; 6 : retour au 16:9
+const VERSION_RENDU = 7;   // 3 : 16:9 ; 4 : cadrage sur la boîte ; 5 : carrées (essai) ; 6 : 16:9 ; 7 : 3:2
 
 /**
  * Une vignette est-elle à (re)faire ? Absente, faite pour un autre état du fichier, ou rendue par
