@@ -2309,7 +2309,12 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
   font-family:inherit;
 }
 .store-carte:hover{ border-color:var(--accent); }
-.store-carte img, .store-sans-vignette{ width:100%; aspect-ratio:16/9; object-fit:cover; background:var(--creux); display:block; }
+.store-carte img, .store-sans-vignette{ width:100%; aspect-ratio:16/9; object-fit:contain; background:var(--creux); display:block; }
+/* ⚠️ CONTAIN ET NON COVER : les vignettes des sources sont CARRÉES (Poly Haven, ambientCG) dans une
+   carte en 16:9 ; « cover » en coupait le haut et le bas, un modèle ou une sphère à moitié (signalé).
+   Entières, centrées, sur le fond creux. Seule une texture À PLAT (« Mes textures ») remplit la carte :
+   c'est une matière qui se répète, la couper ne perd rien. */
+.store-carte img.texture-a-plat{ object-fit:cover; }
 .store-carte-nom{ font-size:var(--texte-courant); font-weight:600; padding:0 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .store-carte-auteur{ font-size:var(--texte-libelle); color:var(--ink-soft); padding:0 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .store-carte-infos{ display:flex; justify-content:space-between; align-items:center; gap:6px; padding:0 8px; font-size:var(--texte-capitales); color:var(--ink-soft); }

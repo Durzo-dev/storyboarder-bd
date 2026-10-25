@@ -100,7 +100,9 @@ function modeleNormalise(id, m, maintenant = Date.now()){
     },
     url: `${SITE}/a/${id}`,
     vignettes: {
-      petite: vignetteDeTaille(m.thumbnail_url, 256),
+      // 512 et non 256 : une carte fait près de 300 px de large (et deux fois plus sur un écran dense) ;
+      // une vignette de 256 y était agrandie, donc floue (signalé).
+      petite: vignetteDeTaille(m.thumbnail_url, 512),
       grande: vignetteDeTaille(m.thumbnail_url, 1024),
     },
     licence: licence('cc0'),

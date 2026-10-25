@@ -53,7 +53,7 @@ function textureNormalisee(id, t, maintenant = Date.now()){
     },
     url: `${SITE}/a/${id}`,
     vignettes: {
-      petite: vignetteDeTaille(t.thumbnail_url, 256),
+      petite: vignetteDeTaille(t.thumbnail_url, 512),   // 256 était agrandie, donc floue (signalé)
       grande: vignetteDeTaille(t.thumbnail_url, 1024),
     },
     licence: licence('cc0'),

@@ -51,7 +51,7 @@ describe('Poly Haven : normalisation', () => {
     assert.equal(r.details.faces, 5626);
     assert.deepEqual(r.details.dimensions, [0.848, 0.766, 1.065]);
     assert.match(r.vignettes.grande, /width=1024&height=1024/);
-    assert.match(r.vignettes.petite, /width=256&height=256/);
+    assert.match(r.vignettes.petite, /width=512&height=512/);   // 256 était floue sur une carte
     assert.equal(r.apercu3D, null);
   });
   test('un modèle en accès anticipé (publié dans le futur) est écarté', () => {

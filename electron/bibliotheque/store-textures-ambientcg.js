@@ -78,7 +78,7 @@ function textureNormalisee(a){
     nom,
     auteur: { nom: 'ambientCG', url: SITE },
     url: `${SITE}/a/${a.assetId}`,
-    vignettes: { petite: vignette(a, 256), grande: vignette(a, 1024) },
+    vignettes: { petite: vignette(a, 512), grande: vignette(a, 1024) },   // 256 était floue (signalé)
     licence: licence('cc0'),
     poids: null,
     details: { dimensions: dimensionsEnMetres(a) },

@@ -188,7 +188,8 @@ function carte(r, local){
     // Le poids sous la provenance, comme sur une carte de « Mes modèles » (demandé).
     local && r.poids ? el('span', { classe: 'store-carte-infos' }, [el('span', { texte: poids(r.poids) })]) : null,
   ]);
-  if (local) urlLocale(r).then(url => { if (url) c.firstChild.replaceWith(vignette(url)); });
+  // Une texture À PLAT remplit sa carte (style.css, .texture-a-plat) : elle se répète, la couper ne perd rien.
+  if (local) urlLocale(r).then(url => { if (url) { const v = vignette(url); v.classList.add('texture-a-plat'); c.firstChild.replaceWith(v); } });
   c.onclick = () => ouvrirFiche(r, local);
   return c;
 }

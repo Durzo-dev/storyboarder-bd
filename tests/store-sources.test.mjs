@@ -103,7 +103,7 @@ describe('Sketchfab : les résultats', () => {
       source: 'sketchfab', id: BANC.uid, type: 'modele', nom: 'The Kungsåra Bench',
       auteur: { nom: 'Historiska', url: 'https://sketchfab.com/historiska' },
       url: BANC.viewerUrl,
-      vignettes: { petite: BANC.thumbnails.images[3].url, grande: BANC.thumbnails.images[1].url },
+      vignettes: { petite: BANC.thumbnails.images[2].url, grande: BANC.thumbnails.images[1].url },
       licence: { code: 'by', ...LICENCES.by },
       poids: 23795824,
       details: { faces: 49980, textures: 1, textureMax: 8192, anime: false },

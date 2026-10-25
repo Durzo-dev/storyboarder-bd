@@ -116,7 +116,7 @@ function modeleNormalise(m){
     url: typeof m.viewerUrl === 'string' && /^https:\/\/sketchfab\.com\//.test(m.viewerUrl)
       ? m.viewerUrl : `https://sketchfab.com/models/${m.uid}`,
     vignettes: {
-      petite: vignette(m.thumbnails && m.thumbnails.images, 256),
+      petite: vignette(m.thumbnails && m.thumbnails.images, 512),   // 256 était floue (signalé)
       grande: vignette(m.thumbnails && m.thumbnails.images, 1024),
     },
     licence: licence(CODES_PAR_LIBELLE[libelle], libelle),
