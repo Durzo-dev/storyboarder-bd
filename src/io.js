@@ -1253,6 +1253,8 @@ export function openRenameEntityModal(kind, target, currentName, extra){
       ? tr('Rename the building', 'Renommer le bâtiment')
     : kind === 'piece'
       ? tr('Rename the room', 'Renommer la pièce')
+    : kind === 'texture'
+      ? tr('Rename the texture', 'Renommer la texture')
       : kind === 'image'
         ? tr('Rename the image file', 'Renommer le fichier image')
         : tr('Rename scene', 'Renommer la scène');

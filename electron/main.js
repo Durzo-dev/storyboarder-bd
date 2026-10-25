@@ -1216,6 +1216,8 @@ ipcMain.handle('textures:importer', async (event) => {
 });
 ipcMain.handle('textures:cartes', async (event, sourceId, id) =>
   storeTextures.cartesEnMemoire(getProjectsDir(), sourceId, String(id || ''), SIMULATION_STORE ? RACINE : null));
+ipcMain.handle('textures:renommer', async (event, cle, nom) => storeTextures.renommer(getProjectsDir(), String(cle || ''), nom));
+ipcMain.handle('textures:integrees', async () => storeTextures.integrees(getProjectsDir(), path.join(RACINE, 'assets', 'textures')));
 ipcMain.handle('textures:matieres', async (event, cle, matieres) => storeTextures.changerMatieres(getProjectsDir(), String(cle || ''), matieres));
 
 // Télécharge puis installe. La progression part vers la fenêtre qui a demandé. En simulation, on

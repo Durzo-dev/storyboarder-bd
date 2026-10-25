@@ -284,6 +284,8 @@ export const I18N_TRAILING = [
   ['#ctxRenameModel', 'Rename the file…', 'Renommer le fichier…'],
   ['#ctxDeleteModel', 'Delete from disk', 'Supprimer du disque'],
   ['#ctxRenameFont', 'Rename the font…', 'Renommer la police…'],
+  ['#ctxRenameTexture', 'Rename…', 'Renommer…'],
+  ['#ctxDeleteTexture', 'Delete from disk', 'Supprimer du disque'],
   ['#ctxDeleteFont', 'Delete the font', 'Supprimer la police'],
   ['#ctxRenameImage', 'Rename the file…', 'Renommer le fichier…'],
   ['#ctxDeleteImage', 'Delete from disk', 'Supprimer du disque'],

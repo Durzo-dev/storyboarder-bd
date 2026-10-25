@@ -85,6 +85,8 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   texturesImporter: () => ipcRenderer.invoke('textures:importer'),
   texturesCartes: (sourceId, id) => ipcRenderer.invoke('textures:cartes', sourceId, id),
   texturesMatieres: (cle, matieres) => ipcRenderer.invoke('textures:matieres', cle, matieres),
+  texturesRenommer: (cle, nom) => ipcRenderer.invoke('textures:renommer', cle, nom),
+  texturesIntegrees: () => ipcRenderer.invoke('textures:integrees'),
   surProgressionTexture: (rappel) => {
     const f = (event, sourceId, id, recus, total) => rappel(sourceId, id, recus, total);
     ipcRenderer.on('textures:progression', f);

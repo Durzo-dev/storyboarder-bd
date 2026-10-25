@@ -181,7 +181,7 @@ import {
 import { vueDeRecherche } from './manuel-recherche.js';
 import { policeADessiner, chargerPolicesUtilisateur, policesImportees, NOMS_INTEGRES } from './polices-utilisateur.js';
 import { cablerPolices, fermerPolices, rafraichirTextesPolices, renommerPolice, supprimerPolice } from './polices-ui.js';
-import { cablerTextures, rafraichirTextesTextures } from './textures-store-ui.js';
+import { cablerTextures, rafraichirTextesTextures, renommerTexture, supprimerTexture, nomAffiche as nomAfficheTexture } from './textures-store-ui.js';
 import {
   setSidebarCallbacks, isSceneTopDownView, homeOwningPanel, exitCameraMode, elementsInPanel,
   getRoomConnectedComponents, updateSidePanel, refreshCameraSliders, renderSideCameraGizmo,
@@ -4819,6 +4819,28 @@ let _modelCtxFichier = null;
 // ── Le clic droit sur une police importée, dans la fenêtre des Polices (#423) ─────────────────
 let _fontCtxNom = null;
 const fontContextMenu = document.getElementById('fontContextMenu');
+// Clic droit sur une carte de « Mes textures » (demandé) : renommer, supprimer. Une texture livrée
+// se renomme (son nom est gardé dans la bibliothèque) mais ne se supprime pas.
+const textureContextMenu = document.getElementById('textureContextMenu');
+let _textureCtx = null;
+function openTextureContextMenu(e, t){
+  _textureCtx = t;
+  hideContextMenu();
+  document.getElementById('ctxDeleteTexture').hidden = !!t.integree;
+  placerMenu3D(textureContextMenu, e.clientX, e.clientY);
+}
+document.getElementById('ctxRenameTexture').onclick = () => {
+  const t = _textureCtx;
+  hideContextMenu();
+  if (!t) return;
+  openRenameEntityModal('texture', t.cle, nomAfficheTexture(t), { appliquer: (nouveau) => renommerTexture(t.cle, nouveau) });
+};
+document.getElementById('ctxDeleteTexture').onclick = () => {
+  const t = _textureCtx;
+  hideContextMenu();
+  if (t) supprimerTexture(t);
+};
+
 function openFontContextMenu(e, nom){
   _fontCtxNom = nom;
   hideContextMenu();
@@ -9452,7 +9474,7 @@ async function supprimerBatimentDeLaBibliotheque(fichier){
 // refait la liste des polices de la fiche ouverte.
 enregistrerFermeture('policesModal', fermerPolices);
 // #446c : le store de textures, une fenêtre à part (demandé).
-cablerTextures({ confirmer: (message) => confirmAction(message) });
+cablerTextures({ confirmer: (message) => confirmAction(message), menuTexture: (e, t) => openTextureContextMenu(e, t) });
 cablerPolices({
   confirmer: (message) => confirmAction(message),
   menuPolice: (e, nom) => openFontContextMenu(e, nom),

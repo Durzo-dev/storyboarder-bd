@@ -2901,3 +2901,7 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .texture-carre-zone .texture-carre{ flex-direction:row; align-items:center; gap:12px; }
 .texture-carre-zone .texture-carre-image{ width:112px; flex:none; }
 .texture-carre-zone .texture-carre-nom{ flex-direction:column; gap:4px; flex:1; }
+
+/* L'image d'une texture de « Mes textures » sur sa fiche : RÉPÉTÉE pour remplir le cadre (signalé :
+   floue, entre deux bandes noires), deux tuiles dans la largeur. */
+.texture-fiche-tuile{ position:absolute; inset:0; background-repeat:repeat; background-size:50% auto; background-position:center; }

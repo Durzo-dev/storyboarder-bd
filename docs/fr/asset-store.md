@@ -282,8 +282,10 @@ dans la section Sol et dans la fenêtre du Tracé : un clic ouvre le store en **
 (`choisirTexture`), sur « Mes textures », l'usage verrouillé ; une carte l'applique, une texture en
 ligne est téléchargée en 1k puis appliquée. **Les textures livrées** (`src/textures-integrees.js` :
 les matières du Sol, Neutre et Eau comprises, et les textures d'origine des Tracés) sont dans « Mes
-textures », avec leur provenance (celle de `assets/textures/LICENSES.md`, qu'un test compare) ; elles
-ne se suppriment pas. Elle s'affiche au naturel (la teinte relevée à la
+textures », avec leur provenance (celle de `assets/textures/LICENSES.md`, qu'un test compare), le
+poids de leur grain et un aperçu 3D (couleur : le grain teint ; relief : une normale tirée de ses
+nuances). Un clic droit sur une carte de « Mes textures » la renomme ou la supprime ; une texture
+livrée se renomme (son nom va dans `nomsIntegrees` de la bibliothèque) mais ne se supprime pas. Elle s'affiche au naturel (la teinte relevée à la
 cuisson) ; une autre couleur la teinte, comme les textures livrées. Les matières du Sol sont
 AJOUTÉES à `GROUND_TYPE_DEFS` (marquées `importee`) : tout le code qui cherchait une matière par son
 identifiant la trouve sans changer. Les grains sont lus par l'IPC (`textures:image`) et servis en

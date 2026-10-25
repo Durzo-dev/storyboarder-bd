@@ -156,15 +156,15 @@ describe('#417 : la dérive composée est IMPOSSIBLE, pas seulement corrigée', 
     assert.ok(EVENTS.includes('function placerMenu3D('), 'le placeur a disparu d\'events.js');
   });
 
-  test('les vingt et un menus flottants passent par le placeur', () => {
+  test('les vingt-deux menus flottants passent par le placeur', () => {
     // Un site oublié ne se verrait qu'à l'usage, et seulement à une échelle autre que 100 %,
     // c'est-à-dire chez les gens qui ont changé le réglage. Le compte est celui de la bascule.
     const appels = (EVENTS.match(/\bplacerMenu3D\(/g) || []).length - 1; // -1 : la déclaration
     // 17 : le menu d'un Chapitre (demandé) a rejoint les seize de la bascule ; 18 : celui d'une
     // police importée, dans la fenêtre des Polices (#423) ; 19 : celui d'un Bâtiment ou d'une Pièce
     // du menu de droite, « Modifier » (#454a) ; 20 : celui d'un bâtiment de « Mes modèles » (#454a-4b) ;
-    // 21 : celui d'une pièce de l'éditeur de bâtiment (#454b).
-    assert.equal(appels, 21, `${appels} menus positionnés, attendu 21 (16 de la bascule + le Chapitre + la Police + les trois du Bâtiment)`);
+    // 21 : celui d'une pièce de l'éditeur de bâtiment (#454b). 22 : celui d'une texture de « Mes textures ».
+    assert.equal(appels, 22, `${appels} menus positionnés, attendu 22 (16 de la bascule + le Chapitre + la Police + les trois du Bâtiment + la Texture)`);
   });
 });
 

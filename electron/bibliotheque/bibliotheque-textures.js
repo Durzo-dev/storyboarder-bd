@@ -61,7 +61,10 @@ const vide = () => ({ version: 1, textures: [], tags: [] });
 const liste = (b) => (b && Array.isArray(b.textures) ? b.textures.filter(t => t && t.cle && t.dossier) : []);
 const tagsDe = (b) => (b && Array.isArray(b.tags) ? b.tags.filter(t => t && t.id && t.nom) : []);
 /** Une bibliothèque refaite avec ces textures, en GARDANT ses tags (ils n'appartiennent à aucune texture). */
-const avec = (b, textures) => ({ version: 1, textures, tags: tagsDe(b) });
+// ⚠️ LES NOMS DONNÉS AUX TEXTURES LIVRÉES voyagent avec chaque réécriture : une opération sur les
+// tags ou les matières ne doit pas les perdre (demandé : renommer aussi une texture intégrée).
+const nomsIntegreesDe = (b) => (b && b.nomsIntegrees && typeof b.nomsIntegrees === 'object' ? { ...b.nomsIntegrees } : {});
+const avec = (b, textures) => ({ version: 1, textures, tags: tagsDe(b), nomsIntegrees: nomsIntegreesDe(b) });
 
 /** Ajoute (ou REMPLACE : un second téléchargement de la même texture met l'entrée à jour, ses tags restent). */
 function ajouter(biblio, entree){
@@ -103,7 +106,7 @@ function renommerTag(biblio, id, nom){
 /** Supprime un tag, et le retire de toutes les textures qui le portaient. */
 function supprimerTag(biblio, id){
   const textures = liste(biblio).map(t => (Array.isArray(t.tags) ? { ...t, tags: t.tags.filter(x => x !== id) } : t));
-  return { version: 1, textures, tags: tagsDe(biblio).filter(t => t.id !== id) };
+  return { version: 1, textures, tags: tagsDe(biblio).filter(t => t.id !== id), nomsIntegrees: nomsIntegreesDe(biblio) };
 }
 
 /** Pose (`actif`) ou retire un tag d'une texture. */
@@ -185,7 +188,28 @@ function avecMatieres(biblio, cle, matieres, usagesDe){
   return avec(biblio, liste(biblio).map(t => (t.cle === cle ? { ...t, matieres: matieres.slice(), usages: usagesDe(matieres) } : t)));
 }
 
+/** Un nom de texture propre : sans espaces aux bords, 80 caractères au plus ; null s'il est vide. */
+const nomDeTexture = (nom) => { const n = String(nom == null ? '' : nom).trim().replace(/\s+/g, ' ').slice(0, 80); return n || null; };
+
+/**
+ * Renomme une texture (demandé, clic droit sur sa carte). Une texture de « Mes textures » change de
+ * `nom` ; une texture LIVRÉE (`integree:…`) n'a pas d'entrée : son nom va dans `nomsIntegrees`, et un
+ * nom vide lui rend le sien. Rend `{ biblio }` ou `{ erreur: 'vide' | 'inconnue' }`.
+ */
+function renommer(biblio, cle, nom){
+  const propre = nomDeTexture(nom);
+  if (typeof cle === 'string' && cle.startsWith('integree:')) {
+    const noms = nomsIntegreesDe(biblio);
+    if (propre) noms[cle] = propre; else delete noms[cle];
+    return { biblio: { ...avec(biblio, liste(biblio)), nomsIntegrees: noms } };
+  }
+  if (!propre) return { erreur: 'vide' };
+  if (!liste(biblio).some(t => t.cle === cle)) return { erreur: 'inconnue' };
+  return { biblio: avec(biblio, liste(biblio).map(t => (t.cle === cle ? { ...t, nom: propre } : t))) };
+}
+
 module.exports = {
+  renommer, nomsIntegreesDe,
   FICHIER, DOSSIER, dossierDe, tailleDeCuisson, entreeTexture, vide, ajouter, retirer, presentes,
   cartesDuDossier, idImport, TAILLE_IMPORT, avecMatieres,
   tagsDe, creerTag, renommerTag, supprimerTag, tagTexture,

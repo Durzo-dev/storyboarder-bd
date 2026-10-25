@@ -1098,6 +1098,13 @@
      correspondance de squelette : une image n'a rien à mettre en face d'un os.
      ⚠️ « Supprimer du disque » n'est PAS le geste de la section Image d'une Case, qui DÉTACHE.
      Ici le fichier part pour de bon, et le message de confirmation le dit (cf. image-library.js). -->
+<!-- Clic droit sur une carte de « Mes textures » (demandé). « Supprimer » est masqué pour une texture
+     livrée avec l'application (events.js, openTextureContextMenu). -->
+<div class="context-menu hidden" id="textureContextMenu">
+  <button id="ctxRenameTexture"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M12 4v16M10 4h4M10 20h4"/></svg></span> Renommer…</button>
+  <button id="ctxDeleteTexture"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6"/><path d="m6 7 1 13h10l1-13M9 7V4h6v3"/></svg></span> Supprimer du disque</button>
+</div>
+
 <div class="context-menu hidden" id="imageContextMenu">
   <button id="ctxRenameImage"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M12 4v16M10 4h4M10 20h4"/></svg></span> Renommer le fichier…</button>
   <button id="ctxDeleteImage"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6"/><path d="m6 7 1 13h10l1-13M9 7V4h6v3"/></svg></span> Supprimer du disque</button>

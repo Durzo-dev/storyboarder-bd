@@ -315,6 +315,28 @@ function changerMatieres(dossierProjets, cle, matieres){
   return { ok: true };
 }
 
+/** Renomme une texture, de « Mes textures » ou livrée (voir B.renommer). */
+function renommer(dossierProjets, cle, nom){
+  const r = B.renommer(lireBiblio(dossierProjets), String(cle || ''), nom);
+  if (r.erreur) return { erreur: r.erreur };
+  ecrireBiblio(dossierProjets, r.biblio);
+  return { ok: true };
+}
+
+/**
+ * Ce que l'interface sait des textures LIVRÉES : les noms que l'utilisateur leur a donnés, et le
+ * poids de chaque grain (demandé sur les cartes). `dossierAssets` : assets/textures de l'application.
+ */
+function integrees(dossierProjets, dossierAssets){
+  const poids = {};
+  try {
+    for (const f of fs.readdirSync(dossierAssets)) {
+      if (/^[a-z.-]+\.png$/.test(f)) poids[f.replace(/\.png$/, '')] = fs.statSync(path.join(dossierAssets, f)).size;
+    }
+  } catch (e) { /* illisible : pas de poids */ }
+  return { noms: B.nomsIntegreesDe(lireBiblio(dossierProjets)), poids };
+}
+
 /** Supprime une texture de « Mes textures » : son dossier et son entrée. */
 function supprimer(dossierProjets, cle){
   const biblio = lireBiblio(dossierProjets);
@@ -338,4 +360,4 @@ function image(dossierProjets, cle, quoi){
   } catch (e) { return { ok: false }; }
 }
 
-module.exports = { infos, chercher, options, telecharger, mesTextures, supprimer, image, importer, changerMatieres, cartesEnMemoire, tags, operationTags };
+module.exports = { renommer, integrees, infos, chercher, options, telecharger, mesTextures, supprimer, image, importer, changerMatieres, cartesEnMemoire, tags, operationTags };

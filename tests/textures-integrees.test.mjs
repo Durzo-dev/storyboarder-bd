@@ -57,3 +57,43 @@ describe('les textures livrées, dans « Mes textures » (demandé)', () => {
     assert.match(readFileSync(new URL('../src/rig3d.js', import.meta.url), 'utf8'), /if \(!trouve\) type = def\.id;/);
   });
 });
+
+describe('renommer une texture, la supprimer (clic droit, demandé)', async () => {
+  const { createRequire } = await import('node:module');
+  const B = createRequire(import.meta.url)('../electron/bibliotheque/bibliotheque-textures.js');
+  const biblio = { version: 1, textures: [{ cle: 'polyhaven:x', nom: 'X', dossier: 'polyhaven-x', matieres: [], usages: [] }], tags: [{ id: 't1', nom: 'Jardin' }] };
+
+  test('une texture de « Mes textures » change de nom ; vide : refusé', () => {
+    assert.equal(B.renommer(biblio, 'polyhaven:x', '  Mon  sol ').biblio.textures[0].nom, 'Mon sol');
+    assert.equal(B.renommer(biblio, 'polyhaven:x', '  ').erreur, 'vide');
+    assert.equal(B.renommer(biblio, 'polyhaven:y', 'Z').erreur, 'inconnue');
+  });
+
+  test('une texture LIVRÉE garde son nom donné à part ; un nom vide lui rend le sien', () => {
+    const b = B.renommer(biblio, 'integree:sol:herbe', 'Pelouse').biblio;
+    assert.deepEqual(b.nomsIntegrees, { 'integree:sol:herbe': 'Pelouse' });
+    assert.deepEqual(B.renommer(b, 'integree:sol:herbe', '').biblio.nomsIntegrees, {});
+  });
+
+  test('RÉGRESSION : une opération sur les tags ou les matières ne perd pas ces noms', () => {
+    const b = B.renommer(biblio, 'integree:sol:herbe', 'Pelouse').biblio;
+    assert.deepEqual(B.creerTag(b, 'Ville').biblio.nomsIntegrees, { 'integree:sol:herbe': 'Pelouse' });
+    assert.deepEqual(B.supprimerTag(b, 't1').nomsIntegrees, { 'integree:sol:herbe': 'Pelouse' });
+    assert.deepEqual(B.avecMatieres(b, 'polyhaven:x', ['terre'], () => ['sol']).nomsIntegrees, { 'integree:sol:herbe': 'Pelouse' });
+  });
+
+  test('câblage : menu au clic droit d\'une carte locale, « Supprimer » masqué pour une livrée, poids des grains', () => {
+    const lire = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
+    assert.match(lire('src/textures-store-ui.js'), /if \(local\) c\.addEventListener\('contextmenu'/);
+    assert.match(lire('src/events.js'), /document\.getElementById\('ctxDeleteTexture'\)\.hidden = !!t\.integree;/);
+    assert.match(lire('electron/main.js'), /'textures:integrees'[\s\S]{0,200}path\.join\(RACINE, 'assets', 'textures'\)/);
+    assert.match(lire('src/textures-store-ui.js'), /poids: t\.grain \? infosIntegrees\.poids\[t\.grain\]/);
+  });
+
+  test('la fiche d\'une livrée : l\'aperçu 3D tire ses cartes du grain, l\'image se répète', () => {
+    const ui = readFileSync(new URL('../src/textures-store-ui.js', import.meta.url), 'utf8');
+    assert.match(ui, /r\.integree \? await cartesIntegrees\(r\)/);
+    assert.match(ui, /const image = \(\) => \(urlImage \? \[tuileDeFiche\(urlImage\)\] : \[\]\);/);
+    assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /\.texture-fiche-tuile\{[^}]*background-repeat:repeat/);
+  });
+});

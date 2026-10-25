@@ -16,6 +16,7 @@ import { tr, S } from './state.js';
 import { utilisationsDe, PREFIXE, chargerTexturesUtilisateur } from './textures-utilisateur.js';
 import { texturesIntegrees, valeurChoisie, textureDeLaValeur, SOURCE as INTEGREE } from './textures-integrees.js';
 import { appliquerTeinteAuMotif3D, rvbDeCouleur3D, natureDuNom3D } from './bubble-texture.js';
+import { GROUND_PLANE_SIZE_3D } from './constants.js';
 import { enregistrerFermeture } from './modal-stack.js';
 import { icone } from './icones.js';
 import { ouvrirApercu3D } from './store-apercu-3d.js';
@@ -38,6 +39,20 @@ const enCours = new Map();  // cle → { recus, total } pendant un téléchargem
 const urlsLocales = new Map();
 let integrees = [];         // les textures livrées avec l'application, montrées dans « Mes textures »
 let mesCharges = false;     // « Mes textures » a été lue au moins une fois (les carrés du Sol et des Tracés)
+let infosIntegrees = { noms: {}, poids: {} };   // textures:integrees : les noms donnés, le poids des grains
+
+/** Les textures livrées, avec le nom que l'utilisateur leur a donné et le poids de leur grain. */
+function lesIntegrees(){
+  return texturesIntegrees().map(t => {
+    const nom = infosIntegrees.noms[t.cle];
+    return { ...t, nom: nom || t.nom, nomEn: nom || t.nomEn, renommee: !!nom, poids: t.grain ? infosIntegrees.poids[t.grain] || null : null };
+  });
+}
+
+async function relireIntegrees(){
+  try { infosIntegrees = (api().texturesIntegrees && await api().texturesIntegrees()) || infosIntegrees; } catch (e) { /* sans noms ni poids */ }
+  integrees = lesIntegrees();
+}
 
 /**
  * LE MODE « CHOISIR » (demandé) : le store s'ouvre depuis le carré de texture de la section Sol ou
@@ -184,7 +199,7 @@ function phraseUtilisation(t){
 async function relireMes(){
   [mes, tags] = await Promise.all([api().texturesMes(), api().texturesTags ? api().texturesTags() : []]);
   mes = mes || []; tags = (tags || []).slice().sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
-  integrees = texturesIntegrees();
+  await relireIntegrees();
   mesCharges = true;
   tagsFiltre = tagsFiltre.filter(id => tags.some(t => t.id === id));
   // #446d : le Sol et les Tracés proposent « Mes textures » ; une texture téléchargée, importée,
@@ -196,26 +211,88 @@ async function relireMes(){
  * L'image d'une texture livrée : son grain (assets/textures), teint de sa teinte comme le fait le
  * rendu, réduit à 256 px. Une matière DESSINÉE (Neutre, Eau) n'a pas de photo : un aplat de sa couleur.
  */
-function urlIntegree(t){
+function urlIntegree(t, taille = 256){
+  return toileIntegree(t, taille).then(r => (r ? r.toile.toDataURL('image/jpeg', 0.9) : null));
+}
+
+/**
+ * La toile d'une texture livrée, teinte comme dans le rendu : `{ toile, largeurNaturelle, grain }`.
+ * `taille` null : la taille du grain (la fiche et l'aperçu 3D, pour une image nette). Une matière
+ * DESSINÉE (Neutre, Eau) n'a pas de photo : un aplat de sa couleur.
+ */
+function toileIntegree(t, taille){
   return new Promise((resolve) => {
     if (typeof Image === 'undefined' || typeof document === 'undefined') { resolve(null); return; }
     const toile = document.createElement('canvas');
-    toile.width = toile.height = 256;
-    const c = toile.getContext('2d', { willReadFrequently: true });
-    const aplat = () => { c.fillStyle = t.teinte || '#888'; c.fillRect(0, 0, 256, 256); resolve(toile.toDataURL('image/jpeg', 0.9)); };
+    const aplat = () => {
+      toile.width = toile.height = taille || 256;
+      const c = toile.getContext('2d');
+      c.fillStyle = t.teinte || '#888';
+      c.fillRect(0, 0, toile.width, toile.height);
+      resolve({ toile, largeurNaturelle: null, grain: null });
+    };
     if (!t.grain) { aplat(); return; }
     const img = new Image();
     img.onload = () => {
-      c.drawImage(img, 0, 0, 256, 256);
-      const d = c.getImageData(0, 0, 256, 256);
+      const L = taille || img.naturalWidth, H = taille || img.naturalHeight;
+      toile.width = L; toile.height = H;
+      const c = toile.getContext('2d', { willReadFrequently: true });
+      c.drawImage(img, 0, 0, L, H);
+      const d = c.getImageData(0, 0, L, H);
       const rvb = rvbDeCouleur3D(t.teinte);
       if (rvb) appliquerTeinteAuMotif3D(d.data, rvb, natureDuNom3D(t.grain));
       c.putImageData(d, 0, 0);
-      resolve(toile.toDataURL('image/jpeg', 0.9));
+      resolve({ toile, largeurNaturelle: img.naturalWidth, grain: img });
     };
     img.onerror = aplat;
     img.src = `../assets/textures/${t.grain}.png`;
   });
+}
+
+/**
+ * Les cartes d'une texture livrée pour l'aperçu 3D (demandé : « comme les autres »), au format de
+ * textures:cartes. Seul le grain cuit est livré : la COULEUR est le grain teint, le RELIEF une normale
+ * tirée de ses nuances (un gradient de Sobel, qui se répète comme la tuile). Une matière dessinée n'a
+ * que sa couleur.
+ */
+async function cartesIntegrees(t){
+  const r = await toileIntegree(t, null);
+  if (!r) return { erreur: 'reponse' };
+  const octets = (toile) => new Promise(ok => toile.toBlob(b => (b ? b.arrayBuffer().then(a => ok({ data: new Uint8Array(a), type: 'image/png' })) : ok(null)), 'image/png'));
+  const cartes = { couleur: await octets(r.toile) };
+  if (r.grain) {
+    const L = r.toile.width, H = r.toile.height;
+    const g = document.createElement('canvas');
+    g.width = L; g.height = H;
+    const gc = g.getContext('2d', { willReadFrequently: true });
+    gc.drawImage(r.grain, 0, 0, L, H);
+    const src = gc.getImageData(0, 0, L, H).data;
+    const n = gc.createImageData(L, H);
+    const lum = (x, y) => { const i = (((y + H) % H) * L + ((x + L) % L)) * 4; return (src[i] + src[i + 1] + src[i + 2]) / 765; };
+    const FORCE = 3;
+    for (let y = 0; y < H; y++) for (let x = 0; x < L; x++) {
+      const dx = (lum(x + 1, y - 1) + 2 * lum(x + 1, y) + lum(x + 1, y + 1)) - (lum(x - 1, y - 1) + 2 * lum(x - 1, y) + lum(x - 1, y + 1));
+      const dy = (lum(x - 1, y + 1) + 2 * lum(x, y + 1) + lum(x + 1, y + 1)) - (lum(x - 1, y - 1) + 2 * lum(x, y - 1) + lum(x + 1, y - 1));
+      let nx = -dx * FORCE, ny = dy * FORCE, nz = 1;
+      const k = 1 / Math.hypot(nx, ny, nz);
+      nx *= k; ny *= k; nz *= k;
+      const i = (y * L + x) * 4;
+      n.data[i] = (nx * 0.5 + 0.5) * 255; n.data[i + 1] = (ny * 0.5 + 0.5) * 255; n.data[i + 2] = (nz * 0.5 + 0.5) * 255; n.data[i + 3] = 255;
+    }
+    gc.putImageData(n, 0, 0);
+    cartes.normal = await octets(g);
+  }
+  return { cartes };
+}
+
+/**
+ * L'IMAGE D'UNE TEXTURE SUR SA FICHE : elle se RÉPÈTE pour remplir le cadre (signalé : floue et
+ * entre deux bandes noires). Une texture est faite pour ça ; deux tuiles dans la largeur.
+ */
+function tuileDeFiche(url){
+  const d = el('div', { classe: 'texture-fiche-tuile' });
+  d.style.backgroundImage = `url("${url}")`;
+  return d;
 }
 
 async function urlLocale(t){
@@ -259,6 +336,9 @@ function carte(r, local){
   // Une texture À PLAT remplit sa carte (style.css, .texture-a-plat) : elle se répète, la couper ne perd rien.
   if (local) urlLocale(r).then(url => { if (url) { const v = vignette(url); v.classList.add('texture-a-plat'); c.firstChild.replaceWith(v); } });
   c.onclick = () => (choix ? choisirCarte(r, local) : ouvrirFiche(r, local));
+  // Clic droit : renommer, supprimer (demandé ; une texture livrée ne se supprime pas). Le menu est
+  // celui du reste de l'application (events.js), comme pour les modèles et les polices.
+  if (local) c.addEventListener('contextmenu', (ev) => { ev.preventDefault(); if (_rappels.menuTexture) _rappels.menuTexture(ev, r); });
   return c;
 }
 
@@ -425,7 +505,7 @@ function boutonApercu(r, visuel, image){
     const moi = apercuGeneration;
     const etiquette = el('p', { texte: tr('Loading the material…', 'Chargement de la matière…'), classe: 'store-apercu-chargement' });
     visuel.replaceChildren(etiquette);
-    const rep = await api().texturesCartes(r.source, r.id).catch(() => ({ erreur: 'reseau' }));
+    const rep = r.integree ? await cartesIntegrees(r) : await api().texturesCartes(r.source, r.id).catch(() => ({ erreur: 'reseau' }));
     if (moi !== apercuGeneration) return;
     if (!rep || rep.erreur || !rep.cartes || !rep.cartes.couleur) { etiquette.textContent = erreurLisible(rep && rep.erreur); etiquette.classList.add('erreur'); return; }
     // La forme : RONDE d'abord ; le bouton en haut à droite de l'aperçu bascule à plat et retour
@@ -628,7 +708,9 @@ async function ouvrirFiche(r, local){
   const t = local ? r : possedee(r);
   const visuel = el('div', { classe: 'store-fiche-visuel' });
   let urlImage = local ? null : r.vignettes.grande;
-  const image = () => (urlImage ? [vignette(urlImage)] : []);
+  // Une texture de « Mes textures » se répète dans le cadre ; l'image d'une source est un rendu (une
+  // sphère, une scène) qui ne se répète pas : contenue.
+  const image = () => (urlImage ? [local ? tuileDeFiche(urlImage) : vignette(urlImage)] : []);
   if (local) urlLocale(r).then(url => { urlImage = url; if (url && ficheCourante && ficheCourante.r === r && !apercu) visuel.replaceChildren(...image()); });
   else visuel.replaceChildren(...image());
   // « Voir sur … » à côté de « Voir en 3D », quand la texture a une page (demandé, comme les modèles).
@@ -685,24 +767,49 @@ async function ouvrirFiche(r, local){
 }
 
 /**
- * La fiche d'une texture LIVRÉE : son image, d'où elle vient, où elle sert. Ni aperçu 3D (ses cartes
- * sources ne sont pas livrées, seul le grain cuit l'est), ni suppression : elle fait partie de
- * l'application.
+ * La fiche d'une texture LIVRÉE, comme les autres (demandé) : son image répétée à la définition du
+ * grain, l'aperçu 3D, d'où elle vient, où elle sert, ses caractéristiques. Pas de suppression : elle
+ * fait partie de l'application.
  */
 function ficheIntegree(t){
   fermerApercu();
   ficheCourante = { r: t, local: true };
   const fiche = $('texturesFiche');
   const visuel = el('div', { classe: 'store-fiche-visuel' });
-  urlLocale(t).then(url => { if (url && ficheCourante && ficheCourante.r === t) visuel.replaceChildren(vignette(url)); });
+  let urlImage = null;
+  const image = () => (urlImage ? [tuileDeFiche(urlImage)] : []);
+  // À la définition du grain (1024), pas celle de la carte : l'image de la fiche était floue.
+  toileIntegree(t, null).then(r => {
+    if (!r || !ficheCourante || ficheCourante.r !== t) return;
+    urlImage = r.toile.toDataURL('image/jpeg', 0.92);
+    if (!apercu) visuel.replaceChildren(...image());
+    const li = fiche.querySelector('.texture-resolution');
+    if (li && r.largeurNaturelle) { li.hidden = false; li.textContent = `${tr('Resolution', 'Résolution')} : ${Math.max(1, Math.round(r.largeurNaturelle / 1024))}k (${r.largeurNaturelle} px)`; }
+  });
   const p = t.provenance;
-  const boutons = el('div', { classe: 'store-fiche-boutons' }, [p ? lien(tr(`View on ${p.banque}`, `Voir sur ${p.banque}`), p.url, 'nav-btn store-lien-bouton') : null]);
-  const liste = (lignes) => el('ul', {}, lignes.filter(Boolean).map(x => el('li', { texte: x })));
+  const boutons = el('div', { classe: 'store-fiche-boutons' }, [boutonApercu(t, visuel, image),
+    p ? lien(tr(`View on ${p.banque}`, `Voir sur ${p.banque}`), p.url, 'nav-btn store-lien-bouton') : null].filter(Boolean));
+  const liste = (lignes) => el('ul', {}, lignes.filter(Boolean).map(x => (typeof x === 'string' ? el('li', { texte: x }) : x)));
   const id = t.choix.sol;
   const usages = id ? utilisationsDe(id, { tomes: S.tomes || [], scenes: S.scenes || [] }) : null;
   const phrase = !usages ? tr('The original texture of this path type, used by every path that has not been given another.', 'La texture d\'origine de ce type de Tracé, portée par chaque Tracé qui n\'en a pas reçu une autre.')
     : (!usages.tomes && !usages.scenes ? tr('Used nowhere in this Project.', 'Utilisée nulle part dans ce Projet.')
       : tr(`Used ${usages.tomes + usages.scenes} time(s) in this Project.`, `Utilisée ${usages.tomes + usages.scenes} fois dans ce Projet.`));
+  // La taille réelle d'une tuile : celle du Tracé, ou pour le Sol le plan divisé par sa répétition
+  // (une unité monde est un mètre).
+  const cote = id && t.repeat ? GROUND_PLANE_SIZE_3D / t.repeat : null;
+  const tuile = t.dimensions || (cote ? [cote, cote] : null);
+  // Dans L'ORDRE des autres fiches : fichier, taille, poids, rendu, résolution, provenance.
+  const caracteristiques = [
+    t.grain ? `${tr('File', 'Fichier')} : assets/textures/${t.grain}.png` : null,
+    tuile && !t.dessinee ? `${tr('Real size of one tile', 'Taille réelle d\'une tuile')} : ${tailleReelle(tuile)}` : null,
+    t.poids ? `${tr('Weight', 'Poids')} : ${poids(t.poids)}` : null,
+    t.dessinee ? tr('Rendering: drawn in colour, without photograph', 'Rendu : dessiné en couleur, sans photographie')
+      : tr('Rendering: baked grain (colour and relief in one image)', 'Rendu : grain cuit (couleur et relief dans une image)'),
+    t.grain ? el('li', { classe: 'texture-resolution', attrs: { hidden: '' } }) : null,
+    p ? `${tr('Source', 'Source')} : ${p.ressource} (${p.banque})` : null,
+    tr('Shipped with the application', 'Livrée avec l\'application'),
+  ];
   const droite = el('div', { classe: 'store-fiche-droite' }, [
     el('h4', { texte: nomTexture(t) }),
     el('p', { texte: t.dessinee ? tr('Drawn by the application', 'Dessinée par l\'application') : tr('Built into the application', 'Intégrée à l\'application') }),
@@ -711,12 +818,7 @@ function ficheIntegree(t){
     section(tr('Licence', 'Licence'), t.dessinee
       ? [el('p', { classe: 'store-fiche-texte', texte: tr('None needed: drawn by the application, from no photograph.', 'Aucune : dessinée par l\'application, sans photographie.') })]
       : [el('p', {}, [lien(CC0.libelle, CC0.url)]), liste(phrasesLicence(CC0, langue()))]),
-    section(tr('Characteristics', 'Caractéristiques'), [liste([
-      t.dimensions ? `${tr('Real size of one tile', 'Taille réelle d\'une tuile')} : ${tailleReelle(t.dimensions)}` : null,
-      p ? `${tr('Source', 'Source')} : ${p.ressource} (${p.banque})` : null,
-      t.grain ? `${tr('File', 'Fichier')} : assets/textures/${t.grain}.png` : null,
-      t.dessinee ? tr('No photograph: a material drawn in colour', 'Sans photographie : une matière dessinée en couleur') : null,
-    ])]),
+    section(tr('Characteristics', 'Caractéristiques'), [liste(caracteristiques)]),
   ]);
   const retour = el('button', { texte: tr('Back', 'Retour'), classe: 'nav-btn', attrs: { type: 'button' } });
   retour.onclick = fermerFiche;
@@ -729,6 +831,33 @@ function ficheIntegree(t){
   fiche.hidden = false;
   $('texturesDefilement').scrollTop = 0;
 }
+
+/** Renomme une texture (clic droit) : de « Mes textures » ou livrée ; un nom vide rend à une livrée le sien. */
+export async function renommerTexture(cleTexture, nom){
+  const r = await api().texturesRenommer(cleTexture, nom);
+  if (r && r.erreur) return r;
+  await relireMes();
+  rendreGrille();
+  if (ficheCourante && ficheCourante.r && ficheCourante.r.cle === cleTexture) {
+    const t = [...mes, ...integrees].find(x => x.cle === cleTexture);
+    if (t) ouvrirFiche(t, true);
+  }
+  return { ok: true };
+}
+
+/** Supprime une texture de « Mes textures » (clic droit), après confirmation. Une livrée ne se supprime pas. */
+export async function supprimerTexture(t){
+  if (!t || t.integree) return;
+  if (_rappels.confirmer && !(await _rappels.confirmer(tr(`Delete the texture “${t.nom}” from the disk?`, `Supprimer la texture « ${t.nom} » du disque ?`)))) return;
+  await api().texturesSupprimer(t.cle);
+  urlsLocales.delete(t.cle);
+  await relireMes();
+  if (ficheCourante && ficheCourante.r && ficheCourante.r.cle === t.cle) fermerFiche();
+  else rendreGrille();
+}
+
+/** Le nom d'une texture tel qu'affiché (la saisie du renommage part de lui). */
+export const nomAffiche = (t) => nomTexture(t);
 
 function suivreProgression(sourceId, id, recus, total){
   const k = `${sourceId}:${id}`;
@@ -814,11 +943,13 @@ export function carreDeTexture({ valeur, usage, titre, appliquer }){
 export async function textureActuelle(valeur, usage){
   if (!mesCharges && api()) {
     try { mes = (await api().texturesMes()) || []; } catch (e) { mes = []; }
-    integrees = texturesIntegrees();
+    await relireIntegrees();
     mesCharges = true;
   }
-  if (!integrees.length) integrees = texturesIntegrees();
-  const t = textureDeLaValeur(valeur, usage, mes);
+  if (!integrees.length) integrees = lesIntegrees();
+  const t0 = textureDeLaValeur(valeur, usage, mes);
+  // Le nom donné par l'utilisateur à une texture livrée.
+  const t = t0 && t0.integree ? integrees.find(x => x.cle === t0.cle) || t0 : t0;
   if (!t) return null;
   return { nom: nomTexture(t), url: urlLocale(t) };
 }

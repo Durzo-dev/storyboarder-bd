@@ -71,7 +71,7 @@ export function texturesIntegrees(){
     cle: `${SOURCE}:sol:${d.id}`, source: SOURCE, id: `sol:${d.id}`, integree: true,
     nom: d.label, nomEn: d.labelEn || d.label, grain: d.grain || null, teinte: d.swatch,
     matieres: MATIERE[d.id] ? [MATIERE[d.id]] : [], usages: ['sol'],
-    dessinee: !d.grain, provenance: provenance(d.grain), choix: { sol: d.id },
+    repeat: d.repeat, dessinee: !d.grain, provenance: provenance(d.grain), choix: { sol: d.id },
   }));
   const traces = Object.entries(TRACÉ_TEXTURES).map(([type, t]) => ({
     cle: `${SOURCE}:trace:${type}`, source: SOURCE, id: `trace:${type}`, integree: true,

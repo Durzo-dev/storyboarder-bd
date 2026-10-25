@@ -90,6 +90,8 @@ interface StoryboarderAPI {
   texturesImage(cle: string, quoi?: string): Promise<{ ok: boolean; data?: Uint8Array; type?: string }>;
   texturesImporter(): Promise<{ annule?: boolean; entree?: object; ignores?: string[]; refus?: string; trouves?: string[]; doublons?: string[] }>;
   texturesMatieres(cle: string, matieres: string[]): Promise<{ ok: boolean }>;
+  texturesRenommer(cle: string, nom: string): Promise<{ ok?: boolean, erreur?: string }>;
+  texturesIntegrees(): Promise<{ noms: Record<string, string>, poids: Record<string, number> }>;
   texturesCartes(sourceId: string, id: string): Promise<{ cartes?: Record<string, { data: Uint8Array; type: string }>; erreur?: string }>;
   surProgressionTexture(rappel: (sourceId: string, id: string, recus: number | null, total: number | null) => void): () => void;
   storeVignette(url: string): Promise<{ data?: Uint8Array; erreur?: string }>;
