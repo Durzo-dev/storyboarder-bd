@@ -317,7 +317,13 @@ function ajouterUnEtage(){
   if (n) { choisirNiveau(n.id); choisirOutil('mur'); }
 }
 /** Copie le niveau courant juste au-dessus, et y passe. Raccourci D. */
+/** Le niveau courant a-t-il au moins une pièce ? Sans pièce, il n'y a rien à dupliquer (demandé). */
+function niveauAvecPieces(){
+  return !!E && E.batiment.pieces.some(p => p.niveauId === E.niveauId);
+}
+
 function dupliquerLEtage(){
+  if (!niveauAvecPieces()) return;   // le raccourci D aussi : le bouton éteint ne suffit pas
   let n = null; const src = E.niveauId; modifier(b => { n = dupliquerNiveau(b, src, tr); });
   if (n) choisirNiveau(n.id);
 }
@@ -456,6 +462,12 @@ function remplirNiveaux(){
   dupliquer.type = 'button'; dupliquer.className = 'full-btn'; dupliquer.textContent = tr('Duplicate', 'Dupliquer');
   dupliquer.title = tr('Duplicate the floor: copy the current level (walls, openings, rooms) just above it (D)', 'Dupliquer l\'étage : copier le niveau courant (murs, ouvertures, pièces) juste au-dessus (D)');
   dupliquer.onclick = dupliquerLEtage;
+  // Un étage sans pièce ne se duplique pas (demandé) : bouton éteint, la raison en infobulle.
+  if (!niveauAvecPieces()) {
+    dupliquer.disabled = true;
+    dupliquer.title = tr('Duplicate the floor: impossible, this level has no room yet (close a contour of walls)',
+      'Dupliquer l\'étage : impossible, ce niveau n\'a encore aucune pièce (fermez un contour de murs)');
+  }
   actions.append(ajouter, dupliquer);
   zone.replaceChildren(...lignes, actions);
 }

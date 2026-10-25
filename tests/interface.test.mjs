@@ -195,3 +195,10 @@ describe('les menus contextuels passent devant tout', () => {
     assert.ok(!/#\w+(ContextMenu|Menu)\{ z-index:/.test(CSS), 'un menu a de nouveau son z-index à lui');
   });
 });
+
+describe('éditeur de bâtiment : un étage sans pièce ne se duplique pas (demandé)', () => {
+  test('le bouton s\'éteint et dit pourquoi ; le raccourci D est refusé aussi', () => {
+    assert.match(fonction('remplirNiveaux'), /if \(!niveauAvecPieces\(\)\) \{\n\s+dupliquer\.disabled = true;\n\s+dupliquer\.title = tr\(/);
+    assert.match(fonction('dupliquerLEtage'), /if \(!niveauAvecPieces\(\)\) return;/);
+  });
+});
