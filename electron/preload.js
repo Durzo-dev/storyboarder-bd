@@ -78,6 +78,8 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   texturesOptions: (sourceId, id) => ipcRenderer.invoke('textures:options', sourceId, id),
   texturesTelecharger: (sourceId, id, resolution) => ipcRenderer.invoke('textures:telecharger', sourceId, id, resolution),
   texturesMes: () => ipcRenderer.invoke('textures:mes'),
+  texturesTags: () => ipcRenderer.invoke('textures:tags'),
+  texturesOperationTags: (op, args) => ipcRenderer.invoke('textures:operationTags', op, args),
   texturesSupprimer: (cle) => ipcRenderer.invoke('textures:supprimer', cle),
   texturesImage: (cle, quoi) => ipcRenderer.invoke('textures:image', cle, quoi),
   texturesImporter: () => ipcRenderer.invoke('textures:importer'),

@@ -84,6 +84,8 @@ interface StoryboarderAPI {
   texturesOptions(sourceId: string, id: string): Promise<{ options?: { resolution: string; octets: number }[]; erreur?: string }>;
   texturesTelecharger(sourceId: string, id: string, resolution?: string): Promise<{ entree?: object; erreur?: string }>;
   texturesMes(): Promise<object[]>;
+  texturesTags(): Promise<{ id: string; nom: string }[]>;
+  texturesOperationTags(op: string, args: object): Promise<{ id?: string | null; erreur?: string; tags: { id: string; nom: string }[] }>;
   texturesSupprimer(cle: string): Promise<{ ok: boolean }>;
   texturesImage(cle: string, quoi?: string): Promise<{ ok: boolean; data?: Uint8Array; type?: string }>;
   texturesImporter(): Promise<{ annule?: boolean; entree?: object; ignores?: string[]; refus?: string; trouves?: string[]; doublons?: string[] }>;

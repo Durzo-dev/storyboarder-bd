@@ -57,16 +57,64 @@ function entreeTexture(r, { resolution, cartes, cuisson = null, date = new Date(
   };
 }
 
-const vide = () => ({ version: 1, textures: [] });
+const vide = () => ({ version: 1, textures: [], tags: [] });
 const liste = (b) => (b && Array.isArray(b.textures) ? b.textures.filter(t => t && t.cle && t.dossier) : []);
+const tagsDe = (b) => (b && Array.isArray(b.tags) ? b.tags.filter(t => t && t.id && t.nom) : []);
+/** Une bibliothèque refaite avec ces textures, en GARDANT ses tags (ils n'appartiennent à aucune texture). */
+const avec = (b, textures) => ({ version: 1, textures, tags: tagsDe(b) });
 
-/** Ajoute (ou REMPLACE : un second téléchargement de la même texture met l'entrée à jour). */
+/** Ajoute (ou REMPLACE : un second téléchargement de la même texture met l'entrée à jour, ses tags restent). */
 function ajouter(biblio, entree){
-  return { version: 1, textures: [...liste(biblio).filter(t => t.cle !== entree.cle), entree] };
+  const ancienne = liste(biblio).find(t => t.cle === entree.cle);
+  const neuve = ancienne && Array.isArray(ancienne.tags) ? { ...entree, tags: ancienne.tags.slice() } : entree;
+  return avec(biblio, [...liste(biblio).filter(t => t.cle !== entree.cle), neuve]);
 }
 
 function retirer(biblio, cle){
-  return { version: 1, textures: liste(biblio).filter(t => t.cle !== cle) };
+  return avec(biblio, liste(biblio).filter(t => t.cle !== cle));
+}
+
+// ── Les TAGS de l'utilisateur (demandé : comme ceux de « Mes modèles ») ─────────────────────────
+
+const cleNom = (n) => String(n || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+const nomPropre = (n) => String(n || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+
+/** Crée un tag : `{ biblio, id }`. Un nom déjà pris rend le tag existant ; un nom vide, id null. */
+function creerTag(biblio, nom){
+  const propre = nomPropre(nom);
+  const tags = tagsDe(biblio);
+  if (!propre) return { biblio: avec(biblio, liste(biblio)), id: null };
+  const existant = tags.find(t => cleNom(t.nom) === cleNom(propre));
+  if (existant) return { biblio: avec(biblio, liste(biblio)), id: existant.id };
+  const id = `t${tags.reduce((m, t) => Math.max(m, Number(String(t.id).slice(1)) || 0), 0) + 1}`;
+  return { biblio: { ...avec(biblio, liste(biblio)), tags: [...tags, { id, nom: propre }] }, id };
+}
+
+/** Renomme un tag : `{ biblio }` ou `{ biblio, erreur }` (inconnu, vide, pris par un autre). */
+function renommerTag(biblio, id, nom){
+  const propre = nomPropre(nom);
+  const tags = tagsDe(biblio);
+  if (!tags.some(t => t.id === id)) return { biblio, erreur: 'inconnu' };
+  if (!propre) return { biblio, erreur: 'vide' };
+  if (tags.some(t => t.id !== id && cleNom(t.nom) === cleNom(propre))) return { biblio, erreur: 'pris' };
+  return { biblio: { ...avec(biblio, liste(biblio)), tags: tags.map(t => (t.id === id ? { ...t, nom: propre } : t)) } };
+}
+
+/** Supprime un tag, et le retire de toutes les textures qui le portaient. */
+function supprimerTag(biblio, id){
+  const textures = liste(biblio).map(t => (Array.isArray(t.tags) ? { ...t, tags: t.tags.filter(x => x !== id) } : t));
+  return { version: 1, textures, tags: tagsDe(biblio).filter(t => t.id !== id) };
+}
+
+/** Pose (`actif`) ou retire un tag d'une texture. */
+function tagTexture(biblio, cle, id, actif){
+  if (!tagsDe(biblio).some(t => t.id === id)) return avec(biblio, liste(biblio));
+  return avec(biblio, liste(biblio).map(t => {
+    if (t.cle !== cle) return t;
+    const s = new Set(Array.isArray(t.tags) ? t.tags : []);
+    if (actif) s.add(id); else s.delete(id);
+    return { ...t, tags: [...s] };
+  }));
 }
 
 /** Les entrées dont le dossier est encore sur le disque (un dossier effacé à la main ne ment pas). */
@@ -134,10 +182,11 @@ const TAILLE_IMPORT = [2, 2];
 
 /** Change les matières d'une texture (cochées sur sa fiche) ; ses usages en découlent. */
 function avecMatieres(biblio, cle, matieres, usagesDe){
-  return { version: 1, textures: liste(biblio).map(t => (t.cle === cle ? { ...t, matieres: matieres.slice(), usages: usagesDe(matieres) } : t)) };
+  return avec(biblio, liste(biblio).map(t => (t.cle === cle ? { ...t, matieres: matieres.slice(), usages: usagesDe(matieres) } : t)));
 }
 
 module.exports = {
   FICHIER, DOSSIER, dossierDe, tailleDeCuisson, entreeTexture, vide, ajouter, retirer, presentes,
   cartesDuDossier, idImport, TAILLE_IMPORT, avecMatieres,
+  tagsDe, creerTag, renommerTag, supprimerTag, tagTexture,
 };

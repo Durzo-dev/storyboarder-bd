@@ -282,6 +282,27 @@ async function cartesEnMemoire(dossierProjets, sourceId, id, simulation){
   return { cartes };
 }
 
+/** Les tags de l'utilisateur (la liste commune à toutes ses textures). */
+function tags(dossierProjets){
+  return B.tagsDe(lireBiblio(dossierProjets));
+}
+
+/**
+ * Une opération sur les tags (demandé : comme ceux de « Mes modèles ») : creerTag, renommerTag,
+ * supprimerTag, tagTexture. Rend `{ id?, erreur?, tags }`.
+ */
+function operationTags(dossierProjets, op, args = {}){
+  const b = lireBiblio(dossierProjets);
+  let r;
+  if (op === 'creerTag') r = B.creerTag(b, args.nom);
+  else if (op === 'renommerTag') r = B.renommerTag(b, String(args.id || ''), args.nom);
+  else if (op === 'supprimerTag') r = { biblio: B.supprimerTag(b, String(args.id || '')) };
+  else if (op === 'tagTexture') r = { biblio: B.tagTexture(b, String(args.cle || ''), String(args.id || ''), !!args.actif) };
+  else return { erreur: 'inconnu', tags: B.tagsDe(b) };
+  if (!r.erreur) ecrireBiblio(dossierProjets, r.biblio);
+  return { id: r.id, erreur: r.erreur, tags: B.tagsDe(r.biblio) };
+}
+
 /** Coche les matières d'une texture (sa fiche) : ses usages en découlent. */
 function changerMatieres(dossierProjets, cle, matieres){
   const propres = (Array.isArray(matieres) ? matieres : []).filter(m => M.matiere(m));
@@ -312,4 +333,4 @@ function image(dossierProjets, cle, quoi){
   } catch (e) { return { ok: false }; }
 }
 
-module.exports = { infos, chercher, options, telecharger, mesTextures, supprimer, image, importer, changerMatieres, cartesEnMemoire };
+module.exports = { infos, chercher, options, telecharger, mesTextures, supprimer, image, importer, changerMatieres, cartesEnMemoire, tags, operationTags };

@@ -1200,6 +1200,8 @@ ipcMain.handle('textures:telecharger', async (event, sourceId, id, resolution) =
     if (!event.sender.isDestroyed()) event.sender.send('textures:progression', sourceId, id, recus, total);
   }, SIMULATION_STORE ? RACINE : null));
 ipcMain.handle('textures:mes', async () => storeTextures.mesTextures(getProjectsDir()));
+ipcMain.handle('textures:tags', async () => storeTextures.tags(getProjectsDir()));
+ipcMain.handle('textures:operationTags', async (event, op, args) => storeTextures.operationTags(getProjectsDir(), String(op || ''), args || {}));
 ipcMain.handle('textures:supprimer', async (event, cle) => storeTextures.supprimer(getProjectsDir(), String(cle || '')));
 ipcMain.handle('textures:image', async (event, cle, quoi) => storeTextures.image(getProjectsDir(), String(cle || ''), quoi));
 // L'import d'un DOSSIER de cartes (demandé) : la boîte de choix d'un dossier, puis la reconnaissance.

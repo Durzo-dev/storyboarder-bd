@@ -360,13 +360,49 @@ describe('retours du 25 octobre sur la fiche des textures', () => {
     assert.match(ui, /new T\.SphereGeometry\(/);
     assert.match(ui, /ouvrirApercu3D\(visuel, null, \{ objet \}\)/);
   });
-  test('les matières cochées attendent « Valider », qui n\'apparaît qu\'en cas de changement', () => {
-    assert.match(ui, /valider\.hidden = avant\.size === choisies\.size/);
+  test('les matières se choisissent dans un menu à choix MULTIPLE, comme la catégorie d\'un modèle', () => {
+    assert.match(ui, /role: 'menuitemcheckbox'/);
+    assert.match(ui, /menuMatieres = true;   \/\/ un choix MULTIPLE : le menu reste ouvert/);
   });
   test('revenir de la fiche refait la grille : la coche d\'une texture téléchargée y apparaît', () => {
     assert.match(ui, /if \(ouverte\) \{ rendreGrille\(\);/);
   });
-  test('les badges de la fiche sont serrés à gauche', () => {
-    assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /\.texture-badges\{ display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-start; \}/);
+  test('comme la fiche d\'un modèle : utilisée dans ce projet, licence, caractéristiques ; plus de note sous les boutons', () => {
+    assert.match(ui, /section\(tr\('Used in this project', 'Utilisée dans ce projet'\)/);
+    assert.match(ui, /section\(tr\('Licence', 'Licence'\)/);
+    assert.match(ui, /section\(tr\('Characteristics', 'Caractéristiques'\)/);
+    assert.doesNotMatch(ui, /La 1k suffit presque toujours/);
+  });
+  test('les usages en étiquettes sous les matières (plus de section Usages) ; « + Tags » et filtre par tags', () => {
+    assert.doesNotMatch(ui, /section\(tr\('Uses', 'Usages'\)/);
+    assert.match(ui, /classe: 'store-chip texture-chip-usage'/);
+    assert.match(ui, /texte: '\+ Tags'/);
+    assert.match(readFileSync(new URL('../src/index.html', import.meta.url), 'utf8'), /id="texturesTagsZone"/);
+  });
+  test('« Voir sur … » à côté de « Voir en 3D » quand la texture a une page', () => {
+    assert.match(ui, /r\.url \? lien\(tr\(`View on \$\{nomSource\(r\.source\)\}`/);
+  });
+});
+
+describe('les tags de « Mes textures » (purs)', () => {
+  test('créer (sans doublon), renommer (refus si pris), poser, supprimer (retiré partout)', () => {
+    let b = B.ajouter(B.vide(), { cle: 'polyhaven:a', dossier: 'polyhaven-a', nom: 'A', matieres: [], usages: [] });
+    const c1 = B.creerTag(b, 'Médiéval'); b = c1.biblio;
+    assert.equal(B.creerTag(b, 'medieval').id, c1.id, 'même nom aux accents près : le tag existant');
+    const c2 = B.creerTag(b, 'Ruines'); b = c2.biblio;
+    assert.equal(B.renommerTag(b, c2.id, 'médiéval').erreur, 'pris');
+    b = B.tagTexture(b, 'polyhaven:a', c1.id, true);
+    assert.deepEqual(b.textures[0].tags, [c1.id]);
+    b = B.supprimerTag(b, c1.id);
+    assert.deepEqual(b.textures[0].tags, []);
+    assert.deepEqual(B.tagsDe(b).map(t => t.nom), ['Ruines']);
+  });
+  test('RÉGRESSION : retélécharger une texture garde ses tags, et ajouter / retirer gardent la liste des tags', () => {
+    let b = B.creerTag(B.vide(), 'X').biblio;
+    b = B.ajouter(b, { cle: 'p:a', dossier: 'p-a', matieres: [], usages: [] });
+    b = B.tagTexture(b, 'p:a', 't1', true);
+    b = B.ajouter(b, { cle: 'p:a', dossier: 'p-a', matieres: [], usages: [], resolution: '2k' });
+    assert.deepEqual(b.textures[0].tags, ['t1']);
+    assert.equal(B.retirer(b, 'p:a').tags.length, 1);
   });
 });

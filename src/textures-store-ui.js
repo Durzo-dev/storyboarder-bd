@@ -16,6 +16,9 @@ import { tr } from './state.js';
 import { enregistrerFermeture } from './modal-stack.js';
 import { icone } from './icones.js';
 import { ouvrirApercu3D } from './store-apercu-3d.js';
+import { menuFlottant } from './store-ui.js';
+import { remplirListeEtiquettes } from './liste-etiquettes.js';
+import { textesStore, phrasesLicence } from './store-texts.js';
 
 const $ = (id) => document.getElementById(id);
 const api = () => globalThis.window && window.storyboarderAPI;
@@ -25,6 +28,8 @@ let infos = null;           // matières, usages, sources (textures:infos)
 let onglet = LOCAL;
 let page = { resultats: [], suivant: null };
 let mes = [];               // « Mes textures » (textures:mes)
+let tags = [];              // les tags de l'utilisateur (textures:tags)
+let tagsFiltre = [];        // les tags cochés dans le filtre de « Mes textures »
 let generation = 0;         // une réponse arrivée après un changement d'onglet est ignorée
 const enCours = new Map();  // cle → { recus, total } pendant un téléchargement
 const urlsLocales = new Map();
@@ -65,8 +70,24 @@ function options(select, liste){
   if ([...select.options].some(o => o.value === avant)) select.value = avant;
 }
 
+/** Le filtre par tags de « Mes textures », à côté des matières (comme « Mes modèles »). */
+function rendreFiltreTags(){
+  const zone = $('texturesTagsZone'), bouton = $('texturesTagsBtn');
+  if (!zone || !bouton) return;
+  zone.hidden = onglet !== LOCAL;
+  bouton.textContent = tagsFiltre.length ? tr(`${tagsFiltre.length} tag(s)`, `${tagsFiltre.length} tag(s)`) : tr('All tags', 'Tous les tags');
+  bouton.classList.toggle('actif', tagsFiltre.length > 0);
+  const remplir = (menu) => remplirListeTags(menu, {
+    estCoche: (e) => tagsFiltre.includes(e.id),
+    cocher: (e, actif) => { tagsFiltre = actif ? [...tagsFiltre, e.id] : tagsFiltre.filter(x => x !== e.id); },
+    refaire: () => { rendreFiltreTags(); rendreGrille(); const m = zone.querySelector('.store-menu-flottant'); if (m) { m.replaceChildren(); remplir(m); } },
+  });
+  bouton.onclick = () => menuFlottant(zone, remplir, 'store-menu-tags', null, bouton);
+}
+
 function rendreFiltres(){
   if (!infos) return;
+  rendreFiltreTags();
   options($('texturesMatiere'), [['', tr('All materials', 'Toutes les matières')], ...infos.matieres.map(m => [m.slug, m[langue()]])]);
   options($('texturesUsage'), [['', tr('All uses', 'Tous les usages')], ...infos.usages.map(u => [u.slug, u[langue()]])]);
   options($('texturesTri'), [['populaires', tr('Most downloaded', 'Les plus téléchargées')], ['recents', tr('Newest', 'Les plus récentes')]]);
@@ -107,7 +128,8 @@ function mesFiltrees(){
   const p = parametres();
   const texte = p.texte.trim().toLowerCase();
   return mes.filter(t => (!texte || t.nom.toLowerCase().includes(texte))
-    && (!p.matiere || t.matieres.includes(p.matiere)) && (!p.usage || t.usages.includes(p.usage)));
+    && (!p.matiere || t.matieres.includes(p.matiere)) && (!p.usage || t.usages.includes(p.usage))
+    && tagsFiltre.every(id => (t.tags || []).includes(id)));
 }
 
 async function chercher(curseur = null){
@@ -124,7 +146,9 @@ async function chercher(curseur = null){
 }
 
 async function relireMes(){
-  mes = await api().texturesMes() || [];
+  [mes, tags] = await Promise.all([api().texturesMes(), api().texturesTags ? api().texturesTags() : []]);
+  mes = mes || []; tags = (tags || []).slice().sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  tagsFiltre = tagsFiltre.filter(id => tags.some(t => t.id === id));
 }
 
 async function urlLocale(t){
@@ -250,44 +274,6 @@ function fermerFiche(){
 let positionListe = 0;
 
 const section = (titre, enfants) => el('section', { classe: 'store-fiche-section' }, [el('h5', { texte: titre }), ...enfants]);
-const badges = (liste, slugs) => el('div', { classe: 'texture-badges' },
-  slugs.map(s => el('span', { texte: nomDe(liste, s), classe: 'store-badge' })));
-
-/**
- * Les matières d'une texture de « Mes textures », à cocher (pour un dossier importé, qui n'a pas de
- * catégorie, ou pour corriger celles de la source). Les changements restent EN ATTENTE jusqu'au
- * bouton « Valider », qui n'apparaît que s'il y a un changement (demandé).
- */
-function matieresACocher(t){
-  const boite = el('div', { classe: 'texture-matieres-boite' });
-  const g = el('div', { classe: 'texture-matieres' });
-  const choisies = new Set(t.matieres);
-  const valider = el('button', { texte: tr('Confirm', 'Valider'), classe: 'full-btn texture-valider', attrs: { type: 'button' } });
-  const change = () => {
-    const avant = new Set(t.matieres);
-    valider.hidden = avant.size === choisies.size && [...avant].every(m => choisies.has(m));
-  };
-  for (const m of infos.matieres) {
-    const b = el('button', { texte: m[langue()], classe: choisies.has(m.slug) ? 'actif' : '', attrs: { type: 'button', 'aria-pressed': String(choisies.has(m.slug)) } });
-    b.onclick = () => {
-      if (choisies.has(m.slug)) choisies.delete(m.slug); else choisies.add(m.slug);
-      b.classList.toggle('actif', choisies.has(m.slug));
-      b.setAttribute('aria-pressed', String(choisies.has(m.slug)));
-      change();
-    };
-    g.appendChild(b);
-  }
-  valider.onclick = async () => {
-    valider.disabled = true;
-    await api().texturesMatieres(t.cle, infos.matieres.map(x => x.slug).filter(s => choisies.has(s)));
-    await relireMes();
-    const neuve = mes.find(x => x.cle === t.cle);
-    if (neuve) ouvrirFiche(neuve, true);
-  };
-  change();
-  boite.append(g, valider);
-  return boite;
-}
 
 const tailleReelle = (d) => (d ? `${d[0].toLocaleString(langue())} × ${d[1].toLocaleString(langue())} m` : null);
 
@@ -362,9 +348,6 @@ function boutonTelecharger(r, note){
     if (o.erreur || !o.options || !o.options.length) { note.textContent = erreurLisible(o.erreur); return; }
     options = o.options;
     choisie = options[0].resolution;
-    note.textContent = options.length > 2
-      ? tr('1k by default; 4k is offered because this texture serves buildings (close-ups).', '1k par défaut ; la 4k est proposée parce que cette texture sert aux bâtiments (gros plans).')
-      : tr('1k is enough for almost everything; 2k for close-ups.', 'La 1k suffit presque toujours ; la 2k pour les gros plans.');
     fleche.hidden = options.length < 2;
     scinde.classList.toggle('avec-fleche', options.length > 1);
     rendreMenu(); majTexte();
@@ -399,6 +382,100 @@ function boutonSupprimer(t, apres){
   return b;
 }
 
+// ── Le classement d'une texture de « Mes textures » : matières (choix multiple), usages, tags ──
+
+/** La liste commune des tags (comme « Mes modèles ») : créer, renommer, supprimer, cocher. */
+function remplirListeTags(menu, { estCoche, cocher, apresCreation, refaire }){
+  const t = textesStore(langue());
+  const operer = async (op, args) => { const r = await api().texturesOperationTags(op, args); await relireMes(); return r; };
+  remplirListeEtiquettes(menu, {
+    etiquettes: () => tags,
+    estCoche, cocher: async (e, actif) => { await cocher(e, actif); await relireMes(); }, apresCreation, refaire,
+    creer: (nom) => operer('creerTag', { nom }),
+    renommer: (e, nom) => operer('renommerTag', { id: e.id, nom }),
+    supprimer: async (e) => {
+      const n = mes.filter(x => (x.tags || []).includes(e.id)).length;
+      const ok = _rappels.confirmer ? await _rappels.confirmer(tr(`Delete the tag “${e.nom}”? ${n ? `It will be removed from ${n} texture(s).` : 'No texture has it.'}`,
+        `Supprimer le tag « ${e.nom} » ? ${n ? `Il sera retiré de ${n} texture(s).` : 'Aucune texture ne le porte.'}`)) : true;
+      if (!ok) return false;
+      await operer('supprimerTag', { id: e.id });
+      tagsFiltre = tagsFiltre.filter(x => x !== e.id);
+      return true;
+    },
+    textes: { nouvelle: t.nouveauTag, aucune: t.aucunTag, renommer: t.renommerTag, supprimer: t.supprimerTag, erreurs: t.erreursTag },
+  });
+}
+
+/**
+ * Le bloc « matières + usages + tags » d'une fiche de « Mes textures » (demandé : comme la catégorie
+ * et les tags d'un modèle). Les matières se choisissent dans un menu à CHOIX MULTIPLE ; les usages
+ * en découlent et s'affichent dessous ; puis les tags de l'utilisateur et « + Tags ». Se refait
+ * lui-même : l'image ou l'aperçu 3D restent en place.
+ */
+function blocClassement(cleTexture){
+  const bloc = el('div', { classe: 'store-classement' });
+  let menuTags = false, menuMatieres = false;
+  const maj = () => {
+    const t = mes.find(x => x.cle === cleTexture);
+    if (!t) return;
+    const noms = t.matieres.map(m => nomDe(infos.matieres, m));
+    const chip = el('button', { texte: noms.length ? noms.join(', ') : tr('Unclassified', 'Non classée'),
+      classe: 'store-chip store-chip-categorie' + (noms.length ? '' : ' store-chip-vide'),
+      attrs: { type: 'button', title: tr('Choose its materials', 'Choisir ses matières'), 'aria-haspopup': 'menu' } });
+    const ouvrirMatieres = () => menuFlottant(bloc, (menu) => {
+      for (const m of infos.matieres) {
+        const actif = t.matieres.includes(m.slug);
+        const b = el('button', { texte: (actif ? '✓ ' : '') + m[langue()], classe: 'store-menu-resolution' + (actif ? ' actif' : ''), attrs: { type: 'button', role: 'menuitemcheckbox', 'aria-checked': String(actif) } });
+        b.onclick = async () => {
+          const choisies = actif ? t.matieres.filter(x => x !== m.slug) : [...t.matieres, m.slug];
+          await api().texturesMatieres(cleTexture, infos.matieres.map(x => x.slug).filter(x => choisies.includes(x)));
+          await relireMes();
+          menuMatieres = true;   // un choix MULTIPLE : le menu reste ouvert
+          maj();
+        };
+        menu.appendChild(b);
+      }
+    }, 'store-menu-categories', () => { menuMatieres = false; }, chip);
+    chip.onclick = () => { menuTags = false; ouvrirMatieres(); menuMatieres = !!document.querySelector('.store-menu-categories'); };
+    const usages = t.usages.map(u => el('span', { texte: nomDe(infos.usages, u), classe: 'store-chip texture-chip-usage', attrs: { title: tr('Use, from its materials', 'Usage, d\'après ses matières') } }));
+    const lesTags = (t.tags || []).map(id => tags.find(x => x.id === id)).filter(Boolean).map(x => el('span', { texte: x.nom, classe: 'store-chip store-chip-tag' }));
+    const ajouter = el('button', { texte: '+ Tags', classe: 'store-chip store-chip-action', attrs: { type: 'button', 'aria-haspopup': 'menu' } });
+    const ouvrirTags = () => menuFlottant(bloc, (menu) => remplirListeTags(menu, {
+      estCoche: (e) => (t.tags || []).includes(e.id),
+      cocher: (e, actif) => api().texturesOperationTags('tagTexture', { cle: cleTexture, id: e.id, actif }),
+      apresCreation: async (id) => { await api().texturesOperationTags('tagTexture', { cle: cleTexture, id, actif: true }); await relireMes(); },
+      refaire: () => { menuTags = true; maj(); },
+    }), 'store-menu-tags', () => { menuTags = false; }, ajouter);
+    ajouter.onclick = () => { menuMatieres = false; ouvrirTags(); menuTags = true; };
+    const rouvrirMatieres = menuMatieres, rouvrirTags = menuTags;
+    document.querySelectorAll('#texturesFiche .store-menu-flottant').forEach(m => m.remove());
+    bloc.replaceChildren(
+      el('div', { classe: 'store-classement-ligne' }, [chip]),
+      usages.length ? el('div', { classe: 'store-classement-ligne' }, usages) : el('p', { classe: 'store-fiche-texte', texte: tr('Tick its materials to choose where it is offered.', 'Choisissez ses matières : elles disent où elle est proposée.') }),
+      el('div', { classe: 'store-classement-ligne' }, [...lesTags, ajouter]),
+    );
+    if (rouvrirMatieres) ouvrirMatieres();
+    else if (rouvrirTags) ouvrirTags();
+  };
+  maj();
+  return bloc;
+}
+
+/** Les matières et usages d'une texture EN LIGNE : des étiquettes, pas de choix (elle n'est pas à nous). */
+function blocLecture(r){
+  return el('div', { classe: 'store-classement' }, [
+    el('div', { classe: 'store-classement-ligne' }, r.matieres.map(m => el('span', { texte: nomDe(infos.matieres, m), classe: 'store-chip store-chip-categorie texture-chip-fixe' }))),
+    el('div', { classe: 'store-classement-ligne' }, r.usages.map(u => el('span', { texte: nomDe(infos.usages, u), classe: 'store-chip texture-chip-usage' }))),
+  ]);
+}
+
+const CC0 = { libelle: 'CC0 Public Domain', url: 'https://creativecommons.org/publicdomain/zero/1.0/', attribution: false, commercial: true, modification: true };
+const NOMS_CARTES = { couleur: ['colour', 'couleur'], normal: ['relief (normal)', 'relief (normale)'], rugosite: ['roughness', 'rugosité'],
+  ao: ['ambient occlusion', 'ombrage des creux'], deplacement: ['displacement', 'déplacement'] };
+
+/** Un lien vers l'extérieur, comme dans le store de modèles (le processus principal l'ouvre dans le navigateur). */
+const lien = (texte, url, classe) => el('a', { texte, classe, attrs: { href: url, target: '_blank', rel: 'noopener' } });
+
 async function ouvrirFiche(r, local){
   fermerApercu();
   ficheCourante = { r, local };
@@ -409,21 +486,34 @@ async function ouvrirFiche(r, local){
   const image = () => (urlImage ? [vignette(urlImage)] : []);
   if (local) urlLocale(r).then(url => { urlImage = url; if (url && ficheCourante && ficheCourante.r === r && !apercu) visuel.replaceChildren(...image()); });
   else visuel.replaceChildren(...image());
-  const boutons = el('div', { classe: 'store-fiche-boutons' }, [boutonApercu(r, visuel, image)]);
+  // « Voir sur … » à côté de « Voir en 3D », quand la texture a une page (demandé, comme les modèles).
+  const boutons = el('div', { classe: 'store-fiche-boutons' }, [boutonApercu(r, visuel, image),
+    r.url ? lien(tr(`View on ${nomSource(r.source)}`, `Voir sur ${nomSource(r.source)}`), r.url, 'nav-btn store-lien-bouton') : null].filter(Boolean));
   const gauche = el('div', { classe: 'store-fiche-gauche' }, [visuel, boutons]);
   const dims = local ? r.dimensions : r.details.dimensions;
+  const liste = (lignes) => el('ul', {}, lignes.filter(Boolean).map(p => el('li', { texte: p })));
+  const importee = r.source === 'import';
+  const auteur = r.auteur && r.auteur.nom;
+  const caracteristiques = [
+    tailleReelle(dims) ? `${tr('Real size of one tile', 'Taille réelle d\'une tuile')} : ${tailleReelle(dims)}${importee ? tr(' (unknown: by default)', ' (inconnue : par défaut)') : ''}` : null,
+    t && t.cartes && t.cartes.length ? `${tr('Maps', 'Cartes')} : ${t.cartes.map(c => (NOMS_CARTES[c] || [c, c])[langue() === 'en' ? 0 : 1]).join(', ')}` : null,
+    t && t.resolution ? `${tr('Resolution', 'Résolution')} : ${t.resolution.toLowerCase()}` : null,
+    t ? (t.grain ? tr('Ground and path grain: ready', 'Grain du Sol et des Tracés : prêt') : tr('No grain (neither displacement nor normal map): building finishes only', 'Pas de grain (ni déplacement ni normale) : revêtements de bâtiment seulement')) : null,
+    t && t.raccordVisible ? tr('Visible seam: it does not tile perfectly', 'Raccord visible : elle ne se répète pas parfaitement') : null,
+    t ? (importee ? tr('Imported from a folder', 'Importée d\'un dossier') : tr(`Downloaded from ${nomSource(r.source)}`, `Téléchargée depuis ${nomSource(r.source)}`)) : null,
+  ];
   const droite = el('div', { classe: 'store-fiche-droite' }, [
     el('h4', { texte: r.nom }),
-    el('p', { classe: 'store-fiche-texte', texte: r.source === 'import' ? tr('Imported from a folder', 'Importée d\'un dossier')
-      : `${nomSource(r.source)} · ${tr('by', 'par')} ${(r.auteur && r.auteur.nom) || nomSource(r.source)} · CC0` }),
-    section(tr('Materials', 'Matières'), [local ? matieresACocher(r) : badges(infos.matieres, r.matieres)]),
-    section(tr('Uses', 'Usages'), [r.usages.length ? badges(infos.usages, r.usages)
-      : el('p', { classe: 'store-fiche-texte', texte: tr('Unclassified: tick its materials above.', 'Non classée : cochez ses matières ci-dessus.') })]),
-    tailleReelle(dims) ? section(tr('Real size of one tile', 'Taille réelle d\'une tuile'), [el('p', { classe: 'store-fiche-texte', texte: tailleReelle(dims) })]) : null,
-    t ? section(tr('In My textures', 'Dans Mes textures'), [el('p', { classe: 'store-fiche-texte', texte: [
-      t.resolution ? `${tr('Resolution', 'Résolution')} ${t.resolution.toLowerCase()}` : null,
-      t.grain ? tr('ground and path grain ready', 'grain du Sol et des Tracés prêt') : tr('no grain: building finishes only', 'pas de grain : revêtements de bâtiment seulement'),
-    ].filter(Boolean).join(' · ') }), t.raccordVisible ? el('p', { classe: 'store-fiche-texte texture-raccord', texte: tr('Visible seam: this texture does not tile perfectly.', 'Raccord visible : cette texture ne se répète pas parfaitement.') }) : null]) : null,
+    importee ? el('p', { texte: tr('Imported from a folder', 'Importée d\'un dossier') })
+      : el('p', {}, [el('span', { texte: tr('by', 'par') + ' ' }), r.auteur && r.auteur.url ? lien(auteur, r.auteur.url) : el('span', { texte: auteur || nomSource(r.source) })]),
+    t ? blocClassement(t.cle) : blocLecture(r),
+    // Comme la fiche d'un modèle de « Mes modèles » : où elle sert, sa licence, ses caractéristiques.
+    t ? section(tr('Used in this project', 'Utilisée dans ce projet'), [el('p', { classe: 'store-fiche-texte',
+      texte: tr('Used nowhere in this Project. Other Projects are not checked.', 'Utilisée nulle part dans ce Projet. Les autres Projets ne sont pas vérifiés.') })]) : null,
+    section(tr('Licence', 'Licence'), importee
+      ? [el('p', { classe: 'store-fiche-texte', texte: tr('Unknown: imported from a folder. Check the conditions where it comes from.', 'Inconnue : importée d\'un dossier. Vérifiez les conditions de sa provenance.') })]
+      : [el('p', {}, [lien(CC0.libelle, CC0.url)]), liste(phrasesLicence(CC0, langue()))]),
+    section(tr('Characteristics', 'Caractéristiques'), [liste(caracteristiques)]),
   ]);
   const retour = el('button', { texte: tr('Back', 'Retour'), classe: 'nav-btn', attrs: { type: 'button' } });
   retour.onclick = fermerFiche;
