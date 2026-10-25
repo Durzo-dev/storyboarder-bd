@@ -1163,6 +1163,7 @@ const SIMULATION_STORE = !app.isPackaged && !!process.env.STORYBOARD_SIMULER_STO
 ipcMain.handle('store:infos', async (event, sourceId) => ({ ...store.infos(sourceId), simulation: SIMULATION_STORE }));
 ipcMain.handle('store:chercher', async (event, sourceId, params) =>
   store.chercher(sourceId, params, SIMULATION_STORE ? RACINE : null));
+ipcMain.handle('store:vignette', async (event, url) => store.octetsVignette(String(url || '')));
 ipcMain.handle('store:telecharges', async () => store.telecharges(getProjectsDir(), SIMULATION_STORE ? RACINE : null));
 // #445 : le téléchargement. Le .glb revient au renderer, qui le RANGE par le chemin de l'import
 // (src/model-store.js : nom libre, doublon à l'identique) ; puis il demande l'attribution.

@@ -102,9 +102,10 @@ describe('le câblage', () => {
     assert.match(MAIN, /const SIMULATION_STORE = !app\.isPackaged && !!process\.env\.STORYBOARD_SIMULER_STORE;/);
     assert.match(MAIN, /store\.chercher\(sourceId, params, SIMULATION_STORE \? RACINE : null\)/);
   });
-  test('le pont n\'expose que les sept appels du store (et deux écoutes)', () => {
+  test('le pont n\'expose que les huit appels du store (et deux écoutes)', () => {
     const pre = lire('electron/preload.js');
-    assert.equal((pre.match(/ipcRenderer\.invoke\('store:/g) || []).length, 7);
+    // Le huitième : les octets d'une vignette, pour la recadrer (src/vignette-recadrage.js).
+    assert.equal((pre.match(/ipcRenderer\.invoke\('store:/g) || []).length, 8);
     assert.match(pre, /storeTelecharges: \(\) => ipcRenderer\.invoke\('store:telecharges'\)/);
     assert.match(MAIN, /store\.telecharges\(getProjectsDir\(\), SIMULATION_STORE \? RACINE : null\)/);
     assert.match(pre, /storeInfos: \(sourceId\) => ipcRenderer\.invoke\('store:infos', sourceId\)/);

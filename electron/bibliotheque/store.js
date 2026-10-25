@@ -324,7 +324,26 @@ async function vignetteSource(resultat){
   return r.erreur ? null : r.octets;
 }
 
+/**
+ * Les OCTETS d'une vignette d'une source (#446, recadrage automatique) : l'interface doit lire ses
+ * pixels pour la recadrer, ce qu'un canevas refuse à une image venue d'un autre site. Seuls les
+ * hôtes d'images des sources connues sont servis ; les dernières sont gardées en mémoire.
+ */
+const HOTES_RECADRAGE = /^https:\/\/(cdn\.polyhaven\.com|media\.sketchfab\.com|acg-media\.struffelproductions\.com|ambientcg\.com)\//;
+const vignettesRecentes = sources.memoireBornee(300, 60 * 1024 * 1024);
+async function octetsVignette(url){
+  if (typeof url !== 'string' || !HOTES_RECADRAGE.test(url)) return { erreur: 'reponse' };
+  const deja = vignettesRecentes.get(url);
+  if (deja) return { data: deja };
+  const r = await lireOctets(url);
+  if (r.erreur) return r;
+  const data = new Uint8Array(r.octets);
+  vignettesRecentes.set(url, data);
+  return { data };
+}
+
 module.exports = {
+  octetsVignette, HOTES_RECADRAGE,
   chercher, infos, telecharges, poids, telecharger, apercu, attribuer, renommerAttribution, vignetteSource,
   DELAI_MS, DUREE_CATALOGUE_MS, POIDS_MAX,
   // #446b : le réseau partagé avec le store de textures (store-textures.js).

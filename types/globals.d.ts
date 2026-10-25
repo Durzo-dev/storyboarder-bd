@@ -92,6 +92,7 @@ interface StoryboarderAPI {
   texturesMatieres(cle: string, matieres: string[]): Promise<{ ok: boolean }>;
   texturesCartes(sourceId: string, id: string): Promise<{ cartes?: Record<string, { data: Uint8Array; type: string }>; erreur?: string }>;
   surProgressionTexture(rappel: (sourceId: string, id: string, recus: number | null, total: number | null) => void): () => void;
+  storeVignette(url: string): Promise<{ data?: Uint8Array; erreur?: string }>;
   storeChercher(sourceId: string, params: object): Promise<{ resultats?: object[]; suivant?: string | null; ecartes?: number; erreur?: string }>;
   bibliothequeLire(): Promise<{ version: number; categories: Record<string, string>; tags: { id: string; nom: string }[]; tagsParModele: Record<string, string[]> }>;
   bibliothequeOperation(op: string, args: object): Promise<{ bibliotheque?: object; id?: string | null; erreur?: string }>;

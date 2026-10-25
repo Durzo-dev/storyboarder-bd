@@ -110,5 +110,6 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   onStoreProgression: (callback) => ipcRenderer.on('store:progression', (e, recus, total) => callback(recus, total)),
   // L'aperçu 3D d'une fiche : le .glb en mémoire, jamais rangé.
   storeApercu: (sourceId, id) => ipcRenderer.invoke('store:apercu', sourceId, id),
+  storeVignette: (url) => ipcRenderer.invoke('store:vignette', url),
   onStoreApercuProgression: (callback) => ipcRenderer.on('store:apercuProgression', (e, s, id, recus, total) => callback(s, id, recus, total)),
 });

@@ -23,6 +23,7 @@ import { preparerVignettes, vignetteLocale, metasLocales, imageDeFiche } from '.
 import { usageLabel } from './model-usages.js';
 import { groupeReplie, memoriserGroupe } from './section-memory.js';
 import { ouvrirApercu3D } from './store-apercu-3d.js';
+import { recomposer } from './vignette-recadrage.js';
 // #454a-4b : les bâtiments, rangés à part (Batiments/) mais listés avec les modèles.
 import { listerBatiments, lireBatimentDuDisque } from './batiment-store.js';
 import { entreesBatiments } from './batiment-bibliotheque.js';
@@ -236,18 +237,33 @@ function pastillePossede(t, fichier){
 }
 
 /**
- * LA MARGE DES VIGNETTES NE SE VOIT PAS (signalé) : une image chargée dans une carte de l'un des deux
- * stores donne aussi la couleur de sa marge : son coin, très agrandi (style.css, .avec-fond-vignette). Une seule
- * écoute, en capture (`load` ne remonte pas), pour toutes les cartes, celles d'aujourd'hui et de demain.
+ * LE RECADRAGE AUTOMATIQUE DES VIGNETTES (src/vignette-recadrage.js, demandé : sujet trop petit, ou
+ * collé au bord). Une image chargée dans une carte de l'un des deux stores est recomposée au format
+ * de la carte, puis remplacée par le résultat. Une seule écoute, en capture (`load` ne remonte pas),
+ * pour toutes les cartes. Une image d'un autre site passe par le processus principal
+ * (store:vignette) : un canevas refuse de lire les pixels d'une image étrangère.
  */
 if (globalThis.document && document.addEventListener) {
-  document.addEventListener('load', (e) => {
+  document.addEventListener('load', async (e) => {
     const img = e.target;
-    if (!img || img.tagName !== 'IMG' || img.classList.contains('texture-a-plat')) return;
+    if (!img || img.tagName !== 'IMG' || img.dataset.recadree || img.classList.contains('texture-a-plat')) return;
     const c = img.closest && img.closest('.store-carte');
     if (!c || img !== c.querySelector('img')) return;
-    img.style.setProperty('--fond-vignette', `url("${String(img.currentSrc || img.src).replace(/"/g, '%22')}")`);
-    img.classList.add('avec-fond-vignette');
+    img.dataset.recadree = '1';
+    try {
+      let source = img;
+      if (/^https?:/.test(img.src)) {
+        const rep = await window.storyboarderAPI.storeVignette(img.currentSrc || img.src);
+        if (!rep || !rep.data) return;
+        source = await createImageBitmap(new Blob([rep.data]));
+      }
+      const L = 600, H = 400;   // la carte en 3:2, à la définition d'un écran dense
+      const toile = recomposer(source, L, H);
+      const blob = await new Promise(ok => toile.toBlob(ok, 'image/jpeg', 0.9));
+      if (!blob || !img.isConnected) return;
+      img.src = URL.createObjectURL(blob);
+      img.classList.add('recadree');
+    } catch (err) { /* l'image d'origine reste, contenue avec sa marge */ }
   }, true);
 }
 
