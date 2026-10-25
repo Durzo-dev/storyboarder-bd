@@ -46,6 +46,18 @@ describe('le sélecteur de couleur (demandé : placé à côté, aux couleurs de
     assert.match(readFileSync(new URL('../src/events.js', import.meta.url), 'utf8'), /installerSelecteurCouleur\(\);/);
   });
 
+  test('RÉGRESSION : Annuler ferme le sélecteur, pas le menu (le clic ne remonte pas, le panneau part après lui)', () => {
+    const src = readFileSync(new URL('../src/selecteur-couleur.js', import.meta.url), 'utf8');
+    assert.match(src, /panneau\.addEventListener\(type, \(e\) => e\.stopPropagation\(\)\);/);
+    assert.match(src, /setTimeout\(\(\) => panneau\.remove\(\), 0\);/);
+  });
+
+  test('« Origine » est une icône à droite de la pipette, présente seulement si le champ a une couleur d\'origine', () => {
+    const src = readFileSync(new URL('../src/selecteur-couleur.js', import.meta.url), 'utf8');
+    assert.match(src, /reinit\.innerHTML = icone\('reinitialiser'\);\s*if \(origine\) ligne\.appendChild\(reinit\);/);
+    assert.match(src, /actions\.append\(annuler, valider\);/);
+  });
+
   test('Annuler n\'émet rien si la couleur n\'a pas bougé (sinon une étape d\'annulation vide)', () => {
     const src = readFileSync(new URL('../src/selecteur-couleur.js', import.meta.url), 'utf8');
     assert.match(src, /if \(!touche\) return;/);

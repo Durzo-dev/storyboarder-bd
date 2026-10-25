@@ -24,6 +24,7 @@
  */
 import { placerMenuFlottant3D } from './ui-scale.js';
 import { tr } from './state.js';
+import { icone } from './icones.js';
 
 // ── Les conversions, PURES ──────────────────────────────────────────────────────────────────────
 
@@ -119,16 +120,22 @@ export function ouvrirSelecteurCouleur(champ){
     };
     ligne.appendChild(pipette);
   }
+  // Revenir à la couleur d'origine : une icône à droite de la pipette (demandé), comme elle.
+  const reinit = el('button', 'selecteur-couleur-pipette', { type: 'button', title: tr('Back to the original colour', 'Revenir à la couleur d\'origine'), 'aria-label': tr('Original colour', 'Couleur d\'origine') });
+  reinit.innerHTML = icone('reinitialiser');
+  if (origine) ligne.appendChild(reinit);
   const annuler = el('button', 'nav-btn', { type: 'button' });
   annuler.textContent = tr('Cancel', 'Annuler');
-  const reinit = el('button', 'nav-btn', { type: 'button', title: origine ? tr('Back to the natural colour', 'Revenir à la couleur naturelle') : '' });
-  reinit.textContent = tr('Original', 'Origine');
-  reinit.hidden = !origine;
   const valider = el('button', 'full-btn', { type: 'button' });
   valider.textContent = tr('Confirm', 'Valider');
   const actions = el('div', 'selecteur-couleur-actions');
-  actions.append(annuler, ...(origine ? [reinit] : []), valider);
+  actions.append(annuler, valider);
   panneau.append(zone, teinte, ligne, actions);
+  // Les clics DANS le sélecteur ne regardent que lui : ils ne remontent pas aux gestes de
+  // l'application (désélection, fermeture des menus), qui écoutent la fenêtre.
+  for (const type of ['pointerdown', 'mousedown', 'mouseup', 'click', 'dblclick', 'contextmenu']) {
+    panneau.addEventListener(type, (e) => e.stopPropagation());
+  }
 
   // Écrire dans le champ, et l'annoncer comme le faisait le sélecteur du système.
   const emettre = (type) => champ.dispatchEvent(new window.Event(type, { bubbles: true }));
@@ -177,7 +184,11 @@ export function ouvrirSelecteurCouleur(champ){
     ouvert = null;
     document.removeEventListener('pointerdown', surClicAilleurs, true);
     document.removeEventListener('keydown', surTouche, true);
-    panneau.remove();
+    // ⚠️ RETIRÉ APRÈS le clic qui le ferme, pas pendant (signalé : « Annuler » fermait le menu). Retiré
+    // tout de suite, le bouton cliqué n'était plus dans la page quand le clic remontait : les gestes de
+    // l'application le prenaient pour un clic dans le vide, et désélectionnaient la Case.
+    panneau.style.visibility = 'hidden';
+    setTimeout(() => panneau.remove(), 0);
     champ.classList.remove('selecteur-couleur-actif');
     if (!touche) return;
     if (retour && champ.value.toLowerCase() !== initiale) { champ.value = initiale; emettre('input'); }

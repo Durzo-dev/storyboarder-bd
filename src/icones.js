@@ -14,6 +14,8 @@
 export const ICONES = {
   polices: '<path d="M3 19 8 5l5 14M4.8 14h6.4"/><circle cx="17.5" cy="16" r="3"/><path d="M20.5 13v6"/>',
   annuler: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+  // Revenir à la valeur d'origine (le sélecteur de couleur) : une flèche qui tourne à rebours.
+  reinitialiser: '<path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/>',
   aide: '<circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
   coche: '<path d="m5 12 5 5 9-10"/>',
   ajouter: '<path d="M12 5v14M5 12h14"/>',
