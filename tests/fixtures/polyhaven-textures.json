@@ -1,0 +1,154 @@
+{
+ "asphalt_snow": {
+  "name": "Asphalt Snow",
+  "categories": [
+   "outdoor",
+   "man made",
+   "asphalt",
+   "snow"
+  ],
+  "type": 1,
+  "tags": [
+   "rough",
+   "asphalt",
+   "road",
+   "snow",
+   "urban",
+   "floor"
+  ],
+  "authors": {
+   "eye-candy.xyz": "All"
+  },
+  "dimensions": [
+   2000,
+   2000
+  ],
+  "date_published": 1680998400,
+  "attributes": {
+   "surface_use": "floor"
+  },
+  "download_count": 12379,
+  "thumbnail_url": "https://cdn.polyhaven.com/asset_img/thumbs/asphalt_snow.png?width=256&height=256&format=webp&v=204b0c54"
+ },
+ "snow_02": {
+  "type": 1,
+  "date_published": 1548806533,
+  "name": "Snow 02",
+  "categories": [
+   "terrain",
+   "natural",
+   "outdoor",
+   "snow"
+  ],
+  "authors": {
+   "Rob Tuytel": "All"
+  },
+  "dimensions": [
+   2000,
+   2000
+  ],
+  "tags": [
+   "snow",
+   "uneven",
+   "smooth",
+   "powdery",
+   "frosty",
+   "snowfield",
+   "soft",
+   "wintery"
+  ],
+  "attributes": {
+   "surface_use": "ground"
+  },
+  "download_count": 233143,
+  "thumbnail_url": "https://cdn.polyhaven.com/asset_img/thumbs/snow_02.png?width=256&height=256&format=webp&v=0c06ec15"
+ },
+ "dirty_carpet": {
+  "name": "Dirty Carpet",
+  "type": 1,
+  "tags": [
+   "carpet",
+   "dirty",
+   "floor",
+   "textile ",
+   "rug",
+   "discolored",
+   "faded"
+  ],
+  "authors": {
+   "Rohit Seervi": "All"
+  },
+  "dimensions": [
+   599.9999046325684,
+   599.9999046325684
+  ],
+  "date_published": 1699315200,
+  "categories": [
+   "floor",
+   "fabric",
+   "carpet"
+  ],
+  "attributes": {
+   "surface_use": "floor"
+  },
+  "download_count": 86517,
+  "thumbnail_url": "https://cdn.polyhaven.com/asset_img/thumbs/dirty_carpet.png?width=256&height=256&format=webp&v=c2afaeb5"
+ },
+ "brick_wall_001": {
+  "type": 1,
+  "tags": [
+   "red",
+   "rough",
+   "industrial",
+   "plain",
+   "baked"
+  ],
+  "date_published": 1615640913,
+  "name": "Brick Wall 001",
+  "categories": [
+   "brick",
+   "man made",
+   "outdoor",
+   "indoor",
+   "clean",
+   "wall"
+  ],
+  "authors": {
+   "Rob Tuytel": "Processing",
+   "Dimitrios Savva": "Photography"
+  },
+  "dimensions": [
+   3000,
+   3000
+  ],
+  "attributes": {
+   "surface_use": "wall"
+  },
+  "download_count": 115255,
+  "thumbnail_url": "https://cdn.polyhaven.com/asset_img/thumbs/brick_wall_001.png?width=256&height=256&format=webp&v=99965586"
+ },
+ "denim_fabric": {
+  "type": 1,
+  "name": "Denim Fabric",
+  "categories": [
+   "fabric",
+   "denim",
+   "man made"
+  ],
+  "tags": [
+   "blue",
+   "denim",
+   "cloth"
+  ],
+  "authors": {
+   "Rob Tuytel": "All"
+  },
+  "dimensions": [
+   1000,
+   1000
+  ],
+  "date_published": 1600000000,
+  "download_count": 5000,
+  "thumbnail_url": "https://cdn.polyhaven.com/asset_img/thumbs/denim_fabric.png?width=256&height=256"
+ }
+}

@@ -1,0 +1,192 @@
+{
+ "numberOfResults": 2037,
+ "foundAssets": [
+  {
+   "assetId": "Grass005",
+   "dataType": "Material",
+   "displayName": "Grass 005",
+   "displayCategory": "Grass",
+   "tags": [
+    "5",
+    "clean",
+    "grass",
+    "green",
+    "lawn",
+    "short"
+   ],
+   "dimensionX": 0,
+   "dimensionY": 0,
+   "downloadFolders": {
+    "default": {
+     "downloadFiletypeCategories": {
+      "zip": {
+       "downloads": [
+        {
+         "downloadLink": "https://ambientcg.com/get?file=Grass005_1K-JPG.zip",
+         "fileName": "Grass005_1K-JPG.zip",
+         "size": 10442657,
+         "attribute": "1K-JPG"
+        },
+        {
+         "downloadLink": "https://ambientcg.com/get?file=Grass005_2K-JPG.zip",
+         "fileName": "Grass005_2K-JPG.zip",
+         "size": 39523019,
+         "attribute": "2K-JPG"
+        },
+        {
+         "downloadLink": "https://ambientcg.com/get?file=Grass005_1K-PNG.zip",
+         "fileName": "Grass005_1K-PNG.zip",
+         "size": 19229149,
+         "attribute": "1K-PNG"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "previewImage": {
+    "256-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-JPG-242424/Grass005.jpg",
+    "1024-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-JPG-242424/Grass005.jpg"
+   }
+  },
+  {
+   "assetId": "Grass001",
+   "dataType": "Material",
+   "displayName": "Grass 001",
+   "displayCategory": "Grass",
+   "tags": [
+    "001",
+    "cover",
+    "garden",
+    "grass",
+    "green",
+    "ground",
+    "lawn"
+   ],
+   "dimensionX": 140,
+   "dimensionY": 140,
+   "downloadFolders": {
+    "default": {
+     "downloadFiletypeCategories": {
+      "zip": {
+       "downloads": [
+        {
+         "downloadLink": "https://ambientcg.com/get?file=Grass001_1K-JPG.zip",
+         "fileName": "Grass001_1K-JPG.zip",
+         "size": 10710313,
+         "attribute": "1K-JPG"
+        },
+        {
+         "downloadLink": "https://ambientcg.com/get?file=Grass001_2K-JPG.zip",
+         "fileName": "Grass001_2K-JPG.zip",
+         "size": 38930280,
+         "attribute": "2K-JPG"
+        },
+        {
+         "downloadLink": "https://ambientcg.com/get?file=Grass001_1K-PNG.zip",
+         "fileName": "Grass001_1K-PNG.zip",
+         "size": 19229149,
+         "attribute": "1K-PNG"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "previewImage": {
+    "256-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-JPG-242424/Grass001.jpg",
+    "1024-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-JPG-242424/Grass001.jpg"
+   }
+  },
+  {
+   "assetId": "Bricks113A",
+   "dataType": "Material",
+   "displayName": "Bricks 113 A",
+   "displayCategory": "Bricks",
+   "tags": [
+    "113",
+    "bricks",
+    "natural",
+    "stone"
+   ],
+   "dimensionX": 0,
+   "dimensionY": 0,
+   "downloadFolders": {
+    "default": {
+     "downloadFiletypeCategories": {
+      "zip": {
+       "downloads": [
+        {
+         "downloadLink": "https://ambientcg.com/get?file=Bricks113A_1K-JPG.zip",
+         "fileName": "Bricks113A_1K-JPG.zip",
+         "size": 7839867,
+         "attribute": "1K-JPG"
+        },
+        {
+         "downloadLink": "https://ambientcg.com/get?file=Bricks113A_2K-JPG.zip",
+         "fileName": "Bricks113A_2K-JPG.zip",
+         "size": 26521977,
+         "attribute": "2K-JPG"
+        },
+        {
+         "downloadLink": "https://ambientcg.com/get?file=Bricks113A_1K-PNG.zip",
+         "fileName": "Bricks113A_1K-PNG.zip",
+         "size": 19229149,
+         "attribute": "1K-PNG"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "previewImage": {
+    "256-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-JPG-242424/Bricks113A.jpg",
+    "1024-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-JPG-242424/Bricks113A.jpg"
+   }
+  },
+  {
+   "assetId": "Fabric086",
+   "dataType": "Material",
+   "displayName": "Fabric 086",
+   "displayCategory": "Fabric",
+   "tags": [
+    "086",
+    "fabric"
+   ],
+   "dimensionX": 0,
+   "dimensionY": 0,
+   "downloadFolders": {
+    "default": {
+     "downloadFiletypeCategories": {
+      "zip": {
+       "downloads": [
+        {
+         "downloadLink": "https://ambientcg.com/get?file=Fabric086_1K-JPG.zip",
+         "fileName": "Fabric086_1K-JPG.zip",
+         "size": 7733757,
+         "attribute": "1K-JPG"
+        },
+        {
+         "downloadLink": "https://ambientcg.com/get?file=Fabric086_2K-JPG.zip",
+         "fileName": "Fabric086_2K-JPG.zip",
+         "size": 23893364,
+         "attribute": "2K-JPG"
+        },
+        {
+         "downloadLink": "https://ambientcg.com/get?file=Fabric086_1K-PNG.zip",
+         "fileName": "Fabric086_1K-PNG.zip",
+         "size": 19229149,
+         "attribute": "1K-PNG"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "previewImage": {
+    "256-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-JPG-242424/Fabric086.jpg",
+    "1024-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-JPG-242424/Fabric086.jpg"
+   }
+  }
+ ]
+}

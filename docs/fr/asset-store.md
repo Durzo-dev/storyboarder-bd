@@ -212,6 +212,36 @@ Sketchfab ou Poly Haven, signalé par un bandeau jaune :
 
 Pour revenir à la normale, fermer le terminal, ou `Remove-Item Env:STORYBOARD_SIMULER_STORE`.
 
+## Le store de textures (#446)
+
+Mêmes principes que pour les modèles : une source est un module sans requête, testé sur de vraies
+réponses, et tout le reste ne connaît que le format commun (`type: 'texture'`).
+
+**Sources** (relevées le 25 octobre 2026, toutes en CC0, sans compte ni clé) :
+
+- **Poly Haven** (`store-textures-polyhaven.js`) : `/assets?type=textures` rend les 869 textures
+  d'un coup ; chacune a des `categories` (un tableau), des tags et sa **taille réelle** en mm.
+  `/files/{id}` donne chaque carte (Diffuse, nor_gl, Rough, AO) par résolution.
+- **ambientCG** (`store-textures-ambientcg.js`) : `api/v2/full_json?type=Material`, pages côté
+  serveur (`limit`, `offset`, `q`, `category` en liste), 2 037 matières ; un zip JPG par résolution
+  (1K ≈ 7 à 10 Mo). La taille réelle, en cm, manque souvent (0).
+- **cc0-textures.com** (#446f, plus tard) : un agrégateur sans API, qui ne sert que des zip 4K. Il
+  reprend Poly Haven et ambientCG sous leurs anciens noms ; seul ShareTextures y est nouveau. Prévu
+  en troisième source, limitée à ShareTextures, réduite en 1k à l'import.
+
+**Matières et usages** (`texture-matieres.js`, table validée le 25 octobre 2026). Une texture a une
+ou plusieurs **matières** (20 : herbe, terre, sable, gravier, roche, neige, asphalte, pavés,
+brique, béton, enduit, bois, parquet, carrelage, marbre, moquette, papier peint, métal, tuiles,
+feuillage), reconnues d'après les catégories de la source puis les mots ENTIERS de ses tags et de
+son nom. Les **usages** (11 : sol extérieur, route, chemin, muret, clôture, haie, mur extérieur,
+mur intérieur, sol intérieur, plafond, toit) découlent des matières, jamais de la texture : ce sont
+eux qui disent où l'application la propose. Une texture sans matière (tissu, cuir, nourriture…)
+est écartée.
+
+**Téléchargement** : la matière complète en **1k** (2k au choix) : couleur, relief (normal
+OpenGL, celui de three.js), rugosité, et l'ombrage des creux s'il existe. Le relief DirectX et le
+déplacement sont laissés.
+
 ## Questions ouvertes
 
 - **GLB direct ou zip** : à vérifier avec un premier jeton. Si seul le zip est proposé, il faudra le

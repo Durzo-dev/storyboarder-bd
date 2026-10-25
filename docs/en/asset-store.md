@@ -213,6 +213,35 @@ Sketchfab or Poly Haven, flagged by a yellow banner:
 
 To go back to normal, close the terminal, or `Remove-Item Env:STORYBOARD_SIMULER_STORE`.
 
+## The texture store (#446)
+
+Same principles as for models: a source is a module that makes no request, tested on real
+responses, and everything else only knows the common format (`type: 'texture'`).
+
+**Sources** (checked on 25 October 2026, all CC0, no account or key):
+
+- **Poly Haven** (`store-textures-polyhaven.js`): `/assets?type=textures` returns all 869 textures
+  at once; each has `categories` (an array), tags and its **real size** in mm. `/files/{id}` gives
+  each map (Diffuse, nor_gl, Rough, AO) per resolution.
+- **ambientCG** (`store-textures-ambientcg.js`): `api/v2/full_json?type=Material`, server-side pages
+  (`limit`, `offset`, `q`, `category` as a list), 2,037 materials; one JPG zip per resolution (1K ≈ 7
+  to 10 MB). The real size, in cm, is often missing (0).
+- **cc0-textures.com** (#446f, later): an aggregator with no API, serving 4K zips only. It repeats
+  Poly Haven and ambientCG under their former names; only ShareTextures is new there. Planned as a
+  third source, limited to ShareTextures, scaled down to 1k on import.
+
+**Materials and uses** (`texture-matieres.js`, table approved on 25 October 2026). A texture has one
+or more **materials** (20: grass, dirt, sand, gravel, rock, snow, asphalt, paving, brick, concrete,
+render, wood, parquet, tiles, marble, carpet, wallpaper, metal, roof tiles, foliage), recognised from
+the source's categories, then from WHOLE words in its tags and name. The **uses** (11: outdoor
+ground, road, path, low wall, fence, hedge, exterior wall, interior wall, interior floor, ceiling,
+roof) follow from the materials, never from the texture itself: they say where the application
+offers it. A texture with no material (fabric, leather, food…) is left out.
+
+**Download**: the full material in **1k** (2k optional): colour, relief (OpenGL normal, the one
+three.js uses), roughness, and ambient occlusion when present. DirectX normals and displacement are
+left out.
+
 ## Open questions
 
 - **Direct GLB or zip**: to check with a first token. If only the zip is offered, it will have to be
