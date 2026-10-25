@@ -113,11 +113,6 @@ export function textureDuTrace(type, texture){
   return t && t.types.includes(type) ? t : (TRACÉ_TEXTURES[type] || null);
 }
 
-/** Les textures de l'utilisateur proposées pour un type de Tracé, dans l'ordre de « Mes textures ». */
-export function texturesPourLeTrace(type){
-  return [..._traces.values()].filter(t => t.types.includes(type));
-}
-
 /**
  * Combien de fois une texture sert dans le Projet : `{ tomes, scenes }`. Une fois par Sol de Case,
  * par Zone de terrain et par Tracé qui la portent, comme `countModelUsages` compte les modèles. Les

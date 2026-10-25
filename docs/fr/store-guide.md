@@ -42,6 +42,12 @@ Les modules côté principal sont dans `electron/bibliotheque/`.
 
 Les menus contextuels ouverts depuis un store ou un éditeur passent au-dessus (z-index 1100).
 
+**Le mode « choisir »** : un store peut s'ouvrir depuis l'endroit où sa ressource s'emploie (le
+carré de texture du Sol ou d'un Tracé). Il ouvre « Mes … », l'usage verrouillé, la ressource posée
+repérée ; un clic sur une carte l'applique et referme, en la téléchargeant d'abord si besoin. Ni
+carte « Importer » ni fiche dans ce mode. Ce que l'application livre figure dans « Mes … », sans
+pouvoir être supprimé.
+
 ## Les cartes
 
 ![Une carte du store](../img/store-guide/carte.fr.svg)

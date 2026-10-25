@@ -40,6 +40,11 @@ The main-side modules are in `electron/bibliotheque/`.
 
 Context menus opened from a store or an editor sit above it (z-index 1100).
 
+**“Choose” mode**: a store can open from where its resource is used (the texture square of the
+Ground or a path). It opens “My …”, the use locked, the current resource marked; a click on a card
+applies it and closes, downloading it first if needed. No “Import” card and no detail page in this
+mode. What the application ships appears in “My …”, and cannot be deleted.
+
 ## The cards
 
 ![A store card](../img/store-guide/carte.en.svg)

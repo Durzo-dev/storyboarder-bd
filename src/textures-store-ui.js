@@ -13,7 +13,9 @@
  * collé en bas) avec ses classes : une seule apparence pour les deux fenêtres.
  */
 import { tr, S } from './state.js';
-import { utilisationsDe, PREFIXE } from './textures-utilisateur.js';
+import { utilisationsDe, PREFIXE, chargerTexturesUtilisateur } from './textures-utilisateur.js';
+import { texturesIntegrees, valeurChoisie, textureDeLaValeur, SOURCE as INTEGREE } from './textures-integrees.js';
+import { appliquerTeinteAuMotif3D, rvbDeCouleur3D, natureDuNom3D } from './bubble-texture.js';
 import { enregistrerFermeture } from './modal-stack.js';
 import { icone } from './icones.js';
 import { ouvrirApercu3D } from './store-apercu-3d.js';
@@ -34,6 +36,16 @@ let tagsFiltre = [];        // les tags cochés dans le filtre de « Mes texture
 let generation = 0;         // une réponse arrivée après un changement d'onglet est ignorée
 const enCours = new Map();  // cle → { recus, total } pendant un téléchargement
 const urlsLocales = new Map();
+let integrees = [];         // les textures livrées avec l'application, montrées dans « Mes textures »
+let mesCharges = false;     // « Mes textures » a été lue au moins une fois (les carrés du Sol et des Tracés)
+
+/**
+ * LE MODE « CHOISIR » (demandé) : le store s'ouvre depuis le carré de texture de la section Sol ou
+ * de la fenêtre d'un Tracé, sur « Mes textures », filtré sur cet usage (verrouillé). Un clic sur une
+ * carte l'APPLIQUE et referme ; une texture en ligne est d'abord téléchargée (en 1k), puis appliquée.
+ * `{ usage, actuelle, appliquer(valeur), titre }`, ou null hors de ce mode.
+ */
+let choix = null;
 
 function el(tag, { texte, classe, attrs } = {}, enfants = []){
   const n = document.createElement(tag);
@@ -46,7 +58,9 @@ function el(tag, { texte, classe, attrs } = {}, enfants = []){
 
 const langue = () => tr('en', 'fr');
 const nomDe = (liste, slug) => { const x = (liste || []).find(m => m.slug === slug); return x ? x[langue()] : slug; };
-const nomSource = (s) => ({ polyhaven: 'Poly Haven', ambientcg: 'ambientCG', import: tr('Imported folder', 'Dossier importé') }[s] || s);
+const nomSource = (s) => ({ polyhaven: 'Poly Haven', ambientcg: 'ambientCG', import: tr('Imported folder', 'Dossier importé'), [INTEGREE]: tr('Built in', 'Intégrée') }[s] || s);
+/** Le nom d'une texture dans la langue : une texture livrée a les deux, les autres celui de leur source. */
+const nomTexture = (t) => (t.integree && langue() === 'en' ? t.nomEn : t.nom);
 const poids = (o) => (o >= 1048576 ? `${(o / 1048576).toLocaleString(langue(), { maximumFractionDigits: 1 })} ${tr('MB', 'Mo')}`
   : `${Math.max(1, Math.round(o / 1024))} ${tr('KB', 'Ko')}`);
 const cle = (r) => `${r.source}:${r.id}`;
@@ -114,7 +128,7 @@ export function rafraichirTextesTextures(){
   const btn = $('texturesOuvrirBtn');
   if (btn) { btn.title = tr('Texture library', 'Bibliothèque de textures'); btn.setAttribute('aria-label', btn.title); }
   if (!$('texturesModal') || $('texturesModal').classList.contains('hidden')) return;
-  $('texturesTitre').textContent = tr('Texture library', 'Bibliothèque de textures');
+  $('texturesTitre').textContent = choix ? choix.titre : tr('Texture library', 'Bibliothèque de textures');
   rendreFiltres();
   rendreOnglets();
   rendreGrille();
@@ -131,7 +145,10 @@ function parametres(curseur){
 function mesFiltrees(){
   const p = parametres();
   const texte = p.texte.trim().toLowerCase();
-  return mes.filter(t => (!texte || t.nom.toLowerCase().includes(texte))
+  // En mode « choisir », seulement ce qui peut servir ici : une texture sans grain (bâtiments
+  // seulement) ne s'applique ni au Sol ni à un Tracé.
+  const utile = (t) => !choix || (t.usages.includes(choix.usage) && (t.integree || !!t.grain));
+  return [...mes, ...integrees].filter(t => utile(t) && (!texte || nomTexture(t).toLowerCase().includes(texte))
     && (!p.matiere || t.matieres.includes(p.matiere)) && (!p.usage || t.usages.includes(p.usage))
     && tagsFiltre.every(id => (t.tags || []).includes(id)));
 }
@@ -167,14 +184,43 @@ function phraseUtilisation(t){
 async function relireMes(){
   [mes, tags] = await Promise.all([api().texturesMes(), api().texturesTags ? api().texturesTags() : []]);
   mes = mes || []; tags = (tags || []).slice().sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  integrees = texturesIntegrees();
+  mesCharges = true;
   tagsFiltre = tagsFiltre.filter(id => tags.some(t => t.id === id));
   // #446d : le Sol et les Tracés proposent « Mes textures » ; une texture téléchargée, importée,
   // supprimée ou reclassée doit y paraître (ou en partir) sans redémarrer.
   window.dispatchEvent(new window.CustomEvent('textures-utilisateur'));
 }
 
+/**
+ * L'image d'une texture livrée : son grain (assets/textures), teint de sa teinte comme le fait le
+ * rendu, réduit à 256 px. Une matière DESSINÉE (Neutre, Eau) n'a pas de photo : un aplat de sa couleur.
+ */
+function urlIntegree(t){
+  return new Promise((resolve) => {
+    if (typeof Image === 'undefined' || typeof document === 'undefined') { resolve(null); return; }
+    const toile = document.createElement('canvas');
+    toile.width = toile.height = 256;
+    const c = toile.getContext('2d', { willReadFrequently: true });
+    const aplat = () => { c.fillStyle = t.teinte || '#888'; c.fillRect(0, 0, 256, 256); resolve(toile.toDataURL('image/jpeg', 0.9)); };
+    if (!t.grain) { aplat(); return; }
+    const img = new Image();
+    img.onload = () => {
+      c.drawImage(img, 0, 0, 256, 256);
+      const d = c.getImageData(0, 0, 256, 256);
+      const rvb = rvbDeCouleur3D(t.teinte);
+      if (rvb) appliquerTeinteAuMotif3D(d.data, rvb, natureDuNom3D(t.grain));
+      c.putImageData(d, 0, 0);
+      resolve(toile.toDataURL('image/jpeg', 0.9));
+    };
+    img.onerror = aplat;
+    img.src = `../assets/textures/${t.grain}.png`;
+  });
+}
+
 async function urlLocale(t){
   if (urlsLocales.has(t.cle)) return urlsLocales.get(t.cle);
+  if (t.integree) { const u = await urlIntegree(t); urlsLocales.set(t.cle, u); return u; }
   const r = await api().texturesImage(t.cle, 'couleur');
   const url = r && r.ok ? URL.createObjectURL(new Blob([r.data], { type: r.type })) : null;
   urlsLocales.set(t.cle, url);
@@ -198,19 +244,60 @@ function pastille(){
 function carte(r, local){
   const t = local ? r : possedee(r);
   const avancement = enCours.get(local ? r.cle : cle(r));
-  const c = el('button', { classe: 'store-carte' + (t && !local ? ' store-carte-possedee' : ''), attrs: { type: 'button', title: r.nom } }, [
+  const valeur = choix && t ? valeurChoisie(t, choix.usage) : undefined;
+  const actuelle = choix && valeur !== undefined && valeur === choix.actuelle;
+  const c = el('button', { classe: 'store-carte' + (t && !local ? ' store-carte-possedee' : '') + (actuelle ? ' store-carte-actuelle' : ''), attrs: { type: 'button', title: nomTexture(r) } }, [
     local ? el('div', { classe: 'store-sans-vignette' }) : vignette(r.vignettes.petite),
     t && !local ? pastille() : null,
-    el('span', { texte: r.nom, classe: 'store-carte-nom' }),
-    el('span', { texte: avancement ? tr('Downloading…', 'Téléchargement…') : (local ? nomSource(r.source) : `${tr('by', 'par')} ${r.auteur.nom}`), classe: 'store-carte-auteur' }),
+    el('span', { texte: nomTexture(r), classe: 'store-carte-nom' }),
+    el('span', { texte: avancement ? (avancement.total ? `${tr('Downloading', 'Téléchargement')} ${Math.round(avancement.recus / avancement.total * 100)} %` : tr('Downloading…', 'Téléchargement…'))
+      : (local ? nomSource(r.source) : `${tr('by', 'par')} ${r.auteur.nom}`), classe: 'store-carte-auteur' }),
     // Pas de badges de matières sur la vignette (demandé : trop nombreux, illisibles) ; ils sont sur la fiche.
     // Le poids sous la provenance, comme sur une carte de « Mes modèles » (demandé).
     local && r.poids ? el('span', { classe: 'store-carte-infos' }, [el('span', { texte: poids(r.poids) })]) : null,
   ]);
   // Une texture À PLAT remplit sa carte (style.css, .texture-a-plat) : elle se répète, la couper ne perd rien.
   if (local) urlLocale(r).then(url => { if (url) { const v = vignette(url); v.classList.add('texture-a-plat'); c.firstChild.replaceWith(v); } });
-  c.onclick = () => ouvrirFiche(r, local);
+  c.onclick = () => (choix ? choisirCarte(r, local) : ouvrirFiche(r, local));
   return c;
+}
+
+/**
+ * Le clic d'une carte en mode « choisir » : appliquer, en téléchargeant d'abord si besoin (en 1k, la
+ * résolution par défaut d'une fiche). Les textures de l'utilisateur sont réinscrites AVANT
+ * d'appliquer : la matière doit exister quand le Sol la cherche.
+ */
+async function choisirCarte(r, local){
+  if (!choix) return;
+  const appliquer = async (t) => {
+    const v = valeurChoisie(t, choix.usage);
+    if (v === undefined) return;
+    if (!t.integree) await chargerTexturesUtilisateur(api(), null);
+    const rappel = choix.appliquer;
+    fermerTextures();
+    rappel(v);
+  };
+  if (local) { await appliquer(r); return; }
+  const deja = possedee(r);
+  if (deja) { await appliquer(deja); return; }
+  if (enCours.has(cle(r))) return;
+  message('');
+  enCours.set(cle(r), { recus: 0, total: 0 });
+  rendreGrille();
+  const o = await api().texturesOptions(r.source, r.id).catch(() => ({ erreur: 'reseau' }));
+  const res = o && !o.erreur && o.options && o.options.length
+    ? await api().texturesTelecharger(r.source, r.id, o.options[0].resolution) : { erreur: (o && o.erreur) || 'reponse' };
+  enCours.delete(cle(r));
+  if (res.erreur) { message(erreurLisible(res.erreur)); rendreGrille(); return; }
+  await relireMes();
+  const t = possedee(r);
+  if (!t || !t.grain) {
+    message(tr(`“${r.nom}” is in My textures, but has no relief image: it can only be used for buildings.`,
+      `« ${r.nom} » est dans Mes textures, mais sans image de relief : elle ne sert qu'aux bâtiments.`));
+    rendreGrille();
+    return;
+  }
+  await appliquer(t);
 }
 
 /** La tuile « Importer un dossier », toujours en tête de « Mes textures » (demandé). */
@@ -255,8 +342,8 @@ function rendreGrille(){
   if (!infos) return;
   if (onglet === LOCAL) {
     const liste = mesFiltrees();
-    g.replaceChildren(carteImport(), ...liste.map(t => carte(t, true)));
-    if (mes.length && !liste.length) message(tr('No texture matches these filters.', 'Aucune texture ne correspond à ces filtres.'));
+    g.replaceChildren(...(choix ? [] : [carteImport()]), ...liste.map(t => carte(t, true)));
+    if (!liste.length) message(tr('No texture matches these filters.', 'Aucune texture ne correspond à ces filtres.'));
     return;
   }
   g.replaceChildren(...page.resultats.map(r => carte(r, false)));
@@ -534,6 +621,7 @@ const CC0 = { libelle: 'CC0 Public Domain', url: 'https://creativecommons.org/pu
 const lien = (texte, url, classe) => el('a', { texte, classe, attrs: { href: url, target: '_blank', rel: 'noopener' } });
 
 async function ouvrirFiche(r, local){
+  if (r.integree) { ficheIntegree(r); return; }
   fermerApercu();
   ficheCourante = { r, local };
   const fiche = $('texturesFiche');
@@ -596,10 +684,57 @@ async function ouvrirFiche(r, local){
   $('texturesDefilement').scrollTop = 0;
 }
 
+/**
+ * La fiche d'une texture LIVRÉE : son image, d'où elle vient, où elle sert. Ni aperçu 3D (ses cartes
+ * sources ne sont pas livrées, seul le grain cuit l'est), ni suppression : elle fait partie de
+ * l'application.
+ */
+function ficheIntegree(t){
+  fermerApercu();
+  ficheCourante = { r: t, local: true };
+  const fiche = $('texturesFiche');
+  const visuel = el('div', { classe: 'store-fiche-visuel' });
+  urlLocale(t).then(url => { if (url && ficheCourante && ficheCourante.r === t) visuel.replaceChildren(vignette(url)); });
+  const p = t.provenance;
+  const boutons = el('div', { classe: 'store-fiche-boutons' }, [p ? lien(tr(`View on ${p.banque}`, `Voir sur ${p.banque}`), p.url, 'nav-btn store-lien-bouton') : null]);
+  const liste = (lignes) => el('ul', {}, lignes.filter(Boolean).map(x => el('li', { texte: x })));
+  const id = t.choix.sol;
+  const usages = id ? utilisationsDe(id, { tomes: S.tomes || [], scenes: S.scenes || [] }) : null;
+  const phrase = !usages ? tr('The original texture of this path type, used by every path that has not been given another.', 'La texture d\'origine de ce type de Tracé, portée par chaque Tracé qui n\'en a pas reçu une autre.')
+    : (!usages.tomes && !usages.scenes ? tr('Used nowhere in this Project.', 'Utilisée nulle part dans ce Projet.')
+      : tr(`Used ${usages.tomes + usages.scenes} time(s) in this Project.`, `Utilisée ${usages.tomes + usages.scenes} fois dans ce Projet.`));
+  const droite = el('div', { classe: 'store-fiche-droite' }, [
+    el('h4', { texte: nomTexture(t) }),
+    el('p', { texte: t.dessinee ? tr('Drawn by the application', 'Dessinée par l\'application') : tr('Built into the application', 'Intégrée à l\'application') }),
+    blocLecture(t),
+    section(tr('Used in this project', 'Utilisée dans ce projet'), [el('p', { classe: 'store-fiche-texte', texte: phrase })]),
+    section(tr('Licence', 'Licence'), t.dessinee
+      ? [el('p', { classe: 'store-fiche-texte', texte: tr('None needed: drawn by the application, from no photograph.', 'Aucune : dessinée par l\'application, sans photographie.') })]
+      : [el('p', {}, [lien(CC0.libelle, CC0.url)]), liste(phrasesLicence(CC0, langue()))]),
+    section(tr('Characteristics', 'Caractéristiques'), [liste([
+      t.dimensions ? `${tr('Real size of one tile', 'Taille réelle d\'une tuile')} : ${tailleReelle(t.dimensions)}` : null,
+      p ? `${tr('Source', 'Source')} : ${p.ressource} (${p.banque})` : null,
+      t.grain ? `${tr('File', 'Fichier')} : assets/textures/${t.grain}.png` : null,
+      t.dessinee ? tr('No photograph: a material drawn in colour', 'Sans photographie : une matière dessinée en couleur') : null,
+    ])]),
+  ]);
+  const retour = el('button', { texte: tr('Back', 'Retour'), classe: 'nav-btn', attrs: { type: 'button' } });
+  retour.onclick = fermerFiche;
+  fiche.replaceChildren(el('div', { classe: 'store-fiche-corps' }, [el('div', { classe: 'store-fiche-gauche' }, [visuel, boutons]), droite]),
+    el('div', { classe: 'store-fiche-pied' }, [el('div', { classe: 'store-fiche-actions' }, [retour])]));
+  if ($('texturesFiche').hidden) positionListe = $('texturesDefilement').scrollTop;
+  $('texturesGrille').hidden = true;
+  $('texturesFormulaire').hidden = true;
+  $('texturesCredit').hidden = true;
+  fiche.hidden = false;
+  $('texturesDefilement').scrollTop = 0;
+}
+
 function suivreProgression(sourceId, id, recus, total){
   const k = `${sourceId}:${id}`;
   if (!enCours.has(k)) return;
   enCours.set(k, { recus, total });
+  if (choix && $('texturesFiche').hidden) { rendreGrille(); return; }
   if (!ficheCourante || ficheCourante.local || cle(ficheCourante.r) !== k) return;
   const b = $('texturesFiche').querySelector('.store-bouton-scinde > .full-btn');
   if (!b) return;
@@ -616,12 +751,76 @@ export async function ouvrirTextures(){
   $('texturesSimulation').textContent = infos.simulation ? tr('Simulation: recorded answers, nothing is downloaded.', 'Simulation : réponses enregistrées, rien n\'est téléchargé.') : '';
   rafraichirTextesTextures();
   await relireMes();
+  if (choix) {
+    // L'usage est imposé par l'endroit d'où l'on choisit, et ne se change pas ici.
+    $('texturesUsage').value = choix.usage;
+    $('texturesUsage').disabled = true;
+    rendreOnglets();
+  }
   chercher();
 }
 
 export function fermerTextures(){
   fermerFiche();
   $('texturesModal').classList.add('hidden');
+  if (choix) {
+    choix = null;
+    $('texturesUsage').disabled = false;
+    $('texturesUsage').value = '';
+    $('texturesModal').classList.remove('textures-mode-choix');
+  }
+}
+
+/**
+ * Ouvre le store pour CHOISIR une texture (voir `choix`) : sur « Mes textures », l'usage verrouillé.
+ * `actuelle` : la valeur posée aujourd'hui (pour marquer sa carte) ; `appliquer(valeur)` : rappelé
+ * avec la valeur choisie, après fermeture.
+ */
+export async function choisirTexture({ usage, actuelle = null, appliquer, titre }){
+  if (!api()) return;
+  if (!$('texturesModal').classList.contains('hidden')) fermerTextures();
+  choix = { usage, actuelle: usage === 'sol' ? (actuelle || 'herbe') : (actuelle || null), appliquer, titre };
+  onglet = LOCAL;
+  // Par-dessus la fenêtre d'un Tracé, d'où il peut s'ouvrir (style.css).
+  $('texturesModal').classList.add('textures-mode-choix');
+  await ouvrirTextures();
+}
+
+/**
+ * LE CARRÉ DE TEXTURE (demandé, à la place d'une liste à rallonge) : l'image de la texture posée,
+ * son nom et « Changer » dessous ; un clic ouvre le store pour en choisir une autre.
+ * `{ valeur, usage, titre, appliquer(valeur) }`. Rend le bouton ; l'image arrive ensuite.
+ */
+export function carreDeTexture({ valeur, usage, titre, appliquer }){
+  const image = el('span', { classe: 'texture-carre-image' });
+  const nom = el('span', { texte: '…' });
+  const b = el('button', { classe: 'texture-carre', attrs: { type: 'button', title: tr('Choose another texture', 'Choisir une autre texture') } },
+    [image, el('span', { classe: 'texture-carre-nom' }, [nom, el('span', { texte: tr('Change', 'Changer') })])]);
+  textureActuelle(valeur, usage).then(async (t) => {
+    if (!t) { nom.textContent = tr('Unknown texture', 'Texture introuvable'); return; }
+    nom.textContent = t.nom;
+    const url = await t.url;
+    if (url) image.style.backgroundImage = `url("${url}")`;
+  });
+  // mousedown plutôt que click, comme les boutons du Sol : le menu de droite se refait au mouseup.
+  b.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); choisirTexture({ usage, actuelle: valeur, appliquer, titre }); });
+  return b;
+}
+
+/**
+ * La texture posée aujourd'hui pour un usage (le carré de la section Sol, de la fenêtre d'un Tracé) :
+ * `{ nom, url }` (url en promesse), livrée ou de « Mes textures ». « Mes textures » est lue une fois.
+ */
+export async function textureActuelle(valeur, usage){
+  if (!mesCharges && api()) {
+    try { mes = (await api().texturesMes()) || []; } catch (e) { mes = []; }
+    integrees = texturesIntegrees();
+    mesCharges = true;
+  }
+  if (!integrees.length) integrees = texturesIntegrees();
+  const t = textureDeLaValeur(valeur, usage, mes);
+  if (!t) return null;
+  return { nom: nomTexture(t), url: urlLocale(t) };
 }
 
 let _rappels = {};

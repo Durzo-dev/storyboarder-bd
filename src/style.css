@@ -2882,3 +2882,22 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .modal-field-ligne > .modal-field-label{ margin:0; }
 .modal-field-ligne input[type=number], .modal-field-ligne .modal-field-number{ flex:none; width:90px; margin:0; }
 .modal-field-ligne .modal-field-valeur{ display:inline-flex; align-items:center; gap:6px; font-size:var(--texte-libelle); color:var(--ink-soft); }
+
+/* ── #446d : choisir une texture depuis le Sol ou un Tracé ─────────────────────────────────────────
+   Un GRAND CARRÉ montre la texture posée, son nom dessous ; un clic ouvre le store de textures en
+   mode « choisir » (textures-store-ui.js, choisirTexture), filtré sur l'usage. */
+.texture-carre{ grid-column:1 / -1; display:flex; flex-direction:column; align-items:stretch; gap:6px; width:100%; padding:8px;
+  background:var(--white); border:1px solid var(--bord-actif); border-radius:var(--rayon-petit); color:var(--ink); cursor:pointer;
+  font:inherit; text-align:left; }
+.texture-carre:hover{ border-color:var(--bord-actif); }
+.texture-carre-image{ width:100%; aspect-ratio:1/1; border-radius:var(--rayon-petit); background:var(--paper-dark) center/cover no-repeat; }
+.texture-carre-nom{ display:flex; justify-content:space-between; gap:8px; font-size:var(--texte-courant); font-weight:600; }
+.texture-carre-nom span:last-child{ color:var(--ink-soft); font-weight:400; }
+/* Le store ouvert pour choisir passe au-dessus de la fenêtre d'un Tracé, d'où il peut venir. */
+#texturesModal.textures-mode-choix{ z-index:1050; }
+/* La texture posée aujourd'hui, repérée dans la grille. */
+.store-carte.store-carte-actuelle{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+/* Dans la fenêtre d'un Tracé, plus étroite : le carré à gauche, le nom à sa droite. */
+.texture-carre-zone .texture-carre{ flex-direction:row; align-items:center; gap:12px; }
+.texture-carre-zone .texture-carre-image{ width:112px; flex:none; }
+.texture-carre-zone .texture-carre-nom{ flex-direction:column; gap:4px; flex:1; }

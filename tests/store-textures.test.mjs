@@ -324,7 +324,8 @@ describe('import d\'un dossier de cartes (demandé : l\'application prend ce qu\
   });
   test('câblage : la tuile « Importer un dossier » en tête de Mes textures, la boîte de choix d\'un dossier', () => {
     const ui = readFileSync(new URL('../src/textures-store-ui.js', import.meta.url), 'utf8');
-    assert.match(ui, /g\.replaceChildren\(carteImport\(\), \.\.\.liste\.map\(t => carte\(t, true\)\)\)/);
+    // En tête, sauf en mode « choisir » (on y applique une texture, on n'en importe pas).
+    assert.match(ui, /g\.replaceChildren\(\.\.\.\(choix \? \[\] : \[carteImport\(\)\]\), \.\.\.liste\.map\(t => carte\(t, true\)\)\)/);
     assert.match(readFileSync(new URL('../electron/main.js', import.meta.url), 'utf8'), /'textures:importer'[\s\S]{0,300}properties: \['openDirectory'\]/);
   });
 });

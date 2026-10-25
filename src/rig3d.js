@@ -873,7 +873,12 @@ function tuileDuGrainDuSol3D(def) {
 }
 
 export function buildGroundTexture(type) {
-  const def = GROUND_TYPE_DEFS.find(d => d.id === type) || GROUND_TYPE_DEFS[0];
+  const trouve = GROUND_TYPE_DEFS.find(d => d.id === type);
+  const def = trouve || GROUND_TYPE_DEFS[0];
+  // ⚠️ UN IDENTIFIANT INCONNU SE RANGE SOUS LA MATIÈRE DE REPLI, pas sous lui-même (#446d). Une
+  // texture de « Mes textures » pas encore inscrite (ou absente sur cette machine) prenait la
+  // recette de « Neutre » ET la gardait pour la session, même une fois inscrite.
+  if (!trouve) type = def.id;
   const garde = _groundTexCache[type];
   // ⚠️ UNE ENTRÉE PEUT ÊTRE PÉRIMÉE PAR L'ARRIVÉE DE SON GRAIN, et c'est un test qui l'a exigé. Le
   // préchargement est ASYNCHRONE : la première Planche peut se dessiner avant lui, et la recette

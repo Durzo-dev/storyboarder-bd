@@ -273,8 +273,13 @@ building finish. The renderer never supplies an address: the source is read agai
 
 **On the Ground and paths** (#446d, `src/textures-utilisateur.js`): a texture with a `sol` use
 becomes a Ground material (the Ground section of a Panel or Scene, terrain zones); a texture whose
-use is a path type (road, dirt path, low wall, fence, hedge) is chosen in that path's window, next to
-“Original”. It shows in its natural colour (the tint measured at baking); another colour tints it,
+use is a path type (road, dirt path, low wall, fence, hedge) is chosen for a path of that type. The
+choice is made through a **large square** (the current texture, its name, “Change”), in the Ground
+section and in the path's window: a click opens the store in **“choose” mode** (`choisirTexture`),
+on “My textures”, the use locked; a card applies it, an online texture is downloaded in 1k then
+applied. **The bundled textures** (`src/textures-integrees.js`: the Ground materials, Neutral and
+Water included, and the paths' original textures) are in “My textures”, with their origin (that of
+`assets/textures/LICENSES.md`, which a test compares); they cannot be deleted. It shows in its natural colour (the tint measured at baking); another colour tints it,
 like the shipped textures. Ground materials are ADDED to `GROUND_TYPE_DEFS` (flagged `importee`):
 all the code that looked a material up by its id finds it unchanged. Grains are read through IPC
 (`textures:image`) and served as blob URLs. The persisted id (`tex:<folder>`) is described in

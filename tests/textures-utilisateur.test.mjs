@@ -45,8 +45,8 @@ describe('les textures de l\'utilisateur sur le Sol et les Tracés (#446d)', () 
   test('l\'usage décide : sans « sol », pas au Sol ; sans grain, nulle part', () => {
     U.installerTexturesUtilisateur([entree({ usages: ['muret'] }), entree({ dossier: 'y', grain: null })]);
     assert.equal(GROUND_TYPE_DEFS.length, livres);
-    assert.deepEqual(U.texturesPourLeTrace('muret').map(t => t.id), ['tex:polyhaven-rocky_trail']);
-    assert.deepEqual(U.texturesPourLeTrace('route'), []);
+    assert.equal(U.textureDuTrace('muret', 'tex:polyhaven-rocky_trail').id, 'tex:polyhaven-rocky_trail');
+    assert.equal(U.textureDuTrace('route', 'tex:polyhaven-rocky_trail'), TRACÉ_TEXTURES.route);
   });
 
   test('un Tracé prend la texture choisie si son type la permet, l\'originale sinon (ou si elle manque)', () => {

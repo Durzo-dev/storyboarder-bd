@@ -28,11 +28,12 @@ import {
   ANIMAL_JOINT_DEFS, ANIMAL_TYPES, BUILD_WALL_DEFAULT_HEIGHT,
   WALL_OPENING_MAGNET_TYPES, PERSONA_PREVIEW_PAN_SENS, ROOM_FLOOR_TYPE_IDS,
   PANEL_CAM_DEFAULT_DIST_3D,
-  POSE_3D, PREVIEW_OBJECT_ID, PERSONA_SKELETON_3D, ARCHETYPES_3D, GROUND_TYPE_DEFS, GROUND_Y_DEFAULT_3D, TRACÉ_DEFAULTS, TRACÉ_TEXTURES,
+  POSE_3D, PREVIEW_OBJECT_ID, PERSONA_SKELETON_3D, ARCHETYPES_3D, GROUND_TYPE_DEFS, GROUND_Y_DEFAULT_3D, TRACÉ_DEFAULTS,
   PERSONA_PREVIEW_MAX_PX,
   TRAVERSANT_TYPES, WALL_PX_PER_UNIT_3D, WALL_TYPES,
 } from './constants.js';
-import { texturesPourLeTrace } from './textures-utilisateur.js';
+import { USAGE_DU_TRACE } from './textures-utilisateur.js';
+import { carreDeTexture } from './textures-store-ui.js';
 import {
   clamp, getElementDepth, repairElementBase3D, unknownPoseKey3D,
   figureRenderSize3D,
@@ -1760,34 +1761,23 @@ export function openTracéModal(obj){
 }
 
 /**
- * La texture d'un Tracé (#446d) : « D'origine », puis les textures de « Mes textures » dont un usage
- * est ce type de Tracé. Le choix attend « Enregistrer » (S.tracéModalTexture). Sans aucune texture
- * proposée, la rangée est masquée : il n'y a rien à choisir.
+ * La texture d'un Tracé (#446d, demandé) : un grand carré avec la texture posée ; un clic ouvre le
+ * store de textures filtré sur ce type de Tracé, où une carte la choisit. Le choix attend
+ * « Enregistrer » (S.tracéModalTexture). La barrière n'a pas d'usage dans le store : pas de carré.
  */
 export function buildTracéTextureGrid(type, courante){
   const champ = document.getElementById('tracéTextureField');
   const grid = document.getElementById('tracéTextureGrid');
-  const proposees = texturesPourLeTrace(type);
-  S.tracéModalTexture = proposees.some(t => t.id === courante) ? courante : null;
-  champ.style.display = proposees.length ? '' : 'none';
-  grid.innerHTML = '';
-  const origine = TRACÉ_TEXTURES[type];
-  [{ id: null, nom: tr('Original', 'D\'origine'), teinte: origine ? origine.teinte : '#888888' }, ...proposees].forEach(t => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'sol-ground-btn' + (t.id === S.tracéModalTexture ? ' active' : '');
-    const pastille = document.createElement('span');
-    pastille.className = 'sol-ground-swatch';
-    pastille.style.background = t.teinte;
-    btn.append(pastille, document.createTextNode(t.nom));
-    btn.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      S.tracéModalTexture = t.id;
-      grid.querySelectorAll('.sol-ground-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
-    grid.appendChild(btn);
-  });
+  S.tracéModalTexture = courante || null;
+  champ.style.display = USAGE_DU_TRACE[type] ? '' : 'none';
+  if (!USAGE_DU_TRACE[type]) { grid.replaceChildren(); return; }
+  const titres = { route: tr('Choose the road texture', 'Choisir la texture de la route'), chemin: tr('Choose the path texture', 'Choisir la texture du chemin'),
+    muret: tr('Choose the low wall texture', 'Choisir la texture du muret'), cloture: tr('Choose the fence texture', 'Choisir la texture de la clôture'),
+    haie: tr('Choose the hedge texture', 'Choisir la texture de la haie') };
+  grid.replaceChildren(carreDeTexture({
+    valeur: S.tracéModalTexture, usage: USAGE_DU_TRACE[type], titre: titres[type],
+    appliquer: (id) => buildTracéTextureGrid(type, id),
+  }));
 }
 
 export function buildTerrainTypeGrid(currentType){

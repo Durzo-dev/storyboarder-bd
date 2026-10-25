@@ -30,10 +30,11 @@ import { bibliothequeLue3D, styleCorrespondant3D, peutEnregistrerLeStyle3D } fro
 import { bulleEstFusionnable3D, groupeDeLaBulle3D } from './bubble-merge.js';
 import {
   OBJECT_TYPE_LABELS,
-  BUBBLE_PADDING_DEFAULT, GROUND_TYPE_DEFS,
+  BUBBLE_PADDING_DEFAULT,
   WALL_TYPES,
 } from './constants.js';
-import { clamp, libelleTable3D, libelleTypeObjet3D } from './utils.js';
+import { carreDeTexture } from './textures-store-ui.js';
+import { clamp, libelleTypeObjet3D } from './utils.js';
 import { icone, ICONE_TYPE_OBJET, ICONE_TRACÉ, ICONE_EMOTION } from './icones.js';
 import { pxParMm, trouverFormat } from './formats.js';
 import { estUneLumiere3D } from './light-source-3d.js';
@@ -1330,26 +1331,18 @@ function updateSidePanelImpl(){
     sideCadrageSection.style.display = 'none';
     // Ground section : floor plan texture type for this Panel/Scene
     {
-      const currentGroundType = sel.groundType || 'herbe';
-      sideGroundGrid.innerHTML = '';
-      GROUND_TYPE_DEFS.forEach(def => {
-        const btn = document.createElement('button');
-        btn.className = 'sol-ground-btn' + (def.id === currentGroundType ? ' active' : '');
-        btn.innerHTML = `<span class="sol-ground-swatch" style="background:${def.swatch}"></span>${libelleTable3D(def, tr)}`;
-        // mousedown rather than click: window.addEventListener('mouseup') calls drawCurrentPage()
-        // on EVERY mouseup, which rebuilds the buttons (sideGroundGrid.innerHTML='') before
-        // the click is emitted. Chromium doesn't fire click on a DOM-detached node.
-        // Same workaround as for the Element rows (cf. renderSideElementRow).
-        btn.addEventListener('mousedown', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
+      // #446d (demandé) : un grand carré avec la texture du Sol, plutôt que la liste des matières ;
+      // un clic ouvre le store de textures, filtré sur le Sol, où une carte l'applique.
+      sideGroundGrid.replaceChildren(carreDeTexture({
+        valeur: sel.groundType || 'herbe', usage: 'sol', titre: tr('Choose the Ground', 'Choisir le Sol'),
+        appliquer: (id) => {
           _snapshot();
-          sel.groundType = def.id;
+          sel.groundType = id;
           panelSceneCache3D.delete(sel.id);
+          updateSidePanel();
           drawCurrentPage();
-        });
-        sideGroundGrid.appendChild(btn);
-      });
+        },
+      }));
       sideGroundSection.style.display = 'block';
       sideLightSection.style.display = 'block';
       rafraichirSectionLumiere();
