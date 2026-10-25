@@ -180,6 +180,7 @@ import {
 import { vueDeRecherche } from './manuel-recherche.js';
 import { policeADessiner, chargerPolicesUtilisateur, policesImportees, NOMS_INTEGRES } from './polices-utilisateur.js';
 import { cablerPolices, fermerPolices, rafraichirTextesPolices, renommerPolice, supprimerPolice } from './polices-ui.js';
+import { cablerTextures, rafraichirTextesTextures } from './textures-store-ui.js';
 import {
   setSidebarCallbacks, isSceneTopDownView, homeOwningPanel, exitCameraMode, elementsInPanel,
   getRoomConnectedComponents, updateSidePanel, refreshCameraSliders, renderSideCameraGizmo,
@@ -6424,7 +6425,7 @@ document.getElementById('openBatimentEditorBtn').onclick = () => {
 // s'allume. Observé sur la classe `hidden` de chacun, plutôt que posé à chaque ouverture : les
 // chemins d'ouverture sont nombreux (bouton, touche, fiche, navigation), l'état affiché est un seul.
 [['personaEditorOverlay', 'openPoseEditorBtn'], ['batimentEditeur', 'openBatimentEditorBtn'],
-  ['storeModal', 'storeOuvrirBtn'], ['policesModal', 'policesOuvrirBtn']].forEach(([ecran, bouton]) => {
+  ['storeModal', 'storeOuvrirBtn'], ['texturesModal', 'texturesOuvrirBtn'], ['policesModal', 'policesOuvrirBtn']].forEach(([ecran, bouton]) => {
   const el = document.getElementById(ecran), btn = document.getElementById(bouton);
   if (!el || !btn) return;
   const maj = () => btn.classList.toggle('actif', !el.classList.contains('hidden'));
@@ -8935,6 +8936,7 @@ languageSelect.addEventListener('change', () => {
   rafraichirValeursGestes3D(); // « 100 % » ou « 100% »
   rafraichirTextesMaj();       // #442 : le bouton et la modale de mise à jour sont écrits par le code
   rafraichirTextesStore();     // #444b : idem pour le store
+  rafraichirTextesTextures();  // #446c : et le store de textures
   rafraichirTextesPolices();   // #423 : la fenêtre des Polices, écrite par le code elle aussi
   if (hasElectronAPI()) window.storyboarderAPI.setSetting('lang', S.appLang);
 });
@@ -9054,6 +9056,7 @@ async function loadAppSettings(){
   // l'état est déjà décidé côté processus principal, la demande ne retarde pas le démarrage.
   initialiserMiseAJour();
   rafraichirTextesStore();   // #444b : le bouton du store, dans la langue qui vient d'être lue
+  rafraichirTextesTextures();
   // #447 et #448 : le processus principal a déménagé un ancien dossier des Projets (à côté du
   // programme, effacé par chaque mise à jour ; ou Documents sous l'ancien nom de l'application).
   // On le dit une fois, puis on l'oublie.
@@ -9436,6 +9439,8 @@ async function supprimerBatimentDeLaBibliotheque(fichier){
 // #423 : la fenêtre des Polices. Une police ajoutée, renommée ou supprimée redessine les Bulles et
 // refait la liste des polices de la fiche ouverte.
 enregistrerFermeture('policesModal', fermerPolices);
+// #446c : le store de textures, une fenêtre à part (demandé).
+cablerTextures({ confirmer: (message) => confirmAction(message) });
 cablerPolices({
   confirmer: (message) => confirmAction(message),
   menuPolice: (e, nom) => openFontContextMenu(e, nom),

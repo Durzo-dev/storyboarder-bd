@@ -106,7 +106,8 @@ describe('le câblage', () => {
   test('le bouton « Aa » à droite du store de modèles, lui-même à droite de l\'Éditeur (demandé)', () => {
     const i = html.indexOf('id="storeOuvrirBtn"');
     const j = html.indexOf('id="policesOuvrirBtn"');
-    assert.ok(i > 0 && j > i && j - i < 1200, 'le bouton des Polices doit suivre celui de l\'Éditeur');
+    // #446c : la bibliothèque de textures s'intercale, juste à droite de celle des modèles (demandé).
+    assert.ok(i > 0 && j > i && j - i < 2000, 'le bouton des Polices doit suivre celui de l\'Éditeur');
     assert.match(ui, /\$\('policesOuvrirBtn'\)\.onclick/);
   });
 

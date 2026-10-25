@@ -244,6 +244,13 @@ wall seen up close in a panel exported large); never 8k. We keep colour, relief 
 roughness, ambient occlusion and displacement when present (not DirectX normals). The ambientCG zip
 is read in memory (`zip-lecture.js`) and only those maps come out.
 
+**The window** (#446c, `src/textures-store-ui.js`): separate from the model store (requested),
+opened by its own header button, just right of the model library. Three tabs ("My textures", Poly
+Haven, ambientCG), filters by text, material and use, the next page loading near the bottom. The
+detail page replaces the grid: materials, uses, real size of one tile, and the resolution choice
+with its weight (1k ticked) before "Download". In "My textures", the page says whether the grain is
+ready, flags a visible seam, and offers "Delete".
+
 **Storage**: `<Projects>/Textures/<source>-<id>/` (`couleur.jpg`, `normal.jpg`, `rugosite.jpg`,
 `ao.jpg`, `deplacement.jpg`, and the grain), plus an entry in `Textures/bibliotheque-textures.json`
 (credit, materials, uses, real size, resolution, baking measures): "My textures".

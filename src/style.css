@@ -2325,6 +2325,11 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
   background:var(--accent); color:var(--sur-accent); box-shadow:0 1px 3px rgba(0,0,0,.35);
 }
 .store-possede svg{ width:14px; height:14px; display:block; }
+/* #446c : le store de textures reprend les classes du store de modèles ; seuls s'ajoutent ses badges
+   de matières et d'usages (qui passent à la ligne), le choix de résolution et l'avis de raccord. */
+.texture-badges{ flex-wrap:wrap; }
+.texture-resolutions{ margin:0 8px 0 0; }
+.texture-raccord{ color:var(--warn); }
 /* « Articulé » : une icône en haut à GAUCHE de la vignette (la droite est à la coche « déjà
    téléchargé »), au même gabarit que la coche. */
 .store-articule{

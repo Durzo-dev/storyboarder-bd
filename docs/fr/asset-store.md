@@ -245,6 +245,14 @@ la couleur, le relief (normal OpenGL), la rugosité, l'ombrage des creux et le d
 existent (pas le relief DirectX). Le zip ambientCG est lu en mémoire (`zip-lecture.js`) et seules
 ces cartes en sortent.
 
+**La fenêtre** (#446c, `src/textures-store-ui.js`) : à part du store de modèles (demandé), ouverte
+par son propre bouton du bandeau, juste à droite de la bibliothèque de modèles. Trois onglets
+(« Mes textures », Poly Haven, ambientCG), des filtres par texte, matière et usage, la page suivante
+qui arrive en approchant du bas. La fiche remplace la grille : matières, usages, taille réelle
+d'une tuile, et le choix de la résolution avec son poids (1k cochée) avant « Télécharger ». Dans
+« Mes textures », la fiche dit si le grain est prêt, signale un raccord visible, et propose
+« Supprimer ».
+
 **Rangement** : `<Projets>/Textures/<source>-<id>/` (`couleur.jpg`, `normal.jpg`, `rugosite.jpg`,
 `ao.jpg`, `deplacement.jpg`, et le grain), plus une entrée dans `Textures/bibliotheque-textures.json`
 (crédit, matières, usages, taille réelle, résolution, mesures de cuisson) : « Mes textures ».

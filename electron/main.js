@@ -1201,6 +1201,7 @@ ipcMain.handle('textures:telecharger', async (event, sourceId, id, resolution) =
   }, SIMULATION_STORE ? RACINE : null));
 ipcMain.handle('textures:mes', async () => storeTextures.mesTextures(getProjectsDir()));
 ipcMain.handle('textures:supprimer', async (event, cle) => storeTextures.supprimer(getProjectsDir(), String(cle || '')));
+ipcMain.handle('textures:image', async (event, cle, quoi) => storeTextures.image(getProjectsDir(), String(cle || ''), quoi));
 
 // Télécharge puis installe. La progression part vers la fenêtre qui a demandé. En simulation, on
 // joue une progression factice et on s'arrête là : `npm start` n'a rien à remplacer.

@@ -85,6 +85,7 @@ interface StoryboarderAPI {
   texturesTelecharger(sourceId: string, id: string, resolution?: string): Promise<{ entree?: object; erreur?: string }>;
   texturesMes(): Promise<object[]>;
   texturesSupprimer(cle: string): Promise<{ ok: boolean }>;
+  texturesImage(cle: string, quoi?: string): Promise<{ ok: boolean; data?: Uint8Array; type?: string }>;
   surProgressionTexture(rappel: (sourceId: string, id: string, recus: number | null, total: number | null) => void): () => void;
   storeChercher(sourceId: string, params: object): Promise<{ resultats?: object[]; suivant?: string | null; ecartes?: number; erreur?: string }>;
   bibliothequeLire(): Promise<{ version: number; categories: Record<string, string>; tags: { id: string; nom: string }[]; tagsParModele: Record<string, string[]> }>;

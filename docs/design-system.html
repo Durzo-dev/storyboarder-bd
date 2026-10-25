@@ -2329,6 +2329,11 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
   background:var(--accent); color:var(--sur-accent); box-shadow:0 1px 3px rgba(0,0,0,.35);
 }
 .store-possede svg{ width:14px; height:14px; display:block; }
+/* #446c : le store de textures reprend les classes du store de modèles ; seuls s'ajoutent ses badges
+   de matières et d'usages (qui passent à la ligne), le choix de résolution et l'avis de raccord. */
+.texture-badges{ flex-wrap:wrap; }
+.texture-resolutions{ margin:0 8px 0 0; }
+.texture-raccord{ color:var(--warn); }
 /* « Articulé » : une icône en haut à GAUCHE de la vignette (la droite est à la coche « déjà
    téléchargé »), au même gabarit que la coche. */
 .store-articule{
@@ -3108,6 +3113,14 @@ html[lang="fr"] .ds-en, html[lang="en"] .ds-fr{ display:none; }
       <rect x="14" y="3" width="7" height="7" rx="1"/>
       <rect x="3" y="14" width="7" height="7" rx="1"/>
       <rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+  </button>
+  
+  <button class="help-round-btn" id="texturesOuvrirBtn" type="button" title="Bibliothèque de textures">
+    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      
+      <rect x="3" y="4" width="18" height="16" rx="1.5"/>
+      <path d="M3 9.5h18M3 15h18M9 4v5.5M15 9.5V15M9 15v5"/>
     </svg>
   </button>
   

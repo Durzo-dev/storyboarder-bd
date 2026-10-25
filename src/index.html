@@ -46,6 +46,15 @@
       <rect x="14" y="14" width="7" height="7" rx="1"/>
     </svg>
   </button>
+  <!-- #446c : le STORE DE TEXTURES, une fenêtre à part avec son propre bouton (demandé), juste à
+       droite de la bibliothèque de modèles. Son infobulle est écrite par src/textures-store-ui.js. -->
+  <button class="help-round-btn" id="texturesOuvrirBtn" type="button" title="Bibliothèque de textures">
+    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Un appareil de briques : une matière, et non une grille de vignettes. -->
+      <rect x="3" y="4" width="18" height="16" rx="1.5"/>
+      <path d="M3 9.5h18M3 15h18M9 4v5.5M15 9.5V15M9 15v5"/>
+    </svg>
+  </button>
   <!-- Les Polices (#423, demandé) : à droite de la bibliothèque de modèles, elle-même à droite de l'Éditeur. Son infobulle est écrite par le
        code (src/polices-ui.js). -->
   <button class="help-round-btn" id="policesOuvrirBtn" type="button" title="Polices">
@@ -1297,6 +1306,30 @@
       <div id="storeFiche" class="store-fiche" hidden></div>
     </div>
     <p id="storeCredit" class="store-credit"></p>
+  </div>
+</div>
+
+<!-- #446c : le STORE DE TEXTURES, à part du store de modèles (demandé). Trois onglets (Mes textures,
+     Poly Haven, ambientCG), des filtres par matière et par usage ; la fiche REMPLACE la grille, comme
+     dans le store de modèles. Écrit par src/textures-store-ui.js. -->
+<div class="modal-overlay hidden" id="texturesModal">
+  <div class="modal-box store-box">
+    <button class="modal-close-btn" id="texturesFermer" type="button" title="Fermer (Échap)">×</button>
+    <h3 id="texturesTitre">Bibliothèque de textures</h3>
+    <div id="texturesOnglets" class="onglets" role="tablist"></div>
+    <p id="texturesSimulation" class="maj-simulation" hidden></p>
+    <form id="texturesFormulaire" class="store-filtres">
+      <input id="texturesTexte" class="modal-input" type="search" autocomplete="off">
+      <select id="texturesMatiere"></select>
+      <select id="texturesUsage"></select>
+      <select id="texturesTri"></select>
+    </form>
+    <p id="texturesMessage" class="maj-message"></p>
+    <div id="texturesDefilement" class="store-defilement">
+      <div id="texturesGrille" class="store-grille"></div>
+      <div id="texturesFiche" class="store-fiche" hidden></div>
+    </div>
+    <p id="texturesCredit" class="store-credit"></p>
   </div>
 </div>
 

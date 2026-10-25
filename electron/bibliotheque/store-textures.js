@@ -222,4 +222,16 @@ function supprimer(dossierProjets, cle){
   return { ok: true };
 }
 
-module.exports = { infos, chercher, options, telecharger, mesTextures, supprimer };
+/** Une image d'une texture de « Mes textures » (la couleur pour la vignette, le grain pour la fiche). */
+function image(dossierProjets, cle, quoi){
+  const t = mesTextures(dossierProjets).find(x => x.cle === cle);
+  if (!t) return { ok: false };
+  const nom = quoi === 'grain' ? t.grain : 'couleur.jpg';
+  if (!nom || !/^[a-z.]+\.(jpg|png)$/.test(nom)) return { ok: false };
+  try {
+    return { ok: true, data: new Uint8Array(fs.readFileSync(path.join(dossierProjets, B.DOSSIER, t.dossier, nom))),
+      type: nom.endsWith('.png') ? 'image/png' : 'image/jpeg' };
+  } catch (e) { return { ok: false }; }
+}
+
+module.exports = { infos, chercher, options, telecharger, mesTextures, supprimer, image };

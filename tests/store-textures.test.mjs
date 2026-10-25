@@ -269,3 +269,29 @@ describe('#446b : le câblage', () => {
     assert.match(s, /ACG\.HOTE_ZIP\.test\(plan\.zip\.url\)/);
   });
 });
+
+describe('#446c : la fenêtre du store de textures', () => {
+  const lire = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
+  const html = lire('src/index.html');
+  const ui = lire('src/textures-store-ui.js');
+  test('une fenêtre À PART, avec son bouton dans le bandeau, juste à droite de la bibliothèque de modèles (demandé)', () => {
+    const i = html.indexOf('id="storeOuvrirBtn"'), j = html.indexOf('id="texturesOuvrirBtn"'), k = html.indexOf('id="policesOuvrirBtn"');
+    assert.ok(i > 0 && j > i && k > j, 'store de modèles, puis textures, puis polices');
+    assert.match(html, /class="modal-overlay hidden" id="texturesModal"/);
+    assert.match(lire('src/store-ui.js'), /export const SOURCES_STORE = \['local', 'sketchfab', 'polyhaven'\];/, 'pas un onglet du store de modèles');
+  });
+  test('trois onglets : Mes textures, puis une source par onglet ; filtres matière et usage', () => {
+    assert.match(ui, /\[\[LOCAL, tr\('My textures', 'Mes textures'\)\], \.\.\.\(infos \? infos\.sources : \[\]\)/);
+    assert.match(html, /id="texturesMatiere"/);
+    assert.match(html, /id="texturesUsage"/);
+  });
+  test('rien d\'office : le téléchargement part du bouton de la fiche, à la résolution choisie (1k d\'abord)', () => {
+    assert.match(ui, /let choisie = o\.options\[0\]\.resolution;/);
+    assert.match(ui, /api\(\)\.texturesTelecharger\(r\.source, r\.id, choisie\)/);
+  });
+  test('câblée au démarrage, le bandeau l\'allume quand elle est ouverte', () => {
+    const ev = lire('src/events.js');
+    assert.match(ev, /cablerTextures\(\{ confirmer: /);
+    assert.match(ev, /\['texturesModal', 'texturesOuvrirBtn'\]/);
+  });
+});
