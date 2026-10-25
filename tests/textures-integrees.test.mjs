@@ -128,6 +128,10 @@ describe('la couleur EN DIRECT, et « Origine » (demandé)', () => {
     assert.match(sb, /saisie\.oninput = \(\) => \{\s*if \(!gesteEnCours\) \{ _snapshot\(\); gesteEnCours = true; \}/);
     assert.match(sb, /requestAnimationFrame\(\(\) => poser\(saisie\.value\)\)/);
     assert.match(sb, /carreSol\.teinter\(t\)/);
+    // RÉGRESSION : le menu est refait à chaque dessin ; le carré est GARDÉ (même Case, même texture),
+    // sinon il repartait d'une image vide et devenait sombre pendant le glissé.
+    assert.match(sb, /ancien\._case === sel && ancien\._texture === \(sel\.groundType \|\| 'herbe'\)/);
+    assert.match(lire('textures-store-ui.js'), /b\.teinter = \(t\) => \{ if \(\(t \|\| null\) === voulue\) return;/);
     assert.match(sb, /saisie\.couleurOrigine = \(\) => defSol\.swatch;/);   // « Origine » dans le sélecteur
   });
   test('Tracé : aperçu en direct, rendu à l\'ancienne couleur si on ferme sans enregistrer, annulation propre', () => {

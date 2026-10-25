@@ -1334,21 +1334,35 @@ function updateSidePanelImpl(){
       // #446d (demandé) : un grand carré avec la texture du Sol, plutôt que la liste des matières ;
       // un clic ouvre le store de textures, filtré sur le Sol, où une carte l'applique.
       const defSol = GROUND_TYPE_DEFS.find(d => d.id === (sel.groundType || 'herbe')) || GROUND_TYPE_DEFS[0];
-      const carreSol = carreDeTexture({
-        valeur: sel.groundType || 'herbe', usage: 'sol', titre: tr('Choose the Ground', 'Choisir le Sol'),
-        teinte: teinteDuSol3D(defSol, sel.groundColor),
-        appliquer: (id) => {
-          _snapshot();
-          sel.groundType = id;
-          // Une autre texture repart de sa couleur naturelle : le vert choisi pour une herbe
-          // n'a rien à faire sur du sable.
-          delete sel.groundColor;
-          panelSceneCache3D.delete(sel.id);
-          updateSidePanel();
-          drawCurrentPage();
-        },
-      });
-      sideGroundGrid.replaceChildren(carreSol);
+      // ⚠️ LE MÊME CARRÉ TANT QUE C'EST LA MÊME CASE ET LA MÊME TEXTURE (signalé : il devenait sombre
+      // pendant le glissé de la couleur). Le menu est refait à CHAQUE dessin (drawCurrentPage) : un carré
+      // neuf repartait d'une image vide, le temps de charger la sienne. Seule sa teinte change.
+      // L'OBJET Case lui-même, pas son identifiant : une annulation refait la Case (même id, autre
+      // objet), et le rappel d'un carré gardé modifierait l'ancienne.
+      const ancien = sideGroundGrid.firstElementChild;
+      let carreSol;
+      if (ancien && ancien._case === sel && ancien._texture === (sel.groundType || 'herbe') && ancien.teinter) {
+        carreSol = ancien;
+        carreSol.teinter(teinteDuSol3D(defSol, sel.groundColor));
+      } else {
+        carreSol = carreDeTexture({
+          valeur: sel.groundType || 'herbe', usage: 'sol', titre: tr('Choose the Ground', 'Choisir le Sol'),
+          teinte: teinteDuSol3D(defSol, sel.groundColor),
+          appliquer: (id) => {
+            _snapshot();
+            sel.groundType = id;
+            // Une autre texture repart de sa couleur naturelle : le vert choisi pour une herbe
+            // n'a rien à faire sur du sable.
+            delete sel.groundColor;
+            panelSceneCache3D.delete(sel.id);
+            updateSidePanel();
+            drawCurrentPage();
+          },
+        });
+        sideGroundGrid.replaceChildren(carreSol);
+        carreSol._case = sel;
+        carreSol._texture = sel.groundType || 'herbe';
+      }
       // La couleur du Sol, sous la texture : la naturelle de la matière tant qu'on n'en a pas choisi.
       // L'Eau a son propre rendu, sans couleur à choisir. Elle s'applique EN DIRECT (demandé) : à la
       // Case et au carré, une fois par image au plus pendant le glissé ; une seule étape d'annulation

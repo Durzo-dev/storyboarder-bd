@@ -942,7 +942,7 @@ export function carreDeTexture({ valeur, usage, titre, appliquer, teinte = null 
     peindre();
   });
   /** Repeint l'image d'une autre couleur (null : la naturelle). */
-  b.teinter = (t) => { voulue = t || null; peindre(); };
+  b.teinter = (t) => { if ((t || null) === voulue) return; voulue = t || null; peindre(); };
   // mousedown plutôt que click, comme les boutons du Sol : le menu de droite se refait au mouseup.
   b.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); choisirTexture({ usage, actuelle: valeur, appliquer, titre }); });
   return b;
