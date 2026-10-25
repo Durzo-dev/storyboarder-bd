@@ -295,3 +295,50 @@ describe('#446c : la fenêtre du store de textures', () => {
     assert.match(ev, /\['texturesModal', 'texturesOuvrirBtn'\]/);
   });
 });
+
+describe('import d\'un dossier de cartes (demandé : l\'application prend ce qu\'il lui faut)', () => {
+  test('les conventions des banques : ambientCG, Poly Haven, et les noms courts (basecolor, normal, height)', () => {
+    assert.deepEqual(B.cartesDuDossier(['Oak_Color.jpg', 'Oak_NormalGL.jpg', 'Oak_NormalDX.jpg', 'Oak_Roughness.jpg', 'Oak_Displacement.png', 'preview.jpg']).cartes,
+      { couleur: 'Oak_Color.jpg', normal: 'Oak_NormalGL.jpg', rugosite: 'Oak_Roughness.jpg', deplacement: 'Oak_Displacement.png' });
+    assert.deepEqual(B.cartesDuDossier(['w_diff_1k.jpg', 'w_nor_gl_1k.jpg', 'w_rough_1k.jpg', 'w_ao_1k.jpg', 'w_disp_1k.png']).cartes,
+      { couleur: 'w_diff_1k.jpg', normal: 'w_nor_gl_1k.jpg', rugosite: 'w_rough_1k.jpg', ao: 'w_ao_1k.jpg', deplacement: 'w_disp_1k.png' });
+    assert.equal(B.cartesDuDossier(['a_basecolor.png', 'a_normal.png', 'a_height.png']).cartes.normal, 'a_normal.png', 'normale ambiguë : lue comme OpenGL');
+  });
+  test('RÉGRESSION : une normale DirectX n\'est jamais prise (elle inverserait le relief)', () => {
+    assert.equal(B.cartesDuDossier(['a_Color.jpg', 'a_NormalDX.jpg']).cartes.normal, undefined);
+  });
+  test('refus lisibles : pas de couleur, ou deux résolutions dans le même dossier', () => {
+    assert.equal(B.cartesDuDossier(['photo.jpg']).refus, 'couleur');
+    const d = B.cartesDuDossier(['x_Color_1k.jpg', 'x_Color_2k.jpg']);
+    assert.equal(d.refus, 'doublons');
+    assert.deepEqual(d.doublons, ['couleur']);
+  });
+  test('un identifiant propre et unique, d\'après le nom du dossier', () => {
+    assert.equal(B.idImport('Chêne clair (2k)'), 'Chene_clair_2k');
+    assert.equal(B.idImport('oak', ['oak', 'oak_2']), 'oak_3');
+  });
+  test('cocher des matières recalcule les usages', () => {
+    const b = { version: 1, textures: [{ cle: 'import:oak', dossier: 'import-oak', matieres: [], usages: [] }] };
+    const apres = B.avecMatieres(b, 'import:oak', ['parquet'], M.usagesDe);
+    assert.deepEqual(apres.textures[0].usages, ['chemin', 'cloture', 'mur-int', 'sol-int', 'plafond']);
+  });
+  test('câblage : la tuile « Importer un dossier » en tête de Mes textures, la boîte de choix d\'un dossier', () => {
+    const ui = readFileSync(new URL('../src/textures-store-ui.js', import.meta.url), 'utf8');
+    assert.match(ui, /g\.replaceChildren\(carteImport\(\), \.\.\.liste\.map\(t => carte\(t, true\)\)\)/);
+    assert.match(readFileSync(new URL('../electron/main.js', import.meta.url), 'utf8'), /'textures:importer'[\s\S]{0,300}properties: \['openDirectory'\]/);
+  });
+});
+
+describe('retours du 25 octobre sur la fenêtre', () => {
+  const lire = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
+  test('pas de badges de matières sur les vignettes (illisibles) : ils restent sur la fiche', () => {
+    const ui = lire('src/textures-store-ui.js');
+    const carte = ui.slice(ui.indexOf('function carte(r, local)'), ui.indexOf('function rendreGrille'));
+    assert.doesNotMatch(carte, /store-badge/);
+  });
+  test('RÉGRESSION : l\'icône du store de textures n\'est pas celle des Murs (une icône = un usage)', () => {
+    const html = lire('src/index.html');
+    const bouton = html.slice(html.indexOf('id="texturesOuvrirBtn"'), html.indexOf('</button>', html.indexOf('id="texturesOuvrirBtn"')));
+    assert.doesNotMatch(bouton, /M3 9\.5h18M3 15h18/, 'les briques des Murs sont revenues');
+  });
+});

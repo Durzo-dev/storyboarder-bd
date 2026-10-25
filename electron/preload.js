@@ -80,6 +80,8 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   texturesMes: () => ipcRenderer.invoke('textures:mes'),
   texturesSupprimer: (cle) => ipcRenderer.invoke('textures:supprimer', cle),
   texturesImage: (cle, quoi) => ipcRenderer.invoke('textures:image', cle, quoi),
+  texturesImporter: () => ipcRenderer.invoke('textures:importer'),
+  texturesMatieres: (cle, matieres) => ipcRenderer.invoke('textures:matieres', cle, matieres),
   surProgressionTexture: (rappel) => {
     const f = (event, sourceId, id, recus, total) => rappel(sourceId, id, recus, total);
     ipcRenderer.on('textures:progression', f);

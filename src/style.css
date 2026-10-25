@@ -2330,6 +2330,9 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .texture-badges{ flex-wrap:wrap; }
 .texture-resolutions{ margin:0 8px 0 0; }
 .texture-raccord{ color:var(--warn); }
+/* Les matières à cocher d'une texture de « Mes textures » : des boutons de choix qui passent à la ligne. */
+.texture-matieres button{ flex:0 0 auto; }
+.store-carte-ajout span.store-ajout-icone svg{ width:44px; height:44px; display:block; }
 /* « Articulé » : une icône en haut à GAUCHE de la vignette (la droite est à la coche « déjà
    téléchargé »), au même gabarit que la coche. */
 .store-articule{

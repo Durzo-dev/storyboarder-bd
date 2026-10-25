@@ -1202,6 +1202,16 @@ ipcMain.handle('textures:telecharger', async (event, sourceId, id, resolution) =
 ipcMain.handle('textures:mes', async () => storeTextures.mesTextures(getProjectsDir()));
 ipcMain.handle('textures:supprimer', async (event, cle) => storeTextures.supprimer(getProjectsDir(), String(cle || '')));
 ipcMain.handle('textures:image', async (event, cle, quoi) => storeTextures.image(getProjectsDir(), String(cle || ''), quoi));
+// L'import d'un DOSSIER de cartes (demandé) : la boîte de choix d'un dossier, puis la reconnaissance.
+ipcMain.handle('textures:importer', async (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+    title: 'Dossier de la texture (couleur, normale, rugosité…)', properties: ['openDirectory'],
+  });
+  if (canceled || !filePaths || !filePaths[0]) return { annule: true };
+  return storeTextures.importer(getProjectsDir(), filePaths[0]);
+});
+ipcMain.handle('textures:matieres', async (event, cle, matieres) => storeTextures.changerMatieres(getProjectsDir(), String(cle || ''), matieres));
 
 // Télécharge puis installe. La progression part vers la fenêtre qui a demandé. En simulation, on
 // joue une progression factice et on s'arrête là : `npm start` n'a rien à remplacer.

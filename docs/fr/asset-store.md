@@ -253,6 +253,14 @@ d'une tuile, et le choix de la résolution avec son poids (1k cochée) avant « 
 « Mes textures », la fiche dit si le grain est prêt, signale un raccord visible, et propose
 « Supprimer ».
 
+**Importer un dossier** (tuile en tête de « Mes textures », demandé) : on choisit le dossier qui
+contient les cartes d'une texture, l'application reconnaît chacune à son nom (`_Color`, `_Diffuse`,
+`_BaseColor` ; `_NormalGL` ou `_Normal` ; `_Roughness` ; `_AO` ; `_Displacement`, `_Height`) et
+ignore le reste. Une normale DirectX n'est jamais prise. Refus lisible si la couleur manque ou si
+deux résolutions cohabitent. Les matières sont devinées d'après les noms ; à défaut la texture est
+« non classée » et sa fiche permet de cocher ses matières (les usages en découlent). Taille réelle
+inconnue : 2 m. Grain cuit en grand format.
+
 **Rangement** : `<Projets>/Textures/<source>-<id>/` (`couleur.jpg`, `normal.jpg`, `rugosite.jpg`,
 `ao.jpg`, `deplacement.jpg`, et le grain), plus une entrée dans `Textures/bibliotheque-textures.json`
 (crédit, matières, usages, taille réelle, résolution, mesures de cuisson) : « Mes textures ».

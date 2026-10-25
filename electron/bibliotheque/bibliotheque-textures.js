@@ -75,4 +75,69 @@ function presentes(biblio, dossiersPresents){
   return liste(biblio).filter(t => la.has(t.dossier));
 }
 
-module.exports = { FICHIER, DOSSIER, dossierDe, tailleDeCuisson, entreeTexture, vide, ajouter, retirer, presentes };
+// ── L'import d'un dossier (#446c, demandé : « sélectionner le dossier, l'application récupère ce
+//    qu'il lui faut ») ─────────────────────────────────────────────────────────────────────────
+
+/**
+ * Les rôles reconnus au nom des fichiers, dans l'ordre où on les cherche. La convention est celle
+ * des banques (Poly Haven, ambientCG, et la plupart des autres) : un suffixe par carte. Une normale
+ * DirectX n'est jamais prise pour une OpenGL (elle inverserait le relief) ; une normale au nom
+ * ambigu (« _Normal » seul) est lue comme OpenGL, la convention la plus courante.
+ */
+const ROLES = [
+  ['couleur', /(^|[_\-. ])(color|colour|col|diff|diffuse|albedo|basecolor|base_color)([_\-. ]|$)/i],
+  ['normal', /(normalgl|nor_gl|normal_gl|normal-ogl|normal_ogl)/i],
+  ['normalAmbigue', /(^|[_\-. ])(normal|nor|nrm)([_\-. ]|$)/i],
+  ['rugosite', /(^|[_\-. ])(rough|roughness|rgh)([_\-. ]|$)/i],
+  ['ao', /(^|[_\-. ])(ao|ambientocclusion|occlusion)([_\-. ]|$)/i],
+  ['deplacement', /(^|[_\-. ])(displacement|disp|height|bump)([_\-. ]|$)/i],
+];
+const DX = /(normaldx|nor_dx|normal_dx|normal-dx)/i;
+
+/**
+ * Les cartes d'un dossier, d'après le nom de ses images : `{ cartes: { couleur, normal, … },
+ * ignores, refus }`. Refus (avec la raison, lisible) si la couleur manque, ou si un rôle a
+ * plusieurs candidats (deux résolutions dans le même dossier : on ne choisit pas à la place).
+ */
+function cartesDuDossier(noms){
+  const images = (noms || []).filter(n => typeof n === 'string' && /\.(jpe?g|png)$/i.test(n) && !n.startsWith('.'));
+  const cartes = {}, doublons = [];
+  for (const nom of images) {
+    if (DX.test(nom)) continue;
+    const role = ROLES.find(([, re]) => re.test(nom.replace(/\.(jpe?g|png)$/i, '')));
+    if (!role) continue;
+    const r = role[0] === 'normalAmbigue' ? 'normal' : role[0];
+    if (r === 'normal' && cartes.normal && role[0] === 'normalAmbigue') continue;   // GL explicite d'abord
+    if (cartes[r] && !(r === 'normal' && role[0] === 'normal')) { doublons.push(r); continue; }
+    cartes[r] = nom;
+  }
+  const pris = new Set(Object.values(cartes));
+  const ignores = images.filter(n => !pris.has(n));
+  if (!cartes.couleur) {
+    return { cartes, ignores, refus: 'couleur' };
+  }
+  if (doublons.length) return { cartes, ignores, refus: 'doublons', doublons: [...new Set(doublons)] };
+  return { cartes, ignores, refus: null };
+}
+
+/** L'identifiant d'une texture importée : le nom du dossier, nettoyé (et unique grâce à `pris`). */
+function idImport(nomDossier, pris = []){
+  const base = String(nomDossier || 'texture').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9_-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 50) || 'texture';
+  let id = base, n = 2;
+  while (pris.includes(id)) id = `${base}_${n++}`;
+  return id;
+}
+
+/** La taille réelle d'une texture importée, inconnue : 2 m de côté, comme une dalle moyenne. */
+const TAILLE_IMPORT = [2, 2];
+
+/** Change les matières d'une texture (cochées sur sa fiche) ; ses usages en découlent. */
+function avecMatieres(biblio, cle, matieres, usagesDe){
+  return { version: 1, textures: liste(biblio).map(t => (t.cle === cle ? { ...t, matieres: matieres.slice(), usages: usagesDe(matieres) } : t)) };
+}
+
+module.exports = {
+  FICHIER, DOSSIER, dossierDe, tailleDeCuisson, entreeTexture, vide, ajouter, retirer, presentes,
+  cartesDuDossier, idImport, TAILLE_IMPORT, avecMatieres,
+};

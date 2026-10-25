@@ -251,6 +251,13 @@ detail page replaces the grid: materials, uses, real size of one tile, and the r
 with its weight (1k ticked) before "Download". In "My textures", the page says whether the grain is
 ready, flags a visible seam, and offers "Delete".
 
+**Import a folder** (tile at the head of "My textures", requested): pick the folder holding a
+texture's maps; the application recognises each by its name (`_Color`, `_Diffuse`, `_BaseColor`;
+`_NormalGL` or `_Normal`; `_Roughness`; `_AO`; `_Displacement`, `_Height`) and ignores the rest. A
+DirectX normal is never taken. Clear refusal if the colour is missing or two resolutions sit
+together. Materials are guessed from the names; otherwise the texture is "unclassified" and its
+page lets you tick its materials (uses follow). Real size unknown: 2 m. Grain baked large.
+
 **Storage**: `<Projects>/Textures/<source>-<id>/` (`couleur.jpg`, `normal.jpg`, `rugosite.jpg`,
 `ao.jpg`, `deplacement.jpg`, and the grain), plus an entry in `Textures/bibliotheque-textures.json`
 (credit, materials, uses, real size, resolution, baking measures): "My textures".

@@ -146,19 +146,27 @@ async function recupererCartes(sourceId, id, resolution, progression){
  * de bibliothèque retient, ou null si la cuisson n'a pas pu se faire honnêtement (la texture reste
  * alors utilisable en revêtement, avec ses cartes).
  */
-async function cuire(dossierTexture, cartes, usages){
+/** Le fichier d'une carte dans le dossier d'une texture : `couleur.jpg` ou `couleur.png` (import). */
+function fichierCarte(dossierTexture, carte){
+  for (const ext of ['jpg', 'png']) if (fs.existsSync(path.join(dossierTexture, `${carte}.${ext}`))) return `${carte}.${ext}`;
+  return null;
+}
+
+async function cuire(dossierTexture, cartes, usages, tailleForcee = null){
   const relief = cartes.includes('deplacement') ? 'deplacement' : cartes.includes('ao') ? 'ao' : null;
   if (!relief) return null;
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sb-cuisson-'));
   try {
-    const nomCuiseur = { couleur: 'm_color.jpg', normal: 'm_normalgl.jpg', deplacement: 'm_displacement.jpg', ao: 'm_ao.jpg' };
+    const nomCuiseur = { couleur: 'm_color', normal: 'm_normalgl', deplacement: 'm_displacement', ao: 'm_ao' };
     for (const carte of ['couleur', 'normal', relief]) {
-      fs.copyFileSync(path.join(dossierTexture, `${carte}.jpg`), path.join(tmp, nomCuiseur[carte]));
+      const f = fichierCarte(dossierTexture, carte);
+      if (!f) return null;
+      fs.copyFileSync(path.join(dossierTexture, f), path.join(tmp, nomCuiseur[carte] + path.extname(f)));
     }
     const cuiseur = await import(pathToFileURL(path.join(__dirname, '..', '..', 'tools', 'bake-textures.mjs')).href);
     const res = await cuiseur.cuireMatiere3D({
       dossier: tmp, id: path.basename(dossierTexture), SORTIE: dossierTexture, nomDeSortie: 'grain',
-      taille: B.tailleDeCuisson(usages, cuiseur.TAILLE_GRAIN_SOL, cuiseur.TAILLE_GRAIN),
+      taille: tailleForcee || B.tailleDeCuisson(usages, cuiseur.TAILLE_GRAIN_SOL, cuiseur.TAILLE_GRAIN),
     });
     return { fichier: path.basename(res.sortie), teinte: res.teinte, nature: res.nature, raccordVisible: res.raccordVisible };
   } catch (e) {
@@ -211,6 +219,45 @@ async function telecharger(dossierProjets, sourceId, id, resolution, progression
   return { entree };
 }
 
+/**
+ * IMPORTE UN DOSSIER de cartes (demandé : « sélectionner le dossier, l'application récupère ce qu'il
+ * lui faut ») : reconnaît les cartes à leur nom (B.cartesDuDossier), les copie, cuit le grain (en
+ * grand format : on ne sait pas encore à quoi la texture servira), range. Les matières sont
+ * devinées d'après les noms ; à défaut, la texture est « non classée » et sa fiche permet de les
+ * cocher. `{ entree, ignores }`, ou `{ refus, trouves, doublons }` à montrer tel quel.
+ */
+async function importer(dossierProjets, cheminDossier){
+  let noms;
+  try { noms = fs.readdirSync(cheminDossier, { withFileTypes: true }).filter(d => d.isFile()).map(d => d.name); }
+  catch (e) { return { refus: 'illisible', trouves: [] }; }
+  const lu = B.cartesDuDossier(noms);
+  if (lu.refus) return { refus: lu.refus, trouves: noms.filter(n => /\.(jpe?g|png)$/i.test(n)), doublons: lu.doublons || [] };
+  const nomDossier = path.basename(cheminDossier);
+  const id = B.idImport(nomDossier, mesTextures(dossierProjets).filter(t => t.source === 'import').map(t => t.id));
+  const dossierTexture = path.join(dossierProjets, B.DOSSIER, B.dossierDe('import', id));
+  fs.mkdirSync(dossierTexture, { recursive: true });
+  for (const [carte, nom] of Object.entries(lu.cartes)) {
+    const ext = /\.png$/i.test(nom) ? 'png' : 'jpg';
+    fs.copyFileSync(path.join(cheminDossier, nom), path.join(dossierTexture, `${carte}.${ext}`));
+  }
+  const matieres = M.matieresParMots([nomDossier.replace(/[_-]+/g, ' '), ...noms.map(n => n.replace(/[_-]+/g, ' '))]);
+  const r = { source: 'import', id, nom: nomDossier, auteur: null, url: null, licence: null,
+    matieres, usages: M.usagesDe(matieres), details: { dimensions: B.TAILLE_IMPORT } };
+  const cartes = Object.keys(lu.cartes);
+  const cuiseur = await import(pathToFileURL(path.join(__dirname, '..', '..', 'tools', 'bake-textures.mjs')).href).catch(() => null);
+  const cuisson = await cuire(dossierTexture, cartes, r.usages, cuiseur ? cuiseur.TAILLE_GRAIN_SOL : null);
+  const entree = B.entreeTexture(r, { resolution: null, cartes, cuisson });
+  ecrireBiblio(dossierProjets, B.ajouter(lireBiblio(dossierProjets), entree));
+  return { entree, ignores: lu.ignores };
+}
+
+/** Coche les matières d'une texture (sa fiche) : ses usages en découlent. */
+function changerMatieres(dossierProjets, cle, matieres){
+  const propres = (Array.isArray(matieres) ? matieres : []).filter(m => M.matiere(m));
+  ecrireBiblio(dossierProjets, B.avecMatieres(lireBiblio(dossierProjets), cle, propres, M.usagesDe));
+  return { ok: true };
+}
+
 /** Supprime une texture de « Mes textures » : son dossier et son entrée. */
 function supprimer(dossierProjets, cle){
   const biblio = lireBiblio(dossierProjets);
@@ -226,7 +273,7 @@ function supprimer(dossierProjets, cle){
 function image(dossierProjets, cle, quoi){
   const t = mesTextures(dossierProjets).find(x => x.cle === cle);
   if (!t) return { ok: false };
-  const nom = quoi === 'grain' ? t.grain : 'couleur.jpg';
+  const nom = quoi === 'grain' ? t.grain : fichierCarte(path.join(dossierProjets, B.DOSSIER, t.dossier), 'couleur');
   if (!nom || !/^[a-z.]+\.(jpg|png)$/.test(nom)) return { ok: false };
   try {
     return { ok: true, data: new Uint8Array(fs.readFileSync(path.join(dossierProjets, B.DOSSIER, t.dossier, nom))),
@@ -234,4 +281,4 @@ function image(dossierProjets, cle, quoi){
   } catch (e) { return { ok: false }; }
 }
 
-module.exports = { infos, chercher, options, telecharger, mesTextures, supprimer, image };
+module.exports = { infos, chercher, options, telecharger, mesTextures, supprimer, image, importer, changerMatieres };

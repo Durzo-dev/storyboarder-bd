@@ -156,11 +156,48 @@ function carte(r, local){
     t && !local ? pastille() : null,
     el('span', { texte: r.nom, classe: 'store-carte-nom' }),
     el('span', { texte: avancement ? tr('Downloading…', 'Téléchargement…') : (local ? nomSource(r.source) : `${tr('by', 'par')} ${r.auteur.nom}`), classe: 'store-carte-auteur' }),
-    el('span', { classe: 'store-carte-infos' }, (r.matieres || []).slice(0, 2).map(m => el('span', { texte: nomDe(infos.matieres, m), classe: 'store-badge' }))),
+    // Pas de badges de matières sur la vignette (demandé : trop nombreux, illisibles) ; ils sont sur la fiche.
   ]);
   if (local) urlLocale(r).then(url => { if (url) c.firstChild.replaceWith(vignette(url)); });
   c.onclick = () => ouvrirFiche(r, local);
   return c;
+}
+
+/** La tuile « Importer un dossier », toujours en tête de « Mes textures » (demandé). */
+function carteImport(){
+  const c = el('button', { classe: 'store-carte store-carte-ajout', attrs: { type: 'button',
+    title: tr('Choose a folder holding a texture\'s maps (colour, normal, roughness…): the application takes what it needs.',
+      'Choisir le dossier qui contient les cartes d\'une texture (couleur, normale, rugosité…) : l\'application prend ce qu\'il lui faut.') } }, [
+    el('span', { classe: 'store-ajout-icone' }),
+    el('span', { texte: tr('Import a folder', 'Importer un dossier'), classe: 'store-carte-nom' }),
+  ]);
+  c.firstChild.innerHTML = icone('importer');
+  c.onclick = importerUnDossier;
+  return c;
+}
+
+async function importerUnDossier(){
+  message('');
+  const r = await api().texturesImporter();
+  if (!r || r.annule) return;
+  if (r.refus) {
+    const trouves = (r.trouves || []).join(', ') || tr('no image', 'aucune image');
+    message(r.refus === 'doublons'
+      ? tr(`Several files for the same map (${r.doublons.join(', ')}): keep only one resolution in the folder. Found: ${trouves}.`,
+        `Plusieurs fichiers pour une même carte (${r.doublons.join(', ')}) : ne gardez qu'une résolution dans le dossier. Trouvés : ${trouves}.`)
+      : r.refus === 'couleur'
+        ? tr(`No colour map recognised (a name ending in _Color, _Diffuse, _Albedo or _BaseColor). Found: ${trouves}.`,
+          `Aucune carte de couleur reconnue (un nom finissant par _Color, _Diffuse, _Albedo ou _BaseColor). Trouvés : ${trouves}.`)
+        : tr('This folder could not be read.', 'Ce dossier n\'a pas pu être lu.'));
+    return;
+  }
+  await relireMes();
+  rendreGrille();
+  const e = r.entree;
+  message(!e.matieres.length
+    ? tr(`“${e.nom}” is in My textures, unclassified: tick its materials on its page so it is offered where it fits.`,
+      `« ${e.nom} » est dans Mes textures, non classée : cochez ses matières sur sa fiche pour qu'elle soit proposée là où elle convient.`)
+    : tr(`“${e.nom}” is in My textures.`, `« ${e.nom} » est dans Mes textures.`) + (e.grain ? '' : ' ' + tr('No grain (no displacement nor normal map): building finishes only.', 'Pas de grain (ni déplacement ni normale) : revêtements de bâtiment seulement.')));
 }
 
 function rendreGrille(){
@@ -168,12 +205,8 @@ function rendreGrille(){
   if (!infos) return;
   if (onglet === LOCAL) {
     const liste = mesFiltrees();
-    g.replaceChildren(...liste.map(t => carte(t, true)));
-    if (!liste.length) {
-      g.appendChild(el('p', { classe: 'empty-hint', texte: mes.length
-        ? tr('No texture matches these filters.', 'Aucune texture ne correspond à ces filtres.')
-        : tr('No texture yet: choose one in the Poly Haven or ambientCG tab.', 'Aucune texture pour l\'instant : choisissez-en une dans l\'onglet Poly Haven ou ambientCG.') }));
-    }
+    g.replaceChildren(carteImport(), ...liste.map(t => carte(t, true)));
+    if (mes.length && !liste.length) message(tr('No texture matches these filters.', 'Aucune texture ne correspond à ces filtres.'));
     return;
   }
   g.replaceChildren(...page.resultats.map(r => carte(r, false)));
@@ -203,6 +236,28 @@ function fermerFiche(){
 const section = (titre, enfants) => el('section', { classe: 'store-fiche-section' }, [el('h5', { texte: titre }), ...enfants]);
 const badges = (liste, slugs) => el('div', { classe: 'store-carte-infos texture-badges' },
   slugs.map(s => el('span', { texte: nomDe(liste, s), classe: 'store-badge' })));
+/**
+ * Les matières d'une texture de « Mes textures », à cocher (demandé pour un dossier importé, qui
+ * n'a pas de catégorie) : ses usages en découlent, et la fiche se redessine.
+ */
+function matieresACocher(t){
+  const g = el('div', { classe: 'choix texture-matieres' });
+  const choisies = new Set(t.matieres);
+  for (const m of infos.matieres) {
+    const b = el('button', { texte: m[langue()], classe: choisies.has(m.slug) ? 'actif' : '', attrs: { type: 'button', 'aria-pressed': String(choisies.has(m.slug)) } });
+    b.onclick = async () => {
+      if (choisies.has(m.slug)) choisies.delete(m.slug); else choisies.add(m.slug);
+      const liste = infos.matieres.map(x => x.slug).filter(s => choisies.has(s));
+      await api().texturesMatieres(t.cle, liste);
+      await relireMes();
+      const neuve = mes.find(x => x.cle === t.cle);
+      if (neuve) ouvrirFiche(neuve, true);
+    };
+    g.appendChild(b);
+  }
+  return g;
+}
+
 const tailleReelle = (d) => (d ? `${d[0].toLocaleString(langue())} × ${d[1].toLocaleString(langue())} m` : null);
 
 async function ouvrirFiche(r, local){
@@ -215,15 +270,17 @@ async function ouvrirFiche(r, local){
   const t = local ? r : possedee(r);
   const droite = el('div', { classe: 'store-fiche-droite' }, [
     el('h4', { texte: r.nom }),
-    el('p', { classe: 'store-fiche-texte', texte: `${nomSource(r.source)} · ${tr('by', 'par')} ${(r.auteur && r.auteur.nom) || nomSource(r.source)} · CC0` }),
-    section(tr('Materials', 'Matières'), [badges(infos.matieres, r.matieres)]),
-    section(tr('Uses', 'Usages'), [badges(infos.usages, r.usages)]),
+    el('p', { classe: 'store-fiche-texte', texte: r.source === 'import' ? tr('Imported from a folder', 'Importée d\'un dossier')
+      : `${nomSource(r.source)} · ${tr('by', 'par')} ${(r.auteur && r.auteur.nom) || nomSource(r.source)} · CC0` }),
+    section(tr('Materials', 'Matières'), [local ? matieresACocher(r) : badges(infos.matieres, r.matieres)]),
+    section(tr('Uses', 'Usages'), [r.usages.length ? badges(infos.usages, r.usages)
+      : el('p', { classe: 'store-fiche-texte', texte: tr('Unclassified: tick its materials above.', 'Non classée : cochez ses matières ci-dessus.') })]),
     tailleReelle(local ? r.dimensions : r.details.dimensions)
       ? section(tr('Real size of one tile', 'Taille réelle d\'une tuile'), [el('p', { classe: 'store-fiche-texte', texte: tailleReelle(local ? r.dimensions : r.details.dimensions) })]) : null,
     t ? section(tr('In My textures', 'Dans Mes textures'), [el('p', { classe: 'store-fiche-texte', texte: [
-      `${tr('Resolution', 'Résolution')} ${t.resolution}`,
+      t.resolution ? `${tr('Resolution', 'Résolution')} ${t.resolution}` : null,
       t.grain ? tr('ground and path grain ready', 'grain du Sol et des Tracés prêt') : tr('no grain: building finishes only', 'pas de grain : revêtements de bâtiment seulement'),
-    ].join(' · ') }), t.raccordVisible ? el('p', { classe: 'store-fiche-texte texture-raccord', texte: tr('Visible seam: this texture does not tile perfectly.', 'Raccord visible : cette texture ne se répète pas parfaitement.') }) : null]) : null,
+    ].filter(Boolean).join(' · ') }), t.raccordVisible ? el('p', { classe: 'store-fiche-texte texture-raccord', texte: tr('Visible seam: this texture does not tile perfectly.', 'Raccord visible : cette texture ne se répète pas parfaitement.') }) : null]) : null,
   ]);
   const actions = el('div', { classe: 'store-fiche-actions' });
   const retour = el('button', { texte: tr('Back', 'Retour'), classe: 'nav-btn', attrs: { type: 'button' } });

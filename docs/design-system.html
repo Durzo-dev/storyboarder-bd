@@ -2334,6 +2334,9 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .texture-badges{ flex-wrap:wrap; }
 .texture-resolutions{ margin:0 8px 0 0; }
 .texture-raccord{ color:var(--warn); }
+/* Les matières à cocher d'une texture de « Mes textures » : des boutons de choix qui passent à la ligne. */
+.texture-matieres button{ flex:0 0 auto; }
+.store-carte-ajout span.store-ajout-icone svg{ width:44px; height:44px; display:block; }
 /* « Articulé » : une icône en haut à GAUCHE de la vignette (la droite est à la coche « déjà
    téléchargé »), au même gabarit que la coche. */
 .store-articule{
@@ -3119,8 +3122,8 @@ html[lang="fr"] .ds-en, html[lang="en"] .ds-fr{ display:none; }
   <button class="help-round-btn" id="texturesOuvrirBtn" type="button" title="Bibliothèque de textures">
     <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       
-      <rect x="3" y="4" width="18" height="16" rx="1.5"/>
-      <path d="M3 9.5h18M3 15h18M9 4v5.5M15 9.5V15M9 15v5"/>
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <path d="M3 12 12 3M3 21 21 3M12 21l9-9"/>
     </svg>
   </button>
   
