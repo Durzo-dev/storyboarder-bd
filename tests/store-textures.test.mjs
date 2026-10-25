@@ -487,3 +487,11 @@ describe('RÉGRESSION : vignettes entières et nettes (signalé : coupées ou fl
     }
   });
 });
+
+describe('la marge des vignettes ne se voit pas (signalé : fonds clairs de Sketchfab)', () => {
+  const lire = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
+  test('le coin de l\'image, très agrandi, colore sa propre marge, posée au chargement pour toutes les cartes', () => {
+    assert.match(lire('src/style.css'), /\.store-carte img\.avec-fond-vignette\{ background:var\(--fond-vignette\) left top \/ 5000% 5000% no-repeat, var\(--creux\); \}/);
+    assert.match(lire('src/store-ui.js'), /document\.addEventListener\('load', \(e\) => \{[\s\S]{0,400}img\.classList\.add\('avec-fond-vignette'\);/);
+  });
+});

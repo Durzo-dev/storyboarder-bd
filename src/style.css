@@ -2306,8 +2306,13 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 }
 .store-carte:hover{ border-color:var(--accent); }
 .store-carte img, .store-sans-vignette{ width:100%; aspect-ratio:16/9; object-fit:contain; background:var(--creux); display:block; }
-/* Une marge autour de l'image (demandé) : le modèle ou la sphère ne touche pas le bord de la carte. */
+/* Une marge autour de l'image (demandé) : le modèle ou la sphère ne touche pas le bord de la carte.
+   La marge ne doit PAS SE VOIR (signalé, sur les fonds clairs de Sketchfab) : derrière elle, la même
+   image, agrandie cinquante fois depuis son coin haut gauche, ne montre plus que la COULEUR DE SON
+   FOND. Un flou avait été essayé : il assombrissait les bords et débordait sous le titre (mesuré).
+   Posé par store-ui.js au chargement (--fond-vignette) ; avant, le fond creux. */
 .store-carte img{ box-sizing:border-box; padding:8px; }
+.store-carte img.avec-fond-vignette{ background:var(--fond-vignette) left top / 5000% 5000% no-repeat, var(--creux); }
 /* Les cartes restent en 16:9 (essayées carrées le 25 octobre 2026, Valentin préférait avant).
    ⚠️ CONTAIN ET NON COVER : les vignettes carrées des sources (Poly Haven, ambientCG) étaient « cover » en coupait le haut et le bas, un modèle ou une sphère à moitié (signalé).
    Entières, centrées, sur le fond creux. Seule une texture À PLAT (« Mes textures ») remplit la carte :

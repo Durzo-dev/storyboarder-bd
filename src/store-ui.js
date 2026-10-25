@@ -235,6 +235,22 @@ function pastillePossede(t, fichier){
   return el('span', { classe: 'store-possede', attrs: { title: `${t.possede} : ${fichier}`, role: 'img', 'aria-label': t.possede } }, [svg]);
 }
 
+/**
+ * LA MARGE DES VIGNETTES NE SE VOIT PAS (signalé) : une image chargée dans une carte de l'un des deux
+ * stores donne aussi la couleur de sa marge : son coin, très agrandi (style.css, .avec-fond-vignette). Une seule
+ * écoute, en capture (`load` ne remonte pas), pour toutes les cartes, celles d'aujourd'hui et de demain.
+ */
+if (globalThis.document && document.addEventListener) {
+  document.addEventListener('load', (e) => {
+    const img = e.target;
+    if (!img || img.tagName !== 'IMG' || img.classList.contains('texture-a-plat')) return;
+    const c = img.closest && img.closest('.store-carte');
+    if (!c || img !== c.querySelector('img')) return;
+    img.style.setProperty('--fond-vignette', `url("${String(img.currentSrc || img.src).replace(/"/g, '%22')}")`);
+    img.classList.add('avec-fond-vignette');
+  }, true);
+}
+
 function carte(r){
   if (r.local) return carteLocale(r);
   const t = textesStore(langue());
