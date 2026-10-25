@@ -2317,6 +2317,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .store-carte img:not(.texture-a-plat){ opacity:0; transition:opacity .18s ease; }
 .store-carte img.recadree{ opacity:1; }
 .store-carte img.recadree-immediate{ transition:none; }
+.store-carte-possedee img.recadree{ opacity:.7; }   /* la vignette d'une carte possédée reste atténuée */
 .store-carte img.recadree:not(.recadree-origine){ padding:0; object-fit:cover; }
 /* Les cartes en 3:2 (16:9 jusqu'au 25 octobre 2026, un peu plus hautes demandé ; le carré a été essayé et écarté).
    ⚠️ CONTAIN ET NON COVER : les vignettes carrées des sources (Poly Haven, ambientCG) étaient « cover » en coupait le haut et le bas, un modèle ou une sphère à moitié (signalé).
