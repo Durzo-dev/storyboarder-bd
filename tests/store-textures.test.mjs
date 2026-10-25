@@ -286,7 +286,7 @@ describe('#446c : la fenêtre du store de textures', () => {
     assert.match(html, /id="texturesUsage"/);
   });
   test('rien d\'office : le téléchargement part du bouton de la fiche, à la résolution choisie (1k d\'abord)', () => {
-    assert.match(ui, /let choisie = o\.options\[0\]\.resolution;/);
+    assert.match(ui, /choisie = options\[0\]\.resolution;/);
     assert.match(ui, /api\(\)\.texturesTelecharger\(r\.source, r\.id, choisie\)/);
   });
   test('câblée au démarrage, le bandeau l\'allume quand elle est ouverte', () => {
@@ -340,5 +340,33 @@ describe('retours du 25 octobre sur la fenêtre', () => {
     const html = lire('src/index.html');
     const bouton = html.slice(html.indexOf('id="texturesOuvrirBtn"'), html.indexOf('</button>', html.indexOf('id="texturesOuvrirBtn"')));
     assert.doesNotMatch(bouton, /M3 9\.5h18M3 15h18/, 'les briques des Murs sont revenues');
+  });
+});
+
+describe('retours du 25 octobre sur la fiche des textures', () => {
+  const ui = readFileSync(new URL('../src/textures-store-ui.js', import.meta.url), 'utf8');
+  test('ni recherche ni filtres sur une fiche (comme le store de modèles)', () => {
+    assert.match(ui, /\$\('texturesFormulaire'\)\.hidden = true;/);
+    assert.match(ui, /\$\('texturesFormulaire'\)\.hidden = false;/);
+  });
+  test('la qualité se choisit par la flèche du bouton Télécharger (bouton scindé du store de modèles)', () => {
+    assert.match(ui, /el\('div', \{ classe: 'store-bouton-scinde' \}, \[telecharger, fleche, menu\]\)/);
+  });
+  test('RÉGRESSION : une texture déjà là propose Supprimer, jamais « Télécharger à nouveau »', () => {
+    assert.match(ui, /const action = t \? boutonSupprimer\(t, /);
+    assert.doesNotMatch(ui, /Télécharger à nouveau/);
+  });
+  test('un aperçu 3D sous l\'image : une sphère habillée de la matière', () => {
+    assert.match(ui, /new T\.SphereGeometry\(/);
+    assert.match(ui, /ouvrirApercu3D\(visuel, null, \{ objet \}\)/);
+  });
+  test('les matières cochées attendent « Valider », qui n\'apparaît qu\'en cas de changement', () => {
+    assert.match(ui, /valider\.hidden = avant\.size === choisies\.size/);
+  });
+  test('revenir de la fiche refait la grille : la coche d\'une texture téléchargée y apparaît', () => {
+    assert.match(ui, /if \(ouverte\) \{ rendreGrille\(\);/);
+  });
+  test('les badges de la fiche sont serrés à gauche', () => {
+    assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /\.texture-badges\{ display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-start; \}/);
   });
 });

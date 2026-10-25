@@ -2331,11 +2331,16 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
 .store-possede svg{ width:14px; height:14px; display:block; }
 /* #446c : le store de textures reprend les classes du store de modèles ; seuls s'ajoutent ses badges
    de matières et d'usages (qui passent à la ligne), le choix de résolution et l'avis de raccord. */
-.texture-badges{ flex-wrap:wrap; }
-.texture-resolutions{ margin:0 8px 0 0; }
 .texture-raccord{ color:var(--warn); }
-/* Les matières à cocher d'une texture de « Mes textures » : des boutons de choix qui passent à la ligne. */
-.texture-matieres button{ flex:0 0 auto; }
+/* Les matières et usages d'une fiche : serrés à gauche, pas étalés sur toute la largeur (demandé). */
+.texture-badges{ display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-start; }
+/* Les matières à cocher (Mes textures) : des pastilles qui passent à la ligne, texte sur une ligne. */
+.texture-matieres{ display:flex; flex-wrap:wrap; gap:6px; }
+.texture-matieres button{ flex:0 0 auto; padding:4px 10px; border-radius:var(--rayon-pilule); border:1px solid var(--line-strong);
+  background:var(--white); color:var(--ink); font-family:'Inter',sans-serif; font-size:var(--texte-libelle); white-space:nowrap; cursor:pointer; }
+.texture-matieres button.actif{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:600; }
+.texture-valider{ margin-top:10px; }
+.texture-valider[hidden]{ display:none; }
 .store-carte-ajout span.store-ajout-icone svg{ width:44px; height:44px; display:block; }
 /* « Articulé » : une icône en haut à GAUCHE de la vignette (la droite est à la coche « déjà
    téléchargé »), au même gabarit que la coche. */

@@ -1211,6 +1211,8 @@ ipcMain.handle('textures:importer', async (event) => {
   if (canceled || !filePaths || !filePaths[0]) return { annule: true };
   return storeTextures.importer(getProjectsDir(), filePaths[0]);
 });
+ipcMain.handle('textures:cartes', async (event, sourceId, id) =>
+  storeTextures.cartesEnMemoire(getProjectsDir(), sourceId, String(id || ''), SIMULATION_STORE ? RACINE : null));
 ipcMain.handle('textures:matieres', async (event, cle, matieres) => storeTextures.changerMatieres(getProjectsDir(), String(cle || ''), matieres));
 
 // Télécharge puis installe. La progression part vers la fenêtre qui a demandé. En simulation, on

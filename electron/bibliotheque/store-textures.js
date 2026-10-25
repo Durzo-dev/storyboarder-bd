@@ -251,6 +251,37 @@ async function importer(dossierProjets, cheminDossier){
   return { entree, ignores: lu.ignores };
 }
 
+/**
+ * Les cartes d'une texture EN MÉMOIRE, pour l'aperçu 3D de sa fiche (demandé) : lues sur le disque
+ * si elle est dans « Mes textures », sinon à la source en 1k, sans rien ranger. Les dernières sont
+ * gardées un moment (une fiche rouverte ne refait pas le réseau). `{ cartes: { couleur: { data,
+ * type }, … } }` ou `{ erreur }`.
+ */
+const recents = require('./store-sources').memoireBornee(6, 60 * 1024 * 1024);
+async function cartesEnMemoire(dossierProjets, sourceId, id, simulation){
+  const cle = `${sourceId}:${id}`;
+  const t = mesTextures(dossierProjets).find(x => x.cle === cle);
+  const type = (nom) => (/\.png$/i.test(nom) ? 'image/png' : 'image/jpeg');
+  if (t) {
+    const dossier = path.join(dossierProjets, B.DOSSIER, t.dossier);
+    const cartes = {};
+    for (const carte of ['couleur', 'normal', 'rugosite', 'ao']) {
+      const f = fichierCarte(dossier, carte);
+      if (f) cartes[carte] = { data: new Uint8Array(fs.readFileSync(path.join(dossier, f))), type: type(f) };
+    }
+    return { cartes };
+  }
+  if (simulation) return { erreur: 'simulation' };
+  const deja = recents.get(cle);
+  if (deja) return { cartes: deja };
+  const lu = await recupererCartes(sourceId, id, sourceId === 'ambientcg' ? ACG.RESOLUTION : PH.RESOLUTION, null);
+  if (lu.erreur) return lu;
+  const cartes = {};
+  for (const [carte, octets] of lu.cartes) if (carte !== 'deplacement') cartes[carte] = { data: new Uint8Array(octets), type: 'image/jpeg' };
+  recents.set(cle, cartes);   // bornée à six fiches (quelques Mo chacune en 1k)
+  return { cartes };
+}
+
 /** Coche les matières d'une texture (sa fiche) : ses usages en découlent. */
 function changerMatieres(dossierProjets, cle, matieres){
   const propres = (Array.isArray(matieres) ? matieres : []).filter(m => M.matiere(m));
@@ -281,4 +312,4 @@ function image(dossierProjets, cle, quoi){
   } catch (e) { return { ok: false }; }
 }
 
-module.exports = { infos, chercher, options, telecharger, mesTextures, supprimer, image, importer, changerMatieres };
+module.exports = { infos, chercher, options, telecharger, mesTextures, supprimer, image, importer, changerMatieres, cartesEnMemoire };

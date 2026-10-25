@@ -15,6 +15,7 @@
 import { tr } from './state.js';
 import { enregistrerFermeture } from './modal-stack.js';
 import { icone } from './icones.js';
+import { ouvrirApercu3D } from './store-apercu-3d.js';
 
 const $ = (id) => document.getElementById(id);
 const api = () => globalThis.window && window.storyboarderAPI;
@@ -226,48 +227,191 @@ async function suiteSiBesoin(){
 
 let ficheCourante = null;
 
+let apercu = null;          // l'aperçu 3D ouvert ({ fermer })
+let apercuGeneration = 0;
+
+function fermerApercu(){
+  apercuGeneration++;
+  if (apercu) { apercu.fermer(); apercu = null; }
+}
+
 function fermerFiche(){
+  const ouverte = !$('texturesFiche').hidden;
   ficheCourante = null;
+  fermerApercu();
   $('texturesFiche').hidden = true;
   $('texturesFiche').replaceChildren();
   $('texturesGrille').hidden = false;
+  // Ni recherche ni filtres sur une fiche (comme le store de modèles) : ils reviennent avec la liste.
+  $('texturesFormulaire').hidden = false;
+  // La grille est refaite : une texture téléchargée depuis la fiche y porte désormais sa coche.
+  if (ouverte) { rendreGrille(); $('texturesDefilement').scrollTop = positionListe; }
 }
+let positionListe = 0;
 
 const section = (titre, enfants) => el('section', { classe: 'store-fiche-section' }, [el('h5', { texte: titre }), ...enfants]);
-const badges = (liste, slugs) => el('div', { classe: 'store-carte-infos texture-badges' },
+const badges = (liste, slugs) => el('div', { classe: 'texture-badges' },
   slugs.map(s => el('span', { texte: nomDe(liste, s), classe: 'store-badge' })));
+
 /**
- * Les matières d'une texture de « Mes textures », à cocher (demandé pour un dossier importé, qui
- * n'a pas de catégorie) : ses usages en découlent, et la fiche se redessine.
+ * Les matières d'une texture de « Mes textures », à cocher (pour un dossier importé, qui n'a pas de
+ * catégorie, ou pour corriger celles de la source). Les changements restent EN ATTENTE jusqu'au
+ * bouton « Valider », qui n'apparaît que s'il y a un changement (demandé).
  */
 function matieresACocher(t){
-  const g = el('div', { classe: 'choix texture-matieres' });
+  const boite = el('div', { classe: 'texture-matieres-boite' });
+  const g = el('div', { classe: 'texture-matieres' });
   const choisies = new Set(t.matieres);
+  const valider = el('button', { texte: tr('Confirm', 'Valider'), classe: 'full-btn texture-valider', attrs: { type: 'button' } });
+  const change = () => {
+    const avant = new Set(t.matieres);
+    valider.hidden = avant.size === choisies.size && [...avant].every(m => choisies.has(m));
+  };
   for (const m of infos.matieres) {
     const b = el('button', { texte: m[langue()], classe: choisies.has(m.slug) ? 'actif' : '', attrs: { type: 'button', 'aria-pressed': String(choisies.has(m.slug)) } });
-    b.onclick = async () => {
+    b.onclick = () => {
       if (choisies.has(m.slug)) choisies.delete(m.slug); else choisies.add(m.slug);
-      const liste = infos.matieres.map(x => x.slug).filter(s => choisies.has(s));
-      await api().texturesMatieres(t.cle, liste);
-      await relireMes();
-      const neuve = mes.find(x => x.cle === t.cle);
-      if (neuve) ouvrirFiche(neuve, true);
+      b.classList.toggle('actif', choisies.has(m.slug));
+      b.setAttribute('aria-pressed', String(choisies.has(m.slug)));
+      change();
     };
     g.appendChild(b);
   }
-  return g;
+  valider.onclick = async () => {
+    valider.disabled = true;
+    await api().texturesMatieres(t.cle, infos.matieres.map(x => x.slug).filter(s => choisies.has(s)));
+    await relireMes();
+    const neuve = mes.find(x => x.cle === t.cle);
+    if (neuve) ouvrirFiche(neuve, true);
+  };
+  change();
+  boite.append(g, valider);
+  return boite;
 }
 
 const tailleReelle = (d) => (d ? `${d[0].toLocaleString(langue())} × ${d[1].toLocaleString(langue())} m` : null);
 
+/**
+ * L'APERÇU 3D (demandé, comme le store de modèles) : une sphère habillée de la matière, éclairée
+ * comme une Case. Les cartes arrivent en mémoire (textures:cartes) : celles du disque pour une
+ * texture de « Mes textures », celles de la source en 1k sinon (rien n'est rangé).
+ */
+async function sphereDeLaMatiere(cartes){
+  const T = globalThis.THREE;
+  const charger = (octets, type) => new Promise((resolve) => {
+    if (!octets) { resolve(null); return; }
+    const url = URL.createObjectURL(new Blob([octets], { type }));
+    new T.TextureLoader().load(url, (tex) => { URL.revokeObjectURL(url); tex.wrapS = tex.wrapT = T.RepeatWrapping; tex.repeat.set(2, 1); resolve(tex); },
+      undefined, () => { URL.revokeObjectURL(url); resolve(null); });
+  });
+  const [map, normalMap, roughnessMap, aoMap] = await Promise.all(['couleur', 'normal', 'rugosite', 'ao']
+    .map(c => charger(cartes[c] && cartes[c].data, cartes[c] && cartes[c].type)));
+  const geo = new T.SphereGeometry(1, 96, 64);
+  geo.setAttribute('uv2', geo.getAttribute('uv'));   // l'AO lit le second jeu d'UV (three r128)
+  const mat = new T.MeshStandardMaterial({ map, normalMap, roughnessMap, aoMap, roughness: roughnessMap ? 1 : 0.8, metalness: 0 });
+  return new T.Mesh(geo, mat);
+}
+
+function boutonApercu(r, visuel, image){
+  const b = el('button', { texte: tr('View in 3D', 'Voir en 3D'), classe: 'nav-btn', attrs: { type: 'button' } });
+  let en3D = false;
+  b.onclick = async () => {
+    en3D = !en3D;
+    b.textContent = en3D ? tr('View the image', 'Voir l\'image') : tr('View in 3D', 'Voir en 3D');
+    fermerApercu();
+    if (!en3D) { visuel.replaceChildren(...image()); return; }
+    const moi = apercuGeneration;
+    const etiquette = el('p', { texte: tr('Loading the material…', 'Chargement de la matière…'), classe: 'store-apercu-chargement' });
+    visuel.replaceChildren(etiquette);
+    const rep = await api().texturesCartes(r.source, r.id).catch(() => ({ erreur: 'reseau' }));
+    if (moi !== apercuGeneration) return;
+    if (!rep || rep.erreur || !rep.cartes || !rep.cartes.couleur) { etiquette.textContent = erreurLisible(rep && rep.erreur); etiquette.classList.add('erreur'); return; }
+    const objet = await sphereDeLaMatiere(rep.cartes);
+    if (moi !== apercuGeneration) return;
+    visuel.replaceChildren();
+    try { apercu = await ouvrirApercu3D(visuel, null, { objet }); } catch (e) { etiquette.textContent = erreurLisible(); visuel.replaceChildren(etiquette); }
+    if (moi !== apercuGeneration && apercu) { apercu.fermer(); apercu = null; }
+  };
+  return b;
+}
+
+/**
+ * Le bouton « Télécharger » et, collée à sa droite, la flèche du choix de la résolution (comme le
+ * store de modèles) : 1k par défaut ; 2k ; 4k pour les seules textures qui servent aux bâtiments.
+ */
+function boutonTelecharger(r, note){
+  const telecharger = el('button', { texte: tr('Download', 'Télécharger'), classe: 'full-btn', attrs: { type: 'button' } });
+  const fleche = el('button', { texte: '▾', classe: 'full-btn store-bouton-fleche', attrs: { type: 'button', title: tr('Texture quality', 'Qualité de la texture'), 'aria-haspopup': 'menu' } });
+  const menu = el('div', { classe: 'store-menu-resolutions', attrs: { role: 'menu', hidden: '' } });
+  const scinde = el('div', { classe: 'store-bouton-scinde' }, [telecharger, fleche, menu]);
+  telecharger.disabled = true;
+  fleche.hidden = true;
+  let options = [], choisie = null;
+  const majTexte = () => {
+    const x = options.find(y => y.resolution === choisie);
+    telecharger.textContent = x ? `${tr('Download', 'Télécharger')} ${choisie.toLowerCase()} (${poids(x.octets)})` : tr('Download', 'Télécharger');
+  };
+  const rendreMenu = () => menu.replaceChildren(...options.map(x => {
+    const b = el('button', { texte: `${x.resolution.toLowerCase()} · ${poids(x.octets)}`, classe: 'store-menu-resolution' + (x.resolution === choisie ? ' actif' : ''), attrs: { type: 'button', role: 'menuitem' } });
+    b.onclick = () => { choisie = x.resolution; menu.hidden = true; rendreMenu(); majTexte(); };
+    return b;
+  }));
+  fleche.onclick = (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; };
+  api().texturesOptions(r.source, r.id).then(o => {
+    if (!ficheCourante || ficheCourante.r !== r) return;
+    if (o.erreur || !o.options || !o.options.length) { note.textContent = erreurLisible(o.erreur); return; }
+    options = o.options;
+    choisie = options[0].resolution;
+    note.textContent = options.length > 2
+      ? tr('1k by default; 4k is offered because this texture serves buildings (close-ups).', '1k par défaut ; la 4k est proposée parce que cette texture sert aux bâtiments (gros plans).')
+      : tr('1k is enough for almost everything; 2k for close-ups.', 'La 1k suffit presque toujours ; la 2k pour les gros plans.');
+    fleche.hidden = options.length < 2;
+    scinde.classList.toggle('avec-fleche', options.length > 1);
+    rendreMenu(); majTexte();
+    telecharger.disabled = false;
+  });
+  telecharger.onclick = async () => {
+    telecharger.disabled = true; fleche.disabled = true;
+    enCours.set(cle(r), { recus: 0, total: 0 });
+    telecharger.textContent = tr('Downloading…', 'Téléchargement…');
+    const res = await api().texturesTelecharger(r.source, r.id, choisie);
+    enCours.delete(cle(r));
+    if (res.erreur) { message(erreurLisible(res.erreur)); telecharger.disabled = false; fleche.disabled = false; majTexte(); return; }
+    await relireMes();
+    message(res.entree && res.entree.raccordVisible
+      ? tr(`“${r.nom}” is in My textures (visible seam: it does not tile perfectly).`, `« ${r.nom} » est dans Mes textures (raccord visible : elle ne se répète pas parfaitement).`)
+      : tr(`“${r.nom}” is in My textures.`, `« ${r.nom} » est dans Mes textures.`));
+    if (ficheCourante && ficheCourante.r === r) ouvrirFiche(r, false);
+  };
+  return scinde;
+}
+
+/** « Supprimer » : depuis Mes textures, ou depuis la fiche d'une source quand on l'a déjà (demandé). */
+function boutonSupprimer(t, apres){
+  const b = el('button', { texte: tr('Delete', 'Supprimer'), classe: 'full-btn delete-btn', attrs: { type: 'button' } });
+  b.onclick = async () => {
+    if (_rappels.confirmer && !(await _rappels.confirmer(tr(`Delete the texture “${t.nom}” from the disk?`, `Supprimer la texture « ${t.nom} » du disque ?`)))) return;
+    await api().texturesSupprimer(t.cle);
+    urlsLocales.delete(t.cle);
+    await relireMes();
+    apres();
+  };
+  return b;
+}
+
 async function ouvrirFiche(r, local){
+  fermerApercu();
   ficheCourante = { r, local };
   const fiche = $('texturesFiche');
-  const visuel = el('div', { classe: 'store-fiche-visuel' });
-  if (local) urlLocale(r).then(url => { if (url && ficheCourante && ficheCourante.r === r) visuel.appendChild(vignette(url)); });
-  else if (r.vignettes.grande) visuel.appendChild(vignette(r.vignettes.grande));
-  const gauche = el('div', { classe: 'store-fiche-gauche' }, [visuel]);
   const t = local ? r : possedee(r);
+  const visuel = el('div', { classe: 'store-fiche-visuel' });
+  let urlImage = local ? null : r.vignettes.grande;
+  const image = () => (urlImage ? [vignette(urlImage)] : []);
+  if (local) urlLocale(r).then(url => { urlImage = url; if (url && ficheCourante && ficheCourante.r === r && !apercu) visuel.replaceChildren(...image()); });
+  else visuel.replaceChildren(...image());
+  const boutons = el('div', { classe: 'store-fiche-boutons' }, [boutonApercu(r, visuel, image)]);
+  const gauche = el('div', { classe: 'store-fiche-gauche' }, [visuel, boutons]);
+  const dims = local ? r.dimensions : r.details.dimensions;
   const droite = el('div', { classe: 'store-fiche-droite' }, [
     el('h4', { texte: r.nom }),
     el('p', { classe: 'store-fiche-texte', texte: r.source === 'import' ? tr('Imported from a folder', 'Importée d\'un dossier')
@@ -275,71 +419,24 @@ async function ouvrirFiche(r, local){
     section(tr('Materials', 'Matières'), [local ? matieresACocher(r) : badges(infos.matieres, r.matieres)]),
     section(tr('Uses', 'Usages'), [r.usages.length ? badges(infos.usages, r.usages)
       : el('p', { classe: 'store-fiche-texte', texte: tr('Unclassified: tick its materials above.', 'Non classée : cochez ses matières ci-dessus.') })]),
-    tailleReelle(local ? r.dimensions : r.details.dimensions)
-      ? section(tr('Real size of one tile', 'Taille réelle d\'une tuile'), [el('p', { classe: 'store-fiche-texte', texte: tailleReelle(local ? r.dimensions : r.details.dimensions) })]) : null,
+    tailleReelle(dims) ? section(tr('Real size of one tile', 'Taille réelle d\'une tuile'), [el('p', { classe: 'store-fiche-texte', texte: tailleReelle(dims) })]) : null,
     t ? section(tr('In My textures', 'Dans Mes textures'), [el('p', { classe: 'store-fiche-texte', texte: [
-      t.resolution ? `${tr('Resolution', 'Résolution')} ${t.resolution}` : null,
+      t.resolution ? `${tr('Resolution', 'Résolution')} ${t.resolution.toLowerCase()}` : null,
       t.grain ? tr('ground and path grain ready', 'grain du Sol et des Tracés prêt') : tr('no grain: building finishes only', 'pas de grain : revêtements de bâtiment seulement'),
     ].filter(Boolean).join(' · ') }), t.raccordVisible ? el('p', { classe: 'store-fiche-texte texture-raccord', texte: tr('Visible seam: this texture does not tile perfectly.', 'Raccord visible : cette texture ne se répète pas parfaitement.') }) : null]) : null,
   ]);
-  const actions = el('div', { classe: 'store-fiche-actions' });
   const retour = el('button', { texte: tr('Back', 'Retour'), classe: 'nav-btn', attrs: { type: 'button' } });
   retour.onclick = fermerFiche;
-  actions.appendChild(retour);
-  const pied = el('div', { classe: 'store-fiche-pied' }, [actions]);
-  fiche.replaceChildren(el('div', { classe: 'store-fiche-corps' }, [gauche, droite]), pied);
+  const note = el('p', { classe: 'store-note' });
+  // Déjà dans Mes textures : on propose de la SUPPRIMER, pas de la retélécharger (demandé).
+  const action = t ? boutonSupprimer(t, () => (local ? fermerFiche() : ouvrirFiche(r, false))) : boutonTelecharger(r, note);
+  fiche.replaceChildren(el('div', { classe: 'store-fiche-corps' }, [gauche, droite]),
+    el('div', { classe: 'store-fiche-pied' }, [el('div', { classe: 'store-fiche-actions' }, [retour, action]), note]));
+  if ($('texturesFiche').hidden) positionListe = $('texturesDefilement').scrollTop;
   $('texturesGrille').hidden = true;
+  $('texturesFormulaire').hidden = true;
   fiche.hidden = false;
-  if (local) {
-    const suppr = el('button', { texte: tr('Delete', 'Supprimer'), classe: 'full-btn delete-btn', attrs: { type: 'button' } });
-    suppr.onclick = async () => {
-      if (_rappels.confirmer && !(await _rappels.confirmer(tr(`Delete the texture “${r.nom}” from the disk?`, `Supprimer la texture « ${r.nom} » du disque ?`)))) return;
-      await api().texturesSupprimer(r.cle);
-      urlsLocales.delete(r.cle);
-      await relireMes();
-      fermerFiche();
-      rendreGrille();
-    };
-    actions.appendChild(suppr);
-    return;
-  }
-  // Le choix de la résolution, avec le poids de chacune, lu à la source (1k coché par défaut).
-  const choixRes = el('div', { classe: 'choix choix-options texture-resolutions' });
-  const telecharger = el('button', { texte: t ? tr('Download again', 'Télécharger à nouveau') : tr('Download', 'Télécharger'), classe: 'full-btn', attrs: { type: 'button' } });
-  telecharger.disabled = true;
-  actions.append(choixRes, telecharger);
-  const note = el('p', { classe: 'store-note', texte: tr('Reading the sizes…', 'Lecture des poids…') });
-  pied.appendChild(note);
-  const o = await api().texturesOptions(r.source, r.id);
-  if (!ficheCourante || ficheCourante.r !== r) return;
-  if (o.erreur || !o.options || !o.options.length) { note.textContent = erreurLisible(o.erreur); return; }
-  let choisie = o.options[0].resolution;
-  const rendreChoix = () => choixRes.replaceChildren(...o.options.map(x => {
-    const b = el('button', { texte: x.resolution.toLowerCase(), classe: x.resolution === choisie ? 'actif' : '', attrs: { type: 'button', title: poids(x.octets) } });
-    b.onclick = () => { choisie = x.resolution; rendreChoix(); majNote(); };
-    return b;
-  }));
-  const majNote = () => {
-    const x = o.options.find(y => y.resolution === choisie);
-    note.textContent = `${poids(x.octets)} · ${o.options.length > 2
-      ? tr('4k is offered because this texture serves buildings (close-ups).', 'La 4k est proposée parce que cette texture sert aux bâtiments (gros plans).')
-      : tr('1k is enough for almost everything; 2k for close-ups.', 'La 1k suffit presque toujours ; la 2k pour les gros plans.')}`;
-  };
-  rendreChoix(); majNote();
-  telecharger.disabled = false;
-  telecharger.onclick = async () => {
-    telecharger.disabled = true;
-    enCours.set(cle(r), { recus: 0, total: 0 });
-    telecharger.textContent = tr('Downloading…', 'Téléchargement…');
-    const res = await api().texturesTelecharger(r.source, r.id, choisie);
-    enCours.delete(cle(r));
-    if (res.erreur) { message(erreurLisible(res.erreur)); telecharger.disabled = false; telecharger.textContent = tr('Download', 'Télécharger'); return; }
-    await relireMes();
-    message(res.entree && res.entree.raccordVisible
-      ? tr(`“${r.nom}” is in My textures (visible seam: it does not tile perfectly).`, `« ${r.nom} » est dans Mes textures (raccord visible : elle ne se répète pas parfaitement).`)
-      : tr(`“${r.nom}” is in My textures.`, `« ${r.nom} » est dans Mes textures.`));
-    if (ficheCourante && ficheCourante.r === r) ouvrirFiche(r, false);
-  };
+  $('texturesDefilement').scrollTop = 0;
 }
 
 function suivreProgression(sourceId, id, recus, total){
@@ -347,7 +444,7 @@ function suivreProgression(sourceId, id, recus, total){
   if (!enCours.has(k)) return;
   enCours.set(k, { recus, total });
   if (!ficheCourante || ficheCourante.local || cle(ficheCourante.r) !== k) return;
-  const b = $('texturesFiche').querySelector('.store-fiche-actions .full-btn');
+  const b = $('texturesFiche').querySelector('.store-bouton-scinde > .full-btn');
   if (!b) return;
   b.textContent = recus == null ? tr('Preparing the grain…', 'Préparation du grain…')
     : `${tr('Downloading', 'Téléchargement')} ${total ? Math.round(recus / total * 100) : 0} %`;
@@ -385,6 +482,10 @@ export function cablerTextures(rappels = {}){
   for (const id of ['texturesMatiere', 'texturesUsage', 'texturesTri']) $(id).addEventListener('change', () => { fermerFiche(); chercher(); });
   $('texturesFormulaire').addEventListener('submit', (e) => { e.preventDefault(); chercher(); });
   $('texturesDefilement').addEventListener('scroll', suiteSiBesoin);
+  // Le menu des résolutions se referme au premier clic ailleurs, comme celui du store de modèles.
+  texturesModal.addEventListener('click', (e) => {
+    if (!e.target.closest('.store-bouton-scinde')) texturesModal.querySelectorAll('.store-menu-resolutions').forEach(m => { m.hidden = true; });
+  });
   if (api().surProgressionTexture) api().surProgressionTexture(suivreProgression);
   enregistrerFermeture('texturesModal', fermerTextures);
   rafraichirTextesTextures();
