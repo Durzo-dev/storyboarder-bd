@@ -426,6 +426,27 @@ export const TRACÉ_DEFAULTS = {
 };
 
 /**
+ * LA LARGEUR D'UNE ROUTE OU D'UN CHEMIN, EN MÈTRES (demandé, à la place de « Épaisseur (px) »).
+ *
+ * ⚠️ L'ANCIEN CHAMP NE RÉGLAIT RIEN EN 3D. La largeur 3D (`world.width`, en mètres) est fixée quand
+ * le Tracé est dessiné, et un déplacement la garde ; `width` (en pixels) ne sert qu'au trait du plan
+ * 2D. Changer l'épaisseur ne changeait donc pas la route dans la Case, et dans une Scène chargée dans
+ * une Case (réduite pour tenir dans le cadre) le champ affichait 0,2259 px.
+ *
+ * Rend `{ world, width }` : la largeur 3D voulue, et le trait 2D qui GARDE SA PROPORTION avec elle
+ * (le plan suit la route). Null si la valeur est illisible ou que le Tracé n'a pas de largeur 3D.
+ * Fonction PURE.
+ */
+export const LARGEUR_TRACE_M = { min: 0.2, max: 30 };
+export function largeurDeTrace3D(o, metres){
+  const m = Number(String(metres).replace(',', '.'));
+  if (!o || !o.world || !(o.world.width > 0) || !Number.isFinite(m)) return null;
+  const voulue = Math.min(LARGEUR_TRACE_M.max, Math.max(LARGEUR_TRACE_M.min, m));
+  const rapport = Number(o.width) > 0 ? o.width / o.world.width : null;
+  return { world: voulue, width: rapport ? voulue * rapport : o.width };
+}
+
+/**
  * Les TEXTURES des Traces (#437) : un grain cuit par `tools/bake-textures.mjs` (1024², comme le
  * Sol), sa teinte NATURELLE relevée à la cuisson, et la taille réelle d'une tuile en mètres,
  * largeur × hauteur. Le Terrain n'y figure pas : il emprunte les matières du Sol.

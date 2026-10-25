@@ -2481,9 +2481,11 @@
         <!-- La couleur SOUS la texture (demandé) : elle la teinte. -->
         <label class="modal-field-label" style="margin-top:14px;">Couleur</label>
         <input type="color" id="tracéColorInput" style="width:100%; height:36px; padding:2px; cursor:pointer;">
-        <div class="modal-field-ligne" style="margin-top:10px;">
-          <label class="modal-field-label">Épaisseur (px)</label>
-          <input type="number" id="tracéWidthInput" min="2" max="60" step="1">
+        <div class="modal-field-ligne" id="tracéWidthField" style="margin-top:10px;">
+          <!-- La largeur 3D, en mètres (route et chemin seulement : celle d'un muret, d'une clôture ou
+               d'une haie suit sa hauteur). constants.js, largeurDeTrace3D. -->
+          <label class="modal-field-label" id="tracéWidthLabel">Largeur (m)</label>
+          <input type="number" id="tracéWidthInput" min="0.2" max="30" step="0.1">
         </div>
         <div id="tracéHeightField" style="display:none;">
           <div class="modal-field-ligne">

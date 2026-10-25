@@ -92,7 +92,7 @@ import {
   styleDuTexteDeBulle,
   POSE_3D, GROUND_Y_DEFAULT_3D, OBJECT_3D_W, OBJECT_3D_H, ANIMAL_TYPES, WALL_PX_PER_UNIT_3D,
   CHILD_DESIGN_SIZE_3D, PERSONA_SKELETON_3D, PERSONA_EDITOR_MODEL_ID,
-  ARCHETYPES_3D, GROUND_TYPE_DEFS, teinteDuSol3D,
+  ARCHETYPES_3D, GROUND_TYPE_DEFS, teinteDuSol3D, largeurDeTrace3D,
 } from './constants.js';
 import { champsApparenceBulle } from './bubble-style.js';
 import { FORME_DEFAUT, formeDeLaBulle } from './bubble-shape.js';
@@ -7754,7 +7754,11 @@ document.getElementById('tracéModalSave').addEventListener('click', () => {
   snapshot();
   S.tracéModalTarget.name  = document.getElementById('tracéNameInput').value.trim() || null;
   S.tracéModalTarget.color = document.getElementById('tracéColorInput').value;
-  S.tracéModalTarget.width = parseInt(document.getElementById('tracéWidthInput').value) || 8;
+  // La largeur 3D en mètres ; le trait du plan 2D garde sa proportion (largeurDeTrace3D).
+  if (document.getElementById('tracéWidthField').style.display !== 'none') {
+    const _l = largeurDeTrace3D(S.tracéModalTarget, document.getElementById('tracéWidthInput').value);
+    if (_l) { S.tracéModalTarget.world.width = _l.world; S.tracéModalTarget.width = _l.width; }
+  }
   // #446d : la texture choisie, ou celle d'origine (le champ disparaît alors du fichier).
   if (document.getElementById('tracéTextureField').style.display !== 'none') {
     if (S.tracéModalTexture) S.tracéModalTarget.traceTexture = S.tracéModalTexture;

@@ -168,3 +168,26 @@ describe('la Zone de terrain, comme le Sol d\'une Case (demandé)', () => {
     assert.match(ev, /if \(_o\) rendreZone\(_o\);\s*snapshot\(\);/);
   });
 });
+
+describe('la largeur d\'une route ou d\'un chemin, en mètres (à la place de « Épaisseur (px) »)', async () => {
+  const { largeurDeTrace3D } = await import('../src/constants.js');
+  test('elle règle la largeur 3D ; le trait 2D garde sa proportion, même dans une Scène réduite', () => {
+    // Une route dessinée à 8 px pour 2 m ; chargée dans une Case, son trait est tombé à 0,24 px.
+    assert.deepEqual(largeurDeTrace3D({ width: 8, world: { width: 2 } }, '3'), { world: 3, width: 12 });
+    const r = largeurDeTrace3D({ width: 0.24, world: { width: 2 } }, '4,5');
+    assert.equal(r.world, 4.5);
+    assert.ok(Math.abs(r.width - 0.54) < 1e-9);
+  });
+  test('bornée (0,2 à 30 m) ; illisible ou sans largeur 3D : rien', () => {
+    assert.equal(largeurDeTrace3D({ width: 8, world: { width: 2 } }, '0').world, 0.2);
+    assert.equal(largeurDeTrace3D({ width: 8, world: { width: 2 } }, '500').world, 30);
+    assert.equal(largeurDeTrace3D({ width: 8, world: { width: 2 } }, 'large'), null);
+    assert.equal(largeurDeTrace3D({ width: 8 }, '3'), null);
+  });
+  test('câblage : le champ n\'existe que pour la route et le chemin ; l\'ancien parseInt a disparu', () => {
+    const lire = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
+    assert.match(lire('modals.js'), /\(obj\.tracéType === 'route' \|\| obj\.tracéType === 'chemin'\) && obj\.world && obj\.world\.width > 0/);
+    assert.doesNotMatch(lire('events.js'), /parseInt\(document\.getElementById\('tracéWidthInput'\)\.value\)/);
+    assert.match(lire('index.html'), /id="tracéWidthLabel">Largeur \(m\)</);
+  });
+});

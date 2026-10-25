@@ -1753,7 +1753,11 @@ export function openTracéModal(obj){
   // La couleur s'applique EN DIRECT à la Trace (demandé) ; ce qu'elle était à l'ouverture est gardé
   // pour la lui rendre si la fenêtre se ferme sans « Enregistrer » (events.js).
   S.tracéModalOrigine = { target: obj, color: obj.color };
-  document.getElementById('tracéWidthInput').value = obj.width != null ? obj.width : (_def.width || 8);
+  // La largeur 3D en mètres, pour une route ou un chemin qui en a une (largeurDeTrace3D). Un muret,
+  // une clôture, une haie ou une barrière tirent leur épaisseur de leur hauteur : pas de champ.
+  const _largeur = (obj.tracéType === 'route' || obj.tracéType === 'chemin') && obj.world && obj.world.width > 0;
+  document.getElementById('tracéWidthField').style.display = _largeur ? '' : 'none';
+  if (_largeur) document.getElementById('tracéWidthInput').value = Math.round(obj.world.width * 100) / 100;
   // Height field: only for types with a vertical volume
   const _hasHeight = ['muret', 'cloture', 'haie', 'barriere'].includes(obj.tracéType);
   document.getElementById('tracéHeightField').style.display = _hasHeight ? '' : 'none';

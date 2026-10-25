@@ -516,6 +516,7 @@ export const I18N_TRAILING = [
   ['#sideGroundColorLabel', 'Colour', 'Couleur'],
   ['#terrainTextureLabel', 'Texture', 'Texture'],
   ['#terrainColorLabel', 'Colour', 'Couleur'],
+  ['#tracéWidthLabel', 'Width (m)', 'Largeur (m)'],
   ['#sideBubbleBorderSection > h2', 'Border', 'Bordure'],
   ['label[for="sideBubbleBgColorInput"]', 'Fill color', 'Couleur du fond'],
   ['label[for="sideBubbleBorderWidthSelect"]', 'Border thickness', 'Épaisseur de la bordure'],
