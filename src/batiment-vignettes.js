@@ -12,7 +12,7 @@ import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
 import { signatureDuBatiment } from './batiment-element.js';
 import { cadrage3D, positionCamera3D } from './store-apercu-3d.js';
 
-const LARGEUR = 320, HAUTEUR = 320, CHAMP = 35;   // carrée, comme les cartes des stores
+const LARGEUR = 320, HAUTEUR = 240, CHAMP = 35;
 const cache = new Map();   // signature → URL de données
 let rendu = null, mats = null;
 

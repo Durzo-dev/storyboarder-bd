@@ -477,10 +477,11 @@ describe('retours : rangée du haut, mention de la source', () => {
 
 describe('RÉGRESSION : vignettes entières et nettes (signalé : coupées ou floues)', () => {
   const lire = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
-  test('des cartes CARRÉES (demandé), contain sauf une texture à plat ; des vignettes de 512 px', () => {
-    assert.match(lire('src/style.css'), /\.store-carte img, \.store-sans-vignette\{ width:100%; aspect-ratio:1\/1; object-fit:contain;/);
-    assert.match(lire('src/model-thumbnails.js'), /export const HAUTEUR_VIGNETTE = 512;/);
-    assert.match(lire('src/style.css'), /\.store-carte img\.texture-a-plat\{ object-fit:cover; \}/);
+  test('cartes en 16:9 (le carré a été écarté), contain avec une marge, sauf une texture à plat ; vignettes de 512 px', () => {
+    assert.match(lire('src/style.css'), /\.store-carte img, \.store-sans-vignette\{ width:100%; aspect-ratio:16\/9; object-fit:contain;/);
+    assert.match(lire('src/style.css'), /\.store-carte img\{ box-sizing:border-box; padding:8px; \}/);
+    assert.match(lire('src/model-thumbnails.js'), /export const HAUTEUR_VIGNETTE = 288;/);
+    assert.match(lire('src/style.css'), /\.store-carte img\.texture-a-plat\{ object-fit:cover; padding:0; \}/);
     for (const f of ['store-polyhaven.js', 'store-textures-polyhaven.js', 'store-textures-ambientcg.js', 'store-sketchfab.js']) {
       assert.match(lire(`electron/bibliotheque/${f}`), /petite: vignette\w*\([^)]*, 512\)/, f);
     }
