@@ -24,12 +24,11 @@ import { cadrage3D, positionCamera3D } from './store-apercu-3d.js';
 import { box3FromObjectSkinAware3D } from './skinned-box-3d.js';
 
 /**
- * La taille d'une vignette, en pixels : AU FORMAT DES CARTES (16:9). Carrée, elle était rognée en haut
- * et en bas par la carte (signalé : têtes et pattes coupées) ; au bon format, le cadrage la remplit
- * sans rien perdre.
+ * La taille d'une vignette, en pixels : AU FORMAT DES CARTES, CARRÉES depuis le 25 octobre 2026
+ * (demandé, comme les vignettes des sources). Le cadrage suit le format : rien n'est rogné.
  */
 export const LARGEUR_VIGNETTE = 512;
-export const HAUTEUR_VIGNETTE = 288;
+export const HAUTEUR_VIGNETTE = 512;
 /** L'angle de la photo : de trois quarts, un peu au-dessus, comme l'aperçu 3D à son ouverture. */
 const ANGLES = { lacet: 0.6, tangage: 0.25 };
 

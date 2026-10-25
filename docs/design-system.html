@@ -2309,9 +2309,10 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
   font-family:inherit;
 }
 .store-carte:hover{ border-color:var(--accent); }
-.store-carte img, .store-sans-vignette{ width:100%; aspect-ratio:16/9; object-fit:contain; background:var(--creux); display:block; }
-/* ⚠️ CONTAIN ET NON COVER : les vignettes des sources sont CARRÉES (Poly Haven, ambientCG) dans une
-   carte en 16:9 ; « cover » en coupait le haut et le bas, un modèle ou une sphère à moitié (signalé).
+.store-carte img, .store-sans-vignette{ width:100%; aspect-ratio:1/1; object-fit:contain; background:var(--creux); display:block; }
+/* Des cartes CARRÉES (demandé), comme les vignettes de Poly Haven et d'ambientCG : ni coupées ni
+   bandes grises. Celles de Sketchfab (16:9) y restent entières, avec une bande en haut et en bas.
+   ⚠️ CONTAIN ET NON COVER : en 16:9, les vignettes carrées des sources étaient « cover » en coupait le haut et le bas, un modèle ou une sphère à moitié (signalé).
    Entières, centrées, sur le fond creux. Seule une texture À PLAT (« Mes textures ») remplit la carte :
    c'est une matière qui se répète, la couper ne perd rien. */
 .store-carte img.texture-a-plat{ object-fit:cover; }

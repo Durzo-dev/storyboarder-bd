@@ -477,8 +477,9 @@ describe('retours : rangée du haut, mention de la source', () => {
 
 describe('RÉGRESSION : vignettes entières et nettes (signalé : coupées ou floues)', () => {
   const lire = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
-  test('contain dans la carte 16:9, sauf une texture à plat ; des vignettes de 512 px', () => {
-    assert.match(lire('src/style.css'), /\.store-carte img, \.store-sans-vignette\{ width:100%; aspect-ratio:16\/9; object-fit:contain;/);
+  test('des cartes CARRÉES (demandé), contain sauf une texture à plat ; des vignettes de 512 px', () => {
+    assert.match(lire('src/style.css'), /\.store-carte img, \.store-sans-vignette\{ width:100%; aspect-ratio:1\/1; object-fit:contain;/);
+    assert.match(lire('src/model-thumbnails.js'), /export const HAUTEUR_VIGNETTE = 512;/);
     assert.match(lire('src/style.css'), /\.store-carte img\.texture-a-plat\{ object-fit:cover; \}/);
     for (const f of ['store-polyhaven.js', 'store-textures-polyhaven.js', 'store-textures-ambientcg.js', 'store-sketchfab.js']) {
       assert.match(lire(`electron/bibliotheque/${f}`), /petite: vignette\w*\([^)]*, 512\)/, f);
