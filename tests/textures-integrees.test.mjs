@@ -85,7 +85,9 @@ describe('renommer une texture, la supprimer (clic droit, demandé)', async () =
   test('câblage : menu au clic droit d\'une carte locale, « Supprimer » masqué pour une livrée, poids des grains', () => {
     const lire = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
     assert.match(lire('src/textures-store-ui.js'), /if \(local\) c\.addEventListener\('contextmenu'/);
-    assert.match(lire('src/events.js'), /document\.getElementById\('ctxDeleteTexture'\)\.hidden = !!t\.integree;/);
+    assert.match(lire('src/events.js'), /document\.getElementById\('ctxDeleteTexture'\)\.style\.display = t\.integree \? 'none' : '';/);
+    // RÉGRESSION : l'attribut hidden ne masque pas un bouton de menu contextuel (display:block l'écrase).
+    assert.match(lire('src/style.css'), /\.context-menu button\{[^}]*display:block/);
     assert.match(lire('electron/main.js'), /'textures:integrees'[\s\S]{0,200}path\.join\(RACINE, 'assets', 'textures'\)/);
     assert.match(lire('src/textures-store-ui.js'), /poids: t\.grain \? infosIntegrees\.poids\[t\.grain\]/);
   });

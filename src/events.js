@@ -4826,7 +4826,9 @@ let _textureCtx = null;
 function openTextureContextMenu(e, t){
   _textureCtx = t;
   hideContextMenu();
-  document.getElementById('ctxDeleteTexture').hidden = !!t.integree;
+  // ⚠️ style.display, PAS l'attribut hidden : `.context-menu button{ display:block }` l'emporte sur lui
+  // (signalé : « Supprimer » restait sur les textures livrées). Comme les autres entrées masquées.
+  document.getElementById('ctxDeleteTexture').style.display = t.integree ? 'none' : '';
   placerMenu3D(textureContextMenu, e.clientX, e.clientY);
 }
 document.getElementById('ctxRenameTexture').onclick = () => {
