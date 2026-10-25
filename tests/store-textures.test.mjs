@@ -454,3 +454,11 @@ describe('aperçu 3D : rond ou à plat ; icône du store de modèles', () => {
     assert.match(b, /M12 3 4 7v10l8 4 8-4V7z/);
   });
 });
+
+describe('carte de « Mes textures »', () => {
+  const ui = readFileSync(new URL('../src/textures-store-ui.js', import.meta.url), 'utf8');
+  test('le poids sous la provenance ; « Dossier importé » plutôt que « import »', () => {
+    assert.match(ui, /local && r\.poids \? el\('span', \{ classe: 'store-carte-infos' \}, \[el\('span', \{ texte: poids\(r\.poids\) \}\)\]\)/);
+    assert.match(ui, /import: tr\('Imported folder', 'Dossier importé'\)/);
+  });
+});

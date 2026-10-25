@@ -45,7 +45,7 @@ function el(tag, { texte, classe, attrs } = {}, enfants = []){
 
 const langue = () => tr('en', 'fr');
 const nomDe = (liste, slug) => { const x = (liste || []).find(m => m.slug === slug); return x ? x[langue()] : slug; };
-const nomSource = (s) => ({ polyhaven: 'Poly Haven', ambientcg: 'ambientCG' }[s] || s);
+const nomSource = (s) => ({ polyhaven: 'Poly Haven', ambientcg: 'ambientCG', import: tr('Imported folder', 'Dossier importé') }[s] || s);
 const poids = (o) => (o >= 1048576 ? `${(o / 1048576).toLocaleString(langue(), { maximumFractionDigits: 1 })} ${tr('MB', 'Mo')}`
   : `${Math.max(1, Math.round(o / 1024))} ${tr('KB', 'Ko')}`);
 const cle = (r) => `${r.source}:${r.id}`;
@@ -182,6 +182,8 @@ function carte(r, local){
     el('span', { texte: r.nom, classe: 'store-carte-nom' }),
     el('span', { texte: avancement ? tr('Downloading…', 'Téléchargement…') : (local ? nomSource(r.source) : `${tr('by', 'par')} ${r.auteur.nom}`), classe: 'store-carte-auteur' }),
     // Pas de badges de matières sur la vignette (demandé : trop nombreux, illisibles) ; ils sont sur la fiche.
+    // Le poids sous la provenance, comme sur une carte de « Mes modèles » (demandé).
+    local && r.poids ? el('span', { classe: 'store-carte-infos' }, [el('span', { texte: poids(r.poids) })]) : null,
   ]);
   if (local) urlLocale(r).then(url => { if (url) c.firstChild.replaceWith(vignette(url)); });
   c.onclick = () => ouvrirFiche(r, local);
