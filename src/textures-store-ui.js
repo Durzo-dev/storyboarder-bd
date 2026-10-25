@@ -102,8 +102,11 @@ function rendreOnglets(){
     b.onclick = () => { if (onglet !== id) { onglet = id; fermerFiche(); rendreFiltres(); rendreOnglets(); chercher(); } };
     return b;
   }));
-  $('texturesCredit').textContent = onglet === LOCAL ? ''
-    : tr(`Textures provided by ${nomSource(onglet)} (CC0, free for any use).`, `Textures fournies par ${nomSource(onglet)} (CC0, libres de tout usage).`);
+  // Un LIEN vers le site, comme la mention du store de modèles (demandé) ; sans la licence, déjà dite
+  // sur chaque fiche (demandé : elle alourdissait la phrase).
+  const SITES = { polyhaven: 'https://polyhaven.com/textures', ambientcg: 'https://ambientcg.com' };
+  $('texturesCredit').replaceChildren(...(onglet === LOCAL ? []
+    : [lien(tr(`Textures provided by ${nomSource(onglet)}`, `Textures fournies par ${nomSource(onglet)}`), SITES[onglet])]));
 }
 
 export function rafraichirTextesTextures(){

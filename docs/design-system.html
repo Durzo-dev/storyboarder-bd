@@ -2786,7 +2786,9 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 #batimentPlacerBtn[hidden] { display: none; }
 /* #454a-4b : la « vignette bouton » qui ajoute un modèle, en tête de « Mes modèles » (demandé). */
 .store-carte-ajout{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
-  border:2px dashed var(--bord-actif); background:transparent; color:var(--ink-soft); min-height:180px; }
+  border:2px dashed var(--bord-actif); background:transparent; color:var(--ink-soft); min-height:120px; }
+/* ⚠️ 120 ET NON 180 : la tuile fixait la hauteur de la PREMIÈRE rangée, plus haute que les autres
+   (signalé, dans les deux stores). Une carte ne descend pas sous ~165 px : la tuile suit la rangée. */
 .store-carte-ajout:hover{ border-color:var(--accent); color:var(--accent); }
 .store-carte-ajout .store-ajout-icone{ width:44px; height:44px; display:block; }
 .store-carte-ajout .store-carte-nom{ color:inherit; }

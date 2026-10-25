@@ -462,3 +462,15 @@ describe('carte de « Mes textures »', () => {
     assert.match(ui, /import: tr\('Imported folder', 'Dossier importé'\)/);
   });
 });
+
+describe('retours : rangée du haut, mention de la source', () => {
+  const lire = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
+  test('RÉGRESSION : la tuile d\'import ne hausse plus la première rangée (min-height 120, pas 180)', () => {
+    assert.match(lire('src/style.css'), /color:var\(--ink-soft\); min-height:120px; \}/);
+  });
+  test('la mention de la source est un lien, sans la licence', () => {
+    const ui = lire('src/textures-store-ui.js');
+    assert.match(ui, /lien\(tr\(`Textures provided by \$\{nomSource\(onglet\)\}`, `Textures fournies par \$\{nomSource\(onglet\)\}`\), SITES\[onglet\]\)/);
+    assert.doesNotMatch(ui, /libres de tout usage/);
+  });
+});
