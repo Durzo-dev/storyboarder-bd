@@ -2900,9 +2900,9 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 #texturesModal.textures-mode-choix{ z-index:1050; }
 /* La texture posée aujourd'hui, repérée dans la grille. */
 .store-carte.store-carte-actuelle{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
-/* Dans la fenêtre d'un Tracé : un petit carré, le nom dessous (demandé : moins de place que la couleur). */
-.texture-carre-zone .texture-carre{ display:inline-flex; width:auto; min-width:120px; max-width:100%; align-items:center; }
-.texture-carre-zone .texture-carre-image{ width:96px; }
+/* Dans la fenêtre d'un Tracé (demandé) : toute la largeur comme la couleur, mais peu haute — un
+   bandeau de la texture, qui se répète au lieu d'être étirée —, le nom centré dessous. */
+.texture-carre-zone .texture-carre-image{ aspect-ratio:auto; height:96px; background-size:96px 96px; background-repeat:repeat; background-position:center; }
 
 /* L'image d'une texture de « Mes textures » sur sa fiche : RÉPÉTÉE pour remplir le cadre (signalé :
    floue, entre deux bandes noires), deux tuiles dans la largeur. */
