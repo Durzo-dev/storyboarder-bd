@@ -121,15 +121,14 @@ describe('la couleur du Sol d\'une Case (demandé, comme un Tracé)', async () =
   });
 });
 
-describe('la couleur EN DIRECT, et « Couleur d\'origine » (demandé)', () => {
+describe('la couleur EN DIRECT, et « Origine » (demandé)', () => {
   const lire = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
   test('Sol : appliquée au glissé (une image au plus), une seule étape d\'annulation par geste, un bouton pour revenir', () => {
     const sb = lire('sidebar.js');
     assert.match(sb, /saisie\.oninput = \(\) => \{\s*if \(!gesteEnCours\) \{ _snapshot\(\); gesteEnCours = true; \}/);
     assert.match(sb, /requestAnimationFrame\(\(\) => poser\(saisie\.value\)\)/);
     assert.match(sb, /carreSol\.teinter\(t\)/);
-    assert.match(sb, /origine\.disabled = !sel\.groundColor;/);
-    assert.match(lire('index.html'), /id="sideGroundColor"[^>]*>\s*<button type="button" id="sideGroundColorReset"/);
+    assert.match(sb, /saisie\.couleurOrigine = \(\) => defSol\.swatch;/);   // « Origine » dans le sélecteur
   });
   test('Tracé : aperçu en direct, rendu à l\'ancienne couleur si on ferme sans enregistrer, annulation propre', () => {
     const ev = lire('events.js');
@@ -137,7 +136,9 @@ describe('la couleur EN DIRECT, et « Couleur d\'origine » (demandé)', () => {
     assert.match(ev, /new MutationObserver\(\(\) => \{\s*const o = S\.tracéModalOrigine;/);
     // L'annulation photographie la couleur d'AVANT l'aperçu.
     assert.match(ev, /if \(_o\) \{ if \(_o\.color === undefined\) delete _o\.target\.color; else _o\.target\.color = _o\.color; \}\s*snapshot\(\);/);
-    assert.match(lire('index.html'), /id="tracéColorInput"[^>]*>\s*<button type="button" id="tracéColorReset"/);
+    assert.match(lire('modals.js'), /document\.getElementById\('tracéColorInput'\)\.couleurOrigine = \(\) => _def\.color \|\| null;/);
+    // Le bouton sous la couleur a été retiré (demandé) : la remise se fait dans le sélecteur.
+    assert.doesNotMatch(lire('index.html'), /tracéColorReset|sideGroundColorReset/);
   });
   test('RÉGRESSION : les nuances traversées sont plafonnées (Sol et Tracés), pas une tuile de 4 Mo par pas', () => {
     assert.match(lire('rig3d.js'), /const TEINTES_DU_SOL_MAX = 6;/);

@@ -92,7 +92,7 @@ import {
   styleDuTexteDeBulle,
   POSE_3D, GROUND_Y_DEFAULT_3D, OBJECT_3D_W, OBJECT_3D_H, ANIMAL_TYPES, WALL_PX_PER_UNIT_3D,
   CHILD_DESIGN_SIZE_3D, PERSONA_SKELETON_3D, PERSONA_EDITOR_MODEL_ID,
-  ARCHETYPES_3D, TRACÉ_DEFAULTS,
+  ARCHETYPES_3D,
 } from './constants.js';
 import { champsApparenceBulle } from './bubble-style.js';
 import { FORME_DEFAUT, formeDeLaBulle } from './bubble-shape.js';
@@ -115,6 +115,7 @@ import { BUBBLE_FONT_PRELOAD_LIST, HELP_MANUAL_EN, HELP_MANUAL_FR } from './help
 import { grainsAPrecharger3D } from './bubble-texture.js';
 import { prechargerGrains3D } from './bubble-grain.js';
 import { chargerTexturesUtilisateur } from './textures-utilisateur.js';
+import { installerSelecteurCouleur } from './selecteur-couleur.js';
 import {
   clamp, wrapAngle, getBBox, tracéBBox, getElementDepth, repairElementBase3D,
   personaEditorPoseList3D, poseJointsByKey3D, nameOfPose3D,
@@ -7717,12 +7718,11 @@ document.getElementById('tracéModalCancel').addEventListener('click', () => {
 
 // ── La couleur d'un Tracé, EN DIRECT (demandé) ─────────────────────────────────────────────────
 // Au glissé du sélecteur, la Trace et le carré de texture changent, une fois par image au plus.
-// « Couleur d'origine » revient à celle par défaut (la texture au naturel). Fermer sans enregistrer
+// « Origine » (dans le sélecteur de couleur) revient à celle par défaut. Fermer sans enregistrer
 // (Annuler, croix, Échap, clic à côté) rend à la Trace sa couleur d'avant : un observateur le fait
 // pour tous ces chemins à la fois.
 {
   const saisie = document.getElementById('tracéColorInput');
-  const origine = document.getElementById('tracéColorReset');
   let image = 0;
   const apercu = () => {
     const o = S.tracéModalOrigine;
@@ -7730,19 +7730,11 @@ document.getElementById('tracéModalCancel').addEventListener('click', () => {
     const type = S.tracéModalTarget.tracéType;
     const t = teinteDuCarreDeTracé(type, saisie.value);
     o.target.color = saisie.value;
-    origine.disabled = !t;
     if (S.tracéModalCarre) S.tracéModalCarre.teinter(t);
     drawCurrentPage();
   };
   saisie.addEventListener('input', () => { cancelAnimationFrame(image); image = requestAnimationFrame(apercu); });
   saisie.addEventListener('change', () => { cancelAnimationFrame(image); apercu(); });
-  origine.addEventListener('click', () => {
-    const type = S.tracéModalTarget && S.tracéModalTarget.tracéType;
-    const defaut = TRACÉ_DEFAULTS[type] && TRACÉ_DEFAULTS[type].color;
-    if (!defaut) return;
-    saisie.value = defaut;
-    apercu();
-  });
   if (globalThis.MutationObserver) new MutationObserver(() => {
     const o = S.tracéModalOrigine;
     if (!o || !document.getElementById('tracéModal').classList.contains('hidden')) return;
@@ -9268,6 +9260,8 @@ if (window.document) {
   const relireTextures = () => chargerTexturesUtilisateur(window.storyboarderAPI, rafraichirTextures);
   relireTextures();
   window.addEventListener('textures-utilisateur', relireTextures);
+  // Le sélecteur de couleur de l'application, à la place de celui du système, pour tous les champs.
+  installerSelecteurCouleur();
 }
 
 // ── Collapsible sections of the right-hand menu ────────────────────────────────────────────────────

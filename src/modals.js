@@ -1761,8 +1761,8 @@ export function openTracéModal(obj){
   }
   S.tracéModalCarre = null;
   buildTracéTextureGrid(obj.tracéType, obj.traceTexture || null);
-  // « Couleur d'origine » : utile seulement si une autre couleur est posée (aussi pour la barrière, sans texture).
-  document.getElementById('tracéColorReset').disabled = !teinteDuCarreDeTracé(obj.tracéType, document.getElementById('tracéColorInput').value);
+  // « Origine » dans le sélecteur de couleur : la couleur par défaut du type, qui montre la texture au naturel.
+  document.getElementById('tracéColorInput').couleurOrigine = () => _def.color || null;
   document.getElementById('tracéModal').classList.remove('hidden');
 }
 

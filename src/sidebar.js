@@ -1356,15 +1356,14 @@ function updateSidePanelImpl(){
       {
         const champ = document.getElementById('sideGroundColorField');
         const saisie = document.getElementById('sideGroundColor');
-        const origine = document.getElementById('sideGroundColorReset');
         champ.style.display = defSol.eau ? 'none' : '';
         if (document.activeElement !== saisie) saisie.value = teinteDuSol3D(defSol, sel.groundColor) || defSol.swatch;
-        origine.disabled = !sel.groundColor;
+        // « Origine » dans le sélecteur de couleur (selecteur-couleur.js) : la couleur naturelle.
+        saisie.couleurOrigine = () => defSol.swatch;
         let gesteEnCours = false, image = 0;
         const poser = (valeur) => {
           const t = teinteDuSol3D(defSol, valeur);
           if (t) sel.groundColor = t; else delete sel.groundColor;
-          origine.disabled = !sel.groundColor;
           carreSol.teinter(t);
           panelSceneCache3D.delete(sel.id);
           drawCurrentPage();
@@ -1379,13 +1378,6 @@ function updateSidePanelImpl(){
           gesteEnCours = false;
           cancelAnimationFrame(image);
           poser(saisie.value);
-        };
-        // Revenir à la couleur de la texture (demandé).
-        origine.onclick = () => {
-          if (!sel.groundColor) return;
-          _snapshot();
-          saisie.value = defSol.swatch;
-          poser(null);
         };
       }
       sideGroundSection.style.display = 'block';
