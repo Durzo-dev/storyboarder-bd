@@ -18,6 +18,7 @@ import { texturesIntegrees, valeurChoisie, textureDeLaValeur, SOURCE as INTEGREE
 import { appliquerTeinteAuMotif3D, rvbDeCouleur3D, natureDuNom3D } from './bubble-texture.js';
 import { GROUND_PLANE_SIZE_3D } from './constants.js';
 import { enregistrerFermeture } from './modal-stack.js';
+import { avalerLaSuiteDuGeste } from './avaler-geste.js';
 import { icone } from './icones.js';
 import { ouvrirApercu3D } from './store-apercu-3d.js';
 import { menuFlottant } from './store-ui.js';
@@ -1008,7 +1009,14 @@ export function cablerTextures(rappels = {}){
   if (!modale || !api()) return;
   $('texturesOuvrirBtn').onclick = () => { if (modale.classList.contains('hidden')) ouvrirTextures(); else fermerTextures(); };
   $('texturesFermer').onclick = fermerTextures;
-  texturesModal.addEventListener('mousedown', (e) => { if (e.target === texturesModal) fermerTextures(); });
+  // Un clic à côté ferme le store, et rien d'autre (signalé : ouvert depuis le menu d'une Case, il
+  // fermait aussi ce menu) : la suite du geste ne tombe pas sur la Planche.
+  texturesModal.addEventListener('mousedown', (e) => {
+    if (e.target !== texturesModal) return;
+    e.stopPropagation();
+    avalerLaSuiteDuGeste();
+    fermerTextures();
+  });
   let minuterie = null;
   $('texturesTexte').addEventListener('input', () => { clearTimeout(minuterie); minuterie = setTimeout(() => chercher(), 300); });
   for (const id of ['texturesMatiere', 'texturesUsage', 'texturesTri']) $(id).addEventListener('change', () => { fermerFiche(); chercher(); });

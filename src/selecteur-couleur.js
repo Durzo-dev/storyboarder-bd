@@ -25,6 +25,7 @@
 import { placerMenuFlottant3D } from './ui-scale.js';
 import { tr } from './state.js';
 import { icone } from './icones.js';
+import { avalerLaSuiteDuGeste } from './avaler-geste.js';
 
 // ── Les conversions, PURES ──────────────────────────────────────────────────────────────────────
 
@@ -172,7 +173,14 @@ export function ouvrirSelecteurCouleur(champ){
   hex.addEventListener('input', () => { const n = hexNormalise(hex.value); if (n) poser(hexVersTsv(n)); });
   hex.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); fermer(false); } });
 
-  const surClicAilleurs = (e) => { if (!panneau.contains(e.target) && e.target !== champ) fermer(false); };
+  // Un clic à côté valide et ferme, SANS aller plus loin (signalé : il fermait le menu de la Case).
+  const surClicAilleurs = (e) => {
+    if (panneau.contains(e.target) || e.target === champ) return;
+    e.stopPropagation();
+    e.preventDefault();
+    avalerLaSuiteDuGeste();
+    fermer(false);
+  };
   const surTouche = (e) => {
     if (e.key !== 'Escape') return;
     // Échap ferme le sélecteur, pas la fenêtre en dessous (modal-stack l'écouterait aussi).
@@ -182,7 +190,7 @@ export function ouvrirSelecteurCouleur(champ){
   function fermer(retour){
     if (!ouvert || ouvert.panneau !== panneau) return;
     ouvert = null;
-    document.removeEventListener('pointerdown', surClicAilleurs, true);
+    window.removeEventListener('pointerdown', surClicAilleurs, true);
     document.removeEventListener('keydown', surTouche, true);
     // ⚠️ RETIRÉ APRÈS le clic qui le ferme, pas pendant (signalé : « Annuler » fermait le menu). Retiré
     // tout de suite, le bouton cliqué n'était plus dans la page quand le clic remontait : les gestes de
@@ -210,7 +218,7 @@ export function ouvrirSelecteurCouleur(champ){
     fenetre: { w: window.innerWidth, h: window.innerHeight }, echelle: echelleUI() });
   panneau.style.left = `${left}px`;
   panneau.style.top = `${top}px`;
-  document.addEventListener('pointerdown', surClicAilleurs, true);
+  window.addEventListener('pointerdown', surClicAilleurs, true);
   document.addEventListener('keydown', surTouche, true);
   ouvert = { champ, initiale, panneau, fermer };
   hex.focus();

@@ -63,3 +63,30 @@ describe('le sélecteur de couleur (demandé : placé à côté, aux couleurs de
     assert.match(src, /if \(!touche\) return;/);
   });
 });
+
+describe('le clic qui ferme une fenêtre flottante s\'arrête là (signalé : il fermait le menu de la Case)', () => {
+  test('le relâchement et le clic qui suivent sont arrêtés, une fois, puis tout redevient normal', async () => {
+    const ecouteurs = new Map();
+    const avant = globalThis.window;
+    globalThis.window = {
+      addEventListener: (t, f) => ecouteurs.set(t, f),
+      removeEventListener: (t, f) => { if (ecouteurs.get(t) === f) ecouteurs.delete(t); },
+    };
+    try {
+      const { avalerLaSuiteDuGeste } = await import('../src/avaler-geste.js');
+      avalerLaSuiteDuGeste();
+      let arrete = 0;
+      const evt = (type) => ({ type, stopPropagation: () => { arrete++; }, preventDefault: () => {} });
+      ecouteurs.get('mouseup')(evt('mouseup'));
+      ecouteurs.get('click')(evt('click'));
+      assert.equal(arrete, 2);
+      assert.equal(ecouteurs.size, 0, 'retiré après le clic : le clic suivant passe');
+    } finally { globalThis.window = avant; }
+  });
+
+  test('câblage : le sélecteur et le store l\'appellent en se fermant sur un clic à côté', () => {
+    const lire = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
+    assert.match(lire('selecteur-couleur.js'), /avalerLaSuiteDuGeste\(\);\s*fermer\(false\);/);
+    assert.match(lire('textures-store-ui.js'), /avalerLaSuiteDuGeste\(\);\s*fermerTextures\(\);/);
+  });
+});
