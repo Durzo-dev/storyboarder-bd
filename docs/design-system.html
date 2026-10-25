@@ -1599,6 +1599,9 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
   transition:opacity .12s ease, border-color .12s ease;
 }
 .preview-corner-btn:hover{ opacity:1; border-color:var(--accent); }
+/* Le bouton de forme de l'aperçu 3D d'une texture (rond / à plat) : en HAUT à droite (demandé). */
+.preview-corner-btn.texture-forme-btn{ top:8px; right:8px; bottom:auto; }
+.texture-forme-btn svg.icone{ width:18px; height:18px; }
 
 /* Version de l'application, affichée à côté de son nom dans l'en-tête (cf. src/version.js).
    Volontairement discrète : c'est une information de dépannage, pas un élément d'interface. */
@@ -3112,10 +3115,8 @@ html[lang="fr"] .ds-en, html[lang="en"] .ds-fr{ display:none; }
   <button class="help-round-btn" id="storeOuvrirBtn" type="button" title="Bibliothèque de modèles (B)">
     <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       
-      <rect x="3" y="3" width="7" height="7" rx="1"/>
-      <rect x="14" y="3" width="7" height="7" rx="1"/>
-      <rect x="3" y="14" width="7" height="7" rx="1"/>
-      <rect x="14" y="14" width="7" height="7" rx="1"/>
+      <path d="M12 3 4 7v10l8 4 8-4V7z"/>
+      <path d="m4 7 8 4 8-4M12 11v10"/>
     </svg>
   </button>
   

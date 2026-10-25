@@ -438,3 +438,19 @@ describe('le grain et le raccord ne se disent que s\'ils posent problème (signa
     assert.match(ui, /ses bords se voient en lignes/);
   });
 });
+
+describe('aperçu 3D : rond ou à plat ; icône du store de modèles', () => {
+  const lire = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
+  test('un bouton en haut à droite de l\'aperçu bascule rond / à plat, avec l\'icône de la forme à venir', () => {
+    const ui = lire('src/textures-store-ui.js');
+    assert.match(ui, /new T\.PlaneGeometry\(2, 2, 1, 1\)/);
+    assert.match(ui, /bascule\.innerHTML = ICONE_FORME\[autre\];/);
+    assert.match(lire('src/style.css'), /\.preview-corner-btn\.texture-forme-btn\{ top:8px; right:8px; bottom:auto; \}/);
+  });
+  test('RÉGRESSION : le store de modèles n\'a plus la grille de vignettes (deux stores : elle ne disait plus rien)', () => {
+    const html = lire('src/index.html');
+    const b = html.slice(html.indexOf('id="storeOuvrirBtn"'), html.indexOf('</button>', html.indexOf('id="storeOuvrirBtn"')));
+    assert.doesNotMatch(b, /<rect x="3" y="3" width="7" height="7"/);
+    assert.match(b, /M12 3 4 7v10l8 4 8-4V7z/);
+  });
+});

@@ -283,7 +283,7 @@ const tailleReelle = (d) => (d ? `${d[0].toLocaleString(langue())} × ${d[1].toL
  * comme une Case. Les cartes arrivent en mémoire (textures:cartes) : celles du disque pour une
  * texture de « Mes textures », celles de la source en 1k sinon (rien n'est rangé).
  */
-async function sphereDeLaMatiere(cartes){
+async function sphereDeLaMatiere(cartes, forme = 'rond'){
   const T = globalThis.THREE;
   const charger = (octets, type) => new Promise((resolve) => {
     if (!octets) { resolve(null); return; }
@@ -293,7 +293,10 @@ async function sphereDeLaMatiere(cartes){
   });
   const [map, normalMap, roughnessMap, aoMap] = await Promise.all(['couleur', 'normal', 'rugosite', 'ao']
     .map(c => charger(cartes[c] && cartes[c].data, cartes[c] && cartes[c].type)));
-  const geo = new T.SphereGeometry(1, 96, 64);
+  // « Rond » : une sphère ; « à plat » : un pan carré de deux tuiles de côté, où la répétition et
+  // ses éventuelles coutures se voient comme sur un mur (demandé).
+  if (forme === 'plat') [map, normalMap, roughnessMap, aoMap].forEach(t => t && t.repeat.set(2, 2));
+  const geo = forme === 'plat' ? new T.PlaneGeometry(2, 2, 1, 1) : new T.SphereGeometry(1, 96, 64);
   geo.setAttribute('uv2', geo.getAttribute('uv'));   // l'AO lit le second jeu d'UV (three r128)
   const mat = new T.MeshStandardMaterial({ map, normalMap, roughnessMap, aoMap, roughness: roughnessMap ? 1 : 0.8, metalness: 0 });
   return new T.Mesh(geo, mat);
@@ -313,11 +316,23 @@ function boutonApercu(r, visuel, image){
     const rep = await api().texturesCartes(r.source, r.id).catch(() => ({ erreur: 'reseau' }));
     if (moi !== apercuGeneration) return;
     if (!rep || rep.erreur || !rep.cartes || !rep.cartes.couleur) { etiquette.textContent = erreurLisible(rep && rep.erreur); etiquette.classList.add('erreur'); return; }
-    const objet = await sphereDeLaMatiere(rep.cartes);
-    if (moi !== apercuGeneration) return;
-    visuel.replaceChildren();
-    try { apercu = await ouvrirApercu3D(visuel, null, { objet }); } catch (e) { etiquette.textContent = erreurLisible(); visuel.replaceChildren(etiquette); }
-    if (moi !== apercuGeneration && apercu) { apercu.fermer(); apercu = null; }
+    // La forme : RONDE d'abord ; le bouton en haut à droite de l'aperçu bascule à plat et retour
+    // (demandé), en montrant l'icône de la forme où l'on PASSERA au clic.
+    const montrer = async (forme) => {
+      const objet = await sphereDeLaMatiere(rep.cartes, forme);
+      if (moi !== apercuGeneration) return;
+      if (apercu) { apercu.fermer(); apercu = null; }
+      visuel.replaceChildren();
+      try { apercu = await ouvrirApercu3D(visuel, null, { objet }); } catch (e) { etiquette.textContent = erreurLisible(); visuel.replaceChildren(etiquette); return; }
+      if (moi !== apercuGeneration) { apercu.fermer(); apercu = null; return; }
+      const autre = forme === 'rond' ? 'plat' : 'rond';
+      const nom = autre === 'plat' ? tr('Show flat', 'Voir à plat') : tr('Show on a sphere', 'Voir en rond');
+      const bascule = el('button', { classe: 'preview-corner-btn texture-forme-btn', attrs: { type: 'button', title: nom, 'aria-label': nom } });
+      bascule.innerHTML = ICONE_FORME[autre];
+      bascule.onclick = () => montrer(autre);
+      visuel.appendChild(bascule);
+    };
+    await montrer('rond');
   };
   return b;
 }
@@ -471,6 +486,12 @@ function blocLecture(r){
     el('div', { classe: 'store-classement-ligne' }, r.usages.map(u => el('span', { texte: nomDe(infos.usages, u), classe: 'store-chip texture-chip-usage' }))),
   ]);
 }
+
+/** Les icônes du bouton de forme : celle de la forme où l'on passera. */
+const ICONE_FORME = {
+  plat: '<svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16 9 6h12l-6 10z"/><path d="M6 11h12M12 6l-3 10"/></svg>',
+  rond: '<svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12c3 3 15 3 18 0M12 3c-3 3-3 15 0 18"/></svg>',
+};
 
 /** Le rendu d'une texture, en mots d'usage : complet, ou ce qui lui manque. */
 function renduLisible(cartes){

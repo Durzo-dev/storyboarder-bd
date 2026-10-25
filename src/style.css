@@ -1595,6 +1595,9 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
   transition:opacity .12s ease, border-color .12s ease;
 }
 .preview-corner-btn:hover{ opacity:1; border-color:var(--accent); }
+/* Le bouton de forme de l'aperçu 3D d'une texture (rond / à plat) : en HAUT à droite (demandé). */
+.preview-corner-btn.texture-forme-btn{ top:8px; right:8px; bottom:auto; }
+.texture-forme-btn svg.icone{ width:18px; height:18px; }
 
 /* Version de l'application, affichée à côté de son nom dans l'en-tête (cf. src/version.js).
    Volontairement discrète : c'est une information de dépannage, pas un élément d'interface. */
