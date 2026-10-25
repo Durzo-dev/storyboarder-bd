@@ -120,3 +120,27 @@ describe('la couleur du Sol d\'une Case (demandé, comme un Tracé)', async () =
     assert.match(lire('sidebar.js'), /delete sel\.groundColor;/);   // une autre texture repart du naturel
   });
 });
+
+describe('la couleur EN DIRECT, et « Couleur d\'origine » (demandé)', () => {
+  const lire = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
+  test('Sol : appliquée au glissé (une image au plus), une seule étape d\'annulation par geste, un bouton pour revenir', () => {
+    const sb = lire('sidebar.js');
+    assert.match(sb, /saisie\.oninput = \(\) => \{\s*if \(!gesteEnCours\) \{ _snapshot\(\); gesteEnCours = true; \}/);
+    assert.match(sb, /requestAnimationFrame\(\(\) => poser\(saisie\.value\)\)/);
+    assert.match(sb, /carreSol\.teinter\(t\)/);
+    assert.match(sb, /origine\.disabled = !sel\.groundColor;/);
+    assert.match(lire('index.html'), /id="sideGroundColor"[^>]*>\s*<button type="button" id="sideGroundColorReset"/);
+  });
+  test('Tracé : aperçu en direct, rendu à l\'ancienne couleur si on ferme sans enregistrer, annulation propre', () => {
+    const ev = lire('events.js');
+    assert.match(ev, /saisie\.addEventListener\('input', \(\) => \{ cancelAnimationFrame\(image\); image = requestAnimationFrame\(apercu\); \}\)/);
+    assert.match(ev, /new MutationObserver\(\(\) => \{\s*const o = S\.tracéModalOrigine;/);
+    // L'annulation photographie la couleur d'AVANT l'aperçu.
+    assert.match(ev, /if \(_o\) \{ if \(_o\.color === undefined\) delete _o\.target\.color; else _o\.target\.color = _o\.color; \}\s*snapshot\(\);/);
+    assert.match(lire('index.html'), /id="tracéColorInput"[^>]*>\s*<button type="button" id="tracéColorReset"/);
+  });
+  test('RÉGRESSION : les nuances traversées sont plafonnées (Sol et Tracés), pas une tuile de 4 Mo par pas', () => {
+    assert.match(lire('rig3d.js'), /const TEINTES_DU_SOL_MAX = 6;/);
+    assert.match(lire('trace-textures-3d.js'), /const TEXTURES_DE_TRACE_MAX = 24;/);
+  });
+});

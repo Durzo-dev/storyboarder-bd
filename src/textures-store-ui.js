@@ -920,20 +920,65 @@ export async function choisirTexture({ usage, actuelle = null, appliquer, titre 
  * son nom centré dessous ; un clic ouvre le store pour en choisir une autre.
  * `{ valeur, usage, titre, appliquer(valeur) }`. Rend le bouton ; l'image arrive ensuite.
  */
-export function carreDeTexture({ valeur, usage, titre, appliquer }){
+export function carreDeTexture({ valeur, usage, titre, appliquer, teinte = null }){
   const image = el('span', { classe: 'texture-carre-image' });
   const nom = el('span', { texte: '…' });
   const b = el('button', { classe: 'texture-carre', attrs: { type: 'button', title: tr('Choose another texture', 'Choisir une autre texture') } },
     [image, el('span', { classe: 'texture-carre-nom' }, [nom])]);   // le nom seul, centré (demandé : plus de « Changer »)
-  textureActuelle(valeur, usage).then(async (t) => {
+  let texture = null, voulue = teinte, demande = 0;
+  // L'image suit la COULEUR choisie, comme le rendu (demandé : en direct au glissé du sélecteur).
+  // Une demande plus récente l'emporte sur une plus lente.
+  const peindre = async () => {
+    if (!texture) return;
+    const moi = ++demande;
+    const url = voulue ? await urlTeintee(texture, voulue) : await urlLocale(texture);
+    if (moi === demande && url) image.style.backgroundImage = `url("${url}")`;
+  };
+  textureActuelle(valeur, usage).then((t) => {
     if (!t) { nom.textContent = tr('Unknown texture', 'Texture introuvable'); return; }
     nom.textContent = t.nom;
-    const url = await t.url;
-    if (url) image.style.backgroundImage = `url("${url}")`;
+    texture = t.texture;
+    peindre();
   });
+  /** Repeint l'image d'une autre couleur (null : la naturelle). */
+  b.teinter = (t) => { voulue = t || null; peindre(); };
   // mousedown plutôt que click, comme les boutons du Sol : le menu de droite se refait au mouseup.
   b.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); choisirTexture({ usage, actuelle: valeur, appliquer, titre }); });
   return b;
+}
+
+/** Les grains des textures de « Mes textures », chargés une fois par l'IPC (pour les teindre). */
+const grainsLocaux = new Map();
+function grainLocal(t){
+  if (!grainsLocaux.has(t.cle)) {
+    grainsLocaux.set(t.cle, api().texturesImage(t.cle, 'grain').then(r => new Promise((ok) => {
+      if (!r || !r.ok) { ok(null); return; }
+      const img = new Image();
+      img.onload = () => ok(img);
+      img.onerror = () => ok(null);
+      img.src = URL.createObjectURL(new Blob([r.data], { type: r.type }));
+    })).catch(() => null));
+  }
+  return grainsLocaux.get(t.cle);
+}
+
+/**
+ * L'image d'une texture TEINTE d'une couleur, comme le rendu la teint : son grain, habillé de la
+ * couleur selon sa nature (appliquerTeinteAuMotif3D). 256 px : c'est une vignette.
+ */
+async function urlTeintee(t, teinte){
+  if (t.integree) return urlIntegree({ ...t, teinte });
+  const img = t.grain ? await grainLocal(t) : null;
+  if (!img) return urlLocale(t);
+  const toile = document.createElement('canvas');
+  toile.width = toile.height = 256;
+  const c = toile.getContext('2d', { willReadFrequently: true });
+  c.drawImage(img, 0, 0, 256, 256);
+  const d = c.getImageData(0, 0, 256, 256);
+  const rvb = rvbDeCouleur3D(teinte);
+  if (rvb) appliquerTeinteAuMotif3D(d.data, rvb, t.nature === 'couleur' ? 'couleur' : 'gris');
+  c.putImageData(d, 0, 0);
+  return toile.toDataURL('image/jpeg', 0.9);
 }
 
 /**
@@ -951,7 +996,7 @@ export async function textureActuelle(valeur, usage){
   // Le nom donné par l'utilisateur à une texture livrée.
   const t = t0 && t0.integree ? integrees.find(x => x.cle === t0.cle) || t0 : t0;
   if (!t) return null;
-  return { nom: nomTexture(t), url: urlLocale(t) };
+  return { nom: nomTexture(t), url: urlLocale(t), texture: t };
 }
 
 let _rappels = {};

@@ -514,6 +514,8 @@ export const I18N_TRAILING = [
   // #461 : trouvés en basculant le système de design en anglais.
   ['#sideGroundSection > h2', 'Ground', 'Sol'],
   ['#sideGroundColorLabel', 'Colour', 'Couleur'],
+  ['#sideGroundColorReset', 'Original colour', 'Couleur d\'origine'],
+  ['#tracéColorReset', 'Original colour', 'Couleur d\'origine'],
   ['#sideBubbleBorderSection > h2', 'Border', 'Bordure'],
   ['label[for="sideBubbleBgColorInput"]', 'Fill color', 'Couleur du fond'],
   ['label[for="sideBubbleBorderWidthSelect"]', 'Border thickness', 'Épaisseur de la bordure'],

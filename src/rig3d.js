@@ -872,6 +872,23 @@ function tuileDuGrainDuSol3D(def) {
   return tuile;
 }
 
+/**
+ * ⚠️ LES SOLS TEINTÉS SONT PLAFONNÉS (demandé : la couleur s'applique EN DIRECT, au glissé du
+ * sélecteur). Chaque nuance traversée ferait une tuile de 1024² (4 Mo, autant en mémoire graphique)
+ * qui ne servirait plus : on n'en garde que les plus récentes, les autres sont libérées. Une Case qui
+ * en employait une la refait à son prochain rendu.
+ */
+const TEINTES_DU_SOL_MAX = 6;
+function evincerTeintesDuSol3D(nouvelle){
+  const teintees = Object.keys(_groundTexCache).filter(k => k.includes('|') && k !== nouvelle);
+  while (teintees.length >= TEINTES_DU_SOL_MAX) {
+    const k = teintees.shift();
+    const e = _groundTexCache[k];
+    if (e && e.map && e.map.dispose) e.map.dispose();
+    delete _groundTexCache[k];
+  }
+}
+
 export function buildGroundTexture(type, teinte = null) {
   const trouve = GROUND_TYPE_DEFS.find(d => d.id === type);
   // La couleur choisie pour le Sol (teinteDuSol3D) remplace la teinte naturelle du grain : c'est elle
@@ -902,6 +919,7 @@ export function buildGroundTexture(type, teinte = null) {
       carte.repeat.set(def.repeat || 60, def.repeat || 60);
       carte.needsUpdate = true;
       const entree = { map: carte, enAttenteDeGrain: false, moyenne: tuile.moyenne || null };
+      if (cleCache !== type) evincerTeintesDuSol3D(cleCache);
       _groundTexCache[cleCache] = entree;
       return entree;
     }

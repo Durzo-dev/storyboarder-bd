@@ -1333,8 +1333,10 @@ function updateSidePanelImpl(){
     {
       // #446d (demandé) : un grand carré avec la texture du Sol, plutôt que la liste des matières ;
       // un clic ouvre le store de textures, filtré sur le Sol, où une carte l'applique.
-      sideGroundGrid.replaceChildren(carreDeTexture({
+      const defSol = GROUND_TYPE_DEFS.find(d => d.id === (sel.groundType || 'herbe')) || GROUND_TYPE_DEFS[0];
+      const carreSol = carreDeTexture({
         valeur: sel.groundType || 'herbe', usage: 'sol', titre: tr('Choose the Ground', 'Choisir le Sol'),
+        teinte: teinteDuSol3D(defSol, sel.groundColor),
         appliquer: (id) => {
           _snapshot();
           sel.groundType = id;
@@ -1345,21 +1347,45 @@ function updateSidePanelImpl(){
           updateSidePanel();
           drawCurrentPage();
         },
-      }));
+      });
+      sideGroundGrid.replaceChildren(carreSol);
       // La couleur du Sol, sous la texture : la naturelle de la matière tant qu'on n'en a pas choisi.
-      // L'Eau a son propre rendu, sans couleur à choisir.
+      // L'Eau a son propre rendu, sans couleur à choisir. Elle s'applique EN DIRECT (demandé) : à la
+      // Case et au carré, une fois par image au plus pendant le glissé ; une seule étape d'annulation
+      // par geste (le premier mouvement la prend).
       {
-        const def = GROUND_TYPE_DEFS.find(d => d.id === (sel.groundType || 'herbe')) || GROUND_TYPE_DEFS[0];
         const champ = document.getElementById('sideGroundColorField');
         const saisie = document.getElementById('sideGroundColor');
-        champ.style.display = def.eau ? 'none' : '';
-        if (document.activeElement !== saisie) saisie.value = teinteDuSol3D(def, sel.groundColor) || def.swatch;
-        saisie.onchange = () => {
-          _snapshot();
-          const t = teinteDuSol3D(def, saisie.value);
+        const origine = document.getElementById('sideGroundColorReset');
+        champ.style.display = defSol.eau ? 'none' : '';
+        if (document.activeElement !== saisie) saisie.value = teinteDuSol3D(defSol, sel.groundColor) || defSol.swatch;
+        origine.disabled = !sel.groundColor;
+        let gesteEnCours = false, image = 0;
+        const poser = (valeur) => {
+          const t = teinteDuSol3D(defSol, valeur);
           if (t) sel.groundColor = t; else delete sel.groundColor;
+          origine.disabled = !sel.groundColor;
+          carreSol.teinter(t);
           panelSceneCache3D.delete(sel.id);
           drawCurrentPage();
+        };
+        saisie.oninput = () => {
+          if (!gesteEnCours) { _snapshot(); gesteEnCours = true; }
+          cancelAnimationFrame(image);
+          image = requestAnimationFrame(() => poser(saisie.value));
+        };
+        saisie.onchange = () => {
+          if (!gesteEnCours) _snapshot();
+          gesteEnCours = false;
+          cancelAnimationFrame(image);
+          poser(saisie.value);
+        };
+        // Revenir à la couleur de la texture (demandé).
+        origine.onclick = () => {
+          if (!sel.groundColor) return;
+          _snapshot();
+          saisie.value = defSol.swatch;
+          poser(null);
         };
       }
       sideGroundSection.style.display = 'block';

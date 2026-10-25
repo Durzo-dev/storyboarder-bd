@@ -92,7 +92,7 @@ import {
   styleDuTexteDeBulle,
   POSE_3D, GROUND_Y_DEFAULT_3D, OBJECT_3D_W, OBJECT_3D_H, ANIMAL_TYPES, WALL_PX_PER_UNIT_3D,
   CHILD_DESIGN_SIZE_3D, PERSONA_SKELETON_3D, PERSONA_EDITOR_MODEL_ID,
-  ARCHETYPES_3D,
+  ARCHETYPES_3D, TRACÉ_DEFAULTS,
 } from './constants.js';
 import { champsApparenceBulle } from './bubble-style.js';
 import { FORME_DEFAUT, formeDeLaBulle } from './bubble-shape.js';
@@ -198,7 +198,7 @@ import {
   sliderDegToRotY, openPersonaModal, closeDescModal, refreshPersonaPreview,
   openObjectModal,
   closeObjectModal, refreshObjectPreview, typeGouvernantLaFiche3D,
-  updateWallFaceFieldForSelectedWall, openRoomModal, openBuildingModal, openTracéModal, openTerrainModal,
+  updateWallFaceFieldForSelectedWall, openRoomModal, openBuildingModal, openTracéModal, openTerrainModal, teinteDuCarreDeTracé,
   setModalsCallbacks, applyRoomScaleFixed, moveJunctionToWorld,
   recomputeBuildWallBox2D, storeRoomGeometry, ecrireChoixEgares,
 
@@ -7715,8 +7715,50 @@ document.getElementById('tracéModalCancel').addEventListener('click', () => {
   S.tracéModalTarget = null;
 });
 
+// ── La couleur d'un Tracé, EN DIRECT (demandé) ─────────────────────────────────────────────────
+// Au glissé du sélecteur, la Trace et le carré de texture changent, une fois par image au plus.
+// « Couleur d'origine » revient à celle par défaut (la texture au naturel). Fermer sans enregistrer
+// (Annuler, croix, Échap, clic à côté) rend à la Trace sa couleur d'avant : un observateur le fait
+// pour tous ces chemins à la fois.
+{
+  const saisie = document.getElementById('tracéColorInput');
+  const origine = document.getElementById('tracéColorReset');
+  let image = 0;
+  const apercu = () => {
+    const o = S.tracéModalOrigine;
+    if (!o || !S.tracéModalTarget) return;
+    const type = S.tracéModalTarget.tracéType;
+    const t = teinteDuCarreDeTracé(type, saisie.value);
+    o.target.color = saisie.value;
+    origine.disabled = !t;
+    if (S.tracéModalCarre) S.tracéModalCarre.teinter(t);
+    drawCurrentPage();
+  };
+  saisie.addEventListener('input', () => { cancelAnimationFrame(image); image = requestAnimationFrame(apercu); });
+  saisie.addEventListener('change', () => { cancelAnimationFrame(image); apercu(); });
+  origine.addEventListener('click', () => {
+    const type = S.tracéModalTarget && S.tracéModalTarget.tracéType;
+    const defaut = TRACÉ_DEFAULTS[type] && TRACÉ_DEFAULTS[type].color;
+    if (!defaut) return;
+    saisie.value = defaut;
+    apercu();
+  });
+  if (globalThis.MutationObserver) new MutationObserver(() => {
+    const o = S.tracéModalOrigine;
+    if (!o || !document.getElementById('tracéModal').classList.contains('hidden')) return;
+    S.tracéModalOrigine = null;
+    if (o.color === undefined) delete o.target.color; else o.target.color = o.color;
+    drawCurrentPage();
+  }).observe(document.getElementById('tracéModal'), { attributes: true, attributeFilter: ['class'] });
+}
+
 document.getElementById('tracéModalSave').addEventListener('click', () => {
   if (!S.tracéModalTarget) return;
+  // L'annulation doit retrouver la couleur d'AVANT l'aperçu en direct : on la remet le temps de la
+  // photographier, puis la saisie l'écrase ci-dessous. Et plus rien à rendre à la fermeture.
+  const _o = S.tracéModalOrigine;
+  S.tracéModalOrigine = null;
+  if (_o) { if (_o.color === undefined) delete _o.target.color; else _o.target.color = _o.color; }
   snapshot();
   S.tracéModalTarget.name  = document.getElementById('tracéNameInput').value.trim() || null;
   S.tracéModalTarget.color = document.getElementById('tracéColorInput').value;

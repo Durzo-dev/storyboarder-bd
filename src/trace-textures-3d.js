@@ -124,8 +124,25 @@ export function textureDeTrace3D(type, couleur, texture = null){
   carte.wrapS = carte.wrapT = THREE.RepeatWrapping;
   carte.anisotropy = 4;
   carte.needsUpdate = true;
+  evincerTexturesDeTrace3D();
   _textures.set(cle, carte);
   return carte;
+}
+
+/**
+ * ⚠️ PLAFONNÉES : la couleur d'un Tracé s'applique EN DIRECT au glissé du sélecteur (demandé), et
+ * chaque nuance traversée ferait une tuile (4 Mo) et un matériau. On garde les plus récentes ; une
+ * texture évincée part avec ses matériaux, et une Trace qui l'employait la refait au rendu suivant
+ * (sa couleur est dans sa signature).
+ */
+const TEXTURES_DE_TRACE_MAX = 24;
+function evincerTexturesDeTrace3D(){
+  while (_textures.size >= TEXTURES_DE_TRACE_MAX) {
+    const [cle, carte] = _textures.entries().next().value;
+    _textures.delete(cle);
+    for (const [k, m] of _materiaux) if (m.map === carte) { _materiaux.delete(k); m.dispose(); }
+    carte.dispose();
+  }
 }
 
 /** Le grain d'une Trace est-il là ? Pour les signatures. */

@@ -1748,6 +1748,9 @@ export function openTracéModal(obj){
   document.getElementById('tracéNameInput').value  = obj.name  || '';
   const _def = TRACÉ_DEFAULTS[obj.tracéType] || {};
   document.getElementById('tracéColorInput').value = obj.color || _def.color || '#888888';
+  // La couleur s'applique EN DIRECT à la Trace (demandé) ; ce qu'elle était à l'ouverture est gardé
+  // pour la lui rendre si la fenêtre se ferme sans « Enregistrer » (events.js).
+  S.tracéModalOrigine = { target: obj, color: obj.color };
   document.getElementById('tracéWidthInput').value = obj.width != null ? obj.width : (_def.width || 8);
   // Height field: only for types with a vertical volume
   const _hasHeight = ['muret', 'cloture', 'haie', 'barriere'].includes(obj.tracéType);
@@ -1756,7 +1759,10 @@ export function openTracéModal(obj){
     document.getElementById('tracéHeightInput').value =
       obj.wallHeight != null ? obj.wallHeight : (_def.wallHeight || 0.5);
   }
+  S.tracéModalCarre = null;
   buildTracéTextureGrid(obj.tracéType, obj.traceTexture || null);
+  // « Couleur d'origine » : utile seulement si une autre couleur est posée (aussi pour la barrière, sans texture).
+  document.getElementById('tracéColorReset').disabled = !teinteDuCarreDeTracé(obj.tracéType, document.getElementById('tracéColorInput').value);
   document.getElementById('tracéModal').classList.remove('hidden');
 }
 
@@ -1774,10 +1780,19 @@ export function buildTracéTextureGrid(type, courante){
   const titres = { route: tr('Choose the road texture', 'Choisir la texture de la route'), chemin: tr('Choose the path texture', 'Choisir la texture du chemin'),
     muret: tr('Choose the low wall texture', 'Choisir la texture du muret'), cloture: tr('Choose the fence texture', 'Choisir la texture de la clôture'),
     haie: tr('Choose the hedge texture', 'Choisir la texture de la haie') };
-  grid.replaceChildren(carreDeTexture({
+  const couleur = document.getElementById('tracéColorInput').value;
+  S.tracéModalCarre = carreDeTexture({
     valeur: S.tracéModalTexture, usage: USAGE_DU_TRACE[type], titre: titres[type],
+    teinte: teinteDuCarreDeTracé(type, couleur),
     appliquer: (id) => buildTracéTextureGrid(type, id),
-  }));
+  });
+  grid.replaceChildren(S.tracéModalCarre);
+}
+
+/** La teinte que montre le carré d'un Tracé : null pour la couleur par défaut (la texture au naturel). */
+export function teinteDuCarreDeTracé(type, couleur){
+  const defaut = TRACÉ_DEFAULTS[type] && TRACÉ_DEFAULTS[type].color;
+  return !couleur || (defaut && couleur.toLowerCase() === defaut.toLowerCase()) ? null : couleur;
 }
 
 export function buildTerrainTypeGrid(currentType){
