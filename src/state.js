@@ -215,6 +215,7 @@ export const S = {
 
   // ── Path (Tracé) / Terrain modals ────────────────────────────────────
   tracéModalTarget:   null,    // reference to the Tracé object currently being edited
+  tracéModalTexture:  null,    // #446d : la texture choisie dans la modale du Tracé (null : celle d'origine)
   terrainModalTarget: null,
   terrainModalType:   'herbe', // ground type selected in the modal's grid
 

@@ -117,6 +117,13 @@ The name is only replaced if the user picks another font.
 Two fields were ADDED alongside, `bulleGras` and `bulleItalique` (booleans, absent = false). Always
 drawn: for real if the font has the style, simulated otherwise.
 
+Since #446d, three fields may also name a texture from “My textures”: `groundType` (the Ground of
+a Panel or Scene), `terrainType` (a terrain zone), and `traceTexture`, ADDED on a path (absent: its
+type's original texture). The value is `tex:<folder>`, the texture's folder name in `Textures/`
+(`tex:polyhaven-rocky_trail`). A missing texture (deleted, another machine) is not found: the
+Ground falls back to the first material, the path to its original texture, and the file keeps the
+id, which brings it back as soon as it is downloaded again.
+
 ### `modelFile` — a name, and the file it points at
 
 An imported 3D model is an ordinary `objet3d` carrying `objType: 'modele'` and one extra field,

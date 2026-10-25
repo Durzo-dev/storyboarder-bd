@@ -107,6 +107,14 @@ l'affiche avec sa remplaçante. Le nom n'est remplacé que si l'utilisateur choi
 Deux champs AJOUTÉS avec eux, `bulleGras` et `bulleItalique` (booléens, absents = faux). Toujours
 dessinés : en vrai si la police a la variante, simulé sinon.
 
+Depuis #446d, trois champs peuvent aussi désigner une texture de « Mes textures » :
+`groundType` (le Sol d'une Case ou d'une Scène), `terrainType` (une Zone de terrain), et
+`traceTexture`, AJOUTÉ sur un Tracé (absent : la texture d'origine de son type). La valeur est
+`tex:<dossier>`, le nom du dossier de la texture dans `Textures/` (`tex:polyhaven-rocky_trail`).
+Une texture absente (supprimée, autre machine) n'est pas trouvée : le Sol retombe sur la première
+matière, le Tracé sur sa texture d'origine, et le fichier garde l'identifiant, ce qui la rend dès
+qu'elle est retéléchargée.
+
 ### `modelFile` — un nom, et le fichier qu'il désigne
 
 Un modèle 3D importé est un `objet3d` ordinaire portant `objType: 'modele'` et un champ de plus,

@@ -169,8 +169,9 @@ describe('Traces : chaque Trace est branchée', () => {
   });
 
   test('⚠️ L’ARRIVÉE DU GRAIN REFAIT LA TRACE ET LA CASE', () => {
-    assert.ok(scene.includes('holes: _tmHoleSig, g: grainDeTracePret3D(o.tracéType) })'));
-    assert.ok(scene.includes('world: o.world, g: grainDeTracePret3D(o.tracéType) }))'));
+    // #446d : la texture choisie entre aussi dans la signature, et c'est SON grain qu'on attend.
+    assert.ok(scene.includes('holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) })'));
+    assert.ok(scene.includes('world: o.world, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) }))'));
     const events = readFileSync(join(RACINE, 'src', 'events.js'), 'utf8');
     assert.ok(events.includes('...grainsDesTraces3D()'), 'les grains des Traces ne sont pas préchargés');
   });

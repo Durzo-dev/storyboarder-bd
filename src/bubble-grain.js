@@ -66,6 +66,15 @@ const _grains = new Map();
 /** Les tuiles composées, par `clé|teinte`. Une Map tient son ordre d'insertion : le premier sort. */
 const _tuiles = new Map();
 
+/**
+ * Les grains qui ne sont pas dans assets/ : ceux de « Mes textures » (#446d), lus par l'IPC et
+ * servis en adresse blob. Par clé ; les autres se cherchent dans DOSSIER_GRAINS.
+ */
+const _adresses = new Map();
+
+/** Déclare où se trouve un grain hors assets/ (src/textures-utilisateur.js). */
+export function definirAdresseDuGrain3D(cle, url){ _adresses.set(cle, url); _signales.delete(cle); }
+
 /** Les grains déjà signalés manquants, pour n'encombrer la console qu'une fois chacun. */
 const _signales = new Set();
 
@@ -96,7 +105,7 @@ export async function prechargerGrains3D(cles, apresChargement){
   if (typeof Image === 'undefined') return 0;
   const arrivees = await Promise.all(cles.map(async (cle) => {
     if (_grains.has(cle)) return 0;
-    const img = await chargerImage(DOSSIER_GRAINS + cle + '.png');
+    const img = await chargerImage(_adresses.get(cle) || DOSSIER_GRAINS + cle + '.png');
     if (!img) {
       console.warn(`[grain] introuvable : ${DOSSIER_GRAINS}${cle}.png — `
         + 'les Bulles qui l\'emploient resteront en aplat. '

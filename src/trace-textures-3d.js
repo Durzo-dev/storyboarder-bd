@@ -27,6 +27,7 @@
  * qu'elle se refasse à son arrivée.
  */
 import { TRACÉ_TEXTURES, couleurDeTrace3D } from './constants.js';
+import { textureDuTrace } from './textures-utilisateur.js';
 import { grainCharge3D } from './bubble-grain.js';
 import { appliquerTeinteAuMotif3D, rvbDeCouleur3D, natureDuNom3D } from './bubble-texture.js';
 
@@ -88,13 +89,25 @@ export function installerPlaquageMonde3D(materiau, tuile, mode = 'monde'){
 /** Les textures teintées, par grain et couleur. Une Trace n'en a qu'une par couleur choisie. */
 const _textures = new Map();
 
-/** La texture teintée d'une Trace, ou `null` si son grain n'est pas encore chargé. */
-export function textureDeTrace3D(type, couleur){
-  const tex = TRACÉ_TEXTURES[type];
+/**
+ * La teinte d'une Trace qui porte `tex` : sa teinte naturelle tant que la couleur est celle par
+ * défaut (couleurDeTrace3D rend alors celle de la texture d'origine), la couleur choisie sinon.
+ */
+function teinteDe(type, couleur, tex){
+  const t = couleurDeTrace3D(type, couleur);
+  return TRACÉ_TEXTURES[type] && t === TRACÉ_TEXTURES[type].teinte ? tex.teinte : t;
+}
+
+/**
+ * La texture teintée d'une Trace, ou `null` si son grain n'est pas encore chargé. `texture` : une
+ * texture de « Mes textures » choisie pour ce Tracé (#446d), sinon celle de son type.
+ */
+export function textureDeTrace3D(type, couleur, texture = null){
+  const tex = textureDuTrace(type, texture);
   if (!tex) return null;
   const img = grainCharge3D(tex.grain);
   if (!img) return null;
-  const teinte = couleurDeTrace3D(type, couleur);
+  const teinte = teinteDe(type, couleur, tex);
   const cle = tex.grain + '|' + teinte;
   if (_textures.has(cle)) return _textures.get(cle);
   const rvb = rvbDeCouleur3D(teinte);
@@ -116,8 +129,8 @@ export function textureDeTrace3D(type, couleur){
 }
 
 /** Le grain d'une Trace est-il là ? Pour les signatures. */
-export function grainDeTracePret3D(type){
-  const tex = TRACÉ_TEXTURES[type];
+export function grainDeTracePret3D(type, texture = null){
+  const tex = textureDuTrace(type, texture);
   return !!(tex && grainCharge3D(tex.grain));
 }
 
@@ -139,15 +152,16 @@ const _materiaux = new Map();
 
 export function materiauDeTrace3D(type, couleur, options = {}){
   const THREE = globalThis.THREE;
-  const { ombre = 1, couleurAplat, plaquage = 'monde', ...reste } = options;
-  const carte = textureDeTrace3D(type, couleur);
+  const { ombre = 1, couleurAplat, plaquage = 'monde', texture = null, ...reste } = options;
+  const carte = textureDeTrace3D(type, couleur, texture);
   if (!carte) {
     return new THREE.MeshStandardMaterial({ color: new THREE.Color(couleurAplat || couleur), ...reste });
   }
-  const cle = [type, couleurDeTrace3D(type, couleur), ombre, plaquage, JSON.stringify(reste)].join('|');
+  const tex = textureDuTrace(type, texture);
+  const cle = [type, tex.grain, teinteDe(type, couleur, tex), ombre, plaquage, JSON.stringify(reste)].join('|');
   if (_materiaux.has(cle)) return _materiaux.get(cle);
   const mat = new THREE.MeshStandardMaterial({ map: carte, color: new THREE.Color(ombre, ombre, ombre), ...reste });
-  installerPlaquageMonde3D(mat, TRACÉ_TEXTURES[type].tuile, plaquage);
+  installerPlaquageMonde3D(mat, tex.tuile, plaquage);
   mat.userData.partage = true;
   _materiaux.set(cle, mat);
   return mat;

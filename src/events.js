@@ -114,6 +114,7 @@ import {
 import { BUBBLE_FONT_PRELOAD_LIST, HELP_MANUAL_EN, HELP_MANUAL_FR } from './help-content.js';
 import { grainsAPrecharger3D } from './bubble-texture.js';
 import { prechargerGrains3D } from './bubble-grain.js';
+import { chargerTexturesUtilisateur } from './textures-utilisateur.js';
 import {
   clamp, wrapAngle, getBBox, tracéBBox, getElementDepth, repairElementBase3D,
   personaEditorPoseList3D, poseJointsByKey3D, nameOfPose3D,
@@ -7696,6 +7697,11 @@ document.getElementById('tracéModalSave').addEventListener('click', () => {
   S.tracéModalTarget.name  = document.getElementById('tracéNameInput').value.trim() || null;
   S.tracéModalTarget.color = document.getElementById('tracéColorInput').value;
   S.tracéModalTarget.width = parseInt(document.getElementById('tracéWidthInput').value) || 8;
+  // #446d : la texture choisie, ou celle d'origine (le champ disparaît alors du fichier).
+  if (document.getElementById('tracéTextureField').style.display !== 'none') {
+    if (S.tracéModalTexture) S.tracéModalTarget.traceTexture = S.tracéModalTexture;
+    else delete S.tracéModalTarget.traceTexture;
+  }
   if (document.getElementById('tracéHeightField').style.display !== 'none') {
     const _h = parseFloat(document.getElementById('tracéHeightInput').value);
     S.tracéModalTarget.wallHeight = isFinite(_h) && _h > 0 ? _h : null;
@@ -9190,6 +9196,12 @@ if (typeof window !== 'undefined') {
 
 if (window.document) {
   prechargerGrains3D([...grainsAPrecharger3D(), ...grainsDuSol3D(), ...grainsDesTraces3D()], drawCurrentPage);
+  // #446d : « Mes textures » sur le Sol et les Tracés, au démarrage puis à chaque changement de la
+  // bibliothèque. Les Cases sont refaites : une texture supprimée doit quitter leur Sol.
+  const rafraichirTextures = () => { panelSceneCache3D.clear(); updateSidePanel(); drawCurrentPage(); };
+  const relireTextures = () => chargerTexturesUtilisateur(window.storyboarderAPI, rafraichirTextures);
+  relireTextures();
+  window.addEventListener('textures-utilisateur', relireTextures);
 }
 
 // ── Collapsible sections of the right-hand menu ────────────────────────────────────────────────────

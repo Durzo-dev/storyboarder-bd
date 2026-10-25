@@ -12,7 +12,8 @@
  * Reprend la présentation du store de modèles (grille, cartes, fiche qui remplace la grille, pied
  * collé en bas) avec ses classes : une seule apparence pour les deux fenêtres.
  */
-import { tr } from './state.js';
+import { tr, S } from './state.js';
+import { utilisationsDe, PREFIXE } from './textures-utilisateur.js';
 import { enregistrerFermeture } from './modal-stack.js';
 import { icone } from './icones.js';
 import { ouvrirApercu3D } from './store-apercu-3d.js';
@@ -148,10 +149,28 @@ async function chercher(curseur = null){
   rendreGrille();
 }
 
+/**
+ * Où une texture sert dans le Projet ouvert (#446d) : Sol, Zone de terrain ou Tracé, compté par Case
+ * et par Scène. Les autres Projets ne sont pas lus, et la phrase le dit.
+ */
+function phraseUtilisation(t){
+  const { tomes, scenes } = utilisationsDe(PREFIXE + t.dossier, { tomes: S.tomes || [], scenes: S.scenes || [] });
+  if (!tomes && !scenes) return tr('Used nowhere in this Project. Other Projects are not checked.', 'Utilisée nulle part dans ce Projet. Les autres Projets ne sont pas vérifiés.');
+  const fois = (n) => tr(n > 1 ? `${n} times` : 'once', n > 1 ? `${n} fois` : 'une fois');
+  const morceaux = [];
+  if (tomes) morceaux.push(tr(`${fois(tomes)} in the Volumes`, `${fois(tomes)} dans les Tomes`));
+  if (scenes) morceaux.push(tr(`${fois(scenes)} in the Scenes`, `${fois(scenes)} dans les Scènes`));
+  return tr(`Used ${morceaux.join(' and ')} (Ground, terrain zones, paths). Other Projects are not checked.`,
+    `Utilisée ${morceaux.join(' et ')} (Sol, zones de terrain, tracés). Les autres Projets ne sont pas vérifiés.`);
+}
+
 async function relireMes(){
   [mes, tags] = await Promise.all([api().texturesMes(), api().texturesTags ? api().texturesTags() : []]);
   mes = mes || []; tags = (tags || []).slice().sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
   tagsFiltre = tagsFiltre.filter(id => tags.some(t => t.id === id));
+  // #446d : le Sol et les Tracés proposent « Mes textures » ; une texture téléchargée, importée,
+  // supprimée ou reclassée doit y paraître (ou en partir) sans redémarrer.
+  window.dispatchEvent(new window.CustomEvent('textures-utilisateur'));
 }
 
 async function urlLocale(t){
@@ -555,8 +574,7 @@ async function ouvrirFiche(r, local){
       : el('p', {}, [el('span', { texte: tr('by', 'par') + ' ' }), r.auteur && r.auteur.url ? lien(auteur, r.auteur.url) : el('span', { texte: auteur || nomSource(r.source) })]),
     t ? blocClassement(t.cle) : blocLecture(r),
     // Comme la fiche d'un modèle de « Mes modèles » : où elle sert, sa licence, ses caractéristiques.
-    t ? section(tr('Used in this project', 'Utilisée dans ce projet'), [el('p', { classe: 'store-fiche-texte',
-      texte: tr('Used nowhere in this Project. Other Projects are not checked.', 'Utilisée nulle part dans ce Projet. Les autres Projets ne sont pas vérifiés.') })]) : null,
+    t ? section(tr('Used in this project', 'Utilisée dans ce projet'), [el('p', { classe: 'store-fiche-texte', texte: phraseUtilisation(t) })]) : null,
     section(tr('Licence', 'Licence'), importee
       ? [el('p', { classe: 'store-fiche-texte', texte: tr('Unknown: imported from a folder. Check the conditions where it comes from.', 'Inconnue : importée d\'un dossier. Vérifiez les conditions de sa provenance.') })]
       : [el('p', {}, [lien(CC0.libelle, CC0.url)]), liste(phrasesLicence(CC0, langue()))]),

@@ -271,6 +271,16 @@ path grain, its natural tint and its nature. A texture that tiles badly is KEPT 
 (`raccordVisible`); a texture with neither displacement nor AO gets no grain and stays usable as a
 building finish. The renderer never supplies an address: the source is read again by its id.
 
+**On the Ground and paths** (#446d, `src/textures-utilisateur.js`): a texture with a `sol` use
+becomes a Ground material (the Ground section of a Panel or Scene, terrain zones); a texture whose
+use is a path type (road, dirt path, low wall, fence, hedge) is chosen in that path's window, next to
+“Original”. It shows in its natural colour (the tint measured at baking); another colour tints it,
+like the shipped textures. Ground materials are ADDED to `GROUND_TYPE_DEFS` (flagged `importee`):
+all the code that looked a material up by its id finds it unchanged. Grains are read through IPC
+(`textures:image`) and served as blob URLs. The persisted id (`tex:<folder>`) is described in
+[persisted-data.md](persisted-data.md). The detail page says how many times the texture is used in
+the open Project.
+
 ## Open questions
 
 - **Direct GLB or zip**: to check with a first token. If only the zip is offered, it will have to be

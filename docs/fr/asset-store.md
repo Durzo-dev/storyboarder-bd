@@ -274,6 +274,17 @@ des Tracés, sa teinte naturelle et sa nature. Une texture qui se répète mal e
 (`raccordVisible`) ; une texture sans déplacement ni AO n'a pas de grain et reste utilisable en
 revêtement. Le renderer ne fournit jamais d'adresse : la source est relue par l'identifiant.
 
+**Sur le Sol et les Tracés** (#446d, `src/textures-utilisateur.js`) : une texture dont un usage est
+`sol` devient une matière du Sol (section Sol d'une Case ou d'une Scène, Zone de terrain) ; une
+texture dont un usage est un type de Tracé (route, chemin, muret, clôture, haie) se choisit dans la
+fenêtre de ce Tracé, à côté de « D'origine ». Elle s'affiche au naturel (la teinte relevée à la
+cuisson) ; une autre couleur la teinte, comme les textures livrées. Les matières du Sol sont
+AJOUTÉES à `GROUND_TYPE_DEFS` (marquées `importee`) : tout le code qui cherchait une matière par son
+identifiant la trouve sans changer. Les grains sont lus par l'IPC (`textures:image`) et servis en
+adresse blob. L'identifiant persisté (`tex:<dossier>`) est décrit dans
+[persisted-data.md](persisted-data.md). La fiche dit combien de fois la texture sert dans le Projet
+ouvert.
+
 ## Questions ouvertes
 
 - **GLB direct ou zip** : à vérifier avec un premier jeton. Si seul le zip est proposé, il faudra le
