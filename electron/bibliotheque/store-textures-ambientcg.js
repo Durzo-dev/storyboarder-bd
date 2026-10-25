@@ -115,7 +115,7 @@ function pageDepuis(json, recherche = {}){
 // ── Le téléchargement ──────────────────────────────────────────────────────────────────────────
 
 const RESOLUTION = '1K';
-const RESOLUTIONS = ['1K', '2K'];
+const RESOLUTIONS = ['1K', '2K', '4K'];   // 4K : bâtiments seulement (cf. resolutionsPermises)
 const HOTE_ZIP = /^https:\/\/ambientcg\.com\/get\?file=[A-Za-z0-9_]+_\d+K-JPG\.zip$/;
 
 /** Le zip à télécharger, à la résolution demandée (sinon la plus petite) ; null s'il n'y en a pas. */
@@ -126,20 +126,27 @@ function planTelechargement(r, resolution = RESOLUTION){
   return res ? { resolution: res, zip: zips[res], total: zips[res].taille } : null;
 }
 
+/** Les résolutions proposées pour une matière, avec leur poids ; la 4K pour les bâtiments seulement. */
+function optionsTelechargement(r){
+  const permises = require('./store-textures-polyhaven').resolutionsPermises(r && r.usages, RESOLUTIONS);
+  return permises.filter(res => r && r.zips && r.zips[res]).map(res => ({ resolution: res, octets: r.zips[res].taille }));
+}
+
 /**
  * Les cartes à garder dans le zip, d'après le nom des fichiers (« Bricks113A_1K-JPG_Color.jpg »).
  * Rend `{ couleur, normal, rugosite, ao }` (des noms de fichiers du zip), ou null s'il manque la
- * couleur, le relief OpenGL ou la rugosité. Le relief DirectX et le déplacement sont ignorés.
+ * couleur, le relief OpenGL ou la rugosité. Le relief DirectX est ignoré ; le déplacement sert au cuiseur.
  */
 function cartesDuZip(noms){
   const trouve = (suffixe) => (noms || []).find(n => typeof n === 'string' && !n.includes('/') && !n.includes('..')
     && new RegExp(`_${suffixe}\\.jpg$`, 'i').test(n)) || null;
-  const c = { couleur: trouve('Color'), normal: trouve('NormalGL'), rugosite: trouve('Roughness'), ao: trouve('AmbientOcclusion') };
+  const c = { couleur: trouve('Color'), normal: trouve('NormalGL'), rugosite: trouve('Roughness'),
+    ao: trouve('AmbientOcclusion'), deplacement: trouve('Displacement') };
   return c.couleur && c.normal && c.rugosite ? c : null;
 }
 
 module.exports = {
   API, SITE, RESOLUTION, RESOLUTIONS,
   idValide, urlRecherche, dimensionsEnMetres, textureNormalisee, zipsDe, pageDepuis,
-  planTelechargement, cartesDuZip,
+  planTelechargement, optionsTelechargement, cartesDuZip, HOTE_ZIP,
 };

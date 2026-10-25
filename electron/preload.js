@@ -72,6 +72,18 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   onMajProgression: (callback) => ipcRenderer.on('maj:progression', (e, recus, total) => callback(recus, total)),
   // Store de ressources (#444) : ce qu'il faut pour les filtres, et une recherche. Le processus
   // principal fait la requête et rend une page déjà normalisée (store-sources.js).
+  // #446b : le store de textures (une fenêtre à part).
+  texturesInfos: () => ipcRenderer.invoke('textures:infos'),
+  texturesChercher: (sourceId, params) => ipcRenderer.invoke('textures:chercher', sourceId, params),
+  texturesOptions: (sourceId, id) => ipcRenderer.invoke('textures:options', sourceId, id),
+  texturesTelecharger: (sourceId, id, resolution) => ipcRenderer.invoke('textures:telecharger', sourceId, id, resolution),
+  texturesMes: () => ipcRenderer.invoke('textures:mes'),
+  texturesSupprimer: (cle) => ipcRenderer.invoke('textures:supprimer', cle),
+  surProgressionTexture: (rappel) => {
+    const f = (event, sourceId, id, recus, total) => rappel(sourceId, id, recus, total);
+    ipcRenderer.on('textures:progression', f);
+    return () => ipcRenderer.removeListener('textures:progression', f);
+  },
   storeInfos: (sourceId) => ipcRenderer.invoke('store:infos', sourceId),
   storeChercher: (sourceId, params) => ipcRenderer.invoke('store:chercher', sourceId, params),
   // Les modèles déjà téléchargés depuis le store, pour ne pas les proposer deux fois.

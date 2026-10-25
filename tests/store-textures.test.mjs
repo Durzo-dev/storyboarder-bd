@@ -139,8 +139,133 @@ describe('ambientCG : les pages et les matières', () => {
     assert.deepEqual(ACG.cartesDuZip(noms), {
       couleur: 'Grass005_1K-JPG_Color.jpg', normal: 'Grass005_1K-JPG_NormalGL.jpg',
       rugosite: 'Grass005_1K-JPG_Roughness.jpg', ao: 'Grass005_1K-JPG_AmbientOcclusion.jpg',
+      deplacement: 'Grass005_1K-JPG_Displacement.jpg',
     });
     assert.equal(ACG.cartesDuZip(noms.filter(n => !n.includes('NormalGL'))), null);
     assert.equal(ACG.cartesDuZip(['../x_Color.jpg', 'a_NormalGL.jpg', 'a_Roughness.jpg']), null);
+  });
+});
+
+// ── #446b : le téléchargement, la cuisson, le rangement ────────────────────────────────────────
+const zlib = require('zlib');
+const Z = require('../electron/bibliotheque/zip-lecture.js');
+const B = require('../electron/bibliotheque/bibliotheque-textures.js');
+
+/** Une petite archive zip, écrite ici pour ne dépendre d'aucun outil : une entrée stockée, une compressée. */
+function petitZip(fichiers){
+  const locaux = [], centraux = [];
+  let decalage = 0;
+  for (const [nom, contenu, comprimer] of fichiers) {
+    const donnees = comprimer ? zlib.deflateRawSync(contenu) : contenu;
+    const n = Buffer.from(nom, 'utf8');
+    const l = Buffer.alloc(30); l.writeUInt32LE(0x04034b50, 0); l.writeUInt16LE(comprimer ? 8 : 0, 8);
+    l.writeUInt32LE(donnees.length, 18); l.writeUInt32LE(contenu.length, 22); l.writeUInt16LE(n.length, 26);
+    const c = Buffer.alloc(46); c.writeUInt32LE(0x02014b50, 0); c.writeUInt16LE(comprimer ? 8 : 0, 10);
+    c.writeUInt32LE(donnees.length, 20); c.writeUInt32LE(contenu.length, 24); c.writeUInt16LE(n.length, 28); c.writeUInt32LE(decalage, 42);
+    locaux.push(l, n, donnees); centraux.push(c, n);
+    decalage += 30 + n.length + donnees.length;
+  }
+  const central = Buffer.concat(centraux);
+  const fin = Buffer.alloc(22); fin.writeUInt32LE(0x06054b50, 0); fin.writeUInt16LE(fichiers.length, 8); fin.writeUInt16LE(fichiers.length, 10);
+  fin.writeUInt32LE(central.length, 12); fin.writeUInt32LE(decalage, 16);
+  return Buffer.concat([...locaux, central, fin]);
+}
+
+describe('#446b : lire un zip ambientCG (sans dépendance)', () => {
+  const couleur = Buffer.from('couleur '.repeat(200));
+  const archive = petitZip([
+    ['G_1K-JPG_Color.jpg', couleur, true],
+    ['G_1K-JPG_NormalGL.jpg', Buffer.from('normale'), false],
+    ['G_1K-JPG_Roughness.jpg', Buffer.from('rugosite'), true],
+    ['dossier/G_1K-JPG_Color.jpg', Buffer.from('piege'), false],
+  ]);
+  test('les noms à la racine, et les cartes qu\'on en garde', () => {
+    assert.deepEqual(Z.nomsDuZip(archive), ['G_1K-JPG_Color.jpg', 'G_1K-JPG_NormalGL.jpg', 'G_1K-JPG_Roughness.jpg']);
+    const c = ACG.cartesDuZip(Z.nomsDuZip(archive));
+    assert.equal(c.couleur, 'G_1K-JPG_Color.jpg');
+    assert.equal(c.deplacement, null);
+  });
+  test('stockée ou compressée, le contenu revient intact ; un fichier dans un dossier n\'est jamais lu', () => {
+    const lus = Z.extraire(archive, ['G_1K-JPG_Color.jpg', 'G_1K-JPG_NormalGL.jpg', 'dossier/G_1K-JPG_Color.jpg']);
+    assert.ok(lus.get('G_1K-JPG_Color.jpg').equals(couleur));
+    assert.equal(lus.get('G_1K-JPG_NormalGL.jpg').toString(), 'normale');
+    assert.ok(!lus.has('dossier/G_1K-JPG_Color.jpg'));
+  });
+  test('une archive illisible est refusée, pas devinée', () => {
+    assert.equal(Z.nomsDuZip(Buffer.from('pas un zip du tout, vraiment pas')), null);
+    assert.throws(() => Z.extraire(Buffer.from('rien'), ['x']), /illisible/);
+  });
+});
+
+describe('#446b : « Mes textures »', () => {
+  const r = PH.catalogueNormalise(fixture('polyhaven-textures.json'), MAINTENANT).find(e => e.r.id === 'brick_wall_001').r;
+  test('un dossier par texture, sans rien qui en sorte', () => {
+    assert.equal(B.dossierDe('polyhaven', 'brick_wall_001'), 'polyhaven-brick_wall_001');
+    assert.equal(B.dossierDe('polyhaven', '../../x'), 'polyhaven-x');
+    assert.equal(B.dossierDe('', 'x'), null);
+  });
+  test('la cuisson en grand format dès qu\'un Sol ou un Tracé s\'en sert', () => {
+    assert.equal(B.tailleDeCuisson(['muret', 'mur-ext']), 1024);
+    assert.equal(B.tailleDeCuisson(['mur-int', 'sol-int']), 512);
+  });
+  test('l\'entrée garde le crédit, les usages, la taille réelle et ce que la cuisson a mesuré', () => {
+    const e = B.entreeTexture(r, { resolution: '1k', cartes: ['couleur', 'normal', 'rugosite'],
+      cuisson: { fichier: 'grain.png', teinte: '#8A4B3C', nature: 'gris', raccordVisible: true }, date: new Date(Date.UTC(2026, 9, 25)) });
+    assert.equal(e.cle, 'polyhaven:brick_wall_001');
+    assert.equal(e.auteur.nom, 'Rob Tuytel, Dimitrios Savva');
+    assert.deepEqual(e.usages, ['muret', 'mur-ext', 'mur-int']);
+    assert.deepEqual(e.dimensions, [3, 3]);
+    assert.equal(e.grain, 'grain.png');
+    assert.equal(e.raccordVisible, true);
+  });
+  test('sans cuisson, la texture reste (revêtements) : pas de grain, pas de raccord annoncé', () => {
+    const e = B.entreeTexture(r, { resolution: '1k', cartes: ['couleur'], cuisson: null });
+    assert.equal(e.grain, null);
+    assert.equal(e.raccordVisible, false);
+  });
+  test('ajouter remplace la même texture ; présentes écarte un dossier effacé à la main', () => {
+    const e1 = B.entreeTexture(r, { resolution: '1k', cartes: [] });
+    const e2 = B.entreeTexture(r, { resolution: '2k', cartes: [] });
+    const b = B.ajouter(B.ajouter(B.vide(), e1), e2);
+    assert.equal(b.textures.length, 1);
+    assert.equal(b.textures[0].resolution, '2k');
+    assert.deepEqual(B.presentes(b, []), []);
+    assert.equal(B.presentes(b, ['polyhaven-brick_wall_001']).length, 1);
+    assert.equal(B.retirer(b, e1.cle).textures.length, 0);
+  });
+});
+
+describe('#446b : résolutions (4K pour les bâtiments seulement, jamais 8K)', () => {
+  test('Poly Haven : 1k et 2k pour un Sol ; 4k ajoutée dès qu\'un bâtiment s\'en sert', () => {
+    assert.deepEqual(PH.resolutionsPermises(['sol', 'route'], PH.RESOLUTIONS), ['1k', '2k']);
+    assert.deepEqual(PH.resolutionsPermises(['muret', 'mur-ext'], PH.RESOLUTIONS), ['1k', '2k', '4k']);
+    assert.ok(!PH.RESOLUTIONS.includes('8k') && !ACG.RESOLUTIONS.includes('8K'));
+  });
+  test('le déplacement est téléchargé (le cuiseur en tire le relief)', () => {
+    const fichiers = fixture('polyhaven-textures-fichiers.json');
+    fichiers.Displacement = { '1k': { jpg: { url: 'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/b/b_disp_1k.jpg', size: 10 } } };
+    assert.deepEqual(PH.planTelechargement(fichiers).cartes.map(c => c.carte), ['couleur', 'normal', 'rugosite', 'ao', 'deplacement']);
+  });
+  test('ambientCG : les options suivent les zip réellement proposés', () => {
+    const g = ACG.pageDepuis(fixture('ambientcg-textures.json')).resultats[0];
+    assert.deepEqual(ACG.optionsTelechargement(g).map(o => o.resolution), ['1K', '2K']);
+  });
+});
+
+describe('#446b : le câblage', () => {
+  const lire = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
+  test('le cuiseur s\'appelle comme une fonction, et voyage avec l\'application installée', () => {
+    assert.match(lire('tools/bake-textures.mjs'), /export async function cuireMatiere3D\(/);
+    assert.ok(JSON.parse(lire('package.json')).build.files.includes('tools/bake-textures.mjs'));
+  });
+  test('ses canaux à part : le store de textures est une fenêtre à part (demandé)', () => {
+    const main = lire('electron/main.js');
+    for (const c of ['infos', 'chercher', 'options', 'telecharger', 'mes', 'supprimer']) assert.match(main, new RegExp(`'textures:${c}'`));
+    assert.match(lire('electron/preload.js'), /texturesTelecharger: /);
+  });
+  test('le renderer ne donne jamais d\'adresse : seulement une source et un identifiant', () => {
+    const s = lire('electron/bibliotheque/store-textures.js');
+    assert.match(s, /async function telecharger\(dossierProjets, sourceId, id, resolution, progression, simulation\)/);
+    assert.match(s, /ACG\.HOTE_ZIP\.test\(plan\.zip\.url\)/);
   });
 });

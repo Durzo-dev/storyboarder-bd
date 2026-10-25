@@ -102,9 +102,13 @@ function pageLocale(catalogue, recherche = {}){
 
 // ── Le téléchargement ──────────────────────────────────────────────────────────────────────────
 
-/** 1k par défaut (demandé : matière complète en 1024 px) ; 2k pour un gros plan. */
+/**
+ * 1k par défaut (demandé : matière complète en 1024 px). 2k au choix ; 4k SEULEMENT pour une
+ * texture qui sert aux bâtiments (un mur vu de près dans une Case exportée en grand). Jamais 8k.
+ * Le Sol et les Tracés n'en profitent pas : le cuiseur ramène leur grain à 1024.
+ */
 const RESOLUTION = '1k';
-const RESOLUTIONS = ['1k', '2k'];
+const RESOLUTIONS = ['1k', '2k', '4k'];
 const HOTE_FICHIERS = /^https:\/\/dl\.polyhaven\.org\//;
 
 /**
@@ -116,6 +120,8 @@ const CARTES = [
   ['normal', 'nor_gl', true],
   ['rugosite', 'Rough', true],
   ['ao', 'AO', false],
+  // Le déplacement : le cuiseur en tire le relief du grain (à défaut, l'AO).
+  ['deplacement', 'Displacement', false],
 ];
 
 function urlFichiers(id){
@@ -149,15 +155,20 @@ function planTelechargement(fichiers, resolution = RESOLUTION){
 }
 
 /** Les résolutions proposées, avec leur poids : `[{ resolution, octets }]`, seulement les vraies. */
-function optionsTelechargement(fichiers){
-  return RESOLUTIONS.map(res => {
+function optionsTelechargement(fichiers, usages = []){
+  return resolutionsPermises(usages, RESOLUTIONS).map(res => {
     const p = planTelechargement(fichiers, res);
     return p && p.resolution === res ? { resolution: res, octets: p.total } : null;
   }).filter(Boolean);
 }
 
+/** Les résolutions permises pour des usages : la plus haute seulement si un bâtiment s'en sert. */
+function resolutionsPermises(usages, toutes){
+  return (usages || []).some(u => (M.usage(u) || {}).cible === 'batiment') ? toutes : toutes.slice(0, 2);
+}
+
 module.exports = {
-  API, SITE, RESOLUTION, RESOLUTIONS, CARTES,
+  API, SITE, RESOLUTION, RESOLUTIONS, CARTES, resolutionsPermises,
   urlCatalogue, dimensionsEnMetres, textureNormalisee, catalogueNormalise, pageLocale,
   urlFichiers, planTelechargement, optionsTelechargement,
 };

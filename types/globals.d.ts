@@ -78,6 +78,14 @@ interface StoryboarderAPI {
     tris?: string[];
     simulation: boolean;
   }>;
+  // #446b : le store de textures (une fenêtre à part).
+  texturesInfos(): Promise<{ sources: string[]; matieres: { slug: string; fr: string; en: string; usages: string[] }[]; usages: { slug: string; fr: string; en: string; cible: string }[]; simulation: boolean }>;
+  texturesChercher(sourceId: string, params: object): Promise<{ resultats?: object[]; suivant?: string | null; erreur?: string }>;
+  texturesOptions(sourceId: string, id: string): Promise<{ options?: { resolution: string; octets: number }[]; erreur?: string }>;
+  texturesTelecharger(sourceId: string, id: string, resolution?: string): Promise<{ entree?: object; erreur?: string }>;
+  texturesMes(): Promise<object[]>;
+  texturesSupprimer(cle: string): Promise<{ ok: boolean }>;
+  surProgressionTexture(rappel: (sourceId: string, id: string, recus: number | null, total: number | null) => void): () => void;
   storeChercher(sourceId: string, params: object): Promise<{ resultats?: object[]; suivant?: string | null; ecartes?: number; erreur?: string }>;
   bibliothequeLire(): Promise<{ version: number; categories: Record<string, string>; tags: { id: string; nom: string }[]; tagsParModele: Record<string, string[]> }>;
   bibliothequeOperation(op: string, args: object): Promise<{ bibliotheque?: object; id?: string | null; erreur?: string }>;

@@ -765,18 +765,14 @@ async function ecrireGrainPng(grain, taille, chemin){
   await ecrireImagePng(rgba, taille, chemin);
 }
 
-async function main(){
-  const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
-  const SOURCES = join(RACINE, 'assets', 'textures', 'sources');
-  const SORTIE = join(RACINE, 'assets', 'textures');
-  const id = process.argv[2];
-  if (!id) {
-    console.error('usage : npm run bake-textures -- <identifiant>');
-    console.error('  les cartes sont lues dans assets/textures/sources/<identifiant>/');
-    process.exit(1);
-  }
-  const dossier = join(SOURCES, id);
-  if (!existsSync(dossier)) throw new Error(`dossier introuvable : ${dossier}`);
+/**
+ * LA CUISSON ELLE-MÊME, sans rien imprimer (#446b) : l'outil en ligne de commande l'appelle, et
+ * l'application aussi, au téléchargement d'une texture du store (dans le processus principal, où
+ * `nativeImage` existe). Lit les cartes de `dossier`, écrit le grain dans `SORTIE` sous le nom
+ * `nomDeSortie` (l'identifiant par défaut), et rend tout ce que le rapport imprime. Lève une erreur
+ * si les cartes ne permettent pas une cuisson honnête (cf. regimeDeCuisson3D).
+ */
+export async function cuireMatiere3D({ dossier, id, taille, SORTIE, nomDeSortie = null, bavard = false }){
   const fichiers = readdirSync(dossier).filter(f => /\.(jpe?g|png)$/i.test(f));
   const cartes = regimeDeCuisson3D(fichiers);
 
@@ -788,8 +784,6 @@ async function main(){
   // ⚠️ RECADRÉ AU CARRÉ AVANT TOUT, et ce n'est pas cosmétique. Une panoramique fait 2:1 ; la
   // redimensionner en 512² l'écraserait du double dans un sens. C'est l'erreur exacte qui avait
   // déformé ma première planche de comparaison, signalée à l'époque.
-  const { GROUND_TYPE_DEFS, TRACÉ_DEFAULTS } = await import('../src/constants.js');
-  const taille = tailleDuGrain3D(id, idsEnGrandFormat3D(GROUND_TYPE_DEFS, TRACÉ_DEFAULTS));
   const aRef = (g) => versReference3D(g, taille, TAILLE_GRAIN);
   const regime = cartes.regime === 'image' ? 'image' : 'matiere';
   const relief = grisDepuisRgba(await chargerCarte(join(dossier, cartes.relief), taille, regime));
@@ -820,20 +814,45 @@ async function main(){
   const tuile = partAEchelleDeTuile3D(mesure, TAILLE_GRAIN);
 
   mkdirSync(SORTIE, { recursive: true });
-  const sortie = join(SORTIE, nomDuGrain3D(id, nature));
+  const sortie = join(SORTIE, nomDuGrain3D(nomDeSortie || id, nature));
   // ⚠️ LE FICHIER DE L'AUTRE NATURE EST SUPPRIMÉ, sans quoi il survit à la recuisson. Trouvé quand
   // une nouvelle source a fait basculer le sable de gris à couleur et le gravier de couleur à gris :
   // `sable.couleur.png` s'écrivait à côté de l'ancien `sable.png`, que le registre continuait de
   // désigner. L'application aurait affiché l'ANCIENNE texture, sans un mot, pendant que le rapport
   // annonçait la nouvelle. Un seul fichier par identifiant, et c'est le dernier cuit.
-  const concurrent = join(SORTIE, nomDuGrain3D(id, nature === 'couleur' ? 'gris' : 'couleur'));
+  const concurrent = join(SORTIE, nomDuGrain3D(nomDeSortie || id, nature === 'couleur' ? 'gris' : 'couleur'));
   if (existsSync(concurrent)) {
     rmSync(concurrent);
-    console.warn(`  ⚠️  ${basename(concurrent)} supprimé : la nature a changé. Le registre doit maintenant`
+    if (bavard) console.warn(`  ⚠️  ${basename(concurrent)} supprimé : la nature a changé. Le registre doit maintenant`
       + ` déclarer grain: '${basename(sortie, '.png')}'.`);
   }
   if (nature === 'couleur') await ecrireImagePng(albedoRgba, taille, sortie);
   else await ecrireGrainPng(grain, taille, sortie);
+  return {
+    sortie, nature, teinte, gain, contraste, couture, tuile, taille, cartes, cadrage, dim,
+    contrasteAlbedo, contrasteRelief,
+    coutureSurUnJoint: couture > COUTURE_SUSPECTE && coutureSurUnJoint3D(mesure, TAILLE_GRAIN),
+    // Le verdict qu'affiche l'application : un raccord visible qui n'est pas un joint du motif.
+    raccordVisible: couture > COUTURE_SUSPECTE && !coutureSurUnJoint3D(mesure, TAILLE_GRAIN),
+  };
+}
+
+async function main(){
+  const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
+  const SOURCES = join(RACINE, 'assets', 'textures', 'sources');
+  const SORTIE = join(RACINE, 'assets', 'textures');
+  const id = process.argv[2];
+  if (!id) {
+    console.error('usage : npm run bake-textures -- <identifiant>');
+    console.error('  les cartes sont lues dans assets/textures/sources/<identifiant>/');
+    process.exit(1);
+  }
+  const dossier = join(SOURCES, id);
+  if (!existsSync(dossier)) throw new Error(`dossier introuvable : ${dossier}`);
+  const { GROUND_TYPE_DEFS, TRACÉ_DEFAULTS } = await import('../src/constants.js');
+  const taille = tailleDuGrain3D(id, idsEnGrandFormat3D(GROUND_TYPE_DEFS, TRACÉ_DEFAULTS));
+  const { sortie, nature, teinte, gain, contraste, couture, tuile, cartes, cadrage, dim,
+    contrasteAlbedo, contrasteRelief, coutureSurUnJoint } = await cuireMatiere3D({ dossier, id, taille, SORTIE, bavard: true });
 
   console.log(`${id} → ${basename(sortie)}  (${taille}², mesures à ${TAILLE_GRAIN}²)`);
   // #431c : une texture livrée sans sa ligne de licence fait échouer les tests. On le dit ICI, au
@@ -866,7 +885,7 @@ async function main(){
     console.log(`  gain      ${gain.toFixed(2)}   contraste ${contraste.toFixed(2)} / ${CONTRASTE_CIBLE}`);
   }
   console.log(`  couture   ${couture.toFixed(2)}   (1,0 = raccord invisible)`);
-  if (couture > COUTURE_SUSPECTE && coutureSurUnJoint3D(mesure, TAILLE_GRAIN)) {
+  if (coutureSurUnJoint) {
     console.log(`  ℹ️  ${couture.toFixed(2)} > ${COUTURE_SUSPECTE}, mais le bord tombe sur un JOINT du motif :`);
     console.log('      son écart ne dépasse pas celui des autres lignes de l\'image. Faux positif probable,');
     console.log('      fréquent sur un parquet ou un carrelage. Vérifiez sur un carrelage 2×2.');

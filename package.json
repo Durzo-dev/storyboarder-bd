@@ -1,6 +1,6 @@
 {
   "name": "storyboard-bd",
-  "version": "1.11.111",
+  "version": "1.11.112",
   "engines": {
     "node": ">=22"
   },
@@ -42,6 +42,7 @@
       "!assets/textures/sources/**",
       "package.json",
       "src/**/*",
+      "tools/bake-textures.mjs",
       "node_modules/three/build/three.min.js"
     ],
     "win": {

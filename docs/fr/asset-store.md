@@ -238,9 +238,22 @@ mur intérieur, sol intérieur, plafond, toit) découlent des matières, jamais 
 eux qui disent où l'application la propose. Une texture sans matière (tissu, cuir, nourriture…)
 est écartée.
 
-**Téléchargement** : la matière complète en **1k** (2k au choix) : couleur, relief (normal
-OpenGL, celui de three.js), rugosité, et l'ombrage des creux s'il existe. Le relief DirectX et le
-déplacement sont laissés.
+**Téléchargement** (#446b) : rien d'office, seulement la texture choisie dans le store, à la
+résolution choisie sur sa fiche : **1k** par défaut, 2k au choix, **4k seulement pour une texture
+qui sert aux bâtiments** (un mur vu de près dans une Case exportée en grand) ; jamais 8k. On garde
+la couleur, le relief (normal OpenGL), la rugosité, l'ombrage des creux et le déplacement s'ils
+existent (pas le relief DirectX). Le zip ambientCG est lu en mémoire (`zip-lecture.js`) et seules
+ces cartes en sortent.
+
+**Rangement** : `<Projets>/Textures/<source>-<id>/` (`couleur.jpg`, `normal.jpg`, `rugosite.jpg`,
+`ao.jpg`, `deplacement.jpg`, et le grain), plus une entrée dans `Textures/bibliotheque-textures.json`
+(crédit, matières, usages, taille réelle, résolution, mesures de cuisson) : « Mes textures ».
+
+**Cuisson** au téléchargement, pas au premier usage (décidé le 25 octobre 2026) : le cuiseur
+(`tools/bake-textures.mjs`, `cuireMatiere3D`, livré avec l'application) tire le grain du Sol et
+des Tracés, sa teinte naturelle et sa nature. Une texture qui se répète mal est GARDÉE et signalée
+(`raccordVisible`) ; une texture sans déplacement ni AO n'a pas de grain et reste utilisable en
+revêtement. Le renderer ne fournit jamais d'adresse : la source est relue par l'identifiant.
 
 ## Questions ouvertes
 

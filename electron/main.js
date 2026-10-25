@@ -1187,6 +1187,21 @@ ipcMain.handle('store:attribuer', async (event, resultat, fichier, resolution) =
   return r;
 });
 
+// #446b : le STORE DE TEXTURES, une fenêtre à part (demandé), d'où ses canaux à part. Rien n'est
+// téléchargé d'office : seulement la texture choisie, rangée dans <Projets>/Textures/ et cuite.
+const storeTextures = require('./bibliotheque/store-textures');
+ipcMain.handle('textures:infos', async () => ({ ...storeTextures.infos(), simulation: SIMULATION_STORE }));
+ipcMain.handle('textures:chercher', async (event, sourceId, params) =>
+  storeTextures.chercher(sourceId, params, SIMULATION_STORE ? RACINE : null));
+ipcMain.handle('textures:options', async (event, sourceId, id) =>
+  storeTextures.options(sourceId, id, SIMULATION_STORE ? RACINE : null));
+ipcMain.handle('textures:telecharger', async (event, sourceId, id, resolution) =>
+  storeTextures.telecharger(getProjectsDir(), sourceId, id, resolution, (recus, total) => {
+    if (!event.sender.isDestroyed()) event.sender.send('textures:progression', sourceId, id, recus, total);
+  }, SIMULATION_STORE ? RACINE : null));
+ipcMain.handle('textures:mes', async () => storeTextures.mesTextures(getProjectsDir()));
+ipcMain.handle('textures:supprimer', async (event, cle) => storeTextures.supprimer(getProjectsDir(), String(cle || '')));
+
 // Télécharge puis installe. La progression part vers la fenêtre qui a demandé. En simulation, on
 // joue une progression factice et on s'arrête là : `npm start` n'a rien à remplacer.
 let installationEnCours = false;

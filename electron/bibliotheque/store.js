@@ -327,4 +327,6 @@ async function vignetteSource(resultat){
 module.exports = {
   chercher, infos, telecharges, poids, telecharger, apercu, attribuer, renommerAttribution, vignetteSource,
   DELAI_MS, DUREE_CATALOGUE_MS, POIDS_MAX,
+  // #446b : le réseau partagé avec le store de textures (store-textures.js).
+  lireJson, lireOctets, md5, fixture,
 };

@@ -238,9 +238,21 @@ ground, road, path, low wall, fence, hedge, exterior wall, interior wall, interi
 roof) follow from the materials, never from the texture itself: they say where the application
 offers it. A texture with no material (fabric, leather, food…) is left out.
 
-**Download**: the full material in **1k** (2k optional): colour, relief (OpenGL normal, the one
-three.js uses), roughness, and ambient occlusion when present. DirectX normals and displacement are
-left out.
+**Download** (#446b): nothing by default, only the texture chosen in the store, at the resolution
+chosen on its page: **1k** by default, 2k optional, **4k only for a texture used by buildings** (a
+wall seen up close in a panel exported large); never 8k. We keep colour, relief (OpenGL normal),
+roughness, ambient occlusion and displacement when present (not DirectX normals). The ambientCG zip
+is read in memory (`zip-lecture.js`) and only those maps come out.
+
+**Storage**: `<Projects>/Textures/<source>-<id>/` (`couleur.jpg`, `normal.jpg`, `rugosite.jpg`,
+`ao.jpg`, `deplacement.jpg`, and the grain), plus an entry in `Textures/bibliotheque-textures.json`
+(credit, materials, uses, real size, resolution, baking measures): "My textures".
+
+**Baking** on download, not on first use (decided on 25 October 2026): the baker
+(`tools/bake-textures.mjs`, `cuireMatiere3D`, shipped with the application) produces the ground and
+path grain, its natural tint and its nature. A texture that tiles badly is KEPT and flagged
+(`raccordVisible`); a texture with neither displacement nor AO gets no grain and stays usable as a
+building finish. The renderer never supplies an address: the source is read again by its id.
 
 ## Open questions
 
