@@ -412,7 +412,7 @@ describe('Caractéristiques d\'une texture : poids, images, dossier', () => {
   test('le poids (sur le disque, ou de la résolution choisie en ligne), le dossier, et « Images » au lieu de « Cartes »', () => {
     assert.match(ui, /\$\{tr\('Weight', 'Poids'\)\} : \$\{poids\(t\.poids\)\}/);
     assert.match(ui, /\$\{tr\('Folder', 'Dossier'\)\} : Textures\/\$\{t\.dossier\}/);
-    assert.match(ui, /\$\{tr\('Images', 'Images'\)\} : /);
+    assert.match(ui, /renduLisible\(t\.cartes\)/);
     assert.doesNotMatch(ui, /tr\('Maps', 'Cartes'\)/);
     assert.match(readFileSync(new URL('../electron/bibliotheque/store-textures.js', import.meta.url), 'utf8'), /return \{ \.\.\.t, poids \};/);
   });
@@ -422,10 +422,19 @@ describe('retours : ordre des Caractéristiques et rien sous les boutons', () =>
   const ui = readFileSync(new URL('../src/textures-store-ui.js', import.meta.url), 'utf8');
   test('dossier, taille, poids, images, grain, résolution, provenance : l\'ordre de la fiche d\'un modèle', () => {
     const bloc = ui.slice(ui.indexOf('const caracteristiques = ['), ui.indexOf('];', ui.indexOf('const caracteristiques = [')));
-    const ordre = ["'Folder'", "'Real size of one tile'", "'Weight'", "'Images'", 'grain', "'Resolution'", 'Downloaded from'].map(m => bloc.indexOf(m));
+    const ordre = ["'Folder'", "'Real size of one tile'", "'Weight'", 'renduLisible', "'Resolution'", 'Downloaded from'].map(m => bloc.indexOf(m));
     assert.ok(ordre.every(i => i >= 0) && ordre.every((v, k) => !k || v > ordre[k - 1]), 'ordre attendu');
   });
   test('la mention de la source est cachée sur une fiche', () => {
     assert.match(ui, /\$\('texturesCredit'\)\.hidden = true;/);
+  });
+});
+
+describe('le grain et le raccord ne se disent que s\'ils posent problème (signalé)', () => {
+  const ui = readFileSync(new URL('../src/textures-store-ui.js', import.meta.url), 'utf8');
+  test('plus de « grain prêt » ; un manque de relief et une couture se disent en mots d\'usage', () => {
+    assert.doesNotMatch(ui, /Grain du Sol et des Tracés : prêt/);
+    assert.match(ui, /t && !t\.grain \? tr\(/);
+    assert.match(ui, /ses bords se voient en lignes/);
   });
 });

@@ -472,9 +472,17 @@ function blocLecture(r){
   ]);
 }
 
+/** Le rendu d'une texture, en mots d'usage : complet, ou ce qui lui manque. */
+function renduLisible(cartes){
+  const manque = [];
+  if (!cartes.includes('normal')) manque.push(tr('relief', 'relief'));
+  if (!cartes.includes('rugosite')) manque.push(tr('shine', 'brillance'));
+  return manque.length
+    ? `${tr('Rendering: simplified, without', 'Rendu : simplifié, sans')} ${manque.join(tr(' or ', ' ni '))}`
+    : `${tr('Rendering: complete (colour, relief, shine', 'Rendu : complet (couleur, relief, brillance')}${cartes.includes('ao') ? tr(', shadows in the hollows', ', ombres des creux') : ''})`;
+}
+
 const CC0 = { libelle: 'CC0 Public Domain', url: 'https://creativecommons.org/publicdomain/zero/1.0/', attribution: false, commercial: true, modification: true };
-const NOMS_CARTES = { couleur: ['colour', 'couleur'], normal: ['relief (normal)', 'relief (normale)'], rugosite: ['roughness', 'rugosité'],
-  ao: ['ambient occlusion', 'ombrage des creux'], deplacement: ['displacement', 'déplacement'] };
 
 /** Un lien vers l'extérieur, comme dans le store de modèles (le processus principal l'ouvre dans le navigateur). */
 const lien = (texte, url, classe) => el('a', { texte, classe, attrs: { href: url, target: '_blank', rel: 'noopener' } });
@@ -503,10 +511,12 @@ async function ouvrirFiche(r, local){
     t ? `${tr('Folder', 'Dossier')} : Textures/${t.dossier}` : null,
     tailleReelle(dims) ? `${tr('Real size of one tile', 'Taille réelle d\'une tuile')} : ${tailleReelle(dims)}${importee ? tr(' (unknown: by default)', ' (inconnue : par défaut)') : ''}` : null,
     t && t.poids ? `${tr('Weight', 'Poids')} : ${poids(t.poids)}` : null,
-    // « Images » plutôt que « Cartes » (jargon 3D, signalé) : les images qui composent la matière.
-    t && t.cartes && t.cartes.length ? `${tr('Images', 'Images')} : ${t.cartes.map(c => (NOMS_CARTES[c] || [c, c])[langue() === 'en' ? 0 : 1]).join(', ')}` : null,
-    t ? (t.grain ? tr('Ground and path grain: ready', 'Grain du Sol et des Tracés : prêt') : tr('No grain (neither displacement nor normal map): building finishes only', 'Pas de grain (ni déplacement ni normale) : revêtements de bâtiment seulement')) : null,
-    t && t.raccordVisible ? tr('Visible seam: it does not tile perfectly', 'Raccord visible : elle ne se répète pas parfaitement') : null,
+    // Le RENDU plutôt que la liste des images (signalé : pas clair). Complet = couleur, relief et
+    // brillance ; sinon on dit ce qui manque, en mots d'usage.
+    t && t.cartes ? renduLisible(t.cartes) : null,
+    // Le grain et le raccord ne se disent QUE s'ils posent problème (signalé : « prêt » l'est toujours).
+    t && !t.grain ? tr('Not usable on the Ground or Paths (no relief image): building finishes only', 'Inutilisable pour le Sol et les Tracés (pas d\'image de relief) : revêtements de bâtiment seulement') : null,
+    t && t.raccordVisible ? tr('Seam: repeated over a large surface, its edges show as lines', 'Couture : répétée sur une grande surface, ses bords se voient en lignes') : null,
     t && t.resolution ? `${tr('Resolution', 'Résolution')} : ${t.resolution.toLowerCase()}` : null,
     t ? (importee ? tr('Imported from a folder', 'Importée d\'un dossier') : tr(`Downloaded from ${nomSource(r.source)}`, `Téléchargée depuis ${nomSource(r.source)}`)) : null,
   ];
