@@ -91,7 +91,9 @@ const css = (c) => `rgb(${c.map(v => Math.round(v)).join(',')})`;
  * des coins, sujet cadré, bords de l'image fondus dans le fond. Rend le canevas.
  */
 export function recomposer(source, L, H){
-  const sl = source.width, sh = source.height;
+  // ⚠️ LA TAILLE NATURELLE, PAS CELLE AFFICHÉE : `width` d'une <img> est sa largeur à l'écran (la
+  // carte), et l'image en était déformée (signalé : la commode étirée). Un ImageBitmap n'a que `width`.
+  const sl = source.naturalWidth || source.width, sh = source.naturalHeight || source.height;
   // L'analyse se fait sur une réduction (128 px de large) : assez pour une boîte, sans coût.
   const al = Math.min(128, sl), ah = Math.max(1, Math.round(sh * al / sl));
   const analyse = document.createElement('canvas');

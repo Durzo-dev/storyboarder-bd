@@ -243,6 +243,11 @@ function pastillePossede(t, fichier){
  * pour toutes les cartes. Une image d'un autre site passe par le processus principal
  * (store:vignette) : un canevas refuse de lire les pixels d'une image étrangère.
  */
+/** Les vignettes déjà recadrées, par adresse d'origine : une carte refaite (filtre, page suivante,
+ *  retour de fiche) reprend la sienne aussitôt, sans refaire le calcul ni clignoter. */
+const recadrees = new Map();
+const RECADRAGES_MAX = 400;
+
 if (globalThis.document && document.addEventListener) {
   document.addEventListener('load', async (e) => {
     const img = e.target;
@@ -250,20 +255,27 @@ if (globalThis.document && document.addEventListener) {
     const c = img.closest && img.closest('.store-carte');
     if (!c || img !== c.querySelector('img')) return;
     img.dataset.recadree = '1';
+    const origine = img.currentSrc || img.src;
+    // ⚠️ L'image d'origine n'est JAMAIS montrée (style.css : invisible tant qu'elle n'est pas
+    // recadrée) : la remplacer sous les yeux faisait clignoter chaque carte (signalé).
+    const montrer = (url) => { if (url) img.src = url; else img.classList.add('recadree-origine'); img.classList.add('recadree'); };
+    if (recadrees.has(origine)) { montrer(recadrees.get(origine)); return; }
     try {
       let source = img;
-      if (/^https?:/.test(img.src)) {
-        const rep = await window.storyboarderAPI.storeVignette(img.currentSrc || img.src);
-        if (!rep || !rep.data) return;
+      if (/^https?:/.test(origine)) {
+        const rep = await window.storyboarderAPI.storeVignette(origine);
+        if (!rep || !rep.data) { montrer(null); return; }
         source = await createImageBitmap(new Blob([rep.data]));
       }
       const L = 600, H = 400;   // la carte en 3:2, à la définition d'un écran dense
       const toile = recomposer(source, L, H);
       const blob = await new Promise(ok => toile.toBlob(ok, 'image/jpeg', 0.9));
-      if (!blob || !img.isConnected) return;
-      img.src = URL.createObjectURL(blob);
-      img.classList.add('recadree');
-    } catch (err) { /* l'image d'origine reste, contenue avec sa marge */ }
+      if (!blob) { montrer(null); return; }
+      const url = URL.createObjectURL(blob);
+      if (recadrees.size >= RECADRAGES_MAX) { const [premiere, u] = recadrees.entries().next().value; URL.revokeObjectURL(u); recadrees.delete(premiere); }
+      recadrees.set(origine, url);
+      if (img.isConnected) montrer(url);
+    } catch (err) { montrer(null); /* l'image d'origine, contenue avec sa marge */ }
   }, true);
 }
 

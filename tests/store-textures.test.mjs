@@ -491,7 +491,16 @@ describe('RÉGRESSION : vignettes entières et nettes (signalé : coupées ou fl
 describe('la marge des vignettes : portée par le recadrage (signalé : fonds clairs, dégradés, sujets au bord)', () => {
   const lire = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
   test('une vignette recadrée remplit la carte, sa marge est en elle ; avant, une marge CSS', () => {
-    assert.match(lire('src/style.css'), /\.store-carte img\.recadree\{ padding:0; object-fit:cover; \}/);
+    const css = lire('src/style.css');
+    assert.match(css, /\.store-carte img\.recadree:not\(\.recadree-origine\)\{ padding:0; object-fit:cover; \}/);
+  });
+  test('ni clignotement ni étirement (signalé : la commode étirée, le remplacement au défilement)', () => {
+    const css = lire('src/style.css'), ui = lire('src/store-ui.js'), r = lire('src/vignette-recadrage.js');
+    assert.match(css, /\.store-carte img:not\(\.texture-a-plat\)\{ opacity:0;/);   // l'originale n'est jamais vue
+    assert.match(css, /\.store-carte img\.recadree\{ opacity:1; \}/);
+    assert.match(ui, /recadrees\.has\(origine\)/);                                  // reprise immédiate, sans recalcul
+    assert.match(ui, /recadree-origine/);                                             // échec : l'originale, montrée
+    assert.match(r, /source\.naturalWidth \|\| source\.width/);                     // taille naturelle d'une <img>
     assert.doesNotMatch(lire('src/style.css'), /border-image:var\(--fond-vignette\)/);
   });
 });
