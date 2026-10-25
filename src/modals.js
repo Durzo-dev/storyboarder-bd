@@ -28,7 +28,7 @@ import {
   ANIMAL_JOINT_DEFS, ANIMAL_TYPES, BUILD_WALL_DEFAULT_HEIGHT,
   WALL_OPENING_MAGNET_TYPES, PERSONA_PREVIEW_PAN_SENS, ROOM_FLOOR_TYPE_IDS,
   PANEL_CAM_DEFAULT_DIST_3D,
-  POSE_3D, PREVIEW_OBJECT_ID, PERSONA_SKELETON_3D, ARCHETYPES_3D, GROUND_TYPE_DEFS, GROUND_Y_DEFAULT_3D, TRACÉ_DEFAULTS,
+  POSE_3D, PREVIEW_OBJECT_ID, PERSONA_SKELETON_3D, ARCHETYPES_3D, GROUND_TYPE_DEFS, GROUND_Y_DEFAULT_3D, TRACÉ_DEFAULTS, teinteDuSol3D,
   PERSONA_PREVIEW_MAX_PX,
   TRAVERSANT_TYPES, WALL_PX_PER_UNIT_3D, WALL_TYPES,
 } from './constants.js';
@@ -79,9 +79,11 @@ import { I18N_PREV_LABEL } from './i18n.js';
 let _snapshot = () => {};
 // #454a-4 : la « fiche » d'un bâtiment placé est l'Éditeur de bâtiment (cf. events.js).
 let _editerBatimentPlace = null;
-export function setModalsCallbacks({ snapshot, editerBatimentPlace }) {
+let _redessiner = null;
+export function setModalsCallbacks({ snapshot, editerBatimentPlace, redessiner }) {
   _snapshot = snapshot;
   if (editerBatimentPlace) _editerBatimentPlace = editerBatimentPlace;
+  if (redessiner) _redessiner = redessiner;
 }
 
 // ── DOM references (Persona / Object / Room / Building modals) ────────────────────────────────
@@ -1795,29 +1797,43 @@ export function teinteDuCarreDeTracé(type, couleur){
   return !couleur || (defaut && couleur.toLowerCase() === defaut.toLowerCase()) ? null : couleur;
 }
 
-export function buildTerrainTypeGrid(currentType){
-  const grid = document.getElementById('terrainTypeGrid');
-  grid.innerHTML = '';
-  GROUND_TYPE_DEFS.forEach(def => {
-    const btn = document.createElement('button');
-    btn.className = 'sol-ground-btn' + (def.id === currentType ? ' active' : '');
-    btn.innerHTML = `<span class="sol-ground-swatch" style="background:${def.swatch}"></span>${libelleTable3D(def, tr)}`;
-    btn.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      S.terrainModalType = def.id;
-      grid.querySelectorAll('.sol-ground-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
-    grid.appendChild(btn);
+/**
+ * La texture et la couleur d'une Zone de terrain (demandé, comme le Sol d'une Case) : le carré ouvre
+ * le store filtré sur le Sol ; la couleur, dessous, teint la texture (`terrainColor`, champ AJOUTÉ ;
+ * absent : la couleur naturelle). Le choix de texture attend « Enregistrer » ; la couleur s'applique
+ * en direct (events.js), et une autre texture repart de sa couleur naturelle.
+ */
+export function buildTerrainTextureCarre(type, couleur){
+  const def = GROUND_TYPE_DEFS.find(d => d.id === type) || GROUND_TYPE_DEFS[0];
+  S.terrainModalType = type;
+  const saisie = document.getElementById('terrainColorInput');
+  saisie.value = teinteDuSol3D(def, couleur) || def.swatch;
+  saisie.couleurOrigine = () => def.swatch;
+  // L'Eau a son propre rendu, sans couleur à choisir.
+  saisie.style.display = def.eau ? 'none' : '';
+  document.getElementById('terrainColorLabel').style.display = def.eau ? 'none' : '';
+  S.terrainModalCarre = carreDeTexture({
+    valeur: type, usage: 'sol', titre: tr('Choose the terrain texture', 'Choisir la texture du terrain'),
+    teinte: teinteDuSol3D(def, couleur),
+    appliquer: (id) => {
+      buildTerrainTextureCarre(id, null);
+      // L'aperçu en direct suit la nouvelle texture, à sa couleur naturelle.
+      const o = S.terrainModalOrigine;
+      if (o) { o.target.terrainType = id; delete o.target.terrainColor; }
+      if (_redessiner) _redessiner();
+    },
   });
+  document.getElementById('terrainTextureZone').replaceChildren(S.terrainModalCarre);
 }
 
 export function openTerrainModal(obj){
   S.terrainModalTarget = obj;
-  S.terrainModalType = obj.terrainType || 'herbe';
+  // Ce qu'était la Zone à l'ouverture : l'aperçu en direct la modifie, et la lui rend si la fenêtre se
+  // ferme sans « Enregistrer » (events.js).
+  S.terrainModalOrigine = { target: obj, terrainType: obj.terrainType, terrainColor: obj.terrainColor };
   document.getElementById('terrainNameInput').value  = obj.name  || '';
   document.getElementById('terrainLabelInput').value = obj.label || '';
-  buildTerrainTypeGrid(S.terrainModalType);
+  buildTerrainTextureCarre(obj.terrainType || 'herbe', obj.terrainColor);
   document.getElementById('terrainModal').classList.remove('hidden');
 }
 

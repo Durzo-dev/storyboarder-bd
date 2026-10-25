@@ -20,7 +20,7 @@ import { policeADessiner } from './polices-utilisateur.js';
 import { sondeDebut, sondeFin, sondeImageDebut, sondeImageFin } from './perf-probe.js';
 import { S, currentPage, currentPageData, isLockedScenePanel, estCaseEnRecadrage3D, panelsInPage, ensurePanelNumbers, newId, tr } from './state.js';
 import {
-  WALL_TYPES, WALL_OPENING_MAGNET_TYPES, GROUND_TYPE_DEFS, GROUND_Y_DEFAULT_3D,
+  WALL_TYPES, WALL_OPENING_MAGNET_TYPES, GROUND_TYPE_DEFS, teinteDuSol3D, GROUND_Y_DEFAULT_3D,
   BUILD_WALL_DEFAULT_HEIGHT, WALL_PX_PER_UNIT_3D,
   BUBBLE_TAIL_ANGLE_DEFAULT, BUBBLE_TAIL_LEN_DEFAULT,
   BUBBLE_FONT_FALLBACK, BUBBLE_PADDING_DEFAULT, styleDuTexteDeBulle,
@@ -137,7 +137,7 @@ export function drawTracé(c, o){
       ? GROUND_TYPE_DEFS.find(d => d.id === (o.terrainType || 'herbe'))
       : null;
     c.globalAlpha = 0.5;
-    c.fillStyle = (_tDef ? _tDef.swatch : null) || o.color || '#6B8E23';
+    c.fillStyle = (_tDef ? (teinteDuSol3D(_tDef, o.terrainColor) || _tDef.swatch) : null) || o.color || '#6B8E23';
     c.fillRect(o.x, o.y, o.w, o.h);
     c.globalAlpha = 1;
     if (o.label) {

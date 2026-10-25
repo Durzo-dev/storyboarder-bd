@@ -17,7 +17,7 @@ import { poserCiel3D, retirerCiel3D, abaissementDeLHorizon3D } from './sky-3d.js
 import {
   BUILD_WALL_DEFAULT_HEIGHT, BUILD_WALL_THICKNESS_RATIO_3D, CAM_SMOOTH_EPS, CAM_SMOOTH_FACTOR, CAM_SMOOTH_FACTOR_PAN, PANEL_CAM_DEFAULT_DIST_3D, PANEL_CAM_REF_DIST_3D, PERSONA_REAL_HEIGHT_M,
   PANEL_DEPTH_MAX_3D, PANEL_SCENE_RENDER_MAX_PX, CHILD_DESIGN_SIZE_3D, FIXED_COLOR, WALL_OPENING_MAGNET_TYPES,
-  GROUND_CONTACT_EPS_3D, GROUND_TYPE_DEFS, GROUND_PLANE_SIZE_3D, GROUND_Y_DEFAULT_3D, TRAVERSANT_TYPES, WALL_PX_PER_UNIT_3D,
+  GROUND_CONTACT_EPS_3D, GROUND_TYPE_DEFS, teinteDuSol3D, GROUND_PLANE_SIZE_3D, GROUND_Y_DEFAULT_3D, TRAVERSANT_TYPES, WALL_PX_PER_UNIT_3D,
   TRACÉ_DEFAULTS, WALL_TYPES,
 } from './constants.js';
 // FIX (pre-existing latent bug, surfaced by the Fix 28 tests): TRACÉ_DEFAULTS above was already
@@ -2013,7 +2013,7 @@ function computePanelSceneSignature3D(panel, page, styleKey){
   // and would needlessly invalidate the cache on every camera rotation.
   const tracéPart = JSON.stringify(
     page.objects.filter(o => o.type === 'tracé' && o.panelId === panel.id)
-      .map(o => ({ tt: o.tracéType, c: o.color, tt2: o.terrainType, w: o.width, world: o.world, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) }))
+      .map(o => ({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, w: o.width, world: o.world, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) }))
   );
   return camPart + '||' + parts.join('|') + '||t:' + tracéPart + '||m:' + modelPart + '||l:' + lumierePart;
 }
@@ -2814,7 +2814,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
           .map(c => ({ f: c.wallAlongFrac, y: c.wallYFrac, w: c.w, h: c.h }))
       : null;
     // #437 : l'arrivée du grain refait la Trace, qui passe de l'aplat à sa texture.
-    const sigKey = JSON.stringify({ tt: o.tracéType, c: o.color, tt2: o.terrainType, wh: o.wallHeight, world: o.world, holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) });
+    const sigKey = JSON.stringify({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, wh: o.wallHeight, world: o.world, holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) });
     let entry = tracéMeshCache3D.get(o.id);
     if (!entry || entry.sigKey !== sigKey) {
       sondeCompter('Trace reconstruite');
@@ -2852,7 +2852,8 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         // Logic identical to Building Slabs (floor): covers the Ground without transparency.
         const tType = o.terrainType || 'herbe';
         const tDef  = GROUND_TYPE_DEFS.find(d => d.id === tType) || GROUND_TYPE_DEFS[0];
-        const { map: tMap } = buildGroundTexture(tType);
+        // Sa couleur (terrainColor) teint la texture, comme le Sol d'une Case.
+        const { map: tMap } = buildGroundTexture(tType, teinteDuSol3D(tDef, o.terrainColor));
         const tMapClone = tMap.clone();
         tMapClone.wrapS = tMapClone.wrapT = THREE.RepeatWrapping;
         tMapClone.repeat.set(Math.max(0.5, w.w * (tDef.repeat || 60) / 100),

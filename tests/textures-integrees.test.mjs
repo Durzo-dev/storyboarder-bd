@@ -149,3 +149,22 @@ describe('la couleur EN DIRECT, et « Origine » (demandé)', () => {
     assert.match(lire('trace-textures-3d.js'), /const TEXTURES_DE_TRACE_MAX = 24;/);
   });
 });
+
+describe('la Zone de terrain, comme le Sol d\'une Case (demandé)', () => {
+  const lire = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
+  test('le carré de texture remplace la grille, la couleur est dessous', () => {
+    const html = lire('index.html');
+    assert.ok(!html.includes('id="terrainTypeGrid"'), 'la grille a disparu');
+    assert.ok(html.indexOf('id="terrainTextureZone"') < html.indexOf('id="terrainColorInput"'));
+    assert.match(lire('modals.js'), /carreDeTexture\(\{\s*valeur: type, usage: 'sol'/);
+    assert.match(lire('modals.js'), /saisie\.couleurOrigine = \(\) => def\.swatch;/);
+  });
+  test('le rendu, le plan et les signatures lisent terrainColor ; l\'aperçu est rendu si l\'on ferme sans enregistrer', () => {
+    assert.match(lire('scene3d.js'), /buildGroundTexture\(tType, teinteDuSol3D\(tDef, o\.terrainColor\)\)/);
+    assert.equal((lire('scene3d.js').match(/tc: o\.terrainColor \|\| null/g) || []).length, 2);
+    assert.match(lire('draw.js'), /teinteDuSol3D\(_tDef, o\.terrainColor\)/);
+    const ev = lire('events.js');
+    assert.match(ev, /const o = S\.terrainModalOrigine;\s*if \(!o \|\| !document\.getElementById\('terrainModal'\)/);
+    assert.match(ev, /if \(_o\) rendreZone\(_o\);\s*snapshot\(\);/);
+  });
+});

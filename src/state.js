@@ -218,6 +218,8 @@ export const S = {
   tracéModalTexture:  null,    // #446d : la texture choisie dans la modale du Tracé (null : celle d'origine)
   tracéModalOrigine:  null,    // la Trace et sa couleur à l'ouverture (rendue si on ferme sans enregistrer)
   tracéModalCarre:    null,    // le carré de texture de la modale (teint en direct)
+  terrainModalOrigine: null,   // la Zone de terrain à l'ouverture (rendue si on ferme sans enregistrer)
+  terrainModalCarre:  null,    // le carré de texture de la modale de Zone (teint en direct)
   terrainModalTarget: null,
   terrainModalType:   'herbe', // ground type selected in the modal's grid
 

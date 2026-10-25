@@ -92,7 +92,7 @@ import {
   styleDuTexteDeBulle,
   POSE_3D, GROUND_Y_DEFAULT_3D, OBJECT_3D_W, OBJECT_3D_H, ANIMAL_TYPES, WALL_PX_PER_UNIT_3D,
   CHILD_DESIGN_SIZE_3D, PERSONA_SKELETON_3D, PERSONA_EDITOR_MODEL_ID,
-  ARCHETYPES_3D,
+  ARCHETYPES_3D, GROUND_TYPE_DEFS, teinteDuSol3D,
 } from './constants.js';
 import { champsApparenceBulle } from './bubble-style.js';
 import { FORME_DEFAUT, formeDeLaBulle } from './bubble-shape.js';
@@ -207,7 +207,7 @@ import {
 
   openHelpModal, closeHelpModal, rafraichirManuelOuvert,
 } from './modals.js';
-setModalsCallbacks({ snapshot, editerBatimentPlace });
+setModalsCallbacks({ snapshot, editerBatimentPlace, redessiner: () => drawCurrentPage() });
 // Collapses/expands a section of the Persona/Object modal (cf. .modal-section, per user
 // request). headerEl is the clicked .modal-section-header element; its direct parent is the
 // .modal-section whose "collapsed" class drives the content display (cf. CSS).
@@ -7795,11 +7795,52 @@ document.getElementById('terrainModalCancel').addEventListener('click', () => {
   S.terrainModalTarget = null;
 });
 
+// ── La couleur d'une Zone de terrain, EN DIRECT (comme celle d'un Tracé) ─────────────────────────
+// Fermer sans enregistrer rend à la Zone sa texture et sa couleur d'avant (un observateur, pour tous
+// les chemins : Annuler, croix, Échap, clic à côté).
+{
+  const saisie = document.getElementById('terrainColorInput');
+  let image = 0;
+  const apercu = () => {
+    const o = S.terrainModalOrigine;
+    if (!o) return;
+    const def = GROUND_TYPE_DEFS.find(d => d.id === S.terrainModalType) || GROUND_TYPE_DEFS[0];
+    const t = teinteDuSol3D(def, saisie.value);
+    if (t) o.target.terrainColor = t; else delete o.target.terrainColor;
+    if (S.terrainModalCarre) S.terrainModalCarre.teinter(t);
+    drawCurrentPage();
+  };
+  saisie.addEventListener('input', () => { cancelAnimationFrame(image); image = requestAnimationFrame(apercu); });
+  saisie.addEventListener('change', () => { cancelAnimationFrame(image); apercu(); });
+  if (globalThis.MutationObserver) new MutationObserver(() => {
+    const o = S.terrainModalOrigine;
+    if (!o || !document.getElementById('terrainModal').classList.contains('hidden')) return;
+    S.terrainModalOrigine = null;
+    rendreZone(o);
+    drawCurrentPage();
+  }).observe(document.getElementById('terrainModal'), { attributes: true, attributeFilter: ['class'] });
+}
+/** Rend à une Zone sa texture et sa couleur d'avant l'aperçu en direct. */
+function rendreZone(o){
+  if (o.terrainType === undefined) delete o.target.terrainType; else o.target.terrainType = o.terrainType;
+  if (o.terrainColor === undefined) delete o.target.terrainColor; else o.target.terrainColor = o.terrainColor;
+}
+
 document.getElementById('terrainModalSave').addEventListener('click', () => {
   if (!S.terrainModalTarget) return;
+  // L'annulation doit retrouver la Zone d'AVANT l'aperçu en direct : on la remet le temps de la
+  // photographier, puis on applique.
+  const _o = S.terrainModalOrigine;
+  S.terrainModalOrigine = null;
+  if (_o) rendreZone(_o);
   snapshot();
   S.terrainModalTarget.name        = document.getElementById('terrainNameInput').value.trim() || null;
   S.terrainModalTarget.terrainType = S.terrainModalType;
+  {
+    const def = GROUND_TYPE_DEFS.find(d => d.id === S.terrainModalType) || GROUND_TYPE_DEFS[0];
+    const t = teinteDuSol3D(def, document.getElementById('terrainColorInput').value);
+    if (t) S.terrainModalTarget.terrainColor = t; else delete S.terrainModalTarget.terrainColor;
+  }
   S.terrainModalTarget.label       = document.getElementById('terrainLabelInput').value.trim() || null;
   document.getElementById('terrainModal').classList.add('hidden');
   S.terrainModalTarget = null;

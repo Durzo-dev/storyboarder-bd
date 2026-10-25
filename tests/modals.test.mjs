@@ -102,7 +102,8 @@ describe('Rapatriement des modales Pièce/Bâtiment : la couture tient', () => {
     // Sans injection, enregistrer une modale Pièce ou Bâtiment ne pose plus de point d'annulation.
     // Rien ne lève : l'undo saute simplement une étape, et on ne s'en aperçoit qu'en l'utilisant.
     // #454a-4 : `editerBatimentPlace` s'y est ajouté (la fiche d'un bâtiment placé est son éditeur).
-    assert.match(evt, /setModalsCallbacks\(\{\s*snapshot\s*(,\s*editerBatimentPlace\s*)?\}\)/,
+    // #446d : `redessiner` aussi (l'aperçu en direct d'une Zone de terrain qui change de texture).
+    assert.match(evt, /setModalsCallbacks\(\{\s*snapshot\s*(,\s*editerBatimentPlace\s*)?(,\s*redessiner: \(\) => drawCurrentPage\(\)\s*)?\}\)/,
       'l\'appel d\'injection a disparu d\'events.js');
     assert.match(mod, /export function setModalsCallbacks/,
       'modals.js n\'expose plus de point d\'injection');

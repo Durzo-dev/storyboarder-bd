@@ -2513,8 +2513,12 @@
       <div class="modal-section-body">
         <label class="modal-field-label">Nom</label>
         <input type="text" id="terrainNameInput" placeholder="Ex. Prairie">
-        <label class="modal-field-label" style="margin-top:10px;">Type de terrain</label>
-        <div id="terrainTypeGrid" class="sol-ground-grid" style="margin-top:6px;"></div>
+        <!-- Comme le Sol d'une Case et un Tracé (demandé) : la texture en carré, qui ouvre le store de
+             textures filtré sur le Sol ; sa couleur dessous, appliquée en direct (modals.js, events.js). -->
+        <label class="modal-field-label" style="margin-top:10px;" id="terrainTextureLabel">Texture</label>
+        <div id="terrainTextureZone" class="texture-carre-zone" style="margin-top:6px;"></div>
+        <label class="modal-field-label" style="margin-top:14px;" id="terrainColorLabel">Couleur</label>
+        <input type="color" id="terrainColorInput" style="width:100%; height:36px; padding:2px; cursor:pointer;">
         <label class="modal-field-label" style="margin-top:10px;">Étiquette affichée</label>
         <input type="text" id="terrainLabelInput" placeholder="Optionnel">
       </div>
