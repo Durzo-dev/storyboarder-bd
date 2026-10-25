@@ -5,6 +5,9 @@
 Tasks #444 to #446. Searching, showing and downloading resources from elsewhere without leaving the
 application: 3D models first, textures next.
 
+The interface and code rules shared by every store (window, cards, thumbnails, detail page), with
+mockups, are in [store-guide.md](store-guide.md).
+
 ## Agreed scope
 
 - **3D models, Sketchfab first** (#444), then **Poly Haven** (#445).

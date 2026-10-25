@@ -5,6 +5,9 @@
 Tâches #444 à #446. Chercher, montrer et télécharger des ressources venues d'ailleurs, sans
 quitter l'application : des modèles 3D d'abord, des textures ensuite.
 
+Les règles d'interface et de code communes à tous les stores (fenêtre, cartes, vignettes, fiche),
+avec des maquettes, sont dans [store-guide.md](store-guide.md).
+
 ## Périmètre arrêté
 
 - **Modèles 3D, Sketchfab d'abord** (#444), puis **Poly Haven** (#445).
