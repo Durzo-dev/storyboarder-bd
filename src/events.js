@@ -7747,7 +7747,7 @@ document.getElementById('tracéModalCancel').addEventListener('click', () => {
 /** Rend à une Trace ce que l'aperçu en direct a changé : couleur, largeur (2D et 3D), hauteur. */
 function rendreTrace(o){
   const t = o.target;
-  for (const k of ['color', 'width', 'wallHeight']) { if (o[k] === undefined) delete t[k]; else t[k] = o[k]; }
+  for (const k of ['color', 'width', 'wallHeight', 'marquage']) { if (o[k] === undefined) delete t[k]; else t[k] = o[k]; }
   if (t.world && o.largeur !== undefined) t.world.width = o.largeur;
 }
 
@@ -7764,6 +7764,13 @@ function rendreTrace(o){
     if (!l) return;
     o.target.world.width = l.world;
     o.target.width = l.width;
+    drawCurrentPage();
+  });
+  // Le marquage au sol d'une route, en direct lui aussi. Coché = le champ disparaît du fichier.
+  document.getElementById('tracéMarquageInput').addEventListener('change', (e) => {
+    const o = S.tracéModalOrigine;
+    if (!o) return;
+    if (e.target.checked) delete o.target.marquage; else o.target.marquage = false;
     drawCurrentPage();
   });
   hauteur.addEventListener('input', () => {
@@ -7786,6 +7793,10 @@ document.getElementById('tracéModalSave').addEventListener('click', () => {
   snapshot();
   S.tracéModalTarget.name  = document.getElementById('tracéNameInput').value.trim() || null;
   S.tracéModalTarget.color = document.getElementById('tracéColorInput').value;
+  if (document.getElementById('tracéMarquageField').style.display !== 'none') {
+    if (document.getElementById('tracéMarquageInput').checked) delete S.tracéModalTarget.marquage;
+    else S.tracéModalTarget.marquage = false;
+  }
   // La largeur 3D en mètres ; le trait du plan 2D garde sa proportion (largeurDeTrace3D).
   if (document.getElementById('tracéWidthField').style.display !== 'none') {
     const _l = largeurDeTrace3D(S.tracéModalTarget, document.getElementById('tracéWidthInput').value);

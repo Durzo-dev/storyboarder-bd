@@ -243,8 +243,8 @@ export function drawTracé(c, o){
       c.moveTo(pts[0].x, pts[0].y);
       for (let i = 1; i < pts.length; i++) c.lineTo(pts[i].x, pts[i].y);
       c.stroke();
-      // Dashed white center line for roads (classic comic-book style).
-      if (tt === 'route') {
+      // Dashed white center line for roads (classic comic-book style). Sauf route sans marquage.
+      if (tt === 'route' && o.marquage !== false) {
         c.strokeStyle = 'rgba(255,255,255,0.55)';
         c.lineWidth = 1.5;
         c.setLineDash([7, 5]);

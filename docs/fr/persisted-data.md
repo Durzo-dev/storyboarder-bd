@@ -113,7 +113,8 @@ Depuis #446d, trois champs peuvent aussi désigner une texture de « Mes texture
 `tex:<dossier>`, le nom du dossier de la texture dans `Textures/` (`tex:polyhaven-rocky_trail`).
 Un quatrième champ est AJOUTÉ sur la Case : `groundColor` (`#rrggbb`), la couleur de son Sol, qui
 teinte sa texture comme celle d'un Tracé ; absent, la couleur naturelle de la matière. Changer de
-texture le retire. Une Zone de terrain a le sien, `terrainColor`, AJOUTÉ, au même sens.
+texture le retire. Une Zone de terrain a le sien, `terrainColor`, AJOUTÉ, au même sens. Une route peut porter
+`marquage: false` (AJOUTÉ) : pas de ligne blanche ; absent, le marquage est affiché.
 Une texture absente (supprimée, autre machine) n'est pas trouvée : le Sol retombe sur la première
 matière, le Tracé sur sa texture d'origine, et le fichier garde l'identifiant, ce qui la rend dès
 qu'elle est retéléchargée.

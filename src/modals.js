@@ -1754,7 +1754,10 @@ export function openTracéModal(obj){
   // pour la lui rendre si la fenêtre se ferme sans « Enregistrer » (events.js).
   // La largeur et la hauteur aussi (demandé : visibles pendant la saisie, pas seulement à l'enregistrement).
   S.tracéModalOrigine = { target: obj, color: obj.color, width: obj.width, wallHeight: obj.wallHeight,
-    largeur: obj.world ? obj.world.width : undefined };
+    marquage: obj.marquage, largeur: obj.world ? obj.world.width : undefined };
+  // Le marquage au sol, pour une route seulement ; absent du fichier = affiché.
+  document.getElementById('tracéMarquageField').style.display = obj.tracéType === 'route' ? '' : 'none';
+  document.getElementById('tracéMarquageInput').checked = obj.marquage !== false;
   // La largeur 3D en mètres, pour une route ou un chemin qui en a une (largeurDeTrace3D). Un muret,
   // une clôture, une haie ou une barrière tirent leur épaisseur de leur hauteur : pas de champ.
   const _largeur = (obj.tracéType === 'route' || obj.tracéType === 'chemin') && obj.world && obj.world.width > 0;

@@ -2013,7 +2013,7 @@ function computePanelSceneSignature3D(panel, page, styleKey){
   // and would needlessly invalidate the cache on every camera rotation.
   const tracéPart = JSON.stringify(
     page.objects.filter(o => o.type === 'tracé' && o.panelId === panel.id)
-      .map(o => ({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, w: o.width, world: o.world, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) }))
+      .map(o => ({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, w: o.width, world: o.world, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) }))
   );
   return camPart + '||' + parts.join('|') + '||t:' + tracéPart + '||m:' + modelPart + '||l:' + lumierePart;
 }
@@ -2814,7 +2814,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
           .map(c => ({ f: c.wallAlongFrac, y: c.wallYFrac, w: c.w, h: c.h }))
       : null;
     // #437 : l'arrivée du grain refait la Trace, qui passe de l'aplat à sa texture.
-    const sigKey = JSON.stringify({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, wh: o.wallHeight, world: o.world, holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) });
+    const sigKey = JSON.stringify({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, wh: o.wallHeight, world: o.world, holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) });
     let entry = tracéMeshCache3D.get(o.id);
     if (!entry || entry.sigKey !== sigKey) {
       sondeCompter('Trace reconstruite');
@@ -2988,7 +2988,8 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         }
         // Secondary mesh (roads only): white DASHED center line.
         // Dashes = 1.2× the road width, gaps = 2× the width, thickness 9% of the width.
-        if (isRoute) {
+        // `marquage: false` (case de la fenêtre de la route, demandé) : une route sans marquage.
+        if (isRoute && o.marquage !== false) {
           const dashGeo = buildTracéDashGeometry3D(
             w.pts, w.width * 0.09,   // dash width (reduced)
             w.width * 1.2,            // dash length (reduced)

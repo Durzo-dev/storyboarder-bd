@@ -483,6 +483,7 @@ export const I18N_TRAILING = [
   // toujours, hors de portée de la garde qui ne lit que les boutons et les options.
   ['#personaTraverseGroundField', 'Can pass through the ground', 'Peut traverser le sol'],
   ['#objectTraverseGroundField', 'Can pass through the ground', 'Peut traverser le sol'],
+  ['#tracéMarquageField', 'Road markings', 'Marquage au sol'],
   // ⚠️ LA CASE DE LA BULLE N'ÉTAIT PAS TRADUITE, seule celle de la Case l'était — deux libellés
   // identiques, un seul déclaré. Manque antérieur à #426b, trouvé en cherchant où ranger la
   // voisine : un `textContent` effacerait l'<input>, donc ces entrées vivent ICI et nulle part
