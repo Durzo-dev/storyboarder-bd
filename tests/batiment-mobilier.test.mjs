@@ -89,7 +89,7 @@ describe('le mobilier d\'un bâtiment (#454e)', () => {
     const meuble = g.children.find(o => o.userData.meubleId === m.id);
     assert.ok(meuble, 'le meuble est dans le groupe');
     assert.deepEqual([meuble.position.x, meuble.position.y, meuble.position.z], [2, 0, 1.5]);
-    assert.ok(Math.abs(meuble.rotation.y - Math.PI / 2) < 1e-9);
+    assert.ok(Math.abs(meuble.rotation.y - 3 * Math.PI / 2) < 1e-9);   // un quart de tour horaire
     const boite = new THREE.Box3().setFromObject(meuble);
     assert.ok(Math.abs(boite.min.y) < 1e-6, 'au sol');
     assert.ok(Math.abs(boite.max.y - 0.8) < 1e-6, 'à sa hauteur');
@@ -117,7 +117,7 @@ describe('les réglages de l\'élément choisi (demandé)', () => {
     const { m } = unePieceMeublee();
     m.rotY = 0.3;
     M.tournerMeuble(m);
-    assert.ok(Math.abs(m.rotY - (0.3 + Math.PI / 2)) < 1e-6);
+    assert.ok(Math.abs(m.rotY - (0.3 - Math.PI / 2 + 2 * Math.PI)) < 1e-6);   // horaire : −90°
   });
 
   test('le clic droit maintenu tourne d\'un angle quelconque, sur tout le tour', () => {
@@ -202,9 +202,9 @@ describe('orienter dans tous les sens, et ne pas traverser les murs (demandé)',
 
   test('le repère : ses axes tournés suivent l\'orientation', () => {
     const { m } = unePieceMeublee();
-    M.tournerMeuble(m);   // un quart de tour : son devant regarde +x
+    M.tournerMeuble(m);   // un quart de tour horaire vu de dessus : son devant (vers le bas de l'écran) regarde à gauche, −x
     const a = M.axesDuMeuble(m);
-    assert.ok(Math.abs(a.z.x - 1) < 1e-9 && Math.abs(a.y.y - 1) < 1e-9);
+    assert.ok(Math.abs(a.z.x + 1) < 1e-9 && Math.abs(a.y.y - 1) < 1e-9);
   });
 
   test('câblage : un geste qui finit dans un mur est défait, l\'élément est rouge pendant', () => {
@@ -249,7 +249,21 @@ describe('tourner sur UN axe, choisi dans le repère (demandé)', () => {
   test('câblage : les axes du repère se cliquent ; le clic droit maintenu ne tourne que l\'axe actif ; les angles se saisissent', () => {
     const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
     assert.match(ui, /g\.addEventListener\('click', \(\) => \{ axeActif = g\.dataset\.axe; remplirPanneau\(\); \}\)/);
-    assert.match(ui, /if \(axeActif === 'y'\) tournerDe\(x, q\(delta\)\); else pencherMeuble\(x, axeActif, q\(delta\)\);/);
+    assert.match(ui, /if \(axeActif === 'y'\) tournerDe\(x, q\(-g\.parcouru\)\);/);
+    assert.match(ui, /pencherMeuble\(x, axeActif, q\(delta\)\);/);
     assert.match(ui, /retoucherMeuble\(id, \(x\) => fixerAngle\(x, axe, deg \* Math\.PI \/ 180\)\)/);
+  });
+});
+
+describe('les retours sur les gestes (demandé)', () => {
+  test('le quart de tour suit la FLÈCHE du bouton : le sens horaire vu de dessus (rotY diminue)', () => {
+    const { m } = unePieceMeublee();
+    M.tournerMeuble(m);
+    assert.ok(Math.abs(m.rotY - 3 * Math.PI / 2) < 1e-9);
+  });
+  test('câblage : décollé, la molette règle l\'élévation ; incliner et basculer au mouvement linéaire', () => {
+    const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
+    assert.match(ui, /if \(x\.colle === false\) \{[\s\S]{0,300}collerAuSol\(x, false, \(x\.y \|\| 0\) \+ pas\);/);
+    assert.match(ui, /const delta = axeActif === 'x' \? \(e\.clientY - g\.y0\) \* VITESSE : \(e\.clientX - g\.x0\) \* VITESSE;/);
   });
 });

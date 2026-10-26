@@ -219,9 +219,13 @@ const normaliserAngle = (a) => {
   return r;
 };
 
-/** Un quart de tour de plus (le clic droit, le bouton « Tourner », demandé), depuis son angle actuel. */
+/**
+ * Un quart de tour de plus (le clic droit, le bouton « Tourner », demandé), depuis son angle actuel,
+ * dans le SENS HORAIRE vu de dessus, celui de la flèche du bouton (signalé : il tournait à l'envers).
+ * Dans three, un angle positif autour de y tourne dans le sens trigonométrique vu d'en haut.
+ */
 export function tournerMeuble(m){
-  m.rotY = normaliserAngle((m.rotY || 0) + Math.PI / 2);
+  m.rotY = normaliserAngle((m.rotY || 0) - Math.PI / 2);
   return m;
 }
 

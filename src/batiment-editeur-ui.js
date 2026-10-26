@@ -1205,9 +1205,16 @@ function commandes({ m, piece, ouv, esc, meuble }){
     if (meuble) return lignes(
       tr('Drag: move it (it snaps to the walls).', 'Tirer : le déplacer (il s\'aimante aux murs).'),
       tr('Right-click: turn it by 90°.', 'Clic droit : le tourner de 90°.'),
-      tr('Hold right button and circle around it: turn it on the active axis (chosen in the axes). Ctrl: by 15°.', 'Clic droit maintenu, en tournant autour : le tourner sur l\'axe actif (choisi dans le repère). Ctrl : par 15°.'),
+      axeActif === 'y'
+        ? tr('Hold right button and circle around it: turn it. Ctrl: by 15°.', 'Clic droit maintenu, en tournant autour : le tourner. Ctrl : par 15°.')
+        : axeActif === 'x'
+          ? tr('Hold right button, up / down: tilt it. Ctrl: by 15°.', 'Clic droit maintenu, haut / bas : l\'incliner. Ctrl : par 15°.')
+          : tr('Hold right button, left / right: lean it. Ctrl: by 15°.', 'Clic droit maintenu, gauche / droite : le basculer. Ctrl : par 15°.'),
+      tr('The axis is chosen in the axes (Orientation).', 'L\'axe se choisit dans le repère (Orientation).'),
       tr('In red: inside a wall, it will go back on release.', 'En rouge : dans un mur, il reviendra au relâcher.'),
-      tr('Wheel: make it bigger or smaller.', 'Molette : l\'agrandir ou le rétrécir.'),
+      meuble.colle === false
+        ? tr('Wheel: raise or lower it (Shift: by 1 cm).', 'Molette : le monter ou le descendre (Maj : au centimètre).')
+        : tr('Wheel: make it bigger or smaller.', 'Molette : l\'agrandir ou le rétrécir.'),
       tr('Alt: move without snapping.', 'Alt : déplacer sans aimant.'),
       tr('Del: delete it.', 'Suppr : le supprimer.'), deselect);
     if (ouv) return lignes(
@@ -1728,10 +1735,17 @@ function cablerPlan(){
       const maintenant = Date.now();
       if (!E.molette || E.molette.id !== meubleMolette || maintenant - E.molette.t > 800) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; }
       const x = E.batiment.elements.find(q => q.id === meubleMolette);
-      const avant = x.echelle;
-      echelonnerMeuble(x, e.deltaY < 0 ? 1 : -1);
-      // Un cran qui le mettrait dans un mur qu'il ne peut pas traverser est refusé.
-      if (meubleEnCollision(E.batiment, x)) x.echelle = avant;
+      if (x.colle === false) {
+        // DÉCOLLÉ, la molette le monte ou le descend (demandé) : 5 cm par cran, 1 cm avec Maj ; sous
+        // le plancher seulement s'il peut traverser (collerAuSol le borne).
+        const pas = (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 0.01 : 0.05);
+        collerAuSol(x, false, (x.y || 0) + pas);
+      } else {
+        const avant = x.echelle;
+        echelonnerMeuble(x, e.deltaY < 0 ? 1 : -1);
+        // Un cran qui le mettrait dans un mur qu'il ne peut pas traverser est refusé.
+        if (meubleEnCollision(E.batiment, x)) x.echelle = avant;
+      }
       E.molette = { id: meubleMolette, t: maintenant };
       E.selection = { meubleId: meubleMolette };
       apresModification();
@@ -1880,9 +1894,16 @@ function cablerPlan(){
       if (d > Math.PI) d -= 2 * Math.PI; else if (d < -Math.PI) d += 2 * Math.PI;
       g.angle = a; g.parcouru += d;
       // Vu de dessus (z vers le bas de l'écran), suivre la souris, c'est tourner en sens inverse de atan2.
-      const delta = -g.parcouru;
       x.rotY = g.base.rotY; x.rotX = g.base.rotX; x.rotZ = g.base.rotZ;
-      if (axeActif === 'y') tournerDe(x, q(delta)); else pencherMeuble(x, axeActif, q(delta));
+      if (axeActif === 'y') tournerDe(x, q(-g.parcouru));
+      else {
+        // INCLINER et BASCULER ne se voient presque pas de dessus : tourner AUTOUR de l'élément n'y
+        // correspond à rien (signalé : difficile). Un mouvement LINÉAIRE, comme un manche, 0,5° par
+        // pixel : haut / bas incline (X), gauche / droite bascule (Z).
+        const VITESSE = Math.PI / 180 * 0.5;
+        const delta = axeActif === 'x' ? (e.clientY - g.y0) * VITESSE : (e.clientX - g.x0) * VITESSE;
+        pencherMeuble(x, axeActif, q(delta));
+      }
       if (!e.altKey) { const c = aimanterMeuble(E.batiment, x, { x: x.x, z: x.z }); x.x = c.x; x.z = c.z; }
       E.collisionMeuble = meubleEnCollision(E.batiment, x) ? x.id : null;
       E.selection = { meubleId: x.id };
