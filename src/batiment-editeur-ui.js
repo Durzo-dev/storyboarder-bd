@@ -302,80 +302,82 @@ function remplirPanneau(){
 const carresRevetement = new Map();
 
 /** Où vit un revêtement, retrouvé PAR SON ID à chaque lecture : une annulation refait le bâtiment. */
-function porteurDuRevetement(cible){
-  const b = E.batiment;
-  if (cible.niveauId) return (b.niveaux || []).find(n => n.id === cible.niveauId) || null;
+function porteurDuRevetement(b, cible){
+  if (cible.batiment) return b;
   return (b.pieces || []).find(p => p.id === cible.pieceId) || null;
 }
 
 /**
- * La section « Revêtements » : la FAÇADE du niveau courant, puis, si une pièce est choisie, ses MURS,
- * son SOL et son PLAFOND. Chacun : le carré de texture (le store en mode « choisir », sur l'usage) et
- * sa couleur dessous, appliquée en direct à l'aperçu 3D, une étape d'annulation par geste.
+ * Un revêtement dans le menu : le carré de texture (le store en mode « choisir », sur l'usage) et sa
+ * couleur dessous, appliquée en direct à l'aperçu 3D, une étape d'annulation par geste.
+ */
+function blocRevetement(l, gardes){
+  const porteur = porteurDuRevetement(E.batiment, l.cible);
+  const rev = normaliserRevetement(porteur && porteur[l.champ]);
+  const texture = rev ? rev.texture : null;
+  const cle = `${l.cible.batiment ? 'batiment' : l.cible.pieceId}|${l.champ}|${texture}`;
+  gardes.add(cle);
+  // Écrire le revêtement (null efface le champ : rien ne change pour un bâtiment sans revêtement).
+  const ecrire = (b, valeur) => {
+    const p = porteurDuRevetement(b, l.cible);
+    if (!p) return;
+    const v = normaliserRevetement(valeur);
+    if (v) p[l.champ] = v; else delete p[l.champ];
+  };
+  let carre = carresRevetement.get(cle);
+  if (carre) carre.teinter(rev && rev.couleur);
+  else {
+    carre = carreDeTexture({
+      valeur: texture, usage: l.usage, titre: l.choisir, teinte: rev && rev.couleur,
+      // Une autre texture repart de sa couleur naturelle, comme le Sol d'une Case.
+      appliquer: (v) => modifier(b => ecrire(b, { texture: v, couleur: null })),
+    });
+    carresRevetement.set(cle, carre);
+  }
+  // La couleur : la naturelle de la texture tant qu'on n'en a pas choisi ; « Origine » y revient.
+  const naturelle = () => { const p = peintureDuRevetement({ texture }, l.usage); return p.teinte || p.couleur; };
+  const saisie = document.createElement('input');
+  saisie.type = 'color';
+  saisie.className = 'batiment-revetement-couleur';
+  saisie.value = (rev && rev.couleur) || naturelle();
+  saisie.couleurOrigine = naturelle;
+  let geste = false;
+  const poser = () => {
+    const c = saisie.value.toLowerCase() === naturelle().toLowerCase() ? null : saisie.value;
+    ecrire(E.batiment, { texture, couleur: c });
+    carre.teinter(c);
+    if (E.apercu) E.apercu.reconstruire(E.batiment);
+  };
+  saisie.addEventListener('input', () => {
+    // Une seule étape d'annulation par geste : la première nuance la prend.
+    if (!geste) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; geste = true; }
+    poser();
+  });
+  saisie.addEventListener('change', () => { if (!geste) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; } geste = false; poser(); majBoutonsDeSortie(); });
+  return sousSection(l.titre, carre, saisie);
+}
+
+/**
+ * Les revêtements (demandé) : la FAÇADE dans la section Bâtiment, pour tous les étages ; la section
+ * de la PIÈCE choisie, titrée de son nom : ses murs, son sol, son plafond. Sans pièce, elle se cache.
  */
 function remplirRevetements(){
-  const zone = $('batimentRevetements');
-  if (!zone) return;
-  const niveau = (E.batiment.niveaux || []).find(n => n.id === E.niveauId);
-  const piece = pieceSelectionnee();
-  const lignes = [];
-  if (niveau) lignes.push({ titre: tr(`Facade · ${niveau.nom}`, `Façade · ${niveau.nom}`), usage: 'mur-ext', cible: { niveauId: niveau.id }, champ: 'facade',
-    choisir: tr('Choose the facade', 'Choisir la façade') });
-  if (piece) {
-    lignes.push({ titre: tr(`Walls · ${piece.nom}`, `Murs · ${piece.nom}`), usage: 'mur-int', cible: { pieceId: piece.id }, champ: 'murs',
-      choisir: tr('Choose the walls', 'Choisir les murs') });
-    lignes.push({ titre: tr('Floor', 'Sol'), usage: 'sol-int', cible: { pieceId: piece.id }, champ: 'sol', choisir: tr('Choose the floor', 'Choisir le sol') });
-    lignes.push({ titre: tr('Ceiling', 'Plafond'), usage: 'plafond', cible: { pieceId: piece.id }, champ: 'plafond', choisir: tr('Choose the ceiling', 'Choisir le plafond') });
-  }
+  const facade = $('batimentFacade'), zone = $('batimentRevetements');
+  if (!facade || !zone) return;
   const gardes = new Set();
-  const blocs = lignes.map(l => {
-    const porteur = porteurDuRevetement(l.cible);
-    const rev = normaliserRevetement(porteur && porteur[l.champ]);
-    const texture = rev ? rev.texture : null;
-    const cle = `${l.cible.niveauId || l.cible.pieceId}|${l.champ}|${texture}`;
-    gardes.add(cle);
-    // Écrire le revêtement (null efface le champ : rien ne change pour un bâtiment sans revêtement).
-    const ecrire = (b, valeur) => {
-      const p = l.cible.niveauId ? (b.niveaux || []).find(n => n.id === l.cible.niveauId) : (b.pieces || []).find(x => x.id === l.cible.pieceId);
-      if (!p) return;
-      const v = normaliserRevetement(valeur);
-      if (v) p[l.champ] = v; else delete p[l.champ];
-    };
-    let carre = carresRevetement.get(cle);
-    if (carre) carre.teinter(rev && rev.couleur);
-    else {
-      carre = carreDeTexture({
-        valeur: texture, usage: l.usage, titre: l.choisir, teinte: rev && rev.couleur,
-        // Une autre texture repart de sa couleur naturelle, comme le Sol d'une Case.
-        appliquer: (v) => modifier(b => ecrire(b, { texture: v, couleur: null })),
-      });
-      carresRevetement.set(cle, carre);
-    }
-    // La couleur : la naturelle de la texture tant qu'on n'en a pas choisi ; « Origine » y revient.
-    const naturelle = () => { const p = peintureDuRevetement({ texture }, l.usage); return p.teinte || p.couleur; };
-    const saisie = document.createElement('input');
-    saisie.type = 'color';
-    saisie.className = 'batiment-revetement-couleur';
-    saisie.value = (rev && rev.couleur) || naturelle();
-    saisie.couleurOrigine = naturelle;
-    let geste = false;
-    const poser = () => {
-      const c = saisie.value.toLowerCase() === naturelle().toLowerCase() ? null : saisie.value;
-      ecrire(E.batiment, { texture, couleur: c });
-      carre.teinter(c);
-      if (E.apercu) E.apercu.reconstruire(E.batiment);
-    };
-    saisie.addEventListener('input', () => {
-      // Une seule étape d'annulation par geste : la première nuance la prend.
-      if (!geste) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; geste = true; }
-      poser();
-    });
-    saisie.addEventListener('change', () => { if (!geste) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; } geste = false; poser(); majBoutonsDeSortie(); });
-    return sousSection(l.titre, carre, saisie);
-  });
+  facade.replaceChildren(blocRevetement({ titre: tr('Facade', 'Façade'), usage: 'mur-ext', cible: { batiment: true }, champ: 'facade',
+    choisir: tr('Choose the facade', 'Choisir la façade') }, gardes));
+  const piece = pieceSelectionnee();
+  $('batimentSectionPiece').hidden = !piece;
+  if (piece) {
+    $('batimentSectionRevetements').textContent = piece.nom;
+    const cible = { pieceId: piece.id };
+    zone.replaceChildren(
+      blocRevetement({ titre: tr('Walls', 'Murs'), usage: 'mur-int', cible, champ: 'murs', choisir: tr('Choose the walls', 'Choisir les murs') }, gardes),
+      blocRevetement({ titre: tr('Floor', 'Sol'), usage: 'sol-int', cible, champ: 'sol', choisir: tr('Choose the floor', 'Choisir le sol') }, gardes),
+      blocRevetement({ titre: tr('Ceiling', 'Plafond'), usage: 'plafond', cible, champ: 'plafond', choisir: tr('Choose the ceiling', 'Choisir le plafond') }, gardes));
+  } else zone.replaceChildren();
   for (const k of [...carresRevetement.keys()]) if (!gardes.has(k)) carresRevetement.delete(k);
-  if (!piece) blocs.push(vide(tr('Choose a room for its walls, floor and ceiling.', 'Choisissez une pièce pour ses murs, son sol et son plafond.')));
-  zone.replaceChildren(...blocs);
 }
 
 // ── Les niveaux (#454b) ────────────────────────────────────────────────────────────────────────
@@ -1011,7 +1013,8 @@ function modifier(faire){
   if (E.historique.length > 200) E.historique.shift();
   E.refaire = [];
   faire(E.batiment);
-  actualiserPieces(E.batiment, E.niveauId, tr);
+  // L'état d'avant : une pièce NÉE dans une autre en hérite les revêtements (actualiserPieces).
+  actualiserPieces(E.batiment, E.niveauId, tr, JSON.parse(E.historique[E.historique.length - 1]));
   apresModification();
 }
 
@@ -1789,7 +1792,8 @@ function ouvrirApercu(conteneur, b){
       if (demande) cancelAnimationFrame(demande);
       if (observateur) observateur.disconnect();
       groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); });
-      Object.values(mats).forEach(m => m.dispose());
+      // `revetement` est la fabrique des revêtements, pas une matière : on ne libère que les matières.
+      Object.values(mats).forEach(m => { if (m && typeof m.dispose === 'function') m.dispose(); });
       grille.geometry.dispose(); grille.material.dispose();
       rendu.dispose();
       if (rendu.forceContextLoss) rendu.forceContextLoss();
@@ -1849,7 +1853,10 @@ async function enregistrer(){
 function clavier(e){
   if (!E) return;
   const tag = document.activeElement && document.activeElement.tagName;
-  const dansUnChamp = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+  // Un champ COULEUR ou une case ne prend pas de frappe : il ne doit pas retenir les touches de l'éditeur
+  // (signalé : après un réglage de revêtement, Suppr ne supprimait plus la pièce).
+  const typeDuChamp = tag === 'INPUT' ? document.activeElement.type : '';
+  const dansUnChamp = (tag === 'INPUT' && typeDuChamp !== 'color' && typeDuChamp !== 'checkbox') || tag === 'TEXTAREA' || tag === 'SELECT';
   // Une modale ouverte par-dessus (la confirmation) garde ses touches.
   if (document.querySelector('.modal-overlay:not(.hidden)')) return;
   const avale = () => { e.preventDefault(); e.stopImmediatePropagation(); };
@@ -1903,12 +1910,18 @@ function clavier(e){
     const id = E.selection.murId;
     modifier(b => supprimerMur(b, id));
   }
+  // Une pièce choisie : ses murs, sauf ceux qu'elle partage (comme « Supprimer » à son clic droit).
+  else if ((e.key === 'Delete' || e.key === 'Backspace') && pieceSelectionnee()) {
+    supprimerPieceDeLEditeur(E.selection.pieceId);
+  }
   // Le reste, raccourcis de la Planche cachée dessous, n'a pas de sens ici : avalé, comme au Lecteur.
   avale();
 }
 
 export function initEditeurDeBatiment(){
   if (!$('batimentEditeur')) return;
+  // Un grain de revêtement arrivé après le dessin (batiment-revetements.js) : refaire l'aperçu.
+  window.addEventListener('grains-batiment', () => { if (E && E.apercu) E.apercu.reconstruire(E.batiment); });
   $('batimentEditeurFermerX').onclick = () => fermerEditeurDeBatiment();
   $('batimentQuitterBtn').onclick = () => fermerEditeurDeBatiment();
   $('batimentRecadrerBtn').onclick = () => recadrer();

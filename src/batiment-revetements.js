@@ -9,7 +9,8 @@
  *
  * OÙ ILS VIVENT (décision 5 de #454 : « chaque étage habille l'intérieur de ses murs à sa façon ») :
  *   - une PIÈCE : `murs` (la face de chaque mur tournée vers elle), `sol`, `plafond` ;
- *   - un NIVEAU : `facade` (les faces de ses murs tournées vers l'extérieur) ;
+ *   - le BÂTIMENT : `facade` (les faces de tous ses murs tournées vers l'extérieur, tous étages
+ *     confondus : demandé, pas de façade par étage) ;
  *   - un MUR peut l'emporter sur sa face extérieure (`revetement.exterieur`, champ du format d'origine).
  * Tous AJOUTÉS, absents par défaut : un bâtiment existant se dessine comme avant.
  *
@@ -18,7 +19,7 @@
  */
 import { COULEURS_BATIMENT, texturesIntegrees } from './textures-integrees.js';
 import { textureDeBatiment } from './textures-utilisateur.js';
-import { grainCharge3D } from './bubble-grain.js';
+import { grainCharge3D, prechargerGrains3D } from './bubble-grain.js';
 import { appliquerTeinteAuMotif3D, rvbDeCouleur3D, natureDuNom3D } from './bubble-texture.js';
 import { GROUND_PLANE_SIZE_3D } from './constants.js';
 import { dansLaFace } from './batiment-pieces.js';
@@ -41,8 +42,7 @@ export function revetementDeLaFace(b, niveauId, mur, pieceId){
   }
   const propre = normaliserRevetement(mur && mur.revetement && mur.revetement.exterieur);
   if (propre) return propre;
-  const n = (b.niveaux || []).find(x => x.id === niveauId);
-  return normaliserRevetement(n && n.facade);
+  return normaliserRevetement(b && b.facade);
 }
 
 /** Le revêtement du sol ou du plafond d'une pièce. PURE. */
@@ -97,11 +97,26 @@ const MATIERES_MAX = 48;
  * Les UV des faces sont en MÈTRES : la texture se répète une fois par tuile. Une texture dont le
  * grain n'est pas encore chargé est peinte unie de sa teinte, et sa clé le dit : elle sera refaite.
  */
+/**
+ * Les grains demandés et pas encore là. ⚠️ Une texture posée avant que son grain soit chargé était
+ * peinte unie et le restait jusqu'au prochain rebâtiment (signalé : le sol n'apparaissait qu'en
+ * changeant sa couleur). On demande le grain ; à son arrivée, `grains-batiment` fait refaire les
+ * bâtiments (l'aperçu de l'éditeur l'écoute).
+ */
+const demandes = new Set();
+function demanderLeGrain(grain){
+  if (demandes.has(grain) || typeof window === 'undefined') return;
+  demandes.add(grain);
+  prechargerGrains3D([grain], () => { demandes.delete(grain); window.dispatchEvent(new window.CustomEvent('grains-batiment')); })
+    .then(n => { if (!n) demandes.delete(grain); });
+}
+
 export function fabriqueDeRevetements(T){
   const cache = new Map();
   return (rev, usage) => {
     const p = peintureDuRevetement(rev, usage);
     const img = p.grain ? grainCharge3D(p.grain) : null;
+    if (p.grain && !img) demanderLeGrain(p.grain);
     const cle = p.grain ? `${p.grain}|${p.teinte}|${p.tuile.join('x')}|${img ? 'pret' : 'attente'}|${usage}` : `uni|${p.couleur}|${usage}`;
     if (cache.has(cle)) { const m = cache.get(cle); cache.delete(cle); cache.set(cle, m); return m; }
     const doubleFace = usage === 'sol-int' || usage === 'plafond';

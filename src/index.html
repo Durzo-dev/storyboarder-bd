@@ -267,6 +267,8 @@
         <section class="side-section">
           <h2 id="batimentSectionNom">Bâtiment</h2>
           <input type="text" id="batimentNom" class="modal-input batiment-nom" autocomplete="off" spellcheck="false">
+          <!-- #454d : la FAÇADE du bâtiment, tous étages confondus (demandé : pas de façade par étage). -->
+          <div id="batimentFacade" class="batiment-revetements" style="margin-top:10px;"></div>
         </section>
         <section class="side-section">
           <h2 id="batimentSectionNiveaux">Niveaux</h2>
@@ -279,8 +281,9 @@
         <!-- #454d / #446e : les revêtements. La façade du niveau, puis, une pièce choisie, ses murs, son
              sol et son plafond : un carré de texture (le store en mode « choisir ») et une couleur
              chacun. Construit par batiment-editeur-ui.js (remplirRevetements). -->
-        <section class="side-section">
-          <h2 id="batimentSectionRevetements">Revêtements</h2>
+        <section class="side-section" id="batimentSectionPiece" hidden>
+          <!-- Titrée du NOM de la pièce choisie (demandé) ; masquée sans pièce. -->
+          <h2 id="batimentSectionRevetements">Pièce</h2>
           <div id="batimentRevetements" class="batiment-revetements"></div>
         </section>
 

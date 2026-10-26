@@ -399,11 +399,11 @@ facade). Tracing also snaps to the level below ('repere' anchor).
 **Finishes** (#454d with #446e, done): `src/batiment-revetements.js`. A finish is
 `{ texture, couleur }`: a bundled texture (`int:…`, the starter set: floorboards, tiles, marble,
 carpet, concrete, bricks, painted wood), a “My textures” texture (`tex:…`) or none (the former plain
-colour), tinted by a colour. A room has its `murs` (walls), `sol` (floor), `plafond` (ceiling); a
-level, its `facade`. Walls are built FACE BY FACE: each face looks at a room (its walls) or outside
-(the facade), faces glued to another wall are skipped, and UVs are in metres. In the editor, the
-“Finishes” section: a texture square (the store in “choose” mode) and a live colour for the
-level's facade, then for the chosen room's walls, floor and ceiling.
+colour), tinted by a colour. A room has its `murs` (walls), `sol` (floor), `plafond` (ceiling); the
+building, its `facade`, the same for every level (requested). A room born inside another (an island,
+a room split in two) inherits its finishes. Walls are built FACE BY FACE: each face looks at a room (its walls) or outside
+(the facade), faces glued to another wall are skipped, and UVs are in metres. In the editor, a texture square (the store in “choose” mode) and a live colour — the facade in the Building
+section; the walls, floor and ceiling in the chosen room's section, titled with its name.
 
 **Staircases** (#454c, done): `src/batiment-escaliers.js`. Straight, L or U (spiral later); steps
 of about 17 cm, Blondel going (2h + g = 63 cm, bounded to 24–30 cm); the stairwell (the widened

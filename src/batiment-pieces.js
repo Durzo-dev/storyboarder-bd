@@ -181,7 +181,15 @@ function nouvelId(pieces){
  * niveaux ne sont pas touchées. Rend les pièces du niveau, chacune avec sa `forme` (non persistée,
  * ajoutée à part : cf. formesDesPieces).
  */
-export function actualiserPieces(batiment, niveauId, traduire){
+/** Les revêtements qu'une pièce transmet à celle qui naît en elle (#454d, demandé). */
+const REVETEMENTS_DE_PIECE = ['murs', 'sol', 'plafond'];
+
+/**
+ * `avant` (facultatif) : le bâtiment AVANT la modification. Une pièce NOUVELLE née dans une autre (un
+ * îlot posé dedans, une pièce coupée en deux) en hérite les revêtements, qu'on change ensuite à
+ * volonté (demandé) : la plus petite des anciennes pièces dont la forme contenait son repère.
+ */
+export function actualiserPieces(batiment, niveauId, traduire, avant = null){
   const faces = facesDesMurs((batiment.murs || []).filter(m => m.niveauId === niveauId));
   const anciennes = (batiment.pieces || []).filter(p => p.niveauId === niveauId);
   const autres = (batiment.pieces || []).filter(p => p.niveauId !== niveauId);
@@ -200,7 +208,13 @@ export function actualiserPieces(batiment, niveauId, traduire){
     const repere = pointInterieur(f.points, f.trous);
     const r = { x: Math.round(repere.x * 1000) / 1000, z: Math.round(repere.z * 1000) / 1000 };
     if (heritee) pieces.push({ ...heritee, repere: r });
-    else pieces.push({ id: nouvelId(toutes()), niveauId, nom: nomLibre(toutes(), traduire), repere: r });
+    else {
+      const neuve = { id: nouvelId(toutes()), niveauId, nom: nomLibre(toutes(), traduire), repere: r };
+      const mere = avant ? pieceSous(avant, niveauId, r) : null;
+      const source = mere && (avant.pieces || []).find(p => p.id === mere);
+      if (source) for (const k of REVETEMENTS_DE_PIECE) if (source[k]) neuve[k] = JSON.parse(JSON.stringify(source[k]));
+      pieces.push(neuve);
+    }
   }
   batiment.pieces = [...autres, ...pieces];
   return pieces;

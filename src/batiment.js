@@ -14,14 +14,14 @@
  *
  * LA FORME (version 1) :
  *   { version, nom,
- *     niveaux:    [{ id, nom, elevation, hauteur, dalle, facade? }]   ordonnés ; elevation = bas du niveau
+ *     niveaux:    [{ id, nom, elevation, hauteur, dalle }]   ordonnés ; elevation = bas du niveau
  *     murs:       [{ id, niveauId, a:{x,z}, b:{x,z}, epaisseur, hauteurPropre?,
  *                    revetement:{ interieur, exterieur } }]  un mur PAR ÉTAGE (décision 5)
  *     ouvertures: [{ id, murId, type, le, y, largeur, hauteur }]   `le` : fraction le long du mur
  *     escaliers:  [{ id, niveauId, ... }]
  *     pieces:     [{ id, niveauId, nom, murs?, sol?, plafond? }]  déduites des murs, NOMMÉES
  *   (#454d) un revêtement = { texture: 'int:…' | 'tex:…' | null, couleur: '#rrggbb' | null }, cf.
- *   batiment-revetements.js : `facade` d'un niveau, `murs`/`sol`/`plafond` d'une pièce, absents
+ *   batiment-revetements.js : `facade` du bâtiment, `murs`/`sol`/`plafond` d'une pièce, absents
  *   par défaut (l'uni d'avant).
  *     toit:       { type, pente, debord, matiere, couleur, terrasse, gardeCorps }
  *     elements:   [ ... ]                                    le mobilier fixe, la cheminée }
