@@ -2989,3 +2989,10 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 .batiment-pose-listes{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px; }
 .batiment-pose-listes select{ width:100%; min-width:0; margin:0; }
 .batiment-pose .batiment-pose-btn{ width:100%; margin-top:8px; }
+
+/* #454e : poser un Élément de la Scène dans le bâtiment. La Sélection seule en bas ; « Valider la
+   position » et « Annuler » à la place de « Supprimer l'élément » et « Quitter ». */
+.batiment-editeur.pose .batiment-outil[data-outil]:not([data-outil="selection"]){ display:none; }
+.batiment-editeur.pose #batimentQuitterBtn, .batiment-editeur.pose #batimentPlacerBtn{ display:none !important; }
+.batiment-pose-sortie{ display:flex; flex-direction:column; gap:8px; }
+.batiment-pose-sortie > button{ width:100%; margin:0; }

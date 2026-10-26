@@ -711,9 +711,9 @@ export function openPersonaModal(obj, isNew){
   updatePersonaSizeDisplay(obj);
   // #454e : « Dans un bâtiment ».
   preparerPoseDansUnBatiment({
-    prefixe: 'persona', obj, page: currentPage(), traduire: tr,
-    hauteur: () => (obj.realHeightFloor !== undefined ? obj.realHeightFloor : ensureElementUnits3D(obj).h),
-    apres: recomputeModalDirty,
+    prefixe: 'persona', obj, page: currentPage(), traduire: tr, versCurseurRotY: rotYToSliderDeg,
+    hauteurActuelle: () => (obj.realHeightFloor !== undefined ? obj.realHeightFloor : ensureElementUnits3D(obj).h),
+    enregistrer: () => descModalSave.onclick(),
   });
   resetModalSections(descModal.querySelector('.modal-box'), ['principal', 'modele']);
   // Starts with no joint handle selected/highlighted, and every "Fine-tuning" sub-section
@@ -1379,8 +1379,9 @@ export function openObjectModal(obj, isNew){
     const _gouverne = WALL_TYPES.includes(obj.objType) || isWallOpeningMagnet;
     preparerPoseDansUnBatiment({
       prefixe: 'object', obj: _gouverne ? null : obj, page: currentPage(), traduire: tr,
-      hauteur: () => (obj.realHeightFloor !== undefined ? obj.realHeightFloor : ensureElementUnits3D(obj).h),
-      apres: recomputeModalDirty,
+      versCurseurRotY: (r) => Math.round((r || 0) * 180 / Math.PI),
+      hauteurActuelle: () => (obj.realHeightFloor !== undefined ? obj.realHeightFloor : ensureElementUnits3D(obj).h),
+      enregistrer: () => objectModalSave.onclick(),
     });
   }
   // ⚠️ LES SECTIONS OUVERTES D'EMBLÉE DIFFÈRENT POUR UNE LUMIÈRE : « Luminosité » s'ajoute, parce

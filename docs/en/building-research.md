@@ -417,12 +417,19 @@ in Panels, which preload these models with the page.
 
 **Placing an Element in a building** (#454e, second part, done): `src/batiment-pose-ui.js`. The
 Character and Object sheets have, under their Position, an “In a building” block: building (those of
-the same Panel), floor, room, then “Place in this room”. The button fills X, Y, Z (the room's interior
-point, `repere`, at its floor level) and unticks “Snapped to the ground”; Save applies, Cancel has
-moved nothing. The point goes from the building's frame to the world through
-`pointDuBatimentPlace3D` (scene3d.js), which replays the render's rule on the rig itself: rotation,
-box centred on the Element's position, scale from its real height. Placing is a one-off: moving the
-building afterwards does not move what was placed in it.
+the same Panel), floor, room, then “Place in this room”. The button hides the sheet and OPENS THE
+EDITOR on a copy of the building, with the Element at the centre of the room, on the right floor. It
+becomes a piece of furniture there (`@pose`, a copy of its rig: `elementCommeMeuble3D`, scene3d.js)
+and is handled as one: move, turn, tilt, size, elevation; the level buttons take it to another floor.
+The building cannot be touched: only the Selection tool remains, and only the element can be picked
+(`meubleVise`). The Panel's other Elements standing in the building are shown, frozen (`@v:<id>`).
+“Confirm the position” and “Cancel” replace “Delete the element” and “Quit”; the cross and Esc
+cancel. Confirm: the centre of its box (`centreDuMeuble`) goes from the building's frame to the Panel
+(`pointDuBatimentPlace3D`), so does its orientation (`rotationDansLaScene`), and its size becomes the
+real height that keeps the size seen in the editor; all of it is written into the sheet's fields, the
+sheet is SAVED (with everything else it holds) and closes, then the Scene camera moves to the Element.
+Cancel: the sheet comes back as it was. Placing is a one-off: moving the building afterwards does not
+move what was placed in it.
 
 **Staircases** (#454c, done): `src/batiment-escaliers.js`. Straight, L or U (spiral later); steps
 of about 17 cm, Blondel going (2h + g = 63 cm, bounded to 24–30 cm); the stairwell (the widened

@@ -312,6 +312,26 @@ export function redresserMeuble(m){
   return m;
 }
 
+/**
+ * Le CENTRE de sa boîte tournée, dans le repère du bâtiment (#454e) : là où le rendu d'une Case met
+ * le centre d'un Élément (placeRigCentered3D centre sa boîte). Son niveau donne l'élévation.
+ */
+export function centreDuMeuble(b, m){
+  const n = ((b && b.niveaux) || []).find(x => x.id === m.niveauId);
+  const h = ((m.dims && m.dims[2]) || 1) * (m.echelle || 1);
+  const c = tourner3D(m, { x: 0, y: h / 2, z: 0 });
+  return { x: m.x + c.x, y: (n ? n.elevation || 0 : 0) + hauteurAuSol(m) - basDuMeuble(m) + c.y, z: m.z + c.z };
+}
+
+/**
+ * L'inverse (#454e) : l'élévation `y` au-dessus du sol du niveau `elevation` qui met le centre de sa
+ * boîte tournée à la hauteur `yCentre`.
+ */
+export function hauteurPourLeCentre(m, elevation, yCentre){
+  const h = ((m.dims && m.dims[2]) || 1) * (m.echelle || 1);
+  return yCentre - tourner3D(m, { x: 0, y: h / 2, z: 0 }).y + basDuMeuble(m) - elevation;
+}
+
 /** Retire un meuble. */
 export function supprimerMeuble(b, id){
   b.elements = (b.elements || []).filter(e => e.id !== id);

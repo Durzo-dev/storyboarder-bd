@@ -41,6 +41,7 @@ import { clearImageCache } from './image-cache.js';
 // 2D divergent de ce que le GPU affiche réellement.
 import { box3FromObjectSkinAwareCached3D } from './skinned-box-3d.js';
 import { boiteDesOsMappes3D, applySkeletonPose } from './rig3d.js';
+import { cloneSkinned } from './vendor/SkeletonUtils.js';
 // Le champ visible d'une Case : il sert de plan éloigné à l'ombre d'une source SANS portée (#422d).
 import { champVisibleDeCase3D } from './shadows-3d.js';
 import { cadreDeMesure, mesurerVisibilites3D, estNonVisible } from './visibilite-3d.js';
@@ -403,16 +404,73 @@ export function pointDuRigPlace3D(fg, o, panel, p){
   return { x: ancre.x + v.x, y: ancre.y + v.y, z: ancre.z + v.z };
 }
 
+/** L'inverse de pointDuBatimentPlace3D : un point du monde de la Case dans le repère du bâtiment. */
+export function pointDansLeBatimentPlace3D(o, panel, w){
+  return pointDansLeRigPlace3D(ensureObjectRigEntry3D(o).figureGroup, o, panel, w);
+}
+
+/** Le calcul de pointDansLeBatimentPlace3D, sur un rig donné. */
+export function pointDansLeRigPlace3D(fg, o, panel, w){
+  const zero = pointDuRigPlace3D(fg, o, panel, { x: 0, y: 0, z: 0 });
+  const ex = pointDuRigPlace3D(fg, o, panel, { x: 1, y: 0, z: 0 });
+  const s = Math.hypot(ex.x - zero.x, ex.y - zero.y, ex.z - zero.z) || 1;
+  const v = new THREE.Vector3(w.x - zero.x, w.y - zero.y, w.z - zero.z).divideScalar(s)
+    .applyQuaternion(fg.quaternion.clone().invert());
+  return { x: v.x, y: v.y, z: v.z };
+}
+
 /**
- * Où mettre un Élément pour que sa base touche le point `sol` du monde : les valeurs des champs X,
- * Y (le CENTRE, comme partout dans les fiches) et Z (la profondeur, bornée comme au glisser).
- * PURE.
+ * Le rig qui DESSINE un Personnage ou un Objet dans sa Case (#454e : le poser dans un bâtiment, depuis
+ * l'éditeur). Le Personnage garde le rig déjà construit, quel que soit son style : en refaire un sous
+ * un autre style le reconstruirait pour rien au prochain rendu.
  */
-export function positionPoseeSur3D(sol, hauteur){
+function rigDeLElement3D(o){
+  if (o.type === 'perso') return personaRigCache3D.get(o.id) || ensurePersonaRigEntry3D(o, undefined);
+  return ensureObjectRigEntry3D(o);
+}
+
+/**
+ * La HAUTEUR NATURELLE d'un Élément tourné de `rot` ({ x, y, z }, ordre XYZ comme au rendu) : ce sur
+ * quoi le rendu divise sa hauteur réelle pour trouver son échelle (cf. _placerElement3D). Le
+ * Personnage, sa hauteur debout ; un modèle importé, la sienne (hauteurDeboutModele3D) ; le reste,
+ * la hauteur de sa boîte TOURNÉE. Le rig est remis comme on l'a trouvé.
+ */
+function hauteurNaturelle3D(o, entry, rot){
+  if (o.type === 'perso' && entry.deboutNaturalH) return entry.deboutNaturalH;
+  const fg = entry.figureGroup;
+  const avant = { r: fg.rotation.clone(), p: fg.position.clone(), s: fg.scale.clone() };
+  fg.rotation.set(rot.x || 0, rot.y || 0, rot.z || 0);
+  fg.position.set(0, 0, 0); fg.scale.set(1, 1, 1);
+  fg.updateMatrixWorld(true);
+  let h;
+  if (o.objType === 'modele') h = hauteurDeboutModele3D(entry, box3FromObjectSkinAwareCached3D);
+  if (!(h > 0)) h = new THREE.Box3().setFromObject(fg).getSize(new THREE.Vector3()).y;
+  fg.rotation.copy(avant.r); fg.position.copy(avant.p); fg.scale.copy(avant.s);
+  fg.updateMatrixWorld(true);
+  return Math.max(h, 0.0001);
+}
+
+/**
+ * Un Élément devenu « meuble » le temps de l'éditeur (#454e) : une COPIE de son rig, droite et à
+ * l'échelle 1 (`copie`), le facteur qui la met à sa taille dans la Case (`base`), ses dimensions
+ * `[largeur, profondeur, hauteur]` à cette taille, et `hauteurReelle(rot, echelle)`, la hauteur réelle
+ * à lui rendre pour qu'il garde dans la Case la taille vue dans l'éditeur, tourné de `rot` et
+ * agrandi de `echelle`.
+ */
+export function elementCommeMeuble3D(o){
+  const entry = rigDeLElement3D(o);
+  const rotActuelle = { x: o.rotX || 0, y: o.rotY || 0, z: o.rotZ || 0 };
+  const realH = (o.realHeightFloor !== undefined) ? o.realHeightFloor : ensureElementUnits3D(o).h;
+  const base = realH / hauteurNaturelle3D(o, entry, rotActuelle);
+  const copie = cloneSkinned(entry.figureGroup);
+  copie.rotation.set(0, 0, 0); copie.position.set(0, 0, 0); copie.scale.set(1, 1, 1);
+  copie.visible = true;
+  copie.updateMatrixWorld(true);
+  const t = new THREE.Box3().setFromObject(copie).getSize(new THREE.Vector3());
+  const dims = [t.x, t.z, t.y].map(v => Math.round(Math.max(v, 0.01) * base * 1000) / 1000);
   return {
-    x: sol.x,
-    y: sol.y + Math.max(0, hauteur || 0) / 2 + GROUND_CONTACT_EPS_3D,
-    z: clampPanelDepth3D(sol.z),
+    copie, base, dims,
+    hauteurReelle: (rot, echelle = 1) => (o.type === 'perso' ? realH * echelle : base * echelle * hauteurNaturelle3D(o, entry, rot)),
   };
 }
 

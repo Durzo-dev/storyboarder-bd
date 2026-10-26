@@ -1,17 +1,17 @@
-// #454e partie 2 : poser un Élément dans une pièce d'un bâtiment placé, depuis sa fiche.
+// #454e partie 2 : poser un Élément dans une pièce d'un bâtiment placé, depuis sa fiche, par l'éditeur.
 import './helpers/dom-stub.mjs';
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { etagesEtPieces, pointDeLaPiece, creerElementBatiment } from '../src/batiment-element.js';
+import { etagesEtPieces, creerElementBatiment } from '../src/batiment-element.js';
 import { creerBatiment } from '../src/batiment.js';
 import { ajouterRectangle } from '../src/batiment-trace.js';
 import { ajouterEtage } from '../src/batiment-niveaux.js';
 import { actualiserPieces } from '../src/batiment-pieces.js';
 import { construireBatiment3D, materiauxBatiment3D } from '../src/batiment-3d.js';
-import { pointDuRigPlace3D, positionPoseeSur3D } from '../src/scene3d.js';
-import { batimentsOuPoser } from '../src/batiment-pose-ui.js';
-import { GROUND_CONTACT_EPS_3D, PANEL_DEPTH_MAX_3D } from '../src/constants.js';
+import { pointDuRigPlace3D, pointDansLeRigPlace3D } from '../src/scene3d.js';
+import { batimentsOuPoser, rotationDansLeBatiment, rotationDansLaScene } from '../src/batiment-pose-ui.js';
+import { centreDuMeuble, hauteurPourLeCentre, fixerAngle } from '../src/batiment-mobilier.js';
 
 const fr = (en, f) => f;
 const T = globalThis.THREE;
@@ -38,14 +38,6 @@ describe('étages et pièces', () => {
     ajouterEtage(b, fr);
     assert.equal(etagesEtPieces(b).length, 1);
   });
-  test('le point d’une pièce : son repère, au niveau de son sol', () => {
-    const b = maison();
-    const p = b.pieces[0];
-    const pt = pointDeLaPiece(b, p.id);
-    assert.equal(pt.x, p.repere.x); assert.equal(pt.z, p.repere.z);
-    proche(pt.y, 0.005);
-    assert.equal(pointDeLaPiece(b, 'inconnue'), null);
-  });
 });
 
 describe('du repère du bâtiment au monde de la Case', () => {
@@ -54,7 +46,7 @@ describe('du repère du bâtiment au monde de la Case', () => {
     o.wxFloor = 2; o.wzFloor = -1; o.wyFloor = -3 + o.realHeightFloor / 2; o.rotY = rotY;
     const fg = construireBatiment3D(T, o.batiment, materiauxBatiment3D(T));
     fg.rotation.set(0, rotY, 0);
-    return { o, point: (p) => pointDuRigPlace3D(fg, o, panel, p), fg };
+    return { o, point: (p) => pointDuRigPlace3D(fg, o, panel, p), inverse: (w) => pointDansLeRigPlace3D(fg, o, panel, w), fg };
   };
   test('sans rotation : le centre du bâtiment tombe sur la position de l’Élément', () => {
     const { point } = placer();
@@ -81,11 +73,41 @@ describe('du repère du bâtiment au monde de la Case', () => {
   });
 });
 
-describe('poser sur un sol', () => {
-  test('le centre est à mi-hauteur au-dessus du sol, la profondeur bornée', () => {
-    const v = positionPoseeSur3D({ x: 1, y: 2, z: 3 }, 1.8);
-    assert.equal(v.x, 1); proche(v.y, 2 + 0.9 + GROUND_CONTACT_EPS_3D); assert.equal(v.z, 3);
-    assert.equal(positionPoseeSur3D({ x: 0, y: 0, z: 999 }, 1).z, PANEL_DEPTH_MAX_3D);
+describe('l’aller-retour entre la Case et le bâtiment', () => {
+  test('pointDansLeRigPlace3D défait pointDuRigPlace3D, bâtiment tourné', () => {
+    const o = creerElementBatiment({ panel, page, batiment: maison() });
+    o.wxFloor = 2; o.wzFloor = -1; o.wyFloor = -1; o.rotY = 0.7;
+    const fg = construireBatiment3D(T, o.batiment, materiauxBatiment3D(T));
+    fg.rotation.set(0, 0.7, 0);
+    const p = { x: 1.3, y: 2.1, z: 3.4 };
+    const r = pointDansLeRigPlace3D(fg, o, panel, pointDuRigPlace3D(fg, o, panel, p));
+    proche(r.x, p.x); proche(r.y, p.y); proche(r.z, p.z);
+  });
+  test('l’orientation : de la Case au meuble et retour', () => {
+    const bEl = { rotX: 0, rotY: 0.6, rotZ: 0 };
+    const el = { rotX: 0.2, rotY: -1.1, rotZ: 0.1 };
+    const r = rotationDansLeBatiment(el, bEl);
+    const m = {};
+    fixerAngle(m, 'y', r.rotY); fixerAngle(m, 'x', r.rotX); fixerAngle(m, 'z', r.rotZ);
+    const w = rotationDansLaScene(m, bEl);
+    proche(w.x, el.rotX); proche(w.y, el.rotY); proche(w.z, el.rotZ);
+  });
+  test('un Élément droit dans un bâtiment tourné : seul son lacet change', () => {
+    const r = rotationDansLeBatiment({ rotY: 1 }, { rotY: 0.25 });
+    proche(r.rotY, 0.75); proche(r.rotX, 0); proche(r.rotZ, 0);
+  });
+});
+
+describe('le centre d’un meuble (là où la Case met le centre d’un Élément)', () => {
+  const b = { niveaux: [{ id: 'n0', elevation: 0 }, { id: 'n1', elevation: 3 }] };
+  test('droit, au sol de l’étage : à mi-hauteur au-dessus', () => {
+    const c = centreDuMeuble(b, { niveauId: 'n1', x: 1, z: 2, rotY: 0, echelle: 2, dims: [0.5, 0.4, 0.9] });
+    proche(c.x, 1); proche(c.y, 3 + 0.9); proche(c.z, 2);
+  });
+  test('hauteurPourLeCentre est l’inverse, incliné compris', () => {
+    const m = { niveauId: 'n1', x: 0, z: 0, rotY: 0.3, rotX: 0.4, rotZ: -0.2, echelle: 1, dims: [0.6, 0.5, 1.7], colle: false, y: 0 };
+    m.y = hauteurPourLeCentre(m, 3, 4.2);
+    proche(centreDuMeuble(b, m).y, 4.2);
   });
 });
 
@@ -109,4 +131,34 @@ test('les deux fiches préparent le bloc avant de prendre leur empreinte', () =>
     const ouverture = src.lastIndexOf('export function', i);
     assert.ok(empreinte > i && src.lastIndexOf('export function', empreinte) === ouverture, prefixe);
   }
+});
+
+describe('l’éditeur en pose (demandé)', () => {
+  const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
+  const pose = readFileSync(new URL('../src/batiment-pose-ui.js', import.meta.url), 'utf8');
+  test('« Valider la position » et « Annuler » remplacent « Supprimer l’élément » et « Quitter »', () => {
+    assert.match(ui, /'Valider la position'/);
+    assert.match(ui, /valider\.onclick = validerLaPose/);
+    assert.match(ui, /annulerPose\.onclick = annulerLaPose/);
+    assert.match(css, /\.batiment-editeur\.pose #batimentQuitterBtn/);
+  });
+  test('la croix et Échap valent « Annuler »', () => {
+    assert.match(ui, /if \(E && E\.pose\) \{ annulerLaPose\(\); return; \}/);
+    assert.match(ui, /if \(e\.key === 'Escape'\) \{ avale\(\); annulerLaPose\(\); return; \}/);
+  });
+  test('seul l’outil Sélection, et seul l’élément se prend', () => {
+    assert.match(css, /\.batiment-editeur\.pose \.batiment-outil\[data-outil\]:not\(\[data-outil="selection"\]\)\{ display:none; \}/);
+    assert.match(ui, /if \(E\.pose && outil && outil !== 'selection'\) return;/);
+    assert.match(ui, /const sommet = E\.pose \? null : sommetSous/);
+    assert.match(ui, /const ouvertureId = E\.pose \? null : ouvertureSous/);
+    assert.ok(!/meubleSous\(E\.batiment, E\.niveauId, souris\(e\)\.p\)/.test(ui), 'les gestes passent par meubleVise');
+  });
+  test('changer d’étage emmène l’élément', () => {
+    assert.match(ui, /if \(posee\) posee\.niveauId = id;/);
+  });
+  test('Annuler rouvre la fiche ; Valider l’enregistre puis centre la caméra', () => {
+    assert.match(pose, /annuler: \(\) => modale\.classList\.remove\('hidden'\)/);
+    assert.match(pose, /fiche\.enregistrer\(\);\s*centerSceneCameraOnElement\(panel, obj\);/);
+  });
 });

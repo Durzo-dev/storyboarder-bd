@@ -134,19 +134,6 @@ export function etagesEtPieces(b){
 }
 
 /**
- * Le point où poser un Élément dans une pièce, dans le repère du bâtiment (mètres) : son `repere`
- * (un point intérieur, cf. batiment-pieces.js, juste même pour une pièce en L) au niveau de son
- * sol (le sol est dessiné 5 mm au-dessus de l'élévation, cf. batiment-3d.js). Null si la pièce
- * n'existe pas. PURE.
- */
-export function pointDeLaPiece(b, pieceId){
-  const p = ((b && b.pieces) || []).find(x => x.id === pieceId);
-  if (!p || !p.repere) return null;
-  const n = (b.niveaux || []).find(x => x.id === p.niveauId);
-  return { x: p.repere.x, y: (n ? n.elevation || 0 : 0) + 0.005, z: p.repere.z };
-}
-
-/**
  * Remet la hauteur réelle d'un bâtiment placé d'accord avec son bâtiment (#454b : les murs montent
  * désormais à travers le toit plat). Le rendu normalise le rig sur `realHeightFloor` : un écart le
  * rétrécirait. Rend vrai si quelque chose a changé.

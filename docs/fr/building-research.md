@@ -439,12 +439,19 @@ pas décodé), dans l'éditeur comme dans les Cases, qui préchargent ces modèl
 
 **Poser un Élément dans un bâtiment** (#454e, seconde partie, faite) : `src/batiment-pose-ui.js`.
 Les fiches d'un Personnage et d'un Objet ont, sous leur Position, un bloc « Dans un bâtiment » :
-bâtiment (ceux de la même Case), étage, pièce, puis « Poser dans cette pièce ». Le bouton remplit X,
-Y, Z (le point intérieur de la pièce, `repere`, au niveau de son sol) et décoche « Aimanté au Sol » ;
-Enregistrer applique, Annuler n'a rien bougé. Le point passe du repère du bâtiment au monde par
-`pointDuBatimentPlace3D` (scene3d.js), qui refait la règle du rendu sur le rig lui-même : rotation,
-boîte centrée sur la position de l'Élément, échelle de sa hauteur réelle. La pose est ponctuelle :
-déplacer le bâtiment ensuite ne déplace pas ce qu'on y a posé.
+bâtiment (ceux de la même Case), étage, pièce, puis « Poser dans cette pièce ». Le bouton cache la
+fiche et OUVRE L'ÉDITEUR sur une copie du bâtiment, l'Élément au centre de la pièce, au bon étage. Il
+y devient un meuble (`@pose`, une copie de son rig : `elementCommeMeuble3D`, scene3d.js) et se manie
+comme tel : déplacer, tourner, incliner, taille, élévation ; les pastilles l'emmènent à un autre
+étage. Le bâtiment ne se touche pas : seul l'outil Sélection reste, et seul l'élément se prend
+(`meubleVise`). Les autres Éléments de la Case qui sont dans le bâtiment s'y voient, figés (`@v:<id>`).
+« Valider la position » et « Annuler » remplacent « Supprimer l'élément » et « Quitter » ; la croix
+et Échap annulent. Valider : le centre de sa boîte (`centreDuMeuble`) passe du repère du bâtiment à
+la Case (`pointDuBatimentPlace3D`), son orientation aussi (`rotationDansLaScene`), sa taille devient
+la hauteur réelle qui lui garde celle vue dans l'éditeur ; tout cela est écrit dans les champs de la
+fiche, qui est ENREGISTRÉE (avec le reste de ce qu'elle porte) et se ferme, puis la caméra de la
+Scène va vers l'Élément. Annuler : la fiche revient telle quelle. La pose est ponctuelle : déplacer le
+bâtiment ensuite ne déplace pas ce qu'on y a posé.
 
 **Les escaliers** (#454c, fait) : `src/batiment-escaliers.js`. Droit, en L ou en U (le colimaçon
 plus tard) ; marches d'environ 17 cm, giron de Blondel (2h + g = 63 cm, borné à 24–30 cm) ; la trémie
