@@ -283,10 +283,32 @@ describe('les retours sur les gestes (demandé)', () => {
 describe('un menu par élément choisi (demandé)', () => {
   test('choisi : son menu (titré de son nom, sa croix le désélectionne) ; rien de choisi : le menu du bâtiment', () => {
     const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
-    assert.match(ui, /\$\('batimentPanneau'\)\.classList\.toggle\('mode-element', !!meuble\);/);
-    assert.match(ui, /if \(E && meubleSelectionne\(\)\) \{ E\.selection = null; remplirPanneau\(\); dessinerPlan\(\); \}\s*else fermerEditeurDeBatiment\(\);/);
+    assert.match(ui, /const fils = meuble \? 'element' : esc \? 'escalier' : piece \? 'piece' : null;/);
+    assert.match(ui, /if \(E && \(meubleSelectionne\(\) \|\| escalierSelectionne\(\) \|\| pieceSelectionnee\(\)\)\) \{ E\.selection = null;/);
     for (const id of ['batimentElemDimensions', 'batimentElemOrientation', 'batimentElemTaille', 'batimentElemPosition']) assert.ok(ui.includes(`'${id}'`), id);
     const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
-    assert.match(css, /#batimentPanneau\.mode-element > \.side-section:not\(#batimentSecCommandes\)\{ display:none !important; \}/);
+    assert.match(css, /#batimentPanneau\.fils > \.side-section:not\(#batimentSecCommandes\)\{ display:none !important; \}/);
+    // « Enregistrer dans la bibliothèque » et « Recadrer » : seulement dans le menu du bâtiment (demandé).
+    assert.match(css, /#batimentPanneau\.fils > #batimentEnregistrerBtn, #batimentPanneau\.fils > #batimentRecadrerBtn\{ display:none !important; \}/);
+  });
+});
+
+describe('les gestes de l\'éditeur de bâtiment (demandé)', () => {
+  const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
+  test('l\'escalier et la pièce ont aussi leur menu ; la pièce, son « Supprimer »', () => {
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+    assert.match(html, /class="side-section menu-piece" id="batimentSectionPiece"/);
+    assert.match(html, /class="side-section menu-escalier" id="batimentSectionSelection"/);
+    assert.match(html, /id="batimentPieceSupprimer"/);
+  });
+  test('une pièce qui se ferme est choisie (contour ou rectangle)', () => {
+    assert.match(ui, /if \(choisirLaPieceNee\(avant\)\) return;/);
+    assert.match(ui, /modifier\(b => ajouterRectangle\(b, E\.niveauId, de, vers, epaisseurDesNouveaux\(\)\)\);\s*choisirLaPieceNee\(avant\);/);
+  });
+  test('l\'outil Sélection par défaut ; le clic droit sans rien de choisi prend l\'outil Mur, et le rend', () => {
+    assert.match(ui, /E\.outil = outil \|\| 'selection';/);
+    assert.match(ui, /outil: 'selection', chaine: null/);
+    assert.match(ui, /if \(E\.outil === 'mur'\) \{ if \(!finirLaChaine\(\)\) choisirOutil\('selection'\); \}/);
+    assert.match(ui, /if \(E\.selection\) \{ E\.selection = null; remplirPanneau\(\); dessinerPlan\(\); \}\s*else choisirOutil\('mur'\);/);
   });
 });

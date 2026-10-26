@@ -152,10 +152,11 @@ describe('les retours du 26 octobre (#454d)', () => {
     assert.ok(lire('index.html').indexOf('id="batimentFacade"') < lire('index.html').indexOf('id="batimentSectionNiveaux"'), 'dans la section Bâtiment');
   });
 
-  test('la section de la pièce porte son nom, et se cache sans pièce', () => {
+  test('le menu de la pièce porte son nom, et se cache sans pièce', () => {
     const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
     assert.match(ui, /\$\('batimentSectionPiece'\)\.hidden = !piece;/);
-    assert.match(ui, /\$\('batimentSectionRevetements'\)\.textContent = piece\.nom;/);
+    // Depuis les menus « fils » : le nom de la pièce titre l'EN-TÊTE de son menu.
+    assert.match(ui, /: piece \? piece\.nom : tr\('Building editor', 'Éditeur de bâtiment'\)/);
   });
 
   test('Suppr supprime la pièce choisie, même après un réglage de couleur (le champ couleur ne retient pas les touches)', () => {

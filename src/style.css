@@ -2972,6 +2972,12 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 .batiment-meuble-angles input{ width:58px; text-align:center; }
 /* #454e : un élément choisi a SON menu (demandé) ; le menu du bâtiment revient quand rien n'est choisi.
    Les Commandes restent en tête des deux. */
-#batimentPanneau.mode-element > .side-section:not(#batimentSecCommandes){ display:none !important; }
-#batimentPanneau:not(.mode-element) #batimentMenuElement{ display:none; }
+/* Les menus « fils » (demandé) : un élément, un escalier, une pièce choisis ont LEUR menu ; celui du
+   bâtiment n'en garde que les Commandes. « Enregistrer dans la bibliothèque » et « Recadrer » ne sont
+   que dans le menu du bâtiment. */
+#batimentPanneau.fils > .side-section:not(#batimentSecCommandes){ display:none !important; }
+#batimentPanneau.fils-piece > .side-section.menu-piece,
+#batimentPanneau.fils-escalier > .side-section.menu-escalier{ display:block !important; }
+#batimentPanneau.fils > #batimentEnregistrerBtn, #batimentPanneau.fils > #batimentRecadrerBtn{ display:none !important; }
+#batimentPanneau:not(.fils-element) #batimentMenuElement{ display:none; }
 #batimentMenuElement > .full-btn{ width:100%; margin-top:4px; }

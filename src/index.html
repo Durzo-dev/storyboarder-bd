@@ -290,12 +290,13 @@
         <!-- #454d / #446e : les revêtements. La façade du niveau, puis, une pièce choisie, ses murs, son
              sol et son plafond : un carré de texture (le store en mode « choisir ») et une couleur
              chacun. Construit par batiment-editeur-ui.js (remplirRevetements). -->
-        <section class="side-section" id="batimentSectionPiece" hidden>
-          <!-- Titrée du NOM de la pièce choisie (demandé) ; masquée sans pièce. -->
-          <h2 id="batimentSectionRevetements">Pièce</h2>
+        <section class="side-section menu-piece" id="batimentSectionPiece" hidden>
+          <!-- Le menu propre de la pièce choisie (demandé), titré de son nom dans l'en-tête. -->
+          <h2 id="batimentSectionRevetements">Aménagement</h2>
           <!-- #454e (demandé) : le store de modèles s'ouvre, le modèle choisi est posé au centre de la pièce. -->
           <button type="button" class="full-btn" id="batimentAjouterElement">Ajouter un élément</button>
           <div id="batimentRevetements" class="batiment-revetements" style="margin-top:10px;"></div>
+          <button type="button" class="full-btn delete-btn" id="batimentPieceSupprimer" style="margin-top:12px;">Supprimer la pièce</button>
         </section>
 
         <!-- #454a-3c : l'outil Ouverture. Les réglages des ouvertures à poser ; le formulaire est
@@ -309,7 +310,7 @@
           <h2 id="batimentSectionEscalier">Escalier à poser</h2>
           <div id="batimentReglagesEscalier"></div>
         </section>
-        <section class="side-section" id="batimentSectionSelection" hidden>
+        <section class="side-section menu-escalier" id="batimentSectionSelection" hidden>
           <h2 id="batimentSelectionTitre">Sélection</h2>
           <!-- #454a-3c : une ouverture choisie se retouche ici. -->
           <div id="batimentSelectionOuverture">

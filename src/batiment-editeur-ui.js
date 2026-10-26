@@ -113,7 +113,7 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null, desti
     structuresBiblio: null, niveauId: b.niveaux[0].id, apercu: null, geste: null,
     // #454a-3 : le tracé.
     // Aucun outil à l'ouverture : le menu de base (demandé).
-    outil: null, chaine: null, survol: null, selection: null,
+    outil: 'selection', chaine: null, survol: null, selection: null,
     glisserSommet: null, historique: [], refaire: [],
     appui: null, rectangle: null,   // #454a-3b : un glisser de l'outil Mur trace une pièce rectangulaire
     // #454a-3c : les réglages de l'ouverture à poser, et l'ouverture qu'on fait glisser.
@@ -273,17 +273,21 @@ function remplirPanneau(){
   const m = murSelectionne(), piece = pieceSelectionnee(), ouv = ouvertureSelectionnee(), esc = escalierSelectionne(), meuble = meubleSelectionne();
   $('batimentSelectionOuverture').hidden = !ouv;
   $('batimentSelectionEscalier').hidden = !esc;
-  // #454e : un élément choisi a SON menu (demandé), titré de son nom ; sa croix le désélectionne.
-  $('batimentPanneau').classList.toggle('mode-element', !!meuble);
-  $('batimentEditeurTitre').textContent = meuble ? meuble.nom : tr('Building editor', 'Éditeur de bâtiment');
-  $('batimentEditeurFermerX').title = meuble ? tr('Deselect (Esc)', 'Désélectionner (Échap)') : tr('Close the editor (Esc)', 'Fermer l\'éditeur (Échap)');
+  // LES MENUS « FILS » (demandé) : un élément, un escalier, une pièce choisis ont LEUR menu, titré de
+  // leur nom ; leur croix les désélectionne. Rien de choisi : le menu du bâtiment.
+  const fils = meuble ? 'element' : esc ? 'escalier' : piece ? 'piece' : null;
+  const panneau = $('batimentPanneau');
+  panneau.classList.toggle('fils', !!fils);
+  for (const f of ['element', 'escalier', 'piece']) panneau.classList.toggle('fils-' + f, fils === f);
+  $('batimentEditeurTitre').textContent = meuble ? meuble.nom : esc ? tr('Staircase', 'Escalier') : piece ? piece.nom : tr('Building editor', 'Éditeur de bâtiment');
+  $('batimentEditeurFermerX').title = fils ? tr('Deselect (Esc)', 'Désélectionner (Échap)') : tr('Close the editor (Esc)', 'Fermer l\'éditeur (Échap)');
   if (meuble) reglagesDuMeuble(meuble); else $('batimentMenuElement').replaceChildren();
   // Un seul menu (demandé) : la section contextuelle s'ajoute au besoin, les commandes suivent.
   $('batimentSectionSelection').hidden = !(ouv || esc);
   $('batimentContexteOuverture').hidden = E.outil !== 'ouverture';
   $('batimentContexteEscalier').hidden = E.outil !== 'escalier';
   $('batimentAide').textContent = commandes({ m, piece, ouv, esc, meuble });
-  $('batimentSelectionTitre').textContent = ouv ? tr('Selected opening', 'Ouverture sélectionnée') : esc ? tr('Selected staircase', 'Escalier sélectionné') : tr('Selection', 'Sélection');
+  $('batimentSelectionTitre').textContent = ouv ? tr('Selected opening', 'Ouverture sélectionnée') : esc ? tr('Settings', 'Réglages') : tr('Selection', 'Sélection');
   if (E.outil === 'escalier') formulaireEscalier($('batimentReglagesEscalier'), E.reglagesEscalier, (c) => {
     E.reglagesEscalier = { ...E.reglagesEscalier, ...c }; remplirPanneau(); dessinerPlan();
   });
@@ -384,7 +388,6 @@ function remplirRevetements(){
   const piece = pieceSelectionnee();
   $('batimentSectionPiece').hidden = !piece;
   if (piece) {
-    $('batimentSectionRevetements').textContent = piece.nom;
     const cible = { pieceId: piece.id };
     zone.replaceChildren(
       blocRevetement({ titre: tr('Walls', 'Murs'), usage: 'mur-int', cible, champ: 'murs', choisir: tr('Choose the walls', 'Choisir les murs') }, gardes),
@@ -1180,7 +1183,8 @@ function majOutilEscalier(){
 function choisirOutil(outil){
   if (!E) return;
   if (outil === 'escalier' && !niveauDessus(E.batiment, E.niveauId)) return;
-  E.outil = outil || null; E.chaine = null; E.survol = null;
+  // Aucun outil, c'est la SÉLECTION (demandé : l'outil par défaut).
+  E.outil = outil || 'selection'; E.chaine = null; E.survol = null;
   if (E.outil !== 'selection') E.selection = null;
   document.querySelectorAll('.batiment-outil').forEach(b => b.classList.toggle('actif', b.dataset.outil === E.outil));
   $('batimentPlan').classList.toggle('outil-mur', E.outil === 'mur' || E.outil === 'ouverture' || E.outil === 'escalier');
@@ -1323,9 +1327,11 @@ function poserUnPoint(s){
   // Un point posé sur un sommet déjà présent ferme la forme : la chaîne s'arrête là.
   const ferme = s.accroche.type === 'sommet';
   let r = null;
+  const avant = idsDesPieces();
   modifier(b => { r = ajouterMur(b, E.niveauId, depuis, s.point, epaisseurDesNouveaux(), { accrocheA: accroche, accrocheB: s.accroche }); });
   if (r && r.erreur) { annuler(); E.refaire = []; return; }
   E.chaine = ferme ? null : { depuis: s.point, accroche: { type: 'sommet' } };
+  if (choisirLaPieceNee(avant)) return;
   dessinerPlan();
 }
 
@@ -1338,7 +1344,25 @@ function poserLeRectangle(){
     dessinerPlan();   // refusée sans message (demandé) : le rectangle était rouge
     return;
   }
+  const avant = idsDesPieces();
   modifier(b => ajouterRectangle(b, E.niveauId, de, vers, epaisseurDesNouveaux()));
+  choisirLaPieceNee(avant);
+}
+
+/** Les ids des pièces du niveau courant. */
+function idsDesPieces(){ return new Set((E.batiment.pieces || []).filter(p => p.niveauId === E.niveauId).map(p => p.id)); }
+
+/**
+ * Une pièce vient de se FERMER (le dernier mur d'un contour, un rectangle) : elle est choisie, et
+ * l'outil Sélection est pris (demandé, comme un escalier ou un élément posé). Rend vrai si oui.
+ */
+function choisirLaPieceNee(avant){
+  const nee = (E.batiment.pieces || []).find(p => p.niveauId === E.niveauId && !avant.has(p.id));
+  if (!nee) return false;
+  choisirOutil('selection');
+  E.selection = { pieceId: nee.id };
+  remplirPanneau(); dessinerPlan();
+  return true;
 }
 
 // ── La vue de dessus ─────────────────────────────────────────────────────────────────────────────
@@ -2031,7 +2055,15 @@ function cablerPlan(){
           : (charniere === 'fin' ? { sens: -1, charniere: 'fin' } : { sens: 1, charniere: 'fin' });
         E.reglagesOuverture = { ...E.reglagesOuverture, ...suivant };
         remplirPanneau(); survoler(e);
-      } else if (!bouge && e && e.type === 'pointerup') { if (!finirLaChaine() && E.outil === 'selection') { E.selection = null; remplirPanneau(); dessinerPlan(); } }
+      } else if (!bouge && e && e.type === 'pointerup') {
+        // LE CLIC DROIT (demandé) : à l'outil Mur, il finit le tracé en cours, ou sans tracé revient à
+        // la Sélection ; à la Sélection, il désélectionne, ou, rien n'étant choisi, prend l'outil Mur.
+        if (E.outil === 'mur') { if (!finirLaChaine()) choisirOutil('selection'); }
+        else if (E.outil === 'selection') {
+          if (E.selection) { E.selection = null; remplirPanneau(); dessinerPlan(); }
+          else choisirOutil('mur');
+        }
+      }
     }
   };
   c.addEventListener('pointerup', fin);
@@ -2287,7 +2319,8 @@ function clavier(e){
     if (E.rectangle || E.appui || E.poseEscalier) { E.rectangle = null; E.appui = null; E.poseEscalier = null; dessinerPlan(); return; }
     if (finirLaChaine()) return;
     if (E.selection) { E.selection = null; remplirPanneau(); dessinerPlan(); return; }
-    if (E.outil) { choisirOutil(null); return; }
+    // Un autre outil que la Sélection : on y revient ; depuis la Sélection, Échap ferme l'éditeur.
+    if (E.outil && E.outil !== 'selection') { choisirOutil('selection'); return; }
     fermerEditeurDeBatiment();
     return;
   }
@@ -2364,12 +2397,13 @@ export function initEditeurDeBatiment(){
   if (!$('batimentEditeur')) return;
   cablerSectionsRepliables();
   $('batimentAjouterElement').onclick = () => { if (E) ajouterUnElement(); };
+  $('batimentPieceSupprimer').onclick = () => { const p = E && pieceSelectionnee(); if (p) supprimerPieceDeLEditeur(p.id); };
   // Un grain de revêtement arrivé après le dessin (batiment-revetements.js) : refaire l'aperçu.
   window.addEventListener('grains-batiment', () => { if (E && E.apercu) E.apercu.reconstruire(E.batiment); });
   // La croix du menu : celle d'un élément choisi le DÉSÉLECTIONNE (on revient au menu du bâtiment) ;
   // sinon elle ferme l'éditeur.
   $('batimentEditeurFermerX').onclick = () => {
-    if (E && meubleSelectionne()) { E.selection = null; remplirPanneau(); dessinerPlan(); }
+    if (E && (meubleSelectionne() || escalierSelectionne() || pieceSelectionnee())) { E.selection = null; remplirPanneau(); dessinerPlan(); }
     else fermerEditeurDeBatiment();
   };
   $('batimentQuitterBtn').onclick = () => fermerEditeurDeBatiment();
