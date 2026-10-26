@@ -2945,3 +2945,10 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 .batiment-revetements .texture-carre-image{ aspect-ratio:auto; height:64px; background-size:64px 64px; background-repeat:repeat; background-position:center; }
 .batiment-revetement-couleur{ display:block; width:100%; height:32px; padding:3px; cursor:pointer; margin-top:6px;
   border:1px solid var(--bord-actif); border-radius:var(--rayon-moyen); background:var(--white); }
+
+/* #454e : la taille d'un élément de l'éditeur de bâtiment, un curseur et sa valeur (×1,25). */
+.batiment-meuble-ligne{ display:flex; align-items:center; gap:10px; }
+.batiment-meuble-curseur{ flex:1; min-width:0; width:100%; margin:0; }
+.batiment-meuble-dimensions > div{ display:flex; justify-content:space-between; font-size:var(--texte-courant); color:var(--ink-soft); }
+.batiment-meuble-dimensions > div span:last-child{ color:var(--ink); font-variant-numeric:tabular-nums; }
+.batiment-meuble-echelle{ flex:none; min-width:44px; text-align:right; font-variant-numeric:tabular-nums; color:var(--ink-soft); }

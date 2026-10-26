@@ -111,3 +111,48 @@ describe('le mobilier d\'un bâtiment (#454e)', () => {
     assert.match(ui, /modifier\(b => supprimerMeuble\(b, id\)\);/);
   });
 });
+
+describe('les réglages de l\'élément choisi (demandé)', () => {
+  test('« Tourner de 90° » part de l\'angle actuel, même quelconque', () => {
+    const { m } = unePieceMeublee();
+    m.rotY = 0.3;
+    M.tournerMeuble(m);
+    assert.ok(Math.abs(m.rotY - (0.3 + Math.PI / 2)) < 1e-6);
+  });
+
+  test('le clic droit maintenu tourne son DEVANT (+z) vers la souris, sur tout le tour ; Maj par 15°', () => {
+    const { m } = unePieceMeublee();
+    M.orienterMeuble(m, { x: m.x, z: m.z + 1 });   // devant
+    assert.equal(m.rotY, 0);
+    M.orienterMeuble(m, { x: m.x + 1, z: m.z });   // à droite : un quart de tour
+    assert.ok(Math.abs(m.rotY - Math.PI / 2) < 1e-6);
+    M.orienterMeuble(m, { x: m.x - 1, z: m.z - 0.1 });
+    assert.ok(m.rotY > Math.PI && m.rotY < 2 * Math.PI, 'derrière à gauche : plus d\'un demi-tour');
+    M.orienterMeuble(m, { x: m.x + 1, z: m.z + 0.9 }, Math.PI / 12);
+    assert.ok(Math.abs(m.rotY / (Math.PI / 12) - Math.round(m.rotY / (Math.PI / 12))) < 1e-6, 'par 15°');
+  });
+
+  test('le curseur de taille est logarithmique : ×1 au milieu, les bornes aux extrémités, aller-retour fidèle', () => {
+    assert.equal(M.curseurDeLEchelle(1), 50);
+    assert.equal(M.echelleDuCurseur(0), M.ECHELLE_MEUBLE.min);
+    assert.equal(M.echelleDuCurseur(100), M.ECHELLE_MEUBLE.max);
+    assert.ok(Math.abs(M.echelleDuCurseur(M.curseurDeLEchelle(1.7)) - 1.7) < 0.02);
+  });
+
+  test('ses dimensions suivent son échelle', () => {
+    const { m } = unePieceMeublee();
+    m.echelle = 2;
+    assert.deepEqual(M.tailleDuMeuble(m), { largeur: 2, longueur: 1, hauteur: 1.6 });
+  });
+
+  test('« Collé au sol » : par défaut ; décoché, sa hauteur au-dessus du sol, en 3D aussi ; recoché, le champ disparaît', () => {
+    const { b, m } = unePieceMeublee();
+    assert.equal(M.hauteurAuSol(m), 0);
+    M.collerAuSol(m, false, 0.75);
+    assert.deepEqual([m.colle, m.y, M.hauteurAuSol(m)], [false, 0.75, 0.75]);
+    const g = construireBatiment3D(THREE, b, materiauxBatiment3D(THREE));
+    assert.equal(g.children.find(o => o.userData.meubleId === m.id).position.y, 0.75);
+    M.collerAuSol(m, true);
+    assert.ok(!('colle' in m) && !('y' in m));
+  });
+});

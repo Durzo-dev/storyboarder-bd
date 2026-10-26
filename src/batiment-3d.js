@@ -15,7 +15,7 @@ import { formesDesPieces, dansLaFace, pointDansPolygone } from './batiment-piece
 import { formeDeLEscalier, tremieDeLEscalier } from './batiment-escaliers.js';
 import { niveauxTries, hauteurDesMursDuNiveau, epaisseurDuDessus, niveauDessous } from './batiment-niveaux.js';
 import { fabriqueDeRevetements, revetementDeLaFace, revetementDeLaPiece, pieceDevantLaFace } from './batiment-revetements.js';
-import { meublesDuNiveau } from './batiment-mobilier.js';
+import { meublesDuNiveau, hauteurAuSol } from './batiment-mobilier.js';
 
 /** Les matières d'un bâtiment, à créer une fois par renderer. */
 export function materiauxBatiment3D(T){
@@ -318,7 +318,7 @@ export function construireBatiment3D(T, b, mats, { jusquA = null } = {}){
  */
 function construireMeuble(T, m, mats, elevation){
   const g = new T.Group();
-  g.position.set(m.x, elevation, m.z);
+  g.position.set(m.x, elevation + hauteurAuSol(m), m.z);   // au sol, ou décollé (« Collé au sol » décoché)
   g.rotation.y = m.rotY || 0;
   g.userData.meubleId = m.id;
   const k = m.echelle || 1;

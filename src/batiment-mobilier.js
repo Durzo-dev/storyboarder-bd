@@ -14,7 +14,8 @@
  *   - dims : largeur (x), profondeur (z), hauteur (y) À L'ÉCHELLE 1, en mètres ;
  *   - base : le facteur qui ramène le fichier à ces dimensions (un modèle fait en centimètres) ;
  *   - echelle : ce que la molette a changé, 1 au départ.
- * Il est TOUJOURS au sol de son niveau (demandé : fixé au sol par défaut).
+ * Il est AU SOL de son niveau par défaut (demandé). `colle: false` le décolle : `y`, sa hauteur
+ * au-dessus du sol, en mètres (posé sur un meuble, accroché au mur).
  *
  * Fonctions PURES ; le rendu est dans batiment-3d.js, les gestes dans batiment-editeur-ui.js.
  */
@@ -130,10 +131,32 @@ export function aimanterMeuble(b, m, centre, tol = AIMANT_MEUBLE){
   return { x: arrondi(p.x), z: arrondi(p.z), colle: pris.length > 0 };
 }
 
-/** Un quart de tour (le clic droit, demandé). */
+const TOUR = Math.PI * 2;
+/** Un angle ramené dans [0 ; 2π[, calé exactement sur un quart de tour quand il en est à un cheveu
+ *  (quatre quarts de tour doivent revenir pile au départ). */
+const normaliserAngle = (a) => {
+  let r = ((a % TOUR) + TOUR) % TOUR;
+  const q = Math.round(r / (Math.PI / 2));
+  if (Math.abs(r - q * Math.PI / 2) < 1e-9) r = (q % 4) * Math.PI / 2;
+  return r;
+};
+
+/** Un quart de tour de plus (le clic droit, le bouton « Tourner », demandé), depuis son angle actuel. */
 export function tournerMeuble(m){
-  const q = Math.round(((m.rotY || 0) / (Math.PI / 2)) + 1) % 4;
-  m.rotY = q * Math.PI / 2;
+  m.rotY = normaliserAngle((m.rotY || 0) + Math.PI / 2);
+  return m;
+}
+
+/**
+ * L'orientation qui tourne le DEVANT du meuble (son côté +z) vers le point `vers` (le clic droit
+ * maintenu, demandé : il suit la souris, sur tout le tour). `pas` : un angle d'arrondi, ou 0.
+ */
+export function orienterMeuble(m, vers, pas = 0){
+  const dx = vers.x - m.x, dz = vers.z - m.z;
+  if (Math.hypot(dx, dz) < 1e-6) return m;
+  let a = Math.atan2(dx, dz);
+  if (pas > 0) a = Math.round(a / pas) * pas;
+  m.rotY = normaliserAngle(a);
   return m;
 }
 
@@ -141,6 +164,31 @@ export function tournerMeuble(m){
 export function echelonnerMeuble(m, cran){
   const k = (m.echelle || 1) * (cran > 0 ? ECHELLE_MEUBLE.pas : 1 / ECHELLE_MEUBLE.pas);
   m.echelle = Math.round(Math.min(ECHELLE_MEUBLE.max, Math.max(ECHELLE_MEUBLE.min, k)) * 1000) / 1000;
+  return m;
+}
+
+/**
+ * Le CURSEUR de taille (demandé) : 0 à 100, sur une échelle LOGARITHMIQUE entre les bornes, pour
+ * qu'il soit aussi fin pour rétrécir que pour grandir (×1 tombe au milieu, à 50).
+ */
+const LOG_MIN = Math.log(ECHELLE_MEUBLE.min), LOG_MAX = Math.log(ECHELLE_MEUBLE.max);
+export const curseurDeLEchelle = (k) => Math.round(((Math.log(Math.min(ECHELLE_MEUBLE.max, Math.max(ECHELLE_MEUBLE.min, k || 1))) - LOG_MIN) / (LOG_MAX - LOG_MIN)) * 1000) / 10;
+export const echelleDuCurseur = (v) => Math.round(Math.exp(LOG_MIN + (Math.min(100, Math.max(0, Number(v) || 0)) / 100) * (LOG_MAX - LOG_MIN)) * 1000) / 1000;
+
+/** Ses dimensions à son échelle, en mètres : `{ largeur, longueur, hauteur }` (demandé, affichées). */
+export function tailleDuMeuble(m){
+  const k = m.echelle || 1, [l, p, h] = m.dims || [1, 1, 1];
+  return { largeur: l * k, longueur: p * k, hauteur: h * k };
+}
+
+/** Sa hauteur au-dessus du sol de son niveau : 0 s'il y est collé (par défaut). */
+export const hauteurAuSol = (m) => (m.colle === false ? Math.max(0, Number(m.y) || 0) : 0);
+
+/** Le coller au sol, ou l'en décoller à la hauteur `y` (en mètres, bornée à 0–20 m). */
+export function collerAuSol(m, colle, y = null){
+  if (colle) { delete m.colle; delete m.y; return m; }
+  m.colle = false;
+  m.y = Math.round(Math.min(20, Math.max(0, Number(y != null ? y : m.y) || 0)) * 1000) / 1000;
   return m;
 }
 
