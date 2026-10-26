@@ -53,8 +53,9 @@ import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
 import { carreDeTexture } from './textures-store-ui.js';
 import { normaliserRevetement, peintureDuRevetement } from './batiment-revetements.js';
 import { sectionDroitePliee, memoriserSectionDroite } from './section-memory.js';
-import { ajouterMeuble, meubleSous, aimanterMeuble, tournerMeuble, orienterMeuble, echelonnerMeuble, supprimerMeuble, empreinteDuMeuble, fichiersDesMeubles,
-  curseurDeLEchelle, echelleDuCurseur, tailleDuMeuble, collerAuSol } from './batiment-mobilier.js';
+import { ajouterMeuble, meubleSous, aimanterMeuble, tournerMeuble, echelonnerMeuble, supprimerMeuble, empreinteDuMeuble, fichiersDesMeubles,
+  curseurDeLEchelle, echelleDuCurseur, tailleDuMeuble, collerAuSol, tournerDe, pencherMeuble, redresserMeuble, meubleEnCollision, devantDuMeuble,
+  axesDuMeuble } from './batiment-mobilier.js';
 import { ouvrirStore } from './store-ui.js';
 import { getLoadedModel, preloadModels } from './model-cache.js';
 import { metasLocales } from './model-thumbnails.js';
@@ -272,14 +273,16 @@ function remplirPanneau(){
   $('batimentSelectionOuverture').hidden = !ouv;
   $('batimentSelectionEscalier').hidden = !esc;
   $('batimentSelectionMeuble').hidden = !meuble;
-  if (meuble) { $('batimentMeubleNom').textContent = meuble.nom; reglagesDuMeuble(meuble); }
+  // Le nom de l'élément est le TITRE de la section (demandé) ; il n'est pas répété dessous.
+  $('batimentMeubleNom').hidden = true;
+  if (meuble) reglagesDuMeuble(meuble);
   // Un seul menu (demandé) : la section contextuelle s'ajoute au besoin, les commandes suivent.
   $('batimentSectionSelection').hidden = !(ouv || esc || meuble);
   $('batimentContexteOuverture').hidden = E.outil !== 'ouverture';
   $('batimentContexteEscalier').hidden = E.outil !== 'escalier';
   $('batimentAide').textContent = commandes({ m, piece, ouv, esc, meuble });
   $('batimentSelectionTitre').textContent = ouv ? tr('Selected opening', 'Ouverture sélectionnée') : esc ? tr('Selected staircase', 'Escalier sélectionné')
-    : meuble ? tr('Selected element', 'Élément sélectionné') : tr('Selection', 'Sélection');
+    : meuble ? meuble.nom : tr('Selection', 'Sélection');
   if (E.outil === 'escalier') formulaireEscalier($('batimentReglagesEscalier'), E.reglagesEscalier, (c) => {
     E.reglagesEscalier = { ...E.reglagesEscalier, ...c }; remplirPanneau(); dessinerPlan();
   });
@@ -702,38 +705,105 @@ function ajouterUnElement(){
   });
 }
 
+/** Rend à un meuble l'état `avant` (JSON) : un geste qui finissait dans un mur est défait. */
+function remettreMeuble(id, avant){
+  const i = (E.batiment.elements || []).findIndex(q => q.id === id);
+  if (i >= 0 && avant) E.batiment.elements[i] = JSON.parse(avant);
+}
+
+/**
+ * Une retouche d'un meuble d'un seul coup (quart de tour, « Remettre droit », hauteur, molette) :
+ * refusée si elle le met dans un mur qu'il ne peut pas traverser (rien ne change).
+ */
+function retoucherMeuble(id, faire){
+  const essai = JSON.parse(JSON.stringify(E.batiment));
+  const x = (essai.elements || []).find(q => q.id === id);
+  if (!x) return false;
+  faire(x);
+  if (meubleEnCollision(essai, x)) return false;
+  modifier(b => { const y = (b.elements || []).find(q => q.id === id); if (y) faire(y); });
+  return true;
+}
+
 /** Une longueur en mètres, lisible (« 1,02 m »). */
 const enMetres = (v) => `${(Math.round(v * 100) / 100).toLocaleString(tr('en', 'fr'), { minimumFractionDigits: 2 })} m`;
 
+/** Un angle en degrés, lisible (« 30° »). */
+const enDegres = (r) => `${Math.round((r || 0) * 180 / Math.PI)}°`;
+
 /**
- * Les RÉGLAGES de l'élément choisi (demandé) : ses dimensions, « Tourner de 90° », le curseur de
- * taille (en direct, une étape d'annulation par geste), « Collé au sol » et, décoché, sa hauteur
- * au-dessus du sol.
+ * LE REPÈRE D'AXES (demandé) : les trois axes de l'élément TOURNÉ, vus de trois quarts — x, sa
+ * largeur (rouge) ; y, sa hauteur (vert) ; z, son devant (bleu). Un SVG, refait à chaque retouche.
+ */
+function repereDAxes(m){
+  const A = axesDuMeuble(m);
+  // Vue de trois quarts : un quart de tour de 45° et 30° de plongée.
+  const vers = (v) => ({ x: 70 + (v.x - v.z) * 0.707 * 48, y: 62 - (v.y * 0.866 - (v.x + v.z) * 0.707 * 0.5) * 48 });
+  const o = vers({ x: 0, y: 0, z: 0 });
+  const axe = (v, coul, nom) => {
+    const p = vers(v);
+    return `<line x1="${o.x}" y1="${o.y}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="${coul}" stroke-width="2.5" stroke-linecap="round"/>`
+      + `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="${coul}"/>`
+      + `<text x="${(p.x + (p.x - o.x) * 0.18).toFixed(1)}" y="${(p.y + (p.y - o.y) * 0.18 + 4).toFixed(1)}" fill="${coul}" font-size="11" font-weight="700" text-anchor="middle">${nom}</text>`;
+  };
+  // Dessinés du plus loin au plus proche (profondeur de la vue), pour que l'avant passe devant.
+  const prof = (v) => v.x + v.z;
+  const axes = [[A.x, '#e5534b', 'X'], [A.y, '#57ab5a', 'Y'], [A.z, '#539bf5', 'Z']].sort((a, b) => prof(a[0]) - prof(b[0]));
+  const d = document.createElement('div');
+  d.className = 'batiment-meuble-repere';
+  d.innerHTML = `<svg viewBox="0 0 140 124" aria-hidden="true">${axes.map(([v, c, n]) => axe(v, c, n)).join('')}<circle cx="${o.x}" cy="${o.y}" r="3" fill="currentColor"/></svg>`;
+  return d;
+}
+
+/**
+ * Les RÉGLAGES de l'élément choisi (demandé) : ses dimensions (sur une ligne), son orientation (le
+ * repère d'axes, ses angles, « Tourner de 90° », « Remettre droit »), sa taille (curseur, en direct,
+ * une étape d'annulation par geste), « Collé au sol » et sa hauteur, « Peut traverser les murs ».
  */
 function reglagesDuMeuble(meuble){
   const zone = $('batimentMeubleReglages');
-  // Le curseur est tenu : le refaire le lâcherait sous la souris. On met seulement le texte à jour.
+  // Le curseur est tenu : le refaire le lâcherait sous la souris.
   if (zone.contains(document.activeElement) && document.activeElement.type === 'range') return;
   const id = meuble.id;
   const courant = () => (E.batiment.elements || []).find(x => x.id === id);
-  // Les dimensions, une par ligne (le nom à gauche, la valeur à droite).
+  const bouton = (texte, faire) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'nav-btn'; b.textContent = texte; b.onclick = faire; return b;
+  };
+  const coche = (texte, coche_, changer) => {
+    const l = document.createElement('label'); l.className = 'modal-checkbox-line';
+    const c = document.createElement('input'); c.type = 'checkbox'; c.checked = coche_;
+    c.addEventListener('change', () => changer(c.checked));
+    l.append(c, document.createTextNode(' ' + texte));
+    return l;
+  };
+  // Dimensions, sur une ligne (demandé) : trois colonnes, le nom au-dessus de la valeur.
   const taille = document.createElement('div');
   taille.className = 'batiment-meuble-dimensions';
   const ecrireTaille = (x) => {
     const d = tailleDuMeuble(x);
     taille.replaceChildren(...[[tr('Width', 'Largeur'), d.largeur], [tr('Length', 'Longueur'), d.longueur], [tr('Height', 'Hauteur'), d.hauteur]].map(([n, v]) => {
-      const l = document.createElement('div');
+      const c = document.createElement('div');
       const a = document.createElement('span'); a.textContent = n;
       const b = document.createElement('span'); b.textContent = enMetres(v);
-      l.append(a, b);
-      return l;
+      c.append(a, b);
+      return c;
     }));
   };
   ecrireTaille(meuble);
-  // Orientation : un quart de tour.
-  const tourner = document.createElement('button');
-  tourner.type = 'button'; tourner.className = 'nav-btn'; tourner.textContent = tr('Turn by 90°', 'Tourner de 90°');
-  tourner.onclick = () => modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (x) tournerMeuble(x); });
+  // Orientation : le repère, les angles, et deux boutons.
+  // Les trois angles, en colonnes comme les dimensions.
+  const angles = document.createElement('div');
+  angles.className = 'batiment-meuble-dimensions';
+  angles.replaceChildren(...[[tr('Turn', 'Rotation'), meuble.rotY], [tr('Tilt', 'Inclinaison'), meuble.rotX], [tr('Lean', 'Bascule'), meuble.rotZ]].map(([n, v]) => {
+    const c = document.createElement('div');
+    const a = document.createElement('span'); a.textContent = n;
+    const b = document.createElement('span'); b.textContent = enDegres(v);
+    c.append(a, b);
+    return c;
+  }));
+  const boutons = document.createElement('div'); boutons.className = 'batiment-meuble-boutons';
+  boutons.append(bouton(tr('Turn by 90°', 'Tourner de 90°'), () => retoucherMeuble(id, tournerMeuble)),
+    bouton(tr('Straighten', 'Remettre droit'), () => retoucherMeuble(id, redresserMeuble)));
   // Taille : le curseur, logarithmique (×1 au milieu).
   const valeur = document.createElement('span'); valeur.className = 'batiment-meuble-echelle';
   const ecrireEchelle = (k) => { valeur.textContent = `×${k.toLocaleString(tr('en', 'fr'), { maximumFractionDigits: 2 })}`; };
@@ -742,40 +812,48 @@ function reglagesDuMeuble(meuble){
   curseur.type = 'range'; curseur.min = '0'; curseur.max = '100'; curseur.step = '0.5';
   curseur.value = String(curseurDeLEchelle(meuble.echelle || 1));
   curseur.className = 'batiment-meuble-curseur';
-  let geste = false;
+  let geste = null;
   curseur.addEventListener('input', () => {
     const x = courant(); if (!x) return;
-    if (!geste) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; geste = true; }
+    if (!geste) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; geste = { avant: JSON.stringify(x) }; }
     x.echelle = echelleDuCurseur(curseur.value);
+    E.collisionMeuble = meubleEnCollision(E.batiment, x) ? id : null;
     ecrireEchelle(x.echelle); ecrireTaille(x);
     dessinerPlan();
     if (E.apercu) E.apercu.reconstruire(E.batiment);
   });
-  curseur.addEventListener('change', () => { geste = false; curseur.blur(); apresModification(); });
+  curseur.addEventListener('change', () => {
+    // Relâché dans un mur : défait (demandé), comme un glissé.
+    if (geste && E.collisionMeuble === id) { E.historique.pop(); remettreMeuble(id, geste.avant); }
+    geste = null; E.collisionMeuble = null; curseur.blur(); apresModification();
+  });
   const ligneTaille = document.createElement('div'); ligneTaille.className = 'batiment-meuble-ligne';
   ligneTaille.append(curseur, valeur);
-  // Collé au sol (par défaut) ; décoché, sa hauteur au-dessus du sol.
-  const case_ = document.createElement('label'); case_.className = 'modal-checkbox-line';
-  const coche = document.createElement('input'); coche.type = 'checkbox'; coche.checked = meuble.colle !== false;
-  case_.append(coche, document.createTextNode(' ' + tr('Stuck to the floor', 'Collé au sol')));
-  coche.addEventListener('change', () => modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (x) collerAuSol(x, coche.checked); }));
+  // Position : collé au sol (par défaut) ; décoché, sa hauteur. Traverser les murs (et le sol).
   const hauteur = document.createElement('label'); hauteur.className = 'batiment-champ';
   hauteur.hidden = meuble.colle !== false;
   const ht = document.createElement('span'); ht.textContent = tr('Height above the floor', 'Hauteur au-dessus du sol');
   const hw = document.createElement('span'); hw.className = 'batiment-champ-valeur';
-  const hi = document.createElement('input'); hi.type = 'number'; hi.min = '0'; hi.step = '1'; hi.value = String(Math.round((meuble.y || 0) * 100));
+  const hi = document.createElement('input'); hi.type = 'number'; hi.step = '1'; hi.value = String(Math.round((meuble.y || 0) * 100));
+  if (!meuble.traverse) hi.min = '0';
   hi.addEventListener('change', () => {
     const n = Number(hi.value);
-    if (!Number.isFinite(n) || n < 0) { hi.value = String(Math.round((meuble.y || 0) * 100)); return; }
+    if (!Number.isFinite(n)) { hi.value = String(Math.round((meuble.y || 0) * 100)); return; }
     modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (x) collerAuSol(x, false, n / 100); });
   });
   hw.append(hi, document.createTextNode(' cm'));
   hauteur.append(ht, hw);
   zone.replaceChildren(
     sousSection(tr('Dimensions', 'Dimensions'), taille),
-    sousSection(tr('Orientation', 'Orientation'), tourner),
+    sousSection(tr('Orientation', 'Orientation'), repereDAxes(meuble), angles, boutons),
     sousSection(tr('Size', 'Taille'), ligneTaille),
-    sousSection(tr('Position', 'Position'), case_, hauteur));
+    sousSection(tr('Position', 'Position'),
+      coche(tr('Stuck to the floor', 'Collé au sol'), meuble.colle !== false,
+        (v) => modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (x) collerAuSol(x, v); })),
+      hauteur,
+      // Décoché (par défaut), il ne traverse ni les murs ni, décollé, le sol (demandé).
+      coche(tr('Can pass through walls', 'Peut traverser les murs'), !!meuble.traverse,
+        (v) => modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (!x) return; if (v) x.traverse = true; else { delete x.traverse; if (x.colle === false) collerAuSol(x, false); } }))));
 }
 
 /** L'escalier sélectionné, s'il existe encore. */
@@ -1103,7 +1181,9 @@ function commandes({ m, piece, ouv, esc, meuble }){
     if (meuble) return lignes(
       tr('Drag: move it (it snaps to the walls).', 'Tirer : le déplacer (il s\'aimante aux murs).'),
       tr('Right-click: turn it by 90°.', 'Clic droit : le tourner de 90°.'),
-      tr('Hold right button: turn it towards the mouse (Shift: by 15°).', 'Clic droit maintenu : le tourner vers la souris (Maj : par 15°).'),
+      tr('Hold right button: left / right turns it, up / down tilts it.', 'Clic droit maintenu : gauche / droite le tourne, haut / bas l\'incline.'),
+      tr('Shift + hold right button: lean it sideways. Ctrl: by 15°.', 'Maj + clic droit maintenu : le basculer. Ctrl : par 15°.'),
+      tr('In red: inside a wall, it will go back on release.', 'En rouge : dans un mur, il reviendra au relâcher.'),
       tr('Wheel: make it bigger or smaller.', 'Molette : l\'agrandir ou le rétrécir.'),
       tr('Alt: move without snapping.', 'Alt : déplacer sans aimant.'),
       tr('Del: delete it.', 'Suppr : le supprimer.'), deselect);
@@ -1383,16 +1463,17 @@ function dessinerPlan(){
   // survolé (outil Sélection) : en couleur d'accent.
   (E.batiment.elements || []).filter(x => x && x.niveauId === E.niveauId && x.modelFile).forEach(x => {
     const choisi = (E.selection && E.selection.meubleId === x.id) || (E.outil === 'selection' && E.survol && E.survol.meubleId === x.id);
-    const teinte = choisi ? accent : couleur('--ink-soft', '#9a9aa2');
+    // Forcé dans un mur qu'il ne peut pas traverser : en rouge (demandé).
+    const teinte = E.collisionMeuble === x.id ? couleur('--danger', '#c0392b') : choisi ? accent : couleur('--ink-soft', '#9a9aa2');
     const coins = empreinteDuMeuble(x);
     g.save();
     poly(coins);
     g.globalAlpha = 0.18; g.fillStyle = teinte; g.fill();
     g.globalAlpha = 1; g.strokeStyle = teinte; g.lineWidth = choisi ? 2 : 1.5; g.stroke();
-    // Le devant (le côté +z du modèle) : un trait plus épais, pour voir où il regarde après un quart de tour.
-    const a = versEsc(coins[2]), b2 = versEsc(coins[3]);
-    g.lineWidth = choisi ? 4 : 3; g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b2.x, b2.y); g.stroke();
-    const centre = versEsc({ x: x.x, z: x.z });
+    // Le devant (le côté +z du modèle) : un trait du centre vers lui, pour voir où il regarde.
+    const centre = versEsc({ x: x.x, z: x.z }), devant = versEsc(devantDuMeuble(x));
+    g.lineWidth = choisi ? 3 : 2; g.beginPath(); g.moveTo(centre.x, centre.y); g.lineTo(devant.x, devant.y); g.stroke();
+    g.beginPath(); g.arc(devant.x, devant.y, choisi ? 4 : 3, 0, Math.PI * 2); g.fillStyle = teinte; g.fill();
     g.fillStyle = teinte; g.font = '600 11px Inter, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillText(x.nom, centre.x, centre.y);
     g.restore();
@@ -1579,6 +1660,8 @@ function survoler(e){
         if (!e.altKey) centre = aimanterMeuble(E.batiment, x, centre);
         x.x = Math.round(centre.x * 1000) / 1000; x.z = Math.round(centre.z * 1000) / 1000;
         g.bouge = true;
+        // Forcé dans un mur qu'il ne peut pas traverser : rouge ; il reviendra au relâcher (demandé).
+        E.collisionMeuble = meubleEnCollision(E.batiment, x) ? x.id : null;
         apresModification();
       }
       return;
@@ -1622,7 +1705,10 @@ function cablerPlan(){
       const maintenant = Date.now();
       if (!E.molette || E.molette.id !== meubleMolette || maintenant - E.molette.t > 800) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; }
       const x = E.batiment.elements.find(q => q.id === meubleMolette);
+      const avant = x.echelle;
       echelonnerMeuble(x, e.deltaY < 0 ? 1 : -1);
+      // Un cran qui le mettrait dans un mur qu'il ne peut pas traverser est refusé.
+      if (meubleEnCollision(E.batiment, x)) x.echelle = avant;
       E.molette = { id: meubleMolette, t: maintenant };
       E.selection = { meubleId: meubleMolette };
       apresModification();
@@ -1666,6 +1752,7 @@ function cablerPlan(){
       E.geste = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, bouge: false, bouton: e.button,
         // #454e : un clic droit maintenu SUR un élément le fait pivoter au lieu de déplacer la vue.
         meuble: e.button === 2 && E.outil === 'selection' ? meubleSous(E.batiment, E.niveauId, souris(e).p) : null };
+      if (E.geste.meuble) { const x = E.batiment.elements.find(q => q.id === E.geste.meuble); E.geste.avant = JSON.stringify(x); E.geste.base = { rotY: x.rotY || 0, rotX: x.rotX || 0, rotZ: x.rotZ || 0 }; }
       c.setPointerCapture(e.pointerId);
       return;
     }
@@ -1717,7 +1804,7 @@ function cablerPlan(){
       const x = E.batiment.elements.find(q => q.id === meubleId);
       E.selection = { meubleId };
       E.historique.push(JSON.stringify(E.batiment)); E.refaire = [];
-      E.glisserMeuble = { id: meubleId, depart: { x: x.x, z: x.z }, p, bouge: false };
+      E.glisserMeuble = { id: meubleId, depart: { x: x.x, z: x.z }, p, bouge: false, avant: JSON.stringify(x) };
       c.setPointerCapture(e.pointerId);
       remplirPanneau(); dessinerPlan();
       return;
@@ -1742,15 +1829,22 @@ function cablerPlan(){
   c.addEventListener('pointermove', (e) => {
     if (!E) return;
     if (E.geste && E.geste.meuble) {
-      // Pivoter (demandé) : le devant de l'élément suit la souris, sur tout le tour (Maj : par 15°) ;
-      // il se recolle aux murs dans sa nouvelle orientation (Alt : sans aimant).
+      // ORIENTER (demandé), au mouvement de la souris depuis l'appui, lentement (0,4° par pixel) :
+      // horizontal, tourner ; vertical, incliner ; Maj + horizontal, basculer ; Ctrl, par 15°. Il se
+      // recolle aux murs dans sa nouvelle orientation (Alt : sans aimant) ; collé au sol, il reste posé.
       const g = E.geste;
       if (!g.tourne && Math.hypot(e.clientX - g.x0, e.clientY - g.y0) < 4) return;
       const x = (E.batiment.elements || []).find(q => q.id === g.meuble);
       if (!x) return;
       if (!g.tourne) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; g.tourne = true; g.bouge = true; }
-      orienterMeuble(x, souris(e).p, e.shiftKey ? Math.PI / 12 : 0);
+      const VITESSE = Math.PI / 180 * 0.4, pas = e.ctrlKey ? Math.PI / 12 : 0;
+      const q = (v) => (pas ? Math.round(v / pas) * pas : v);
+      const dx = (e.clientX - g.x0) * VITESSE, dy = (e.clientY - g.y0) * VITESSE;
+      x.rotY = g.base.rotY; x.rotX = g.base.rotX; x.rotZ = g.base.rotZ;
+      if (e.shiftKey) pencherMeuble(x, 'z', q(dx)); else tournerDe(x, q(dx));
+      pencherMeuble(x, 'x', q(dy));
       if (!e.altKey) { const c = aimanterMeuble(E.batiment, x, { x: x.x, z: x.z }); x.x = c.x; x.z = c.z; }
+      E.collisionMeuble = meubleEnCollision(E.batiment, x) ? x.id : null;
       E.selection = { meubleId: x.id };
       apresModification();
       return;
@@ -1778,10 +1872,15 @@ function cablerPlan(){
       apresModification();
     }
     if (E.glisserMeuble) {
-      const { bouge } = E.glisserMeuble;
+      const { bouge, id, avant } = E.glisserMeuble;
       E.glisserMeuble = null;
-      // Un clic sans glisser n'a rien changé : le point d'annulation est retiré.
-      if (!bouge) E.historique.pop();
+      // Un clic sans glisser n'a rien changé, et un geste qui finit dans un mur est défait (demandé :
+      // il revient à sa position d'avant) : le point d'annulation est retiré.
+      if (!bouge || E.collisionMeuble === id) {
+        E.historique.pop();
+        if (E.collisionMeuble === id) remettreMeuble(id, avant);
+      }
+      E.collisionMeuble = null;
       apresModification();
     }
     if (E.poseEscalier) {
@@ -1817,13 +1916,22 @@ function cablerPlan(){
       if (Math.hypot(depart.x - actuel.x, depart.z - actuel.z) < 1e-9) E.historique.pop();
       apresModification();
     }
+    if (E.geste && E.geste.tourne) {
+      // Fin d'une orientation : défaite si elle finit dans un mur (demandé).
+      const { meuble, avant } = E.geste;
+      E.geste = null;
+      if (E.collisionMeuble === meuble) { E.historique.pop(); remettreMeuble(meuble, avant); }
+      E.collisionMeuble = null;
+      apresModification();
+      return;
+    }
     if (E.geste) {
       const { bouge } = E.geste;
       E.geste = null;
       // #454e : à l'outil Sélection, un clic droit sur un meuble le tourne d'un quart de tour (demandé).
       const meubleClic = !bouge && e && e.type === 'pointerup' && E.outil === 'selection' ? meubleSous(E.batiment, E.niveauId, souris(e).p) : null;
       if (meubleClic) {
-        modifier(b => { const x = (b.elements || []).find(q => q.id === meubleClic); if (x) tournerMeuble(x); });
+        retoucherMeuble(meubleClic, tournerMeuble);
         E.selection = { meubleId: meubleClic };
         remplirPanneau(); dessinerPlan();
       } else
@@ -1948,7 +2056,7 @@ function ouvrirApercu(conteneur, b){
   const mats = materiauxBatiment3D(T);
   // #454e : le mobilier par le cache des modèles ; ceux du bâtiment sont décodés à l'ouverture.
   mats.modele = (f) => { const c = getLoadedModel(f); return c && c.scene ? cloneSkinned(c.scene) : null; };
-  const options = () => ({ jusquA: E && E.coupe ? E.niveauId : null });
+  const options = () => ({ jusquA: E && E.coupe ? E.niveauId : null, rouge: E ? E.collisionMeuble : null });
   let groupe = construireBatiment3D(T, b, mats, options());
   scene.add(groupe);
   const meubles = fichiersDesMeubles(b);

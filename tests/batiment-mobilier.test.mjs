@@ -106,7 +106,7 @@ describe('le mobilier d\'un bâtiment (#454e)', () => {
     const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
     assert.match(ui, /\$\('batimentAjouterElement'\)\.onclick = \(\) => \{ if \(E\) ajouterUnElement\(\); \};/);
     assert.match(ui, /ouvrirStore\(\{\s*accepter: \(e\) => !e\.introuvable && !e\.batiment,/);
-    assert.match(ui, /if \(x\) tournerMeuble\(x\);/);
+    assert.match(ui, /retoucherMeuble\(meubleClic, tournerMeuble\);/);
     assert.match(ui, /echelonnerMeuble\(x, e\.deltaY < 0 \? 1 : -1\);/);
     assert.match(ui, /modifier\(b => supprimerMeuble\(b, id\)\);/);
   });
@@ -120,16 +120,12 @@ describe('les réglages de l\'élément choisi (demandé)', () => {
     assert.ok(Math.abs(m.rotY - (0.3 + Math.PI / 2)) < 1e-6);
   });
 
-  test('le clic droit maintenu tourne son DEVANT (+z) vers la souris, sur tout le tour ; Maj par 15°', () => {
+  test('le clic droit maintenu tourne d\'un angle quelconque, sur tout le tour', () => {
     const { m } = unePieceMeublee();
-    M.orienterMeuble(m, { x: m.x, z: m.z + 1 });   // devant
+    M.tournerDe(m, -Math.PI / 4);
+    assert.ok(Math.abs(m.rotY - 7 * Math.PI / 4) < 1e-9, 'ramené dans [0 ; 2π[');
+    M.tournerDe(m, Math.PI / 4);
     assert.equal(m.rotY, 0);
-    M.orienterMeuble(m, { x: m.x + 1, z: m.z });   // à droite : un quart de tour
-    assert.ok(Math.abs(m.rotY - Math.PI / 2) < 1e-6);
-    M.orienterMeuble(m, { x: m.x - 1, z: m.z - 0.1 });
-    assert.ok(m.rotY > Math.PI && m.rotY < 2 * Math.PI, 'derrière à gauche : plus d\'un demi-tour');
-    M.orienterMeuble(m, { x: m.x + 1, z: m.z + 0.9 }, Math.PI / 12);
-    assert.ok(Math.abs(m.rotY / (Math.PI / 12) - Math.round(m.rotY / (Math.PI / 12))) < 1e-6, 'par 15°');
   });
 
   test('le curseur de taille est logarithmique : ×1 au milieu, les bornes aux extrémités, aller-retour fidèle', () => {
@@ -154,5 +150,69 @@ describe('les réglages de l\'élément choisi (demandé)', () => {
     assert.equal(g.children.find(o => o.userData.meubleId === m.id).position.y, 0.75);
     M.collerAuSol(m, true);
     assert.ok(!('colle' in m) && !('y' in m));
+  });
+});
+
+describe('orienter dans tous les sens, et ne pas traverser les murs (demandé)', () => {
+  test('incliné, il reste POSÉ sur son point le plus bas (collé au sol), en 3D aussi', () => {
+    const { b, m } = unePieceMeublee();
+    M.pencherMeuble(m, 'x', Math.PI / 6);
+    assert.ok(M.basDuMeuble(m) < 0, 'un coin passe sous son origine');
+    const g = construireBatiment3D(THREE, b, materiauxBatiment3D(THREE));
+    g.updateMatrixWorld(true);
+    const boite = new THREE.Box3().setFromObject(g.children.find(o => o.userData.meubleId === m.id));
+    assert.ok(Math.abs(boite.min.y) < 1e-6, `posé au sol : ${boite.min.y}`);
+  });
+
+  test('incliner et basculer sont bornés à ±90° ; « Remettre droit » les efface', () => {
+    const { m } = unePieceMeublee();
+    M.pencherMeuble(m, 'x', 5); M.pencherMeuble(m, 'z', -5);
+    assert.deepEqual([m.rotX, m.rotZ].map(v => Math.round(v * 1e6) / 1e6), [Math.round(Math.PI / 2 * 1e6) / 1e6, -Math.round(Math.PI / 2 * 1e6) / 1e6]);
+    M.redresserMeuble(m);
+    assert.ok(!('rotX' in m) && !('rotZ' in m));
+  });
+
+  test('son empreinte suit l\'inclinaison : couché, il prend sa hauteur au sol', () => {
+    const { m } = unePieceMeublee();
+    M.pencherMeuble(m, 'x', Math.PI / 2);   // couché sur le dos : profondeur 0,8 (sa hauteur)
+    const e = M.empreinteDuMeuble(m);
+    const zs = e.map(p => p.z);
+    assert.ok(Math.abs((Math.max(...zs) - Math.min(...zs)) - 0.8) < 1e-6);
+  });
+
+  test('LA COLLISION : contre une face (aimanté), non ; dans le mur, oui ; « Peut traverser les murs », jamais', () => {
+    const { b, m } = unePieceMeublee();
+    const colle = M.aimanterMeuble(b, m, { x: 2, z: 0.4 });
+    m.x = colle.x; m.z = colle.z;
+    assert.equal(M.meubleEnCollision(b, m), false, 'collé contre la face');
+    m.z = 0.2;   // dans le mur du haut
+    assert.equal(M.meubleEnCollision(b, m), true);
+    m.traverse = true;
+    assert.equal(M.meubleEnCollision(b, m), false);
+  });
+
+  test('décollé, il ne descend sous le sol que s\'il peut traverser', () => {
+    const { m } = unePieceMeublee();
+    M.collerAuSol(m, false, -0.5);
+    assert.equal(m.y, 0);
+    m.traverse = true;
+    M.collerAuSol(m, false, -0.5);
+    assert.equal(M.hauteurAuSol(m), -0.5);
+  });
+
+  test('le repère : ses axes tournés suivent l\'orientation', () => {
+    const { m } = unePieceMeublee();
+    M.tournerMeuble(m);   // un quart de tour : son devant regarde +x
+    const a = M.axesDuMeuble(m);
+    assert.ok(Math.abs(a.z.x - 1) < 1e-9 && Math.abs(a.y.y - 1) < 1e-9);
+  });
+
+  test('câblage : un geste qui finit dans un mur est défait, l\'élément est rouge pendant', () => {
+    const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
+    assert.match(ui, /if \(E\.collisionMeuble === id\) remettreMeuble\(id, avant\);/);
+    assert.match(ui, /if \(E\.collisionMeuble === meuble\) \{ E\.historique\.pop\(\); remettreMeuble\(meuble, avant\); \}/);
+    assert.match(ui, /rouge: E \? E\.collisionMeuble : null/);
+    assert.match(ui, /const VITESSE = Math\.PI \/ 180 \* 0\.4/);
+    assert.match(ui, /: meuble \? meuble\.nom : tr\('Selection', 'Sélection'\)/);   // la section au nom de l'élément
   });
 });

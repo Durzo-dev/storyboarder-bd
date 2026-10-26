@@ -15,7 +15,7 @@ import { formesDesPieces, dansLaFace, pointDansPolygone } from './batiment-piece
 import { formeDeLEscalier, tremieDeLEscalier } from './batiment-escaliers.js';
 import { niveauxTries, hauteurDesMursDuNiveau, epaisseurDuDessus, niveauDessous } from './batiment-niveaux.js';
 import { fabriqueDeRevetements, revetementDeLaFace, revetementDeLaPiece, pieceDevantLaFace } from './batiment-revetements.js';
-import { meublesDuNiveau, hauteurAuSol } from './batiment-mobilier.js';
+import { meublesDuNiveau, hauteurAuSol, basDuMeuble } from './batiment-mobilier.js';
 
 /** Les matières d'un bâtiment, à créer une fois par renderer. */
 export function materiauxBatiment3D(T){
@@ -187,7 +187,7 @@ function construireArche(T, mur, o, mats){
  * `jusquA` (#454b) : l'id du DERNIER niveau à montrer ; ceux du dessus sont omis (la « coupe » de
  * l'aperçu de l'éditeur, pour voir dans l'étage qu'on retouche). Absent : tout le bâtiment.
  */
-export function construireBatiment3D(T, b, mats, { jusquA = null } = {}){
+export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null } = {}){
   const groupe = new T.Group();
   const tries = niveauxTries(b);
   const limite = jusquA ? tries.findIndex(n => n.id === jusquA) : -1;
@@ -305,7 +305,7 @@ export function construireBatiment3D(T, b, mats, { jusquA = null } = {}){
     // #454c : les escaliers du niveau.
     (b.escaliers || []).filter(x => x.niveauId === n.id).forEach(x => construireEscalier(T, b, x, mats, n.elevation, groupe));
     // #454e : le mobilier du niveau, posé au sol.
-    meublesDuNiveau(b, n.id).forEach(m => groupe.add(construireMeuble(T, m, mats, n.elevation)));
+    meublesDuNiveau(b, n.id).forEach(m => groupe.add(construireMeuble(T, m, mats, n.elevation, m.id === rouge)));
   });
   col.maillages().forEach(m => groupe.add(m));
   return groupe;
@@ -316,10 +316,12 @@ export function construireBatiment3D(T, b, mats, { jusquA = null } = {}){
  * molette), centré sur son empreinte et posé au sol de son niveau, tourné de `rotY`. Sans modèle
  * (pas encore décodé, ou introuvable) : une boîte translucide à sa taille.
  */
-function construireMeuble(T, m, mats, elevation){
+function construireMeuble(T, m, mats, elevation, enCollision = false){
   const g = new T.Group();
-  g.position.set(m.x, elevation + hauteurAuSol(m), m.z);   // au sol, ou décollé (« Collé au sol » décoché)
-  g.rotation.y = m.rotY || 0;
+  // Au sol (ou décollé, « Collé au sol » décoché), POSÉ SUR SON POINT LE PLUS BAS : incliné ou
+  // basculé, il ne s'enfonce pas dans le plancher (demandé : « en fonction des contraintes »).
+  g.position.set(m.x, elevation + hauteurAuSol(m) - basDuMeuble(m), m.z);
+  g.rotation.set(m.rotX || 0, m.rotY || 0, m.rotZ || 0, 'YXZ');
   g.userData.meubleId = m.id;
   const k = m.echelle || 1;
   const copie = typeof mats.modele === 'function' ? mats.modele(m.modelFile) : null;
@@ -337,6 +339,11 @@ function construireMeuble(T, m, mats, elevation){
     const boite = new T.Mesh(new T.BoxGeometry(l, h, p), mats.meubleAttente);
     boite.position.y = h / 2;
     g.add(boite);
+  }
+  // Forcé dans un mur (demandé) : en rouge, le temps du geste.
+  if (enCollision) {
+    if (!mats.meubleRouge) mats.meubleRouge = new T.MeshStandardMaterial({ color: 0xe0453a, roughness: 0.7, transparent: true, opacity: 0.75 });
+    g.traverse(o => { if (o.isMesh) o.material = mats.meubleRouge; });
   }
   return g;
 }
