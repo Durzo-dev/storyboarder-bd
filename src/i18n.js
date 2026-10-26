@@ -59,7 +59,6 @@ export const I18N_TEXT = [
   ['#batimentEscalierSupprimer', 'Delete the staircase', "Supprimer l'escalier"],
   ['#batimentSectionOuverture', 'Opening to place', 'Ouverture à poser'],
   ['#batimentOuvertureSupprimer', 'Delete the opening', "Supprimer l'ouverture"],
-  ['#batimentMeubleSupprimer', 'Delete the element', "Supprimer l'élément"],
   ['#batimentAjouterElement', 'Add an element', 'Ajouter un élément'],
   ['#batimentApercuTitre', '3D preview', 'Aperçu 3D'],
   ['#batimentApercuReduire', null, null, 'title', 'Minimise the preview', "Réduire l'aperçu"],

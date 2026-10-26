@@ -269,6 +269,10 @@
           <h2 id="batimentSectionAide">Commandes</h2>
           <p id="batimentAide" class="batiment-aide"></p>
         </section>
+        <!-- #454e (demandé) : UN MENU PAR ÉLÉMENT choisi. Ses sections (Dimensions, Orientation, Taille,
+             Position) et « Supprimer » sont construites par batiment-editeur-ui.js ; celles du bâtiment
+             se cachent tant qu'il est choisi (classe mode-element du panneau). -->
+        <div id="batimentMenuElement"></div>
         <section class="side-section" id="batimentSecBatiment">
           <h2 id="batimentSectionNom">Bâtiment</h2>
           <input type="text" id="batimentNom" class="modal-input batiment-nom" autocomplete="off" spellcheck="false">
@@ -311,13 +315,6 @@
           <div id="batimentSelectionOuverture">
             <div id="batimentFormOuverture"></div>
             <button type="button" class="full-btn delete-btn" id="batimentOuvertureSupprimer">Supprimer l'ouverture</button>
-          </div>
-          <!-- #454e : un Élément (meuble) choisi. -->
-          <div id="batimentSelectionMeuble" hidden>
-            <p id="batimentMeubleNom" class="batiment-aide"></p>
-            <!-- Taille, orientation, collé au sol (demandé) : construit par batiment-editeur-ui.js. -->
-            <div id="batimentMeubleReglages"></div>
-            <button type="button" class="full-btn delete-btn" id="batimentMeubleSupprimer">Supprimer l'élément</button>
           </div>
           <!-- #454c : un escalier choisi se retouche ici. -->
           <div id="batimentSelectionEscalier">

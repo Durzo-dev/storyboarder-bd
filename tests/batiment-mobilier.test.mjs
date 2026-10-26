@@ -122,10 +122,19 @@ describe('les réglages de l\'élément choisi (demandé)', () => {
 
   test('le clic droit maintenu tourne d\'un angle quelconque, sur tout le tour', () => {
     const { m } = unePieceMeublee();
-    M.tournerDe(m, -Math.PI / 4);
+    M.fixerAngle(m, 'y', -Math.PI / 4);
     assert.ok(Math.abs(m.rotY - 7 * Math.PI / 4) < 1e-9, 'ramené dans [0 ; 2π[');
-    M.tournerDe(m, Math.PI / 4);
+    M.fixerAngle(m, 'y', 2 * Math.PI);
     assert.equal(m.rotY, 0);
+  });
+
+  test('L\'AIMANT DES ANGLES : à moins de 6° d\'un quart de tour, il s\'y colle ; Alt l\'enlève ; Ctrl par 15°', () => {
+    const d = Math.PI / 180;
+    assert.equal(M.angleAimante(92 * d), Math.PI / 2);
+    assert.equal(M.angleAimante(-3 * d), 0);
+    assert.ok(Math.abs(M.angleAimante(80 * d) - 80 * d) < 1e-12, 'trop loin : libre');
+    assert.ok(Math.abs(M.angleAimante(92 * d, { libre: true }) - 92 * d) < 1e-12, 'Alt');
+    assert.ok(Math.abs(M.angleAimante(37 * d, { pas: 15 * d }) - 30 * d) < 1e-12, 'Ctrl');
   });
 
   test('le curseur de taille est logarithmique : ×1 au milieu, les bornes aux extrémités, aller-retour fidèle', () => {
@@ -215,14 +224,15 @@ describe('orienter dans tous les sens, et ne pas traverser les murs (demandé)',
     // RÉGRESSION : un bouton rotatif, l'angle parcouru AUTOUR de l'élément, cumulé sans saut à ±180°
     // (au mouvement horizontal, le sens s'inversait passé de l'autre côté).
     assert.match(ui, /if \(d > Math\.PI\) d -= 2 \* Math\.PI; else if \(d < -Math\.PI\) d \+= 2 \* Math\.PI;/);
-    assert.match(ui, /: meuble \? meuble\.nom : tr\('Selection', 'Sélection'\)/);   // la section au nom de l'élément
+    // Le menu de l'élément est titré de son nom.
+    assert.match(ui, /\$\('batimentEditeurTitre'\)\.textContent = meuble \? meuble\.nom :/);
   });
 });
 
 describe('les retouches de la section (demandé)', () => {
   test('« Remettre droit » rend EXACTEMENT l\'orientation d\'arrivée, rotation comprise', () => {
     const { m } = unePieceMeublee();
-    M.tournerDe(m, 0.7); M.pencherMeuble(m, 'x', 0.3); M.pencherMeuble(m, 'z', -0.2);
+    M.fixerAngle(m, 'y', 0.7); M.pencherMeuble(m, 'x', 0.3); M.pencherMeuble(m, 'z', -0.2);
     M.redresserMeuble(m);
     assert.deepEqual([m.rotY, m.rotX, m.rotZ], [0, undefined, undefined]);
   });
@@ -249,8 +259,10 @@ describe('tourner sur UN axe, choisi dans le repère (demandé)', () => {
   test('câblage : les axes du repère se cliquent ; le clic droit maintenu ne tourne que l\'axe actif ; les angles se saisissent', () => {
     const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
     assert.match(ui, /g\.addEventListener\('click', \(\) => \{ axeActif = g\.dataset\.axe; remplirPanneau\(\); \}\)/);
-    assert.match(ui, /if \(axeActif === 'y'\) tournerDe\(x, q\(-g\.parcouru\)\);/);
-    assert.match(ui, /pencherMeuble\(x, axeActif, q\(delta\)\);/);
+    assert.match(ui, /if \(axeActif === 'y'\) fixerAngle\(x, 'y', angleAimante\(g\.base\.rotY - g\.parcouru, reglage\)\);/);
+    assert.match(ui, /fixerAngle\(x, axeActif, angleAimante\(base \+ delta, reglage\)\);/);
+    // L'aimant tous les 90° ; Alt le retire, comme les autres aimants de l'éditeur.
+    assert.match(ui, /const reglage = \{ pas: e\.ctrlKey \? Math\.PI \/ 12 : 0, libre: e\.altKey \};/);
     assert.match(ui, /retoucherMeuble\(id, \(x\) => fixerAngle\(x, axe, deg \* Math\.PI \/ 180\)\)/);
   });
 });
@@ -265,5 +277,16 @@ describe('les retours sur les gestes (demandé)', () => {
     const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
     assert.match(ui, /if \(x\.colle === false\) \{[\s\S]{0,300}collerAuSol\(x, false, \(x\.y \|\| 0\) \+ pas\);/);
     assert.match(ui, /const delta = axeActif === 'x' \? \(e\.clientY - g\.y0\) \* VITESSE : \(e\.clientX - g\.x0\) \* VITESSE;/);
+  });
+});
+
+describe('un menu par élément choisi (demandé)', () => {
+  test('choisi : son menu (titré de son nom, sa croix le désélectionne) ; rien de choisi : le menu du bâtiment', () => {
+    const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
+    assert.match(ui, /\$\('batimentPanneau'\)\.classList\.toggle\('mode-element', !!meuble\);/);
+    assert.match(ui, /if \(E && meubleSelectionne\(\)\) \{ E\.selection = null; remplirPanneau\(\); dessinerPlan\(\); \}\s*else fermerEditeurDeBatiment\(\);/);
+    for (const id of ['batimentElemDimensions', 'batimentElemOrientation', 'batimentElemTaille', 'batimentElemPosition']) assert.ok(ui.includes(`'${id}'`), id);
+    const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
+    assert.match(css, /#batimentPanneau\.mode-element > \.side-section:not\(#batimentSecCommandes\)\{ display:none !important; \}/);
   });
 });

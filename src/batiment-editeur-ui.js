@@ -55,8 +55,8 @@ import { normaliserRevetement, peintureDuRevetement } from './batiment-revetemen
 import { sectionDroitePliee, memoriserSectionDroite } from './section-memory.js';
 import { icone } from './icones.js';
 import { ajouterMeuble, meubleSous, aimanterMeuble, tournerMeuble, echelonnerMeuble, supprimerMeuble, empreinteDuMeuble, fichiersDesMeubles,
-  curseurDeLEchelle, echelleDuCurseur, tailleDuMeuble, collerAuSol, tournerDe, pencherMeuble, redresserMeuble, meubleEnCollision, devantDuMeuble,
-  axesDuMeuble, fixerAngle } from './batiment-mobilier.js';
+  curseurDeLEchelle, echelleDuCurseur, tailleDuMeuble, collerAuSol, redresserMeuble, meubleEnCollision, devantDuMeuble,
+  axesDuMeuble, fixerAngle, angleAimante } from './batiment-mobilier.js';
 import { ouvrirStore } from './store-ui.js';
 import { getLoadedModel, preloadModels } from './model-cache.js';
 import { metasLocales } from './model-thumbnails.js';
@@ -273,17 +273,17 @@ function remplirPanneau(){
   const m = murSelectionne(), piece = pieceSelectionnee(), ouv = ouvertureSelectionnee(), esc = escalierSelectionne(), meuble = meubleSelectionne();
   $('batimentSelectionOuverture').hidden = !ouv;
   $('batimentSelectionEscalier').hidden = !esc;
-  $('batimentSelectionMeuble').hidden = !meuble;
-  // Le nom de l'élément est le TITRE de la section (demandé) ; il n'est pas répété dessous.
-  $('batimentMeubleNom').hidden = true;
-  if (meuble) reglagesDuMeuble(meuble);
+  // #454e : un élément choisi a SON menu (demandé), titré de son nom ; sa croix le désélectionne.
+  $('batimentPanneau').classList.toggle('mode-element', !!meuble);
+  $('batimentEditeurTitre').textContent = meuble ? meuble.nom : tr('Building editor', 'Éditeur de bâtiment');
+  $('batimentEditeurFermerX').title = meuble ? tr('Deselect (Esc)', 'Désélectionner (Échap)') : tr('Close the editor (Esc)', 'Fermer l\'éditeur (Échap)');
+  if (meuble) reglagesDuMeuble(meuble); else $('batimentMenuElement').replaceChildren();
   // Un seul menu (demandé) : la section contextuelle s'ajoute au besoin, les commandes suivent.
-  $('batimentSectionSelection').hidden = !(ouv || esc || meuble);
+  $('batimentSectionSelection').hidden = !(ouv || esc);
   $('batimentContexteOuverture').hidden = E.outil !== 'ouverture';
   $('batimentContexteEscalier').hidden = E.outil !== 'escalier';
   $('batimentAide').textContent = commandes({ m, piece, ouv, esc, meuble });
-  $('batimentSelectionTitre').textContent = ouv ? tr('Selected opening', 'Ouverture sélectionnée') : esc ? tr('Selected staircase', 'Escalier sélectionné')
-    : meuble ? meuble.nom : tr('Selection', 'Sélection');
+  $('batimentSelectionTitre').textContent = ouv ? tr('Selected opening', 'Ouverture sélectionnée') : esc ? tr('Selected staircase', 'Escalier sélectionné') : tr('Selection', 'Sélection');
   if (E.outil === 'escalier') formulaireEscalier($('batimentReglagesEscalier'), E.reglagesEscalier, (c) => {
     E.reglagesEscalier = { ...E.reglagesEscalier, ...c }; remplirPanneau(); dessinerPlan();
   });
@@ -770,8 +770,22 @@ function repereDAxes(m){
  * repère d'axes, ses angles, « Tourner de 90° », « Remettre droit »), sa taille (curseur, en direct,
  * une étape d'annulation par geste), « Collé au sol » et sa hauteur, « Peut traverser les murs ».
  */
+/** Une section du menu de l'élément, repliable par son titre (état gardé, comme celles du bâtiment). */
+function sectionDElement(id, titre, ...contenu){
+  const sec = document.createElement('section');
+  sec.className = 'side-section'; sec.id = id;
+  const h = document.createElement('h2'); h.textContent = titre;
+  sec.append(h, ...contenu.filter(Boolean));
+  try { sec.classList.toggle('collapsed', sectionDroitePliee(localStorage, MEMOIRE_SECTIONS, id)); } catch (e) { /* sans mémoire */ }
+  h.addEventListener('click', () => {
+    sec.classList.toggle('collapsed');
+    try { memoriserSectionDroite(localStorage, MEMOIRE_SECTIONS, id, sec.classList.contains('collapsed')); } catch (e) { /* sans mémoire */ }
+  });
+  return sec;
+}
+
 function reglagesDuMeuble(meuble){
-  const zone = $('batimentMeubleReglages');
+  const zone = $('batimentMenuElement');
   // Le curseur est tenu : le refaire le lâcherait sous la souris.
   if (zone.contains(document.activeElement) && document.activeElement.type === 'range') return;
   const id = meuble.id;
@@ -866,18 +880,23 @@ function reglagesDuMeuble(meuble){
   });
   hw.append(hi, document.createTextNode(' cm'));
   hauteur.append(ht, hw);
+  // Supprimer, en bas du menu, comme les actions de sortie.
+  const supprimer = document.createElement('button');
+  supprimer.type = 'button'; supprimer.className = 'full-btn delete-btn'; supprimer.textContent = tr('Delete the element', 'Supprimer l\'élément');
+  supprimer.onclick = () => modifier(b => supprimerMeuble(b, id));
   zone.replaceChildren(
-    sousSection(tr('Dimensions', 'Dimensions'), taille),
-    sousSection(tr('Orientation', 'Orientation'), repereDAxes(meuble), angles, boutons),
-    sousSection(tr('Size', 'Taille'), ligneTaille),
+    sectionDElement('batimentElemDimensions', tr('Dimensions', 'Dimensions'), taille),
+    sectionDElement('batimentElemOrientation', tr('Orientation', 'Orientation'), repereDAxes(meuble), angles, boutons),
+    sectionDElement('batimentElemTaille', tr('Size', 'Taille'), ligneTaille),
     // Dans cet ordre (demandé) : l'élévation, puis « Collé au sol », puis « Peut traverser les murs ».
-    sousSection(tr('Position', 'Position'),
+    sectionDElement('batimentElemPosition', tr('Position', 'Position'),
       hauteur,
       coche(tr('Stuck to the floor', 'Collé au sol'), meuble.colle !== false,
         (v) => modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (x) collerAuSol(x, v); })),
       // Décoché (par défaut), il ne traverse ni les murs ni, décollé, le sol (demandé).
       coche(tr('Can pass through walls', 'Peut traverser les murs'), !!meuble.traverse,
-        (v) => modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (!x) return; if (v) x.traverse = true; else { delete x.traverse; if (x.colle === false) collerAuSol(x, false); } }))));
+        (v) => modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (!x) return; if (v) x.traverse = true; else { delete x.traverse; if (x.colle === false) collerAuSol(x, false); } }))),
+    supprimer);
 }
 
 /** L'escalier sélectionné, s'il existe encore. */
@@ -1210,6 +1229,7 @@ function commandes({ m, piece, ouv, esc, meuble }){
         : axeActif === 'x'
           ? tr('Hold right button, up / down: tilt it. Ctrl: by 15°.', 'Clic droit maintenu, haut / bas : l\'incliner. Ctrl : par 15°.')
           : tr('Hold right button, left / right: lean it. Ctrl: by 15°.', 'Clic droit maintenu, gauche / droite : le basculer. Ctrl : par 15°.'),
+      tr('It snaps every 90° (Alt: free).', 'Il s\'aimante tous les 90° (Alt : libre).'),
       tr('The axis is chosen in the axes (Orientation).', 'L\'axe se choisit dans le repère (Orientation).'),
       tr('In red: inside a wall, it will go back on release.', 'En rouge : dans un mur, il reviendra au relâcher.'),
       meuble.colle === false
@@ -1886,8 +1906,8 @@ function cablerPlan(){
       // tourne de l'angle que la souris parcourt AUTOUR de lui (signalé : au mouvement horizontal, le
       // sens s'inversait une fois la souris passée de l'autre côté). L'angle parcouru est cumulé, un
       // tour complet compris, sans saut au passage de ±180°.
-      const pas = e.ctrlKey ? Math.PI / 12 : 0;
-      const q = (v) => (pas ? Math.round(v / pas) * pas : v);
+      // Ctrl : par 15° ; sinon l'AIMANT tous les 90° (demandé), qu'Alt retire (comme les autres aimants).
+      const reglage = { pas: e.ctrlKey ? Math.PI / 12 : 0, libre: e.altKey };
       const pm = souris(e).p;
       const a = Math.atan2(pm.z - x.z, pm.x - x.x);
       let d = a - g.angle;
@@ -1895,14 +1915,15 @@ function cablerPlan(){
       g.angle = a; g.parcouru += d;
       // Vu de dessus (z vers le bas de l'écran), suivre la souris, c'est tourner en sens inverse de atan2.
       x.rotY = g.base.rotY; x.rotX = g.base.rotX; x.rotZ = g.base.rotZ;
-      if (axeActif === 'y') tournerDe(x, q(-g.parcouru));
+      if (axeActif === 'y') fixerAngle(x, 'y', angleAimante(g.base.rotY - g.parcouru, reglage));
       else {
         // INCLINER et BASCULER ne se voient presque pas de dessus : tourner AUTOUR de l'élément n'y
         // correspond à rien (signalé : difficile). Un mouvement LINÉAIRE, comme un manche, 0,5° par
         // pixel : haut / bas incline (X), gauche / droite bascule (Z).
         const VITESSE = Math.PI / 180 * 0.5;
         const delta = axeActif === 'x' ? (e.clientY - g.y0) * VITESSE : (e.clientX - g.x0) * VITESSE;
-        pencherMeuble(x, axeActif, q(delta));
+        const base = axeActif === 'x' ? g.base.rotX : g.base.rotZ;
+        fixerAngle(x, axeActif, angleAimante(base + delta, reglage));
       }
       if (!e.altKey) { const c = aimanterMeuble(E.batiment, x, { x: x.x, z: x.z }); x.x = c.x; x.z = c.z; }
       E.collisionMeuble = meubleEnCollision(E.batiment, x) ? x.id : null;
@@ -2343,10 +2364,14 @@ export function initEditeurDeBatiment(){
   if (!$('batimentEditeur')) return;
   cablerSectionsRepliables();
   $('batimentAjouterElement').onclick = () => { if (E) ajouterUnElement(); };
-  $('batimentMeubleSupprimer').onclick = () => { const x = meubleSelectionne(); if (x) modifier(b => supprimerMeuble(b, x.id)); };
   // Un grain de revêtement arrivé après le dessin (batiment-revetements.js) : refaire l'aperçu.
   window.addEventListener('grains-batiment', () => { if (E && E.apercu) E.apercu.reconstruire(E.batiment); });
-  $('batimentEditeurFermerX').onclick = () => fermerEditeurDeBatiment();
+  // La croix du menu : celle d'un élément choisi le DÉSÉLECTIONNE (on revient au menu du bâtiment) ;
+  // sinon elle ferme l'éditeur.
+  $('batimentEditeurFermerX').onclick = () => {
+    if (E && meubleSelectionne()) { E.selection = null; remplirPanneau(); dessinerPlan(); }
+    else fermerEditeurDeBatiment();
+  };
   $('batimentQuitterBtn').onclick = () => fermerEditeurDeBatiment();
   $('batimentRecadrerBtn').onclick = () => recadrer();
   $('batimentEnregistrerBtn').onclick = () => enregistrer();

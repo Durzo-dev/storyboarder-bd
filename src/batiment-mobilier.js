@@ -286,10 +286,20 @@ export function fixerAngle(m, axe, valeur){
   return pencherMeuble(m, axe, v);
 }
 
-/** Tourner de `delta` radians autour de la verticale. */
-export function tournerDe(m, delta){
-  m.rotY = normaliserAngle((m.rotY || 0) + delta);
-  return m;
+/** À moins de cet angle d'un quart de tour, la rotation s'y colle (l'aimant, demandé). */
+export const AIMANT_ANGLE = Math.PI / 30;   // 6°
+
+/**
+ * L'AIMANT DES ANGLES (demandé) : un angle à moins de 6° d'un multiple de 90° s'y colle. `pas` (Ctrl,
+ * 15°) arrondit d'abord ; `libre` (Alt) n'aimante pas.
+ */
+export function angleAimante(a, { pas = 0, libre = false } = {}){
+  let v = pas > 0 ? Math.round(a / pas) * pas : a;
+  if (!libre) {
+    const q = Math.round(v / (Math.PI / 2)) * (Math.PI / 2);
+    if (Math.abs(v - q) < AIMANT_ANGLE) v = q;
+  }
+  return v === 0 ? 0 : v;   // pas de −0
 }
 
 /**
