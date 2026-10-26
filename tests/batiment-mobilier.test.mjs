@@ -287,7 +287,9 @@ describe('un menu par élément choisi (demandé)', () => {
     assert.match(ui, /if \(E && \(meubleSelectionne\(\) \|\| escalierSelectionne\(\) \|\| pieceSelectionnee\(\)\)\) \{ E\.selection = null;/);
     for (const id of ['batimentElemDimensions', 'batimentElemOrientation', 'batimentElemTaille', 'batimentElemPosition']) assert.ok(ui.includes(`'${id}'`), id);
     const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
-    assert.match(css, /#batimentPanneau\.fils > \.side-section:not\(#batimentSecCommandes\)\{ display:none !important; \}/);
+    // RÉGRESSION : les sections de la pièce et de l'escalier sont EXCLUES de la règle qui cache (une
+    // règle qui les ré-affichait perdait contre elle, `:not(#…)` comptant comme un identifiant).
+    assert.match(css, /#batimentPanneau\.fils > \.side-section:not\(#batimentSecCommandes\):not\(\.menu-piece\):not\(\.menu-escalier\)\{ display:none !important; \}/);
     // « Enregistrer dans la bibliothèque » et « Recadrer » : seulement dans le menu du bâtiment (demandé).
     assert.match(css, /#batimentPanneau\.fils > #batimentEnregistrerBtn, #batimentPanneau\.fils > #batimentRecadrerBtn\{ display:none !important; \}/);
   });

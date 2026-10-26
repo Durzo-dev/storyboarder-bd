@@ -2975,9 +2975,10 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 /* Les menus « fils » (demandé) : un élément, un escalier, une pièce choisis ont LEUR menu ; celui du
    bâtiment n'en garde que les Commandes. « Enregistrer dans la bibliothèque » et « Recadrer » ne sont
    que dans le menu du bâtiment. */
-#batimentPanneau.fils > .side-section:not(#batimentSecCommandes){ display:none !important; }
-#batimentPanneau.fils-piece > .side-section.menu-piece,
-#batimentPanneau.fils-escalier > .side-section.menu-escalier{ display:block !important; }
+/* ⚠️ Les sections de la pièce et de l'escalier sont EXCLUES de la règle qui cache, pas ré-affichées
+   par une seconde : `:not(#…)` compte comme un identifiant et l'aurait emporté (signalé : leur menu
+   n'avait que les Commandes). Elles se montrent selon ce qui est choisi (leur attribut hidden). */
+#batimentPanneau.fils > .side-section:not(#batimentSecCommandes):not(.menu-piece):not(.menu-escalier){ display:none !important; }
 #batimentPanneau.fils > #batimentEnregistrerBtn, #batimentPanneau.fils > #batimentRecadrerBtn{ display:none !important; }
 #batimentPanneau:not(.fils-element) #batimentMenuElement{ display:none; }
 #batimentMenuElement > .full-btn{ width:100%; margin-top:4px; }
