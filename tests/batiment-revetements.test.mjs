@@ -171,3 +171,10 @@ describe('les retours du 26 octobre (#454d)', () => {
     assert.match(readFileSync(new URL('../src/batiment-revetements.js', import.meta.url), 'utf8'), /if \(p\.grain && !img\) demanderLeGrain\(p\.grain\);/);
   });
 });
+
+describe('le quadrillage de l\'aperçu sous le sol des pièces (signalé)', () => {
+  test('il est sous le sol (qui est à +5 mm), assez pour que la profondeur les départage', () => {
+    const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
+    assert.match(ui, /grille\.position\.y = -0\.03;/);
+  });
+});

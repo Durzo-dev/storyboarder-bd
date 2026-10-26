@@ -1718,6 +1718,11 @@ function ouvrirApercu(conteneur, b){
   const cle = new T.DirectionalLight(0xffffff, 1.6);
   scene.add(cle);
   const grille = new T.GridHelper(40, 40, 0x888888, 0x555555);
+  // ⚠️ SOUS LE SOL DES PIÈCES, de quelques centimètres (signalé : le quadrillage transperçait le sol
+  // et brouillait sa texture). À 5 mm d'écart, la profondeur ne les départageait plus de loin ; il
+  // reste visible dehors, et le sol des pièces le couvre.
+  grille.position.y = -0.03;
+  grille.renderOrder = -1;
   scene.add(grille);
   const mats = materiauxBatiment3D(T);
   const options = () => ({ jusquA: E && E.coupe ? E.niveauId : null });
