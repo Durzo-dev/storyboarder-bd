@@ -269,6 +269,19 @@ export function pencherMeuble(m, axe, delta){
   return m;
 }
 
+/**
+ * Fixer l'angle d'un axe, en radians (les champs de la section, demandé) : 'y' la rotation (sur tout
+ * le tour), 'x' l'inclinaison et 'z' la bascule (bornées à ±90°).
+ */
+export function fixerAngle(m, axe, valeur){
+  const v = Number(valeur);
+  if (!Number.isFinite(v)) return m;
+  if (axe === 'y') { m.rotY = normaliserAngle(v); return m; }
+  const k = axe === 'x' ? 'rotX' : 'rotZ';
+  delete m[k];
+  return pencherMeuble(m, axe, v);
+}
+
 /** Tourner de `delta` radians autour de la verticale. */
 export function tournerDe(m, delta){
   m.rotY = normaliserAngle((m.rotY || 0) + delta);

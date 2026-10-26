@@ -2968,6 +2968,12 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 .batiment-meuble-icone .icone{ width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 /* Un champ de l'éditeur de bâtiment éteint (l'élévation d'un élément collé au sol) : grisé. */
 .batiment-champ input:disabled{ opacity:.45; cursor:not-allowed; }
+/* L'orientation d'un élément : les axes du repère se cliquent ; les angles se saisissent, l'actif surligné. */
+.batiment-meuble-repere [data-axe]{ cursor:pointer; }
+.batiment-meuble-angles label{ display:flex; flex-direction:column; align-items:center; gap:3px; }
+.batiment-meuble-angles label > span{ color:var(--ink-soft); font-size:var(--texte-capitales); }
+.batiment-meuble-angles label.actif > span{ color:var(--accent); font-weight:600; }
+.batiment-meuble-angles input{ width:58px; text-align:center; }
 
 /* ── La page du système de design (préfixe ds-), posée SUR la feuille de l'application ── */
 html, body{ height:auto !important; overflow:auto !important; }

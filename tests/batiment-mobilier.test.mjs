@@ -233,3 +233,21 @@ describe('les retouches de la section (demandé)', () => {
     assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /\.batiment-meuble-boutons\{ display:flex; justify-content:center;/);
   });
 });
+
+describe('tourner sur UN axe, choisi dans le repère (demandé)', () => {
+  test('fixer un angle : la rotation sur tout le tour, l\'inclinaison et la bascule bornées à ±90°', () => {
+    const { m } = unePieceMeublee();
+    M.fixerAngle(m, 'y', -Math.PI / 2);
+    assert.ok(Math.abs(m.rotY - 3 * Math.PI / 2) < 1e-9);
+    M.fixerAngle(m, 'x', Math.PI);
+    assert.ok(Math.abs(m.rotX - Math.PI / 2) < 1e-6);
+    M.fixerAngle(m, 'z', 0);
+    assert.ok(!('rotZ' in m));
+  });
+  test('câblage : les axes du repère se cliquent ; le clic droit maintenu ne tourne que l\'axe actif ; les angles se saisissent', () => {
+    const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
+    assert.match(ui, /g\.addEventListener\('click', \(\) => \{ axeActif = g\.dataset\.axe; remplirPanneau\(\); \}\)/);
+    assert.match(ui, /if \(axeActif === 'y'\) tournerDe\(x, q\(dx\)\); else pencherMeuble\(x, axeActif, q\(dx\)\);/);
+    assert.match(ui, /retoucherMeuble\(id, \(x\) => fixerAngle\(x, axe, deg \* Math\.PI \/ 180\)\)/);
+  });
+});

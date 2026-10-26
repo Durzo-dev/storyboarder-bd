@@ -56,7 +56,7 @@ import { sectionDroitePliee, memoriserSectionDroite } from './section-memory.js'
 import { icone } from './icones.js';
 import { ajouterMeuble, meubleSous, aimanterMeuble, tournerMeuble, echelonnerMeuble, supprimerMeuble, empreinteDuMeuble, fichiersDesMeubles,
   curseurDeLEchelle, echelleDuCurseur, tailleDuMeuble, collerAuSol, tournerDe, pencherMeuble, redresserMeuble, meubleEnCollision, devantDuMeuble,
-  axesDuMeuble } from './batiment-mobilier.js';
+  axesDuMeuble, fixerAngle } from './batiment-mobilier.js';
 import { ouvrirStore } from './store-ui.js';
 import { getLoadedModel, preloadModels } from './model-cache.js';
 import { metasLocales } from './model-thumbnails.js';
@@ -729,30 +729,39 @@ function retoucherMeuble(id, faire){
 /** Une longueur en mètres, lisible (« 1,02 m »). */
 const enMetres = (v) => `${(Math.round(v * 100) / 100).toLocaleString(tr('en', 'fr'), { minimumFractionDigits: 2 })} m`;
 
-/** Un angle en degrés, lisible (« 30° »). */
-const enDegres = (r) => `${Math.round((r || 0) * 180 / Math.PI)}°`;
 
 /**
  * LE REPÈRE D'AXES (demandé) : les trois axes de l'élément TOURNÉ, vus de trois quarts — x, sa
  * largeur (rouge) ; y, sa hauteur (vert) ; z, son devant (bleu). Un SVG, refait à chaque retouche.
  */
+/**
+ * L'AXE ACTIF de rotation (demandé : un seul axe à la fois, choisi dans le repère) : 'y' tourner (par
+ * défaut), 'x' incliner, 'z' basculer. Le clic droit maintenu ne tourne que sur lui.
+ */
+let axeActif = 'y';
+
 function repereDAxes(m){
   const A = axesDuMeuble(m);
   // Vue de trois quarts : un quart de tour de 45° et 30° de plongée.
   const vers = (v) => ({ x: 70 + (v.x - v.z) * 0.707 * 48, y: 62 - (v.y * 0.866 - (v.x + v.z) * 0.707 * 0.5) * 48 });
   const o = vers({ x: 0, y: 0, z: 0 });
+  // Chaque axe est CLIQUABLE (un trait épais invisible pour la prise) ; l'actif est épais, les autres atténués.
   const axe = (v, coul, nom) => {
-    const p = vers(v);
-    return `<line x1="${o.x}" y1="${o.y}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="${coul}" stroke-width="2.5" stroke-linecap="round"/>`
-      + `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="${coul}"/>`
-      + `<text x="${(p.x + (p.x - o.x) * 0.18).toFixed(1)}" y="${(p.y + (p.y - o.y) * 0.18 + 4).toFixed(1)}" fill="${coul}" font-size="11" font-weight="700" text-anchor="middle">${nom}</text>`;
+    const p = vers(v), actif = nom.toLowerCase() === axeActif;
+    return `<g class="batiment-repere-axe${actif ? ' actif' : ''}" data-axe="${nom.toLowerCase()}" opacity="${actif ? 1 : 0.4}">`
+      + `<line x1="${o.x}" y1="${o.y}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="transparent" stroke-width="14" stroke-linecap="round"/>`
+      + `<line x1="${o.x}" y1="${o.y}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="${coul}" stroke-width="${actif ? 3.5 : 2.5}" stroke-linecap="round"/>`
+      + `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${actif ? 5 : 3}" fill="${coul}"/>`
+      + `<text x="${(p.x + (p.x - o.x) * 0.18).toFixed(1)}" y="${(p.y + (p.y - o.y) * 0.18 + 4).toFixed(1)}" fill="${coul}" font-size="12" font-weight="700" text-anchor="middle">${nom}</text></g>`;
   };
   // Dessinés du plus loin au plus proche (profondeur de la vue), pour que l'avant passe devant.
   const prof = (v) => v.x + v.z;
   const axes = [[A.x, '#e5534b', 'X'], [A.y, '#57ab5a', 'Y'], [A.z, '#539bf5', 'Z']].sort((a, b) => prof(a[0]) - prof(b[0]));
   const d = document.createElement('div');
   d.className = 'batiment-meuble-repere';
-  d.innerHTML = `<svg viewBox="0 0 140 124" aria-hidden="true">${axes.map(([v, c, n]) => axe(v, c, n)).join('')}<circle cx="${o.x}" cy="${o.y}" r="3" fill="currentColor"/></svg>`;
+  d.innerHTML = `<svg viewBox="0 0 140 124">${axes.map(([v, c, n]) => axe(v, c, n)).join('')}<circle cx="${o.x}" cy="${o.y}" r="3" fill="currentColor"/></svg>`;
+  d.title = tr('Click an axis: the right button turns around it only.', 'Cliquez un axe : le clic droit maintenu ne tourne que sur lui.');
+  d.querySelectorAll('[data-axe]').forEach(g => g.addEventListener('click', () => { axeActif = g.dataset.axe; remplirPanneau(); }));
   return d;
 }
 
@@ -794,14 +803,22 @@ function reglagesDuMeuble(meuble){
   };
   ecrireTaille(meuble);
   // Orientation : le repère, les angles, et deux boutons.
-  // Les trois angles, en colonnes comme les dimensions.
+  // Les trois angles, en colonnes, SAISISSABLES en degrés (demandé) ; celui de l'axe actif est surligné.
   const angles = document.createElement('div');
-  angles.className = 'batiment-meuble-dimensions';
-  angles.replaceChildren(...[[tr('Turn', 'Rotation'), meuble.rotY], [tr('Tilt', 'Inclinaison'), meuble.rotX], [tr('Lean', 'Bascule'), meuble.rotZ]].map(([n, v]) => {
-    const c = document.createElement('div');
+  angles.className = 'batiment-meuble-dimensions batiment-meuble-angles';
+  angles.replaceChildren(...[['y', tr('Turn', 'Rotation'), meuble.rotY], ['x', tr('Tilt', 'Inclinaison'), meuble.rotX], ['z', tr('Lean', 'Bascule'), meuble.rotZ]].map(([axe, n, v]) => {
+    const c = document.createElement('label');
+    if (axe === axeActif) c.classList.add('actif');
     const a = document.createElement('span'); a.textContent = n;
-    const b = document.createElement('span'); b.textContent = enDegres(v);
-    c.append(a, b);
+    const i = document.createElement('input'); i.type = 'number'; i.step = '1';
+    i.value = String(Math.round((v || 0) * 180 / Math.PI));
+    if (axe !== 'y') { i.min = '-90'; i.max = '90'; }
+    i.addEventListener('focus', () => { axeActif = axe; });
+    i.addEventListener('change', () => {
+      const deg = Number(i.value);
+      if (!Number.isFinite(deg) || !retoucherMeuble(id, (x) => fixerAngle(x, axe, deg * Math.PI / 180))) i.value = String(Math.round((v || 0) * 180 / Math.PI));
+    });
+    c.append(a, i);
     return c;
   }));
   const boutons = document.createElement('div'); boutons.className = 'batiment-meuble-boutons';
@@ -1188,8 +1205,7 @@ function commandes({ m, piece, ouv, esc, meuble }){
     if (meuble) return lignes(
       tr('Drag: move it (it snaps to the walls).', 'Tirer : le déplacer (il s\'aimante aux murs).'),
       tr('Right-click: turn it by 90°.', 'Clic droit : le tourner de 90°.'),
-      tr('Hold right button: left / right turns it, up / down tilts it.', 'Clic droit maintenu : gauche / droite le tourne, haut / bas l\'incline.'),
-      tr('Shift + hold right button: lean it sideways. Ctrl: by 15°.', 'Maj + clic droit maintenu : le basculer. Ctrl : par 15°.'),
+      tr('Hold right button: turn it around the active axis (chosen in the axes). Ctrl: by 15°.', 'Clic droit maintenu : le tourner sur l\'axe actif (choisi dans le repère). Ctrl : par 15°.'),
       tr('In red: inside a wall, it will go back on release.', 'En rouge : dans un mur, il reviendra au relâcher.'),
       tr('Wheel: make it bigger or smaller.', 'Molette : l\'agrandir ou le rétrécir.'),
       tr('Alt: move without snapping.', 'Alt : déplacer sans aimant.'),
@@ -1844,12 +1860,12 @@ function cablerPlan(){
       const x = (E.batiment.elements || []).find(q => q.id === g.meuble);
       if (!x) return;
       if (!g.tourne) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; g.tourne = true; g.bouge = true; }
+      // UN SEUL AXE à la fois (demandé) : l'axe actif du repère, au mouvement horizontal de la souris.
       const VITESSE = Math.PI / 180 * 0.4, pas = e.ctrlKey ? Math.PI / 12 : 0;
       const q = (v) => (pas ? Math.round(v / pas) * pas : v);
-      const dx = (e.clientX - g.x0) * VITESSE, dy = (e.clientY - g.y0) * VITESSE;
+      const dx = (e.clientX - g.x0) * VITESSE;
       x.rotY = g.base.rotY; x.rotX = g.base.rotX; x.rotZ = g.base.rotZ;
-      if (e.shiftKey) pencherMeuble(x, 'z', q(dx)); else tournerDe(x, q(dx));
-      pencherMeuble(x, 'x', q(dy));
+      if (axeActif === 'y') tournerDe(x, q(dx)); else pencherMeuble(x, axeActif, q(dx));
       if (!e.altKey) { const c = aimanterMeuble(E.batiment, x, { x: x.x, z: x.z }); x.x = c.x; x.z = c.z; }
       E.collisionMeuble = meubleEnCollision(E.batiment, x) ? x.id : null;
       E.selection = { meubleId: x.id };
