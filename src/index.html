@@ -264,17 +264,22 @@
              CONTEXTUELLE s'ajoute au besoin (l'ouverture ou l'escalier à poser, l'ouverture ou
              l'escalier choisi), et « Commandes » dit ce qu'on peut faire selon l'outil et la sélection.
              Le code montre la section (hidden) et écrit les commandes. -->
-        <section class="side-section">
+        <!-- Commandes EN TÊTE (demandé). Toutes les sections se replient par leur titre. -->
+        <section class="side-section" id="batimentSecCommandes">
+          <h2 id="batimentSectionAide">Commandes</h2>
+          <p id="batimentAide" class="batiment-aide"></p>
+        </section>
+        <section class="side-section" id="batimentSecBatiment">
           <h2 id="batimentSectionNom">Bâtiment</h2>
           <input type="text" id="batimentNom" class="modal-input batiment-nom" autocomplete="off" spellcheck="false">
           <!-- #454d : la FAÇADE du bâtiment, tous étages confondus (demandé : pas de façade par étage). -->
           <div id="batimentFacade" class="batiment-revetements" style="margin-top:10px;"></div>
         </section>
-        <section class="side-section">
+        <section class="side-section" id="batimentSecNiveaux">
           <h2 id="batimentSectionNiveaux">Niveaux</h2>
           <div id="batimentNiveaux" class="batiment-liste"></div>
         </section>
-        <section class="side-section">
+        <section class="side-section" id="batimentSecPieces">
           <h2 id="batimentSectionPieces">Pièces</h2>
           <div id="batimentPieces" class="batiment-liste"></div>
         </section>
@@ -315,10 +320,6 @@
           </div>
         </section>
 
-        <section class="side-section">
-          <h2 id="batimentSectionAide">Commandes</h2>
-          <p id="batimentAide" class="batiment-aide"></p>
-        </section>
 
         <!-- Enregistrer, recadrer, quitter l'éditeur : toujours là (Échap quitte d'abord l'outil). -->
         <!-- #454a-4 : ouvert depuis une Scène, le bâtiment y retourne. Texte posé par le code

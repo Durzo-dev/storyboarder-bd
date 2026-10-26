@@ -178,3 +178,13 @@ describe('le quadrillage de l\'aperçu sous le sol des pièces (signalé)', () =
     assert.match(ui, /grille\.position\.y = -0\.03;/);
   });
 });
+
+describe('le menu de l\'éditeur de bâtiment (demandé)', () => {
+  test('« Commandes » en tête ; toutes les sections se replient, leur état gardé pour l\'éditeur', () => {
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+    const panneau = html.slice(html.indexOf('id="batimentPanneau"'));
+    assert.ok(panneau.indexOf('id="batimentSecCommandes"') < panneau.indexOf('id="batimentSecBatiment"'));
+    assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /#batimentPanneau \.side-section\.collapsed > \*:not\(h2\)\{ display:none !important; \}/);
+    assert.match(readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8'), /document\.querySelectorAll\('#batimentPanneau \.side-section > h2'\)/);
+  });
+});

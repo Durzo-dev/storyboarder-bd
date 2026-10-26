@@ -701,18 +701,19 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 .side-section h2::before{
   content:''; width:5px; height:5px; border-radius:50%; background:var(--accent); flex-shrink:0;
 }
-/* Sections collapsables du menu de droite (cf. initRightPanelCollapse) */
-#rightPanel .side-section > h2{ cursor:pointer; user-select:none; }
-#rightPanel .side-section > h2::after{
+/* Sections collapsables du menu de droite (cf. initRightPanelCollapse), et de celui de l'éditeur de
+   bâtiment (demandé ; batiment-editeur-ui.js, cablerSectionsRepliables). */
+#rightPanel .side-section > h2, #batimentPanneau .side-section > h2{ cursor:pointer; user-select:none; }
+#rightPanel .side-section > h2::after, #batimentPanneau .side-section > h2::after{
   content:'▾'; margin-left:auto; font-size:var(--texte-micro); color:var(--ink-soft);
   display:inline-block; line-height:1; flex-shrink:0;
   transition:transform .18s ease; transform-origin:center;
 }
-#rightPanel .side-section.collapsed > h2::after{ transform:rotate(-90deg); }
-#rightPanel .side-section.collapsed > h2{ padding-bottom:0; margin-bottom:0; border-bottom:none; }
+#rightPanel .side-section.collapsed > h2::after, #batimentPanneau .side-section.collapsed > h2::after{ transform:rotate(-90deg); }
+#rightPanel .side-section.collapsed > h2, #batimentPanneau .side-section.collapsed > h2{ padding-bottom:0; margin-bottom:0; border-bottom:none; }
 /* !important nécessaire : certains enfants ont un display inline mis par JS (ex: style="display:flex")
    qui écrase les règles de classe. !important garantit que le collapse est toujours respecté. */
-#rightPanel .side-section.collapsed > *:not(h2){ display:none !important; }
+#rightPanel .side-section.collapsed > *:not(h2), #batimentPanneau .side-section.collapsed > *:not(h2){ display:none !important; }
 /* En-tête générique de chaque menu de l'encart de droite (Case / Bulle / Caméra / Aide) : titre
    centré en gras, bouton de fermeture en haut à droite (la colonne fantôme de gauche, même largeur
    que le bouton, garantit que le titre reste visuellement centré et pas juste "poussé" par le bouton). */
@@ -4626,17 +4627,28 @@ This can be undone with Ctrl+Z.</span></p>
           <button id="batimentEditeurFermerX" class="menu-close-btn" type="button" title="Fermer l'éditeur (Échap)">&times;</button>
         </div>
         
-        <section class="side-section">
+        
+        <section class="side-section" id="batimentSecCommandes">
+          <h2 id="batimentSectionAide">Commandes</h2>
+          <p id="batimentAide" class="batiment-aide"><span class="ds-fr">Tirer : le déplacer.
+R : le tourner de 90°.
+Suppr : le supprimer.
+Échap : désélectionner.</span><span class="ds-en">Drag: move it.
+R: turn it by 90°.
+Del: delete it.
+Esc: deselect.</span></p>
+        </section>
+        <section class="side-section" id="batimentSecBatiment">
           <h2 id="batimentSectionNom">Bâtiment</h2>
           <input type="text" id="batimentNom" class="modal-input batiment-nom" value="Maison du gardien" data-ds-valeur-fr="Maison du gardien" data-ds-valeur-en="Keeper's house" autocomplete="off" spellcheck="false">
           
           <div id="batimentFacade" class="batiment-revetements" style="margin-top:10px;"></div>
         </section>
-        <section class="side-section">
+        <section class="side-section" id="batimentSecNiveaux">
           <h2 id="batimentSectionNiveaux">Niveaux</h2>
           <div id="batimentNiveaux" class="batiment-liste"><div class="batiment-ligne batiment-ligne-niveau cliquable"><div class="batiment-niveau-gauche"><span class="batiment-niveau-pastille">1</span><button type="button" class="batiment-niveau-suppr">×</button></div><div class="batiment-niveau-droite"><input type="text" class="batiment-niveau-nom" value="Étage 1" data-ds-valeur-fr="Étage 1" data-ds-valeur-en="Floor 1"><span class="batiment-champ-valeur"><input type="number" value="280"> cm</span></div></div><div class="batiment-ligne batiment-ligne-niveau cliquable actif"><div class="batiment-niveau-gauche"><span class="batiment-niveau-pastille">RDC</span><button type="button" class="batiment-niveau-suppr">×</button></div><div class="batiment-niveau-droite"><input type="text" class="batiment-niveau-nom" value="Rez-de-chaussée" data-ds-valeur-fr="Rez-de-chaussée" data-ds-valeur-en="Ground floor"><span class="batiment-champ-valeur"><input type="number" value="280"> cm</span></div></div><div class="batiment-boutons-ligne"><button type="button" class="full-btn"><span class="ds-fr">Ajouter</span><span class="ds-en">Add</span></button><button type="button" class="full-btn"><span class="ds-fr">Dupliquer</span><span class="ds-en">Duplicate</span></button></div></div>
         </section>
-        <section class="side-section">
+        <section class="side-section" id="batimentSecPieces">
           <h2 id="batimentSectionPieces">Pièces</h2>
           <div id="batimentPieces" class="batiment-liste"><div class="batiment-ligne cliquable"><span><span class="ds-fr">Séjour</span><span class="ds-en">Living room</span></span><small>32,4 m²</small></div><div class="batiment-ligne cliquable"><span><span class="ds-fr">Cuisine</span><span class="ds-en">Kitchen</span></span><small>12,1 m²</small></div></div>
         </section>
@@ -4670,16 +4682,6 @@ This can be undone with Ctrl+Z.</span></p>
           </div>
         </section>
 
-        <section class="side-section">
-          <h2 id="batimentSectionAide">Commandes</h2>
-          <p id="batimentAide" class="batiment-aide"><span class="ds-fr">Tirer : le déplacer.
-R : le tourner de 90°.
-Suppr : le supprimer.
-Échap : désélectionner.</span><span class="ds-en">Drag: move it.
-R: turn it by 90°.
-Del: delete it.
-Esc: deselect.</span></p>
-        </section>
 
         
         

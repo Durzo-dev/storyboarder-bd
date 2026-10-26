@@ -697,18 +697,19 @@ main{ flex:1; display:flex; flex-direction:column; min-width:0; }
 .side-section h2::before{
   content:''; width:5px; height:5px; border-radius:50%; background:var(--accent); flex-shrink:0;
 }
-/* Sections collapsables du menu de droite (cf. initRightPanelCollapse) */
-#rightPanel .side-section > h2{ cursor:pointer; user-select:none; }
-#rightPanel .side-section > h2::after{
+/* Sections collapsables du menu de droite (cf. initRightPanelCollapse), et de celui de l'éditeur de
+   bâtiment (demandé ; batiment-editeur-ui.js, cablerSectionsRepliables). */
+#rightPanel .side-section > h2, #batimentPanneau .side-section > h2{ cursor:pointer; user-select:none; }
+#rightPanel .side-section > h2::after, #batimentPanneau .side-section > h2::after{
   content:'▾'; margin-left:auto; font-size:var(--texte-micro); color:var(--ink-soft);
   display:inline-block; line-height:1; flex-shrink:0;
   transition:transform .18s ease; transform-origin:center;
 }
-#rightPanel .side-section.collapsed > h2::after{ transform:rotate(-90deg); }
-#rightPanel .side-section.collapsed > h2{ padding-bottom:0; margin-bottom:0; border-bottom:none; }
+#rightPanel .side-section.collapsed > h2::after, #batimentPanneau .side-section.collapsed > h2::after{ transform:rotate(-90deg); }
+#rightPanel .side-section.collapsed > h2, #batimentPanneau .side-section.collapsed > h2{ padding-bottom:0; margin-bottom:0; border-bottom:none; }
 /* !important nécessaire : certains enfants ont un display inline mis par JS (ex: style="display:flex")
    qui écrase les règles de classe. !important garantit que le collapse est toujours respecté. */
-#rightPanel .side-section.collapsed > *:not(h2){ display:none !important; }
+#rightPanel .side-section.collapsed > *:not(h2), #batimentPanneau .side-section.collapsed > *:not(h2){ display:none !important; }
 /* En-tête générique de chaque menu de l'encart de droite (Case / Bulle / Caméra / Aide) : titre
    centré en gras, bouton de fermeture en haut à droite (la colonne fantôme de gauche, même largeur
    que le bouton, garantit que le titre reste visuellement centré et pas juste "poussé" par le bouton). */

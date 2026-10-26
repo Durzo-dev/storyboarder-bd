@@ -52,6 +52,7 @@ import { cadrage3D, orbite3D, zoom3D, positionCamera3D, deplacement3D } from './
 import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
 import { carreDeTexture } from './textures-store-ui.js';
 import { normaliserRevetement, peintureDuRevetement } from './batiment-revetements.js';
+import { sectionDroitePliee, memoriserSectionDroite } from './section-memory.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -1923,8 +1924,26 @@ function clavier(e){
   avale();
 }
 
+/**
+ * Les sections du menu de l'éditeur se REPLIENT par leur titre (demandé), comme celles du menu de
+ * droite d'une Case ; leur état est gardé pour l'éditeur (une mémoire à lui, tous bâtiments confondus).
+ */
+const MEMOIRE_SECTIONS = 'editeur-batiment';
+function cablerSectionsRepliables(){
+  document.querySelectorAll('#batimentPanneau .side-section > h2').forEach(h2 => {
+    const sec = h2.closest('.side-section');
+    try { if (sec.id) sec.classList.toggle('collapsed', sectionDroitePliee(localStorage, MEMOIRE_SECTIONS, sec.id)); } catch (e) { /* sans mémoire */ }
+    h2.addEventListener('click', () => {
+      sec.classList.toggle('collapsed');
+      if (!sec.id) return;
+      try { memoriserSectionDroite(localStorage, MEMOIRE_SECTIONS, sec.id, sec.classList.contains('collapsed')); } catch (e) { /* sans mémoire */ }
+    });
+  });
+}
+
 export function initEditeurDeBatiment(){
   if (!$('batimentEditeur')) return;
+  cablerSectionsRepliables();
   // Un grain de revêtement arrivé après le dessin (batiment-revetements.js) : refaire l'aperçu.
   window.addEventListener('grains-batiment', () => { if (E && E.apercu) E.apercu.reconstruire(E.batiment); });
   $('batimentEditeurFermerX').onclick = () => fermerEditeurDeBatiment();
