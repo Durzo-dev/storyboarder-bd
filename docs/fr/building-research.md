@@ -437,6 +437,15 @@ dimensions sont celles du fichier (un modèle de plus de 6 m ou de moins de 5 cm
 `base`). Le plan montre son empreinte et son devant ; la 3D, son modèle (une boîte tant qu'il n'est
 pas décodé), dans l'éditeur comme dans les Cases, qui préchargent ces modèles avec la page.
 
+**Poser un Élément dans un bâtiment** (#454e, seconde partie, faite) : `src/batiment-pose-ui.js`.
+Les fiches d'un Personnage et d'un Objet ont, sous leur Position, un bloc « Dans un bâtiment » :
+bâtiment (ceux de la même Case), étage, pièce, puis « Poser dans cette pièce ». Le bouton remplit X,
+Y, Z (le point intérieur de la pièce, `repere`, au niveau de son sol) et décoche « Aimanté au Sol » ;
+Enregistrer applique, Annuler n'a rien bougé. Le point passe du repère du bâtiment au monde par
+`pointDuBatimentPlace3D` (scene3d.js), qui refait la règle du rendu sur le rig lui-même : rotation,
+boîte centrée sur la position de l'Élément, échelle de sa hauteur réelle. La pose est ponctuelle :
+déplacer le bâtiment ensuite ne déplace pas ce qu'on y a posé.
+
 **Les escaliers** (#454c, fait) : `src/batiment-escaliers.js`. Droit, en L ou en U (le colimaçon
 plus tard) ; marches d'environ 17 cm, giron de Blondel (2h + g = 63 cm, borné à 24–30 cm) ; la trémie
 (l'emprise élargie) perce le plancher du dessus et le plafond de son niveau, dans la pièce qui la
@@ -484,8 +493,8 @@ place : rien ne bouge à l'écran.
 - **#454c** l'escalier entre deux niveaux et sa trémie.
 - **#454d** les revêtements : murs (face intérieure et extérieure, par pièce et par étage), sols,
   plafonds ; un jeu de matières fourni, puis le store (#446).
-- **#454e** placer un Élément dans un bâtiment : la modale (bâtiment, étage, pièce), et la pose à
-  la main.
+- **#454e** placer un Élément dans un bâtiment : le mobilier de l'éditeur, puis la pose depuis la
+  fiche (bâtiment, étage, pièce). Fait.
 - **#454f** la conversion des bâtiments tracés dans les Scènes, et le retrait de l'outil de la Scène.
 - **#458** le toit automatique : types, pente, débord, matières, toit-terrasse avec garde-corps,
   Éléments sur le toit.

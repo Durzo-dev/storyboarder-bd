@@ -47,6 +47,7 @@ import {
   findOwningPanel, groundMagnetEligible,
   getCamOrbitWorld, mergedBuildWallRigCache3D, panelCamBasis3D, panelSceneCache3D, slabMeshCache3D,
 } from './scene3d.js';
+import { preparerPoseDansUnBatiment } from './batiment-pose-ui.js';
 import {
   cloneJoints, getEffectiveJoints, groupesDeCurseurs3D, objectRigCache3D,
   personaScene3D, poseOsPourModeleImporte, wallRenderRigCache3D,
@@ -708,6 +709,12 @@ export function openPersonaModal(obj, isNew){
   personaPosYInput.value = Math.round((obj.wyFloor !== undefined ? obj.wyFloor : wp.y) * 100) / 100;
   personaPosYInput.disabled = personaGroundMagnetCheckbox.checked;
   updatePersonaSizeDisplay(obj);
+  // #454e : « Dans un bâtiment ».
+  preparerPoseDansUnBatiment({
+    prefixe: 'persona', obj, page: currentPage(), traduire: tr,
+    hauteur: () => (obj.realHeightFloor !== undefined ? obj.realHeightFloor : ensureElementUnits3D(obj).h),
+    apres: recomputeModalDirty,
+  });
   resetModalSections(descModal.querySelector('.modal-box'), ['principal', 'modele']);
   // Starts with no joint handle selected/highlighted, and every "Fine-tuning" sub-section
   // collapsed (cf. the two-way preview <-> sub-section sync), rather than keeping the state
@@ -1367,6 +1374,15 @@ export function openObjectModal(obj, isNew){
   // disposition plus haut la ferait contredire par `remplirChampHauteur3D` ou `buildFigureFieldUI`,
   // en silence, selon l'ordre d'écriture de cette fonction.
   appliquerDispositionFicheLumiere3D(obj);
+  // #454e : « Dans un bâtiment », pour ce qui se pose (ni un mur, ni ce qu'un mur gouverne).
+  {
+    const _gouverne = WALL_TYPES.includes(obj.objType) || isWallOpeningMagnet;
+    preparerPoseDansUnBatiment({
+      prefixe: 'object', obj: _gouverne ? null : obj, page: currentPage(), traduire: tr,
+      hauteur: () => (obj.realHeightFloor !== undefined ? obj.realHeightFloor : ensureElementUnits3D(obj).h),
+      apres: recomputeModalDirty,
+    });
+  }
   // ⚠️ LES SECTIONS OUVERTES D'EMBLÉE DIFFÈRENT POUR UNE LUMIÈRE : « Luminosité » s'ajoute, parce
   // que les trois réglages qui justifient l'existence de cette fiche y vivent, et qu'il serait
   // absurde de demander un clic pour atteindre la seule chose qu'on est venu changer.

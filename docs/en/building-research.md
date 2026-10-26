@@ -415,6 +415,15 @@ the file's (a model taller than 6 m or shorter than 5 cm is brought back to 1 m,
 shows its footprint and its front; 3D shows its model (a box until it is decoded), in the editor and
 in Panels, which preload these models with the page.
 
+**Placing an Element in a building** (#454e, second part, done): `src/batiment-pose-ui.js`. The
+Character and Object sheets have, under their Position, an “In a building” block: building (those of
+the same Panel), floor, room, then “Place in this room”. The button fills X, Y, Z (the room's interior
+point, `repere`, at its floor level) and unticks “Snapped to the ground”; Save applies, Cancel has
+moved nothing. The point goes from the building's frame to the world through
+`pointDuBatimentPlace3D` (scene3d.js), which replays the render's rule on the rig itself: rotation,
+box centred on the Element's position, scale from its real height. Placing is a one-off: moving the
+building afterwards does not move what was placed in it.
+
 **Staircases** (#454c, done): `src/batiment-escaliers.js`. Straight, L or U (spiral later); steps
 of about 17 cm, Blondel going (2h + g = 63 cm, bounded to 24–30 cm); the stairwell (the widened
 footprint) pierces the floor above and the ceiling of its level, in the room that contains it.
@@ -459,7 +468,8 @@ moves on screen.
 - **#454c** the staircase between two levels and its stairwell.
 - **#454d** finishes: walls (inner and outer face, per room and per floor), floors, ceilings; a
   supplied set of materials, then the store (#446).
-- **#454e** placing an Element in a building: the modal (building, floor, room), and placing by hand.
+- **#454e** placing an Element in a building: the editor's furniture, then placing from the sheet
+  (building, floor, room). Done.
 - **#454f** converting the buildings traced in Scenes, and removing the tool from the Scene.
 - **#458** the automatic roof: types, pitch, overhang, materials, roof terrace with railing,
   Elements on the roof.

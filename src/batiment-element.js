@@ -14,7 +14,7 @@
 import { WALL_PX_PER_UNIT_3D } from './constants.js';
 import { newId } from './state.js';
 import { clamp } from './utils.js';
-import { hauteurDesMursDuNiveau } from './batiment-niveaux.js';
+import { hauteurDesMursDuNiveau, niveauxTries } from './batiment-niveaux.js';
 
 /** Le discriminant persisté. */
 export const OBJ_TYPE_BATIMENT = 'batiment';
@@ -118,6 +118,32 @@ export function signatureDeStructure(b){
   const { nom: _nom, ...reste } = b;
   void _nom;
   return signatureDuBatiment(reste);
+}
+
+/**
+ * Les étages d'un bâtiment et leurs pièces, du plus bas au plus haut, pour choisir où poser un
+ * Élément (#454e) : `[{ id, nom, elevation, pieces: [{ id, nom }] }]`. Un étage sans pièce fermée
+ * n'y figure pas (on ne pose rien dans une pièce qui n'existe pas). PURE.
+ */
+export function etagesEtPieces(b){
+  if (!b) return [];
+  return niveauxTries(b).map(n => ({
+    id: n.id, nom: n.nom, elevation: n.elevation || 0,
+    pieces: (b.pieces || []).filter(p => p.niveauId === n.id && p.repere).map(p => ({ id: p.id, nom: p.nom })),
+  })).filter(n => n.pieces.length);
+}
+
+/**
+ * Le point où poser un Élément dans une pièce, dans le repère du bâtiment (mètres) : son `repere`
+ * (un point intérieur, cf. batiment-pieces.js, juste même pour une pièce en L) au niveau de son
+ * sol (le sol est dessiné 5 mm au-dessus de l'élévation, cf. batiment-3d.js). Null si la pièce
+ * n'existe pas. PURE.
+ */
+export function pointDeLaPiece(b, pieceId){
+  const p = ((b && b.pieces) || []).find(x => x.id === pieceId);
+  if (!p || !p.repere) return null;
+  const n = (b.niveaux || []).find(x => x.id === p.niveauId);
+  return { x: p.repere.x, y: (n ? n.elevation || 0 : 0) + 0.005, z: p.repere.z };
 }
 
 /**

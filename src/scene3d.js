@@ -366,6 +366,56 @@ export function findOwningPanel(perso, page){
   return null;
 }
 
+/**
+ * Un point du repère d'un BÂTIMENT PLACÉ (mètres, celui de batiment.js) ramené dans le monde de sa
+ * Case ou de sa Scène (#454e : poser un Élément dans une de ses pièces).
+ *
+ * ⚠️ LA RÈGLE EST CELLE DU RENDU, PAS UNE COPIE APPROCHÉE. Le rig du bâtiment est tourné, puis
+ * placeRigCentered3D CENTRE SA BOÎTE sur la position de l'Élément et le met à l'échelle de sa
+ * hauteur réelle. Cette boîte dépend de tout ce qu'il contient (escaliers, mobilier, dalles qui
+ * débordent) : on la mesure sur le rig lui-même, sans le déplacer (sa position et son échelle sont
+ * remises comme on les a trouvées). Mêmes sources que le rendu pour le centre : `wxFloor`, `wyFloor`
+ * sinon la projection de la boîte 2D, `wzFloor` sinon la profondeur.
+ */
+export function pointDuBatimentPlace3D(o, panel, p){
+  return pointDuRigPlace3D(ensureObjectRigEntry3D(o).figureGroup, o, panel, p);
+}
+
+/** Le calcul de pointDuBatimentPlace3D, sur un rig donné (déjà tourné, cf. ensureObjectRigEntry3D). */
+export function pointDuRigPlace3D(fg, o, panel, p){
+  const pos = fg.position.clone(), ech = fg.scale.clone();
+  fg.position.set(0, 0, 0); fg.scale.set(1, 1, 1);
+  fg.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(fg);
+  fg.position.copy(pos); fg.scale.copy(ech);
+  fg.updateMatrixWorld(true);
+  const size = new THREE.Vector3(), centre = new THREE.Vector3();
+  box.getSize(size); box.getCenter(centre);
+  const unitsH = (o.realHeightFloor !== undefined) ? o.realHeightFloor : ensureElementUnits3D(o).h;
+  const s = unitsH / Math.max(size.y, 0.0001);
+  const ep = (o.wxFloor === undefined || o.wyFloor === undefined) ? ensureElementWorldPos3D(o, panel) : null;
+  const ancre = {
+    x: o.wxFloor ?? ep.x,
+    y: (o.wyFloor ?? ep.y) + (o.roomFloatY || 0),
+    z: (o.wzFloor !== undefined) ? o.wzFloor : getElementDepth(o),
+  };
+  const v = new THREE.Vector3(p.x, p.y, p.z).applyQuaternion(fg.quaternion).sub(centre).multiplyScalar(s);
+  return { x: ancre.x + v.x, y: ancre.y + v.y, z: ancre.z + v.z };
+}
+
+/**
+ * Où mettre un Élément pour que sa base touche le point `sol` du monde : les valeurs des champs X,
+ * Y (le CENTRE, comme partout dans les fiches) et Z (la profondeur, bornée comme au glisser).
+ * PURE.
+ */
+export function positionPoseeSur3D(sol, hauteur){
+  return {
+    x: sol.x,
+    y: sol.y + Math.max(0, hauteur || 0) / 2 + GROUND_CONTACT_EPS_3D,
+    z: clampPanelDepth3D(sol.z),
+  };
+}
+
 // ════════════════════════════════════════════════════════════
 // 3D CAMERA, SCENE RENDERING, TRACE GEOMETRY
 // ════════════════════════════════════════════════════════════
