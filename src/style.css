@@ -2956,5 +2956,11 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 .batiment-meuble-dimensions > div span:last-child{ color:var(--ink); font-variant-numeric:tabular-nums; font-weight:600; }
 .batiment-meuble-repere{ display:flex; justify-content:center; color:var(--ink-soft); }
 .batiment-meuble-repere svg{ width:140px; height:124px; }
-.batiment-meuble-boutons{ display:flex; flex-direction:column; gap:6px; margin-top:10px; }
-.batiment-meuble-boutons .nav-btn{ width:100%; margin:0; }
+.batiment-meuble-boutons{ display:flex; justify-content:center; gap:8px; margin-top:10px; }
+/* Les boutons icônes d'un élément (Tourner de 90°, Remettre droit), côte à côte (demandé). */
+.batiment-meuble-icone{ width:40px; height:36px; display:flex; align-items:center; justify-content:center; padding:0;
+  background:var(--nav-bg); color:var(--ink); border:none; border-radius:var(--rayon-moyen); cursor:pointer; }
+.batiment-meuble-icone:hover{ background:var(--nav-bg-hover); }
+.batiment-meuble-icone .icone{ width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+/* Un champ de l'éditeur de bâtiment éteint (l'élévation d'un élément collé au sol) : grisé. */
+.batiment-champ input:disabled{ opacity:.45; cursor:not-allowed; }

@@ -216,3 +216,20 @@ describe('orienter dans tous les sens, et ne pas traverser les murs (demandé)',
     assert.match(ui, /: meuble \? meuble\.nom : tr\('Selection', 'Sélection'\)/);   // la section au nom de l'élément
   });
 });
+
+describe('les retouches de la section (demandé)', () => {
+  test('« Remettre droit » rend EXACTEMENT l\'orientation d\'arrivée, rotation comprise', () => {
+    const { m } = unePieceMeublee();
+    M.tournerDe(m, 0.7); M.pencherMeuble(m, 'x', 0.3); M.pencherMeuble(m, 'z', -0.2);
+    M.redresserMeuble(m);
+    assert.deepEqual([m.rotY, m.rotX, m.rotZ], [0, undefined, undefined]);
+  });
+  test('boutons icônes côte à côte ; l\'élévation, toujours là, au-dessus de « Collé au sol »', () => {
+    const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
+    assert.match(ui, /bouton\('quartDeTour',/);
+    assert.match(ui, /bouton\('reinitialiser',/);
+    assert.match(ui, /hauteur,\s*coche\(tr\('Stuck to the floor', 'Collé au sol'\)/);
+    assert.match(ui, /ht\.textContent = tr\('Elevation', 'Élévation'\);/);
+    assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /\.batiment-meuble-boutons\{ display:flex; justify-content:center;/);
+  });
+});

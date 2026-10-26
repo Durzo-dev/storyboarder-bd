@@ -16,6 +16,8 @@ export const ICONES = {
   annuler: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
   // Revenir à la valeur d'origine (le sélecteur de couleur) : une flèche qui tourne à rebours.
   reinitialiser: '<path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/>',
+  // Un quart de tour (un élément de l'éditeur de bâtiment) : une flèche qui tourne dans le sens horaire, et 90.
+  quartDeTour: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
   aide: '<circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
   coche: '<path d="m5 12 5 5 9-10"/>',
   ajouter: '<path d="M12 5v14M5 12h14"/>',

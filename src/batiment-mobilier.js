@@ -275,8 +275,12 @@ export function tournerDe(m, delta){
   return m;
 }
 
-/** Remettre droit : ni inclinaison ni bascule. */
+/**
+ * Remettre droit (demandé) : EXACTEMENT l'orientation qu'il avait en arrivant dans la pièce, celle de
+ * son modèle (ni rotation, ni inclinaison, ni bascule).
+ */
 export function redresserMeuble(m){
+  m.rotY = 0;
   delete m.rotX; delete m.rotZ;
   return m;
 }

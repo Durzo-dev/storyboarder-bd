@@ -53,6 +53,7 @@ import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
 import { carreDeTexture } from './textures-store-ui.js';
 import { normaliserRevetement, peintureDuRevetement } from './batiment-revetements.js';
 import { sectionDroitePliee, memoriserSectionDroite } from './section-memory.js';
+import { icone } from './icones.js';
 import { ajouterMeuble, meubleSous, aimanterMeuble, tournerMeuble, echelonnerMeuble, supprimerMeuble, empreinteDuMeuble, fichiersDesMeubles,
   curseurDeLEchelle, echelleDuCurseur, tailleDuMeuble, collerAuSol, tournerDe, pencherMeuble, redresserMeuble, meubleEnCollision, devantDuMeuble,
   axesDuMeuble } from './batiment-mobilier.js';
@@ -766,8 +767,10 @@ function reglagesDuMeuble(meuble){
   if (zone.contains(document.activeElement) && document.activeElement.type === 'range') return;
   const id = meuble.id;
   const courant = () => (E.batiment.elements || []).find(x => x.id === id);
-  const bouton = (texte, faire) => {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'nav-btn'; b.textContent = texte; b.onclick = faire; return b;
+  // Des boutons ICÔNES (demandé), leur nom en infobulle.
+  const bouton = (nom, titre, faire) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'batiment-meuble-icone';
+    b.title = titre; b.setAttribute('aria-label', titre); b.innerHTML = icone(nom); b.onclick = faire; return b;
   };
   const coche = (texte, coche_, changer) => {
     const l = document.createElement('label'); l.className = 'modal-checkbox-line';
@@ -802,8 +805,8 @@ function reglagesDuMeuble(meuble){
     return c;
   }));
   const boutons = document.createElement('div'); boutons.className = 'batiment-meuble-boutons';
-  boutons.append(bouton(tr('Turn by 90°', 'Tourner de 90°'), () => retoucherMeuble(id, tournerMeuble)),
-    bouton(tr('Straighten', 'Remettre droit'), () => retoucherMeuble(id, redresserMeuble)));
+  boutons.append(bouton('quartDeTour', tr('Turn by 90°', 'Tourner de 90°'), () => retoucherMeuble(id, tournerMeuble)),
+    bouton('reinitialiser', tr('Back to its original orientation', 'Remettre droit : son orientation d\'arrivée'), () => retoucherMeuble(id, redresserMeuble)));
   // Taille : le curseur, logarithmique (×1 au milieu).
   const valeur = document.createElement('span'); valeur.className = 'batiment-meuble-echelle';
   const ecrireEchelle = (k) => { valeur.textContent = `×${k.toLocaleString(tr('en', 'fr'), { maximumFractionDigits: 2 })}`; };
@@ -830,11 +833,14 @@ function reglagesDuMeuble(meuble){
   const ligneTaille = document.createElement('div'); ligneTaille.className = 'batiment-meuble-ligne';
   ligneTaille.append(curseur, valeur);
   // Position : collé au sol (par défaut) ; décoché, sa hauteur. Traverser les murs (et le sol).
+  // L'ÉLÉVATION (un libellé court, demandé), toujours là, éteinte tant qu'il est collé au sol (0).
   const hauteur = document.createElement('label'); hauteur.className = 'batiment-champ';
-  hauteur.hidden = meuble.colle !== false;
-  const ht = document.createElement('span'); ht.textContent = tr('Height above the floor', 'Hauteur au-dessus du sol');
+  const ht = document.createElement('span'); ht.textContent = tr('Elevation', 'Élévation');
   const hw = document.createElement('span'); hw.className = 'batiment-champ-valeur';
-  const hi = document.createElement('input'); hi.type = 'number'; hi.step = '1'; hi.value = String(Math.round((meuble.y || 0) * 100));
+  const hi = document.createElement('input'); hi.type = 'number'; hi.step = '1';
+  hi.value = String(meuble.colle !== false ? 0 : Math.round((meuble.y || 0) * 100));
+  hi.disabled = meuble.colle !== false;
+  hi.title = hi.disabled ? tr('Untick “Stuck to the floor” to raise it.', 'Décochez « Collé au sol » pour l\'élever.') : '';
   if (!meuble.traverse) hi.min = '0';
   hi.addEventListener('change', () => {
     const n = Number(hi.value);
@@ -847,10 +853,11 @@ function reglagesDuMeuble(meuble){
     sousSection(tr('Dimensions', 'Dimensions'), taille),
     sousSection(tr('Orientation', 'Orientation'), repereDAxes(meuble), angles, boutons),
     sousSection(tr('Size', 'Taille'), ligneTaille),
+    // Dans cet ordre (demandé) : l'élévation, puis « Collé au sol », puis « Peut traverser les murs ».
     sousSection(tr('Position', 'Position'),
+      hauteur,
       coche(tr('Stuck to the floor', 'Collé au sol'), meuble.colle !== false,
         (v) => modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (x) collerAuSol(x, v); })),
-      hauteur,
       // Décoché (par défaut), il ne traverse ni les murs ni, décollé, le sol (demandé).
       coche(tr('Can pass through walls', 'Peut traverser les murs'), !!meuble.traverse,
         (v) => modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (!x) return; if (v) x.traverse = true; else { delete x.traverse; if (x.colle === false) collerAuSol(x, false); } }))));
