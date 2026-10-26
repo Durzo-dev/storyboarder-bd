@@ -210,7 +210,7 @@ export function ouvrirSelecteurCouleur(champ){
   peindre();
   champ.classList.add('selecteur-couleur-actif');
   // À côté du conteneur du champ, jamais dessus : ce qu'on teint reste visible.
-  const conteneur = champ.closest('.right-panel, .modal-box, .sidebar') || champ;
+  const conteneur = champ.closest('.right-panel, .modal-box, .sidebar, .batiment-editeur-panneau, .persona-editor-panel') || champ;
   const p = panneau.getBoundingClientRect();
   const ancre = ancreDuSelecteur({ champ: champ.getBoundingClientRect(), conteneur: conteneur.getBoundingClientRect(),
     taille: { w: p.width, h: p.height }, fenetre: { w: window.innerWidth, h: window.innerHeight } });

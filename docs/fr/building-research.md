@@ -416,6 +416,16 @@ du dessus commence à `elevation + hauteur + dalle(du dessus)`. Les élévations
 en attendant #458) et les murs montent jusqu'au dessus de cette dalle (façade continue). Le tracé
 s'aimante aussi au niveau du dessous (accroche 'repere').
 
+**Les revêtements** (#454d avec #446e, fait) : `src/batiment-revetements.js`. Un revêtement est
+`{ texture, couleur }` : une texture livrée (`int:…`, le jeu fourni : plancher, carrelage, marbre,
+moquette, béton, briques, bois peint), une texture de « Mes textures » (`tex:…`) ou aucune (l'uni
+d'avant), teinte d'une couleur. Une pièce a ses `murs`, son `sol`, son `plafond` ; un niveau, sa
+`facade`. Les murs se construisent FACE PAR FACE : chaque face regarde une pièce (ses murs) ou
+l'extérieur (la façade), les faces collées à un autre mur ne sont pas faites, et les UV sont en
+mètres. Dans l'éditeur, la section « Revêtements » : un carré de texture (le store en mode
+« choisir ») et une couleur en direct pour la façade du niveau, puis pour les murs, le sol et le
+plafond de la pièce choisie.
+
 **Les escaliers** (#454c, fait) : `src/batiment-escaliers.js`. Droit, en L ou en U (le colimaçon
 plus tard) ; marches d'environ 17 cm, giron de Blondel (2h + g = 63 cm, borné à 24–30 cm) ; la trémie
 (l'emprise élargie) perce le plancher du dessus et le plafond de son niveau, dans la pièce qui la

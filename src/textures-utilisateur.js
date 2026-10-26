@@ -89,6 +89,28 @@ export function traceDe(entree){
 /** Les textures de Tracé de l'utilisateur, par identifiant. Remplie par `installerTexturesUtilisateur`. */
 const _traces = new Map();
 
+/** Les usages de bâtiment (#446e), comme dans textures-integrees.js (le toit attend #458). */
+const USAGES_BATIMENT = ['mur-ext', 'mur-int', 'sol-int', 'plafond'];
+
+/**
+ * La texture de bâtiment d'une entrée (#446e) : `{ id, grain, teinte, tuile, usages }`, ou null si
+ * aucun usage de bâtiment. La tuile : sa taille réelle, sinon deux mètres.
+ */
+export function batimentDe(entree){
+  if (!utilisable(entree)) return null;
+  const usages = entree.usages.filter(u => USAGES_BATIMENT.includes(u));
+  if (!usages.length) return null;
+  const d = Array.isArray(entree.dimensions) && entree.dimensions.length === 2 && entree.dimensions.every(v => Number(v) > 0)
+    ? entree.dimensions.map(Number) : TUILE_PAR_DEFAUT;
+  return { id: idDe(entree), grain: cleDuGrain(entree), teinte: couleur(entree.teinte), tuile: d, usages };
+}
+
+/** Les textures de bâtiment de l'utilisateur, par identifiant (`tex:<dossier>`). */
+const _batiment = new Map();
+
+/** La texture de bâtiment d'un identifiant `tex:…`, ou null (absente : le bâtiment reste uni). */
+export const textureDeBatiment = (id) => _batiment.get(id) || null;
+
 /**
  * Inscrit les textures de « Mes textures » : celles du Sol dans GROUND_TYPE_DEFS (les précédentes
  * en sont retirées, une texture supprimée disparaît des menus), celles des Tracés dans le registre.
@@ -97,12 +119,14 @@ const _traces = new Map();
 export function installerTexturesUtilisateur(entrees){
   for (let i = GROUND_TYPE_DEFS.length - 1; i >= 0; i--) if (GROUND_TYPE_DEFS[i].importee) GROUND_TYPE_DEFS.splice(i, 1);
   _traces.clear();
+  _batiment.clear();
   const grains = new Map();
   for (const e of Array.isArray(entrees) ? entrees : []) {
-    const sol = defSolDe(e), trace = traceDe(e);
+    const sol = defSolDe(e), trace = traceDe(e), bati = batimentDe(e);
     if (sol) GROUND_TYPE_DEFS.push(sol);
     if (trace) _traces.set(trace.id, trace);
-    if (sol || trace) grains.set(cleDuGrain(e), e);
+    if (bati) _batiment.set(bati.id, bati);
+    if (sol || trace || bati) grains.set(cleDuGrain(e), e);
   }
   return [...grains].map(([cle, entree]) => ({ cle, entree }));
 }
@@ -141,7 +165,7 @@ export async function chargerTexturesUtilisateur(api, apres){
   try { entrees = await api.texturesMes(); } catch (e) { return 0; }
   const aCharger = installerTexturesUtilisateur(entrees);
   // Rien de changé pour le rendu (un tag ajouté, une fiche rouverte) : on ne refait pas les Cases.
-  const signature = JSON.stringify([...GROUND_TYPE_DEFS.filter(d => d.importee), ..._traces.values()]);
+  const signature = JSON.stringify([...GROUND_TYPE_DEFS.filter(d => d.importee), ..._traces.values(), ..._batiment.values()]);
   const change = signature !== _signature;
   _signature = signature;
   const cles = [];

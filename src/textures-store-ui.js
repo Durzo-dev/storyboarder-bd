@@ -163,7 +163,8 @@ function mesFiltrees(){
   const texte = p.texte.trim().toLowerCase();
   // En mode « choisir », seulement ce qui peut servir ici : une texture sans grain (bâtiments
   // seulement) ne s'applique ni au Sol ni à un Tracé.
-  const utile = (t) => !choix || (t.usages.includes(choix.usage) && (t.integree || !!t.grain));
+  // « Sans texture » (bâtiments) ne se montre que pour choisir : ce n'est pas une texture qu'on a.
+  const utile = (t) => (!choix ? !t.uni : (t.usages.includes(choix.usage) && (t.integree || !!t.grain)));
   return [...mes, ...integrees].filter(t => utile(t) && (!texte || nomTexture(t).toLowerCase().includes(texte))
     && (!p.matiere || t.matieres.includes(p.matiere)) && (!p.usage || t.usages.includes(p.usage))
     && tagsFiltre.every(id => (t.tags || []).includes(id)));

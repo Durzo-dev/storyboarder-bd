@@ -11,9 +11,10 @@
  */
 import { polygonesDesMurs, morceauxDuMur } from './batiment-geometrie.js';
 import { intervalleDe } from './batiment-ouvertures.js';
-import { formesDesPieces, dansLaFace } from './batiment-pieces.js';
+import { formesDesPieces, dansLaFace, pointDansPolygone } from './batiment-pieces.js';
 import { formeDeLEscalier, tremieDeLEscalier } from './batiment-escaliers.js';
 import { niveauxTries, hauteurDesMursDuNiveau, epaisseurDuDessus, niveauDessous } from './batiment-niveaux.js';
+import { fabriqueDeRevetements, revetementDeLaFace, revetementDeLaPiece, pieceDevantLaFace } from './batiment-revetements.js';
 
 /** Les matières d'un bâtiment, à créer une fois par renderer. */
 export function materiauxBatiment3D(T){
@@ -25,8 +26,73 @@ export function materiauxBatiment3D(T){
     verre: new T.MeshStandardMaterial({ color: 0x9fc6d8, roughness: 0.1, metalness: 0.1, transparent: true, opacity: 0.35, side: T.DoubleSide }),
     // Poignées et paumelles d'une porte (demandé : voir de quel côté on la regarde).
     metal: new T.MeshStandardMaterial({ color: 0x3a3a3e, roughness: 0.35, metalness: 0.8 }),
+    // #454d / #446e : les matières des revêtements, fabriquées à la demande et gardées par le renderer.
+    revetement: fabriqueDeRevetements(T),
   };
 }
+
+/**
+ * LE COLLECTEUR DE FACES (#454d) : les faces d'un bâtiment, rangées par matière, puis un maillage par
+ * matière. Les murs étaient un prisme chacun, d'une seule matière ; leurs faces ont maintenant chacune
+ * la leur (la pièce qu'elles regardent, ou la façade), et des dizaines de murs feraient des centaines
+ * de maillages. UV en MÈTRES : la matière règle sa répétition sur la taille de sa tuile.
+ */
+function collecteur(T){
+  const parMatiere = new Map();
+  const tampon = (mat) => {
+    if (!parMatiere.has(mat)) parMatiere.set(mat, { pos: [], nor: [], uv: [], idx: [] });
+    return parMatiere.get(mat);
+  };
+  return {
+    /** Un quadrilatère vertical de a à b, de y0 à y1, tourné vers `n` ({x, z}). */
+    mur(mat, a, b, y0, y1, n){
+      const t = tampon(mat), base = t.pos.length / 3;
+      const lg = Math.hypot(b.x - a.x, b.z - a.z) || 1;
+      const d = { x: (b.x - a.x) / lg, z: (b.z - a.z) / lg };
+      // u : l'abscisse le long de la face, en mètres et dans le repère du bâtiment, pour que deux
+      // morceaux d'un même mur (de part et d'autre d'une fenêtre) se raccordent.
+      const u = (p) => p.x * d.x + p.z * d.z;
+      t.pos.push(a.x, y0, a.z, b.x, y0, b.z, b.x, y1, b.z, a.x, y1, a.z);
+      for (let i = 0; i < 4; i++) t.nor.push(n.x, 0, n.z);
+      t.uv.push(u(a), y0, u(b), y0, u(b), y1, u(a), y1);
+      // L'ordre des sommets fait face à n : (b − a) × y vaut (−d.z, 0, d.x).
+      if (-d.z * n.x + d.x * n.z >= 0) t.idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
+      else t.idx.push(base, base + 2, base + 1, base, base + 3, base + 2);
+    },
+    /** Un polygone horizontal à la hauteur y, tourné vers le haut (dessus) ou le bas. */
+    plan(mat, pts, y, versLeHaut){
+      const tri = T.ShapeUtils.triangulateShape(pts.map(p => new T.Vector2(p.x, p.z)), []);
+      if (!tri.length) return;
+      const t = tampon(mat), base = t.pos.length / 3;
+      pts.forEach(p => { t.pos.push(p.x, y, p.z); t.nor.push(0, versLeHaut ? 1 : -1, 0); t.uv.push(p.x, p.z); });
+      // Le sens des triangles rendus par triangulateShape dépend de celui du contour : on l'oriente
+      // d'après la normale voulue (y vers le haut : sens horaire vu du dessus dans x, z).
+      const cote = (i, j, k) => (pts[j].x - pts[i].x) * (pts[k].z - pts[i].z) - (pts[j].z - pts[i].z) * (pts[k].x - pts[i].x);
+      tri.forEach(([i, j, k]) => {
+        const haut = cote(i, j, k) < 0;
+        if (haut === versLeHaut) t.idx.push(base + i, base + j, base + k);
+        else t.idx.push(base + i, base + k, base + j);
+      });
+    },
+    /** Les maillages, un par matière. */
+    maillages(){
+      const sortie = [];
+      for (const [mat, t] of parMatiere) {
+        if (!t.idx.length) continue;
+        const g = new T.BufferGeometry();
+        g.setAttribute('position', new T.Float32BufferAttribute(t.pos, 3));
+        g.setAttribute('normal', new T.Float32BufferAttribute(t.nor, 3));
+        g.setAttribute('uv', new T.Float32BufferAttribute(t.uv, 2));
+        g.setIndex(t.idx);
+        sortie.push(new T.Mesh(g, mat));
+      }
+      return sortie;
+    },
+  };
+}
+
+/** L'aire signée d'un polygone (x, z) : positive dans le sens trigonométrique. */
+const aireSignee = (pts) => pts.reduce((s, p, i) => { const q = pts[(i + 1) % pts.length]; return s + p.x * q.z - q.x * p.z; }, 0) / 2;
 
 /**
  * La menuiserie d'une ouverture (#454a-3c), simple en attendant les modèles du store : un cadre, du
@@ -139,8 +205,10 @@ export function construireBatiment3D(T, b, mats, { jusquA = null } = {}){
     m.position.y = y;
     groupe.add(m);
   };
+  const col = collecteur(T);
   visibles.forEach(n => {
     const dessous = niveauDessous(b, n.id);
+    const formesDuNiveau = formesDesPieces(b, n.id);
     const tremiesPlancher = dessous ? tremiesDe(dessous.id) : [];
     const tremiesPlafond = tremiesDe(n.id);
     const forme2D = (f, tremies = []) => {
@@ -148,13 +216,25 @@ export function construireBatiment3D(T, b, mats, { jusquA = null } = {}){
       [...(f.trous || []), ...percees(f, tremies)].forEach(t => forme.holes.push(new T.Path(t.map(p => new T.Vector2(p.x, -p.z)))));
       return forme;
     };
-    for (const f of formesDesPieces(b, n.id).values()) {
+    for (const [pieceId, f] of formesDuNiveau) {
       // Le sol de chaque pièce (#454a-3b), un peu au-dessus de la grille pour ne pas scintiller avec elle.
+      // #454d : son revêtement (uni par défaut, la couleur d'avant).
       const geo = new T.ShapeGeometry(forme2D(f, tremiesPlancher));
       geo.rotateX(-Math.PI / 2);
-      const sol = new T.Mesh(geo, mats.sol);
+      const sol = new T.Mesh(geo, mats.revetement ? mats.revetement(revetementDeLaPiece(b, pieceId, 'sol'), 'sol-int') : mats.sol);
       sol.position.y = n.elevation + 0.005;
       groupe.add(sol);
+      // #454d : le PLAFOND, sous la dalle du dessus, tourné vers le bas (dessiné dans x, z puis basculé
+      // de +90° : la normale descend et z garde son sens). Pas sous un dernier niveau ouvert par la coupe.
+      if (mats.revetement && !(coupe && n.id === dernier) && epaisseurDuDessus(b, n.id) > 0) {
+        const fp = new T.Shape(f.points.map(p => new T.Vector2(p.x, p.z)));
+        [...(f.trous || []), ...percees(f, tremiesPlafond)].forEach(t => fp.holes.push(new T.Path(t.map(p => new T.Vector2(p.x, p.z)))));
+        const gp = new T.ShapeGeometry(fp);
+        gp.rotateX(Math.PI / 2);
+        const plafond = new T.Mesh(gp, mats.revetement(revetementDeLaPiece(b, pieceId, 'plafond'), 'plafond'));
+        plafond.position.y = n.elevation + n.hauteur - 0.003;
+        groupe.add(plafond);
+      }
       // #454b : la dalle, SOUS le sol d'un étage (le plus bas des niveaux est posé sur le Sol).
       if (n.id !== lePlusBas && n.dalle > 0) dalle(f, n.elevation - n.dalle, n.dalle, tremiesPlancher);
       // ET LE DESSUS DE CHAQUE PIÈCE (signalé : une pièce qui dépassait de l'étage du dessus restait à
@@ -166,17 +246,35 @@ export function construireBatiment3D(T, b, mats, { jusquA = null } = {}){
     }
     const murs = b.murs.filter(m => m.niveauId === n.id);
     const formes = polygonesDesMurs(murs);
-    // La forme est tracée dans (x, −z) puis extrudée vers le haut : la rotation de −90° autour de x
-    // envoie (x, y, profondeur) sur (x, profondeur, −y).
+    // #454d : un morceau de mur, FACE PAR FACE. Chaque face regarde une pièce (ses murs) ou l'extérieur
+    // (la façade du niveau, ou celle du mur) ; le dessus et le dessous gardent la matière du mur.
+    let murCourant = null;
     const extruder = (pts, y0, y1) => {
       if (y1 - y0 < 1e-3) return;
-      const geo = new T.ExtrudeGeometry(new T.Shape(pts.map(p => new T.Vector2(p.x, -p.z))), { depth: y1 - y0, bevelEnabled: false });
-      geo.rotateX(-Math.PI / 2);
-      const maillage = new T.Mesh(geo, mats.mur);
-      maillage.position.y = n.elevation + y0;
-      groupe.add(maillage);
+      const sens = aireSignee(pts) > 0 ? 1 : -1;
+      const ya = n.elevation + y0, yb = n.elevation + y1;
+      for (let i = 0; i < pts.length; i++) {
+        const a = pts[i], c = pts[(i + 1) % pts.length];
+        const lg = Math.hypot(c.x - a.x, c.z - a.z);
+        if (lg < 1e-4) continue;
+        const d = { x: (c.x - a.x) / lg, z: (c.z - a.z) / lg };
+        const normale = sens > 0 ? { x: d.z, z: -d.x } : { x: -d.z, z: d.x };   // vers l'extérieur du polygone
+        const milieu = { x: (a.x + c.x) / 2, z: (a.z + c.z) / 2 };
+        // Une face COLLÉE à un autre mur (la jonction de deux murs, dans un angle ou un T) ne se voit
+        // pas : on ne la construit pas (elle scintillerait avec sa voisine, et coûterait pour rien).
+        const devant = { x: milieu.x + normale.x * 0.02, z: milieu.z + normale.z * 0.02 };
+        if (murCourant && [...formes].some(([id, q]) => id !== murCourant.id && pointDansPolygone(devant, q))) continue;
+        const pieceId = pieceDevantLaFace(formesDuNiveau, milieu, normale);
+        const mat = mats.revetement
+          ? mats.revetement(revetementDeLaFace(b, n.id, murCourant, pieceId), pieceId ? 'mur-int' : 'mur-ext')
+          : mats.mur;
+        col.mur(mat, a, c, ya, yb, normale);
+      }
+      col.plan(mats.mur, pts, yb, true);
+      if (y0 > 0) col.plan(mats.mur, pts, ya, false);   // le dessous d'un linteau, vu par l'ouverture
     };
     murs.forEach(m => {
+      murCourant = m;
       const f = formes.get(m.id); if (!f) return;
       // #454b : les murs montent jusqu'au plancher du dessus, à travers sa dalle (façade continue).
       const hauteur = m.hauteurPropre || hauteurDesMursDuNiveau(b, n.id);
@@ -201,6 +299,7 @@ export function construireBatiment3D(T, b, mats, { jusquA = null } = {}){
     // #454c : les escaliers du niveau.
     (b.escaliers || []).filter(x => x.niveauId === n.id).forEach(x => construireEscalier(T, b, x, mats, n.elevation, groupe));
   });
+  col.maillages().forEach(m => groupe.add(m));
   return groupe;
 }
 

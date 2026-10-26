@@ -396,6 +396,15 @@ starts at `elevation + hauteur + dalle(above)`. Elevations are derived (`recaler
 (the floor above, or a flat roof until #458) and walls run up to the top of that slab (continuous
 facade). Tracing also snaps to the level below ('repere' anchor).
 
+**Finishes** (#454d with #446e, done): `src/batiment-revetements.js`. A finish is
+`{ texture, couleur }`: a bundled texture (`int:…`, the starter set: floorboards, tiles, marble,
+carpet, concrete, bricks, painted wood), a “My textures” texture (`tex:…`) or none (the former plain
+colour), tinted by a colour. A room has its `murs` (walls), `sol` (floor), `plafond` (ceiling); a
+level, its `facade`. Walls are built FACE BY FACE: each face looks at a room (its walls) or outside
+(the facade), faces glued to another wall are skipped, and UVs are in metres. In the editor, the
+“Finishes” section: a texture square (the store in “choose” mode) and a live colour for the
+level's facade, then for the chosen room's walls, floor and ceiling.
+
 **Staircases** (#454c, done): `src/batiment-escaliers.js`. Straight, L or U (spiral later); steps
 of about 17 cm, Blondel going (2h + g = 63 cm, bounded to 24–30 cm); the stairwell (the widened
 footprint) pierces the floor above and the ceiling of its level, in the room that contains it.

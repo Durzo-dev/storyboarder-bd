@@ -56,6 +56,30 @@ const NOMS_TRACE = {
   cloture: ['Fence', 'Clôture'], haie: ['Hedge', 'Haie'], barriere: ['Road barrier', 'Barrière de route'],
 };
 
+/**
+ * Les usages de BÂTIMENT (#446e) : où une texture habille un bâtiment. Ceux de la table du store
+ * (texture-matieres.js), moins le toit, qui attend #458.
+ */
+export const USAGES_BATIMENT = ['mur-ext', 'mur-int', 'sol-int', 'plafond'];
+export const estUsageBatiment = (u) => USAGES_BATIMENT.includes(u);
+
+/**
+ * Le JEU FOURNI D'EMBLÉE pour les bâtiments (décision 11 de #454) : les textures livrées qui s'y
+ * prêtent, d'après leur matière (la table du store), par identifiant.
+ */
+const USAGES_BATIMENT_LIVREES = {
+  'sol:carrelage': ['sol-int', 'mur-int'],
+  'sol:plancher': ['sol-int', 'mur-int', 'plafond'],
+  'sol:marbre': ['sol-int', 'mur-int'],
+  'sol:moquette': ['sol-int'],
+  'sol:béton': ['sol-int', 'mur-ext', 'mur-int', 'plafond'],
+  'trace:muret': ['mur-ext', 'mur-int'],
+  'trace:cloture': ['mur-ext', 'mur-int', 'plafond'],
+};
+
+/** La couleur d'un bâtiment sans revêtement, par usage (celle d'avant #446e : rien ne change à l'écran). */
+export const COULEURS_BATIMENT = { 'mur-ext': '#d9d4c7', 'mur-int': '#d9d4c7', 'sol-int': '#a89c86', plafond: '#d9d4c7' };
+
 const provenance = (grain) => {
   const p = grain && PROVENANCE[grain];
   return p ? { ressource: p[0], banque: p[1], url: p[2] } : null;
@@ -70,7 +94,7 @@ export function texturesIntegrees(){
   const sol = GROUND_TYPE_DEFS.filter(d => !d.importee).map(d => ({
     cle: `${SOURCE}:sol:${d.id}`, source: SOURCE, id: `sol:${d.id}`, integree: true,
     nom: d.label, nomEn: d.labelEn || d.label, grain: d.grain || null, teinte: d.swatch,
-    matieres: MATIERE[d.id] ? [MATIERE[d.id]] : [], usages: ['sol'],
+    matieres: MATIERE[d.id] ? [MATIERE[d.id]] : [], usages: ['sol', ...(USAGES_BATIMENT_LIVREES[`sol:${d.id}`] || [])],
     repeat: d.repeat, dessinee: !d.grain, provenance: provenance(d.grain), choix: { sol: d.id },
   }));
   const traces = Object.entries(TRACÉ_TEXTURES).map(([type, t]) => ({
@@ -79,10 +103,15 @@ export function texturesIntegrees(){
     grain: t.grain, teinte: t.teinte, dimensions: t.tuile,
     matieres: MATIERE[type] ? [MATIERE[type]] : [],
     // La barrière n'a pas d'usage dans la table du store : elle n'est proposée nulle part, mais se voit.
-    usages: type === 'barriere' ? [] : [type],
+    usages: [...(type === 'barriere' ? [] : [type]), ...(USAGES_BATIMENT_LIVREES[`trace:${type}`] || [])],
     dessinee: false, provenance: provenance(t.grain), choix: { trace: type },
   }));
-  return [...sol, ...traces];
+  // « Sans texture » : la couleur unie d'un bâtiment, celle d'avant les revêtements. Proposée
+  // seulement pour choisir (textures-store-ui.js la cache ailleurs).
+  const uni = { cle: `${SOURCE}:uni`, source: SOURCE, id: 'uni', integree: true, uni: true,
+    nom: 'Sans texture', nomEn: 'No texture', grain: null, teinte: COULEURS_BATIMENT['mur-ext'],
+    matieres: [], usages: USAGES_BATIMENT.slice(), dessinee: true, provenance: null, choix: {} };
+  return [...sol, ...traces, uni];
 }
 
 /**
@@ -91,6 +120,8 @@ export function texturesIntegrees(){
  */
 export function valeurChoisie(t, usage){
   if (!t || !Array.isArray(t.usages) || !t.usages.includes(usage)) return undefined;
+  // Un bâtiment : `int:<id>` pour une texture livrée, null pour « Sans texture ».
+  if (estUsageBatiment(usage)) return t.integree ? (t.uni ? null : 'int:' + t.id) : 'tex:' + t.dossier;
   if (t.integree) return usage === 'sol' ? t.choix.sol : null;
   return 'tex:' + t.dossier;
 }
@@ -98,6 +129,11 @@ export function valeurChoisie(t, usage){
 /** La texture (livrée ou de l'utilisateur) qui correspond à la valeur posée, pour l'afficher. */
 export function textureDeLaValeur(valeur, usage, mes = []){
   const integrees = texturesIntegrees();
+  if (estUsageBatiment(usage)) {
+    if (typeof valeur === 'string' && valeur.startsWith('tex:')) return mes.find(t => 'tex:' + t.dossier === valeur) || null;
+    if (typeof valeur === 'string' && valeur.startsWith('int:')) return integrees.find(t => t.id === valeur.slice(4)) || null;
+    return integrees.find(t => t.uni) || null;
+  }
   if (usage === 'sol') {
     if (typeof valeur === 'string' && valeur.startsWith('tex:')) return mes.find(t => 'tex:' + t.dossier === valeur) || null;
     return integrees.find(t => t.choix.sol === (valeur || 'herbe')) || null;
