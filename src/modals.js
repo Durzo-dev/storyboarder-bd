@@ -556,10 +556,11 @@ export function recomputeModalDirty(){
   updateSaveButtonState();
 }
 
-export function rotYToSliderDeg(rotY){
+/** `exact` (#454e) : sans l'arrondi au degré, pour écrire une orientation revenue de l'éditeur de bâtiment. */
+export function rotYToSliderDeg(rotY, exact = false){
   let deg = ((rotY || 0) * 180 / Math.PI) - 180;
   deg = ((deg + 180) % 360 + 360) % 360 - 180;
-  return Math.round(deg);
+  return exact ? deg : Math.round(deg);
 }
 
 export function sliderDegToRotY(deg){
@@ -711,7 +712,7 @@ export function openPersonaModal(obj, isNew){
   updatePersonaSizeDisplay(obj);
   // #454e : « Dans un bâtiment ».
   preparerPoseDansUnBatiment({
-    prefixe: 'persona', obj, page: currentPage(), traduire: tr, versCurseurRotY: rotYToSliderDeg,
+    prefixe: 'persona', obj, page: currentPage(), traduire: tr, versCurseurRotY: (r) => rotYToSliderDeg(r, true),
     hauteurActuelle: () => (obj.realHeightFloor !== undefined ? obj.realHeightFloor : ensureElementUnits3D(obj).h),
     enregistrer: () => descModalSave.onclick(),
   });
@@ -1379,7 +1380,7 @@ export function openObjectModal(obj, isNew){
     const _gouverne = WALL_TYPES.includes(obj.objType) || isWallOpeningMagnet;
     preparerPoseDansUnBatiment({
       prefixe: 'object', obj: _gouverne ? null : obj, page: currentPage(), traduire: tr,
-      versCurseurRotY: (r) => Math.round((r || 0) * 180 / Math.PI),
+      versCurseurRotY: (r) => (r || 0) * 180 / Math.PI,
       hauteurActuelle: () => (obj.realHeightFloor !== undefined ? obj.realHeightFloor : ensureElementUnits3D(obj).h),
       enregistrer: () => objectModalSave.onclick(),
     });

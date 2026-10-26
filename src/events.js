@@ -6804,6 +6804,15 @@ if (personaHeightInput) {
     refreshPersonaPreview();
   });
 }
+/**
+ * La hauteur réelle qu'un Élément aura une fois sa fiche enregistrée : le champ Hauteur s'il est là,
+ * sinon sa hauteur réelle enregistrée, sinon `repli` (sa taille à l'écran ramenée en mètres).
+ */
+function hauteurCibleDeLaFiche3D(o, champ, saisie, repli){
+  const h = (champ && champ.style.display !== 'none' && saisie) ? Number(saisie.value) : NaN;
+  if (Number.isFinite(h) && h > 0) return h;
+  return (typeof o.realHeightFloor === 'number' && o.realHeightFloor > 0) ? o.realHeightFloor : repli;
+}
 descModalSave.onclick = () => {
   if (S.modalTarget) {
     snapshot();
@@ -6846,7 +6855,10 @@ descModalSave.onclick = () => {
       // so realH matches the actual perceived height and the ground threshold is exact.
       const _distP = panelDepthToDistance3D(getElementDepth(S.modalTarget));
       const _factorP = WALL_PX_PER_UNIT_3D * (PANEL_CAM_DEFAULT_DIST_3D / _distP);
-      worldY = clampWorldYAboveGround(S.modalTarget, worldY, S.modalTarget.h / _factorP);
+      // #454e : la hauteur RÉELLE qu'il aura, pas l'ancienne taille à l'écran ramenée à la NOUVELLE
+      // profondeur (fausse dès que Z change : posé au rez-de-chaussée d'un bâtiment depuis l'éditeur,
+      // il était remonté au-dessus du plancher).
+      worldY = clampWorldYAboveGround(S.modalTarget, worldY, hauteurCibleDeLaFiche3D(S.modalTarget, personaHeightField, personaHeightInput, S.modalTarget.h / _factorP));
       setElementWorldPos3D(S.modalTarget, panel, Number(personaPosXInput.value) || 0, worldY);
     }
     // La hauteur fait foi quand son champ est là (cf. applyElementRealHeight).
@@ -7214,7 +7226,7 @@ objectModalSave.onclick = () => {
       // locking Y).
       const _distO = panelDepthToDistance3D(getElementDepth(S.modalTarget));
       const _factorO = WALL_PX_PER_UNIT_3D * (PANEL_CAM_REF_DIST_3D / _distO);
-      worldY = clampWorldYAboveGround(S.modalTarget, worldY, S.modalTarget.h / _factorO);
+      worldY = clampWorldYAboveGround(S.modalTarget, worldY, hauteurCibleDeLaFiche3D(S.modalTarget, objectHeightField, objectHeightInput, S.modalTarget.h / _factorO));
       setElementWorldPos3D(S.modalTarget, panel, Number(objectPosXInput.value) || 0, worldY);
     }
     if (WALL_TYPES.includes(S.modalTarget.objType)) {

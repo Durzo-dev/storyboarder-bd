@@ -2987,10 +2987,10 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 #batimentPanneau:not(.fils-element) #batimentMenuElement{ display:none; }
 #batimentMenuElement > .full-btn{ width:100%; margin-top:4px; }
 
-/* #454e : « Dans un bâtiment » (fiches d'un Personnage et d'un Objet) : bâtiment, étage, pièce
-   côte à côte, puis le bouton qui remplit la Position. */
+/* #454e : « Dans un bâtiment » (fiches d'un Personnage et d'un Objet) : le bâtiment, puis le
+   bouton qui ouvre l'éditeur (l'étage et la place s'y choisissent). */
 .batiment-pose{ margin-top:12px; }
-.batiment-pose-listes{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px; }
+.batiment-pose-listes{ display:grid; grid-template-columns:minmax(0, 1fr); gap:6px; }
 .batiment-pose-listes select{ width:100%; min-width:0; margin:0; }
 .batiment-pose .batiment-pose-btn{ width:100%; margin-top:8px; }
 

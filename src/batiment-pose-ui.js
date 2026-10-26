@@ -1,10 +1,11 @@
 /**
  * @file batiment-pose-ui.js
  * « DANS UN BÂTIMENT » (#454e) : depuis la fiche d'un Personnage ou d'un Objet, choisir un bâtiment
- * placé dans la même Case (ou Scène), puis un étage, puis une pièce, et y poser l'Élément.
+ * placé dans la même Case (ou Scène) et y poser l'Élément.
  *
- * « Poser dans cette pièce » OUVRE L'ÉDITEUR DE BÂTIMENT (demandé), l'Élément choisi au centre de la
- * pièce, au bon étage. Il s'y manie comme un meuble (déplacer, tourner, incliner, taille, élévation),
+ * « Poser dans ce bâtiment » OUVRE L'ÉDITEUR DE BÂTIMENT (demandé ; l'étage et la pièce s'y
+ * choisissent, plus dans la fiche). L'Élément y apparaît là où il est s'il est déjà dans ce bâtiment,
+ * sinon au centre de la première pièce du rez-de-chaussée. Il s'y manie comme un meuble (déplacer, tourner, incliner, taille, élévation),
  * et peut changer d'étage ; le bâtiment, lui, ne se touche pas : seul l'outil Sélection est là, et
  * rien d'autre ne se prend. Les autres Éléments de la Case qui sont dans le bâtiment se voient, figés.
  *
@@ -89,27 +90,49 @@ function seMontreDansLeBatiment(o){
 }
 
 /**
+ * Un Élément de la Case vu comme un meuble du bâtiment `bat` (placé `bEl`), à SA place : son centre
+ * ramené dans le repère du bâtiment, au niveau sous ses pieds, son orientation. Null s'il n'est pas
+ * dans le bâtiment (hors de son emprise, ou plus bas que son sol, ou plus haut que son toit).
+ */
+function meubleASaPlace(o, rep, { id, bat, bEl, panel }){
+  const { minX, maxX, minZ, maxZ } = emprise(bat);
+  const tries = niveauxTries(bat);
+  if (!tries.length) return null;
+  const haut = Math.max(...tries.map(n => (n.elevation || 0) + (n.hauteur || 3))) + 0.5;
+  const L = pointDansLeBatimentPlace3D(bEl, panel, centreDansLaCase(o, panel));
+  if (L.x < minX || L.x > maxX || L.z < minZ || L.z > maxZ || L.y < -0.5 || L.y > haut) return null;
+  const m = orienter({ id, modelFile: id, nom: o.name || '', x: L.x, z: L.z, echelle: 1, dims: rep.dims, base: rep.base }, rotationDansLeBatiment(o, bEl));
+  const bas = L.y - rep.dims[2] / 2;
+  const n = tries.filter(x => (x.elevation || 0) <= bas + 0.1).pop() || tries[0];
+  m.niveauId = n.id;
+  const y = Math.round(hauteurPourLeCentre(m, n.elevation || 0, L.y) * 1000) / 1000;
+  // Posé sur son sol (à 2 cm près) : « Collé au sol », comme un meuble qu'on vient de poser.
+  if (Math.abs(y) > 0.02) { m.colle = false; m.y = y; }
+  return m;
+}
+
+/** La pièce où poser d'abord un Élément qui n'est pas encore dans le bâtiment : la première du rez-de-chaussée. */
+export function pieceDeDepart(bat){
+  const tries = niveauxTries(bat);
+  const avecPieces = tries.filter(n => (bat.pieces || []).some(p => p.niveauId === n.id && p.repere));
+  const rdc = avecPieces.find(n => (n.elevation || 0) >= 0) || avecPieces[0];
+  return rdc ? bat.pieces.find(p => p.niveauId === rdc.id && p.repere) : null;
+}
+
+/**
  * Les autres Éléments de la Case qui sont DANS le bâtiment, en meubles figés (demandé : visibles, pas
  * sélectionnables), chacun au niveau sous ses pieds. Ajoutés à `bat.elements`, leurs copies à `copies`.
  */
 function ajouterLesVoisins(bat, copies, { obj, bEl, page, panel }){
-  const { minX, maxX, minZ, maxZ } = emprise(bat);
-  const tries = niveauxTries(bat);
-  const haut = Math.max(...tries.map(n => (n.elevation || 0) + (n.hauteur || 3))) + 0.5;
   for (const o of page.objects) {
     if (o === obj || o.id === obj.id || !seMontreDansLeBatiment(o) || findOwningPanel(o, page) !== panel) continue;
-    const L = pointDansLeBatimentPlace3D(bEl, panel, centreDansLaCase(o, panel));
-    if (L.x < minX || L.x > maxX || L.z < minZ || L.z > maxZ || L.y < -0.5 || L.y > haut) continue;
     let rep;
     try { rep = elementCommeMeuble3D(o); } catch (e) { continue; }
     const id = '@v:' + o.id;
+    const m = meubleASaPlace(o, rep, { id, bat, bEl, panel });
+    if (!m) continue;
     copies.set(id, rep.copie);
-    const m = orienter({ id, modelFile: id, nom: o.name || '', x: L.x, z: L.z, echelle: 1, dims: rep.dims, base: rep.base, fige: true, traverse: true }, rotationDansLeBatiment(o, bEl));
-    const bas = L.y - rep.dims[2] / 2;
-    const n = tries.filter(x => (x.elevation || 0) <= bas + 0.1).pop() || tries[0];
-    m.niveauId = n.id;
-    m.colle = false;
-    m.y = Math.round(hauteurPourLeCentre(m, n.elevation || 0, L.y) * 1000) / 1000;
+    m.fige = true; m.traverse = true;
     bat.elements.push(m);
   }
 }
@@ -118,19 +141,24 @@ function ajouterLesVoisins(bat, copies, { obj, bEl, page, panel }){
  * Ouvre l'éditeur sur une copie du bâtiment `bEl`, l'Élément `obj` posé au centre de la pièce
  * `pieceId`. `fiche` : ce qu'il faut pour lire et écrire la fiche (cf. preparerPoseDansUnBatiment).
  */
-async function ouvrirLaPose({ obj, bEl, page, panel, pieceId, fiche }){
+async function ouvrirLaPose({ obj, bEl, page, panel, fiche }){
   const bat = JSON.parse(JSON.stringify(bEl.batiment));
   if (!Array.isArray(bat.elements)) bat.elements = [];
-  const piece = (bat.pieces || []).find(p => p.id === pieceId);
-  if (!piece || !piece.repere) return;
   const rep = elementCommeMeuble3D(obj);
   const copies = new Map();
   const ID = '@pose';
   copies.set(ID, rep.copie);
-  bat.elements.push(orienter({
-    id: ID, niveauId: piece.niveauId, modelFile: ID, nom: obj.name || fiche.nomParDefaut,
-    x: piece.repere.x, z: piece.repere.z, echelle: 1, dims: rep.dims, base: rep.base,
-  }, rotationDansLeBatiment(obj, bEl)));
+  // Déjà dans ce bâtiment : là où il est (demandé : rouvrir l'éditeur le retrouve). Sinon, au centre
+  // de la première pièce du rez-de-chaussée, son orientation gardée.
+  let m = meubleASaPlace(obj, rep, { id: ID, bat, bEl, panel });
+  if (!m) {
+    const piece = pieceDeDepart(bat);
+    if (!piece) return;
+    m = orienter({ id: ID, niveauId: piece.niveauId, modelFile: ID, x: piece.repere.x, z: piece.repere.z, echelle: 1, dims: rep.dims, base: rep.base },
+      rotationDansLeBatiment(obj, bEl));
+  }
+  m.nom = obj.name || fiche.nomParDefaut;
+  bat.elements.push(m);
   ajouterLesVoisins(bat, copies, { obj, bEl, page, panel });
   const { ouvrirEditeurDeBatiment } = await import('./batiment-editeur-ui.js');
   const modale = fiche.modale();
@@ -141,6 +169,9 @@ async function ouvrirLaPose({ obj, bEl, page, panel, pieceId, fiche }){
     valider: (m, batFinal) => {
       const W = pointDuBatimentPlace3D(bEl, panel, centreDuMeuble(batFinal, m));
       const rot = rotationDansLaScene(m, bEl);
+      // La position vient désormais des champs X, Y, Z : un `wyFloor` (celui des murs du traceur)
+      // l'emporterait au rendu sur le Y qu'on écrit, et la fiche ne serait plus raccord.
+      delete obj.wyFloor;
       fiche.ecrire({ x: W.x, y: W.y, z: clampPanelDepth3D(W.z), rot, hauteur: rep.hauteurReelle(rot, m.echelle || 1) });
       fiche.enregistrer();
       centerSceneCameraOnElement(panel, obj);
@@ -179,49 +210,39 @@ export function preparerPoseDansUnBatiment({ prefixe, obj, page, traduire, versC
       <label class="modal-field-label"></label>
       <div class="batiment-pose-listes">
         <select data-role="batiment"></select>
-        <select data-role="etage"></select>
-        <select data-role="piece"></select>
       </div>
       <button type="button" class="project-modal-btn nav-btn batiment-pose-btn"></button>`;
     corps.appendChild(bloc);
   }
-  const [selB, selE, selP] = ['batiment', 'etage', 'piece'].map(r => bloc.querySelector(`[data-role="${r}"]`));
+  const selB = bloc.querySelector('[data-role="batiment"]');
   const bouton = bloc.querySelector('button');
   bloc.querySelector('label').textContent = traduire('In a building', 'Dans un bâtiment');
-  bouton.textContent = traduire('Place in this room', 'Poser dans cette pièce');
+  bouton.textContent = traduire('Place in this building', 'Poser dans ce bâtiment');
+  bouton.title = traduire('Opens the building editor: choose the floor and the place there.', 'Ouvre l\'éditeur de bâtiment : l\'étage et la place s\'y choisissent.');
   selB.title = traduire('Building', 'Bâtiment');
-  selE.title = traduire('Floor', 'Étage');
-  selP.title = traduire('Room', 'Pièce');
   const panel = obj && page ? findOwningPanel(obj, page) : null;
   const batiments = panel ? batimentsOuPoser(obj, page, panel) : [];
   bloc.style.display = batiments.length ? '' : 'none';
   if (!batiments.length) return;
   const leBatiment = () => batiments.find(b => b.id === selB.value) || batiments[0];
-  const etages = () => etagesEtPieces(leBatiment().batiment);
-  const majPieces = (garder) => {
-    const e = etages().find(x => x.id === selE.value) || etages()[0];
-    remplir(selP, e ? e.pieces : [], garder);
-  };
-  const majEtages = (garder) => { remplir(selE, etages(), garder); majPieces(garder); };
   remplir(selB, batiments.map(b => ({ id: b.id, nom: b.name || traduire('Building', 'Bâtiment') })), true);
-  majEtages(true);
-  selB.onchange = () => majEtages(false);
-  selE.onchange = () => majPieces(false);
-  const deg = (r) => Math.round((r || 0) * 180 / Math.PI);
+  const deg = (r) => (r || 0) * 180 / Math.PI;
   const fiche = {
     nomParDefaut: obj.type === 'perso' ? traduire('Character', 'Personnage') : traduire('Object', 'Objet'),
     modale: () => champX.closest('.modal-overlay') || document.getElementById(prefixe === 'persona' ? 'descModal' : 'objectModal'),
     /** Les valeurs revenues de l'éditeur, dans les champs : la fiche les enregistre comme les siennes. */
     ecrire({ x, y, z, rot, hauteur }){
-      const arrondi = (n) => Math.round(n * 100) / 100;
-      champX.value = arrondi(x);
-      $('PosYInput').value = arrondi(y);
-      $('DepthInput').value = arrondi(z);
+      // ⚠️ LES VALEURS EXACTES, PAS ARRONDIES (demandé : la fiche raccord avec l'éditeur). Les champs
+      // de position les gardent telles quelles ; les curseurs d'orientation sont libérés de leur pas
+      // (1°) le temps de l'enregistrement, sans quoi l'Élément tournerait d'une fraction de degré.
+      champX.value = String(x);
+      $('PosYInput').value = String(y);
+      $('DepthInput').value = String(z);
       const aimant = $('GroundMagnetCheckbox');
       if (aimant && aimant.checked) { aimant.checked = false; aimant.dispatchEvent(new window.Event('change', { bubbles: true })); }
-      $('RotYInput').value = versCurseurRotY(rot.y);
-      $('RotXInput').value = deg(rot.x);
-      $('RotZInput').value = deg(rot.z);
+      for (const [k, v] of [['RotYInput', versCurseurRotY(rot.y)], ['RotXInput', deg(rot.x)], ['RotZInput', deg(rot.z)]]) {
+        $(k).step = 'any'; $(k).value = String(v);
+      }
       // La taille : le champ Hauteur quand la fiche l'a, sinon le curseur en %, libéré de son pas
       // (5 %) le temps d'y écrire la valeur exacte.
       const champH = $('HeightField'), h = $('HeightInput'), curseur = $('SizeInput');
@@ -235,10 +256,8 @@ export function preparerPoseDansUnBatiment({ prefixe, obj, page, traduire, versC
       enregistrer();
       const curseur = $('SizeInput');
       if (curseur) curseur.step = '5';
+      ['RotYInput', 'RotXInput', 'RotZInput'].forEach(k => { $(k).step = '1'; });
     },
   };
-  bouton.onclick = () => {
-    const bEl = leBatiment();
-    ouvrirLaPose({ obj, bEl, page, panel, pieceId: selP.value, fiche });
-  };
+  bouton.onclick = () => ouvrirLaPose({ obj, bEl: leBatiment(), page, panel, fiche });
 }

@@ -10,7 +10,7 @@ import { ajouterEtage } from '../src/batiment-niveaux.js';
 import { actualiserPieces } from '../src/batiment-pieces.js';
 import { construireBatiment3D, materiauxBatiment3D } from '../src/batiment-3d.js';
 import { pointDuRigPlace3D, pointDansLeRigPlace3D } from '../src/scene3d.js';
-import { batimentsOuPoser, rotationDansLeBatiment, rotationDansLaScene } from '../src/batiment-pose-ui.js';
+import { batimentsOuPoser, rotationDansLeBatiment, rotationDansLaScene, pieceDeDepart } from '../src/batiment-pose-ui.js';
 import { centreDuMeuble, hauteurPourLeCentre, fixerAngle } from '../src/batiment-mobilier.js';
 
 const fr = (en, f) => f;
@@ -108,6 +108,31 @@ describe('le centre d’un meuble (là où la Case met le centre d’un Élémen
     const m = { niveauId: 'n1', x: 0, z: 0, rotY: 0.3, rotX: 0.4, rotZ: -0.2, echelle: 1, dims: [0.6, 0.5, 1.7], colle: false, y: 0 };
     m.y = hauteurPourLeCentre(m, 3, 4.2);
     proche(centreDuMeuble(b, m).y, 4.2);
+  });
+});
+
+describe('où l’éditeur s’ouvre', () => {
+  test('pas encore dans le bâtiment : la première pièce du rez-de-chaussée', () => {
+    const b = maison();
+    const n1 = ajouterEtage(b, fr);
+    ajouterRectangle(b, n1.id, { x: 0, z: 0 }, { x: 3, z: 3 }, 0.2);
+    actualiserPieces(b, n1.id, fr);
+    const p = pieceDeDepart(b);
+    assert.equal(p.niveauId, 'n0');
+  });
+  test('le bloc ne propose plus que le bâtiment ; l’Élément déjà dedans est retrouvé à sa place', () => {
+    const pose = readFileSync(new URL('../src/batiment-pose-ui.js', import.meta.url), 'utf8');
+    assert.ok(!/data-role="etage"|data-role="piece"/.test(pose));
+    assert.match(pose, /'Poser dans ce bâtiment'/);
+    assert.match(pose, /let m = meubleASaPlace\(obj, rep, \{ id: ID, bat, bEl, panel \}\);\s*if \(!m\) \{/);
+  });
+  test('raccord : les valeurs exactes vont dans la fiche (pas d’arrondi, curseurs libérés de leur pas)', () => {
+    const pose = readFileSync(new URL('../src/batiment-pose-ui.js', import.meta.url), 'utf8');
+    assert.match(pose, /champX\.value = String\(x\);/);
+    assert.match(pose, /\$\(k\)\.step = 'any'/);
+    assert.match(pose, /delete obj\.wyFloor;/);
+    const modals = readFileSync(new URL('../src/modals.js', import.meta.url), 'utf8');
+    assert.match(modals, /versCurseurRotY: \(r\) => rotYToSliderDeg\(r, true\)/);
   });
 });
 

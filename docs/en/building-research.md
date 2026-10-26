@@ -416,9 +416,10 @@ shows its footprint and its front; 3D shows its model (a box until it is decoded
 in Panels, which preload these models with the page.
 
 **Placing an Element in a building** (#454e, second part, done): `src/batiment-pose-ui.js`. The
-Character and Object sheets have, under their Position, an “In a building” block: building (those of
-the same Panel), floor, room, then “Place in this room”. The button hides the sheet and OPENS THE
-EDITOR on a copy of the building, with the Element at the centre of the room, on the right floor. It
+Character and Object sheets have, under their Position, an “In a building” block: the building (those
+of the same Panel), then “Place in this building”. The button hides the sheet and OPENS THE EDITOR on
+a copy of the building: the Element is at its own place if it is already inside, otherwise at the
+centre of the first ground-floor room (floor and room are chosen in the editor). It
 becomes a piece of furniture there (`@pose`, a copy of its rig: `elementCommeMeuble3D`, scene3d.js)
 and is handled as one: move, turn, tilt, size, elevation; the level buttons take it to another floor.
 The building cannot be touched: only the Selection tool remains, and only the element can be picked
@@ -426,7 +427,7 @@ The building cannot be touched: only the Selection tool remains, and only the el
 “Confirm the position” and “Cancel” replace “Delete the element” and “Quit”; the cross and Esc
 cancel. Confirm: the centre of its box (`centreDuMeuble`) goes from the building's frame to the Panel
 (`pointDuBatimentPlace3D`), so does its orientation (`rotationDansLaScene`), and its size becomes the
-real height that keeps the size seen in the editor; all of it is written into the sheet's fields, the
+real height that keeps the size seen in the editor; all of it is written, unrounded, into the sheet's fields, the
 sheet is SAVED (with everything else it holds) and closes, then the Scene camera moves to the Element.
 Cancel: the sheet comes back as it was. Placing is a one-off: moving the building afterwards does not
 move what was placed in it.

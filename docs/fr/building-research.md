@@ -439,8 +439,9 @@ pas décodé), dans l'éditeur comme dans les Cases, qui préchargent ces modèl
 
 **Poser un Élément dans un bâtiment** (#454e, seconde partie, faite) : `src/batiment-pose-ui.js`.
 Les fiches d'un Personnage et d'un Objet ont, sous leur Position, un bloc « Dans un bâtiment » :
-bâtiment (ceux de la même Case), étage, pièce, puis « Poser dans cette pièce ». Le bouton cache la
-fiche et OUVRE L'ÉDITEUR sur une copie du bâtiment, l'Élément au centre de la pièce, au bon étage. Il
+le bâtiment (ceux de la même Case), puis « Poser dans ce bâtiment ». Le bouton cache la fiche et
+OUVRE L'ÉDITEUR sur une copie du bâtiment : l'Élément y est à sa place s'il y est déjà, sinon au
+centre de la première pièce du rez-de-chaussée (l'étage et la pièce se choisissent dans l'éditeur). Il
 y devient un meuble (`@pose`, une copie de son rig : `elementCommeMeuble3D`, scene3d.js) et se manie
 comme tel : déplacer, tourner, incliner, taille, élévation ; les pastilles l'emmènent à un autre
 étage. Le bâtiment ne se touche pas : seul l'outil Sélection reste, et seul l'élément se prend
@@ -448,7 +449,7 @@ comme tel : déplacer, tourner, incliner, taille, élévation ; les pastilles l'
 « Valider la position » et « Annuler » remplacent « Supprimer l'élément » et « Quitter » ; la croix
 et Échap annulent. Valider : le centre de sa boîte (`centreDuMeuble`) passe du repère du bâtiment à
 la Case (`pointDuBatimentPlace3D`), son orientation aussi (`rotationDansLaScene`), sa taille devient
-la hauteur réelle qui lui garde celle vue dans l'éditeur ; tout cela est écrit dans les champs de la
+la hauteur réelle qui lui garde celle vue dans l'éditeur ; tout cela est écrit, sans arrondi, dans les champs de la
 fiche, qui est ENREGISTRÉE (avec le reste de ce qu'elle porte) et se ferme, puis la caméra de la
 Scène va vers l'Élément. Annuler : la fiche revient telle quelle. La pose est ponctuelle : déplacer le
 bâtiment ensuite ne déplace pas ce qu'on y a posé.
