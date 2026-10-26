@@ -66,6 +66,10 @@ export function collectModelFiles(objects){
     if (o && o.type === 'objet3d' && o.objType === 'modele' && typeof o.modelFile === 'string' && o.modelFile) {
       noms.add(o.modelFile);
     }
+    // #454e : le mobilier d'un bâtiment placé (préchargé avec la page, signalé s'il manque).
+    if (o && o.type === 'objet3d' && o.batiment && Array.isArray(o.batiment.elements)) {
+      o.batiment.elements.forEach(e => { if (e && typeof e.modelFile === 'string' && e.modelFile) noms.add(e.modelFile); });
+    }
   });
   return [...noms];
 }

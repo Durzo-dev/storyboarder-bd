@@ -15,6 +15,7 @@ import { formesDesPieces, dansLaFace, pointDansPolygone } from './batiment-piece
 import { formeDeLEscalier, tremieDeLEscalier } from './batiment-escaliers.js';
 import { niveauxTries, hauteurDesMursDuNiveau, epaisseurDuDessus, niveauDessous } from './batiment-niveaux.js';
 import { fabriqueDeRevetements, revetementDeLaFace, revetementDeLaPiece, pieceDevantLaFace } from './batiment-revetements.js';
+import { meublesDuNiveau } from './batiment-mobilier.js';
 
 /** Les matières d'un bâtiment, à créer une fois par renderer. */
 export function materiauxBatiment3D(T){
@@ -28,6 +29,11 @@ export function materiauxBatiment3D(T){
     metal: new T.MeshStandardMaterial({ color: 0x3a3a3e, roughness: 0.35, metalness: 0.8 }),
     // #454d / #446e : les matières des revêtements, fabriquées à la demande et gardées par le renderer.
     revetement: fabriqueDeRevetements(T),
+    // #454e : un meuble dont le modèle n'est pas (encore) là, une boîte à sa taille.
+    meubleAttente: new T.MeshStandardMaterial({ color: 0x9aa0a8, roughness: 0.8, transparent: true, opacity: 0.55 }),
+    // #454e : `modele(fichier)` rend une COPIE du modèle décodé, ou null. Fournie par l'appelant
+    // (l'éditeur, le rendu des Cases), qui tient le cache des modèles ; absente, des boîtes.
+    modele: null,
   };
 }
 
@@ -298,9 +304,41 @@ export function construireBatiment3D(T, b, mats, { jusquA = null } = {}){
     });
     // #454c : les escaliers du niveau.
     (b.escaliers || []).filter(x => x.niveauId === n.id).forEach(x => construireEscalier(T, b, x, mats, n.elevation, groupe));
+    // #454e : le mobilier du niveau, posé au sol.
+    meublesDuNiveau(b, n.id).forEach(m => groupe.add(construireMeuble(T, m, mats, n.elevation)));
   });
   col.maillages().forEach(m => groupe.add(m));
   return groupe;
+}
+
+/**
+ * Un meuble en 3D (#454e) : son modèle, ramené à ses dimensions (`base`, puis l'`echelle` de la
+ * molette), centré sur son empreinte et posé au sol de son niveau, tourné de `rotY`. Sans modèle
+ * (pas encore décodé, ou introuvable) : une boîte translucide à sa taille.
+ */
+function construireMeuble(T, m, mats, elevation){
+  const g = new T.Group();
+  g.position.set(m.x, elevation, m.z);
+  g.rotation.y = m.rotY || 0;
+  g.userData.meubleId = m.id;
+  const k = m.echelle || 1;
+  const copie = typeof mats.modele === 'function' ? mats.modele(m.modelFile) : null;
+  if (copie) {
+    copie.scale.multiplyScalar((m.base || 1) * k);
+    copie.updateMatrixWorld(true);
+    const boite = new T.Box3().setFromObject(copie);
+    const centre = boite.getCenter(new T.Vector3());
+    copie.position.x -= centre.x;
+    copie.position.z -= centre.z;
+    copie.position.y -= boite.min.y;
+    g.add(copie);
+  } else {
+    const [l, p, h] = (m.dims || [1, 1, 1]).map(v => v * k);
+    const boite = new T.Mesh(new T.BoxGeometry(l, h, p), mats.meubleAttente);
+    boite.position.y = h / 2;
+    g.add(boite);
+  }
+  return g;
 }
 
 /**

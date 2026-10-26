@@ -427,6 +427,16 @@ mètres. Dans l'éditeur, la section « Revêtements » : un carré de texture (
 « choisir ») et une couleur en direct : la façade dans la section Bâtiment ; les murs, le sol et
 le plafond dans la section de la pièce choisie, titrée de son nom.
 
+**Le mobilier** (#454e, première partie, faite) : `src/batiment-mobilier.js`. « Ajouter un
+élément », dans la section de la pièce choisie, ouvre le store de modèles en mode « choisir » ; le
+modèle est posé au centre de la pièce, au sol (toujours : il est fixé au sol). À l'outil Sélection :
+glisser le déplace et l'aimante à la face des murs (deux dans un coin ; Alt : libre), le clic droit
+le tourne d'un quart de tour, la molette le grandit ou le rétrécit, Suppr l'enlève. Un meuble est
+`{ id, niveauId, modelFile, nom, x, z, rotY, echelle, dims, base }` dans `elements` : ses
+dimensions sont celles du fichier (un modèle de plus de 6 m ou de moins de 5 cm est ramené à 1 m,
+`base`). Le plan montre son empreinte et son devant ; la 3D, son modèle (une boîte tant qu'il n'est
+pas décodé), dans l'éditeur comme dans les Cases, qui préchargent ces modèles avec la page.
+
 **Les escaliers** (#454c, fait) : `src/batiment-escaliers.js`. Droit, en L ou en U (le colimaçon
 plus tard) ; marches d'environ 17 cm, giron de Blondel (2h + g = 63 cm, borné à 24–30 cm) ; la trémie
 (l'emprise élargie) perce le plancher du dessus et le plafond de son niveau, dans la pièce qui la

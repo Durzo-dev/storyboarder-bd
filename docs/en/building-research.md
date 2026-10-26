@@ -405,6 +405,16 @@ a room split in two) inherits its finishes. Walls are built FACE BY FACE: each f
 (the facade), faces glued to another wall are skipped, and UVs are in metres. In the editor, a texture square (the store in “choose” mode) and a live colour — the facade in the Building
 section; the walls, floor and ceiling in the chosen room's section, titled with its name.
 
+**Furniture** (#454e, first part, done): `src/batiment-mobilier.js`. “Add an element”, in the
+chosen room's section, opens the model store in “choose” mode; the model is placed at the centre of
+the room, on the floor (always: it is fixed to the floor). With the Selection tool: dragging moves it
+and snaps it to wall faces (two in a corner; Alt: free), right-click turns it a quarter turn, the
+wheel makes it bigger or smaller, Del removes it. A piece of furniture is
+`{ id, niveauId, modelFile, nom, x, z, rotY, echelle, dims, base }` in `elements`: its dimensions are
+the file's (a model taller than 6 m or shorter than 5 cm is brought back to 1 m, `base`). The plan
+shows its footprint and its front; 3D shows its model (a box until it is decoded), in the editor and
+in Panels, which preload these models with the page.
+
 **Staircases** (#454c, done): `src/batiment-escaliers.js`. Straight, L or U (spiral later); steps
 of about 17 cm, Blondel going (2h + g = 63 cm, bounded to 24–30 cm); the stairwell (the widened
 footprint) pierces the floor above and the ceiling of its level, in the room that contains it.

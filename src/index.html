@@ -289,7 +289,9 @@
         <section class="side-section" id="batimentSectionPiece" hidden>
           <!-- Titrée du NOM de la pièce choisie (demandé) ; masquée sans pièce. -->
           <h2 id="batimentSectionRevetements">Pièce</h2>
-          <div id="batimentRevetements" class="batiment-revetements"></div>
+          <!-- #454e (demandé) : le store de modèles s'ouvre, le modèle choisi est posé au centre de la pièce. -->
+          <button type="button" class="full-btn" id="batimentAjouterElement">Ajouter un élément</button>
+          <div id="batimentRevetements" class="batiment-revetements" style="margin-top:10px;"></div>
         </section>
 
         <!-- #454a-3c : l'outil Ouverture. Les réglages des ouvertures à poser ; le formulaire est
@@ -309,6 +311,11 @@
           <div id="batimentSelectionOuverture">
             <div id="batimentFormOuverture"></div>
             <button type="button" class="full-btn delete-btn" id="batimentOuvertureSupprimer">Supprimer l'ouverture</button>
+          </div>
+          <!-- #454e : un Élément (meuble) choisi. -->
+          <div id="batimentSelectionMeuble" hidden>
+            <p id="batimentMeubleNom" class="batiment-aide"></p>
+            <button type="button" class="full-btn delete-btn" id="batimentMeubleSupprimer">Supprimer l'élément</button>
           </div>
           <!-- #454c : un escalier choisi se retouche ici. -->
           <div id="batimentSelectionEscalier">

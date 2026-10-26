@@ -42,7 +42,8 @@ import {
 } from './light-source-3d.js';
 // Cache des modèles importés : LECTURE SYNCHRONE seulement (cf. model-cache.js). Le décodage a eu
 // lieu à l'ouverture du Projet ; ce module ne fait jamais attendre le chemin de dessin.
-import { getLoadedModel, loadedModelNames, modelState } from './model-cache.js';
+import { getLoadedModel, loadedModelNames, modelState, modelCacheSignature } from './model-cache.js';
+import { fichiersDesMeubles } from './batiment-mobilier.js';
 import { isImportedModel } from './model-store.js';
 // #454a-4 : le bâtiment placé, dessiné par le MÊME constructeur que l'aperçu de l'éditeur.
 import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
@@ -4304,6 +4305,15 @@ const PROP_RIG_BUILDERS_3D = {
 // avec un bâtiment, seules ses géométries le font, cf. libererGeometries3D).
 let _materiauxBatiment3D = null;
 
+/**
+ * Ce qui fait refaire un bâtiment placé : son contenu, ET l'état de ses meubles dans le cache des
+ * modèles (#454e). Sans cette part, un meuble resterait en boîte : le bâtiment ne change pas quand
+ * son modèle finit d'arriver.
+ */
+function signatureDuBatimentRendu3D(b){
+  return signatureDuBatiment(b) + '|' + modelCacheSignature(fichiersDesMeubles(b));
+}
+
 /** Libère les géométries d'un rig (un bâtiment en porte des centaines) ; ses matières restent. */
 function libererGeometries3D(groupe){
   if (groupe) groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); });
@@ -4314,7 +4324,11 @@ export function buildPropRig3D(objType, colorHex, o){
   // #454a-4 : un bâtiment placé. Le rig est le bâtiment lui-même, en mètres ; la signature dit de
   // quelle version il a été construit, pour qu'ensureObjectRigEntry3D le refasse après « Modifier ».
   if (objType === OBJ_TYPE_BATIMENT) {
-    if (!_materiauxBatiment3D) _materiauxBatiment3D = materiauxBatiment3D(THREE);
+    if (!_materiauxBatiment3D) {
+      _materiauxBatiment3D = materiauxBatiment3D(THREE);
+      // #454e : le mobilier du bâtiment, par le cache des modèles des Cases.
+      _materiauxBatiment3D.modele = (f) => { const c = getLoadedModel(f); return c && c.scene ? cloneSkinned(c.scene) : null; };
+    }
     const groupe = construireBatiment3D(THREE, (o && o.batiment) || { niveaux: [], murs: [] }, _materiauxBatiment3D);
     // Un bâtiment sans mur reste visible et sélectionnable : un repère d'un mètre.
     if (!groupe.children.length) {
@@ -4322,7 +4336,7 @@ export function buildPropRig3D(objType, colorHex, o){
       repere.position.y = 0.5;
       groupe.add(repere);
     }
-    return { figureGroup: groupe, batimentSig: signatureDuBatiment(o && o.batiment) };
+    return { figureGroup: groupe, batimentSig: signatureDuBatimentRendu3D(o && o.batiment) };
   }
   const builder = PROP_RIG_BUILDERS_3D[objType] || buildCarRig3D;
   if (WALL_TYPES.includes(objType) && o && o.w && o.h) {
@@ -4845,7 +4859,7 @@ export function ensureObjectRigEntry3D(o){
   // image).
   const heightChanged = entry && objType === 'modele' && entry.realHeightFloor !== (o && o.realHeightFloor);
   // #454a-4 : un bâtiment placé se reconstruit quand son bâtiment change (« Modifier », annuler).
-  const batimentChanged = entry && objType === OBJ_TYPE_BATIMENT && entry.batimentSig !== signatureDuBatiment(o && o.batiment);
+  const batimentChanged = entry && objType === OBJ_TYPE_BATIMENT && entry.batimentSig !== signatureDuBatimentRendu3D(o && o.batiment);
   if (!entry || entry.objType !== objType || entry.color !== color || dimsChanged || doorStateChanged || windowStateChanged || modelChanged || batimentChanged || heightChanged) {
     if (entry) personaScene3D.remove(entry.figureGroup);
     if (entry && entry.objType === OBJ_TYPE_BATIMENT) libererGeometries3D(entry.figureGroup);

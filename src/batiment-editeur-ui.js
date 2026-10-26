@@ -53,6 +53,11 @@ import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
 import { carreDeTexture } from './textures-store-ui.js';
 import { normaliserRevetement, peintureDuRevetement } from './batiment-revetements.js';
 import { sectionDroitePliee, memoriserSectionDroite } from './section-memory.js';
+import { ajouterMeuble, meubleSous, aimanterMeuble, tournerMeuble, echelonnerMeuble, supprimerMeuble, empreinteDuMeuble, fichiersDesMeubles } from './batiment-mobilier.js';
+import { ouvrirStore } from './store-ui.js';
+import { getLoadedModel, preloadModels } from './model-cache.js';
+import { metasLocales } from './model-thumbnails.js';
+import { cloneSkinned } from './vendor/SkeletonUtils.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -262,15 +267,18 @@ function remplirPanneau(){
     return l;
   }) : [vide(tr('No room yet: close a contour of walls.', 'Aucune pièce : fermez un contour de murs.'))]));
   remplirRevetements();
-  const m = murSelectionne(), piece = pieceSelectionnee(), ouv = ouvertureSelectionnee(), esc = escalierSelectionne();
+  const m = murSelectionne(), piece = pieceSelectionnee(), ouv = ouvertureSelectionnee(), esc = escalierSelectionne(), meuble = meubleSelectionne();
   $('batimentSelectionOuverture').hidden = !ouv;
   $('batimentSelectionEscalier').hidden = !esc;
+  $('batimentSelectionMeuble').hidden = !meuble;
+  if (meuble) $('batimentMeubleNom').textContent = meuble.nom;
   // Un seul menu (demandé) : la section contextuelle s'ajoute au besoin, les commandes suivent.
-  $('batimentSectionSelection').hidden = !(ouv || esc);
+  $('batimentSectionSelection').hidden = !(ouv || esc || meuble);
   $('batimentContexteOuverture').hidden = E.outil !== 'ouverture';
   $('batimentContexteEscalier').hidden = E.outil !== 'escalier';
-  $('batimentAide').textContent = commandes({ m, piece, ouv, esc });
-  $('batimentSelectionTitre').textContent = ouv ? tr('Selected opening', 'Ouverture sélectionnée') : esc ? tr('Selected staircase', 'Escalier sélectionné') : tr('Selection', 'Sélection');
+  $('batimentAide').textContent = commandes({ m, piece, ouv, esc, meuble });
+  $('batimentSelectionTitre').textContent = ouv ? tr('Selected opening', 'Ouverture sélectionnée') : esc ? tr('Selected staircase', 'Escalier sélectionné')
+    : meuble ? tr('Selected element', 'Élément sélectionné') : tr('Selection', 'Sélection');
   if (E.outil === 'escalier') formulaireEscalier($('batimentReglagesEscalier'), E.reglagesEscalier, (c) => {
     E.reglagesEscalier = { ...E.reglagesEscalier, ...c }; remplirPanneau(); dessinerPlan();
   });
@@ -653,6 +661,46 @@ function pieceSelectionnee(){
   return E.batiment.pieces.find(p => p.id === E.selection.pieceId) || null;
 }
 
+/** Le meuble (Élément) sélectionné, s'il existe encore (#454e). */
+function meubleSelectionne(){
+  if (!E || !E.selection || !E.selection.meubleId) return null;
+  return (E.batiment.elements || []).find(x => x.id === E.selection.meubleId) || null;
+}
+
+/**
+ * « Ajouter un Élément » (#454e, demandé) : le store de modèles en mode « choisir » ; le modèle
+ * choisi est posé au centre de la pièce, au sol, puis choisi (outil Sélection). Ses dimensions : ce
+ * que les vignettes ont relevé, sinon mesurées sur le modèle décodé.
+ */
+function ajouterUnElement(){
+  const piece = pieceSelectionnee();
+  if (!piece) return;
+  const pieceId = piece.id, niveauId = E.niveauId;
+  ouvrirStore({
+    accepter: (e) => !e.introuvable && !e.batiment,
+    choisir: async (fichier) => {
+      if (!E) return;
+      let mesurees = (metasLocales()[fichier] || {}).dimensions || null;
+      if (!mesurees) {
+        await preloadModels([fichier]);
+        const c = getLoadedModel(fichier);
+        const T = globalThis.THREE;
+        if (c && c.scene && T) { const t = new T.Box3().setFromObject(c.scene).getSize(new T.Vector3()); mesurees = [t.x, t.z, t.y]; }
+      }
+      if (!E) return;
+      const p = (E.batiment.pieces || []).find(x => x.id === pieceId);
+      if (!p || !p.repere) return;
+      let id = null;
+      modifier(b => { id = ajouterMeuble(b, niveauId, { modelFile: fichier, centre: p.repere, mesurees }).id; });
+      choisirOutil('selection');
+      E.selection = { meubleId: id };
+      remplirPanneau(); dessinerPlan();
+      // Le modèle dans l'aperçu dès qu'il est décodé (une boîte en attendant).
+      preloadModels([fichier]).then(() => { if (E && E.apercu) E.apercu.reconstruire(E.batiment); });
+    },
+  });
+}
+
 /** L'escalier sélectionné, s'il existe encore. */
 function escalierSelectionne(){
   if (!E || !E.selection || !E.selection.escalierId) return null;
@@ -946,7 +994,7 @@ function choisirOutil(outil){
  * Le texte de « Commandes », selon l'outil et ce qui est choisi (demandé : il est contextuel).
  * Une action par ligne (le style garde les retours à la ligne).
  */
-function commandes({ m, piece, ouv, esc }){
+function commandes({ m, piece, ouv, esc, meuble }){
   // Une action par ligne, sans ligne vide (demandé).
   const lignes = (...l) => l.join('\n');
   const vue = [tr('Wheel: zoom.', 'Molette : zoomer.'), tr('Hold right button: move the view.', 'Clic droit maintenu : déplacer la vue.')];
@@ -975,6 +1023,12 @@ function commandes({ m, piece, ouv, esc }){
     tr('Alt: place without snapping.', 'Alt : poser sans aimant.'),
     tr('In red: no level above, or crosses a wall.', 'En rouge : pas d\'étage au-dessus, ou traverse un mur.'), sortir);
   if (E.outil === 'selection') {
+    if (meuble) return lignes(
+      tr('Drag: move it (it snaps to the walls).', 'Tirer : le déplacer (il s\'aimante aux murs).'),
+      tr('Right-click: turn it by 90°.', 'Clic droit : le tourner de 90°.'),
+      tr('Wheel: make it bigger or smaller.', 'Molette : l\'agrandir ou le rétrécir.'),
+      tr('Alt: move without snapping.', 'Alt : déplacer sans aimant.'),
+      tr('Del: delete it.', 'Suppr : le supprimer.'), deselect);
     if (ouv) return lignes(
       tr('Drag: slide it along its wall.', 'Tirer : la faire glisser sur son mur.'),
       tr('Wheel: raise or lower it.', 'Molette : la monter ou la descendre.'),
@@ -1021,7 +1075,8 @@ function modifier(faire){
 
 function apresModification(){
   if (E.selection && ((E.selection.murId && !murSelectionne()) || (E.selection.pieceId && !pieceSelectionnee())
-    || (E.selection.ouvertureId && !ouvertureSelectionnee()) || (E.selection.escalierId && !escalierSelectionne()))) E.selection = null;
+    || (E.selection.ouvertureId && !ouvertureSelectionnee()) || (E.selection.escalierId && !escalierSelectionne())
+    || (E.selection.meubleId && !meubleSelectionne()))) E.selection = null;
   remplirPanneau();
   dessinerPlan();
   if (E.apercu) E.apercu.reconstruire(E.batiment);
@@ -1246,6 +1301,25 @@ function dessinerPlan(){
     if (f) dessinerEscalier(g, versEsc, f, choisi ? accent : couleur('--ink-soft', '#9a9aa2'), poly);
   });
 
+  // #454e : le mobilier du niveau, en EMPREINTE : un rectangle tourné, son nom au milieu. Choisi ou
+  // survolé (outil Sélection) : en couleur d'accent.
+  (E.batiment.elements || []).filter(x => x && x.niveauId === E.niveauId && x.modelFile).forEach(x => {
+    const choisi = (E.selection && E.selection.meubleId === x.id) || (E.outil === 'selection' && E.survol && E.survol.meubleId === x.id);
+    const teinte = choisi ? accent : couleur('--ink-soft', '#9a9aa2');
+    const coins = empreinteDuMeuble(x);
+    g.save();
+    poly(coins);
+    g.globalAlpha = 0.18; g.fillStyle = teinte; g.fill();
+    g.globalAlpha = 1; g.strokeStyle = teinte; g.lineWidth = choisi ? 2 : 1.5; g.stroke();
+    // Le devant (le côté +z du modèle) : un trait plus épais, pour voir où il regarde après un quart de tour.
+    const a = versEsc(coins[2]), b2 = versEsc(coins[3]);
+    g.lineWidth = choisi ? 4 : 3; g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b2.x, b2.y); g.stroke();
+    const centre = versEsc({ x: x.x, z: x.z });
+    g.fillStyle = teinte; g.font = '600 11px Inter, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(x.nom, centre.x, centre.y);
+    g.restore();
+  });
+
   // Chaque mur est coupé à ses ouvertures (#454a-3c), comme sur un plan d'architecte ; chaque
   // ouverture y dessine son symbole.
   const ouvertures = E.batiment.ouvertures || [];
@@ -1418,6 +1492,19 @@ function survoler(e){
       if (r.ok && E.reglagesOuverture.y > H - 0.25) E.survol.raison = 'haute';
     } else E.survol = null;
   } else if (E.outil === 'selection') {
+    if (E.glisserMeuble) {
+      // Le meuble suit la souris ; près d'un mur, il se colle à sa face (Alt : libre).
+      const g = E.glisserMeuble;
+      const x = E.batiment.elements.find(q => q.id === g.id);
+      if (x) {
+        let centre = { x: g.depart.x + p.x - g.p.x, z: g.depart.z + p.z - g.p.z };
+        if (!e.altKey) centre = aimanterMeuble(E.batiment, x, centre);
+        x.x = Math.round(centre.x * 1000) / 1000; x.z = Math.round(centre.z * 1000) / 1000;
+        g.bouge = true;
+        apresModification();
+      }
+      return;
+    }
     if (E.glisserEscalier) {
       // Le déplacement suit la souris ; une position où il traverserait un mur est sautée.
       const g = E.glisserEscalier;
@@ -1435,8 +1522,9 @@ function survoler(e){
     const ouvertureId = sommet ? null : ouvertureSous(E.batiment, E.niveauId, p, tol / 2);
     const m = (sommet || ouvertureId) ? null : murSous(E.batiment, E.niveauId, p, tol / 2);
     const escalierId = (sommet || ouvertureId || m) ? null : escalierSous(E.batiment, E.niveauId, p);
-    const pieceId = (sommet || m || ouvertureId || escalierId) ? null : pieceSous(E.batiment, E.niveauId, p);
-    E.survol = { sommet, murId: m ? m.mur.id : null, pieceId, ouvertureId, escalierId };
+    const meubleId = (sommet || ouvertureId) ? null : meubleSous(E.batiment, E.niveauId, p);
+    const pieceId = (sommet || m || ouvertureId || escalierId || meubleId) ? null : pieceSous(E.batiment, E.niveauId, p);
+    E.survol = { sommet, murId: m ? m.mur.id : null, pieceId, ouvertureId, escalierId, meubleId };
   } else E.survol = null;
   dessinerPlan();
 }
@@ -1449,6 +1537,19 @@ function cablerPlan(){
     // Une ouverture choisie : la molette la MONTE ou la DESCEND au lieu de zoomer (demandé ; 5 cm par
     // cran, 1 cm avec Maj). Les crans rapprochés ne font qu'un point d'annulation. L'aperçu 3D, lui,
     // garde sa molette pour zoomer.
+    // #454e : sur un meuble (à l'outil Sélection), la molette le grandit ou le rétrécit (demandé). Les
+    // crans rapprochés ne font qu'un point d'annulation ; Ctrl + molette zoome toujours.
+    const meubleMolette = E.outil === 'selection' && !e.ctrlKey ? meubleSous(E.batiment, E.niveauId, souris(e).p) : null;
+    if (meubleMolette) {
+      const maintenant = Date.now();
+      if (!E.molette || E.molette.id !== meubleMolette || maintenant - E.molette.t > 800) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; }
+      const x = E.batiment.elements.find(q => q.id === meubleMolette);
+      echelonnerMeuble(x, e.deltaY < 0 ? 1 : -1);
+      E.molette = { id: meubleMolette, t: maintenant };
+      E.selection = { meubleId: meubleMolette };
+      apresModification();
+      return;
+    }
     const ouv = E.outil === 'selection' && ouvertureSelectionnee();
     if (ouv) {
       const maintenant = Date.now();
@@ -1530,6 +1631,17 @@ function cablerPlan(){
       remplirPanneau(); dessinerPlan();
       return;
     }
+    // #454e : un meuble, le choisir, et le déplacer si on tire.
+    const meubleId = meubleSous(E.batiment, E.niveauId, p);
+    if (meubleId) {
+      const x = E.batiment.elements.find(q => q.id === meubleId);
+      E.selection = { meubleId };
+      E.historique.push(JSON.stringify(E.batiment)); E.refaire = [];
+      E.glisserMeuble = { id: meubleId, depart: { x: x.x, z: x.z }, p, bouge: false };
+      c.setPointerCapture(e.pointerId);
+      remplirPanneau(); dessinerPlan();
+      return;
+    }
     const m = murSous(E.batiment, E.niveauId, p, tol / 2);
     // Un escalier : le choisir, et le déplacer si on tire.
     const escalierId = m ? null : escalierSous(E.batiment, E.niveauId, p);
@@ -1571,6 +1683,13 @@ function cablerPlan(){
       if (!bouge) E.historique.pop();
       apresModification();
     }
+    if (E.glisserMeuble) {
+      const { bouge } = E.glisserMeuble;
+      E.glisserMeuble = null;
+      // Un clic sans glisser n'a rien changé : le point d'annulation est retiré.
+      if (!bouge) E.historique.pop();
+      apresModification();
+    }
     if (E.poseEscalier) {
       const pose = E.poseEscalier;
       E.poseEscalier = null;
@@ -1607,6 +1726,13 @@ function cablerPlan(){
     if (E.geste) {
       const { bouge } = E.geste;
       E.geste = null;
+      // #454e : à l'outil Sélection, un clic droit sur un meuble le tourne d'un quart de tour (demandé).
+      const meubleClic = !bouge && e && e.type === 'pointerup' && E.outil === 'selection' ? meubleSous(E.batiment, E.niveauId, souris(e).p) : null;
+      if (meubleClic) {
+        modifier(b => { const x = (b.elements || []).find(q => q.id === meubleClic); if (x) tournerMeuble(x); });
+        E.selection = { meubleId: meubleClic };
+        remplirPanneau(); dessinerPlan();
+      } else
       // L'outil Escalier : un clic droit sans glisser fait tourner l'escalier à poser d'un quart de tour (demandé).
       if (!bouge && e && e.type === 'pointerup' && E.outil === 'escalier') {
         E.reglagesEscalier = { ...E.reglagesEscalier, angle: E.reglagesEscalier.angle + Math.PI / 2 };
@@ -1726,9 +1852,13 @@ function ouvrirApercu(conteneur, b){
   grille.renderOrder = -1;
   scene.add(grille);
   const mats = materiauxBatiment3D(T);
+  // #454e : le mobilier par le cache des modèles ; ceux du bâtiment sont décodés à l'ouverture.
+  mats.modele = (f) => { const c = getLoadedModel(f); return c && c.scene ? cloneSkinned(c.scene) : null; };
   const options = () => ({ jusquA: E && E.coupe ? E.niveauId : null });
   let groupe = construireBatiment3D(T, b, mats, options());
   scene.add(groupe);
+  const meubles = fichiersDesMeubles(b);
+  if (meubles.length) preloadModels(meubles).then(() => { if (E && E.apercu) E.apercu.reconstruire(E.batiment); });
 
   let centre = [0, 1.4, 0], distance = 20, distanceCadrage = 20;
   let angles = { lacet: 0.7, tangage: 0.5 };
@@ -1916,6 +2046,11 @@ function clavier(e){
     const id = E.selection.murId;
     modifier(b => supprimerMur(b, id));
   }
+  // #454e : un meuble choisi.
+  else if ((e.key === 'Delete' || e.key === 'Backspace') && meubleSelectionne()) {
+    const id = E.selection.meubleId;
+    modifier(b => supprimerMeuble(b, id));
+  }
   // Une pièce choisie : ses murs, sauf ceux qu'elle partage (comme « Supprimer » à son clic droit).
   else if ((e.key === 'Delete' || e.key === 'Backspace') && pieceSelectionnee()) {
     supprimerPieceDeLEditeur(E.selection.pieceId);
@@ -1944,6 +2079,8 @@ function cablerSectionsRepliables(){
 export function initEditeurDeBatiment(){
   if (!$('batimentEditeur')) return;
   cablerSectionsRepliables();
+  $('batimentAjouterElement').onclick = () => { if (E) ajouterUnElement(); };
+  $('batimentMeubleSupprimer').onclick = () => { const x = meubleSelectionne(); if (x) modifier(b => supprimerMeuble(b, x.id)); };
   // Un grain de revêtement arrivé après le dessin (batiment-revetements.js) : refaire l'aperçu.
   window.addEventListener('grains-batiment', () => { if (E && E.apercu) E.apercu.reconstruire(E.batiment); });
   $('batimentEditeurFermerX').onclick = () => fermerEditeurDeBatiment();
