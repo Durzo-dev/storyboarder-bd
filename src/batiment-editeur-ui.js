@@ -1205,7 +1205,7 @@ function commandes({ m, piece, ouv, esc, meuble }){
     if (meuble) return lignes(
       tr('Drag: move it (it snaps to the walls).', 'Tirer : le déplacer (il s\'aimante aux murs).'),
       tr('Right-click: turn it by 90°.', 'Clic droit : le tourner de 90°.'),
-      tr('Hold right button: turn it around the active axis (chosen in the axes). Ctrl: by 15°.', 'Clic droit maintenu : le tourner sur l\'axe actif (choisi dans le repère). Ctrl : par 15°.'),
+      tr('Hold right button and circle around it: turn it on the active axis (chosen in the axes). Ctrl: by 15°.', 'Clic droit maintenu, en tournant autour : le tourner sur l\'axe actif (choisi dans le repère). Ctrl : par 15°.'),
       tr('In red: inside a wall, it will go back on release.', 'En rouge : dans un mur, il reviendra au relâcher.'),
       tr('Wheel: make it bigger or smaller.', 'Molette : l\'agrandir ou le rétrécir.'),
       tr('Alt: move without snapping.', 'Alt : déplacer sans aimant.'),
@@ -1775,7 +1775,15 @@ function cablerPlan(){
       E.geste = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, bouge: false, bouton: e.button,
         // #454e : un clic droit maintenu SUR un élément le fait pivoter au lieu de déplacer la vue.
         meuble: e.button === 2 && E.outil === 'selection' ? meubleSous(E.batiment, E.niveauId, souris(e).p) : null };
-      if (E.geste.meuble) { const x = E.batiment.elements.find(q => q.id === E.geste.meuble); E.geste.avant = JSON.stringify(x); E.geste.base = { rotY: x.rotY || 0, rotX: x.rotX || 0, rotZ: x.rotZ || 0 }; }
+      if (E.geste.meuble) {
+        const x = E.batiment.elements.find(q => q.id === E.geste.meuble);
+        E.geste.avant = JSON.stringify(x);
+        E.geste.base = { rotY: x.rotY || 0, rotX: x.rotX || 0, rotZ: x.rotZ || 0 };
+        // Le BOUTON ROTATIF : l'angle de la souris autour de l'élément, et ce qu'elle a parcouru.
+        const p0 = souris(e).p;
+        E.geste.angle = Math.atan2(p0.z - x.z, p0.x - x.x);
+        E.geste.parcouru = 0;
+      }
       c.setPointerCapture(e.pointerId);
       return;
     }
@@ -1860,12 +1868,21 @@ function cablerPlan(){
       const x = (E.batiment.elements || []).find(q => q.id === g.meuble);
       if (!x) return;
       if (!g.tourne) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; g.tourne = true; g.bouge = true; }
-      // UN SEUL AXE à la fois (demandé) : l'axe actif du repère, au mouvement horizontal de la souris.
-      const VITESSE = Math.PI / 180 * 0.4, pas = e.ctrlKey ? Math.PI / 12 : 0;
+      // UN SEUL AXE à la fois (demandé) : l'axe actif du repère. COMME UN BOUTON ROTATIF : l'élément
+      // tourne de l'angle que la souris parcourt AUTOUR de lui (signalé : au mouvement horizontal, le
+      // sens s'inversait une fois la souris passée de l'autre côté). L'angle parcouru est cumulé, un
+      // tour complet compris, sans saut au passage de ±180°.
+      const pas = e.ctrlKey ? Math.PI / 12 : 0;
       const q = (v) => (pas ? Math.round(v / pas) * pas : v);
-      const dx = (e.clientX - g.x0) * VITESSE;
+      const pm = souris(e).p;
+      const a = Math.atan2(pm.z - x.z, pm.x - x.x);
+      let d = a - g.angle;
+      if (d > Math.PI) d -= 2 * Math.PI; else if (d < -Math.PI) d += 2 * Math.PI;
+      g.angle = a; g.parcouru += d;
+      // Vu de dessus (z vers le bas de l'écran), suivre la souris, c'est tourner en sens inverse de atan2.
+      const delta = -g.parcouru;
       x.rotY = g.base.rotY; x.rotX = g.base.rotX; x.rotZ = g.base.rotZ;
-      if (axeActif === 'y') tournerDe(x, q(dx)); else pencherMeuble(x, axeActif, q(dx));
+      if (axeActif === 'y') tournerDe(x, q(delta)); else pencherMeuble(x, axeActif, q(delta));
       if (!e.altKey) { const c = aimanterMeuble(E.batiment, x, { x: x.x, z: x.z }); x.x = c.x; x.z = c.z; }
       E.collisionMeuble = meubleEnCollision(E.batiment, x) ? x.id : null;
       E.selection = { meubleId: x.id };

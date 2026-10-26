@@ -212,7 +212,9 @@ describe('orienter dans tous les sens, et ne pas traverser les murs (demandé)',
     assert.match(ui, /if \(E\.collisionMeuble === id\) remettreMeuble\(id, avant\);/);
     assert.match(ui, /if \(E\.collisionMeuble === meuble\) \{ E\.historique\.pop\(\); remettreMeuble\(meuble, avant\); \}/);
     assert.match(ui, /rouge: E \? E\.collisionMeuble : null/);
-    assert.match(ui, /const VITESSE = Math\.PI \/ 180 \* 0\.4/);
+    // RÉGRESSION : un bouton rotatif, l'angle parcouru AUTOUR de l'élément, cumulé sans saut à ±180°
+    // (au mouvement horizontal, le sens s'inversait passé de l'autre côté).
+    assert.match(ui, /if \(d > Math\.PI\) d -= 2 \* Math\.PI; else if \(d < -Math\.PI\) d \+= 2 \* Math\.PI;/);
     assert.match(ui, /: meuble \? meuble\.nom : tr\('Selection', 'Sélection'\)/);   // la section au nom de l'élément
   });
 });
@@ -247,7 +249,7 @@ describe('tourner sur UN axe, choisi dans le repère (demandé)', () => {
   test('câblage : les axes du repère se cliquent ; le clic droit maintenu ne tourne que l\'axe actif ; les angles se saisissent', () => {
     const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
     assert.match(ui, /g\.addEventListener\('click', \(\) => \{ axeActif = g\.dataset\.axe; remplirPanneau\(\); \}\)/);
-    assert.match(ui, /if \(axeActif === 'y'\) tournerDe\(x, q\(dx\)\); else pencherMeuble\(x, axeActif, q\(dx\)\);/);
+    assert.match(ui, /if \(axeActif === 'y'\) tournerDe\(x, q\(delta\)\); else pencherMeuble\(x, axeActif, q\(delta\)\);/);
     assert.match(ui, /retoucherMeuble\(id, \(x\) => fixerAngle\(x, axe, deg \* Math\.PI \/ 180\)\)/);
   });
 });
