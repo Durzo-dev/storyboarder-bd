@@ -315,3 +315,13 @@ describe('les gestes de l\'éditeur de bâtiment (demandé)', () => {
     assert.match(ui, /if \(E\.selection\) \{ E\.selection = null; remplirPanneau\(\); dessinerPlan\(\); \}\s*else choisirOutil\('mur'\);/);
   });
 });
+
+test('signalé : un modèle articulé (anime_girl1) se mesure et se pose OS COMPRIS, et reste dessiné', () => {
+  const b3 = readFileSync(new URL('../src/batiment-3d.js', import.meta.url), 'utf8');
+  assert.match(b3, /const reelle = box3FromObjectSkinAware3D\(copie\)\.getSize/);
+  assert.match(b3, /if \(o\.isSkinnedMesh\) o\.frustumCulled = false;/);
+  const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
+  assert.match(ui, /const t = box3FromObjectSkinAware3D\(c\.scene\)\.getSize/);
+  const store = readFileSync(new URL('../src/store-ui.js', import.meta.url), 'utf8');
+  assert.match(store, /onglet = LOCAL;\n[\s\S]{0,300}if \(infos\) rafraichirTextesStore\(\);\n  \} else if \(choix\)/, 'en mode choix, les onglets réduits d\'emblée');
+});

@@ -1333,6 +1333,9 @@ export async function ouvrirStore({ onglet, choisir, accepter, importer } = {}){
     accepterChoix = typeof accepter === 'function' ? accepter : POSABLE;
     importerChoix = typeof importer === 'function' ? importer : null;
     onglet = LOCAL;
+    // Les onglets d'emblée réduits à « Mes modèles » (signalé : tous restaient affichés jusqu'au
+    // premier clic, qui les faisait disparaître ; on ne pose que ce qui est sur le disque).
+    if (infos) rafraichirTextesStore();
   } else if (choix) {
     // Le bouton du bandeau pendant un choix : on revient à la fenêtre ordinaire.
     quitterModeChoix();

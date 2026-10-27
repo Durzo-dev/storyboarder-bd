@@ -10,6 +10,7 @@
  * bâtiments, et ne se libèrent pas avec eux.
  */
 import { polygonesDesMurs, morceauxDuMur } from './batiment-geometrie.js';
+import { box3FromObjectSkinAware3D } from './skinned-box-3d.js';
 import { intervalleDe } from './batiment-ouvertures.js';
 import { formesDesPieces, dansLaFace, pointDansPolygone } from './batiment-pieces.js';
 import { formeDeLEscalier, tremieDeLEscalier } from './batiment-escaliers.js';
@@ -456,9 +457,19 @@ function construireMeuble(T, m, mats, elevation, enCollision = false){
   const k = m.echelle || 1;
   const copie = typeof mats.modele === 'function' ? mats.modele(m.modelFile) : null;
   if (copie) {
-    copie.scale.multiplyScalar((m.base || 1) * k);
+    // ⚠️ LA BOÎTE D'UN MODÈLE ARTICULÉ TIENT COMPTE DE SES OS (signalé : un personnage importé,
+    // anime_girl1, n'apparaissait pas). Box3.setFromObject ne lit que la géométrie brute ; souvent en
+    // centimètres sous des os à 0,01, elle mesurait le modèle cent fois trop grand, et l'élément était
+    // rapetissé d'autant. On le met donc à SA hauteur (dims, échelle comprise) d'après la boîte des os.
     copie.updateMatrixWorld(true);
-    const boite = new T.Box3().setFromObject(copie);
+    const reelle = box3FromObjectSkinAware3D(copie).getSize(new T.Vector3()).y;
+    const cible = ((m.dims && m.dims[2]) || 1) * k;
+    copie.scale.multiplyScalar(reelle > 1e-6 ? cible / reelle : (m.base || 1) * k);
+    // Ses bornes de dessin sont celles de la pose de repos, à l'échelle du fichier : sans cela, three
+    // le croit hors champ et ne le dessine pas.
+    copie.traverse(o => { if (o.isSkinnedMesh) o.frustumCulled = false; });
+    copie.updateMatrixWorld(true);
+    const boite = box3FromObjectSkinAware3D(copie);
     const centre = boite.getCenter(new T.Vector3());
     copie.position.x -= centre.x;
     copie.position.z -= centre.z;

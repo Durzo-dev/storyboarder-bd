@@ -39,7 +39,7 @@ import { clearImageCache } from './image-cache.js';
 // cf. son en-tête : la boîte englobante d'un modèle importé articulé doit tenir compte du
 // squelette, pas seulement de la géométrie brute, sinon l'échelle réelle et la boîte de sélection
 // 2D divergent de ce que le GPU affiche réellement.
-import { box3FromObjectSkinAwareCached3D } from './skinned-box-3d.js';
+import { box3FromObjectSkinAwareCached3D, box3FromObjectSkinAware3D } from './skinned-box-3d.js';
 import { boiteDesOsMappes3D, applySkeletonPose } from './rig3d.js';
 import { cloneSkinned } from './vendor/SkeletonUtils.js';
 // Le champ visible d'une Case : il sert de plan éloigné à l'ombre d'une source SANS portée (#422d).
@@ -466,7 +466,8 @@ export function elementCommeMeuble3D(o){
   copie.rotation.set(0, 0, 0); copie.position.set(0, 0, 0); copie.scale.set(1, 1, 1);
   copie.visible = true;
   copie.updateMatrixWorld(true);
-  const t = new THREE.Box3().setFromObject(copie).getSize(new THREE.Vector3());
+  // Os compris (un modèle articulé), comme le rendu du mobilier le mesure (batiment-3d.js).
+  const t = box3FromObjectSkinAware3D(copie).getSize(new THREE.Vector3());
   const dims = [t.x, t.z, t.y].map(v => Math.round(Math.max(v, 0.01) * base * 1000) / 1000);
   return {
     copie, base, dims,

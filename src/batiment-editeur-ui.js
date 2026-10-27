@@ -63,6 +63,7 @@ import { ouvrirStore } from './store-ui.js';
 import { getLoadedModel, preloadModels } from './model-cache.js';
 import { metasLocales } from './model-thumbnails.js';
 import { cloneSkinned } from './vendor/SkeletonUtils.js';
+import { box3FromObjectSkinAware3D } from './skinned-box-3d.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -880,13 +881,17 @@ function ajouterUnElement({ surLeToit = false } = {}){
     accepter: (e) => !e.introuvable && !e.batiment,
     choisir: async (fichier) => {
       if (!E) return;
-      let mesurees = (metasLocales()[fichier] || {}).dimensions || null;
-      if (!mesurees) {
-        await preloadModels([fichier]);
-        const c = getLoadedModel(fichier);
-        const T = globalThis.THREE;
-        if (c && c.scene && T) { const t = new T.Box3().setFromObject(c.scene).getSize(new T.Vector3()); mesurees = [t.x, t.z, t.y]; }
+      // Mesuré sur le modèle décodé, OS COMPRIS (signalé : un personnage articulé mesuré sur sa
+      // géométrie brute, cent fois trop grand, devenait minuscule) ; les dimensions des vignettes en repli.
+      let mesurees = null;
+      await preloadModels([fichier]);
+      const c = getLoadedModel(fichier);
+      if (c && c.scene && globalThis.THREE) {
+        c.scene.updateMatrixWorld(true);
+        const t = box3FromObjectSkinAware3D(c.scene).getSize(new globalThis.THREE.Vector3());
+        if (t.y > 0) mesurees = [t.x, t.z, t.y];
       }
+      if (!mesurees) mesurees = (metasLocales()[fichier] || {}).dimensions || null;
       if (!E) return;
       // #458c : sur le toit, au milieu de sa forme ; sinon au centre de la pièce.
       const centre = surLeToit ? centreDuToit(E.batiment, niveauId) : ((E.batiment.pieces || []).find(x => x.id === pieceId) || {}).repere;
