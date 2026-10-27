@@ -2981,6 +2981,8 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
    n'avait que les Commandes). Elles se montrent selon ce qui est choisi (leur attribut hidden). */
 #batimentPanneau.fils > .side-section:not(#batimentSecCommandes):not(.menu-piece):not(.menu-escalier){ display:none !important; }
 #batimentPanneau.fils > #batimentEnregistrerBtn, #batimentPanneau.fils > #batimentRecadrerBtn{ display:none !important; }
+/* Dans un sous-menu, « Quitter » suit le bouton de suppression : un écart les sépare (demandé). */
+#batimentPanneau.fils > #batimentQuitterBtn{ margin-top: 8px; }
 #batimentPanneau:not(.fils-element) #batimentMenuElement{ display:none; }
 #batimentMenuElement > .full-btn{ width:100%; margin-top:4px; }
 
