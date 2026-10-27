@@ -2512,6 +2512,12 @@ describe('éditeur de Personnage : il n\'occupe plus la fenêtre entière', () =
       'un refus doit interrompre la sortie, pas seulement sauter la confirmation');
   });
 
+  test('signalé : un clic sur l\'ICÔNE d\'un bouton est rejoué sur le bouton (Éditeur de bâtiment)', () => {
+    const fn = src.slice(src.indexOf('async function quitterEditeurParNavigation'));
+    const corps = fn.slice(0, fn.indexOf('\n}'));
+    assert.match(corps, /let n = cible;\s*while \(n && typeof n\.click !== 'function'\) n = n\.parentElement;\s*if \(n\) n\.click\(\);/);
+  });
+
   test('LE CAS QUI A MORDU : le bouton « ? » n\'est PAS rejoué', () => {
     // Le « ? » est un basculeur. Si le Manuel était déjà ouvert dans le panneau droit avant
     // d'entrer dans l'éditeur, panneau que l'éditeur recouvre, rejouer le clic le REFERMAIT :
@@ -2523,7 +2529,7 @@ describe('éditeur de Personnage : il n\'occupe plus la fenêtre entière', () =
     assert.match(corps, /afficherManuelLateral\(\)/,
       'on AFFICHE le Manuel, on ne bascule pas son état');
     const iHelp = corps.indexOf('afficherManuelLateral');
-    const iRejeu = corps.indexOf('cible.click()');
+    const iRejeu = corps.indexOf('if (n) n.click();');
     assert.ok(iHelp > 0 && iRejeu > iHelp, 'ce cas doit sortir AVANT le rejeu générique');
     // Et il doit SORTIR, pas seulement passer en premier : sans le `return`, on affiche le Manuel
     // puis on rejoue le clic, qui le referme aussitôt, le défaut d'origine, à l'identique.
@@ -2558,7 +2564,7 @@ describe('éditeur de Personnage : il n\'occupe plus la fenêtre entière', () =
 
   test('le clic est REJOUÉ une fois l\'éditeur fermé', () => {
     const fn = src.slice(src.indexOf('async function quitterEditeurParNavigation'));
-    assert.match(fn.slice(0, 800), /cible\.click\(\)/,
+    assert.match(fn.slice(0, fn.indexOf('\n}')), /if \(n\) n\.click\(\);/,
       'sans rejeu, cliquer une Planche fermerait l\'éditeur sans y aller');
   });
 });

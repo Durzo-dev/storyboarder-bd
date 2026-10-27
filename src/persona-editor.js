@@ -1874,7 +1874,12 @@ async function quitterEditeurParNavigation(cible){
     scheduleDrawCurrentPage();
     return;
   }
-  if (cible && typeof cible.click === 'function') cible.click();
+  // ⚠️ LA CIBLE PEUT ÊTRE L'ICÔNE DU BOUTON (signalé : l'Éditeur de bâtiment ne s'ouvrait pas depuis
+  // l'Éditeur de modèle) : un clic sur le dessin SVG du bouton a pour cible un <path>, qui n'a pas de
+  // `click()`. On rejoue sur le premier ancêtre qui en a un, le bouton.
+  let n = cible;
+  while (n && typeof n.click !== 'function') n = n.parentElement;
+  if (n) n.click();
 }
 
 export function wirePersonaEditor(){
