@@ -284,7 +284,7 @@ describe('les retours sur les gestes (demandé)', () => {
   });
   test('câblage : décollé, la molette règle l\'élévation ; incliner et basculer au mouvement linéaire', () => {
     const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
-    assert.match(ui, /if \(x\.colle === false && !x\.surLeToit\) \{[\s\S]{0,300}collerAuSol\(x, false, \(x\.y \|\| 0\) \+ pas\);/);
+    assert.match(ui, /\} else if \(x\.colle === false\) \{[\s\S]{0,300}collerAuSol\(x, false, \(x\.y \|\| 0\) \+ pas\);/);
     assert.match(ui, /const delta = axeActif === 'x' \? \(e\.clientY - g\.y0\) \* VITESSE : \(e\.clientX - g\.x0\) \* VITESSE;/);
   });
 });
@@ -298,7 +298,7 @@ describe('un menu par élément choisi (demandé)', () => {
     // Le curseur de la taille dans Dimensions (demandé) ; sur le toit, la molette garde la taille.
     assert.ok(!ui.includes("'batimentElemTaille'"));
     assert.match(ui, /tr\('Dimensions', 'Dimensions'\), taille, ligneTaille\)/);
-    assert.match(ui, /if \(x\.colle === false && !x\.surLeToit\) \{/);
+    assert.match(ui, /if \(x\.surLeToit\) \{[\s\S]{0,250}if \(y <= 1e-6\) collerAuSol\(x, true\); else collerAuSol\(x, false, y\);\s*\} else if \(x\.colle === false\) \{/, 'sur le toit, la molette règle l\'élévation');
     const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
     // RÉGRESSION : les sections de la pièce et de l'escalier sont EXCLUES de la règle qui cache (une
     // règle qui les ré-affichait perdait contre elle, `:not(#…)` comptant comme un identifiant).

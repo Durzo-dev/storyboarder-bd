@@ -1480,7 +1480,7 @@ function commandes({ m, piece, ouv, esc, meuble }){
       tr('It snaps every 90° (Alt: free).', 'Il s\'aimante tous les 90° (Alt : libre).'),
       tr('The axis is chosen in the axes (Orientation).', 'L\'axe se choisit dans le repère (Orientation).'),
       meuble.surLeToit ? null : tr('In red: inside a wall, it will go back on release.', 'En rouge : dans un mur, il reviendra au relâcher.'),
-      meuble.colle === false && !meuble.surLeToit
+      meuble.colle === false || meuble.surLeToit
         ? tr('Wheel: raise or lower it (Shift: by 1 cm).', 'Molette : le monter ou le descendre (Maj : au centimètre).')
         : tr('Wheel: make it bigger or smaller.', 'Molette : l\'agrandir ou le rétrécir.'),
       meuble.surLeToit ? null : tr('Alt: move without snapping.', 'Alt : déplacer sans aimant.'),
@@ -2084,8 +2084,13 @@ function cablerPlan(){
       const maintenant = Date.now();
       if (!E.molette || E.molette.id !== meubleMolette || maintenant - E.molette.t > 800) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; }
       const x = E.batiment.elements.find(q => q.id === meubleMolette);
-      // Sur le toit, la molette garde la TAILLE (demandé) : sa marge d'élévation se règle dans Position.
-      if (x.colle === false && !x.surLeToit) {
+      // SUR LE TOIT, la molette règle toujours sa marge d'élévation (demandé), jamais sous le toit :
+      // revenue à 0, il s'y repose (collé).
+      if (x.surLeToit) {
+        const pas = (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 0.01 : 0.05);
+        const y = (x.colle === false ? x.y || 0 : 0) + pas;
+        if (y <= 1e-6) collerAuSol(x, true); else collerAuSol(x, false, y);
+      } else if (x.colle === false) {
         // DÉCOLLÉ, la molette le monte ou le descend (demandé) : 5 cm par cran, 1 cm avec Maj ; sous
         // le plancher seulement s'il peut traverser (collerAuSol le borne).
         const pas = (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 0.01 : 0.05);
