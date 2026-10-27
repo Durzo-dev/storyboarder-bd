@@ -50,7 +50,7 @@ import {
   niveauxTries, niveauDessous, niveauDessus, ajouterEtage, dupliquerNiveau, supprimerNiveau, modifierNiveau,
   deplacerNiveau,
 } from './batiment-niveaux.js';
-import { cadrage3D, orbite3D, zoom3D, positionCamera3D, deplacement3D } from './store-apercu-3d.js';
+import { cadrageOriente3D, orbite3D, zoom3D, positionCamera3D, deplacement3D } from './store-apercu-3d.js';
 import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
 import { carreDeTexture } from './textures-store-ui.js';
 import { normaliserRevetement, peintureDuRevetement } from './batiment-revetements.js';
@@ -182,6 +182,7 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null, desti
   $('batimentEditeur').classList.toggle('masquage', !!masquage);
   $('batimentEditeur').classList.remove('hidden');
   $('batimentApercuCoupe').classList.toggle('actif', E.coupe);
+  $('batimentApercuSuivi').classList.toggle('actif', cadrageAuto);
   $('batimentNom').value = b.nom;
   // Un bâtiment vide s'ouvre sur l'outil Mur (demandé) : il n'y a rien d'autre à faire.
   choisirOutil(b.murs.length || pose || masquage ? null : 'mur');
@@ -1602,12 +1603,25 @@ function taillePlan(){
   return { c, l: c.clientWidth || 1, h: c.clientHeight || 1 };
 }
 
+/** « Recadrer » : la vue de dessus seulement ; l'aperçu a son propre cadrage automatique (demandé). */
 function recadrer(){
   if (!E) return;
   const { l, h } = taillePlan();
   E.vue = cadrerSur(boiteDesMurs(E.batiment, E.niveauId), l, h);
   dessinerPlan();
-  if (E.apercu) E.apercu.recadrer();
+}
+
+/**
+ * LE CADRAGE AUTOMATIQUE DE L'APERÇU 3D (demandé) : activé par défaut, gardé d'une ouverture de
+ * l'éditeur à l'autre pendant la session. Son bouton, dans la barre de l'aperçu, le montre allumé.
+ */
+let cadrageAuto = true;
+function fixerCadrageAuto(v){
+  if (cadrageAuto === v) return;
+  cadrageAuto = v;
+  const b = $('batimentApercuSuivi');
+  if (b) b.classList.toggle('actif', v);
+  if (v && E && E.apercu) E.apercu.cadrerMaintenant();
 }
 
 function couleur(nom, repli){
@@ -2396,6 +2410,7 @@ function cablerFenetreApercu(){
     $('batimentApercuCoupe').classList.toggle('actif', E.coupe);
     if (E.apercu) E.apercu.reconstruire(E.batiment);
   };
+  $('batimentApercuSuivi').onclick = () => fixerCadrageAuto(!cadrageAuto);
   $('batimentApercuPlein').onclick = () => changerAffichage({ mode: affichage.mode === 'plein' ? 'fenetre' : 'plein' });
   $('batimentApercuIcone').onclick = () => changerAffichage({ mode: 'fenetre' });
   barre.addEventListener('dblclick', (e) => {
@@ -2485,10 +2500,11 @@ function ouvrirApercu(conteneur, b){
     rendu.render(scene, camera);
   };
   const redessiner = () => { if (!demande) demande = requestAnimationFrame(dessiner); };
-  // LE SUIVI (demandé) : tant que l'utilisateur n'a pas bougé la caméra, l'aperçu recentre la
-  // construction à chaque changement (pièce, mur, étage…). Un geste (orbite, déplacement, molette)
-  // le suspend ; « Recadrer » le rend. L'angle de vue n'est jamais changé, seuls centre et distance.
-  let suivre = true, derniereBoite = '';
+  // LE CADRAGE AUTOMATIQUE (demandé) : activé, l'aperçu recentre la construction à chaque changement
+  // (pièce, mur, étage…). Le bouton de sa barre l'active ou le coupe ; un geste (orbite, déplacement,
+  // molette) le coupe aussi. « Recadrer », du menu, ne touche plus à l'aperçu (demandé). L'angle de
+  // vue n'est jamais changé, seuls le point visé et la distance.
+  let derniereBoite = '';
   const cadrer = (force) => {
     // La boîte OS COMPRIS : un modèle articulé mesuré sur sa géométrie brute serait cent fois trop grand.
     const boite = box3FromObjectSkinAware3D(groupe);
@@ -2497,17 +2513,17 @@ function ouvrirApercu(conteneur, b){
     const signature = [...min, ...max].map(v => v.toFixed(2)).join(',');
     if (!force && signature === derniereBoite) return;
     derniereBoite = signature;
-    const r = cadrage3D(min, max, CHAMP, (conteneur.clientWidth || 1) / (conteneur.clientHeight || 1));
+    // Pour l'angle de vue COURANT : toute la boîte dans l'image (signalé : des parties en sortaient).
+    const r = cadrageOriente3D(min, max, angles, CHAMP, (conteneur.clientWidth || 1) / (conteneur.clientHeight || 1), 1.1);
     centre = r.centre; distance = distanceCadrage = r.distance;
   };
-  const recadrerApercu = () => { suivre = true; cadrer(true); redessiner(); };
 
   let glisser = null;
   const el = rendu.domElement;
   el.addEventListener('pointerdown', (e) => {
     if (e.button !== 0 && e.button !== 2) return;
     glisser = { x: e.clientX, y: e.clientY, deplacer: e.button === 2 };
-    suivre = false;
+    fixerCadrageAuto(false);
     el.setPointerCapture(e.pointerId);
   });
   el.addEventListener('pointermove', (e) => {
@@ -2522,15 +2538,17 @@ function ouvrirApercu(conteneur, b){
   el.addEventListener('pointerup', relache);
   el.addEventListener('pointercancel', relache);
   el.addEventListener('contextmenu', (e) => e.preventDefault());
-  el.addEventListener('wheel', (e) => { e.preventDefault(); suivre = false; distance = zoom3D(distance, e.deltaY, distanceCadrage); redessiner(); }, { passive: false });
+  el.addEventListener('wheel', (e) => { e.preventDefault(); fixerCadrageAuto(false); distance = zoom3D(distance, e.deltaY, distanceCadrage); redessiner(); }, { passive: false });
   const Observateur = globalThis.ResizeObserver;
   // La fenêtre agrandie ou réduite : suivie, la construction y est recadrée à sa nouvelle forme.
-  const observateur = Observateur ? new Observateur(() => { if (suivre) cadrer(true); redessiner(); }) : null;
+  const observateur = Observateur ? new Observateur(() => { if (cadrageAuto) cadrer(true); redessiner(); }) : null;
   if (observateur) observateur.observe(conteneur);
-  recadrerApercu();
+  cadrer(true);
+  redessiner();
 
   return {
-    recadrer: recadrerApercu,
+    /** Le cadrage automatique vient d'être rallumé : on recadre aussitôt. */
+    cadrerMaintenant(){ cadrer(true); redessiner(); },
     redessiner,
     /** Les murs ont changé : on refait le groupe, et l'on recentre s'il est suivi (demandé). */
     reconstruire(nouveau){
@@ -2538,7 +2556,7 @@ function ouvrirApercu(conteneur, b){
       groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); });
       groupe = construireBatiment3D(T, nouveau, mats, options());
       scene.add(groupe);
-      if (suivre) cadrer(false);
+      if (cadrageAuto) cadrer(false);
       redessiner();
     },
     fermer(){

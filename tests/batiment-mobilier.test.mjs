@@ -329,14 +329,19 @@ test('signalé : un modèle articulé (anime_girl1) se mesure et se pose OS COMP
   assert.match(store, /if \(choix && accepterChoix\(\{ fichier: issue\.fichier, local: true, batiment: false \}\)\) \{\n      const rendre = choix;\n      fermerStore\(\);\n      rendre\(issue\.fichier\);/, 'un téléchargement en mode choix rend le modèle');
 });
 
-test('demandé : l\'aperçu 3D de l\'éditeur recentre la construction tant que la caméra n\'a pas été bougée', () => {
+test('demandé : l\'aperçu 3D a son cadrage automatique, que son bouton allume et qu\'un geste coupe', () => {
   const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
   const apercu = ui.slice(ui.indexOf('function ouvrirApercu'), ui.indexOf('function validerLaPose'));
-  assert.match(apercu, /let suivre = true/);
-  assert.match(apercu, /if \(suivre\) cadrer\(false\);/, 'chaque reconstruction recentre');
-  assert.match(apercu, /deplacer: e\.button === 2 \};\n    suivre = false;/, 'un geste suspend le suivi');
-  assert.match(apercu, /e\.preventDefault\(\); suivre = false; distance/, 'la molette aussi');
-  assert.match(apercu, /const recadrerApercu = \(\) => \{ suivre = true; cadrer\(true\);/, '« Recadrer » le rend');
+  assert.match(ui, /let cadrageAuto = true;/);
+  assert.match(apercu, /if \(cadrageAuto\) cadrer\(false\);/, 'chaque reconstruction recentre');
+  assert.match(apercu, /deplacer: e\.button === 2 \};\n    fixerCadrageAuto\(false\);/, 'un geste le coupe');
+  assert.match(apercu, /e\.preventDefault\(\); fixerCadrageAuto\(false\); distance/, 'la molette aussi');
+  assert.match(apercu, /cadrageOriente3D\(min, max, angles, CHAMP/, 'pour l\'angle de vue courant');
   assert.match(apercu, /box3FromObjectSkinAware3D\(groupe\)/);
+  assert.match(ui, /\$\('batimentApercuSuivi'\)\.onclick = \(\) => fixerCadrageAuto\(!cadrageAuto\);/);
+  const recadrer = ui.slice(ui.indexOf('function recadrer()'), ui.indexOf('let cadrageAuto'));
+  assert.doesNotMatch(recadrer, /apercu/, '« Recadrer » ne touche plus à l\'aperçu');
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+  assert.match(html, /id="batimentApercuSuivi"/);
 });
 

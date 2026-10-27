@@ -65,6 +65,7 @@ export const I18N_TEXT = [
   ['#batimentApercuTitre', '3D preview', 'Aperçu 3D'],
   ['#batimentApercuReduire', null, null, 'title', 'Minimise the preview', "Réduire l'aperçu"],
   ['#batimentApercuCoupe', null, null, 'title', 'Cut at the current level', 'Couper au niveau courant'],
+  ['#batimentApercuSuivi', null, null, 'title', 'Automatic framing', 'Cadrage automatique'],
   ['#batimentApercuPlein', null, null, 'title', 'Full-screen preview', 'Aperçu en plein écran'],
   ['#batimentApercuIcone', null, null, 'title', 'Show the 3D preview', "Afficher l'aperçu 3D"],
   ['#batimentEnregistrerBtn', 'Save to the library', 'Enregistrer dans la bibliothèque'],

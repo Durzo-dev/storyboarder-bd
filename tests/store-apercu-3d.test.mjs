@@ -13,7 +13,7 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const { memoireBornee } = require('../electron/bibliotheque/store-sources.js');
-const { cadrage3D, orbite3D, zoom3D, positionCamera3D, deplacement3D } = await import('../src/store-apercu-3d.js');
+const { cadrage3D, cadrageOriente3D, orbite3D, zoom3D, positionCamera3D, deplacement3D } = await import('../src/store-apercu-3d.js');
 const { VITESSE_DEPLACEMENT_3D } = await import('../src/utils.js');
 const sans = (s) => s.split('\n').filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
 const lire = (f) => sans(readFileSync(new URL(`../${f}`, import.meta.url), 'utf8'));
@@ -141,3 +141,37 @@ describe('Le branchement des gestes', () => {
     assert.match(SRC, /el\.addEventListener\('contextmenu', menu\);/);
   });
 });
+
+// Signalé : dans l'aperçu de l'Éditeur de bâtiment, des parties du bâtiment sortaient de l'image.
+describe('cadrageOriente3D : toute la boîte tient dans l\'image, pour l\'angle de vue donné', () => {
+  const sub = (a, b) => a.map((v, i) => v - b[i]), dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const norm = (a) => { const l = Math.hypot(...a); return a.map(v => v / l); };
+  /** Le plus grand écart au bord (1 = sur le bord) des huit coins, vus de la caméra obtenue. */
+  const debord = (min, max, angles, aspect, marge) => {
+    const { centre, distance } = cadrageOriente3D(min, max, angles, 35, aspect, marge);
+    const cam = positionCamera3D(centre, distance, angles);
+    const f = norm(sub(centre, cam)), r = norm(cross(f, [0, 1, 0])), u = cross(r, f);
+    const tv = Math.tan(35 * Math.PI / 360), th = tv * aspect;
+    let m = 0;
+    for (let k = 0; k < 8; k++) {
+      const q = sub([k & 1 ? max[0] : min[0], k & 2 ? max[1] : min[1], k & 4 ? max[2] : min[2]], cam);
+      const z = dot(q, f);
+      m = Math.max(m, Math.abs(dot(q, r)) / z / th, Math.abs(dot(q, u)) / z / tv);
+    }
+    return m;
+  };
+  const cas = [
+    [[-5, 0, -3], [12, 9, 4], { lacet: 0.7, tangage: 0.5 }, 1.4],
+    [[0, 0, 0], [30, 3, 2], { lacet: 2, tangage: 1.2 }, 0.6],
+    [[-1, 0, -1], [1, 20, 1], { lacet: -1, tangage: 0.1 }, 2],
+    [[-8, -3, -8], [8, 12, 8], { lacet: 3.5, tangage: -0.4 }, 1],
+  ];
+  test('sans marge, la boîte touche le bord sans le dépasser', () => {
+    for (const [min, max, a, asp] of cas) assert.ok(Math.abs(debord(min, max, a, asp, 1) - 1) < 1e-6, JSON.stringify(a));
+  });
+  test('avec la marge, elle reste en deçà d\'autant', () => {
+    for (const [min, max, a, asp] of cas) assert.ok(Math.abs(debord(min, max, a, asp, 1.1) - 1 / 1.1) < 1e-6);
+  });
+});
+

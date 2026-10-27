@@ -47,6 +47,43 @@ export function cadrage3D(min, max, champDeg = CHAMP, aspect = 1){
   return { centre, rayon, distance };
 }
 
+/**
+ * LE CADRAGE EXACT POUR UN ANGLE DE VUE DONNÉ (l'aperçu de l'Éditeur de bâtiment, signalé : des
+ * parties du bâtiment sortaient de l'image). `cadrage3D` suppose une vue de trois quarts ; ici, les
+ * huit coins de la boîte sont projetés dans le repère de la caméra (`angles`, ceux de
+ * positionCamera3D), et l'on cherche la distance la plus courte qui les fait tous tenir, champ
+ * horizontal et vertical, avec le décalage latéral qui les équilibre. Pour un axe de l'écran de
+ * demi-ouverture t, un point (x, z vers la caméra) est vu si |x − s| ≤ t (D − z) : il faut
+ * D ≥ (max(x + t z) − min(x − t z)) / 2t, et s au milieu. `marge` élargit d'autant. Rend
+ * `{ centre, distance }`, le centre étant le point visé. PURE.
+ */
+export function cadrageOriente3D(min, max, { lacet, tangage }, champDeg = CHAMP, aspect = 1, marge = 1.1){
+  const d = [Math.cos(tangage) * Math.sin(lacet), Math.sin(tangage), Math.cos(tangage) * Math.cos(lacet)];
+  // À droite : horizontal, perpendiculaire à la visée ; en haut : complète le repère.
+  const lr = Math.hypot(d[0], d[2]) || 1;
+  const r = [d[2] / lr, 0, -d[0] / lr];
+  const u = [d[1] * r[2] - d[2] * r[1], d[2] * r[0] - d[0] * r[2], d[0] * r[1] - d[1] * r[0]];
+  const c = [0, 1, 2].map(i => (min[i] + max[i]) / 2);
+  const tv = Math.tan((champDeg * Math.PI / 180) / 2) / marge;
+  const th = Math.tan(Math.atan(Math.tan((champDeg * Math.PI / 180) / 2) * Math.max(0.1, aspect))) / marge;
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const axes = [[r, th], [u, tv]].map(([a, t]) => ({ a, t, hautMax: -Infinity, basMin: Infinity }));
+  let zMax = -Infinity;
+  for (let k = 0; k < 8; k++) {
+    const p = [k & 1 ? max[0] : min[0], k & 2 ? max[1] : min[1], k & 4 ? max[2] : min[2]].map((v, i) => v - c[i]);
+    const z = dot(p, d);
+    zMax = Math.max(zMax, z);
+    for (const ax of axes) {
+      const x = dot(p, ax.a);
+      ax.hautMax = Math.max(ax.hautMax, x + ax.t * z);
+      ax.basMin = Math.min(ax.basMin, x - ax.t * z);
+    }
+  }
+  const distance = Math.max(zMax + 0.5, ...axes.map(ax => (ax.hautMax - ax.basMin) / (2 * ax.t)));
+  const [sr, su] = axes.map(ax => (ax.hautMax + ax.basMin) / 2);
+  return { centre: [0, 1, 2].map(i => c[i] + sr * r[i] + su * u[i]), distance };
+}
+
 /** Tourner autour : le glisser horizontal fait le tour, le vertical incline, borné. PURE. */
 export function orbite3D({ lacet, tangage }, dx, dy){
   return {
