@@ -284,7 +284,7 @@ describe('les retours sur les gestes (demandé)', () => {
   });
   test('câblage : décollé, la molette règle l\'élévation ; incliner et basculer au mouvement linéaire', () => {
     const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
-    assert.match(ui, /if \(x\.colle === false\) \{[\s\S]{0,300}collerAuSol\(x, false, \(x\.y \|\| 0\) \+ pas\);/);
+    assert.match(ui, /if \(x\.colle === false && !x\.surLeToit\) \{[\s\S]{0,300}collerAuSol\(x, false, \(x\.y \|\| 0\) \+ pas\);/);
     assert.match(ui, /const delta = axeActif === 'x' \? \(e\.clientY - g\.y0\) \* VITESSE : \(e\.clientX - g\.x0\) \* VITESSE;/);
   });
 });
@@ -294,7 +294,11 @@ describe('un menu par élément choisi (demandé)', () => {
     const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
     assert.match(ui, /const fils = meuble \? 'element' : esc \? 'escalier' : piece \? 'piece' : null;/);
     assert.match(ui, /if \(E && \(meubleSelectionne\(\) \|\| escalierSelectionne\(\) \|\| pieceSelectionnee\(\)\)\) \{ E\.selection = null;/);
-    for (const id of ['batimentElemDimensions', 'batimentElemOrientation', 'batimentElemTaille', 'batimentElemPosition']) assert.ok(ui.includes(`'${id}'`), id);
+    for (const id of ['batimentElemDimensions', 'batimentElemOrientation', 'batimentElemPosition']) assert.ok(ui.includes(`'${id}'`), id);
+    // Le curseur de la taille dans Dimensions (demandé) ; sur le toit, la molette garde la taille.
+    assert.ok(!ui.includes("'batimentElemTaille'"));
+    assert.match(ui, /tr\('Dimensions', 'Dimensions'\), taille, ligneTaille\)/);
+    assert.match(ui, /if \(x\.colle === false && !x\.surLeToit\) \{/);
     const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
     // RÉGRESSION : les sections de la pièce et de l'escalier sont EXCLUES de la règle qui cache (une
     // règle qui les ré-affichait perdait contre elle, `:not(#…)` comptant comme un identifiant).

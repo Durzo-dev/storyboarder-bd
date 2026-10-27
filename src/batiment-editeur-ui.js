@@ -1113,9 +1113,9 @@ function reglagesDuMeuble(meuble){
     sortie.append(valider, annulerPose);
   }
   zone.replaceChildren(
-    sectionDElement('batimentElemDimensions', tr('Dimensions', 'Dimensions'), taille),
+    // Le curseur de la taille SOUS les dimensions (demandé, pour gagner de la place) : plus de section Taille.
+    sectionDElement('batimentElemDimensions', tr('Dimensions', 'Dimensions'), taille, ligneTaille),
     sectionDElement('batimentElemOrientation', tr('Orientation', 'Orientation'), repereDAxes(meuble), angles, boutons),
-    sectionDElement('batimentElemTaille', tr('Size', 'Taille'), ligneTaille),
     // Dans cet ordre (demandé) : l'élévation, puis « Collé au sol », puis « Peut traverser les murs ».
     // #458c (demandé) : SUR LE TOIT, ni « Sur le toit », ni « Collé au toit », ni « Peut traverser les
     // murs » (rien à traverser là-haut) : l'élévation seule, une marge. Sa place (pièce ou toit) se
@@ -1480,7 +1480,7 @@ function commandes({ m, piece, ouv, esc, meuble }){
       tr('It snaps every 90° (Alt: free).', 'Il s\'aimante tous les 90° (Alt : libre).'),
       tr('The axis is chosen in the axes (Orientation).', 'L\'axe se choisit dans le repère (Orientation).'),
       meuble.surLeToit ? null : tr('In red: inside a wall, it will go back on release.', 'En rouge : dans un mur, il reviendra au relâcher.'),
-      meuble.colle === false
+      meuble.colle === false && !meuble.surLeToit
         ? tr('Wheel: raise or lower it (Shift: by 1 cm).', 'Molette : le monter ou le descendre (Maj : au centimètre).')
         : tr('Wheel: make it bigger or smaller.', 'Molette : l\'agrandir ou le rétrécir.'),
       meuble.surLeToit ? null : tr('Alt: move without snapping.', 'Alt : déplacer sans aimant.'),
@@ -2084,7 +2084,8 @@ function cablerPlan(){
       const maintenant = Date.now();
       if (!E.molette || E.molette.id !== meubleMolette || maintenant - E.molette.t > 800) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; }
       const x = E.batiment.elements.find(q => q.id === meubleMolette);
-      if (x.colle === false) {
+      // Sur le toit, la molette garde la TAILLE (demandé) : sa marge d'élévation se règle dans Position.
+      if (x.colle === false && !x.surLeToit) {
         // DÉCOLLÉ, la molette le monte ou le descend (demandé) : 5 cm par cran, 1 cm avec Maj ; sous
         // le plancher seulement s'il peut traverser (collerAuSol le borne).
         const pas = (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 0.01 : 0.05);
