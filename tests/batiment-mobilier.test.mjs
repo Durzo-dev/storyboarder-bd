@@ -345,3 +345,12 @@ test('demandé : l\'aperçu 3D a son cadrage automatique, que son bouton allume 
   assert.match(html, /id="batimentApercuSuivi"/);
 });
 
+test('demandé : une cour se supprime (à son niveau), « Refaire une pièce » reste', () => {
+  const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
+  assert.match(ui, /\$\('batimentCourSupprimer'\)\.hidden = !vide;/);
+  assert.match(ui, /modifier\(b => supprimerCour\(b, niveauId, p\.id, supprimerMur\)\);/);
+  assert.match(ui, /tr\('Make it a room again', 'Refaire une pièce'\)/);
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+  assert.match(html, /id="batimentCourSupprimer"[^>]*hidden>Supprimer la cour</);
+});
+

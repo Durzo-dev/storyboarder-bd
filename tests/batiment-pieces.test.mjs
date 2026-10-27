@@ -216,3 +216,47 @@ test('signalé : supprimer un ÎLOT (une pièce posée au milieu d\'une autre) e
   assert.equal(b.murs.length, murs);
   assert.equal(b.pieces.find(p => p.id === ilot).vide, true);
 });
+
+// Demandé : supprimer une cour, à son niveau seulement (comme « Refaire une pièce »).
+describe('supprimerCour : l\'espace quitte le bâtiment', () => {
+  const fr = (en, f) => f;
+  test('un îlot : ses murs partent, il se fond dans la pièce qui l\'entourait', async () => {
+    const { creerBatiment } = await import('../src/batiment.js');
+    const { ajouterRectangle, supprimerMur } = await import('../src/batiment-trace.js');
+    const { actualiserPieces, supprimerPiece, supprimerCour, pieceSous, formesDesPieces } = await import('../src/batiment-pieces.js');
+    const b = creerBatiment('M', fr);
+    ajouterRectangle(b, 'n0', { x: 0, z: 0 }, { x: 10, z: 10 }, 0.2);
+    ajouterRectangle(b, 'n0', { x: 3, z: 3 }, { x: 7, z: 6 }, 0.2);
+    actualiserPieces(b, 'n0', fr);
+    const ilot = pieceSous(b, 'n0', { x: 5, z: 4.5 });
+    const grande = pieceSous(b, 'n0', { x: 1, z: 1 });
+    supprimerPiece(b, 'n0', ilot, supprimerMur);
+    assert.equal(supprimerCour(b, 'n0', ilot, supprimerMur).length, 4);
+    actualiserPieces(b, 'n0', fr);
+    assert.deepEqual(b.pieces.filter(p => p.niveauId === 'n0').map(p => p.id), [grande], 'la grande pièce reste, seule');
+    assert.equal(pieceSous(b, 'n0', { x: 5, z: 4.5 }), grande, 'et couvre l\'ancienne cour');
+    assert.equal((formesDesPieces(b, 'n0').get(grande).trous || []).length, 0);
+  });
+  test('fermée par ses voisines : elle se fond dans celle du plus long bord, les autres gardent leurs murs', async () => {
+    const { creerBatiment } = await import('../src/batiment.js');
+    const { ajouterRectangle, supprimerMur } = await import('../src/batiment-trace.js');
+    const { actualiserPieces, supprimerPiece, supprimerCour, pieceSous, estUnVide } = await import('../src/batiment-pieces.js');
+    const b = creerBatiment('M', fr);
+    // La cour [3,2]-[6,5], entourée de quatre voisines qui partagent chacune un bord de 3 m.
+    for (const [a, c] of [[[0, 0], [3, 7]], [[3, 0], [6, 2]], [[3, 5], [6, 7]], [[6, 0], [9, 7]], [[3, 2], [6, 5]]]) {
+      ajouterRectangle(b, 'n0', { x: a[0], z: a[1] }, { x: c[0], z: c[1] }, 0.2);
+      actualiserPieces(b, 'n0', fr);
+    }
+    const cour = pieceSous(b, 'n0', { x: 4.5, z: 3.5 });
+    supprimerPiece(b, 'n0', cour, supprimerMur);
+    assert.equal(estUnVide(b.pieces.find(p => p.id === cour)), true);
+    const avant = b.pieces.filter(p => p.niveauId === 'n0').length;
+    const partis = supprimerCour(b, 'n0', cour, supprimerMur);
+    actualiserPieces(b, 'n0', fr);
+    assert.equal(partis.length, 1, 'une seule cloison commune tombe');
+    assert.equal(b.pieces.filter(p => p.niveauId === 'n0').length, avant - 1);
+    assert.ok(!b.pieces.some(estUnVide), 'plus de cour');
+    const fondue = pieceSous(b, 'n0', { x: 4.5, z: 3.5 });
+    assert.ok(fondue && fondue !== cour, 'l\'espace appartient à une voisine, qui garde son nom');
+  });
+});

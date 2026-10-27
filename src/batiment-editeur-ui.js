@@ -40,7 +40,7 @@ import {
   aimanter, ajouterMur, ajouterRectangle, croiseUnMur, deplacerSommet, supprimerMur, sommetSous, murSous,
   sommetsDuNiveau,
 } from './batiment-trace.js';
-import { actualiserPieces, formesDesPieces, pieceSous, supprimerPiece, estUnVide } from './batiment-pieces.js';
+import { actualiserPieces, formesDesPieces, pieceSous, supprimerPiece, supprimerCour, estUnVide } from './batiment-pieces.js';
 import { empriseDeLaPiece, etagesAuDessus, prolongerLaCour } from './batiment-cours.js';
 import {
   formeDeLEscalier, tremieDeLEscalier, validiteDeLEscalier, ajouterEscalier, modifierEscalier, supprimerEscalier,
@@ -468,6 +468,8 @@ function remplirRevetements(){
   $('batimentPieceSupprimer').classList.toggle('delete-btn', !vide);
   $('batimentPieceSupprimer').classList.toggle('nav-btn', vide);
   $('batimentPieceSupprimer').classList.toggle('full-btn', !vide);
+  // Une cour se supprime aussi (demandé) : à son niveau seulement, comme « Refaire une pièce ».
+  $('batimentCourSupprimer').hidden = !vide;
   if (piece && vide) {
     zone.replaceChildren(vide && Object.assign(document.createElement('p'), { className: 'batiment-info',
       textContent: tr('An empty space (a courtyard): no floor, no ceiling, no roof. Its neighbours keep their walls.',
@@ -2853,6 +2855,12 @@ export function initEditeurDeBatiment(){
     // #458 : un vide redevient une pièce ; une pièce se supprime (ou devient un vide si tous ses murs sont partagés).
     if (estUnVide(p)) modifier(b => { const x = (b.pieces || []).find(q => q.id === p.id); if (x) delete x.vide; });
     else supprimerPieceDeLEditeur(p.id);
+  };
+  $('batimentCourSupprimer').onclick = () => {
+    const p = E && pieceSelectionnee();
+    if (!p || !estUnVide(p)) return;
+    const niveauId = E.niveauId;
+    modifier(b => supprimerCour(b, niveauId, p.id, supprimerMur));
   };
   // Un grain de revêtement arrivé après le dessin (batiment-revetements.js) : refaire l'aperçu.
   window.addEventListener('grains-batiment', () => { if (E && E.apercu) E.apercu.reconstruire(E.batiment); });

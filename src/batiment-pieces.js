@@ -277,3 +277,43 @@ export function supprimerPiece(batiment, niveauId, pieceId, supprimerMur){
   murs.forEach(m => supprimerMur(batiment, m.id));
   return murs.map(m => m.id);
 }
+
+/**
+ * SUPPRIMER UNE COUR (demandé le 27 octobre 2026), À SON NIVEAU SEULEMENT (comme « Refaire une
+ * pièce ») : l'espace quitte le bâtiment.
+ *   - les murs qui ne bordent QU'ELLE partent (ceux d'un îlot compris) : elle redevient l'extérieur,
+ *     ou se fond dans la pièce qui l'entourait ;
+ *   - entièrement fermée par ses voisines, aucun mur n'est à elle : elle se fond dans la voisine
+ *     avec laquelle elle partage le plus long bord (leurs cloisons communes partent, les autres
+ *     voisines gardent les leurs).
+ * La cour est retirée de la liste des pièces : la face fondue garde le nom de sa voisine. Rend les
+ * ids des murs supprimés. `supprimerMur(b, id)` est fourni par l'appelant (batiment-trace.js). PURE (sur `batiment`).
+ */
+export function supprimerCour(batiment, niveauId, pieceId, supprimerMur){
+  const formes = formesDesPieces(batiment, niveauId);
+  const f = formes.get(pieceId);
+  if (!f) return [];
+  const cleDe = (p, q) => [cle(p), cle(q)].sort().join('|');
+  const aretes = (pts) => pts.map((p, i) => ({ k: cleDe(p, pts[(i + 1) % pts.length]), l: Math.hypot(pts[(i + 1) % pts.length].x - p.x, pts[(i + 1) % pts.length].z - p.z) }));
+  const siennes = new Map(aretes(f.points).map(a => [a.k, a.l]));
+  // Pour chaque voisine, les bords qu'elle partage avec la cour.
+  const voisines = new Map();
+  for (const [id, g] of formes) {
+    if (id === pieceId) continue;
+    const communs = aretes(g.points).filter(a => siennes.has(a.k)).map(a => a.k);
+    if (communs.length) voisines.set(id, communs);
+  }
+  const partagees = new Set([...voisines.values()].flat());
+  const surLeNiveau = (batiment.murs || []).filter(m => m.niveauId === niveauId);
+  let murs = surLeNiveau.filter(m => siennes.has(cleDe(m.a, m.b)) && !partagees.has(cleDe(m.a, m.b)));
+  if (!murs.length && voisines.size) {
+    const longueur = (ks) => ks.reduce((t, k) => t + siennes.get(k), 0);
+    const [, communs] = [...voisines].sort((a, b) => longueur(b[1]) - longueur(a[1]))[0];
+    const ks = new Set(communs);
+    murs = surLeNiveau.filter(m => ks.has(cleDe(m.a, m.b)));
+  }
+  murs.forEach(m => supprimerMur(batiment, m.id));
+  batiment.pieces = (batiment.pieces || []).filter(p => p.id !== pieceId);
+  return murs.map(m => m.id);
+}
+
