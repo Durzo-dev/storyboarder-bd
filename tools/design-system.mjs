@@ -342,7 +342,7 @@ function specimens(html){
   batiment = retirer(batiment, 'batimentSelectionOuverture');
   batiment = texte(batiment, 'batimentAide', 'Tirer : le déplacer.\nR : le tourner de 90°.\nSuppr : le supprimer.\nÉchap : désélectionner.', 'Drag: move it.\nR: turn it by 90°.\nDel: delete it.\nEsc: deselect.');
   const poser = `<aside class="batiment-editeur-panneau"><section class="side-section"><h2>${L('Ouverture à poser', 'Opening to place')}</h2>${OUVERTURE}</section>
-    <section class="side-section"><h2>${L('Commandes', 'Controls')}</h2><p class="batiment-aide">${L('Clic : la poser et la choisir.\nClic droit : changer le sens d\'une porte.\nMolette : changer de type.\nCtrl + molette : zoomer.\nÉchap : quitter l\'outil.', 'Click: place and select it.\nRight-click: change how a door opens.\nWheel: change the type.\nCtrl + wheel: zoom.\nEsc: leave the tool.')}</p></section></aside>`;
+    <section class="side-section"><h2>${L('Commandes', 'Controls')}</h2><p class="commandes-aide">${L('Clic : la poser et la choisir.\nClic droit : changer le sens d\'une porte.\nMolette : changer de type.\nCtrl + molette : zoomer.\nÉchap : quitter l\'outil.', 'Click: place and select it.\nRight-click: change how a door opens.\nWheel: change the type.\nCtrl + wheel: zoom.\nEsc: leave the tool.')}</p></section></aside>`;
   let lecteur = montrer(fragmentPar(html, '<aside class="lecteur-panneau">'));
   lecteur = texte(lecteur, 'lecteurTitre', 'Le Phare', 'The Lighthouse');
   lecteur = texte(lecteur, 'lecteurPosition', ' · Planches 2-3 / 24', ' · Pages 2-3 / 24');

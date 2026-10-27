@@ -104,6 +104,8 @@ A grouping inside a section (Type, Steps, Dimensions): a **well** (`--creux`), a
 ### Controls
 
 - A "Controls" section says what can be done **depending on the tool and the selection**.
+- It comes **first in the menu**, before any setting (building editor, Reader); never a help line at
+  the bottom of the menu. Shared style: `.commandes-aide`.
 - **One action per line**, as "Gesture: effect.", with no blank line between them.
 - Short sentences: a line that wraps is too long.
 

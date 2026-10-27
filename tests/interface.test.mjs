@@ -202,3 +202,19 @@ describe('éditeur de bâtiment : un étage sans pièce ne se duplique pas (dema
     assert.match(fonction('dupliquerLEtage'), /if \(!niveauAvecPieces\(\)\) return;/);
   });
 });
+
+describe('les Commandes en tête du menu de droite (demandé)', () => {
+  test('le Lecteur : une section Commandes, la première, une action par ligne ; plus d’aide en bas', () => {
+    const src = readFileSync(new URL('../src/lecteur-ui.js', import.meta.url), 'utf8');
+    assert.match(src, /p\.replaceChildren\(\s*section\(tr\('Controls', 'Commandes'\), \[aide\]\),/);
+    assert.match(src, /aide\.className = 'commandes-aide';/);
+    assert.ok(!/aide\.className = 'side-hint'/.test(src));
+  });
+  test('l’éditeur de bâtiment : Commandes est la première section, au même style', () => {
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+    const panneau = html.slice(html.indexOf('id="batimentPanneau"'));
+    assert.ok(panneau.indexOf('id="batimentSecCommandes"') < panneau.indexOf('<section', panneau.indexOf('id="batimentSecCommandes"') + 1));
+    assert.ok(panneau.indexOf('id="batimentSecCommandes"') === panneau.indexOf('<section') + panneau.slice(panneau.indexOf('<section')).indexOf('id="batimentSecCommandes"'));
+    assert.match(html, /<p id="batimentAide" class="commandes-aide"><\/p>/);
+  });
+});

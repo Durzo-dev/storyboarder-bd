@@ -107,6 +107,8 @@ ensemble.
 ### Commandes
 
 - Une section « Commandes » dit ce qu'on peut faire **selon l'outil et la sélection**.
+- Elle est **en tête du menu**, avant tout réglage (éditeur de bâtiment, Lecteur) ; jamais une ligne
+  d'aide en bas du menu. Style commun : `.commandes-aide`.
 - **Une action par ligne**, sous la forme « Geste : effet. », sans ligne vide entre elles.
 - Des phrases courtes : une ligne qui passe à la ligne est trop longue.
 

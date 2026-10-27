@@ -2765,7 +2765,8 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .batiment-liste { display: flex; flex-direction: column; gap: 4px; font-size: var(--texte-courant); }
 .batiment-liste .batiment-ligne { display: flex; justify-content: space-between; gap: 8px; padding: 5px 8px; border: 1px solid var(--line); border-radius: var(--rayon-petit); }
 .batiment-liste .batiment-ligne small { color: var(--ink-soft); }
-.batiment-aide { margin: 0; font-size: var(--texte-libelle); color: var(--ink-soft); line-height: 1.45; white-space: pre-line; }
+/* La section « Commandes » d'un menu de droite, EN TÊTE (éditeur de bâtiment, Lecteur) : une action par ligne. */
+.commandes-aide { margin: 0; font-size: var(--texte-libelle); color: var(--ink-soft); line-height: 1.45; white-space: pre-line; }
 /* Les outils (demandé) : des boutons ronds à icône, comme celui qui rouvre l'aperçu 3D, qui flottent
    directement sur la vue de dessus, en bas au centre. */
 .batiment-outils { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 2; display: flex; gap: 10px;

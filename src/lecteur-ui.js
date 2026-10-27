@@ -503,11 +503,21 @@ function construirePanneau(){
   plein.className = 'nav-btn';
   plein.textContent = tr('⛶ Full screen (F)', '⛶ Plein écran (F)');
   plein.onclick = basculerPleinEcran;
+  // LES COMMANDES, une section EN TÊTE du menu (demandé, comme l'éditeur de bâtiment), une action
+  // par ligne. Elles étaient une ligne d'aide en bas du menu.
   const aide = document.createElement('p');
-  aide.className = 'side-hint';
-  aide.textContent = tr('← → or click the edges to turn pages · Home / End · Esc to leave.',
-    '← → ou clic sur les bords pour tourner les pages · Origine / Fin · Échap pour sortir.');
+  aide.className = 'commandes-aide';
+  aide.textContent = [
+    tr('← →: turn the pages.', '← → : tourner les pages.'),
+    tr('Click the edges: turn the pages.', 'Clic sur les bords : tourner les pages.'),
+    tr('Page Up / Page Down: previous / next page.', 'Page haut / Page bas : page précédente / suivante.'),
+    tr('Home / End: first / last page.', 'Origine / Fin : première / dernière page.'),
+    tr('Space: play / pause.', 'Espace : lecture / pause.'),
+    tr('F: full screen.', 'F : plein écran.'),
+    tr('Esc: leave full screen, then the reader.', 'Échap : quitter le plein écran, puis le lecteur.'),
+  ].join('\n');
   p.replaceChildren(
+    section(tr('Controls', 'Commandes'), [aide]),
     section(tr('Display', 'Affichage'), [
       // Des pictogrammes, nom en infobulle (demandé) : une page / deux, la première à droite ou à
       // gauche, la page entière ou en largeur ; puis les deux vues, en bascules.
@@ -542,7 +552,6 @@ function construirePanneau(){
       ligneDeBascules(bascule('miniatures', tr('Thumbnail strip', 'Bandeau de miniatures'), ICONE_MINIATURES)),
       plein,
     ]),
-    aide,
   );
 }
 
