@@ -148,11 +148,7 @@ export const SIGNAL_RECADRAGE = '#D2691E';
 // ce second indice existait déjà, et il est ce qui rend l'outil lisible sans la couleur.
 export const SIGNAL_MESURE = '#FFD700';
 export const SIGNAL_MESURE_CONTOUR = '#222';
-// Outil Construire : segments posés, points, aperçu.
-export const SIGNAL_CONSTRUIRE = '#3E5FA8';
-export const SIGNAL_CONSTRUIRE_GUIDE = 'rgba(62,95,168,0.5)';
-// Le point d'un tracé qui ne rejoint PAS le précédent. Un état d'erreur douce.
-export const SIGNAL_CONSTRUIRE_DETACHE = '#2BA84A';
+// (#454f : les signaux de l'outil Construire, SIGNAL_CONSTRUIRE*, sont partis avec lui.)
 // Les repères d'aimantation, quand un déplacement s'aligne sur un voisin.
 export const SIGNAL_AIMANTATION = '#2E7D9A';
 // Éditeur de modèle : la poignée saisie, celle qui porte un rôle, celle qui n'en porte pas.
@@ -191,10 +187,8 @@ export const FIXED_SHAPE = 'rect';
 // La teinte par défaut du corps d'un Personnage ou d'un Objet. Elle DÉPEINT : c'est la couleur de
 // la chose représentée, pas l'état d'une interface, et aucun thème ne doit y toucher.
 //
-// ⚠️ ELLE PARTAGE SA VALEUR AVEC `SIGNAL_CONSTRUIRE` PAR ACCIDENT, les deux valant `#3E5FA8` depuis
-// l'origine. C'est justement ce que l'extraction en jetons sépare : le jour où un thème repeindra
-// l'outil Construire, la couleur par défaut des Personnages ne suivra pas. Deux sens qui partagent
-// une valeur ne sont pas la même chose.
+// (Elle partageait sa valeur avec le signal de l'outil Construire, retiré par #454f : deux sens qui
+// partagent une valeur ne sont pas la même chose.)
 export const FIXED_COLOR = '#3E5FA8';
 
 
@@ -250,9 +244,6 @@ export const BUILD_WALL_DEFAULT_HEIGHT = 3.0; // height of created walls (world 
 // match it exactly, so it lives here rather than being copied a third time.
 export const BUILD_WALL_THICKNESS_RATIO_3D = 0.06;
 
-export const BUILD_SNAP_ANGLE_DEG = 12;       // 90° snapping threshold (degrees)
-
-export const BUILD_CLOSE_DIST = 0.4;          // automatic closing distance (world units)
 
 
 // ── Undo stack ──────────────────────────────────────────────────
@@ -400,10 +391,6 @@ export const OBJECT_REAL_HEIGHT_M = {
 export const MODEL_HEIGHT_WARN_MAX_M = 10;
 
 
-// ── Building alignment ──────────────────────────────────────────
-// Alignment snap on already-placed points: if the cursor is close to the same X or Z as an
-// existing point, we align the relevant coordinate to it and return the visual guides to display.
-export const BUILD_ALIGN_THRESHOLD = 0.18; // world units (~18 cm)
 
 
 // ── Tracer tool (routes, zones) ─────────────────────────────────

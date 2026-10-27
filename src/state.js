@@ -134,7 +134,6 @@ export const S = {
   lastWallId:  null,
 
   // ── Active tools ─────────────────────────────────────────────────────
-  buildTool:   null,
   // Careful not to confuse "trace" (this field) and "tracé" (with an accent, kept as-is in object
   // type values, cf. note below): traceTool is the state of the INTERACTIVE mouse-drawing tool
   // (cf. startTraceTool/stopTraceTool in events.js), used both for Routes/Paths and for the Terrain
@@ -388,7 +387,7 @@ export function tr(en, fr) { return S.appLang === 'en' ? en : fr; }
  *     cette ligne fera échouer la suite, au lieu d'ouvrir le menu Projet derrière lui.
  */
 export function modeCanevasActif3D(){
-  return !!(S.imageMovePanelId || S.measureTool || S.traceTool || S.buildTool);
+  return !!(S.imageMovePanelId || S.measureTool || S.traceTool);
 }
 
 // Cette Case est-elle celle dont on recadre l'image ? Exportée ici, comme isLockedScenePanel et

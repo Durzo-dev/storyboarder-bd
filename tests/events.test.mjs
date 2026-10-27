@@ -16,7 +16,6 @@ import { sourceSansCommentaires } from './helpers/source.mjs';
 
 // Les deux magnétismes de l'outil Construire ont suivi cet outil dans src/canvas-tools.js. Les
 // tests, eux, restent ici : ils portent sur la géométrie du tracé, pas sur le fichier qui l'héberge.
-import { buildApplyAngleSnap, buildApplyAlignSnap } from '../src/canvas-tools.js';
 import {
   getStackGroup,
   moveStackGroup,
@@ -70,59 +69,9 @@ function assertClose(actual, expected, msg, eps = 1e-6) {
 beforeEach(() => {
   S.selectedId = null;
   S.selectedRoomId = null;
-  S.buildTool = null;
 });
 
-// ── buildApplyAngleSnap / buildApplyAlignSnap (outil Construire) ───────────────────────────────
-describe('buildApplyAngleSnap : magnétisme à 90°/180° pendant le tracé au clavier/souris', () => {
-  test('aucun point posé : pas de snap possible (renvoie la position brute)', () => {
-    S.buildTool = { points: [] };
-    assert.deepEqual(buildApplyAngleSnap(4, 0.3), { x: 4, z: 0.3 });
-  });
-
-  test('curseur proche de l\'horizontale (0°) depuis le dernier point : accroché exactement à 0°', () => {
-    S.buildTool = { points: [{ x: 0, z: 0 }] };
-    const snapped = buildApplyAngleSnap(4, 0.3);
-    assertClose(snapped.z, 0, 'z ramené à 0 (accroché à l\'axe horizontal)');
-    assertClose(snapped.x, 4, 'x = projection le long de l\'axe accroché');
-  });
-
-  test('curseur à 45° (hors seuil de tolérance) : pas de snap, direction brute conservée', () => {
-    S.buildTool = { points: [{ x: 0, z: 0 }] };
-    const snapped = buildApplyAngleSnap(4, 4);
-    assertClose(snapped.x, 4, 'x inchangé (pas de snap)');
-    assertClose(snapped.z, 4, 'z inchangé (pas de snap)');
-  });
-
-  test('deuxième segment : les références incluent aussi l\'angle relatif au segment précédent (pas seulement les axes du monde)', () => {
-    S.buildTool = { points: [{ x: 0, z: 0 }, { x: 4, z: 0 }] };
-    const snapped = buildApplyAngleSnap(4.2, 3);
-    assertClose(snapped.x, 4, 'x ramené sur l\'axe vertical passant par le dernier point');
-  });
-});
-
-describe('buildApplyAlignSnap : alignement sur les points déjà posés (guides)', () => {
-  test('aucun S.buildTool actif : renvoie la position brute sans guide', () => {
-    S.buildTool = null;
-    assert.deepEqual(buildApplyAlignSnap(1, 1), { x: 1, z: 1, guideX: [], guideZ: [] });
-  });
-
-  test('curseur proche en X d\'un point déjà posé : accroché à ce X, avec un guide', () => {
-    S.buildTool = { points: [{ x: 0, z: 0 }, { x: 4, z: 0 }] };
-    const result = buildApplyAlignSnap(0.05, 5);
-    assertClose(result.x, 0, 'x accroché au point posé');
-    assert.deepEqual(result.guideX, [0]);
-    assert.deepEqual(result.guideZ, []);
-  });
-
-  test('curseur quasi confondu avec le dernier point posé : aucun snap ni guide (évite un mur fantôme pleine-largeur)', () => {
-    S.buildTool = { points: [{ x: 0, z: 0 }, { x: 4, z: 0 }] };
-    const result = buildApplyAlignSnap(4.001, 0.001);
-    assertClose(result.x, 4.001, 'pas de snap (trop proche du dernier point)');
-    assert.deepEqual(result.guideX, []);
-    assert.deepEqual(result.guideZ, []);
-  });
-});
+// (#454f : buildApplyAngleSnap et buildApplyAlignSnap sont partis avec l'outil Construire.)
 
 // ── getStackGroup / moveStackGroup (empilement Case + Éléments) ────────────────────────────────
 describe('getStackGroup : groupe d\'empilement (une Case + ses Éléments propres)', () => {
@@ -2288,7 +2237,8 @@ describe('Redessin coalescé : les chemins répétitifs passent par l\'ordonnanc
   test('les chemins chauds appellent bien la version coalescée', () => {
     // Le pendant du test précédent : sans lui, supprimer purement les appels le satisferait aussi.
     const par = appelsParEvenement();
-    assert.ok(((par.mousemove || {}).coalesce || []).length >= 8, 'mousemove');
+    // 6 depuis #454f : l'aperçu de l'outil Construire (deux appels) est parti avec lui.
+    assert.ok(((par.mousemove || {}).coalesce || []).length >= 6, 'mousemove');
     assert.ok(((par.wheel || {}).coalesce || []).length >= 4, 'wheel');
   });
 

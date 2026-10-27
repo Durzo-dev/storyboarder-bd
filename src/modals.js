@@ -2332,11 +2332,9 @@ window.addEventListener('keydown', (e) => {
 
 // ── Room / Building geometry ──────────────────────────────────────────────────────────────────
 // Repatriated from events.js, where it sat under a banner that read « BUILD TOOL ». It is not the
-// Build tool, that lives in draw.js (buildToolClose, buildTryExtendWall, detectBuildFaces). What
-// this is: the geometry the Room and Building modals need in order to move, scale and re-anchor a
+// Build tool (removed by #454f: building is done in the building editor). What this is: the geometry the Room and Building modals need in order to move, scale and re-anchor a
 // Room once the dialog is saved. It belongs next to those handlers, which are just below.
-// Recomputes a S.buildTool wall's 2D thin-box after its Room is moved (X/Z translation).
-// Duplicates buildToolCreateWallSegment's logic to remain independent of the current S.buildTool.
+// Recomputes a traced Room wall's 2D thin-box after its Room is moved (X/Z translation).
 
 // Exported for unit tests (tests/events.test.mjs), unchanged behavior.
 export function recomputeBuildWallBox2D(obj, panel) {

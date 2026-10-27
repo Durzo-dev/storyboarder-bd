@@ -3,8 +3,7 @@
 import './helpers/dom-stub.mjs';
 // events.js déclenche à son chargement initStartupProject() (async, via loadAppSettings().then(...))
 // qui peuple S.tomes avec un Tome/Page de démarrage, sans cet import, S.tomes reste [] et
-// currentPage()/currentPageData() plantent (utilisés en interne par stopBuildMode → drawCurrentPage,
-// appelé depuis buildToolClose). draw.js ne déclenche pas cette initialisation lui-même (c'est
+// currentPage()/currentPageData() plantent (utilisés en interne par drawCurrentPage). draw.js ne déclenche pas cette initialisation lui-même (c'est
 // events.js qui orchestre le démarrage de l'appli), d'où cet import par effet de bord uniquement.
 import '../src/events.js';
 import { test, describe, beforeEach } from 'node:test';
@@ -12,10 +11,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import {
-  detectBuildFaces,
-  addRoomWallElement,
-  buildToolCreateWallSegment,
-  buildToolClose,
+  uniqueDefaultName,
   getRoomBoundingBoxXZ,
   getBuildingBoundingBoxXZ,
   getPanelPoints,
@@ -36,13 +32,13 @@ import {
   drawBubbleGroupe,
 } from '../src/draw.js';
 import { _viderGrains3D, _setGrain3D } from '../src/bubble-grain.js';
-import { S, currentPage } from '../src/state.js';
+import { S } from '../src/state.js';
 import { buildWallJunctions3D, isJunctionWall3D,
   budgetFrameEpuise3D, RENDUS_3D_PAR_FRAME,
   octetsEntreeCache3D, idsCacheAGarder3D, elaguerCacheDeCases3D, noterPlancheAffichee3D,
   oublierRecenceDesPlanches3D, panelSceneCache3D, plafondCacheOctets3D,
   PLAFOND_CACHE_MO_DEFAUT, PLAFOND_CACHE_MO_MAX } from '../src/scene3d.js';
-import { GROUND_Y_DEFAULT_3D, BUILD_WALL_DEFAULT_HEIGHT, PANEL_CAM_DEFAULT_DIST_3D,
+import { GROUND_Y_DEFAULT_3D, BUILD_WALL_DEFAULT_HEIGHT,
          POSE_HANDLES } from '../src/constants.js';
 
 // Fix 92 : les extracteurs de source RETIRENT les commentaires avant de chercher.
@@ -71,154 +67,22 @@ function assertClose(actual, expected, msg, eps = 1e-6) {
 beforeEach(() => {
   S.selectedId = null;
   S.selectedRoomId = null;
-  S.buildTool = null;
 });
 
-// ── detectBuildFaces ──────────────────────────────────────────────────────────────────────────
-describe('detectBuildFaces : détection des faces planaires du graphe de murs', () => {
-  test('moins de 3 segments : pas assez pour fermer une face, renvoie null', () => {
-    assert.equal(detectBuildFaces([]), null);
-    assert.equal(detectBuildFaces([{ id: 'w1', x1: 0, z1: 0, x2: 1, z2: 0 }]), null);
+// ── uniqueDefaultName ─────────────────────────────────────────────────────────────────────────
+// (#454f : detectBuildFaces, addRoomWallElement et buildToolCreateWallSegment sont partis avec
+// l'outil Construire de la Scène ; leurs tests aussi.)
+describe('uniqueDefaultName : deux Éléments d\'une Case ne partagent pas un nom par défaut', () => {
+  const panel = { id: 'c1', type: 'panel', x: 0, y: 0, w: 800, h: 600 };
+  test('le premier garde le nom, les suivants sont numérotés', () => {
+    const page = { objects: [panel, { id: 'm1', type: 'objet3d', name: 'Mur', homePanelId: 'c1' }] };
+    assert.equal(uniqueDefaultName(panel, page, 'Chaise'), 'Chaise');
+    assert.equal(uniqueDefaultName(panel, page, 'Mur'), 'Mur 2');
   });
-
-  test('une seule Pièce fermée (triangle) : comportement standard, renvoie null (pas de scission nécessaire)', () => {
-    const wallSegs = [
-      { id: 'w1', x1: 0, z1: 0, x2: 4, z2: 0 },
-      { id: 'w2', x1: 4, z1: 0, x2: 2, z2: 3 },
-      { id: 'w3', x1: 2, z1: 3, x2: 0, z2: 0 },
-    ];
-    assert.equal(detectBuildFaces(wallSegs), null);
-  });
-
-  test('un carré fermé (4 murs) : une seule face intérieure, renvoie null', () => {
-    const wallSegs = [
-      { id: 'w1', x1: 0, z1: 0, x2: 2, z2: 0 },
-      { id: 'w2', x1: 2, z1: 0, x2: 2, z2: 2 },
-      { id: 'w3', x1: 2, z1: 2, x2: 0, z2: 2 },
-      { id: 'w4', x1: 0, z1: 2, x2: 0, z2: 0 },
-    ];
-    assert.equal(detectBuildFaces(wallSegs), null);
-  });
-
-  test('deux carrés unitaires adjacents partageant une cloison : 2 faces intérieures détectées', () => {
-    const wallSegs = [
-      { id: 'w1', x1: 0, z1: 0, x2: 1, z2: 0 },
-      { id: 'w2', x1: 1, z1: 0, x2: 1, z2: 1 }, // cloison partagée A/B
-      { id: 'w3', x1: 1, z1: 1, x2: 0, z2: 1 },
-      { id: 'w4', x1: 0, z1: 1, x2: 0, z2: 0 },
-      { id: 'w5', x1: 1, z1: 0, x2: 2, z2: 0 },
-      { id: 'w6', x1: 2, z1: 0, x2: 2, z2: 1 },
-      { id: 'w7', x1: 2, z1: 1, x2: 1, z2: 1 },
-    ];
-    const result = detectBuildFaces(wallSegs);
-    assert.ok(result, 'devrait détecter 2 pièces');
-    assert.equal(result.interiorFaces.length, 2, 'deux faces intérieures');
-    const shoelaceAbsArea = (poly) => {
-      let a = 0;
-      for (let i = 0; i < poly.length; i++) {
-        const p = poly[i], q = poly[(i + 1) % poly.length];
-        a += p.x * q.z - q.x * p.z;
-      }
-      return Math.abs(a / 2);
-    };
-    result.interiorFaces.forEach((f, i) => {
-      assertClose(shoelaceAbsArea(f.polygon), 1, `aire de la face ${i} ≈ 1`);
-    });
-    assert.equal(result.wallFaceIdx.size, 7, 'les 7 murs sont attribués à une face');
-    assert.ok(result.wallFaceIdxAlt.has('w2'), 'w2 (cloison) a une face alternative');
-    const faceA = result.wallFaceIdx.get('w2');
-    const faceB = result.wallFaceIdxAlt.get('w2');
-    assert.notEqual(faceA, faceB, 'les deux faces de la cloison sont bien différentes');
-    assert.ok(!result.wallFaceIdxAlt.has('w1'));
-    assert.ok(!result.wallFaceIdxAlt.has('w4'));
-  });
-
-  test('sommets quasi-identiques (bruit flottant < EPS) sont dédupliqués comme un seul sommet', () => {
-    const wallSegs = [
-      { id: 'w1', x1: 0, z1: 0, x2: 4, z2: 0 },
-      { id: 'w2', x1: 4, z1: 0, x2: 2, z2: 3 },
-      { id: 'w3', x1: 2, z1: 3, x2: 0.005, z2: 0.004 },
-    ];
-    assert.equal(detectBuildFaces(wallSegs), null);
-  });
-});
-
-// ── addRoomWallElement / uniqueDefaultName / buildToolCreateWallSegment ─────────────────────────
-describe('addRoomWallElement / uniqueDefaultName : création d\'un Mur', () => {
-  test('crée un objet Mur poussé dans page.objects, avec le bon pieceId/pieceLabel', () => {
-    const panel = { id: 'panel1', x: 0, y: 0, w: 800, h: 600 };
-    const page = { objects: [] };
-    const obj = addRoomWallElement(panel, page, 'Mur', 0, GROUND_Y_DEFAULT_3D + 1.5, 0, 4, 3, 0, 0, 'p1', 'Pièce');
-    assert.equal(page.objects.length, 1);
-    assert.equal(page.objects[0], obj);
-    assert.equal(obj.type, 'objet3d');
-    assert.equal(obj.objType, 'mur');
-    assert.equal(obj.pieceId, 'p1');
-    assert.equal(obj.pieceLabel, 'Pièce');
-    assert.equal(obj.name, 'Mur');
-    assert.equal(obj.homePanelId, panel.id);
-  });
-
-  test('uniqueDefaultName : deux Murs par défaut dans la même Case ne partagent jamais le même nom', () => {
-    const panel = { id: 'panel1', type: 'panel', x: 0, y: 0, w: 800, h: 600 };
-    const page = { objects: [panel] };
-    const obj1 = addRoomWallElement(panel, page, 'Mur', 0, GROUND_Y_DEFAULT_3D + 1.5, 0, 4, 3, 0, 0, 'p1', 'Pièce');
-    const obj2 = addRoomWallElement(panel, page, 'Mur', 5, GROUND_Y_DEFAULT_3D + 1.5, 0, 4, 3, 0, 0, 'p1', 'Pièce');
-    assert.equal(obj1.name, 'Mur');
-    assert.equal(obj2.name, 'Mur 2', 'renommage automatique à la 2e création');
-  });
-
-  test('uniqueDefaultName ignore les Murs d\'une autre Case (findOwningPanel via homePanelId)', () => {
-    const panelA = { id: 'panelA', type: 'panel', x: 0, y: 0, w: 800, h: 600 };
-    const panelB = { id: 'panelB', type: 'panel', x: 1000, y: 0, w: 800, h: 600 };
-    const page = { objects: [panelA, panelB] };
-    addRoomWallElement(panelA, page, 'Mur', 0, GROUND_Y_DEFAULT_3D + 1.5, 0, 4, 3, 0, 0, 'p1', 'Pièce');
-    const objB = addRoomWallElement(panelB, page, 'Mur', 0, GROUND_Y_DEFAULT_3D + 1.5, 0, 4, 3, 0, 0, 'p2', 'Pièce');
-    assert.equal(objB.name, 'Mur', 'pas de conflit entre Cases différentes');
-  });
-});
-
-describe('buildToolCreateWallSegment : création d\'un mur entre deux points sol', () => {
-  function makePanel() {
-    return { id: 'panel1', x: 0, y: 0, w: 800, h: 600, camRotX: 0, camRotY: 0, camDist: PANEL_CAM_DEFAULT_DIST_3D, camWx: 0, camWy: 0, camWz: 0 };
-  }
-
-  test('segment dégénéré (longueur quasi nulle) : ne crée rien, renvoie null', () => {
-    const panel = makePanel();
-    const page = { objects: [] };
-    S.buildTool = { pieceId: 'p1', pieceLabel: 'Pièce', wallSegs: [] };
-    const id = buildToolCreateWallSegment(panel, page, 1, 1, 1.001, 1.001);
-    assert.equal(id, null);
-    assert.equal(page.objects.length, 0);
-  });
-
-  test('segment horizontal (0,0)→(4,0) : mur créé avec la bonne position/longueur/orientation monde', () => {
-    const panel = makePanel();
-    const page = { objects: [] };
-    S.buildTool = { pieceId: 'p1', pieceLabel: 'Pièce', wallSegs: [] };
-    const id = buildToolCreateWallSegment(panel, page, 0, 0, 4, 0);
-    assert.ok(id, 'un id de mur est renvoyé');
-    const obj = page.objects.find(o => o.id === id);
-    assert.ok(obj, 'le mur existe dans page.objects');
-    assertClose(obj.wxFloor, 2, 'centre X = milieu du segment');
-    assertClose(obj.wzFloor, 0, 'centre Z = milieu du segment');
-    assertClose(obj.wyFloor, GROUND_Y_DEFAULT_3D + BUILD_WALL_DEFAULT_HEIGHT / 2, 'centré entre sol et plafond');
-    assertClose(obj.realLenFloor, 4, 'longueur réelle = distance entre les deux points');
-    assertClose(obj.realHeightFloor, BUILD_WALL_DEFAULT_HEIGHT, 'hauteur par défaut');
-    assertClose(obj.rotY, 0, 'mur aligné sur +X → rotY = atan2(-0,4) = 0');
-    assert.equal(obj.pieceId, 'p1');
-    assert.equal(S.buildTool.wallSegs.length, 1);
-    assertClose(S.buildTool.wallSegs[0].x1, 0);
-    assertClose(S.buildTool.wallSegs[0].x2, 4);
-  });
-
-  test('segment vertical (0,0)→(0,4) : rotY = atan2(-4,0) = -π/2', () => {
-    const panel = makePanel();
-    const page = { objects: [] };
-    S.buildTool = { pieceId: 'p1', pieceLabel: 'Pièce', wallSegs: [] };
-    const id = buildToolCreateWallSegment(panel, page, 0, 0, 0, 4);
-    const obj = page.objects.find(o => o.id === id);
-    assertClose(obj.rotY, Math.atan2(-4, 0), 'rotY dérivé de atan2(-dz,dx)');
+  test('les Éléments d\'une autre Case ne comptent pas (findOwningPanel via homePanelId)', () => {
+    const autre = { id: 'c2', type: 'panel', x: 900, y: 0, w: 100, h: 100 };
+    const page = { objects: [panel, autre, { id: 'm1', type: 'objet3d', name: 'Mur', homePanelId: 'c2' }] };
+    assert.equal(uniqueDefaultName(panel, page, 'Mur'), 'Mur');
   });
 });
 
@@ -270,101 +134,6 @@ describe('getRoomBoundingBoxXZ / getBuildingBoundingBoxXZ : boîtes englobantes 
 // Elle est retirée : « prête à être branchée » n'était plus vrai depuis longtemps, et git la garde.
 // Ce que ces tests avaient de précieux — une asymétrie mesurée, le prolongement ne marchait que
 // dans un sens — était la description d'un défaut de code mort.
-
-// ── buildToolClose (test d'intégration) ──────────────────────────────────────────────────────
-describe('buildToolClose : fermeture de la boucle de murs (intégration)', () => {
-  beforeEach(() => {
-    S.selectedId = null;
-    S.selectedRoomId = null;
-  });
-
-  function makePanel() {
-    const panel = {
-      id: 'panel1', type: 'panel', x: 0, y: 0, w: 800, h: 600,
-      pts: [{ x: 0, y: 0 }, { x: 800, y: 0 }, { x: 800, y: 600 }, { x: 0, y: 600 }],
-      camRotX: 0, camRotY: 0, camDist: PANEL_CAM_DEFAULT_DIST_3D, camWx: 0, camWy: 0, camWz: 0,
-    };
-    return panel;
-  }
-
-  test('Pièce simple (triangle) : une Dalle Plancher + une Plafond, sélection sur la Pièce créée', () => {
-    const panel = makePanel();
-    const page = { objects: [panel] };
-    S.buildTool = { panelId: panel.id, pieceId: 'p1', pieceLabel: 'Pièce', points: [{ x: 0, z: 0 }], wallSegs: [], wallIds: [] };
-
-    const w1 = buildToolCreateWallSegment(panel, page, 0, 0, 4, 0);
-    S.buildTool.wallIds.push(w1); S.buildTool.points.push({ x: 4, z: 0 });
-    const w2 = buildToolCreateWallSegment(panel, page, 4, 0, 2, 3);
-    S.buildTool.wallIds.push(w2); S.buildTool.points.push({ x: 2, z: 3 });
-
-    buildToolClose(panel, page);
-
-    const dalles = page.objects.filter(o => o.objType === 'dalle');
-    assert.equal(dalles.length, 2, 'une Dalle Plancher + une Plafond');
-    assert.ok(dalles.every(d => d.pieceId === 'p1'));
-    assert.ok(dalles.some(d => d.name === 'Plancher'));
-    assert.ok(dalles.some(d => d.name === 'Plafond'));
-
-    const walls = page.objects.filter(o => o.objType === 'mur');
-    assert.equal(walls.length, 3, '2 murs tracés + 1 mur de fermeture');
-    assert.ok(walls.every(w => w.pieceId === 'p1'), 'tous les murs appartiennent à la même Pièce');
-
-    assert.equal(S.selectedRoomId, 'p1');
-    assert.equal(S.selectedId, panel.id);
-    assert.equal(S.buildTool, null, 'outil Build désactivé après fermeture');
-  });
-
-  test('moins de 3 points : annule (revert) au lieu de fermer : les murs déjà tracés sont supprimés', () => {
-    const page = currentPage();
-    page.objects.length = 0;
-    const panel = makePanel();
-    page.objects.push(panel);
-    S.buildTool = { panelId: panel.id, pieceId: 'p1', pieceLabel: 'Pièce', points: [{ x: 0, z: 0 }], wallSegs: [], wallIds: [] };
-    const w1 = buildToolCreateWallSegment(panel, page, 0, 0, 4, 0);
-    S.buildTool.wallIds.push(w1); S.buildTool.points.push({ x: 4, z: 0 });
-
-    assert.equal(page.objects.some(o => o.id === w1), true, 'le mur existe avant fermeture');
-    buildToolClose(panel, page);
-    assert.equal(page.objects.some(o => o.id === w1), false, 'le mur est retiré (revert)');
-    assert.equal(S.buildTool, null);
-  });
-
-  test('Bâtiment multi-Pièces (deux carrés adjacents partageant une cloison) : 2 Pièces distinctes créées', () => {
-    const panel = makePanel();
-    const page = { objects: [panel] };
-    S.buildTool = { panelId: panel.id, pieceId: 'p1', pieceLabel: 'Pièce', points: [{ x: 0, z: 0 }], wallSegs: [], wallIds: [] };
-
-    const outer = [{ x: 1, z: 0 }, { x: 2, z: 0 }, { x: 2, z: 1 }, { x: 1, z: 1 }, { x: 0, z: 1 }];
-    let prev = { x: 0, z: 0 };
-    for (const pt of outer) {
-      const id = buildToolCreateWallSegment(panel, page, prev.x, prev.z, pt.x, pt.z);
-      S.buildTool.wallIds.push(id);
-      S.buildTool.points.push(pt);
-      prev = pt;
-    }
-    const midId = buildToolCreateWallSegment(panel, page, 1, 0, 1, 1);
-    S.buildTool.wallIds.push(midId);
-
-    buildToolClose(panel, page);
-
-    const dalles = page.objects.filter(o => o.objType === 'dalle');
-    assert.equal(dalles.length, 4, '2 Pièces × (Plancher + Plafond)');
-    const roomIds = [...new Set(dalles.map(d => d.pieceId))];
-    assert.equal(roomIds.length, 2, 'deux Pièces distinctes');
-    assert.ok(roomIds.includes('p1'), 'la 1re Pièce garde le pieceId initial du buildTool');
-
-    const walls = page.objects.filter(o => o.objType === 'mur');
-    assert.equal(walls.length, 7, '5 murs extérieurs + 1 cloison + 1 mur de fermeture');
-    assert.ok(walls.every(w => roomIds.includes(w.pieceId)), 'chaque mur est attribué à l\'une des 2 Pièces');
-
-    const midWall = walls.find(w => w.id === midId);
-    assert.ok(midWall.altPieceId, 'la cloison partagée a une Pièce alternative mémorisée (surlignage)');
-    assert.notEqual(midWall.pieceId, midWall.altPieceId, 'les deux faces de la cloison sont bien différentes');
-
-    assert.ok(roomIds.includes(S.selectedRoomId), 'la Pièce sélectionnée est l\'une des 2 créées');
-    assert.equal(S.buildTool, null);
-  });
-});
 
 // ── getPanelPoints : géométrie des formes de Case ────────────────────────────────────────────
 describe('getPanelPoints : sommets d\'une Case selon sa forme', () => {
@@ -468,25 +237,23 @@ describe('wrapTextLines : découpage du texte en lignes selon une largeur max', 
   });
 });
 
-// ── Fix 34 : angles pleins, sur de VRAIS Murs produits par l'outil Construire ────────────────
-// Les tests unitaires de buildWallJunctions3D travaillent sur un carré écrit à la main. Ici on
-// passe par buildToolCreateWallSegment/buildToolClose, donc par les vraies coordonnées monde,
-// les vrais rotY et le vrai mur de fermeture, c'est ce chemin-là que l'utilisateur emprunte.
-describe('buildWallJunctions3D : angles d\'une Pièce réellement construite (Fix 34)', () => {
+// ── Fix 34 : angles pleins, sur les Murs d'une Pièce TRACÉE ──────────────────────────────────
+// Les tests unitaires de buildWallJunctions3D travaillent sur un carré écrit à la main. Ici, les
+// Murs ont la forme exacte de ceux que l'outil Construire écrivait (centre monde, longueur réelle,
+// rotY = atan2(-dz, dx), pieceId) : l'outil est retiré (#454f), mais ses Pièces restent dans les
+// Projets, et leurs angles doivent rester pleins.
+describe('buildWallJunctions3D : angles d\'une Pièce tracée (Fix 34)', () => {
   function pieceRectangulaire() {
-    const panel = {
-      id: 'panelJ', type: 'panel', x: 0, y: 0, w: 800, h: 600,
-      pts: [{ x: 0, y: 0 }, { x: 800, y: 0 }, { x: 800, y: 600 }, { x: 0, y: 600 }],
-      camRotX: 0, camRotY: 0, camDist: PANEL_CAM_DEFAULT_DIST_3D, camWx: 0, camWy: 0, camWz: 0,
-    };
-    const page = { objects: [panel] };
-    S.buildTool = { panelId: panel.id, pieceId: 'pj', pieceLabel: 'P', points: [{ x: 0, z: 0 }], wallSegs: [], wallIds: [] };
-    for (const [ax, az, bx, bz] of [[0, 0, 6, 0], [6, 0, 6, 4], [6, 4, 0, 4]]) {
-      const id = buildToolCreateWallSegment(panel, page, ax, az, bx, bz);
-      S.buildTool.wallIds.push(id); S.buildTool.points.push({ x: bx, z: bz });
-    }
-    buildToolClose(panel, page);
-    return { panel, page };
+    const page = { objects: [] };
+    [[0, 0, 6, 0], [6, 0, 6, 4], [6, 4, 0, 4], [0, 4, 0, 0]].forEach(([ax, az, bx, bz], i) => {
+      page.objects.push({
+        id: 'mj' + i, type: 'objet3d', objType: 'mur', pieceId: 'pj', pieceLabel: 'P',
+        wxFloor: (ax + bx) / 2, wzFloor: (az + bz) / 2, wyFloor: GROUND_Y_DEFAULT_3D + BUILD_WALL_DEFAULT_HEIGHT / 2,
+        realLenFloor: Math.hypot(bx - ax, bz - az), realHeightFloor: BUILD_WALL_DEFAULT_HEIGHT,
+        rotY: Math.atan2(-(bz - az), bx - ax),
+      });
+    });
+    return { page };
   }
   const enJonctions = page => {
     const murs = page.objects.filter(isJunctionWall3D);
@@ -498,7 +265,7 @@ describe('buildWallJunctions3D : angles d\'une Pièce réellement construite (Fi
 
   test('les 4 angles sont détectés, aux 4 sommets du rectangle', () => {
     const { page } = pieceRectangulaire();
-    assert.equal(page.objects.filter(o => o.objType === 'mur').length, 4, '3 murs + fermeture');
+    assert.equal(page.objects.filter(o => o.objType === 'mur').length, 4);
     const j = enJonctions(page);
     assert.equal(j.length, 4, `${j.length} angles détectés`);
     const coins = j.map(p => `${Math.round(p.x)},${Math.round(p.z)}`).sort();

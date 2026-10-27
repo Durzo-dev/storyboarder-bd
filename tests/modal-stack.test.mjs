@@ -327,7 +327,8 @@ describe('COMPLÉTUDE : aucune modale ne peut être oubliée', () => {
     // panneau droit : un écouteur posé sur un `<input>`, pas un mode du canevas, et qui n'a donc
     // rien à faire dans ce prédicat. On ne retient que les drapeaux lus pour leur seule vérité.
     const drapeaux = [...events.matchAll(/e\.key === 'Escape' && (S\.\w+)\)/g)].map(m => m[1]);
-    assert.ok(drapeaux.length >= 4, `seulement ${drapeaux.length} gardes Échap trouvées : le motif a changé`);
+    // Trois depuis #454f (l'outil Construire retiré) : Mesure, Tracé, le recadrage d'image.
+    assert.ok(drapeaux.length >= 3, `seulement ${drapeaux.length} gardes Échap trouvées : le motif a changé`);
     [...new Set(drapeaux)].forEach(d => assert.ok(corps.includes(d),
       `${d} traite Échap sur le canevas mais n'est pas déclaré dans modeCanevasActif3D`));
   });

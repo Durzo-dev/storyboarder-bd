@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import {
-  setCanvasToolsCallbacks, startBuildMode, startTraceTool, stopTraceTool,
+  setCanvasToolsCallbacks, startTraceTool, stopTraceTool,
   startMeasureTool, stopMeasureTool,
 } from '../src/canvas-tools.js';
 import { S } from '../src/state.js';
@@ -35,7 +35,7 @@ const CASE = { id: 'c1', type: 'panel', x: 0, y: 0, w: 400, h: 300, shape: 'rect
 
 beforeEach(() => {
   snapshots = 0;
-  S.buildTool = null; S.traceTool = null; S.measureTool = null;
+  S.traceTool = null; S.measureTool = null;
   S.selectedId = null;
   S.editingSceneId = null; S.currentTomeIndex = 0; S.currentPageIndex = 0;
   S.tomes = [{
@@ -103,10 +103,6 @@ describe('Les trois outils s\'excluent, et se rangent', () => {
     const canevas = () => document.getElementById('board');
     canevas().style.cursor = 'défaut-de-test';
 
-    startBuildMode(CASE, { objects: objets() });
-    assert.equal(canevas().style.cursor, 'crosshair', 'Construire ne pose pas le curseur');
-
-    canevas().style.cursor = 'défaut-de-test';
     startTraceTool(CASE, 'route');
     assert.equal(canevas().style.cursor, 'crosshair', 'Tracer ne pose pas le curseur');
     stopTraceTool(false);
@@ -183,54 +179,7 @@ describe('Tracé enregistré : le seuil, et le vocabulaire persisté', () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 3. L'outil Construire nomme ses Pièces
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe('startBuildMode : le nom de la Pièce ne se répète pas', () => {
-  // Le nom par défaut SUIT LA LANGUE depuis qu'il passe par tr() : « Pièce » ou « Room ». La langue
-  // est donc fixée explicitement ici, `S.appLang` vaut 'en' par défaut dans state.js, et s'appuyer
-  // dessus sans le dire rendrait ces tests dépendants d'un réglage qui n'a rien à voir avec eux.
-  beforeEach(() => { S.appLang = 'fr'; });
-
-  test('la première Pièce d\'une Case s\'appelle « Pièce »', () => {
-    startBuildMode(CASE, { objects: objets() });
-    assert.equal(S.buildTool.pieceLabel, 'Pièce');
-    assert.equal(S.buildTool.panelId, 'c1');
-    assert.deepEqual(S.buildTool.points, []);
-  });
-
-  test('les suivantes sont numérotées à partir du premier numéro LIBRE', () => {
-    // Le `while` cherche un TROU, il ne compte pas. Le montage doit donc contenir à la fois un
-    // numéro pris (2) et un trou (3) : ma première version n'avait que le trou, et retirer le
-    // `while` donnait alors la même réponse, la mutation passait au vert.
-    //
-    // Deux Pièces d'une même Case portant le même nom seraient indiscernables dans le panneau
-    // latéral, et le nom est ce que l'utilisateur lit pour les distinguer.
-    const étiquette = (id, pieceId, pieceLabel) =>
-      ({ id, type: 'objet3d', objType: 'mur', homePanelId: 'c1', pieceId, pieceLabel });
-    const page = { objects: [CASE,
-      étiquette('m1', 'pA', 'Pièce'), étiquette('m2', 'pB', 'Pièce 2'),
-      étiquette('m3', 'pC', 'Pièce 4')] };
-    startBuildMode(CASE, page);
-    assert.equal(S.buildTool.pieceLabel, 'Pièce 3',
-      'le premier numéro libre n\'a pas été trouvé (collision, ou trou sauté)');
-  });
-
-  test('en anglais, le même nom part de « Room »', () => {
-    // La numérotation ne dépend pas de la langue ; seul le mot change.
-    S.appLang = 'en';
-    startBuildMode(CASE, { objects: objets() });
-    assert.equal(S.buildTool.pieceLabel, 'Room');
-  });
-
-  test('chaque activation crée un identifiant de Pièce neuf', () => {
-    startBuildMode(CASE, { objects: objets() });
-    const a = S.buildTool.pieceId;
-    startBuildMode(CASE, { objects: objets() });
-    assert.notEqual(S.buildTool.pieceId, a);
-  });
-});
+// 3. (L'outil Construire et le nom de ses Pièces : retirés avec l'outil, #454f.)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 4. La couture avec events.js
@@ -249,9 +198,8 @@ describe('canvas-tools.js : la couture', () => {
     assert.doesNotMatch(ct, /from '\.\/events\.js'/, 'cycle réintroduit');
   });
 
-  test('les trois outils ne sont plus définis dans events.js', () => {
-    ['startBuildMode', 'startTraceTool', 'stopTraceTool', 'startMeasureTool', 'stopMeasureTool',
-      'screenToWorldFloor', 'buildApplyAngleSnap', 'buildApplyAlignSnap']
+  test('les outils ne sont plus définis dans events.js', () => {
+    ['startTraceTool', 'stopTraceTool', 'startMeasureTool', 'stopMeasureTool']
       .forEach(n => assert.ok(!new RegExp(`^(export )?function ${n}\\b`, 'm').test(evt),
         `${n} est revenu dans events.js`));
   });
@@ -302,3 +250,23 @@ describe('canvas-tools.js : la couture', () => {
  * tomber aucun test, et c'est correct : la ligne suivante réaffecte `S.traceTool` en entier. Noté
  * ici plutôt que masqué par un test artificiel, un mutant équivalent n'est pas un trou.
  */
+
+describe('#454f : l\'outil Construire de la Scène est retiré (demandé)', () => {
+  test('ni ses fonctions, ni son état, ni son entrée de menu', () => {
+    const ct = lire('src/canvas-tools.js'), dr = lire('src/draw.js'), ev = lire('src/events.js'), st = lire('src/state.js');
+    ['startBuildMode', 'screenToWorldFloor', 'buildApplyAngleSnap', 'buildApplyAlignSnap'].forEach(n =>
+      assert.ok(!new RegExp(`function ${n}\\b`).test(ct), n));
+    ['addRoomWallElement', 'stopBuildMode', 'buildToolCreateWallSegment', 'buildToolClose', 'drawBuildToolOverlay', 'detectBuildFaces'].forEach(n =>
+      assert.ok(!new RegExp(`function ${n}\\b`).test(dr), n));
+    assert.ok(!/S\.buildTool/.test(ev + dr + ct + st), 'S.buildTool est encore lu ou écrit');
+    assert.ok(!/function addRoomToPanel\b/.test(ev));
+  });
+  test('le clic droit ne propose plus Murs, Parois ni Bâtiments ; « Créer un bâtiment » reste', () => {
+    const html = lire('src/index.html');
+    ['ctxMursTrigger', 'ctxWallOpeningTrigger', 'ctxBuildingsTrigger', 'mursSubmenu', 'wallOpeningSubmenu',
+      'buildingsSubmenu', 'ctxBuildMode', 'ctxAddRoom', 'ctxAddMurSimple', 'ctxAddMurCoin', 'ctxAddFenetreOuverte',
+      'ctxAddPorteOuverte', 'ctxAddEscalier', 'ctxAddBaieVitree'].forEach(id => assert.ok(!html.includes(`id="${id}"`), id));
+    assert.ok(html.includes('id="ctxCreerBatiment"'));
+    assert.ok(html.includes('id="ctxTracerTrigger"'), 'les Tracés (muret, clôture, haie, barrière) restent');
+  });
+});

@@ -503,7 +503,11 @@ place : rien ne bouge à l'écran.
   plafonds ; un jeu de matières fourni, puis le store (#446).
 - **#454e** placer un Élément dans un bâtiment : le mobilier de l'éditeur, puis la pose depuis la
   fiche (bâtiment, étage, pièce). Fait.
-- **#454f** la conversion des bâtiments tracés dans les Scènes, et le retrait de l'outil de la Scène.
+- **#454f** FAIT (27 octobre 2026) : l'outil « Construire un bâtiment » de la Scène est retiré, et avec
+  lui, au clic droit, « Ajouter → Murs », « Ajouter → Parois » et « Ajouter → Bâtiments » ; la
+  construction se fait UNIQUEMENT dans l'éditeur (« Créer un bâtiment »). Décision de Valentin : les
+  murs, parois et pièces déjà posés dans les Projets restent TELS QUELS (rendus, sélectionnables,
+  modifiables) ; une pièce tracée se reprend dans l'éditeur par « Modifier » (une copie).
 - **#458** le toit automatique : types, pente, débord, matières, toit-terrasse avec garde-corps,
   Éléments sur le toit.
 - **#459** la vue en coupe par Case (« jusqu'au niveau N », murs de devant effacés).

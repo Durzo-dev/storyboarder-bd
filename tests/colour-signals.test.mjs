@@ -30,9 +30,9 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import {
-  SIGNAL_SELECTION, SIGNAL_SELECTION_LISERE, SIGNAL_SELECTION_3D, SIGNAL_BATIMENT,
-  SIGNAL_RECADRAGE, SIGNAL_MESURE, SIGNAL_CONSTRUIRE, SIGNAL_CONSTRUIRE_DETACHE,
-  SIGNAL_AIMANTATION, SIGNAL_POSE_ACTIVE, SIGNAL_POSE_ROLE, SIGNAL_POSE_SANS_ROLE,
+  SIGNAL_SELECTION, SIGNAL_SELECTION_LISERE, SIGNAL_SELECTION_3D,
+  SIGNAL_RECADRAGE, SIGNAL_MESURE,
+  SIGNAL_POSE_ACTIVE, SIGNAL_POSE_ROLE, SIGNAL_POSE_SANS_ROLE,
   SIGNAL_APERCU_PERSO, SIGNAL_APERCU_ELEMENT, SIGNAL_IMAGE_ABSENTE_TEXTE,
   SIGNAL_IMAGE_ATTENDUE_TEXTE, FIXED_COLOR,
 } from '../src/constants.js';
@@ -108,11 +108,8 @@ describe('Les paires que l\'utilisateur doit distinguer', () => {
    */
   const SEUIL = 60;
   const PAIRES = [
-    ['sélection / outil Construire', SIGNAL_SELECTION, SIGNAL_CONSTRUIRE],
     ['sélection / poignée (liseré)', SIGNAL_SELECTION, SIGNAL_SELECTION_LISERE],
     ['sélection 2D / sélection 3D', SIGNAL_SELECTION, SIGNAL_SELECTION_3D],
-    ['Bâtiment / outil Construire', SIGNAL_BATIMENT, SIGNAL_CONSTRUIRE],
-    ['outil Construire / point détaché', SIGNAL_CONSTRUIRE, SIGNAL_CONSTRUIRE_DETACHE],
     ['outil Mesure / sélection', SIGNAL_MESURE, SIGNAL_SELECTION],
     ['pose active / pose avec rôle', SIGNAL_POSE_ACTIVE, SIGNAL_POSE_ROLE],
     ['image absente / image attendue (texte)', SIGNAL_IMAGE_ABSENTE_TEXTE, SIGNAL_IMAGE_ATTENDUE_TEXTE],
@@ -126,9 +123,10 @@ describe('Les paires que l\'utilisateur doit distinguer', () => {
   });
 
   test('le garde-fou : la liste n\'a pas fondu', () => {
-    // Huit paires. Si quelqu'un en retirait sept pour faire passer une teinte, la suite resterait
-    // verte sans que personne ne le voie.
-    assert.ok(PAIRES.length >= 8, `seulement ${PAIRES.length} paires surveillées`);
+    // Cinq paires (huit avant #454f, qui a retiré l'outil Construire et ses trois paires). Si
+    // quelqu'un en retirait pour faire passer une teinte, la suite resterait verte sans que personne
+    // ne le voie.
+    assert.ok(PAIRES.length >= 5, `seulement ${PAIRES.length} paires surveillées`);
   });
 });
 
@@ -146,7 +144,6 @@ describe('Faibles en couleur, mais portées par le motif de tirets', () => {
    */
   const FAIBLES = [
     ['sélection / recadrage d\'image', SIGNAL_SELECTION, SIGNAL_RECADRAGE, 43, ['[4, 3]', '[6, 4]']],
-    ['outil Construire / aimantation', SIGNAL_CONSTRUIRE, SIGNAL_AIMANTATION, 30, ['[4, 4]', '[2, 4]']],
   ];
 
   FAIBLES.forEach(([nom, a, b, mesure, tirets]) => {
@@ -210,7 +207,6 @@ describe('draw.js ne décide plus des couleurs de signal', () => {
       // 10, plus 5 pour l'édition des Cases d'une Planche importée (dessinerEditionDesCases).
       [SIGNAL_SELECTION, 'SIGNAL_SELECTION', 15],
       [SIGNAL_MESURE, 'SIGNAL_MESURE', 4],
-      [SIGNAL_CONSTRUIRE, 'SIGNAL_CONSTRUIRE', 6],
       [SIGNAL_APERCU_PERSO, 'SIGNAL_APERCU_PERSO', 2],
     ];
     emplois.forEach(([, nom, attendu]) => {
@@ -235,11 +231,10 @@ describe('draw.js ne décide plus des couleurs de signal', () => {
       assert.ok(DRAW.includes(c), `${c} dépeint un tracé et devait rester en dur`));
   });
 
-  test('FIXED_COLOR partage sa valeur avec SIGNAL_CONSTRUIRE, et ce n\'est pas la même chose', () => {
-    // Les deux valent #3E5FA8 depuis l'origine, par accident. C'est exactement ce que l'extraction
-    // sépare : le jour où un thème repeint l'outil Construire, la couleur par défaut d'un
-    // Personnage ne doit pas suivre. Le test épingle l'accident pour qu'il reste visible.
-    assert.equal(FIXED_COLOR, SIGNAL_CONSTRUIRE);
+  test('FIXED_COLOR dépeint, elle n\'est pas un signal', () => {
+    // Elle valait #3E5FA8 comme le signal de l'outil Construire (retiré par #454f), par accident :
+    // c'est une couleur de la chose représentée, pas d'un état de l'interface.
+    assert.equal(FIXED_COLOR, '#3E5FA8');
     assert.ok(DRAW.includes('FIXED_COLOR'), 'FIXED_COLOR doit rester employée pour ce qu\'elle dépeint');
   });
 });

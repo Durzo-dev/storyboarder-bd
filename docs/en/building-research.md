@@ -478,7 +478,11 @@ moves on screen.
   supplied set of materials, then the store (#446).
 - **#454e** placing an Element in a building: the editor's furniture, then placing from the sheet
   (building, floor, room). Done.
-- **#454f** converting the buildings traced in Scenes, and removing the tool from the Scene.
+- **#454f** DONE (27 October 2026): the Scene's "Build a building" tool is removed, and with it, on
+  right-click, "Add → Walls", "Add → Wall openings" and "Add → Buildings"; building is done ONLY in
+  the editor ("Create a building"). Valentin's decision: walls, openings and rooms already placed in
+  Projects stay AS THEY ARE (rendered, selectable, editable); a traced room is taken into the editor
+  with "Modify" (a copy).
 - **#458** the automatic roof: types, pitch, overhang, materials, roof terrace with railing,
   Elements on the roof.
 - **#459** the cutaway view per Panel ("up to level N", front walls hidden).

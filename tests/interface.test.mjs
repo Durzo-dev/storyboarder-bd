@@ -121,7 +121,8 @@ describe('#460i : l\'échelle typographique', () => {
 describe('#460k : une seule famille d\'icônes au trait', () => {
   test('chaque entrée de menu contextuel porte une icône SVG, plus aucun emoji', () => {
     const icones = [...HTML.matchAll(/<span class="ctx-icon">([\s\S]*?)<\/span>/g)].map(m => m[1]);
-    assert.ok(icones.length > 100, 'les icônes des menus contextuels ont disparu');
+    // Plus de 100 avant #454f, qui a retiré du clic droit Murs, Parois et Bâtiments (9 entrées).
+    assert.ok(icones.length > 90, 'les icônes des menus contextuels ont disparu');
     const emojis = icones.filter(i => !/^<svg viewBox="0 0 24 24"/.test(i));
     assert.deepEqual(emojis, [], 'une entrée de menu est revenue à un caractère ou un emoji');
   });

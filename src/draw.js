@@ -4,10 +4,10 @@
  * Extracted from app.js. Refactor step B.11.
  *
  * Exported functions: getPanelPoints, drawTracé, drawTraceToolPreview,
- * drawMeasureToolPreview, drawBuildToolOverlay, drawPanelNumberBadge,
+ * drawMeasureToolPreview, drawPanelNumberBadge,
  * drawContent, drawObject, bubbleTailVisible, bubbleEdgePoint,
  * getBubbleTailTip, drawBubble, drawFace, syncPreviewCanvasRes,
- * getRoomBoundingBoxXZ, getBuildingBoundingBoxXZ, detectBuildFaces, buildTryExtendWall,
+ * getRoomBoundingBoxXZ, getBuildingBoundingBoxXZ,
  * drawRoomPreview, drawBuildingPreview, drawObjectPreview, drawPersonaPreview,
  * personaHandleScreenPos, projectJointToCanvas, drawPersonaPoseHandlesOverlay,
  * pickPoseHandleAt, projectLocalOffsetToCanvas, distToSegmentSq, pickLimbSegmentAt,
@@ -18,10 +18,10 @@
 
 import { policeADessiner } from './polices-utilisateur.js';
 import { sondeDebut, sondeFin, sondeImageDebut, sondeImageFin } from './perf-probe.js';
-import { S, currentPage, currentPageData, isLockedScenePanel, estCaseEnRecadrage3D, panelsInPage, ensurePanelNumbers, newId, tr } from './state.js';
+import { S, currentPage, currentPageData, isLockedScenePanel, estCaseEnRecadrage3D, panelsInPage, ensurePanelNumbers, tr } from './state.js';
 import {
   WALL_TYPES, WALL_OPENING_MAGNET_TYPES, GROUND_TYPE_DEFS, teinteDuSol3D, GROUND_Y_DEFAULT_3D,
-  BUILD_WALL_DEFAULT_HEIGHT, WALL_PX_PER_UNIT_3D,
+  BUILD_WALL_DEFAULT_HEIGHT,
   BUBBLE_TAIL_ANGLE_DEFAULT, BUBBLE_TAIL_LEN_DEFAULT,
   BUBBLE_FONT_FALLBACK, BUBBLE_PADDING_DEFAULT, styleDuTexteDeBulle,
   ROOM_PREVIEW_BASE_W, ROOM_PREVIEW_BASE_H,
@@ -29,25 +29,22 @@ import {
   PERSONA_PREVIEW_BASE_W, PERSONA_PREVIEW_BASE_H,
   PREVIEW_OBJECT_ID, PREVIEW_PERSONA_ID,
   POSE_HANDLES, LIMB_SEGMENTS, FIXED_COLOR, POSE_3D,
-  PANEL_CAM_DEFAULT_DIST_3D, GROUND_CONTACT_EPS_3D,
   SIGNAL_SELECTION, SIGNAL_SELECTION_LISERE, SIGNAL_SELECTION_3D, SIGNAL_PIECE_POIGNEE,
   SIGNAL_BATIMENT, SIGNAL_BATIMENT_POIGNEE, SIGNAL_RECADRAGE, SIGNAL_MESURE,
-  SIGNAL_MESURE_CONTOUR, SIGNAL_CONSTRUIRE, SIGNAL_CONSTRUIRE_GUIDE,
-  SIGNAL_CONSTRUIRE_DETACHE, SIGNAL_AIMANTATION, SIGNAL_POSE_ACTIVE, SIGNAL_POSE_ROLE,
+  SIGNAL_MESURE_CONTOUR, SIGNAL_AIMANTATION, SIGNAL_POSE_ACTIVE, SIGNAL_POSE_ROLE,
   SIGNAL_POSE_SANS_ROLE, SIGNAL_APERCU_PERSO, SIGNAL_APERCU_ELEMENT,
   SIGNAL_IMAGE_ABSENTE_FOND, SIGNAL_IMAGE_ATTENDUE_FOND, SIGNAL_IMAGE_ABSENTE_TEXTE,
   SIGNAL_IMAGE_ATTENDUE_TEXTE,
 } from './constants.js';
 import { clamp, getHandles, pickNearestHandle3D, posePickRadii3D, makeFrameScheduler,
-         poseDragHintSegment3D, POSE_DRAG_HINT_LEN, POSE_LIMB_PICK_RADIUS , nomNumeroteLibre3D} from './utils.js';
+         poseDragHintSegment3D, POSE_DRAG_HINT_LEN, POSE_LIMB_PICK_RADIUS } from './utils.js';
 import {
   findOwningPanel, elementNonVisible3D, mesurerToutesLesCases3D, groundMagnetEligible, applyGroundMagnetY,
-  tracéUpdateScreenPts, worldFloorToScreen, worldToPageXY,
+  tracéUpdateScreenPts, worldToPageXY,
   drawPanelScene3D, drawObject3D,
   projectElementCenterToCanvas3D, getElementProjectedHalfExtents3D,
-  elaguerCacheDeCases3D, noterPlancheAffichee3D, panelCamBasis3D, getCamOrbitWorld,
+  elaguerCacheDeCases3D, noterPlancheAffichee3D,
   commencerFrameLimitee3D, resteDesRendus3D, terminerFrameLimitee3D,
-  panelDepthToDistance3D, clampPanelDepth3D,
   getRoomScreenBBoxFrom2DProjections, getBuildingJunctionCorners, getWallChildProjectedQuad3D,
   renderObjectToCanvas3D,
 } from './scene3d.js';
@@ -356,13 +353,6 @@ export function drawMeasureToolPreview(c, panel, page) {
   c.restore();
 }
 
-// FIX (pre-existing bug, regression from extraction #165): uniqueDefaultName, addRoomWallElement and
-// stopBuildMode had stayed in app.js while buildToolCreateWallSegment/buildToolClose (which
-// depend on them) had been moved here without being exported, the "Build a Building"
-// tool (drawing walls with the mouse) therefore crashed immediately (ReferenceError) as soon as it was used.
-// Repatriated here (and exported for app.js, which also uses them in addObjectToPanel/
-// addRoomToPanel/addPersonaToPanel) to break the circular dependency draw.js → app.js.
-
 // Prevents two Elements of the same Type created in the same Panel from sharing the same default name.
 export function uniqueDefaultName(panel, page, baseName){
   const existingNames = new Set(
@@ -374,409 +364,11 @@ export function uniqueDefaultName(panel, page, baseName){
   return baseName + ' ' + n;
 }
 
-// Creates a simple Wall positioned/sized in REAL coordinates (world units), by back-calculating
-// the apparent 2D box and depth expected by the generic Element placement model.
-export function addRoomWallElement(panel, page, name, worldX, worldY, worldZ, realLen, realHeight, rotX, rotY, pieceId, pieceLabel){
-  const panelCx = panel.x + panel.w / 2, panelCy = panel.y + panel.h / 2;
-  const dist = panelDepthToDistance3D(worldZ);
-  const factor = WALL_PX_PER_UNIT_3D * (PANEL_CAM_DEFAULT_DIST_3D / dist);
-  const w = Math.max(1, realLen * factor), h = Math.max(1, realHeight * factor);
-  const cx = panelCx + worldX * factor, cy = panelCy - worldY * factor;
-  const obj = {
-    id: newId(), type: 'objet3d', objType: 'mur', x: cx - w / 2, y: cy - h / 2, w, h,
-    baseW: w, baseH: h, z: clampPanelDepth3D(worldZ),
-    name: uniqueDefaultName(panel, page, name),
-    rotX: rotX || 0, rotY: rotY || 0, rotZ: 0, color: FIXED_COLOR,
-    lockedAxis: (w >= h) ? 'y' : 'x',
-    homePanelId: panel.id,
-    pieceId, pieceLabel,
-  };
-  page.objects.push(obj);
-  return obj;
-}
-
-// Deactivates the Build tool. If revert=true, removes the walls already created.
-export function stopBuildMode(revert){
-  if (!S.buildTool) return;
-  if (revert && S.buildTool.wallIds.length > 0) {
-    const page = currentPage();
-    S.buildTool.wallIds.forEach(id => {
-      const idx = page.objects.findIndex(o => o.id === id);
-      if (idx !== -1) page.objects.splice(idx, 1);
-    });
-  }
-  S.buildTool = null;
-  if (_canvas) _canvas.style.cursor = '';
-  drawCurrentPage();
-}
-
-// Creates a wall between two ground points (x1,z1)→(x2,z2). Returns the id of the created wall, or null.
-export function buildToolCreateWallSegment(panel, page, x1, z1, x2, z2){
-  const dx = x2 - x1, dz = z2 - z1;
-  const len = Math.hypot(dx, dz);
-  if (len < 0.01) return null;
-  const worldX = (x1 + x2) / 2;
-  const worldZ = (z1 + z2) / 2;
-  const worldY = GROUND_Y_DEFAULT_3D + BUILD_WALL_DEFAULT_HEIGHT / 2; // centered between floor and ceiling
-  const rotY = Math.atan2(-dz, dx);
-  const obj = addRoomWallElement(panel, page, 'Mur', worldX, worldY, worldZ,
-                                  len, BUILD_WALL_DEFAULT_HEIGHT, 0, rotY,
-                                  S.buildTool.pieceId, S.buildTool.pieceLabel);
-  if (obj) {
-    // Store the exact world coordinates for the 3D renderer (avoids re-deriving them
-    // from the 2D box, which would be incorrect for walls created in top-down view).
-    obj.wxFloor = worldX;
-    obj.wyFloor = worldY;
-    obj.wzFloor = worldZ;
-    obj.realLenFloor = len;
-    obj.realHeightFloor = BUILD_WALL_DEFAULT_HEIGHT;
-    // Recompute the 2D box from the projected endpoints: the result is a thin rectangle
-    // aligned on the wall direction (thin perpendicular), correct regardless of the camera.
-    // We use panelCx/panelCy (same reference as addRoomWallElement and panelDragRayOnPlane)
-    // rather than page.w/2 (used by worldFloorToScreen) to avoid the offset when the
-    // panel isn't centered on the page.
-    const _panelCx = panel.x + panel.w / 2;
-    const _panelCy = panel.y + panel.h / 2;
-    const _basis = panelCamBasis3D(panel);
-    const _camDist = panel.camDist || PANEL_CAM_DEFAULT_DIST_3D;
-    const _porb = getCamOrbitWorld(panel, _basis);
-    const _panOffX = _porb.x, _panOffY = _porb.y, _panOffZ = _porb.z;
-    let _camY = _panOffY + _basis.backward.y * _camDist;
-    if (_camY < GROUND_Y_DEFAULT_3D + 0.15) _camY = GROUND_Y_DEFAULT_3D + 0.15;
-    const _camX = _panOffX + _basis.backward.x * _camDist;
-    const _camZ = _panOffZ + _basis.backward.z * _camDist;
-    const _scale = PANEL_CAM_DEFAULT_DIST_3D * WALL_PX_PER_UNIT_3D;
-    const _projectFloorPanel = (wx, wz) => {
-      const vx = wx - _camX, vy = GROUND_Y_DEFAULT_3D - _camY, vz = wz - _camZ;
-      const vright = vx * _basis.right.x + vy * _basis.right.y + vz * _basis.right.z;
-      const vup    = vx * _basis.up.x    + vy * _basis.up.y    + vz * _basis.up.z;
-      const vdepth = -(vx * _basis.backward.x + vy * _basis.backward.y + vz * _basis.backward.z);
-      if (vdepth <= 0) return null;
-      return { x: _panelCx + vright * _scale / vdepth, y: _panelCy - vup * _scale / vdepth };
-    };
-    const sp1 = _projectFloorPanel(x1, z1);
-    const sp2 = _projectFloorPanel(x2, z2);
-    if (sp1 && sp2) {
-      const WALL_2D_THIN_PX = 5; // 2D thickness of the wall on the site plan
-      const bx = Math.min(sp1.x, sp2.x) - WALL_2D_THIN_PX / 2;
-      const by = Math.min(sp1.y, sp2.y) - WALL_2D_THIN_PX / 2;
-      const bw = Math.max(WALL_2D_THIN_PX, Math.abs(sp2.x - sp1.x) + WALL_2D_THIN_PX);
-      const bh = Math.max(WALL_2D_THIN_PX, Math.abs(sp2.y - sp1.y) + WALL_2D_THIN_PX);
-      obj.x = bx; obj.y = by; obj.w = bw; obj.h = bh;
-      obj.baseW = bw; obj.baseH = bh;
-      obj.lockedAxis = (bw >= bh) ? 'y' : 'x';
-    }
-    S.buildTool.wallSegs.push({ id: obj.id, x1, z1, x2, z2 });
-  }
-  return obj ? obj.id : null;
-}
-
-// `buildTryExtendWall` A ÉTÉ RETIRÉE (#402d).
-//
-// ⚠️ SON PROPRE COMMENTAIRE NOMMAIT SON APPELANT, « seul buildToolClose l'appelle en interne » : ce
-// n'était plus vrai, et rien ne l'avait signalé. Elle décidait si un nouveau segment PROLONGE un mur
-// existant au lieu d'en créer un second ; l'outil Construire ne lui posait plus la question.
-//
-// Un commentaire qui nomme un appelant vieillit comme n'importe quel code : il faut le vérifier, pas
-// le croire. C'est cette famille de mensonge que tests/code-mort.test.mjs rend maintenant visible.
-// Adds a horizontal Slab (floor or ceiling) : arbitrary polygon in XZ.
-// Stored as objet3d/dalle, invisible in 2D (1×1 px), rendered in 3D via THREE.ShapeGeometry.
-function addSlabElement(panel, page, name, polygon, worldY, pieceId, pieceLabel){
-  const obj = {
-    id: newId(), type: 'objet3d', objType: 'dalle',
-    x: panel.x + panel.w / 2 - 0.5, y: panel.y + panel.h / 2 - 0.5, w: 1, h: 1,
-    z: 0, rotX: 0, rotY: 0, rotZ: 0, color: '#B8A890',
-    name: uniqueDefaultName(panel, page, name),
-    homePanelId: panel.id,  // explicit ownership (cf. findOwningPanel)
-    polygon,   // [{x, z}] polygon outline in world units
-    worldY,    // Y height in world units
-    pieceId, pieceLabel,
-    magnetGround: false,
-  };
-  page.objects.push(obj);
-  return obj;
-}
-
-// ── Detection of planar faces in the wall graph (S.buildTool multi-room) ──────────────
-// Takes wallSegs [{id,x1,z1,x2,z2}] and returns null if there's only a single interior face
-// (standard behavior), or { interiorFaces:[{polygon}], wallFaceIdx:Map<wallId,idx> }.
-// Algorithm: half-edge traversal always taking the minimum clockwise rotation.
-// The exterior (infinite) face is identified by its largest absolute area (Shoelace).
-// Exported (Step C, unit tests): pure function (no DOM/S/THREE dependency), it's the
-// algorithmic core of automatic multi-Room splitting, purely additive export, changes
-// nothing for buildToolClose (the only application caller, still in this same file).
-export function detectBuildFaces(wallSegs) {
-  if (wallSegs.length < 3) return null;
-  const EPS = 0.01;
-
-  // 1. Deduplicate vertices
-  const verts = [];
-  function vid(x, z) {
-    for (let i = 0; i < verts.length; i++)
-      if (Math.hypot(verts[i].x - x, verts[i].z - z) < EPS) return i;
-    verts.push({ x, z }); return verts.length - 1;
-  }
-  const edges = wallSegs
-    .map(s => ({ id: s.id, a: vid(s.x1, s.z1), b: vid(s.x2, s.z2) }))
-    .filter(e => e.a !== e.b);
-  if (edges.length < 3) return null;
-
-  // 2. Adjacency list
-  const adj = verts.map(() => []);
-  edges.forEach(e => {
-    const { x: ax, z: az } = verts[e.a], { x: bx, z: bz } = verts[e.b];
-    adj[e.a].push({ v: e.b, edgeId: e.id, angle: Math.atan2(bz - az, bx - ax) });
-    adj[e.b].push({ v: e.a, edgeId: e.id, angle: Math.atan2(az - bz, ax - bx) });
-  });
-
-  // 3. Half-edge traversal: from v (coming from u), take the minimum clockwise rotation
-  const halfEdgeFace = new Map(); // "u,v" → faceIdx in faces[]
-  const faces = [];               // [{ vertIndices, absArea }]
-
-  for (const e of edges) {
-    for (const [su, sv] of [[e.a, e.b], [e.b, e.a]]) {
-      if (halfEdgeFace.has(`${su},${sv}`)) continue;
-      const fVerts = [];
-      let u = su, v = sv;
-      for (let g = 0; g <= edges.length * 2 + 4; g++) {
-        const key = `${u},${v}`;
-        if (halfEdgeFace.has(key)) break;
-        halfEdgeFace.set(key, faces.length);
-        fVerts.push(u);
-        // From v (coming from u): minimum clockwise rotation = minimum CCW diff from the return direction
-        const inAng = Math.atan2(verts[v].z - verts[u].z, verts[v].x - verts[u].x);
-        const ref   = inAng + Math.PI;
-        let bestV = -1, bestDiff = Infinity;
-        for (const nb of adj[v]) {
-          if (nb.v === u && adj[v].length > 1) continue; // don't backtrack unless it's a dead end
-          const d = ((nb.angle - ref) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
-          if (d < bestDiff) { bestDiff = d; bestV = nb.v; }
-        }
-        if (bestV === -1) break;
-        u = v; v = bestV;
-      }
-      if (fVerts.length < 3) continue;
-      // Signed area (Shoelace) to identify the exterior face
-      let area = 0;
-      for (let i = 0; i < fVerts.length; i++) {
-        const a = verts[fVerts[i]], b = verts[fVerts[(i + 1) % fVerts.length]];
-        area += a.x * b.z - b.x * a.z;
-      }
-      faces.push({ vertIndices: fVerts, absArea: Math.abs(area / 2) });
-    }
-  }
-
-  if (faces.length < 2) return null;
-
-  // 4. Exterior face = the one with the largest absolute area
-  const outerIdx = faces.reduce((mi, f, i) => f.absArea > faces[mi].absArea ? i : mi, 0);
-  const interiorFull = faces.filter((f, i) => i !== outerIdx && f.absArea > 0.001);
-  if (interiorFull.length <= 1) return null;
-
-  // 5. Wall → interior face assignment (priority to the half-edge a→b)
-  const interiorIdxSet = new Set();
-  faces.forEach((f, i) => { if (i !== outerIdx && f.absArea > 0.001) interiorIdxSet.add(i); });
-  const origToResult = new Map();
-  let ri = 0;
-  faces.forEach((_, i) => { if (interiorIdxSet.has(i)) origToResult.set(i, ri++); });
-
-  const wallFaceIdx    = new Map(); // wallId → primary result face
-  const wallFaceIdxAlt = new Map(); // wallId → secondary result face (partitions shared between 2 faces)
-  edges.forEach(e => {
-    const fiAB = halfEdgeFace.get(`${e.a},${e.b}`);
-    const fiBA = halfEdgeFace.get(`${e.b},${e.a}`);
-    const abIn = fiAB !== undefined && interiorIdxSet.has(fiAB);
-    const baIn = fiBA !== undefined && interiorIdxSet.has(fiBA);
-    if (abIn) wallFaceIdx.set(e.id, origToResult.get(fiAB));
-    else if (baIn) wallFaceIdx.set(e.id, origToResult.get(fiBA));
-    // Partition wall: the two half-edges belong to different interior faces
-    if (abIn && baIn) wallFaceIdxAlt.set(e.id, origToResult.get(fiBA));
-  });
-
-  return {
-    interiorFaces: interiorFull.map(f => ({
-      polygon: f.vertIndices.map(vi => ({ x: verts[vi].x, z: verts[vi].z })),
-    })),
-    wallFaceIdx,
-    wallFaceIdxAlt,
-  };
-}
-
-// Closes the polygon, detects planar faces and creates a Room for each interior face.
-export function buildToolClose(panel, page){
-  if (!S.buildTool || S.buildTool.points.length < 3) { stopBuildMode(true); return; }
-  const pts = S.buildTool.points;
-  // Last wall: last point → first point
-  const last = pts[pts.length - 1], first = pts[0];
-  const closingId = buildToolCreateWallSegment(panel, page, last.x, last.z, first.x, first.z);
-  if (closingId) S.buildTool.wallIds.push(closingId);
-
-  const faceResult = detectBuildFaces(S.buildTool.wallSegs);
-
-  if (!faceResult) {
-    // Standard case: a single Room (unchanged behavior)
-    const polygon = pts.map(p => ({ x: p.x, z: p.z }));
-    addSlabElement(panel, page, 'Plancher', polygon, GROUND_Y_DEFAULT_3D + GROUND_CONTACT_EPS_3D,                        S.buildTool.pieceId, S.buildTool.pieceLabel);
-    addSlabElement(panel, page, 'Plafond',  polygon, GROUND_Y_DEFAULT_3D + BUILD_WALL_DEFAULT_HEIGHT - GROUND_CONTACT_EPS_3D, S.buildTool.pieceId, S.buildTool.pieceLabel);
-    S.selectedRoomId = S.buildTool.pieceId;
-    S.selectedId = panel.id;
-    stopBuildMode(false);
-    return;
-  }
-
-  // Multi-room case: generate unique labels for each face
-  const wallIdSet = new Set(S.buildTool.wallIds);
-  const takenLabels = new Set(
-    page.objects
-      .filter(o => o.pieceId && o.homePanelId === panel.id && !wallIdSet.has(o.id))
-      .map(o => o.pieceLabel).filter(Boolean)
-  );
-  takenLabels.add(S.buildTool.pieceLabel); // reserve the label of the 1st face
-  function nextLabel() {
-    const lbl = nomNumeroteLibre3D(takenLabels, tr('Room', 'Pièce'));
-    takenLabels.add(lbl);
-    return lbl;
-  }
-
-  // faceMeta[i] = { pieceId, pieceLabel } for each interior face
-  const faceMeta = faceResult.interiorFaces.map((_, i) => ({
-    pieceId:    i === 0 ? S.buildTool.pieceId : newId('piece'),
-    pieceLabel: i === 0 ? S.buildTool.pieceLabel : nextLabel(),
-  }));
-
-  // Reassign walls to their face (unassigned walls keep S.buildTool.pieceId = faceMeta[0])
-  faceResult.wallFaceIdx.forEach((faceIdx, wallId) => {
-    const obj = page.objects.find(o => o.id === wallId);
-    if (!obj) return;
-    obj.pieceId    = faceMeta[faceIdx].pieceId;
-    obj.pieceLabel = faceMeta[faceIdx].pieceLabel;
-    // Shared partition: also remember the adjacent face for highlighting
-    if (faceResult.wallFaceIdxAlt.has(wallId)) {
-      const altIdx = faceResult.wallFaceIdxAlt.get(wallId);
-      obj.altPieceId = faceMeta[altIdx].pieceId;
-    }
-  });
-
-  // Create floor + ceiling for each face
-  faceResult.interiorFaces.forEach((face, i) => {
-    const { pieceId, pieceLabel } = faceMeta[i];
-    addSlabElement(panel, page, 'Plancher', face.polygon, GROUND_Y_DEFAULT_3D + GROUND_CONTACT_EPS_3D,                        pieceId, pieceLabel);
-    addSlabElement(panel, page, 'Plafond',  face.polygon, GROUND_Y_DEFAULT_3D + BUILD_WALL_DEFAULT_HEIGHT - GROUND_CONTACT_EPS_3D, pieceId, pieceLabel);
-  });
-
-  // Select the last face (the most recently delimited)
-  S.selectedRoomId = faceMeta[faceMeta.length - 1].pieceId;
-  S.selectedId = panel.id;
-  stopBuildMode(false);
-}
-
-// Draws the Build tool's 2D overlay (drawn segments + segment in progress + points).
-export function drawBuildToolOverlay(c, page){
-  if (!S.buildTool) return;
-  const panel = page.objects.find(o => o.id === S.buildTool.panelId);
-  if (!panel) return;
-  const pts = S.buildTool.points;
-  const toScreen = (wx, wz) => worldFloorToScreen(wx, wz, panel, page);
-  c.save();
-  c.beginPath(); c.rect(panel.x, panel.y, panel.w, panel.h); c.clip();
-  // Alignment guides (semi-transparent dashed blue lines)
-  const gX = S.buildTool.activeGuideX || [], gZ = S.buildTool.activeGuideZ || [];
-  if (gX.length > 0 || gZ.length > 0) {
-    c.strokeStyle = SIGNAL_CONSTRUIRE_GUIDE; c.lineWidth = 1; c.setLineDash([5, 4]);
-    gX.forEach(gx => {
-      const sA = toScreen(gx, -60) || toScreen(gx, -20);
-      const sB = toScreen(gx,  60) || toScreen(gx,  20);
-      if (sA && sB) { c.beginPath(); c.moveTo(sA.x, sA.y); c.lineTo(sB.x, sB.y); c.stroke(); }
-    });
-    gZ.forEach(gz => {
-      const sA = toScreen(-60, gz) || toScreen(-20, gz);
-      const sB = toScreen( 60, gz) || toScreen( 20, gz);
-      if (sA && sB) { c.beginPath(); c.moveTo(sA.x, sA.y); c.lineTo(sB.x, sB.y); c.stroke(); }
-    });
-    c.setLineDash([]);
-  }
-  // Drawn segments (solid blue line) : from wallSegs, not from pts.
-  // Correct even after merge/split and in detached mode (no phantom line).
-  if (S.buildTool.wallSegs.length > 0) {
-    c.strokeStyle = SIGNAL_CONSTRUIRE; c.lineWidth = 2; c.setLineDash([]);
-    S.buildTool.wallSegs.forEach(seg => {
-      const s1 = toScreen(seg.x1, seg.z1), s2 = toScreen(seg.x2, seg.z2);
-      if (s1 && s2) { c.beginPath(); c.moveTo(s1.x, s1.y); c.lineTo(s2.x, s2.y); c.stroke(); }
-    });
-  }
-  // Segment in progress (last point → mouse) : thin dashed blue line (not in detached mode)
-  if (pts.length >= 1 && S.buildTool.previewPos && !S.buildTool.disconnected) {
-    const sLast = toScreen(pts[pts.length - 1].x, pts[pts.length - 1].z);
-    const sPrev = toScreen(S.buildTool.previewPos.x, S.buildTool.previewPos.z);
-    if (sLast && sPrev) {
-      c.beginPath();
-      c.strokeStyle = SIGNAL_CONSTRUIRE; c.lineWidth = 1; c.setLineDash([4, 4]);
-      c.moveTo(sLast.x, sLast.y); c.lineTo(sPrev.x, sPrev.y);
-      c.stroke(); c.setLineDash([]);
-    }
-    // Closing preview segment → first point
-    if (S.buildTool.snapped && pts.length >= 2) {
-      const sFirst = toScreen(pts[0].x, pts[0].z);
-      if (sPrev && sFirst) {
-        c.beginPath(); c.strokeStyle = SIGNAL_CONSTRUIRE; c.lineWidth = 1; c.setLineDash([4, 4]);
-        c.moveTo(sPrev.x, sPrev.y); c.lineTo(sFirst.x, sFirst.y);
-        c.stroke(); c.setLineDash([]);
-      }
-    }
-  }
-  // Placed points : drawn from the walls' real endpoints (not from pts)
-  // A point only appears at real junctions between different walls,
-  // never in the middle of an extended wall.
-  {
-    const drawnDots = new Set();
-    const drawDot = (wx, wz) => {
-      const key = `${wx.toFixed(4)},${wz.toFixed(4)}`;
-      if (drawnDots.has(key)) return;
-      drawnDots.add(key);
-      const s = toScreen(wx, wz);
-      if (!s) return;
-      c.beginPath(); c.arc(s.x, s.y, 4, 0, Math.PI * 2);
-      c.fillStyle = SIGNAL_CONSTRUIRE; c.fill();
-    };
-    if (S.buildTool.wallSegs.length === 0) {
-      // No wall yet: just draw the first placed point
-      if (pts.length > 0) drawDot(pts[0].x, pts[0].z);
-    } else {
-      S.buildTool.wallSegs.forEach(seg => { drawDot(seg.x1, seg.z1); drawDot(seg.x2, seg.z2); });
-    }
-    // Always include the very last placed point (current cursor of the tracé)
-    if (pts.length > 0) drawDot(pts[pts.length - 1].x, pts[pts.length - 1].z);
-  }
-  // Ring around the hovered point (snap vertex)
-  if (S.buildTool.snapPointIdx !== null && S.buildTool.snapPointIdx < pts.length) {
-    const sp = toScreen(pts[S.buildTool.snapPointIdx].x, pts[S.buildTool.snapPointIdx].z);
-    if (sp) {
-      c.beginPath(); c.arc(sp.x, sp.y, 9, 0, Math.PI * 2);
-      c.strokeStyle = SIGNAL_CONSTRUIRE; c.lineWidth = 2; c.setLineDash([]); c.stroke();
-    }
-  }
-  // Detached mode: green ring + cross on the hovered target point
-  if (S.buildTool.disconnected && S.buildTool.previewPos) {
-    const sp = toScreen(S.buildTool.previewPos.x, S.buildTool.previewPos.z);
-    if (sp) {
-      c.beginPath(); c.arc(sp.x, sp.y, 7, 0, Math.PI * 2);
-      c.strokeStyle = SIGNAL_CONSTRUIRE_DETACHE; c.lineWidth = 1.5; c.setLineDash([]); c.stroke();
-      c.strokeStyle = SIGNAL_CONSTRUIRE_DETACHE; c.lineWidth = 1;
-      c.beginPath(); c.moveTo(sp.x - 3, sp.y); c.lineTo(sp.x + 3, sp.y); c.stroke();
-      c.beginPath(); c.moveTo(sp.x, sp.y - 3); c.lineTo(sp.x, sp.y + 3); c.stroke();
-    }
-  }
-  // Current point (preview) : same size as the others (not in detached mode)
-  if (S.buildTool.previewPos && !S.buildTool.disconnected) {
-    const sp = toScreen(S.buildTool.previewPos.x, S.buildTool.previewPos.z);
-    if (sp) {
-      c.beginPath(); c.arc(sp.x, sp.y, 4, 0, Math.PI * 2);
-      c.fillStyle = SIGNAL_CONSTRUIRE; c.fill();
-    }
-  }
-  c.restore();
-}
-
+// #454f : L'OUTIL « CONSTRUIRE UN BÂTIMENT » DE LA SCÈNE A ÉTÉ RETIRÉ (demandé : la construction se
+// fait dans l'éditeur de bâtiment). Avec lui : addRoomWallElement, stopBuildMode,
+// buildToolCreateWallSegment, addSlabElement, detectBuildFaces, buildToolClose et
+// drawBuildToolOverlay. Les pièces déjà tracées dans les Projets (murs et dalles portant un
+// `pieceId`) restent telles quelles : rendues, sélectionnables, modifiables.
 
 export function getRoomBoundingBoxXZ(pieceId, page) {
   const floor = page.objects.find(o =>
@@ -808,8 +400,7 @@ export function getBuildingBoundingBoxXZ(buildingRoomIds, page) {
            cx: (minX + maxX) / 2, cz: (minZ + maxZ) / 2 };
 }
 
-// Recomputes an S.buildTool wall's 2D thin-box after its Room has moved (X/Z translation).
-// Duplicates buildToolCreateWallSegment's logic to stay independent of the current S.buildTool.
+// Recomputes a traced Room wall's 2D thin-box after its Room has moved (X/Z translation).
 
 // ════════════════════════════════════════════════════════════
 // BUILD TOOL
@@ -1189,8 +780,6 @@ export function drawContent(c, page, scale, withSelection, exportBadges){
     }
     c.restore();
   }
-  // Overlay of the "Build a Building" tool (drawn segments + segment in progress + points)
-  if (S.buildTool) drawBuildToolOverlay(c, page);
   // L'édition des Cases d'une Planche importée : ses Cases, numérotées, et ce qu'on trace.
   // Effacées le temps d'un cadrage au clic droit (demandé) : elles gêneraient la vue de l'image.
   if (withSelection && estPlancheImportee(page) && S.dragMode !== 'plancheCadrage'

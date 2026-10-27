@@ -21,8 +21,7 @@ import {
   hitPanelCorner, hitPanelEdge, snapCornerToRightAngle,
 } from './hit-test.js';
 import {
-  setCanvasToolsCallbacks, screenToWorldFloor, buildApplyAngleSnap, buildApplyAlignSnap,
-  startBuildMode, startTraceTool, stopTraceTool, startMeasureTool, stopMeasureTool,
+  setCanvasToolsCallbacks, startTraceTool, stopTraceTool, startMeasureTool, stopMeasureTool,
 } from './canvas-tools.js';
 import { countModelUsages, messageSuppressionModele, messageRenommageModele,
   repointerModele3D, repointerPileAnnulation3D } from './model-library.js';
@@ -85,7 +84,7 @@ import { renommerChapitre, supprimerChapitre, indexDuChapitre, deplacerPlanche }
 import {
   grainsDuSol3D, grainsDesTraces3D,
   EMOTIONS, HAND_STATES, POSITIONS, FIXED_SHAPE, FIXED_COLOR, PANEL_CAM_REF_DIST_3D,
-  PANEL_CAM_DEFAULT_DIST_3D, BUILD_WALL_DEFAULT_HEIGHT, BUILD_SNAP_ANGLE_DEG, BUILD_CLOSE_DIST, MAX_UNDO,
+  PANEL_CAM_DEFAULT_DIST_3D, BUILD_WALL_DEFAULT_HEIGHT, MAX_UNDO,
   WALL_OPENING_MAGNET_TYPES, WALL_TYPES, TRAVERSANT_TYPES, WALL_OPENING_MARGIN_FRAC,
   OBJECT_ASPECT_RATIOS, PERSONA_REAL_HEIGHT_M, OBJECT_REAL_HEIGHT_M, ZOOM_MIN, ZOOM_MAX, PAGE_RENDER_SCALE_MAX, CANVAS_WRAP_PADDING, CURSOR_MAP,
   BUBBLE_TAIL_ANGLE_DEFAULT, BUBBLE_TAIL_LEN_DEFAULT, BUBBLE_PADDING_DEFAULT, BUBBLE_FONT_DEFAULT,
@@ -122,7 +121,7 @@ import {
 
   hauteurBase3D, hauteurDepuisPourcentage3D, pourcentageDepuisHauteur3D,
 
-  pageVoisine3D, nomNumeroteLibre3D, libelleTypeObjet3D, libelleTable3D, positionInfobulle3D,
+  pageVoisine3D, libelleTypeObjet3D, libelleTable3D, positionInfobulle3D,
   vitesseRotation3D, vitesseDeplacement3D, reglerVitessesGestes3D, pourcentGeste3D,
 } from './utils.js';
 import {
@@ -158,7 +157,7 @@ import {
   projectElementCenterToCanvas3D, setElementWorldPos3D, smoothTracéPath3D, tracéPointAtFrac3D,
   wallOpeningWorldPosOnTracé3D, startCamSmoothing, storeElementWorldCoords, useObjectBoxFormat3D,
   distanceCameraPourPremierElement3D, estPremierElement3DdeLaCase,
-  useObjectFormat3D, worldFloorToScreen, worldPointToPageXY3D, panelSceneCache3D, elaguerCacheDeCases3D, tracéMeshCache3D,
+  useObjectFormat3D, worldPointToPageXY3D, panelSceneCache3D, elaguerCacheDeCases3D, tracéMeshCache3D,
   getRoomScreenBBoxFrom2DProjections, getBuildingJunctionCorners,
 } from './scene3d.js';
 import {
@@ -169,8 +168,7 @@ import {
   loadModelRenames, noterRenommageModele, proposerRepointageModeles, prechargerEnCascade3D,
 } from './io.js';
 import {
-  setDrawCallbacks, uniqueDefaultName, addRoomWallElement, stopBuildMode, buildToolCreateWallSegment,
-  buildToolClose, getPanelPoints, bubbleTailVisible, getBubbleTailTip, drawCurrentPage, renderAll,
+  setDrawCallbacks, uniqueDefaultName, getPanelPoints, bubbleTailVisible, getBubbleTailTip, drawCurrentPage, renderAll,
   scheduleDrawCurrentPage, flushDrawCurrentPage, exportPage, exportVolume, exportPages,
   cadreDeRecouvrement3D, ancrageApresGlissement3D, reglagesQueueVersLePoint3D,
 } from './draw.js';
@@ -487,9 +485,6 @@ function assignNextPanelNumber(page, panelObj){
 // ↳ src/constants.js
 // ↳ src/constants.js
 // ↳ src/constants.js
-// Current state of the Build tool: null = inactive.
-// { panelId, pieceId, pieceLabel, points, wallIds, previewPos, snapped }
-// [STATE→S] let S.buildTool = null;
 
 // ════════════════════════════════════════════════════════════
 // 3D COORDINATE HELPERS
@@ -1366,54 +1361,6 @@ function addObjectToPanel(panel, objType){
   // c'est aujourd'hui la règle commune, et une règle commune vaut mieux qu'une exception à retenir.
   openObjectModal(obj, true);
 }
-// ---------- Buildings: Room (hollow cube made of 6 simple Walls) ----------
-// [DRAW→draw.js] addRoomWallElement → imported from draw.js (cf. import above, FIX for the Build tool).
-// Adds a whole Room (Floor, Ceiling, 4 side Walls = 4 Sides) to the Panel, forming a hollow cube.
-// Real dimensions derived from the Panel's size (with an absolute minimum), deliberately large
-// enough so the Camera (right-click the Panel → Camera, cf. ctxToggleCamera) can "enter" the Room
-// by dollying (scroll wheel) without visually passing through a Wall, the sphere of possible camera
-// positions (radius = camera distance) must stay strictly inside the cube as long as we don't
-// approach the minimum (cf. camDist clamp to 1 in the existing scroll-wheel code in Camera mode).
-function addRoomToPanel(panel){
-  snapshot();
-  const page = currentPage();
-  const roomW = clamp((panel.w / WALL_PX_PER_UNIT_3D) * 0.95, 3, 12);
-  const roomH = clamp((panel.h / WALL_PX_PER_UNIT_3D) * 0.95, 2.5, 10);
-  const roomD = roomW;
-  const halfW = roomW / 2, halfH = roomH / 2, halfD = roomD / 2;
-  // pieceId: identifier shared by the 6 Walls created below (one per call to addRoomToPanel), so
-  // they can later be grouped/selected together (cf. renderSidePersonas/S.selectedRoomId).
-  // pieceLabel: display label for the group header, numbered ("Pièce 2", "Pièce 3", ...) if the
-  // Panel already contains one or more other Rooms, on the same principle as uniqueDefaultName.
-  const pieceId = newId('piece');
-  const existingRoomLabels = new Set(
-    page.objects.filter(o => o.type === 'objet3d' && o.pieceId && findOwningPanel(o, page) === panel).map(o => o.pieceLabel)
-  );
-  const pieceLabel = nomNumeroteLibre3D(existingRoomLabels, tr('Room', 'Pièce'));
-  // Floor/Ceiling: a "flat" Wall (rotX=90°), its length (local X axis, unaffected by the rotation)
-  // covers the room's width, its height (local Y axis, which flips onto the world Z axis under the
-  // rotation) covers its depth.
-  addRoomWallElement(panel, page, 'Plancher', 0, -halfH, 0, roomW, roomD, Math.PI / 2, 0, pieceId, pieceLabel);
-  addRoomWallElement(panel, page, 'Plafond', 0, halfH, 0, roomW, roomD, Math.PI / 2, 0, pieceId, pieceLabel);
-  // Back/front Walls: no rotation needed (default orientation, facing the camera), just offset in
-  // depth on either side of the room's center.
-  addRoomWallElement(panel, page, tr('Back wall', 'Mur arrière'), 0, 0, -halfD, roomW, roomH, 0, 0, pieceId, pieceLabel);
-  addRoomWallElement(panel, page, 'Mur avant', 0, 0, halfD, roomW, roomH, 0, 0, pieceId, pieceLabel);
-  // Left/right Walls: rotY=90°, their length (local X axis) flips onto the world Z axis (room
-  // depth), their height (local Y axis, vertical) stays unchanged.
-  addRoomWallElement(panel, page, 'Mur gauche', -halfW, 0, 0, roomD, roomH, 0, Math.PI / 2, pieceId, pieceLabel);
-  addRoomWallElement(panel, page, 'Mur droit', halfW, 0, 0, roomD, roomH, 0, Math.PI / 2, pieceId, pieceLabel);
-  S.selectedId = panel.id; S.selectedRoomId = pieceId;
-  drawCurrentPage();
-}
-
-// ============================================================
-// "BUILD A BUILDING" TOOL : drawing walls in top-down view
-// ============================================================
-
-
-// Projects a world point (wx, GROUND_Y_DEFAULT_3D, wz) into page coordinates (px).
-
 // Projects a world point (wx, GROUND_Y_DEFAULT_3D, wz) into real page coordinates (panel-space).
 // Inverse of panelPixelToGroundXZ3D: world XZ → page pixel on the Panel.
 // Returns null if the point is behind the camera.
@@ -1534,13 +1481,6 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
     e.stopImmediatePropagation();
     stopTraceTool(false);
-    return;
-  }
-  // Escape: cancels the current "Build a Building" tool (removes walls already drawn).
-  if (e.key === 'Escape' && S.buildTool) {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    stopBuildMode(true);
     return;
   }
   const tag = document.activeElement.tagName;
@@ -2566,24 +2506,13 @@ canvas.addEventListener('mousedown', (e) => {
     stopMeasureTool();
     return;
   }
-  // ---- Tracé / Zone tool: right-click = cancel (same logic as S.buildTool)
+  // ---- Tracé / Zone tool: right-click = cancel
   if (e.button === 2 && S.traceTool) {
     stopTraceTool(false);
     return;
   }
 
   if (e.button === 2) {
-    // In build mode, right-click enters "detached" mode instead of panning.
-    if (S.buildTool) {
-      S.buildTool.disconnected = true;
-      S.buildTool.previewPos = null;
-      S.buildTool.snapPointIdx = null;
-      S.buildTool.snapped = false;
-      S.buildTool.activeGuideX = []; S.buildTool.activeGuideZ = [];
-      canvas.style.cursor = 'crosshair';
-      drawCurrentPage();
-      return;
-    }
     // ── Clic droit MAINTENU sur une Case à image : on recadre (#403j) ──
     //
     // Un raccourci, pas un mode : le geste dure ce que dure le bouton. Il vient DOUBLER l'entrée
@@ -2742,263 +2671,6 @@ canvas.addEventListener('mousedown', (e) => {
     return;
   }
 
-  // ---- "Build a Building" tool: intercept left-click ----
-  if (S.buildTool && e.button === 0) {
-    const panel = page.objects.find(o => o.id === S.buildTool.panelId);
-    if (panel) {
-      const worldPt = screenToWorldFloor(x, y, panel, page);
-      if (worldPt) {
-        const angleSnapped = buildApplyAngleSnap(worldPt.x, worldPt.z);
-        const pts = S.buildTool.points;
-
-        // ---- Detached mode: pick a new starting point ----
-        if (S.buildTool.disconnected) {
-          const DISC_EP_PX = 12, DISC_SEG_PX = 8;
-          // 1. Nearby wall endpoint?
-          let foundEp = null;
-          for (const seg of S.buildTool.wallSegs) {
-            for (const [ex, ez] of [[seg.x1, seg.z1], [seg.x2, seg.z2]]) {
-              const sp = worldFloorToScreen(ex, ez, panel, page);
-              if (sp && Math.hypot(x - sp.x, y - sp.y) < DISC_EP_PX) { foundEp = { x: ex, z: ez }; break; }
-            }
-            if (foundEp) break;
-          }
-          if (foundEp) {
-            pts.push({ x: foundEp.x, z: foundEp.z });
-            S.buildTool.disconnected = false;
-            S.buildTool.lastWasVertexSnap = true;
-            S.buildTool.snapWallSegsCount = S.buildTool.wallSegs.length;
-            S.buildTool.snapArrivalWallId = null;
-            canvas.style.cursor = 'crosshair';
-            drawCurrentPage(); return;
-          }
-          // 2. Point on a wall segment (with splitting)?
-          let bestSeg = null, bestPx = 0, bestPz = 0, bestDist = Infinity;
-          for (const seg of S.buildTool.wallSegs) {
-            const dx = seg.x2 - seg.x1, dz = seg.z2 - seg.z1;
-            const len2 = dx * dx + dz * dz;
-            if (len2 < 0.0001) continue;
-            const t = Math.max(0, Math.min(1, ((worldPt.x - seg.x1) * dx + (worldPt.z - seg.z1) * dz) / len2));
-            const projX = seg.x1 + t * dx, projZ = seg.z1 + t * dz;
-            const projSp = worldFloorToScreen(projX, projZ, panel, page);
-            if (!projSp) continue;
-            const d = Math.hypot(x - projSp.x, y - projSp.y);
-            if (d < DISC_SEG_PX && d < bestDist) { bestDist = d; bestSeg = seg; bestPx = projX; bestPz = projZ; }
-          }
-          if (bestSeg) {
-            snapshot();
-            // Split the wall in two at the clicked point
-            const si = page.objects.findIndex(o => o.id === bestSeg.id);
-            if (si !== -1) page.objects.splice(si, 1);
-            const siwi = S.buildTool.wallIds.indexOf(bestSeg.id);
-            if (siwi !== -1) S.buildTool.wallIds.splice(siwi, 1);
-            S.buildTool.wallSegs = S.buildTool.wallSegs.filter(s => s.id !== bestSeg.id);
-            const id1 = buildToolCreateWallSegment(panel, page, bestSeg.x1, bestSeg.z1, bestPx, bestPz);
-            const id2 = buildToolCreateWallSegment(panel, page, bestPx, bestPz, bestSeg.x2, bestSeg.z2);
-            if (id1) S.buildTool.wallIds.push(id1);
-            if (id2) S.buildTool.wallIds.push(id2);
-            pts.push({ x: bestPx, z: bestPz });
-            S.buildTool.disconnected = false;
-            S.buildTool.lastWasVertexSnap = false;
-            S.buildTool.snapWallSegsCount = S.buildTool.wallSegs.length;
-            S.buildTool.snapArrivalWallId = null;
-            S.buildTool.activeGuideX = []; S.buildTool.activeGuideZ = [];
-            canvas.style.cursor = 'crosshair';
-            drawCurrentPage(); return;
-          }
-          // 3. Nothing found → cancel the construction (same effect as Escape)
-          stopBuildMode(true);
-          return;
-        }
-
-        // Snap onto an existing point of the tracé (screen space, excl. last point).
-        // We ignore points that are no longer endpoints of any real wall (absorbed by a
-        // colinear merge), they no longer make sense as snap targets.
-        const SNAP_EPS_W = 0.015;
-        const isRealEndpoint = (px, pz) => S.buildTool.wallSegs.some(s =>
-          Math.hypot(s.x1 - px, s.z1 - pz) < SNAP_EPS_W ||
-          Math.hypot(s.x2 - px, s.z2 - pz) < SNAP_EPS_W);
-        let pointSnapIdx = null;
-        for (let i = 0; i < pts.length - 1; i++) {
-          if (i > 0 && !isRealEndpoint(pts[i].x, pts[i].z)) continue;
-          const sp = worldFloorToScreen(pts[i].x, pts[i].z, panel, page);
-          if (sp && Math.hypot(x - sp.x, y - sp.y) < 10) { pointSnapIdx = i; break; }
-        }
-        if (pointSnapIdx !== null) {
-          const target = pts[pointSnapIdx];
-          if (pointSnapIdx === 0 && pts.length >= 3) { buildToolClose(panel, page); return; }
-          // Remember how many walls exist BEFORE creating the arrival wall to the snapped vertex
-          S.buildTool.snapWallSegsCount = S.buildTool.wallSegs.length;
-          S.buildTool.snapArrivalWallId = null;
-          if (pts.length === 1) snapshot();
-          if (pts.length >= 1) {
-            const last = pts[pts.length - 1];
-            const wallId = buildToolCreateWallSegment(panel, page, last.x, last.z, target.x, target.z);
-            if (wallId) { S.buildTool.wallIds.push(wallId); S.buildTool.snapArrivalWallId = wallId; }
-          }
-          pts.push({ x: target.x, z: target.z });
-          S.buildTool.lastWasVertexSnap = true;
-          S.buildTool.activeGuideX = []; S.buildTool.activeGuideZ = [];
-          drawCurrentPage(); return;
-        }
-        const aligned = buildApplyAlignSnap(angleSnapped.x, angleSnapped.z);
-        const snapped = { x: aligned.x, z: aligned.z };
-        // Closing test: if ≥3 pts and we're close to the first point.
-        // Two thresholds: raw position (BUILD_CLOSE_DIST) OR snapped position (1 cm, alignment
-        // snap can have brought the cursor exactly onto the first point even if the raw click was
-        // slightly farther, which prevents the merge logic from running incorrectly).
-        if (pts.length >= 3) {
-          const first = pts[0];
-          const distRaw     = Math.hypot(worldPt.x - first.x, worldPt.z - first.z);
-          const distSnapped = Math.hypot(snapped.x  - first.x, snapped.z  - first.z);
-          if (distRaw < BUILD_CLOSE_DIST || distSnapped < 0.01) { buildToolClose(panel, page); return; }
-        }
-        // --- Automatic splitting if `snapped` lands on an existing wall ---
-        // When a wall ends on an already-drawn wall (neither at an endpoint nor outside the
-        // segment), we split the latter at the exact projection point so the planar graph stays
-        // connected.
-        {
-          const ARRIVAL_SPLIT_EPS = 0.1; // world units (~10 cm)
-          for (const seg of S.buildTool.wallSegs.slice()) {
-            const dx = seg.x2 - seg.x1, dz = seg.z2 - seg.z1;
-            const len2 = dx * dx + dz * dz;
-            if (len2 < 0.0001) continue;
-            const t = ((snapped.x - seg.x1) * dx + (snapped.z - seg.z1) * dz) / len2;
-            if (t < 0.01 || t > 0.99) continue; // endpoint → no split
-            const projX = seg.x1 + t * dx, projZ = seg.z1 + t * dz;
-            if (Math.hypot(snapped.x - projX, snapped.z - projZ) > ARRIVAL_SPLIT_EPS) continue;
-            // The arrival point is on this wall → split it and adjust snapped
-            snapped.x = projX; snapped.z = projZ;
-            const si = page.objects.findIndex(o => o.id === seg.id);
-            if (si !== -1) page.objects.splice(si, 1);
-            const wi = S.buildTool.wallIds.indexOf(seg.id);
-            if (wi !== -1) S.buildTool.wallIds.splice(wi, 1);
-            S.buildTool.wallSegs = S.buildTool.wallSegs.filter(s => s.id !== seg.id);
-            const id1 = buildToolCreateWallSegment(panel, page, seg.x1, seg.z1, projX, projZ);
-            const id2 = buildToolCreateWallSegment(panel, page, projX, projZ, seg.x2, seg.z2);
-            if (id1) S.buildTool.wallIds.push(id1);
-            if (id2) S.buildTool.wallIds.push(id2);
-            break; // only one wall split per click
-          }
-        }
-        if (pts.length === 1) snapshot(); // snapshot before the 1st wall
-        if (pts.length >= 1) {
-          const last = pts[pts.length - 1];
-          let wallId;
-          const MEPS = 0.002;
-          const mergeRad = BUILD_SNAP_ANGLE_DEG * Math.PI / 180;
-          const newAng = Math.atan2(snapped.z - last.z, snapped.x - last.x);
-          // Automatic merging: look for a wall colinear to "last" to replace with the extended
-          // wall. For a vertex snap: only search among walls prior to the snap (before the
-          // arrival wall). For a normal click: only search the very last wall created.
-          const mergePool = S.buildTool.lastWasVertexSnap
-            ? S.buildTool.wallSegs.slice(0, S.buildTool.snapWallSegsCount)
-            : (S.buildTool.wallSegs.length > 0 ? [S.buildTool.wallSegs[S.buildTool.wallSegs.length - 1]] : []);
-          let mergeTarget = null;
-          for (const seg of mergePool) {
-            const atB = Math.hypot(seg.x2 - last.x, seg.z2 - last.z) < MEPS;
-            const atA = Math.hypot(seg.x1 - last.x, seg.z1 - last.z) < MEPS;
-            if (!atA && !atB) continue;
-            const segAng = Math.atan2(seg.z2 - seg.z1, seg.x2 - seg.x1);
-            let df = newAng - segAng;
-            while (df >  Math.PI) df -= 2 * Math.PI;
-            while (df < -Math.PI) df += 2 * Math.PI;
-            const angMatch = Math.abs(df) < mergeRad || Math.abs(Math.abs(df) - Math.PI) < mergeRad;
-            if (angMatch) {
-              const fx = atB ? seg.x1 : seg.x2, fz = atB ? seg.z1 : seg.z2;
-              // snapped must be beyond last from the fixed endpoint
-              const asx = snapped.x - fx, asz = snapped.z - fz;
-              const alx = last.x   - fx, alz = last.z   - fz;
-              const dotOk = asx * alx + asz * alz > alx * alx + alz * alz;
-              if (dotOk) {
-                mergeTarget = { seg, fx, fz }; break;
-              }
-            }
-          }
-          // Junction check: if other non-colinear walls also end at "last", it's a legitimate
-          // junction, we don't merge (the point must stay visible).
-          if (mergeTarget) {
-            const { seg: ms, fx, fz } = mergeTarget;
-            const arrId = S.buildTool.snapArrivalWallId;
-            const extAng = Math.atan2(snapped.z - fz, snapped.x - fx);
-            const isJunction = S.buildTool.wallSegs.some(s => {
-              if (s.id === ms.id || s.id === arrId) return false;
-              const atL = Math.hypot(s.x1 - last.x, s.z1 - last.z) < MEPS ||
-                          Math.hypot(s.x2 - last.x, s.z2 - last.z) < MEPS;
-              if (!atL) return false;
-              const sA = Math.atan2(s.z2 - s.z1, s.x2 - s.x1);
-              let dj = sA - extAng;
-              while (dj >  Math.PI) dj -= 2 * Math.PI;
-              while (dj < -Math.PI) dj += 2 * Math.PI;
-              return !(Math.abs(dj) < mergeRad || Math.abs(Math.abs(dj) - Math.PI) < mergeRad);
-            });
-            if (isJunction) mergeTarget = null;
-          }
-          if (mergeTarget) {
-            const { seg: ms, fx, fz } = mergeTarget;
-            const lx = last.x, lz = last.z;
-            // 1. Remove the old colinear wall
-            const oi = page.objects.findIndex(o => o.id === ms.id);
-            if (oi !== -1) page.objects.splice(oi, 1);
-            const wi = S.buildTool.wallIds.indexOf(ms.id);
-            if (wi !== -1) S.buildTool.wallIds.splice(wi, 1);
-            S.buildTool.wallSegs = S.buildTool.wallSegs.filter(s => s.id !== ms.id);
-            // 2. Remove the snap's arrival wall if it exists (avoids overlaps)
-            const arrId2 = S.buildTool.snapArrivalWallId;
-            if (arrId2) {
-              const ai = page.objects.findIndex(o => o.id === arrId2);
-              if (ai !== -1) page.objects.splice(ai, 1);
-              const awi = S.buildTool.wallIds.indexOf(arrId2);
-              if (awi !== -1) S.buildTool.wallIds.splice(awi, 1);
-              S.buildTool.wallSegs = S.buildTool.wallSegs.filter(s => s.id !== arrId2);
-              S.buildTool.snapArrivalWallId = null;
-            }
-            // 3. Remove residual colinear walls at "last" that would double up in thickness.
-            // We only look for walls going in the SAME DIRECTION as the extension (identical
-            // direction, ± mergeRad), never the opposite direction, since that could mistakenly
-            // remove a legitimate perimeter wall (e.g. a side of the rectangle coming back to
-            // "last" from the other side).
-            const extAng2 = Math.atan2(snapped.z - fz, snapped.x - fx);
-            const colIds = [];
-            S.buildTool.wallSegs = S.buildTool.wallSegs.filter(s => {
-              const atL = Math.hypot(s.x1 - lx, s.z1 - lz) < MEPS ||
-                          Math.hypot(s.x2 - lx, s.z2 - lz) < MEPS;
-              if (!atL) return true;
-              const sA = Math.atan2(s.z2 - s.z1, s.x2 - s.x1);
-              let d2 = sA - extAng2;
-              while (d2 >  Math.PI) d2 -= 2 * Math.PI;
-              while (d2 < -Math.PI) d2 += 2 * Math.PI;
-              if (Math.abs(d2) < mergeRad) {
-                colIds.push(s.id); return false;
-              }
-              return true;
-            });
-            for (const cid of colIds) {
-              const ci = page.objects.findIndex(o => o.id === cid);
-              if (ci !== -1) page.objects.splice(ci, 1);
-              const cw = S.buildTool.wallIds.indexOf(cid);
-              if (cw !== -1) S.buildTool.wallIds.splice(cw, 1);
-            }
-            // 4. Create the merged wall (no pts manipulation, the points come from wallSegs)
-            wallId = buildToolCreateWallSegment(panel, page, fx, fz, snapped.x, snapped.z);
-          } else {
-            wallId = buildToolCreateWallSegment(panel, page, last.x, last.z, snapped.x, snapped.z);
-          }
-          if (wallId) S.buildTool.wallIds.push(wallId);
-        }
-        pts.push({ x: snapped.x, z: snapped.z });
-        S.buildTool.lastWasVertexSnap = false;
-        // Clear the alignment guides: they must not persist after a click (otherwise the Z guide
-        // stays shown as a long full-width horizontal line, visually confusing the wall with
-        // something much longer).
-        S.buildTool.activeGuideX = []; S.buildTool.activeGuideZ = [];
-        drawCurrentPage(); return;
-      }
-    }
-    // Click outside the panel: cancellation
-    stopBuildMode(true);
-    return;
-  }
 
   // Clicking anywhere in the canvas (the Page's space, whether there's a Panel/Bubble under the
   // click or not) "selects" that Page, like a click on its row in the left-hand menu, on user
@@ -3166,7 +2838,7 @@ canvas.addEventListener('mousedown', (e) => {
     }
   }
   // Room resize handles (corner of the real 2D bbox).
-  if (S.selectedRoomId && !S.buildTool) {
+  if (S.selectedRoomId) {
     const _pPanel = page.objects.find(p => p.type === 'panel' && p.id === S.selectedId);
     if (_pPanel) {
       const _pMembers = page.objects.filter(o => o.pieceId === S.selectedRoomId || o.altPieceId === S.selectedRoomId);
@@ -3201,7 +2873,7 @@ canvas.addEventListener('mousedown', (e) => {
     }
   }
   // Building resize handles (all wall junctions).
-  if (S.selectedBuildingKey && !S.buildTool) {
+  if (S.selectedBuildingKey) {
     const _bPanel = page.objects.find(p => p.type === 'panel' && p.id === S.selectedId);
     if (_bPanel) {
       const buildingRoomIds = S.selectedBuildingKey.split(',');
@@ -3237,7 +2909,7 @@ canvas.addEventListener('mousedown', (e) => {
   // rectangle (same logic as for an Element, cf. comment below): click-and-drag anywhere in the
   // Panel moves the whole {walls + floor + ceiling} set in 3D world space via a raycast onto the
   // ground plane (Y = GROUND_Y_DEFAULT_3D + roomFloatY).
-  if (S.selectedRoomId && !S.buildTool) {
+  if (S.selectedRoomId) {
     const page2 = currentPage();
     const roomMembers = page2.objects.filter(o => o.pieceId === S.selectedRoomId);
     const firstWall = roomMembers.find(o => WALL_TYPES.includes(o.objType));
@@ -3272,7 +2944,7 @@ canvas.addEventListener('mousedown', (e) => {
     }
   }
   // Building selected (S.selectedBuildingKey): move the whole set of all its Rooms.
-  if (S.selectedBuildingKey && !S.buildTool) {
+  if (S.selectedBuildingKey) {
     const page2 = currentPage();
     const buildingRoomIds = S.selectedBuildingKey.split(',');
     const firstMember = page2.objects.find(o => buildingRoomIds.includes(o.pieceId) && WALL_TYPES.includes(o.objType));
@@ -4182,97 +3854,6 @@ canvas.addEventListener('mousemove', (e) => {
     return;
   }
 
-  // ---- Build Tool: preview update ----
-  if (S.buildTool) {
-    const { x, y } = getCoords(e);
-    const page = currentPage();
-    const panel = page.objects.find(o => o.id === S.buildTool.panelId);
-    if (panel) {
-      const worldPt = screenToWorldFloor(x, y, panel, page);
-      if (worldPt) {
-        // ---- Detached mode: look for the nearest wall/point for the next anchor ----
-        if (S.buildTool.disconnected) {
-          const DISC_EP_PX = 12, DISC_SEG_PX = 8;
-          let foundPos = null;
-          // 1. Nearest wall endpoint
-          for (const seg of S.buildTool.wallSegs) {
-            for (const [ex, ez] of [[seg.x1, seg.z1], [seg.x2, seg.z2]]) {
-              const sp = worldFloorToScreen(ex, ez, panel, page);
-              if (sp && Math.hypot(x - sp.x, y - sp.y) < DISC_EP_PX) { foundPos = { x: ex, z: ez }; break; }
-            }
-            if (foundPos) break;
-          }
-          // 2. Point projected onto a wall segment
-          if (!foundPos) {
-            let bestDist = Infinity;
-            for (const seg of S.buildTool.wallSegs) {
-              const dx = seg.x2 - seg.x1, dz = seg.z2 - seg.z1;
-              const len2 = dx * dx + dz * dz;
-              if (len2 < 0.0001) continue;
-              const t = Math.max(0, Math.min(1, ((worldPt.x - seg.x1) * dx + (worldPt.z - seg.z1) * dz) / len2));
-              const projX = seg.x1 + t * dx, projZ = seg.z1 + t * dz;
-              const projSp = worldFloorToScreen(projX, projZ, panel, page);
-              if (!projSp) continue;
-              const d = Math.hypot(x - projSp.x, y - projSp.y);
-              if (d < DISC_SEG_PX && d < bestDist) { bestDist = d; foundPos = { x: projX, z: projZ }; }
-            }
-          }
-          S.buildTool.previewPos = foundPos;
-          S.buildTool.snapPointIdx = null;
-          S.buildTool.snapped = false;
-          S.buildTool.activeGuideX = []; S.buildTool.activeGuideZ = [];
-          canvas.style.cursor = foundPos ? 'pointer' : 'crosshair';
-          scheduleDrawCurrentPage();
-          return;
-        }
-
-        const angleSnapped = buildApplyAngleSnap(worldPt.x, worldPt.z);
-        const pts = S.buildTool.points;
-        // Snap to an existing trace point (screen space, excl. last point).
-        // Points that are no longer endpoints of a real wall in wallSegs are ignored.
-        const SNAP_MV_EPS = 0.015;
-        const isRealEndpointMV = (px, pz) => S.buildTool.wallSegs.some(s =>
-          Math.hypot(s.x1 - px, s.z1 - pz) < SNAP_MV_EPS ||
-          Math.hypot(s.x2 - px, s.z2 - pz) < SNAP_MV_EPS);
-        let pointSnapIdx = null;
-        for (let i = 0; i < pts.length - 1; i++) {
-          if (i > 0 && !isRealEndpointMV(pts[i].x, pts[i].z)) continue;
-          const sp = worldFloorToScreen(pts[i].x, pts[i].z, panel, page);
-          if (sp && Math.hypot(x - sp.x, y - sp.y) < 10) { pointSnapIdx = i; break; }
-        }
-        if (pointSnapIdx !== null) {
-          S.buildTool.previewPos = { x: pts[pointSnapIdx].x, z: pts[pointSnapIdx].z };
-          S.buildTool.snapPointIdx = pointSnapIdx;
-          S.buildTool.snapped = (pointSnapIdx === 0 && pts.length >= 3);
-          S.buildTool.activeGuideX = []; S.buildTool.activeGuideZ = [];
-        } else {
-          S.buildTool.snapPointIdx = null;
-          // Check whether we're near the first point (closing the loop)
-          let closing = false;
-          if (pts.length >= 3) {
-            const first = pts[0];
-            const dist = Math.hypot(angleSnapped.x - first.x, angleSnapped.z - first.z);
-            if (dist < BUILD_CLOSE_DIST) { closing = true; }
-          }
-          if (!closing) {
-            const aligned = buildApplyAlignSnap(angleSnapped.x, angleSnapped.z);
-            S.buildTool.previewPos = { x: aligned.x, z: aligned.z };
-            S.buildTool.activeGuideX = aligned.guideX;
-            S.buildTool.activeGuideZ = aligned.guideZ;
-          } else {
-            // `buildTool` nu : seul rescapé de la migration vers `S` sur 99 occurrences. Cette
-            // ligne levait un ReferenceError dès qu'on approchait du point de départ sans le
-            // survoler, l'outil Construire s'arrêtait net. Trouvé par ESLint (no-undef).
-            S.buildTool.previewPos = { ...S.buildTool.points[0] };
-            S.buildTool.activeGuideX = []; S.buildTool.activeGuideZ = [];
-          }
-          S.buildTool.snapped = closing;
-        }
-        scheduleDrawCurrentPage();
-      }
-    }
-    return;
-  }
   if (S.dragMode) return;
   const { x, y } = getCoords(e);
   const page = currentPage();
@@ -4323,10 +3904,7 @@ const loadSceneSubmenu = document.getElementById('loadSceneSubmenu');
 const itemContextMenu = document.getElementById('itemContextMenu');
 const vehicleSubmenu = document.getElementById('vehicleSubmenu');
 const furnitureSubmenu = document.getElementById('furnitureSubmenu');
-const wallOpeningSubmenu = document.getElementById('wallOpeningSubmenu');
-const mursSubmenu = document.getElementById('mursSubmenu');
 const plantesSubmenu = document.getElementById('plantesSubmenu');
-const buildingsSubmenu = document.getElementById('buildingsSubmenu');
 const animauxSubmenu = document.getElementById('animauxSubmenu');
 const jardinSubmenu = document.getElementById('jardinSubmenu');
 const villeSubmenu = document.getElementById('villeSubmenu');
@@ -4422,9 +4000,6 @@ document.getElementById('helpBtn').onclick = (e) => {
 canvas.addEventListener('contextmenu', (e) => {
   e.preventDefault();
   if (S.panMoved) { S.panMoved = false; hideContextMenu(); return; }
-  // In "Build a Building" mode, right-click is used for panning (cf. mousedown)
-  // — not to open a context menu that would disrupt the tracing.
-  if (S.buildTool) return;
   const { x, y } = getCoords(e);
   const page = currentPage();
   // Une Planche importée n'a rien à ajouter ni à modifier (demandé) : pas de menu, ni sur une Case
@@ -4471,9 +4046,7 @@ canvas.addEventListener('contextmenu', (e) => {
   // one Element in the Panel").
   // Pas d'entrée « Caméra » sur la toile d'une Scène : elle n'a plus de mode Caméra (demandé).
   ctxToggleCamera.style.display = (hit.type === 'panel' && !isLockedScenePanel(hit) && elementsInPanel(hit, page).length > 0) ? '' : 'none';
-  // "Build a Building" + "Trace" + "Zone": only visible on a Scene canvas in top-down view.
-  const ctxBuildModeBtn = document.getElementById('ctxBuildMode');
-  if (ctxBuildModeBtn) ctxBuildModeBtn.style.display = isSceneTopDownView(hit) ? '' : 'none';
+  // "Trace" + "Zone": only visible on a Scene canvas in top-down view.
   const _isTopDown = isSceneTopDownView(hit);
   document.getElementById('ctxTracerTrigger').style.display = _isTopDown ? '' : 'none';
   document.getElementById('ctxZoneTrigger').style.display   = _isTopDown ? '' : 'none';
@@ -4587,10 +4160,7 @@ loadSceneSubmenu.addEventListener('mouseleave', scheduleCloseLoadSceneSubmenu);
 //   2. Sibling submenus close immediately (with no delay) when another one opens.
 const ctxVehiclesTrigger = document.getElementById('ctxVehiclesTrigger');
 const ctxFurnitureTrigger2 = document.getElementById('ctxFurnitureTrigger');
-const ctxWallOpeningTrigger2 = document.getElementById('ctxWallOpeningTrigger');
-const ctxMursTrigger2 = document.getElementById('ctxMursTrigger');
 const ctxPlantesTrigger2 = document.getElementById('ctxPlantesTrigger');
-const ctxBuildingsTrigger2 = document.getElementById('ctxBuildingsTrigger');
 const ctxAnimauxTrigger2 = document.getElementById('ctxAnimauxTrigger');
 const ctxJardinTrigger2 = document.getElementById('ctxJardinTrigger');
 const ctxVilleTrigger2 = document.getElementById('ctxVilleTrigger');
@@ -4600,10 +4170,7 @@ const ctxEgliseTrigger2 = document.getElementById('ctxEgliseTrigger');
 const addSubmenuL2Groups = [
   { trigger: ctxVehiclesTrigger,   submenu: vehicleSubmenu   },
   { trigger: ctxFurnitureTrigger2, submenu: furnitureSubmenu },
-  { trigger: ctxWallOpeningTrigger2,    submenu: wallOpeningSubmenu    },
-  { trigger: ctxMursTrigger2,      submenu: mursSubmenu      },
   { trigger: ctxPlantesTrigger2,   submenu: plantesSubmenu   },
-  { trigger: ctxBuildingsTrigger2, submenu: buildingsSubmenu },
   { trigger: ctxAnimauxTrigger2,   submenu: animauxSubmenu   },
   { trigger: ctxJardinTrigger2,    submenu: jardinSubmenu    },
   { trigger: ctxVilleTrigger2,     submenu: villeSubmenu     },
@@ -4662,29 +4229,8 @@ document.getElementById('ctxAddVelo').onclick = () => {
     if (panel) addObjectToPanel(panel, objType);
   };
 });
-// "Wall Openings" submenu : managed via addSubmenuL2Groups (see Vehicles block above).
-[
-  ['ctxAddFenetreOuverte', 'fenetre_ouverte'], ['ctxAddPorteOuverte', 'porte_ouverte'],
-  ['ctxAddEscalier', 'escalier'], ['ctxAddBaieVitree', 'baie_vitree'],
-].forEach(([btnId, objType]) => {
-  document.getElementById(btnId).onclick = () => {
-    const page = currentPage();
-    const panel = page.objects.find(o => o.id === S.selectedId && o.type === 'panel');
-    hideContextMenu();
-    if (panel) addObjectToPanel(panel, objType);
-  };
-});
-// "Walls" submenu : managed via addSubmenuL2Groups (see Vehicles block above).
-[
-  ['ctxAddMurSimple', 'mur'], ['ctxAddMurCoin', 'mur_coin'],
-].forEach(([btnId, objType]) => {
-  document.getElementById(btnId).onclick = () => {
-    const page = currentPage();
-    const panel = page.objects.find(o => o.id === S.selectedId && o.type === 'panel');
-    hideContextMenu();
-    if (panel) addObjectToPanel(panel, objType);
-  };
-});
+// #454f : « Parois » et « Murs » ne sont plus au clic droit (demandé) : la construction se fait
+// dans l'éditeur de bâtiment. Ceux déjà posés dans les Projets restent tels quels.
 // "Plants" submenu : managed via addSubmenuL2Groups (see Vehicles block above).
 [
   ['ctxAddBuisson', 'buisson'], ['ctxAddArbre', 'arbre'], ['ctxAddArbuste', 'arbuste'],
@@ -4697,23 +4243,8 @@ document.getElementById('ctxAddVelo').onclick = () => {
     if (panel) addObjectToPanel(panel, objType);
   };
 });
-// "Buildings" submenu : managed via addSubmenuL2Groups (see Vehicles block above).
-document.getElementById('ctxAddRoom').onclick = () => {
-  const page = currentPage();
-  const panel = page.objects.find(o => o.id === S.selectedId && o.type === 'panel');
-  hideContextMenu();
-  if (panel) addRoomToPanel(panel);
-};
-document.getElementById('ctxBuildMode').onclick = () => {
-  const page = currentPage();
-  const panel = page.objects.find(o => o.id === S.selectedId && o.type === 'panel');
-  hideContextMenu();
-  if (panel && isSceneTopDownView(panel)) {
-    if (S.buildTool) stopBuildMode(true);
-    startBuildMode(panel, page);
-    drawCurrentPage();
-  }
-};
+// #454f : « Bâtiments » (Ajouter une pièce, Construire un bâtiment) n'est plus au clic droit : «
+// Créer un bâtiment » ouvre l'éditeur. Les pièces déjà tracées restent telles quelles.
 // "Animals" submenu : managed via addSubmenuL2Groups (see Vehicles block above).
 [
   ['ctxAddOiseau', 'oiseau'], ['ctxAddLezard', 'lezard'], ['ctxAddLoup', 'loup'], ['ctxAddGriffon', 'griffon'], ['ctxAddSinge', 'singe'],
