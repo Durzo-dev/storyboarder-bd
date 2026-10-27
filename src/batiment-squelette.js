@@ -38,18 +38,28 @@ const position = (s, t) => (s.v ? { x: s.p.x + s.v.x * (t - s.t0), z: s.p.z + s.
 
 /**
  * Le squelette droit pondéré de `pts` (sens trigonométrique), `poids[i]` pour le côté i → i+1.
+ * `trous` (#458c, les cours) : `[{ pts, poids }]`, chacun en sens INVERSE (l'intérieur du toit reste à
+ * gauche) ; leurs côtés suivent ceux du contour dans la numérotation (`cote` des faces). Un trou se
+ * soude au front qui l'entoure quand un sommet rentrant de l'un touche un côté de l'autre.
  * PURE ; rend null si le calcul n'aboutit pas.
  */
-export function squeletteDroit(pts, poids){
-  const n = pts.length;
-  if (n < 3) return null;
-  const cotes = pts.map((a, i) => {
-    const b = pts[(i + 1) % n];
-    const L = Math.hypot(b.x - a.x, b.z - a.z);
-    const d = { x: (b.x - a.x) / L, z: (b.z - a.z) / L };
-    const nrm = { x: -d.z, z: d.x };
-    return { a, b, d, n: nrm, c: nrm.x * a.x + nrm.z * a.z, w: Math.max(0, poids[i] || 0) };
-  });
+export function squeletteDroit(pts, poids, trous = []){
+  if (pts.length < 3) return null;
+  const boucles = [{ pts, poids }, ...trous];
+  const cotes = [], debuts = [];
+  for (const bcl of boucles) {
+    const m = bcl.pts.length;
+    if (m < 3) return null;
+    debuts.push(cotes.length);
+    bcl.pts.forEach((a, i) => {
+      const b = bcl.pts[(i + 1) % m];
+      const L = Math.hypot(b.x - a.x, b.z - a.z);
+      const d = { x: (b.x - a.x) / L, z: (b.z - a.z) / L };
+      const nrm = { x: -d.z, z: d.x };
+      cotes.push({ a, b, d, n: nrm, c: nrm.x * a.x + nrm.z * a.z, w: Math.max(0, (bcl.poids || [])[i] ?? 1) });
+    });
+  }
+  const n = cotes.length;
   const segments = cotes.map(() => []);   // par face : [[p1, p2]] avec p = { x, z, t }
   let ids = 0;
   const sommet = (p, t, gauche, droite) => {
@@ -57,8 +67,11 @@ export function squeletteDroit(pts, poids){
     return { id: ids++, p, t0: t, v, gauche, droite };
   };
   // Les fronts : des listes cycliques de sommets.
-  let fronts = [pts.map((p, i) => sommet({ x: p.x, z: p.z }, 0, (i + n - 1) % n, i))];
-  if (fronts[0].some(s => !s.v)) return null;
+  let fronts = boucles.map((bcl, k) => {
+    const m = bcl.pts.length, o = debuts[k];
+    return bcl.pts.map((p, i) => sommet({ x: p.x, z: p.z }, 0, o + (i + m - 1) % m, o + i));
+  });
+  if (fronts.some(f => f.some(s => !s.v))) return null;
   // Un sommet s'arrête à t, au point `q` (le point de l'événement, le même pour tous ceux qu'il
   // réunit : sans cela, deux arrondis différents casseraient le chaînage des faces).
   const finir = (s, t, q = position(s, t)) => {
@@ -144,9 +157,10 @@ export function squeletteDroit(pts, poids){
         const g = cotes[r.gauche], dr = cotes[r.droite];
         const croix = g.d.x * dr.d.z - g.d.z * dr.d.x;
         if (croix > -1e-9) continue;   // pas rentrant
-        for (let j = 0; j < m; j++) {
-          const a = f[j], b = f[(j + 1) % m];
+        for (const g2 of fronts) for (let j = 0; j < g2.length; j++) {
+          const a = g2[j], b = g2[(j + 1) % g2.length];
           if (a === r || b === r) continue;
+          const autre = g2 !== f;
           const e = cotes[a.droite];
           const r0 = position(r, t);
           const den = e.n.x * r.v.x + e.n.z * r.v.z - e.w;
@@ -157,11 +171,11 @@ export function squeletteDroit(pts, poids){
           const P = position(r, te), A = position(a, te), B = position(b, te);
           const L = (B.x - A.x) * e.d.x + (B.z - A.z) * e.d.z;
           const s = (P.x - A.x) * e.d.x + (P.z - A.z) * e.d.z;
-          if (L > EPS && s > EPS && s < L - EPS) meilleur = { t: te, sorte: 'coupe', f, i, j };
+          if (L > EPS && s > EPS && s < L - EPS) meilleur = { t: te, sorte: autre ? 'soudure' : 'coupe', f, g: g2, i, j };
           // Pile sur un bout du côté : deux sommets rentrants qui se rencontrent (un « événement de
           // sommet », fréquent sur les plans orthogonaux). Le front se coupe EN CE SOMMET.
-          else if (L > EPS && Math.abs(s) <= 1e-6 && a !== f[(i + m - 1) % m] && a !== f[(i + 1) % m]) meilleur = { t: te, sorte: 'sommet', f, i, k: j };
-          else if (L > EPS && Math.abs(s - L) <= 1e-6 && b !== f[(i + m - 1) % m] && b !== f[(i + 1) % m]) meilleur = { t: te, sorte: 'sommet', f, i, k: (j + 1) % m };
+          else if (L > EPS && Math.abs(s) <= 1e-6 && a !== f[(i + m - 1) % m] && a !== f[(i + 1) % m]) meilleur = { t: te, sorte: autre ? 'soudureSommet' : 'sommet', f, g: g2, i, k: j };
+          else if (L > EPS && Math.abs(s - L) <= 1e-6 && b !== f[(i + m - 1) % m] && b !== f[(i + 1) % m]) meilleur = { t: te, sorte: autre ? 'soudureSommet' : 'sommet', f, g: g2, i, k: (j + 1) % g2.length };
         }
       }
     }
@@ -173,7 +187,31 @@ export function squeletteDroit(pts, poids){
     }
     t = Math.max(t, meilleur.t);
     const f = meilleur.f, m = f.length;
-    fronts = fronts.filter(x => x !== f);
+    fronts = fronts.filter(x => x !== f && x !== meilleur.g);
+    // Faire le tour d'un front à partir de l'indice `de`, jusqu'à `jusqua` exclu.
+    const tour = (fr, de, jusqua) => { const l = []; for (let k = de % fr.length; k !== jusqua; k = (k + 1) % fr.length) l.push(fr[k]); return l; };
+    const garder = (g0) => {
+      const g = nettoyer(g0, t);
+      if (g.length < 3 || g.some(z => !z.v) || Math.abs(aire(g, t)) < 1e-9) clore(g, t); else fronts.push(g);
+    };
+    if (meilleur.sorte === 'soudure') {
+      // Un sommet rentrant de f touche le côté a → b d'un AUTRE front (une cour) : les deux se soudent.
+      const g = meilleur.g, mg = g.length, ir = meilleur.i, j = meilleur.j;
+      const r = f[ir], a = g[j];
+      const q = finir(r, t);
+      const x1 = sommet(q, t, r.gauche, a.droite), x2 = sommet({ ...q }, t, a.droite, r.droite);
+      // x1 → b … (tout le tour de g) … a → x2 → après r … avant r.
+      garder([x1, ...tour(g, (j + 1) % mg, j), a, x2, ...tour(f, (ir + 1) % m, ir)]);
+      continue;
+    }
+    if (meilleur.sorte === 'soudureSommet') {
+      const g = meilleur.g, mg = g.length, ir = meilleur.i, iv = meilleur.k;
+      const r = f[ir], v = g[iv];
+      const q = finir(r, t); finir(v, t, q);
+      const x1 = sommet(q, t, r.gauche, v.droite), x2 = sommet({ ...q }, t, v.gauche, r.droite);
+      garder([x1, ...tour(g, (iv + 1) % mg, iv), x2, ...tour(f, (ir + 1) % m, ir)]);
+      continue;
+    }
     if (meilleur.sorte === 'cote') {
       const u = f[meilleur.i], v = f[(meilleur.i + 1) % m];
       const q = finir(u, t); finir(v, t, q);
@@ -239,10 +277,44 @@ export function squeletteDroit(pts, poids){
 }
 
 /**
- * La TRIANGULATION d'un polygone simple (oreilles), en indices : `[[i, j, k]]`. Les points en
- * `{ x, z }` ; le sens importe peu. PURE.
+ * La TRIANGULATION d'un polygone (oreilles), en indices : `[[i, j, k]]`. Les points en `{ x, z }` ;
+ * le sens importe peu. `trous` (#458c, des cours) : des contours dedans, en sens inverse ; leurs
+ * indices suivent ceux du contour (comme `[...pts, ...trou1, ...trou2]`). Chaque trou est relié au
+ * contour par un pont (deux arêtes confondues), ce qui rend un seul polygone à trianguler. PURE.
  */
-export function trianguler(pts){
+export function trianguler(pts, trous = []){
+  if (!trous.length) return triangulerSimple(pts);
+  const tous = [...pts, ...trous.flat()];
+  let anneau = pts.map((_, i) => i);
+  let o = pts.length;
+  const segs = () => { const l = []; anneau.forEach((v, k) => l.push([v, anneau[(k + 1) % anneau.length]])); return l; };
+  const croise = (a, b, c, d) => {
+    const or = (p, q, r) => (q.x - p.x) * (r.z - p.z) - (q.z - p.z) * (r.x - p.x);
+    return or(a, b, c) * or(a, b, d) < -1e-12 && or(c, d, a) * or(c, d, b) < -1e-12;
+  };
+  const indicesTrous = trous.map(t => { const r = t.map((_, i) => o + i); o += t.length; return r; });
+  // Les trous les plus à droite d'abord (leur pont ne coupe pas ceux qu'on posera ensuite).
+  indicesTrous.sort((u, v) => Math.max(...v.map(i => tous[i].x)) - Math.max(...u.map(i => tous[i].x)));
+  for (const t of indicesTrous) {
+    const h = t.reduce((m, i) => (tous[i].x > tous[m].x ? i : m), t[0]);
+    const autres = indicesTrous.filter(x => x !== t).flatMap(x => x.map((i, k) => [i, x[(k + 1) % x.length]]));
+    let meilleur = null;
+    for (const v of anneau) {
+      const d = Math.hypot(tous[v].x - tous[h].x, tous[v].z - tous[h].z);
+      if (meilleur && d >= meilleur.d) continue;
+      const libre = [...segs(), ...t.map((i, k) => [i, t[(k + 1) % t.length]]), ...autres]
+        .every(([p, q]) => p === v || q === v || p === h || q === h || !croise(tous[h], tous[v], tous[p], tous[q]));
+      if (libre) meilleur = { v, d };
+    }
+    if (!meilleur) return triangulerSimple(pts);
+    const k = anneau.indexOf(meilleur.v), kh = t.indexOf(h);
+    const tourTrou = [...t.slice(kh), ...t.slice(0, kh), h];
+    anneau = [...anneau.slice(0, k + 1), ...tourTrou, ...anneau.slice(k)];
+  }
+  return triangulerSimple(anneau.map(i => tous[i])).map(tri => tri.map(i => anneau[i]));
+}
+
+function triangulerSimple(pts){
   const n = pts.length;
   if (n < 3) return [];
   let a = 0;

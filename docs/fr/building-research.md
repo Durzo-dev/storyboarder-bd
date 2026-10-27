@@ -530,7 +530,13 @@ place : rien ne bouge à l'écran.
   pans recouvrent exactement la forme. Un squelette qui n'aboutit pas laisse la forme plate (dit).
   VIDES (signalé) : supprimer une pièce dont tous les murs sont partagés avec ses voisines en fait un
   VIDE (`piece.vide`, champ AJOUTÉ) : une cour, sans sol, plafond ni toit, hachurée sur le plan ;
-  « Refaire une pièce » la rend. Un toit en pente percé d'une cour reste plat pour l'instant.
+  « Refaire une pièce » la rend (sur son niveau seulement). **#458c, les cours, FAIT** (27 octobre 2026,
+  `src/batiment-cours.js`) : créer une cour sous des étages ouvre une fenêtre ; Valider la prolonge
+  jusqu'en haut, en traçant les murs de son contour là où une pièce de l'étage la couvre
+  (`ajouterContour`) ; un mur, un escalier ou une trémie dans l'emprise : erreur, rien ne change. Son
+  sol (`estUneTerrasse`) : sur une pièce, une terrasse ; sur une cour ou au rez-de-chaussée, aucun. Le
+  toit fait le tour des cours (squelette droit à trous : un trou se soude au front qui l'entoure ;
+  triangulation à ponts pour un pan unique), et l'acrotère ou le garde-corps aussi.
   Reste **#458c** : les Éléments sur le toit, des toitures livrées avec l'application.
 - **#459** la vue en coupe par Case. **#459a FAIT** (27 octobre 2026) : choisir un bâtiment placé
   dans « Éléments » montre la section « Affichage du bâtiment » : « Montrer jusqu'à : Tout le

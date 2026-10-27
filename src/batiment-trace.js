@@ -303,10 +303,20 @@ function partiesNonCouvertes(batiment, niveauId, u, v){
 export function ajouterRectangle(batiment, niveauId, p1, p2, epaisseur){
   const a = point(p1), c = point(p2);
   if (Math.abs(c.x - a.x) < BORNES_BATIMENT.longueurMin || Math.abs(c.z - a.z) < BORNES_BATIMENT.longueurMin) return { erreur: 'court' };
-  const coins = [a, { x: c.x, z: a.z }, c, { x: a.x, z: c.z }];
+  return ajouterContour(batiment, niveauId, [a, { x: c.x, z: a.z }, c, { x: a.x, z: c.z }], epaisseur);
+}
+
+/**
+ * Trace les murs d'un contour fermé quelconque (#458c : le contour d'une cour qu'on prolonge aux
+ * étages), comme ajouterRectangle : les parties déjà couvertes par un mur sont gardées, les coins
+ * posés au milieu d'un mur le coupent ; un morceau qui en croise un autre refuse tout (`erreur:
+ * 'croise'`, rien n'est tracé). Rend `{ murs }` ou `{ erreur }`.
+ */
+export function ajouterContour(batiment, niveauId, contour, epaisseur){
+  const coins = contour.map(point);
   const morceaux = [];
   coins.forEach((u, i) => {
-    const v = coins[(i + 1) % 4];
+    const v = coins[(i + 1) % coins.length];
     for (const [t0, t1] of partiesNonCouvertes(batiment, niveauId, u, v)) {
       const lerp = (t) => point({ x: u.x + (v.x - u.x) * t, z: u.z + (v.z - u.z) * t });
       morceaux.push([lerp(t0), lerp(t1)]);

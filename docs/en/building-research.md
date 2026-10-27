@@ -502,8 +502,13 @@ moves on screen.
   Checked on random shapes: the slopes cover the shape exactly. A skeleton that fails leaves the shape
   flat (and says so). EMPTY SPACES (reported): deleting a room whose walls are all shared with its
   neighbours makes it an EMPTY SPACE (`piece.vide`, an ADDED field): a courtyard, with no floor,
-  ceiling or roof, hatched on the plan; "Make it a room again" restores it. A sloped roof pierced by a
-  courtyard stays flat for now. Left: **#458c**, Elements on the roof, roof coverings shipped with
+  ceiling or roof, hatched on the plan; "Make it a room again" restores it (on its level only). **#458c, courtyards, DONE** (27
+  October 2026, `src/batiment-cours.js`): making a courtyard under upper floors opens a dialog;
+  Confirm extends it to the top, drawing the walls of its outline where a room of that floor covers it
+  (`ajouterContour`); a wall, a staircase or a stair opening in the footprint: error, nothing changes.
+  Its floor (`estUneTerrasse`): over a room, a terrace; over a courtyard or on the ground floor, none.
+  The roof goes around courtyards (straight skeleton with holes: a hole welds onto the front around
+  it; bridged triangulation for a single pitch), and so do the parapet and the railing. Left: **#458c**, Elements on the roof, roof coverings shipped with
   the application.
 - **#459** the cutaway view per Panel. **#459a DONE** (27 October 2026): picking a placed building in
   "Elements" shows the "Building display" section: "Show up to: The whole building / <level>". Stored

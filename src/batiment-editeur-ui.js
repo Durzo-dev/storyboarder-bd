@@ -41,6 +41,7 @@ import {
   sommetsDuNiveau,
 } from './batiment-trace.js';
 import { actualiserPieces, formesDesPieces, pieceSous, supprimerPiece, estUnVide } from './batiment-pieces.js';
+import { empriseDeLaPiece, etagesAuDessus, prolongerLaCour } from './batiment-cours.js';
 import {
   formeDeLEscalier, tremieDeLEscalier, validiteDeLEscalier, ajouterEscalier, modifierEscalier, supprimerEscalier,
   escalierSous, hauteurAFranchir, DEFAUTS_ESCALIER, TYPES_D_ESCALIER, essayerEscalier, aimanterEscalier, escaliersBloques,
@@ -87,10 +88,42 @@ export function renommerPieceDeLEditeur(id, nom){
   if (!E || !nom) return;
   modifier(b => { const p = b.pieces.find(q => q.id === id); if (p) p.nom = nom; });
 }
-/** Supprime une pièce : ses murs, sauf ceux qu'elle partage avec une voisine (un point d'annulation). */
-export function supprimerPieceDeLEditeur(id){
+/**
+ * Supprime une pièce : ses murs, sauf ceux qu'elle partage avec une voisine (un point d'annulation).
+ * #458c : fermée par les murs de ses voisines, elle devient une COUR ; s'il y a des étages au-dessus,
+ * une fenêtre demande de la prolonger jusqu'en haut (Valider : les murs de son contour y sont tracés ;
+ * impossible, une fenêtre d'erreur dit pourquoi, et rien ne change ; Annuler : elle reste une pièce).
+ */
+export async function supprimerPieceDeLEditeur(id){
   if (!E) return;
-  modifier(b => supprimerPiece(b, E.niveauId, id, supprimerMur));
+  const ed = E, niveauId = E.niveauId;
+  const essai = JSON.parse(JSON.stringify(E.batiment));
+  const partis = supprimerPiece(essai, niveauId, id, supprimerMur);
+  const p = (essai.pieces || []).find(x => x.id === id);
+  const poly = !partis.length && p && p.vide ? empriseDeLaPiece(essai, niveauId, id) : null;
+  const etages = poly ? etagesAuDessus(essai, niveauId, poly) : [];
+  if (!etages.length) { modifier(b => supprimerPiece(b, niveauId, id, supprimerMur)); return; }
+  const noms = etages.map(eid => `« ${(essai.niveaux.find(n => n.id === eid) || {}).nom} »`).join(', ');
+  const ok = await _rappels.confirmer(
+    tr(`This room becomes a courtyard. A courtyard is open to the sky: it will go up through the levels above (${noms}), whose walls around it will be drawn.`,
+      `Cette pièce devient une cour. Une cour est ouverte jusqu'au ciel : elle montera aux étages du dessus (${noms}), où les murs de son contour seront tracés.`),
+    tr('Make a courtyard', 'Faire une cour'), { ok: tr('Make the courtyard', 'Faire la cour') });
+  if (!ok || E !== ed) return;
+  const r = prolongerLaCour(essai, niveauId, id, DEFAUTS_BATIMENT.epaisseur, tr);
+  if (r.erreur) {
+    const nom = (essai.niveaux.find(n => n.id === r.erreur.niveauId) || {}).nom || '?';
+    const raisons = {
+      mur: tr('a wall crosses its footprint', 'un mur traverse son emprise'),
+      escalier: tr('a staircase stands in its footprint', 'un escalier est posé dans son emprise'),
+      tremie: tr('the opening of a staircase coming up is in its footprint', 'la trémie d\'un escalier qui monte est dans son emprise'),
+      forme: tr('its outline could not be closed', 'son contour n\'a pas pu être fermé'),
+    };
+    await _rappels.alerter(tr(`The courtyard cannot go up to the top: on the level "${nom}", ${raisons[r.erreur.raison]}. Nothing has changed: the room stays a room.`,
+      `La cour ne peut pas monter jusqu'en haut : au niveau « ${nom} », ${raisons[r.erreur.raison]}. Rien n'a changé : la pièce reste une pièce.`), tr('Make a courtyard', 'Faire une cour'));
+    return;
+  }
+  // Un seul point d'annulation pour la cour et tous ses étages.
+  modifier(b => { for (const k of Object.keys(b)) delete b[k]; Object.assign(b, essai); });
 }
 
 /**
@@ -525,12 +558,6 @@ function remplirToit(){
       const info = document.createElement('p'); info.className = 'batiment-info';
       info.textContent = tr('The level above covers only part of a room: that room stays flat. Make its walls follow the level above.',
         'L\'étage du dessus ne couvre qu\'une partie d\'une pièce : elle reste plate. Faites suivre ses murs à ceux de l\'étage.');
-      elements.push(info);
-    }
-    if (toitsDuNiveau(E.batiment, n.id).some(x => x.percee)) {
-      const info = document.createElement('p'); info.className = 'batiment-info';
-      info.textContent = tr('A courtyard (an empty space) cuts through this roof: it stays flat for now.',
-        'Une cour (un vide) perce ce toit : il reste plat pour l\'instant.');
       elements.push(info);
     }
     if (toitsDuNiveau(E.batiment, n.id).some(x => x.enAttente)) {

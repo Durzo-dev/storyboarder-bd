@@ -24,7 +24,7 @@
  * découpée par les demi-plans où il est le plus bas. Une forme à angle rentrant (en L, en T, en U)
  * demande le squelette droit (#458b) : en attendant, elle reste plate, et `enAttente` le dit.
  */
-import { niveauxTries, niveauDessus, hauteurDesMursDuNiveau } from './batiment-niveaux.js';
+import { niveauxTries, niveauDessus, niveauDessous, hauteurDesMursDuNiveau } from './batiment-niveaux.js';
 import { formesDesPieces, dansLaFace, pointDansPolygone } from './batiment-pieces.js';
 import { TOLERANCE_SOMMET } from './batiment-geometrie.js';
 import { squeletteDroit, trianguler } from './batiment-squelette.js';
@@ -75,6 +75,22 @@ export function aireSignee(pts){
   let a = 0;
   for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; a += p.x * q.z - q.x * p.z; }
   return a / 2;
+}
+
+/**
+ * Une cour (un vide) a-t-elle un SOL (#458c, décidé avec Valentin) ? Au-dessus d'une PIÈCE, oui :
+ * c'est une terrasse (sa dalle, sans plafond ni toit). Au-dessus d'une autre cour, ou au
+ * rez-de-chaussée, non : le puits continue (jusqu'au Sol de la Scène). PURE.
+ */
+export function estUneTerrasse(b, piece){
+  if (!piece || !piece.vide || !piece.repere) return false;
+  const dessous = niveauDessous(b, piece.niveauId);
+  if (!dessous) return false;
+  for (const [id, f] of formesDesPieces(b, dessous.id)) {
+    const p = (b.pieces || []).find(x => x.id === id);
+    if (dansLaFace(piece.repere, f)) return !(p && p.vide);
+  }
+  return false;   // rien dessous (l'étage déborde) : pas de sol, la cour est ouverte
 }
 
 /** Les pièces du niveau qui n'ont pas d'étage au-dessus (leur repère hors des pièces du dessus). PURE. */
@@ -130,12 +146,15 @@ export function contoursDuToit(b, niveauId){
     f.points.forEach((a, i) => { const c = f.points[(i + 1) % f.points.length]; couverts.add(`${cle(a)}>${cle(c)}`); });
   }
   const aretes = new Map();   // "ka>kb" → { a, b }
+  // Le contour de chaque pièce, et ses îlots (un groupe de murs posé dedans, une cour au milieu
+  // d'une pièce : #458c), qui tournent dans l'autre sens.
   for (const { forme } of decouvertes) {
-    const pts = forme.points;
-    for (let i = 0; i < pts.length; i++) {
-      const a = pts[i], c = pts[(i + 1) % pts.length];
-      const k = `${cle(a)}>${cle(c)}`, inverse = `${cle(c)}>${cle(a)}`;
-      if (aretes.has(inverse)) aretes.delete(inverse); else aretes.set(k, { a, b: c, adosse: couverts.has(inverse) });
+    for (const pts of [forme.points, ...(forme.trous || [])]) {
+      for (let i = 0; i < pts.length; i++) {
+        const a = pts[i], c = pts[(i + 1) % pts.length];
+        const k = `${cle(a)}>${cle(c)}`, inverse = `${cle(c)}>${cle(a)}`;
+        if (aretes.has(inverse)) aretes.delete(inverse); else aretes.set(k, { a, b: c, adosse: couverts.has(inverse) });
+      }
     }
   }
   const depuis = new Map();
@@ -157,10 +176,16 @@ export function contoursDuToit(b, niveauId){
   }
   // Les faces des pièces tournent dans le sens NÉGATIF (cf. facesDesMurs) : l'union aussi ; une boucle
   // positive est un trou (un îlot non couvert). Retournée, le côté j relie les anciens n-1-j et n-2-j.
-  return boucles.filter(x => aireSignee(x.pts) < -1e-6).map(({ pts, adosses }) => {
+  const retourner = ({ pts, adosses }) => {
     const n = pts.length;
     return sansAlignes(pts.slice().reverse(), pts.map((_, j) => adosses[(n - 2 - j + n) % n]));
-  });
+  };
+  // #458c : les boucles positives sont des COURS (des vides) : des trous du contour qui les entoure,
+  // retournés eux aussi (sens inverse : l'intérieur du toit reste à leur gauche).
+  const trous = boucles.filter(x => aireSignee(x.pts) > 1e-6).map(retourner);
+  return boucles.filter(x => aireSignee(x.pts) < -1e-6).map(retourner).map(c => ({
+    ...c, trous: trous.filter(t => pointDansPolygone(t.points[0], c.points)),
+  }));
 }
 
 /**
@@ -293,7 +318,7 @@ function coupuresDuCote(plans, a, c){
  * `options.hautMax` : la hauteur à ne pas dépasser au-dessus de `base` (un toit adossé reste SOUS
  * l'égout de l'étage contre lequel il bute : la pente est réduite au besoin). PURE.
  */
-export function geometrieDuToit(ext, reglages, base, { adosses = [], hautMax = Infinity } = {}){
+export function geometrieDuToit(ext, reglages, base, { adosses = [], hautMax = Infinity, trous = [] } = {}){
   const t = toitDuNiveau({ toit: reglages });
   let plans = plansDuToit(ext, t, adosses);
   if (!plans.length) return null;
@@ -311,8 +336,20 @@ export function geometrieDuToit(ext, reglages, base, { adosses = [], hautMax = I
   }
   const H = (p) => Math.min(...plans.map(pl => hauteur(pl, p)));
   const deborde = t.debord > 0 ? decaler(ext, ext.map((_, i) => (adosses[i] ? 0 : t.debord))) : ext;
+  // #458c : les cours (un pan unique seulement ici), débordées vers la cour.
+  const debordeTrous = trous.map(tr => (t.debord > 0 ? decaler(tr, t.debord) : tr));
   const pans = [];
-  plans.forEach((pl, i) => {
+  if (trous.length && plans.length === 1) {
+    const pl = plans[0];
+    const tous = [...deborde, ...debordeTrous.flat()];
+    const le = { x: -pl.n.z, z: pl.n.x };
+    const cos = Math.cos(Math.atan(pl.k));
+    pans.push({
+      points: tous.map(p => ({ x: p.x, y: base + hauteur(pl, p), z: p.z })),
+      uv: tous.map(p => [le.x * p.x + le.z * p.z, (pl.n.x * p.x + pl.n.z * p.z - pl.c) / cos]),
+      triangles: trianguler(deborde, debordeTrous),
+    });
+  } else plans.forEach((pl, i) => {
     let poly = deborde;
     plans.forEach((q, j) => { if (j !== i) poly = couper(poly, (p) => hauteur(pl, p) - hauteur(q, p)); });
     if (poly.length < 3) return;
@@ -326,27 +363,28 @@ export function geometrieDuToit(ext, reglages, base, { adosses = [], hautMax = I
     });
   });
   // Les pignons : sur chaque côté LIBRE des murs, ce qui sépare le dessus des murs du dessous du toit
-  // (contre un côté adossé, c'est le mur de l'étage qui ferme).
+  // (contre un côté adossé, c'est le mur de l'étage qui ferme). Ceux des cours aussi.
   const pignons = [];
-  ext.forEach((a, i) => {
-    if (adosses[i]) return;
-    const c = ext[(i + 1) % ext.length];
+  [{ boucle: ext, ad: adosses }, ...trous.map(tr => ({ boucle: tr, ad: [] }))].forEach(({ boucle, ad }) => boucle.forEach((a, i) => {
+    if (ad[i]) return;
+    const c = boucle[(i + 1) % boucle.length];
     const le = coupuresDuCote(plans, a, c).map(s => { const p = { x: a.x + (c.x - a.x) * s, z: a.z + (c.z - a.z) * s }; return { ...p, h: Math.max(0, H(p)) }; });
     if (le.every(p => p.h < 1e-3)) return;
     // Les points du haut à hauteur nulle tombent sur ceux du bas : retirés (un triangle reste un triangle).
     pignons.push({ points: [{ x: a.x, y: base, z: a.z }, { x: c.x, y: base, z: c.z },
       ...le.slice().reverse().filter(p => p.h > 1e-6).map(p => ({ x: p.x, y: base + p.h, z: p.z }))] });
-  });
+  }));
   const bord = deborde.map(p => ({ x: p.x, y: base + H(p), z: p.z }));
   // LES RIVES, côté par côté, en suivant le toit (signalé : sur un pignon, la rive filait droit d'un
   // coin d'égout à l'autre et traversait le pignon) : coupées là où le toit change de pan, au faîtage.
-  const rives = deborde.map((a, i) => {
-    const c = deborde[(i + 1) % deborde.length];
-    return { adosse: !!adosses[i], points: coupuresDuCote(plans, a, c).map(s => {
+  const rivesDe = (boucle, ad) => boucle.map((a, i) => {
+    const c = boucle[(i + 1) % boucle.length];
+    return { adosse: !!ad[i], points: coupuresDuCote(plans, a, c).map(s => {
       const p = { x: a.x + (c.x - a.x) * s, z: a.z + (c.z - a.z) * s };
       return { ...p, y: base + H(p) };
     }) };
   });
+  const rives = [...rivesDe(deborde, adosses), ...debordeTrous.flatMap(tr => rivesDe(tr, []))];
   const haut = Math.max(base, ...pans.flatMap(p => p.points.map(q => q.y)));
   return { pans, pignons, bord, rives, bordAdosses: ext.map((_, i) => !!adosses[i]), haut };
 }
@@ -380,7 +418,19 @@ export function pignonsDeLAile(ext, sens = 0, adosses = []){
   if (!bouts.length) return new Set();
   const min = Math.min(...bouts.map(b => b.L));
   const courts = bouts.filter(b => b.L <= min * 1.25 + 1e-6), longs = bouts.filter(b => b.L > min * 1.25 + 1e-6);
-  return new Set(((sens % 2 && longs.length) ? longs : courts).map(b => b.i));
+  let choisis = (sens % 2 && longs.length) ? longs : courts;
+  // Une forme CONVEXE dont tous les bouts se valent (un carré autour d'une cour, #458c) : une seule
+  // paire de côtés parallèles fait les pignons, au choix de `sens`.
+  if (estConvexe(ext)) {
+    const groupes = [];
+    for (const b of choisis) {
+      const d = dir(b.i);
+      const g = groupes.find(x => Math.abs(x.d.x * d.z - x.d.z * d.x) < 1e-6);
+      if (g) g.l.push(b); else groupes.push({ d, l: [b] });
+    }
+    if (groupes.length > 1) choisis = groupes[sens % groupes.length].l;
+  }
+  return new Set(choisis.map(b => b.i));
 }
 
 /**
@@ -389,15 +439,19 @@ export function pignonsDeLAile(ext, sens = 0, adosses = []){
  * des ailes restent droits (poids 0) et deviennent des pignons. Un côté adossé à l'étage ne bouge pas
  * non plus. Même sortie que geometrieDuToit ; null si le squelette n'aboutit pas. PURE.
  */
-export function geometrieSquelette(ext, reglages, base, { adosses = [], hautMax = Infinity } = {}){
+export function geometrieSquelette(ext, reglages, base, { adosses = [], hautMax = Infinity, trous = [] } = {}){
   const t = toitDuNiveau({ toit: reglages });
   const gables = t.type === 'deux-pans' ? pignonsDeLAile(ext, t.sens, adosses) : new Set();
   const poids = ext.map((_, i) => (adosses[i] || gables.has(i) ? 0 : 1));
-  if (!poids.some(Boolean)) return null;
+  if (!poids.some(Boolean) && !trous.length) return null;
   const d = t.debord;
   const deborde = d > 0 ? decaler(ext, ext.map((_, i) => (adosses[i] ? 0 : d))) : ext;
-  const sq = squeletteDroit(deborde, poids);
+  // #458c : les cours, débordées vers la cour ; leurs côtés sont des égouts (poids 1).
+  const debordeTrous = trous.map(tr => (d > 0 ? decaler(tr, d) : tr));
+  const sq = squeletteDroit(deborde, poids, debordeTrous.map(tr => ({ pts: tr, poids: tr.map(() => 1) })));
   if (!sq) return null;
+  // Tous les côtés, contour puis cours, dans la numérotation du squelette.
+  const tousCotes = [deborde, ...debordeTrous].flatMap(bcl => bcl.map((a, i) => ({ a, c: bcl[(i + 1) % bcl.length] })));
   let k = Math.tan(t.pente * Math.PI / 180);
   const tMax = Math.max(...sq.faces.flatMap(f => f.points.map(p => p.t)));
   // Le plus haut au-dessus de `base` : (tMax − débord) · k ; réduit sous l'égout de l'étage au besoin.
@@ -407,9 +461,9 @@ export function geometrieSquelette(ext, reglages, base, { adosses = [], hautMax 
   const pans = [], pignons = [], rives = [];
   sq.faces.forEach(f => {
     const i = f.cote;
-    const a = deborde[i], c = deborde[(i + 1) % deborde.length];
+    const { a, c } = tousCotes[i];
     const L = Math.hypot(c.x - a.x, c.z - a.z) || 1, dx = (c.x - a.x) / L, dz = (c.z - a.z) / L;
-    if (poids[i] > 0) {
+    if (i >= deborde.length || poids[i] > 0) {
       pans.push({
         points: f.points.map(p => ({ x: p.x, y: y(p), z: p.z })),
         uv: f.points.map(p => [p.x * dx + p.z * dz, p.t / cos]),
@@ -442,7 +496,9 @@ export function geometrieSquelette(ext, reglages, base, { adosses = [], hautMax 
   const haut = Math.max(base, ...pans.flatMap(p => p.points.map(q => q.y)));
   // Les rives dans l'ordre des côtés, comme geometrieDuToit.
   const parCote = new Map(sq.faces.map((f, j) => [f.cote, rives[j]]));
-  return { pans, pignons, bord, rives: ext.map((_, i) => parCote.get(i) || { adosse: true, points: [] }), bordAdosses: ext.map((_, i) => !!adosses[i]), haut };
+  // Sous les égouts des cours, les murs de la cour se ferment comme ailleurs : rien à ajouter (le toit
+  // part du dessus des murs).
+  return { pans, pignons, bord, rives: tousCotes.map((_, i) => parCote.get(i) || { adosse: true, points: [] }), bordAdosses: ext.map((_, i) => !!adosses[i]), haut };
 }
 
 /**
@@ -469,25 +525,26 @@ export function toitsDuNiveau(b, niveauId){
   }
   // Les pièces de l'étage, un peu rentrées (une pièce posée juste à côté ne compte pas).
   const formesDessus = dessus ? [...formesDesPieces(b, dessus.id).values()].map(f => decaler(f.points.slice().reverse(), -0.05)) : [];
-  return contoursDuToit(b, niveauId).map(({ points: contour, adosses }) => {
+  return contoursDuToit(b, niveauId).map(({ points: contour, adosses, trous }) => {
     const ext = decaler(contour, adosses.map(a => (a ? -e : e)));
+    // Les cours, poussées à la face de leurs murs (côté cour).
+    const extTrous = trous.map(t => decaler(t.points, e));
     const convexe = estConvexe(ext);
     const enPente = reglages.type !== 'plat';
     // Un étage posé EN PARTIE sur la forme (sans suivre ses murs) : un toit en pente le traverserait.
     // Elle reste plate (signalé : les raccords), et `sousUnEtage` le dit.
     const sousUnEtage = enPente && formesDessus.some(f => serecouvrent(contour, f));
-    // Une cour (un vide) DANS la forme : le toit la couvrirait. Il reste plat (`percee` le dit).
-    const percee = enPente && (b.pieces || []).some(p => p.niveauId === niveauId && p.vide && p.repere && pointDansPolygone(p.repere, contour));
-    // Convexe, ou un pan unique : les plans (exacts) ; sinon le squelette droit (#458b). S'il n'aboutit
-    // pas, le toit reste plat plutôt que faux, et `enAttente` le dit.
-    const options = { adosses, hautMax: adosses.some(Boolean) ? sousLEgout : Infinity };
+    // Convexe sans cour, ou un pan unique : les plans (exacts) ; sinon le squelette droit (#458b), qui
+    // fait aussi le tour des cours (#458c : le toit s'y égoutte, comme autour d'un atrium). S'il
+    // n'aboutit pas, le toit reste plat plutôt que faux, et `enAttente` le dit.
+    const options = { adosses, trous: extTrous, hautMax: adosses.some(Boolean) ? sousLEgout : Infinity };
     let geometrie = null;
-    if (enPente && !sousUnEtage && !percee) {
-      geometrie = (convexe || reglages.type === 'un-pan')
+    if (enPente && !sousUnEtage) {
+      geometrie = ((convexe && !extTrous.length) || reglages.type === 'un-pan')
         ? geometrieDuToit(ext, reglages, base, options)
         : geometrieSquelette(ext, reglages, base, options);
     }
-    return { contour, adosses, ext, reglages, base, convexe, enAttente: enPente && !sousUnEtage && !percee && !geometrie, sousUnEtage, percee, geometrie };
+    return { contour, adosses, trous, ext, extTrous, reglages, base, convexe, enAttente: enPente && !sousUnEtage && !geometrie, sousUnEtage, geometrie };
   });
 }
 

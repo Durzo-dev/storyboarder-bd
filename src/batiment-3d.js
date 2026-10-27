@@ -16,7 +16,7 @@ import { formeDeLEscalier, tremieDeLEscalier } from './batiment-escaliers.js';
 import { niveauxTries, hauteurDesMursDuNiveau, epaisseurDuDessus, niveauDessous } from './batiment-niveaux.js';
 import { fabriqueDeRevetements, revetementDeLaFace, revetementDeLaPiece, pieceDevantLaFace } from './batiment-revetements.js';
 import { meublesDuNiveau, hauteurAuSol, basDuMeuble } from './batiment-mobilier.js';
-import { toitsDuNiveau, decaler, ACROTERE, GARDE_CORPS, EPAISSEUR_TOIT } from './batiment-toits.js';
+import { toitsDuNiveau, decaler, ACROTERE, GARDE_CORPS, EPAISSEUR_TOIT, estUneTerrasse } from './batiment-toits.js';
 
 /** Les matières d'un bâtiment, à créer une fois par renderer. */
 export function materiauxBatiment3D(T){
@@ -236,6 +236,16 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, 
       [...(f.trous || []), ...percees(f, tremies)].forEach(t => forme.holes.push(new T.Path(t.map(p => new T.Vector2(p.x, -p.z)))));
       return forme;
     };
+    // #458c : une cour posée sur une PIÈCE est une terrasse : son sol et sa dalle, rien au-dessus.
+    for (const [pieceId, f] of formesDesPieces(b, n.id)) {
+      if (!vides.has(pieceId) || cache.sols.has(pieceId) || !estUneTerrasse(b, b.pieces.find(p => p.id === pieceId))) continue;
+      const geo = new T.ShapeGeometry(forme2D(f, tremiesPlancher));
+      geo.rotateX(-Math.PI / 2);
+      const sol = new T.Mesh(geo, mats.revetement ? mats.revetement(revetementDeLaPiece(b, pieceId, 'sol'), 'sol-int') : mats.sol);
+      sol.position.y = n.elevation + 0.005;
+      groupe.add(sol);
+      if (n.dalle > 0) dalle(f, n.elevation - n.dalle, n.dalle, tremiesPlancher);
+    }
     for (const [pieceId, f] of formesDuNiveau) {
       // Le sol de chaque pièce (#454a-3b), un peu au-dessus de la grille pour ne pas scintiller avec elle.
       // #454d : son revêtement (uni par défaut, la couleur d'avant).
@@ -388,19 +398,23 @@ function construireToits(T, b, n, mats, groupe){
       });
       if (pp.length) groupe.add(maillage(T, pp, pu, facade));
     } else if (t.reglages.bordure === 'acrotere') {
-      // Un anneau entre la face extérieure des murs et son retrait, sur le toit plat.
-      const forme = new T.Shape(t.ext.map(p => new T.Vector2(p.x, -p.z)));
-      forme.holes.push(new T.Path(decaler(t.ext, -ACROTERE.epaisseur).map(p => new T.Vector2(p.x, -p.z))));
-      const geo = new T.ExtrudeGeometry(forme, { depth: ACROTERE.hauteur, bevelEnabled: false });
-      geo.rotateX(-Math.PI / 2);
-      const m = new T.Mesh(geo, facade);
-      m.position.y = t.base;
-      groupe.add(m);
+      // Un anneau entre la face extérieure des murs et son retrait, sur le toit plat ; et autour de
+      // chaque cour (#458c).
+      [t.ext, ...(t.extTrous || [])].forEach(boucle => {
+        const forme = new T.Shape(boucle.map(p => new T.Vector2(p.x, -p.z)));
+        forme.holes.push(new T.Path(decaler(boucle, -ACROTERE.epaisseur).map(p => new T.Vector2(p.x, -p.z))));
+        const geo = new T.ExtrudeGeometry(forme, { depth: ACROTERE.hauteur, bevelEnabled: false });
+        geo.rotateX(-Math.PI / 2);
+        const m = new T.Mesh(geo, facade);
+        m.position.y = t.base;
+        groupe.add(m);
+      });
     } else if (t.reglages.bordure === 'garde-corps') {
-      // Une lisse et des poteaux, un peu en retrait de la façade : le toit-terrasse.
-      const tour = decaler(t.ext, -GARDE_CORPS.retrait);
+      // Une lisse et des poteaux, un peu en retrait de la façade : le toit-terrasse (autour des cours aussi).
+      [{ boucle: t.ext, ad: t.adosses }, ...(t.extTrous || []).map(bcl => ({ boucle: bcl, ad: [] }))].forEach(({ boucle, ad }) => {
+      const tour = decaler(boucle, -GARDE_CORPS.retrait);
       tour.forEach((a, i) => {
-        if (t.adosses[i]) return;   // pas de garde-corps contre le mur de l'étage
+        if (ad[i]) return;   // pas de garde-corps contre le mur de l'étage
         const c = tour[(i + 1) % tour.length];
         const L = Math.hypot(c.x - a.x, c.z - a.z);
         if (L < 1e-3) return;
@@ -416,6 +430,7 @@ function construireToits(T, b, n, mats, groupe){
           poteau.position.set(a.x + (c.x - a.x) * s, t.base + GARDE_CORPS.hauteur / 2, a.z + (c.z - a.z) * s);
           groupe.add(poteau);
         }
+      });
       });
     }
   }
