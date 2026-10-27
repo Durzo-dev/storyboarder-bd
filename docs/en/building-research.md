@@ -514,8 +514,11 @@ moves on screen.
   (Roof section) sets a store model on the level's roof (`surLeToit`, an ADDED furniture field); it is
   planted at the lowest roof point under its footprint (`baseSurLeToit`, `hauteurDuToitEn`), does not
   collide with walls nor snap to them, is drawn dashed on the plan; "On the roof" moves it between
-  room and roof; the building's height includes it. Left of #458c: roof coverings shipped with the
-  application.
+  room and roof; the building's height includes it. **#458c, shipped roof coverings, DONE**: old
+  flat tiles, barrel tiles, slate (`TOITS_LIVRES`, textures-integrees.js; `int:toit:<id>`), for the
+  "roof" use only. A courtyard can be deleted too ("Delete the courtyard", Del): on its level, its own
+  walls go, or, closed by its neighbours, it merges into the one sharing the longest side
+  (`supprimerCour`). **#458 VALIDATED** on 27 October 2026.
 - **#459** the cutaway view per Panel. **#459a DONE** (27 October 2026): picking a placed building in
   "Elements" shows the "Building display" section: "Show up to: The whole building / <level>". Stored
   on the placed Element (`affichage.jusquA`, an ADDED field), so per Panel. The cut rig carries the

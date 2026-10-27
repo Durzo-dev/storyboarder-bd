@@ -4,7 +4,7 @@
 
 > 🇫🇷 [Version française](README.fr.md)
 
-**Version 1.12.21**
+**Version 1.13.0**
 
 **Comic book storyboarding application**: a desktop tool to create, organize and visualize comic book pages with real-time 3D scene rendering.
 
@@ -42,6 +42,8 @@ Previous versions and release notes: [all releases](https://github.com/val66/sto
 - 🏠 **Build from above**: snapping walls, detected rooms, doors, windows, bay windows and passages, straight, L- or U-shaped stairs, several levels
 - 🧱 **Finishes**: facade, walls, floors and ceilings in textures and colours, room by room
 - 🪑 **Furniture**: your models placed in the rooms, snapped to the walls, orientable
+- 🏡 **Roofs**: automatic per level, flat (parapet, railing), single pitch, gable or hip, even on L, T or U shapes; tiles, barrel tiles or slate; a chimney on top
+- ⛲ **Courtyards**: a room becomes a courtyard open to the sky, which goes up through the floors; a terrace above a room
 - 📍 **In scenes**: the building is placed as a copy; a character or an object is set in a room from its sheet; each panel can cut it at a level or hide walls, ceilings and floors
 
 ### Textures

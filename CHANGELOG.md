@@ -13,6 +13,56 @@ version coûterait plus qu'il ne rapporte.
 
 ---
 
+## v1.13.0
+
+**Des toits, des cours, et une icône.** Chaque niveau d'un bâtiment reçoit son toit automatiquement,
+même sur des plans en L, T ou U ; une pièce peut devenir une cour ouverte au ciel ; l'application a
+enfin son icône.
+
+### Ce qui change pour vous
+
+**Toits.** Section « Toit » de l'éditeur de bâtiment, par niveau, sur les pièces qui n'ont pas
+d'étage au-dessus : plat (sans bordure, acrotère ou garde-corps), un pan, deux pans ou quatre pans ;
+pente, débord, sens du faîtage, couverture (texture et couleur). Les formes en L, T ou U ont de vrais
+toits en pente, avec arêtiers, noues et pignons des ailes. Un toit adossé à l'étage du dessus s'y
+raccorde sans débord, sous son égout, comme une aile ou un appentis.
+
+**Couvertures livrées.** Tuiles plates anciennes, tuiles canal et ardoise, proposées pour les toits.
+
+**Éléments sur le toit.** « Ajouter un élément sur le toit » pose un modèle (une cheminée…) au plus
+bas du toit sous son empreinte ; « Sur le toit » et « Collé au toit » dans sa section Position.
+
+**Cours.** Supprimer une pièce fermée par ses voisines, ou posée au milieu d'une autre, en fait une
+cour (hachurée) : ni plafond ni toit, le toit en pente l'entoure. Avec des étages au-dessus, une
+fenêtre propose de la faire monter jusqu'en haut, murs tracés automatiquement (ou dit ce qui
+l'empêche). Au-dessus d'une pièce, c'est une terrasse. « Refaire une pièce » la rend, « Supprimer la
+cour » (ou Suppr) l'efface, à son niveau seulement.
+
+**Aperçu 3D de l'éditeur de bâtiment.** Il recadre seul la construction à chaque changement, et tout
+le bâtiment tient dans l'image quel que soit l'angle. Un bouton de sa barre active ou coupe ce
+cadrage automatique ; bouger la caméra le coupe aussi.
+
+**Store de modèles.** Ouvert pour choisir un modèle (Éditeur de modèle, « Importer un modèle »,
+« Ajouter un élément »), il garde tous ses onglets : « Télécharger » sur un modèle en ligne le range
+et le pose aussitôt.
+
+**Icône.** L'application a son icône : exécutable, installeur, raccourcis, fenêtre.
+
+**Corrections.** Un modèle articulé (anime_girl1) posé dans un bâtiment s'affiche et se mesure
+correctement, et ne devient plus géant en traversant un mur. Le bouton de l'Éditeur de bâtiment
+l'ouvre aussi depuis l'Éditeur de modèle. Dupliquer un niveau ne donne plus deux « Étage 1 ».
+
+### Sous le capot
+
+- `src/batiment-toits.js` : contour du toit par union des pièces découvertes (trous compris), méthode
+  des plans pour les formes convexes, côtés adossés, pignons et rives.
+- `src/batiment-squelette.js` : squelette droit pondéré (événements de côté, de scission, de sommet,
+  soudure entre fronts pour les trous) et triangulation à ponts.
+- `src/batiment-cours.js` : prolonger une cour aux étages (copie, erreur sans rien modifier) ;
+  `supprimerCour` dans batiment-pieces.js.
+- `cadrageOriente3D` (store-apercu-3d.js) : cadrage exact d'une boîte pour un angle de vue donné.
+- L'icône vit dans `assets/icone/`, hors de la licence CC (tous droits réservés).
+
 ## v1.12.0
 
 **Un éditeur de bâtiment, un store de textures, et des planches déjà dessinées qu'on importe.**

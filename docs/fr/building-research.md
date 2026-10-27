@@ -542,9 +542,11 @@ place : rien ne bouge à l'écran.
   le toit » (section Toit) pose un modèle du store sur le toit du niveau (`surLeToit`, champ AJOUTÉ du
   meuble) ; il se plante au plus bas du toit sous son empreinte (`baseSurLeToit`, `hauteurDuToitEn`),
   ne heurte pas les murs, n'est pas aimanté à eux, se dessine en pointillé sur le plan ; « Sur le
-  toit » le fait passer de la pièce au toit ; la hauteur du bâtiment le compte. Reste de #458c : des toitures
-  livrées avec l'application.
-  Reste **#458c** : les Éléments sur le toit, des toitures livrées avec l'application.
+  toit » le fait passer de la pièce au toit ; la hauteur du bâtiment le compte. **#458c, les toitures livrées,
+  FAIT** : tuiles plates anciennes, tuiles canal, ardoise (`TOITS_LIVRES`, textures-integrees.js ;
+  `int:toit:<id>`), usage « toit » seulement. Une cour se supprime aussi (« Supprimer la cour », Suppr) :
+  à son niveau, ses murs propres partent, ou, fermée par ses voisines, elle se fond dans celle du plus
+  long bord (`supprimerCour`). **#458 VALIDÉ** le 27 octobre 2026.
 - **#459** la vue en coupe par Case. **#459a FAIT** (27 octobre 2026) : choisir un bâtiment placé
   dans « Éléments » montre la section « Affichage du bâtiment » : « Montrer jusqu'à : Tout le
   bâtiment / <niveau> ». Enregistré sur l'Élément placé (`affichage.jusquA`, champ AJOUTÉ), donc par

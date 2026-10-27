@@ -4,7 +4,7 @@
 
 > 🇬🇧 [English version](README.md)
 
-**Version 1.12.21**
+**Version 1.13.0**
 
 **Application de découpage de Bandes Dessinées** : outil de storyboard pour créer, organiser et visualiser des planches de BD avec rendu 3D des scènes.
 
@@ -42,6 +42,8 @@ Versions précédentes et notes de version : [toutes les releases](https://githu
 - 🏠 **Construire en vue de dessus** : murs aimantés, pièces détectées, portes, fenêtres, baies et passages, escaliers droits, en L ou en U, plusieurs niveaux
 - 🧱 **Revêtements** : façade, murs, sols et plafonds en textures et couleurs, pièce par pièce
 - 🪑 **Mobilier** : vos modèles posés dans les pièces, aimantés aux murs, orientables
+- 🏡 **Toits** : automatiques par niveau, plats (acrotère, garde-corps), à un, deux ou quatre pans, même sur des formes en L, T ou U ; tuiles plates, tuiles canal ou ardoise ; une cheminée dessus
+- ⛲ **Cours** : une pièce devient une cour ouverte au ciel, qui traverse les étages ; une terrasse au-dessus d'une pièce
 - 📍 **Dans les Scènes** : le bâtiment s'y place en copie ; un Personnage ou un Objet s'y pose dans une pièce, depuis sa fiche ; chaque Case peut le couper à un niveau ou en masquer des murs, plafonds et sols
 
 ### Textures
