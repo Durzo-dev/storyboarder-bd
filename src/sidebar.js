@@ -13,6 +13,8 @@
 
 import { policeADessiner, variantesDeLaPolice, policesImportees, nomsDesUsagesDeLaPolice } from './polices-utilisateur.js';
 import { S, currentPage, currentPageData, isLockedScenePanel, panelsInPage, ensurePanelNumbers, tr } from './state.js';
+import { estUnBatimentPlace, niveauDeCoupe, fixerCoupe } from './batiment-element.js';
+import { niveauxTries } from './batiment-niveaux.js';
 import { lumiereDeCase3D, projeterSurDome3D, geometrieDome3D,
   AZIMUTS_CARDINAUX } from './lighting-3d.js';
 import { isImportedModel } from './model-store.js';
@@ -109,6 +111,7 @@ const sideLightColorInput = document.getElementById('sideLightColorInput');
 const sideLightIntensityRange = document.getElementById('sideLightIntensityRange');
 const sideLightIntensityValue = document.getElementById('sideLightIntensityValue');
 const sidePersonasSection = document.getElementById('sidePersonasSection');
+const sideBatimentSection = document.getElementById('sideBatimentSection');
 const sideImageSection = document.getElementById('sideImageSection');
 const sideImageZoomInput = document.getElementById('sideImageZoomInput');
 const sideImageZoomValue = document.getElementById('sideImageZoomValue');
@@ -1157,8 +1160,32 @@ export function renderSidePagePanels(page){
 // Renamed to an internal function (updateSidePanel becomes a wrapper just below): cf. the FIX
 // above on _restoreSectionCollapseStates, which must run after EVERY call to
 // updateSidePanel() regardless of its exit point (several `return`s below).
+/**
+ * #459a : la section « Affichage du bâtiment », quand l'Élément choisi est un bâtiment placé : jusqu'à
+ * quel niveau SA Case le montre (« Tout le bâtiment », puis ses niveaux du plus haut au plus bas).
+ * Cachée pour tout le reste.
+ */
+function majSectionAffichageBatiment(el){
+  if (!sideBatimentSection) return;
+  if (!estUnBatimentPlace(el)) { sideBatimentSection.style.display = 'none'; return; }
+  document.getElementById('sideBatimentTitle').textContent = tr('Building display', 'Affichage du bâtiment');
+  document.getElementById('sideBatimentCoupeLabel').textContent = tr('Show up to', 'Montrer jusqu\'à');
+  const choix = document.getElementById('sideBatimentCoupe');
+  const niveaux = niveauxTries(el.batiment).reverse();
+  const options = [['', tr('The whole building', 'Tout le bâtiment')], ...niveaux.map(n => [n.id, n.nom])];
+  choix.replaceChildren(...options.map(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; return o; }));
+  choix.value = niveauDeCoupe(el) || '';
+  choix.onchange = () => {
+    _snapshot();
+    fixerCoupe(el, choix.value || null);
+    drawCurrentPage();
+  };
+  sideBatimentSection.style.display = 'block';
+}
+
 function updateSidePanelImpl(){
   const page = currentPage();
+  majSectionAffichageBatiment(null);
   // Le cadrage d'une Planche importée n'appartient qu'au menu Planche, qui la remontre plus bas.
   sidePageCadrageSection.style.display = 'none';
   sidePageEditionSection.style.display = 'none';
@@ -1401,6 +1428,7 @@ function updateSidePanelImpl(){
     renderSidePersonas(sel, page);
     sidePersonas.style.display = 'flex';
     sidePersonasSection.style.display = 'block';
+    majSectionAffichageBatiment(selRaw);
     sideBubbleAppearanceSection.style.display = 'none';
     sideBubbleBorderSection.style.display = 'none';
     sideBubbleStyleSection.style.display = 'none';

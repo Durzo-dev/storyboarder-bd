@@ -510,7 +510,12 @@ place : rien ne bouge à l'écran.
   modifiables) ; une pièce tracée se reprend dans l'éditeur par « Modifier » (une copie).
 - **#458** le toit automatique : types, pente, débord, matières, toit-terrasse avec garde-corps,
   Éléments sur le toit.
-- **#459** la vue en coupe par Case (« jusqu'au niveau N », murs de devant effacés).
+- **#459** la vue en coupe par Case. **#459a FAIT** (27 octobre 2026) : choisir un bâtiment placé
+  dans « Éléments » montre la section « Affichage du bâtiment » : « Montrer jusqu'à : Tout le
+  bâtiment / <niveau> ». Enregistré sur l'Élément placé (`affichage.jusquA`, champ AJOUTÉ), donc par
+  Case. Le rig coupé embarque le bâtiment entier, invisible et hors des rayons, pour garder sa taille
+  et sa place (le rendu centre la boîte du rig). Reste #459b (murs de devant effacés, plus tard) et
+  #464 (masquer un mur, un plafond, par l'éditeur).
 - **#454g** le sous-sol et le Sol percé, en dernier.
 - **#456** (plan d'architecte) ensuite, dans l'éditeur : un plan = un niveau.
 

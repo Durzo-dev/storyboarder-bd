@@ -47,7 +47,7 @@ import { fichiersDesMeubles } from './batiment-mobilier.js';
 import { isImportedModel } from './model-store.js';
 // #454a-4 : le bâtiment placé, dessiné par le MÊME constructeur que l'aperçu de l'éditeur.
 import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
-import { OBJ_TYPE_BATIMENT, signatureDuBatiment } from './batiment-element.js';
+import { OBJ_TYPE_BATIMENT, signatureDuBatiment, niveauDeCoupe } from './batiment-element.js';
 // cf. son en-tête : Object3D.clone() casse le lien SkinnedMesh↔Skeleton, faussant l'échelle
 // appliquée par placeRigCentered3D pour tout modèle importé articulé.
 import { cloneSkinned } from './vendor/SkeletonUtils.js';
@@ -4310,8 +4310,9 @@ let _materiauxBatiment3D = null;
  * modèles (#454e). Sans cette part, un meuble resterait en boîte : le bâtiment ne change pas quand
  * son modèle finit d'arriver.
  */
-function signatureDuBatimentRendu3D(b){
-  return signatureDuBatiment(b) + '|' + modelCacheSignature(fichiersDesMeubles(b));
+function signatureDuBatimentRendu3D(b, o = null){
+  // #459a : la coupe de SA Case en fait partie (changer de niveau montré refait le rig).
+  return signatureDuBatiment(b) + '|' + modelCacheSignature(fichiersDesMeubles(b)) + '|' + (niveauDeCoupe(o) || '');
 }
 
 /** Libère les géométries d'un rig (un bâtiment en porte des centaines) ; ses matières restent. */
@@ -4329,14 +4330,28 @@ export function buildPropRig3D(objType, colorHex, o){
       // #454e : le mobilier du bâtiment, par le cache des modèles des Cases.
       _materiauxBatiment3D.modele = (f) => { const c = getLoadedModel(f); return c && c.scene ? cloneSkinned(c.scene) : null; };
     }
-    const groupe = construireBatiment3D(THREE, (o && o.batiment) || { niveaux: [], murs: [] }, _materiauxBatiment3D);
+    const b = (o && o.batiment) || { niveaux: [], murs: [] };
+    const jusquA = niveauDeCoupe(o);
+    const groupe = construireBatiment3D(THREE, b, _materiauxBatiment3D, { jusquA });
+    // #459a : COUPÉ, il garde la place et la taille du bâtiment entier. Le rendu centre la BOÎTE du
+    // rig et la met à la hauteur réelle : une boîte rétrécie par la coupe le grandirait et le
+    // déplacerait. Le bâtiment entier est donc joint, INVISIBLE et hors de la couche des rayons
+    // (sélection) : Box3.setFromObject le compte, le rendu et la sélection ne le voient pas. Ses
+    // géométries sont libérées avec le rig.
+    if (jusquA) {
+      const gabarit = construireBatiment3D(THREE, b, _materiauxBatiment3D);
+      gabarit.visible = false;
+      gabarit.traverse(n => { n.layers.set(31); n.castShadow = false; n.receiveShadow = false; });
+      gabarit.userData.gabarit = true;
+      groupe.add(gabarit);
+    }
     // Un bâtiment sans mur reste visible et sélectionnable : un repère d'un mètre.
     if (!groupe.children.length) {
       const repere = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), _materiauxBatiment3D.cadre);
       repere.position.y = 0.5;
       groupe.add(repere);
     }
-    return { figureGroup: groupe, batimentSig: signatureDuBatimentRendu3D(o && o.batiment) };
+    return { figureGroup: groupe, batimentSig: signatureDuBatimentRendu3D(b, o) };
   }
   const builder = PROP_RIG_BUILDERS_3D[objType] || buildCarRig3D;
   if (WALL_TYPES.includes(objType) && o && o.w && o.h) {
@@ -4859,7 +4874,7 @@ export function ensureObjectRigEntry3D(o){
   // image).
   const heightChanged = entry && objType === 'modele' && entry.realHeightFloor !== (o && o.realHeightFloor);
   // #454a-4 : un bâtiment placé se reconstruit quand son bâtiment change (« Modifier », annuler).
-  const batimentChanged = entry && objType === OBJ_TYPE_BATIMENT && entry.batimentSig !== signatureDuBatimentRendu3D(o && o.batiment);
+  const batimentChanged = entry && objType === OBJ_TYPE_BATIMENT && entry.batimentSig !== signatureDuBatimentRendu3D(o && o.batiment, o);
   if (!entry || entry.objType !== objType || entry.color !== color || dimsChanged || doorStateChanged || windowStateChanged || modelChanged || batimentChanged || heightChanged) {
     if (entry) personaScene3D.remove(entry.figureGroup);
     if (entry && entry.objType === OBJ_TYPE_BATIMENT) libererGeometries3D(entry.figureGroup);

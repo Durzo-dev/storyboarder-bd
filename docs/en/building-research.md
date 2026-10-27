@@ -485,7 +485,12 @@ moves on screen.
   with "Modify" (a copy).
 - **#458** the automatic roof: types, pitch, overhang, materials, roof terrace with railing,
   Elements on the roof.
-- **#459** the cutaway view per Panel ("up to level N", front walls hidden).
+- **#459** the cutaway view per Panel. **#459a DONE** (27 October 2026): picking a placed building in
+  "Elements" shows the "Building display" section: "Show up to: The whole building / <level>". Stored
+  on the placed Element (`affichage.jusquA`, an ADDED field), so per Panel. The cut rig carries the
+  whole building, invisible and out of the raycast layer, to keep its size and place (the render
+  centres the rig's box). Left: #459b (front walls hidden, later) and #464 (hide a wall, a ceiling,
+  through the editor).
 - **#454g** the basement and the pierced Ground, last.
 - **#456** (architect's plan) afterwards, in the editor: one plan = one level.
 

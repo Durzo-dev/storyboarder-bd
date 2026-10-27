@@ -87,3 +87,48 @@ describe('placer, puis appliquer une retouche', () => {
     assert.equal(estUnBatimentPlace({ type: 'objet3d', objType: 'batiment' }), false, 'sans bâtiment embarqué');
   });
 });
+
+// #459a : l'affichage d'un bâtiment placé, par Case.
+describe('montrer jusqu\'à un niveau (#459a)', () => {
+  test('niveauDeCoupe : seulement un niveau qui existe encore ; fixerCoupe pose et retire le champ', async () => {
+    const { niveauDeCoupe, fixerCoupe } = await import('../src/batiment-element.js');
+    const o = creerElementBatiment({ panel, page, batiment: maison() });
+    assert.equal(niveauDeCoupe(o), null);
+    fixerCoupe(o, 'n0');
+    assert.deepEqual(o.affichage, { jusquA: 'n0' });
+    assert.equal(niveauDeCoupe(o), 'n0');
+    o.affichage.jusquA = 'disparu';
+    assert.equal(niveauDeCoupe(o), null, 'un niveau supprimé ne coupe plus rien');
+    fixerCoupe(o, null);
+    assert.equal('affichage' in o, false, 'tout montré : plus de champ');
+  });
+  test('coupé, le rig garde la boîte du bâtiment entier (gabarit invisible, hors des rayons)', async () => {
+    await import('./helpers/dom-stub.mjs');
+    const { buildPropRig3D } = await import('../src/rig3d.js');
+    const { ajouterEtage } = await import('../src/batiment-niveaux.js');
+    const { fixerCoupe } = await import('../src/batiment-element.js');
+    const T = globalThis.THREE;
+    const b = maison();
+    const n1 = ajouterEtage(b, fr);
+    ajouterRectangle(b, n1.id, { x: 0, z: 0 }, { x: 6, z: 4 }, 0.2);
+    const o = creerElementBatiment({ panel, page, batiment: b });
+    const entier = buildPropRig3D('batiment', '#888', o).figureGroup;
+    fixerCoupe(o, 'n0');
+    const r = buildPropRig3D('batiment', '#888', o);
+    const coupe = r.figureGroup;
+    const h = (g) => new T.Box3().setFromObject(g).getSize(new T.Vector3()).y;
+    proche(h(coupe), h(entier));
+    const gabarit = coupe.children.find(c => c.userData.gabarit);
+    assert.ok(gabarit && gabarit.visible === false);
+    assert.equal(gabarit.layers.test(new T.Layers()), false, 'les rayons de la sélection ne le voient pas');
+    assert.match(r.batimentSig, /\|n0$/, 'la coupe fait partie de la signature du rig');
+  });
+});
+
+test('#459a : la section « Affichage du bâtiment » suit l\'Élément choisi, et pose la coupe avec un point d\'annulation', async () => {
+  const { readFileSync } = await import('node:fs');
+  const sb = readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8');
+  assert.match(sb, /sidePersonasSection\.style\.display = 'block';\n\s*majSectionAffichageBatiment\(selRaw\);/);
+  assert.match(sb, /_snapshot\(\);\n\s*fixerCoupe\(el, choix\.value \|\| null\);/);
+  assert.match(readFileSync(new URL('../src/index.html', import.meta.url), 'utf8'), /id="sideBatimentSection"/);
+});

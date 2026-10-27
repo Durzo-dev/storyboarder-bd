@@ -134,6 +134,28 @@ export function etagesEtPieces(b){
 }
 
 /**
+ * L'AFFICHAGE d'un bâtiment placé (#459a) : ce que montre SA Case, sans toucher au bâtiment.
+ * `o.affichage = { jusquA }` (un champ AJOUTÉ, absent par défaut : tout est montré) :
+ *   - `jusquA` : l'id du dernier niveau montré, ouvert par le haut (sans son plafond ni la dalle du
+ *     dessus), comme la coupe de l'éditeur ; les niveaux au-dessus disparaissent.
+ * Il vit sur l'Élément placé, donc par Case : « Modifier » et la bibliothèque n'en héritent pas.
+ */
+
+/** Le niveau où couper, s'il existe encore dans le bâtiment (un niveau supprimé ne coupe plus rien). PURE. */
+export function niveauDeCoupe(o){
+  const id = o && o.affichage && o.affichage.jusquA;
+  return id && ((o.batiment && o.batiment.niveaux) || []).some(n => n.id === id) ? id : null;
+}
+
+/** Coupe au niveau `id`, ou montre tout (`null`). Le champ disparaît quand il ne dit plus rien. PURE. */
+export function fixerCoupe(o, id){
+  const a = { ...(o.affichage || {}) };
+  if (id) a.jusquA = id; else delete a.jusquA;
+  if (Object.keys(a).length) o.affichage = a; else delete o.affichage;
+  return o;
+}
+
+/**
  * Remet la hauteur réelle d'un bâtiment placé d'accord avec son bâtiment (#454b : les murs montent
  * désormais à travers le toit plat). Le rendu normalise le rig sur `realHeightFloor` : un écart le
  * rétrécirait. Rend vrai si quelque chose a changé.

@@ -567,6 +567,15 @@
       <h2 id="sidePersonasTitle">Éléments</h2>
       <div id="sidePersonas" class="side-persos"></div>
     </div>
+    <!-- #459a : l'AFFICHAGE du bâtiment placé choisi dans « Éléments », pour CETTE Case : jusqu'à quel
+         niveau il est montré. Rempli par sidebar.js (majSectionAffichageBatiment). -->
+    <div id="sideBatimentSection" class="side-section" style="display:none;">
+      <h2 id="sideBatimentTitle">Affichage du bâtiment</h2>
+      <div class="tome-format">
+        <label for="sideBatimentCoupe" id="sideBatimentCoupeLabel">Montrer jusqu'à</label>
+        <select id="sideBatimentCoupe"></select>
+      </div>
+    </div>
     <!-- Section Image : elle REMPLACE Sol et Éléments, elle ne s'y ajoute pas. Une Case porte une
          image ou de la 3D (cf. docs/en/panel-images.md), et c'est ici que l'exclusivité s'explique
          à l'utilisateur, puisque le menu contextuel, lui, retire simplement ses entrées. -->
