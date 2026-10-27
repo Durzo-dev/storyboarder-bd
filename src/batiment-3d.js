@@ -360,14 +360,17 @@ function construireToits(T, b, n, mats, groupe){
         // Le dessous, à l'épaisseur du toit, tourné vers le bas.
         eventail(p.points.map(q => ({ ...q, y: q.y - EPAISSEUR_TOIT })).reverse(), p.uv.slice().reverse(), pos, uvs);
       });
-      // La rive : le pourtour débordant, de l'épaisseur du toit ; pas contre un mur de l'étage (elle le
-      // traverserait, ou passerait au travers de son toit : la ligne sombre signalée).
-      g.bord.forEach((a, i) => {
-        if (g.bordAdosses[i]) return;
-        const c = g.bord[(i + 1) % g.bord.length];
-        const L = Math.hypot(c.x - a.x, c.z - a.z);
-        eventail([{ x: a.x, y: a.y - EPAISSEUR_TOIT, z: a.z }, { x: c.x, y: c.y - EPAISSEUR_TOIT, z: c.z }, c, a],
-          [[0, 0], [L, 0], [L, EPAISSEUR_TOIT], [0, EPAISSEUR_TOIT]], pos, uvs, true);
+      // La rive : le pourtour débordant, de l'épaisseur du toit, en SUIVANT le toit (montée et descente
+      // d'un pignon) ; pas contre un mur de l'étage (elle le traverserait, ou passerait au travers de son
+      // toit : la ligne sombre signalée).
+      g.rives.forEach(r => {
+        if (r.adosse) return;
+        for (let i = 0; i + 1 < r.points.length; i++) {
+          const a = r.points[i], c = r.points[i + 1];
+          const L = Math.hypot(c.x - a.x, c.z - a.z);
+          eventail([{ x: a.x, y: a.y - EPAISSEUR_TOIT, z: a.z }, { x: c.x, y: c.y - EPAISSEUR_TOIT, z: c.z }, c, a],
+            [[0, 0], [L, 0], [L, EPAISSEUR_TOIT], [0, EPAISSEUR_TOIT]], pos, uvs, true);
+        }
       });
       groupe.add(maillage(T, pos, uvs, matToit));
       const pp = [], pu = [];

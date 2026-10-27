@@ -260,6 +260,24 @@ function couper(poly, f){
   return r;
 }
 
+/** Les abscisses (0 à 1) le long du côté a → c où le toit change de pan, bouts compris, triées. */
+function coupuresDuCote(plans, a, c){
+  const H = (p) => Math.min(...plans.map(pl => hauteur(pl, p)));
+  const ts = new Set([0, 1]);
+  for (let x = 0; x < plans.length; x++) for (let y = x + 1; y < plans.length; y++) {
+    const fa = hauteur(plans[x], a) - hauteur(plans[y], a), fc = hauteur(plans[x], c) - hauteur(plans[y], c);
+    if (Math.abs(fa - fc) > 1e-12) {
+      const s = fa / (fa - fc);
+      if (s > 1e-6 && s < 1 - 1e-6) {
+        // Seulement si ces deux plans sont bien ceux du toit en ce point (le plus bas des plans).
+        const p = { x: a.x + (c.x - a.x) * s, z: a.z + (c.z - a.z) * s };
+        if (Math.abs(hauteur(plans[x], p) - H(p)) < 1e-6) ts.add(s);
+      }
+    }
+  }
+  return [...ts].sort((u, v) => u - v);
+}
+
 /**
  * La géométrie d'un toit sur un contour CONVEXE `ext` (face extérieure des murs), posé à la hauteur
  * `base` (le dessus des murs) :
@@ -310,20 +328,24 @@ export function geometrieDuToit(ext, reglages, base, { adosses = [], hautMax = I
   ext.forEach((a, i) => {
     if (adosses[i]) return;
     const c = ext[(i + 1) % ext.length];
-    const ts = new Set([0, 1]);
-    for (let x = 0; x < plans.length; x++) for (let y = x + 1; y < plans.length; y++) {
-      const fa = hauteur(plans[x], a) - hauteur(plans[y], a), fc = hauteur(plans[x], c) - hauteur(plans[y], c);
-      if (Math.abs(fa - fc) > 1e-12) { const s = fa / (fa - fc); if (s > 1e-6 && s < 1 - 1e-6) ts.add(s); }
-    }
-    const le = [...ts].sort((u, v) => u - v).map(s => { const p = { x: a.x + (c.x - a.x) * s, z: a.z + (c.z - a.z) * s }; return { ...p, h: Math.max(0, H(p)) }; });
+    const le = coupuresDuCote(plans, a, c).map(s => { const p = { x: a.x + (c.x - a.x) * s, z: a.z + (c.z - a.z) * s }; return { ...p, h: Math.max(0, H(p)) }; });
     if (le.every(p => p.h < 1e-3)) return;
     // Les points du haut à hauteur nulle tombent sur ceux du bas : retirés (un triangle reste un triangle).
     pignons.push({ points: [{ x: a.x, y: base, z: a.z }, { x: c.x, y: base, z: c.z },
       ...le.slice().reverse().filter(p => p.h > 1e-6).map(p => ({ x: p.x, y: base + p.h, z: p.z }))] });
   });
   const bord = deborde.map(p => ({ x: p.x, y: base + H(p), z: p.z }));
+  // LES RIVES, côté par côté, en suivant le toit (signalé : sur un pignon, la rive filait droit d'un
+  // coin d'égout à l'autre et traversait le pignon) : coupées là où le toit change de pan, au faîtage.
+  const rives = deborde.map((a, i) => {
+    const c = deborde[(i + 1) % deborde.length];
+    return { adosse: !!adosses[i], points: coupuresDuCote(plans, a, c).map(s => {
+      const p = { x: a.x + (c.x - a.x) * s, z: a.z + (c.z - a.z) * s };
+      return { ...p, y: base + H(p) };
+    }) };
+  });
   const haut = Math.max(base, ...pans.flatMap(p => p.points.map(q => q.y)));
-  return { pans, pignons, bord, bordAdosses: ext.map((_, i) => !!adosses[i]), haut };
+  return { pans, pignons, bord, rives, bordAdosses: ext.map((_, i) => !!adosses[i]), haut };
 }
 
 /** Deux polygones se recouvrent-ils (un sommet de l'un dans l'autre, ou deux côtés qui se croisent) ? */

@@ -189,3 +189,15 @@ test('un étage posé en partie sur une pièce (sans suivre ses murs) : elle res
   assert.equal(t.sousUnEtage, true);
   assert.equal(t.geometrie, null);
 });
+
+test('la rive d\'un pignon suit le toit jusqu\'au faîtage (signalé : elle traversait le pignon à l\'horizontale)', () => {
+  const rect = [{ x: 0, z: 0 }, { x: 8, z: 0 }, { x: 8, z: 4 }, { x: 0, z: 4 }];
+  const g = geometrieDuToit(rect, { type: 'deux-pans', pente: 45, debord: 0.3 }, 3);
+  const pignons = g.rives.filter(r => r.points.length === 3);
+  assert.equal(pignons.length, 2, 'les deux petits côtés passent par le faîtage');
+  pignons.forEach(r => proche(r.points[1].y, g.haut, 1e-9));
+  const egouts = g.rives.filter(r => r.points.length === 2);
+  egouts.forEach(r => proche(r.points[0].y, r.points[1].y, 1e-9));
+  const src = readFileSync(new URL('../src/batiment-3d.js', import.meta.url), 'utf8');
+  assert.match(src, /g\.rives\.forEach\(r => \{\n\s*if \(r\.adosse\) return;/);
+});
