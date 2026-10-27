@@ -1072,7 +1072,8 @@ function reglagesDuMeuble(meuble){
   const hi = document.createElement('input'); hi.type = 'number'; hi.step = '1';
   hi.value = String(meuble.colle !== false ? 0 : Math.round((meuble.y || 0) * 100));
   hi.disabled = meuble.colle !== false;
-  hi.title = hi.disabled ? tr('Untick “Stuck to the floor” to raise it.', 'Décochez « Collé au sol » pour l\'élever.') : '';
+  hi.title = !hi.disabled ? '' : meuble.surLeToit ? tr('Untick “Stuck to the roof” to raise it above the roof.', 'Décochez « Collé au toit » pour l\'élever au-dessus du toit.')
+    : tr('Untick “Stuck to the floor” to raise it.', 'Décochez « Collé au sol » pour l\'élever.');
   if (!meuble.traverse) hi.min = '0';
   hi.addEventListener('change', () => {
     const n = Number(hi.value);

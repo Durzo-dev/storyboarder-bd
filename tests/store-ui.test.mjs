@@ -317,8 +317,12 @@ describe('le mode choix (l\'Éditeur de modèle choisit sa figure dans « Mes mo
     // La fiche laissée ouverte n'est pas rouverte en mode choix, ni oubliée.
     assert.match(corps, /const reprise = choix \? null : aRouvrir;/);
   });
-  test('seul l\'onglet « Mes modèles » est montré', () => {
-    assert.match(ui, /SOURCES_STORE\.filter\(id => !choix \|\| id === LOCAL\)/);
+  // Demandé ensuite : chercher en ligne et poser. Tous les onglets restent ; un téléchargement choisit.
+  test('tous les onglets sont montrés ; un téléchargement choisit le modèle', () => {
+    assert.match(ui, /SOURCES_STORE\.map\(id =>/);
+    assert.doesNotMatch(ui, /id === LOCAL\)\.map/);
+    const corps = ui.slice(ui.indexOf('export async function telechargerModele'), ui.indexOf('return issue;'));
+    assert.match(corps, /if \(choix && accepterChoix\(/);
   });
   // #454a-4b : ce que le choix accepte est passé par l'appelant ; par défaut (l'Éditeur de modèle),
   // une figure à poser : ni un modèle statique, ni un bâtiment.

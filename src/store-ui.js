@@ -54,8 +54,8 @@ let possedes = new Map();
 /** Les résultats affichés, pour refaire les cartes sans nouvelle requête. */
 let affiches = [];
 /**
- * Le MODE CHOIX (demandé, l'Éditeur de modèle) : la fenêtre ne montre que « Mes modèles », et un clic
- * sur une vignette rend le modèle à l'appelant au lieu d'ouvrir sa fiche. `choix(fichier)` est le
+ * Le MODE CHOIX (demandé, l'Éditeur de modèle) : la fenêtre s'ouvre sur « Mes modèles », et un clic
+ * sur une vignette rend le modèle à l'appelant au lieu d'ouvrir sa fiche ; en ligne, le télécharger le rend. `choix(fichier)` est le
  * rappel ; null hors de ce mode. L'onglet d'avant est rendu à la fermeture, et la fiche laissée
  * ouverte la dernière fois n'est ni rouverte ni oubliée.
  */
@@ -133,8 +133,9 @@ export function rafraichirTextesStore(){
 function rendreOnglets(){
   const zone = $('storeOnglets');
   if (!zone) return;
-  // En mode choix, le seul onglet est « Mes modèles » : on ne pose que ce qui est sur le disque.
-  zone.replaceChildren(...SOURCES_STORE.filter(id => !choix || id === LOCAL).map(id => {
+  // En mode choix aussi, tous les onglets (demandé : chercher en ligne et poser ; le téléchargement
+  // d'une fiche rend alors le modèle à l'appelant, cf. telechargerModele).
+  zone.replaceChildren(...SOURCES_STORE.map(id => {
     const nom = id === LOCAL ? textesStore(langue()).mesModeles : ((infosPar[id] && infosPar[id].source.nom) || id);
     const b = el('button', { texte: nom, classe: 'onglet' + (id === source ? ' actif' : ''),
       attrs: { type: 'button', role: 'tab', 'aria-selected': String(id === source) } });
@@ -567,6 +568,13 @@ export async function telechargerModele(r, ui, resolution = RESOLUTION_DEFAUT){
     // La coche sur la carte, et la section Modèles du menu de gauche (et les Cases, si remplacé).
     $('storeGrille').replaceChildren(...affiches.map(carte));
     if (_rappels.apresTelechargement) _rappels.apresTelechargement(issue.fichier, issue.remplace);
+    // En mode choix, le modèle téléchargé est CHOISI (demandé : chercher en ligne et poser). Son
+    // squelette n'est pas encore mesuré : seul un refus certain le garde dans la fenêtre.
+    if (choix && accepterChoix({ fichier: issue.fichier, local: true, batiment: false })) {
+      const rendre = choix;
+      fermerStore();
+      rendre(issue.fichier);
+    }
   } else {
     if (courant && courant.bouton) { courant.bouton.textContent = t.telecharger; courant.bouton.disabled = false; }
     if (courant && courant.note) { courant.note.textContent = t.erreurs[issue.erreur] || t.erreurs.reponse; courant.note.classList.add('erreur'); }
@@ -1333,9 +1341,6 @@ export async function ouvrirStore({ onglet, choisir, accepter, importer } = {}){
     accepterChoix = typeof accepter === 'function' ? accepter : POSABLE;
     importerChoix = typeof importer === 'function' ? importer : null;
     onglet = LOCAL;
-    // Les onglets d'emblée réduits à « Mes modèles » (signalé : tous restaient affichés jusqu'au
-    // premier clic, qui les faisait disparaître ; on ne pose que ce qui est sur le disque).
-    if (infos) rafraichirTextesStore();
   } else if (choix) {
     // Le bouton du bandeau pendant un choix : on revient à la fenêtre ordinaire.
     quitterModeChoix();

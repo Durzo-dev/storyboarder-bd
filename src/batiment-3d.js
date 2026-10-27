@@ -484,7 +484,10 @@ function construireMeuble(T, m, mats, elevation, enCollision = false){
   // Forcé dans un mur (demandé) : en rouge, le temps du geste.
   if (enCollision) {
     if (!mats.meubleRouge) mats.meubleRouge = new T.MeshStandardMaterial({ color: 0xe0453a, roughness: 0.7, transparent: true, opacity: 0.75 });
-    g.traverse(o => { if (o.isMesh) o.material = mats.meubleRouge; });
+    // Un maillage ARTICULÉ veut un matériau qui suit ses os (r128 : `skinning: true`) : sans lui, il
+    // est dessiné dans sa géométrie brute, souvent en centimètres (signalé : anime_girl1 géante).
+    if (!mats.meubleRougeArticule) mats.meubleRougeArticule = new T.MeshStandardMaterial({ color: 0xe0453a, roughness: 0.7, transparent: true, opacity: 0.75, skinning: true });
+    g.traverse(o => { if (o.isMesh) o.material = o.isSkinnedMesh ? mats.meubleRougeArticule : mats.meubleRouge; });
   }
   return g;
 }

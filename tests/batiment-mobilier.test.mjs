@@ -320,8 +320,11 @@ test('signalé : un modèle articulé (anime_girl1) se mesure et se pose OS COMP
   const b3 = readFileSync(new URL('../src/batiment-3d.js', import.meta.url), 'utf8');
   assert.match(b3, /const reelle = box3FromObjectSkinAware3D\(copie\)\.getSize/);
   assert.match(b3, /if \(o\.isSkinnedMesh\) o\.frustumCulled = false;/);
+  assert.match(b3, /opacity: 0\.75, skinning: true \}\)/, 'le rouge de collision suit les os');
+  assert.match(b3, /o\.material = o\.isSkinnedMesh \? mats\.meubleRougeArticule : mats\.meubleRouge;/);
   const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
   assert.match(ui, /const t = box3FromObjectSkinAware3D\(c\.scene\)\.getSize/);
   const store = readFileSync(new URL('../src/store-ui.js', import.meta.url), 'utf8');
-  assert.match(store, /onglet = LOCAL;\n[\s\S]{0,300}if \(infos\) rafraichirTextesStore\(\);\n  \} else if \(choix\)/, 'en mode choix, les onglets réduits d\'emblée');
+  assert.match(store, /zone\.replaceChildren\(\.\.\.SOURCES_STORE\.map\(id =>/, 'en mode choix, tous les onglets (chercher en ligne et poser)');
+  assert.match(store, /if \(choix && accepterChoix\(\{ fichier: issue\.fichier, local: true, batiment: false \}\)\) \{\n      const rendre = choix;\n      fermerStore\(\);\n      rendre\(issue\.fichier\);/, 'un téléchargement en mode choix rend le modèle');
 });
