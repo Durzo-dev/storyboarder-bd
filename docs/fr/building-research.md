@@ -515,6 +515,11 @@ place : rien ne bouge à l'écran.
   couverture en texture et couleur (usage « toit » du store). Chaque pan est un plan, le toit est leur
   minimum : exact sur une forme CONVEXE ; les pignons ferment les murs sous lui (matière de la
   façade). La hauteur du bâtiment compte le toit (les bâtiments placés gardent leur taille).
+  RACCORDS (signalé) : un côté du contour partagé avec une pièce couverte du même niveau est ADOSSÉ à
+  l'étage : le toit s'y arrête à la face du mur de l'étage, sans débord, sans rive, sans égout ni
+  pignon ; un appentis monte vers ce mur, un deux-pans y amène son faîtage de face (le pignon contre
+  la maison), comme une aile ou un appentis réels (les Sims, Chief Architect) ; et il reste sous
+  l'égout de l'étage (sa pente est réduite au besoin).
   Reste **#458b** : les formes à angle rentrant (L, T, U), par le squelette droit ; **#458c** : les
   Éléments sur le toit, des toitures livrées avec l'application.
 - **#459** la vue en coupe par Case. **#459a FAIT** (27 octobre 2026) : choisir un bâtiment placé

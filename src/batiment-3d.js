@@ -16,7 +16,7 @@ import { formeDeLEscalier, tremieDeLEscalier } from './batiment-escaliers.js';
 import { niveauxTries, hauteurDesMursDuNiveau, epaisseurDuDessus, niveauDessous } from './batiment-niveaux.js';
 import { fabriqueDeRevetements, revetementDeLaFace, revetementDeLaPiece, pieceDevantLaFace } from './batiment-revetements.js';
 import { meublesDuNiveau, hauteurAuSol, basDuMeuble } from './batiment-mobilier.js';
-import { toitsDuNiveau, decaler, ACROTERE, GARDE_CORPS } from './batiment-toits.js';
+import { toitsDuNiveau, decaler, ACROTERE, GARDE_CORPS, EPAISSEUR_TOIT } from './batiment-toits.js';
 
 /** Les matières d'un bâtiment, à créer une fois par renderer. */
 export function materiauxBatiment3D(T){
@@ -327,8 +327,6 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, 
   return groupe;
 }
 
-/** L'épaisseur d'un toit en pente (couverture et charpente), visible à sa rive. */
-const EPAISSEUR_TOIT = 0.12;
 
 /** Un polygone convexe 3D en éventail : positions (et UV) dans les tableaux, les deux faces si `deux`. */
 function eventail(pts, uv, pos, uvs, deux = false){
@@ -362,8 +360,10 @@ function construireToits(T, b, n, mats, groupe){
         // Le dessous, à l'épaisseur du toit, tourné vers le bas.
         eventail(p.points.map(q => ({ ...q, y: q.y - EPAISSEUR_TOIT })).reverse(), p.uv.slice().reverse(), pos, uvs);
       });
-      // La rive : le pourtour débordant, de l'épaisseur du toit.
+      // La rive : le pourtour débordant, de l'épaisseur du toit ; pas contre un mur de l'étage (elle le
+      // traverserait, ou passerait au travers de son toit : la ligne sombre signalée).
       g.bord.forEach((a, i) => {
+        if (g.bordAdosses[i]) return;
         const c = g.bord[(i + 1) % g.bord.length];
         const L = Math.hypot(c.x - a.x, c.z - a.z);
         eventail([{ x: a.x, y: a.y - EPAISSEUR_TOIT, z: a.z }, { x: c.x, y: c.y - EPAISSEUR_TOIT, z: c.z }, c, a],
@@ -390,6 +390,7 @@ function construireToits(T, b, n, mats, groupe){
       // Une lisse et des poteaux, un peu en retrait de la façade : le toit-terrasse.
       const tour = decaler(t.ext, -GARDE_CORPS.retrait);
       tour.forEach((a, i) => {
+        if (t.adosses[i]) return;   // pas de garde-corps contre le mur de l'étage
         const c = tour[(i + 1) % tour.length];
         const L = Math.hypot(c.x - a.x, c.z - a.z);
         if (L < 1e-3) return;

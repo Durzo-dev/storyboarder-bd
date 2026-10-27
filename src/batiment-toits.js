@@ -25,7 +25,7 @@
  * demande le squelette droit (#458b) : en attendant, elle reste plate, et `enAttente` le dit.
  */
 import { niveauxTries, niveauDessus, hauteurDesMursDuNiveau } from './batiment-niveaux.js';
-import { formesDesPieces, dansLaFace } from './batiment-pieces.js';
+import { formesDesPieces, dansLaFace, pointDansPolygone } from './batiment-pieces.js';
 import { TOLERANCE_SOMMET } from './batiment-geometrie.js';
 
 export const TYPES_TOIT = ['plat', 'un-pan', 'deux-pans', 'quatre-pans'];
@@ -36,6 +36,8 @@ export const BORNES_TOIT = { pente: [5, 60], debord: [0, 1.5] };
 /** L'acrotère d'un toit plat : épaisseur et hauteur ; le garde-corps : sa hauteur. */
 export const ACROTERE = { epaisseur: 0.15, hauteur: 0.4 };
 export const GARDE_CORPS = { hauteur: 1, retrait: 0.05 };
+/** L'épaisseur d'un toit en pente (couverture et charpente), visible à sa rive. */
+export const EPAISSEUR_TOIT = 0.12;
 
 const fini = (v) => typeof v === 'number' && Number.isFinite(v);
 const borne = (v, [a, b], d) => (fini(v) ? Math.min(b, Math.max(a, v)) : d);
@@ -86,36 +88,53 @@ export function piecesDecouvertes(b, niveauId){
     .map(([id, f]) => ({ id, forme: f }));
 }
 
-/** Retire les sommets alignés (un mur coupé par une jonction en T laisse un point au milieu d'un côté). */
-function sansAlignes(pts){
-  const r = pts.slice();
+/**
+ * Retire les sommets alignés (un mur coupé par une jonction en T laisse un point au milieu d'un côté),
+ * seulement entre deux côtés de même nature (adossés ou libres). `adosses[i]` : le côté i → i+1.
+ */
+function sansAlignes(pts, adosses){
+  const r = pts.slice(), f = adosses.slice();
   let change = true;
   while (change && r.length > 3) {
     change = false;
     for (let i = 0; i < r.length; i++) {
-      const a = r[(i + r.length - 1) % r.length], p = r[i], c = r[(i + 1) % r.length];
+      const ip = (i + r.length - 1) % r.length;
+      const a = r[ip], p = r[i], c = r[(i + 1) % r.length];
       const croix = (p.x - a.x) * (c.z - p.z) - (p.z - a.z) * (c.x - p.x);
       const l = Math.hypot(p.x - a.x, p.z - a.z) * Math.hypot(c.x - p.x, c.z - p.z);
-      if (l < 1e-12 || Math.abs(croix) / l < 1e-6) { r.splice(i, 1); change = true; break; }
+      if ((l < 1e-12 || Math.abs(croix) / l < 1e-6) && f[ip] === f[i]) { r.splice(i, 1); f.splice(i, 1); change = true; break; }
     }
   }
-  return r;
+  return { points: r, adosses: f };
 }
 
 /**
  * Les contours à couvrir sur un niveau : l'union des pièces découvertes, en AXES de murs, sens
  * trigonométrique, sans sommet aligné. Une arête partagée par deux pièces de l'union s'annule ; ce qui
  * reste se chaîne en boucles ; les boucles extérieures sont gardées (une cour fermée par des pièces
- * n'en est pas une : c'est une pièce, couverte aussi). PURE.
+ * n'en est pas une : c'est une pièce, couverte aussi).
+ *
+ * Chaque côté dit s'il est ADOSSÉ (signalé : les raccords) : partagé avec une pièce du même niveau
+ * qui, elle, a un étage au-dessus. Là, le toit ne déborde pas et ne fait pas d'égout : il vient buter
+ * contre le mur de l'étage, comme un appentis contre une maison (les Sims, Chief Architect).
+ * Rend `[{ points, adosses }]`. PURE.
  */
 export function contoursDuToit(b, niveauId){
+  const decouvertes = piecesDecouvertes(b, niveauId);
+  const ids = new Set(decouvertes.map(d => d.id));
+  // Les côtés des pièces COUVERTES du niveau : un côté de l'union qui en est un est adossé.
+  const couverts = new Set();
+  for (const [id, f] of formesDesPieces(b, niveauId)) {
+    if (ids.has(id)) continue;
+    f.points.forEach((a, i) => { const c = f.points[(i + 1) % f.points.length]; couverts.add(`${cle(a)}>${cle(c)}`); });
+  }
   const aretes = new Map();   // "ka>kb" → { a, b }
-  for (const { forme } of piecesDecouvertes(b, niveauId)) {
+  for (const { forme } of decouvertes) {
     const pts = forme.points;
     for (let i = 0; i < pts.length; i++) {
       const a = pts[i], c = pts[(i + 1) % pts.length];
       const k = `${cle(a)}>${cle(c)}`, inverse = `${cle(c)}>${cle(a)}`;
-      if (aretes.has(inverse)) aretes.delete(inverse); else aretes.set(k, { a, b: c });
+      if (aretes.has(inverse)) aretes.delete(inverse); else aretes.set(k, { a, b: c, adosse: couverts.has(inverse) });
     }
   }
   const depuis = new Map();
@@ -123,24 +142,30 @@ export function contoursDuToit(b, niveauId){
   const vues = new Set(), boucles = [];
   for (const [k0, e0] of aretes) {
     if (vues.has(k0)) continue;
-    const pts = [];
+    const pts = [], adosses = [];
     let k = k0, e = e0, garde = 0;
     while (e && !vues.has(k) && garde++ < 10000) {
       vues.add(k);
-      pts.push(e.a);
+      pts.push(e.a); adosses.push(e.adosse);
       const kb = cle(e.b);
       const suivantes = (depuis.get(kb) || []).filter(x => !vues.has(`${kb}>${cle(x.b)}`));
       e = suivantes[0];
       k = e ? `${kb}>${cle(e.b)}` : null;
     }
-    if (pts.length >= 3) boucles.push(pts);
+    if (pts.length >= 3) boucles.push({ pts, adosses });
   }
   // Les faces des pièces tournent dans le sens NÉGATIF (cf. facesDesMurs) : l'union aussi ; une boucle
-  // positive est un trou (un îlot non couvert).
-  return boucles.filter(p => aireSignee(p) < -1e-6).map(p => sansAlignes(p.slice().reverse()));
+  // positive est un trou (un îlot non couvert). Retournée, le côté j relie les anciens n-1-j et n-2-j.
+  return boucles.filter(x => aireSignee(x.pts) < -1e-6).map(({ pts, adosses }) => {
+    const n = pts.length;
+    return sansAlignes(pts.slice().reverse(), pts.map((_, j) => adosses[(n - 2 - j + n) % n]));
+  });
 }
 
-/** Le contour décalé de `d` vers l'extérieur (négatif : vers l'intérieur), angles en onglet. PURE. */
+/**
+ * Le contour décalé vers l'extérieur (négatif : vers l'intérieur), angles en onglet. `d` : une
+ * distance, ou une par côté (le côté i → i+1). PURE.
+ */
 export function decaler(pts, d){
   const n = pts.length;
   const lignes = pts.map((a, i) => {
@@ -148,7 +173,8 @@ export function decaler(pts, d){
     const L = Math.hypot(c.x - a.x, c.z - a.z) || 1;
     const t = { x: (c.x - a.x) / L, z: (c.z - a.z) / L };
     const ext = { x: t.z, z: -t.x };   // sens trigonométrique : l'extérieur est à droite
-    return { p: { x: a.x + ext.x * d, z: a.z + ext.z * d }, t };
+    const di = Array.isArray(d) ? d[i] : d;
+    return { p: { x: a.x + ext.x * di, z: a.z + ext.z * di }, t };
   });
   return lignes.map((l, i) => {
     const prec = lignes[(i + n - 1) % n];
@@ -176,30 +202,42 @@ function demiEpaisseur(b, niveauId){
 
 // ── Les pans ─────────────────────────────────────────────────────────────────────────────────────
 
-/** Les plans du toit sur un contour convexe : h(p) = k · (n·p − c), n vers le haut de la pente. */
-function plansDuToit(ext, t){
-  const k = Math.tan(t.pente * Math.PI / 180);
-  // Le GRAND CÔTÉ donne l'orientation : le faîtage d'un deux-pans le suit (sens pair).
-  let g = null;
-  ext.forEach((a, i) => { const c = ext[(i + 1) % ext.length]; const L = Math.hypot(c.x - a.x, c.z - a.z); if (!g || L > g.L) g = { L, t: { x: (c.x - a.x) / L, z: (c.z - a.z) / L } }; });
+/**
+ * Les plans du toit sur un contour convexe : h(p) = k · (n·p − c), n vers le haut de la pente.
+ * `adosses[i]` : le côté i bute contre l'étage du dessus. Un côté adossé ne fait pas d'égout (pas de
+ * pan qui en monte) ; et quand il y en a, l'orientation part de lui (le plus long) : un appentis
+ * MONTE vers le mur, un deux-pans y amène son faîtage de face (le pignon contre la maison), comme
+ * une aile ou un appentis réels. `sens` tourne ensuite d'un quart de tour par pas.
+ */
+function plansDuToit(ext, t, adosses = [], k = Math.tan(t.pente * Math.PI / 180)){
+  const cote = (i) => { const a = ext[i], c = ext[(i + 1) % ext.length]; const L = Math.hypot(c.x - a.x, c.z - a.z) || 1; return { L, t: { x: (c.x - a.x) / L, z: (c.z - a.z) / L } }; };
+  let g = null, gAdosse = null;
+  ext.forEach((_, i) => {
+    const c = cote(i);
+    if (!g || c.L > g.L) g = c;
+    if (adosses[i] && (!gAdosse || c.L > gAdosse.L)) gAdosse = c;
+  });
   const tourne = (v, q) => { let r = v; for (let i = 0; i < q; i++) r = { x: -r.z, z: r.x }; return r; };
   const projMin = (n) => Math.min(...ext.map(p => n.x * p.x + n.z * p.z));
   if (t.type === 'quatre-pans') {
     return ext.map((a, i) => {
-      const c = ext[(i + 1) % ext.length];
-      const L = Math.hypot(c.x - a.x, c.z - a.z) || 1;
-      const n = { x: -(c.z - a.z) / L, z: (c.x - a.x) / L };   // vers l'intérieur (à gauche)
+      if (adosses[i]) return null;
+      const { t: d } = cote(i);
+      const n = { x: -d.z, z: d.x };   // vers l'intérieur (à gauche)
       return { n, c: n.x * a.x + n.z * a.z, k };
-    });
+    }).filter(Boolean);
   }
   if (t.type === 'deux-pans') {
-    const faitage = tourne(g.t, t.sens % 2);
+    // Sans mur adossé, le faîtage suit le grand côté ; adossé, il arrive de face sur le mur.
+    const faitage = tourne(gAdosse ? tourne(gAdosse.t, 1) : g.t, t.sens % 2);
     const u = { x: -faitage.z, z: faitage.x };
     const v = { x: -u.x, z: -u.z };
     return [{ n: u, c: projMin(u), k }, { n: v, c: projMin(v), k }];
   }
   if (t.type === 'un-pan') {
-    const n = tourne({ x: -g.t.z, z: g.t.x }, t.sens);
+    // Adossé : il monte VERS le mur (sa normale extérieure) ; sinon depuis le grand côté.
+    const depart = gAdosse ? { x: gAdosse.t.z, z: -gAdosse.t.x } : { x: -g.t.z, z: g.t.x };
+    const n = tourne(depart, t.sens);
     return [{ n, c: projMin(n), k }];
   }
   return [];
@@ -228,16 +266,32 @@ function couper(poly, f){
  *   - `pans` : `[{ points: [{x, y, z}], uv: [[u, v]] }]`, chacun un polygone convexe (en éventail) ;
  *     les UV en mètres (u le long de l'égout, v en montant la pente) ;
  *   - `pignons` : les murs à fermer sous le toit, `[{ points: [{x, y, z}] }]`, verticaux, posés sur
- *     chaque côté de `ext` (un triangle de pignon, un trapèze sous un pan unique) ;
- *   - `bord` : le contour débordant et ses hauteurs (la rive, épaissie au rendu) ;
+ *     chaque côté LIBRE de `ext` (un triangle de pignon, un trapèze sous un pan unique) ;
+ *   - `bord` et `bordAdosses` : le contour débordant, ses hauteurs (la rive, épaissie au rendu), et
+ *     les côtés qui butent contre un mur (sans rive : elle traverserait le mur ou l'autre toit) ;
  *   - `haut` : le plus haut point.
- * PURE.
+ * `options.adosses` : les côtés adossés à l'étage du dessus (ni débord, ni égout, ni pignon) ;
+ * `options.hautMax` : la hauteur à ne pas dépasser au-dessus de `base` (un toit adossé reste SOUS
+ * l'égout de l'étage contre lequel il bute : la pente est réduite au besoin). PURE.
  */
-export function geometrieDuToit(ext, reglages, base){
+export function geometrieDuToit(ext, reglages, base, { adosses = [], hautMax = Infinity } = {}){
   const t = toitDuNiveau({ toit: reglages });
-  const plans = plansDuToit(ext, t);
+  let plans = plansDuToit(ext, t, adosses);
+  if (!plans.length) return null;
+  const sommetsDe = (pls) => {
+    // Le plus haut du toit sur la face des murs : aux sommets et aux croisements des plans.
+    const H = (p) => Math.min(...pls.map(pl => hauteur(pl, p)));
+    let m = Math.max(...ext.map(H));
+    pls.forEach((pl, i) => { let poly = ext; pls.forEach((q, j) => { if (j !== i) poly = couper(poly, (p) => hauteur(pl, p) - hauteur(q, p)); }); poly.forEach(p => { m = Math.max(m, H(p)); }); });
+    return m;
+  };
+  const hautTrouve = sommetsDe(plans);
+  if (hautTrouve > hautMax && hautMax > 0.1) {
+    const k = Math.tan(t.pente * Math.PI / 180) * hautMax / hautTrouve;
+    plans = plansDuToit(ext, t, adosses, k);
+  }
   const H = (p) => Math.min(...plans.map(pl => hauteur(pl, p)));
-  const deborde = t.debord > 0 ? decaler(ext, t.debord) : ext;
+  const deborde = t.debord > 0 ? decaler(ext, ext.map((_, i) => (adosses[i] ? 0 : t.debord))) : ext;
   const pans = [];
   plans.forEach((pl, i) => {
     let poly = deborde;
@@ -250,9 +304,11 @@ export function geometrieDuToit(ext, reglages, base){
       uv: poly.map(p => [le.x * p.x + le.z * p.z, (pl.n.x * p.x + pl.n.z * p.z - pl.c) / cos]),
     });
   });
-  // Les pignons : sur chaque côté des murs, ce qui sépare le dessus des murs du dessous du toit.
+  // Les pignons : sur chaque côté LIBRE des murs, ce qui sépare le dessus des murs du dessous du toit
+  // (contre un côté adossé, c'est le mur de l'étage qui ferme).
   const pignons = [];
   ext.forEach((a, i) => {
+    if (adosses[i]) return;
     const c = ext[(i + 1) % ext.length];
     const ts = new Set([0, 1]);
     for (let x = 0; x < plans.length; x++) for (let y = x + 1; y < plans.length; y++) {
@@ -267,13 +323,25 @@ export function geometrieDuToit(ext, reglages, base){
   });
   const bord = deborde.map(p => ({ x: p.x, y: base + H(p), z: p.z }));
   const haut = Math.max(base, ...pans.flatMap(p => p.points.map(q => q.y)));
-  return { pans, pignons, bord, haut };
+  return { pans, pignons, bord, bordAdosses: ext.map((_, i) => !!adosses[i]), haut };
+}
+
+/** Deux polygones se recouvrent-ils (un sommet de l'un dans l'autre, ou deux côtés qui se croisent) ? */
+function serecouvrent(A, B){
+  if (A.some(p => pointDansPolygone(p, B)) || B.some(p => pointDansPolygone(p, A))) return true;
+  const croise = (a, b, c, d) => {
+    const o = (p, q, r) => (q.x - p.x) * (r.z - p.z) - (q.z - p.z) * (r.x - p.x);
+    return o(a, b, c) * o(a, b, d) < -1e-12 && o(c, d, a) * o(c, d, b) < -1e-12;
+  };
+  return A.some((a, i) => B.some((c, j) => croise(a, A[(i + 1) % A.length], c, B[(j + 1) % B.length])));
 }
 
 /**
- * Les toits d'un niveau, prêts à dessiner : `[{ contour, ext, reglages, base, convexe, enAttente,
- * geometrie }]`. `geometrie` : celle d'un toit en pente (null s'il est plat, ou en attente du
- * squelette droit sur une forme à angle rentrant). PURE.
+ * Les toits d'un niveau, prêts à dessiner : `[{ contour, adosses, ext, reglages, base, convexe,
+ * enAttente, geometrie }]`. `ext` : le contour poussé à la face extérieure des murs, sauf contre
+ * l'étage du dessus, où il s'arrête à la face du mur de l'étage (`adosses`). `geometrie` : celle d'un
+ * toit en pente (null s'il est plat, ou en attente du squelette droit sur une forme à angle
+ * rentrant). Un toit adossé reste 30 cm sous l'égout de l'étage contre lequel il bute. PURE.
  */
 export function toitsDuNiveau(b, niveauId){
   const n = ((b && b.niveaux) || []).find(x => x.id === niveauId);
@@ -281,15 +349,28 @@ export function toitsDuNiveau(b, niveauId){
   const reglages = toitDuNiveau(n);
   const base = (n.elevation || 0) + hauteurDesMursDuNiveau(b, niveauId);
   const e = demiEpaisseur(b, niveauId);
-  return contoursDuToit(b, niveauId).map(contour => {
-    const ext = decaler(contour, e);
+  const dessus = niveauDessus(b, niveauId);
+  // Sous l'égout de l'étage : son toit déborde et descend (débord × pente, plus son épaisseur) ; on
+  // garde 10 cm de plus, et au moins 30 cm.
+  let sousLEgout = Infinity;
+  if (dessus) {
+    const td = toitDuNiveau(dessus);
+    const descente = td.type === 'plat' ? 0 : td.debord * Math.tan(td.pente * Math.PI / 180) + EPAISSEUR_TOIT;
+    sousLEgout = Math.max(0.3, hauteurDesMursDuNiveau(b, dessus.id) - Math.max(0.3, descente + 0.1));
+  }
+  // Les pièces de l'étage, un peu rentrées (une pièce posée juste à côté ne compte pas).
+  const formesDessus = dessus ? [...formesDesPieces(b, dessus.id).values()].map(f => decaler(f.points.slice().reverse(), -0.05)) : [];
+  return contoursDuToit(b, niveauId).map(({ points: contour, adosses }) => {
+    const ext = decaler(contour, adosses.map(a => (a ? -e : e)));
     const convexe = estConvexe(ext);
     const enPente = reglages.type !== 'plat';
-    return {
-      contour, ext, reglages, base, convexe,
-      enAttente: enPente && !convexe,
-      geometrie: enPente && convexe ? geometrieDuToit(ext, reglages, base) : null,
-    };
+    // Un étage posé EN PARTIE sur la forme (sans suivre ses murs) : un toit en pente le traverserait.
+    // Elle reste plate (signalé : les raccords), et `sousUnEtage` le dit.
+    const sousUnEtage = enPente && formesDessus.some(f => serecouvrent(contour, f));
+    const geometrie = enPente && convexe && !sousUnEtage
+      ? geometrieDuToit(ext, reglages, base, { adosses, hautMax: adosses.some(Boolean) ? sousLEgout : Infinity })
+      : null;
+    return { contour, adosses, ext, reglages, base, convexe, enAttente: enPente && !convexe && !sousUnEtage, sousUnEtage, geometrie };
   });
 }
 

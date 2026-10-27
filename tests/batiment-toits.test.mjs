@@ -45,8 +45,9 @@ describe('la forme couverte', () => {
     assert.equal(piecesDecouvertes(b, 'n0').length, 2);
     const c = contoursDuToit(b, 'n0');
     assert.equal(c.length, 1);
-    assert.equal(c[0].length, 4, 'les points de la cloison (alignés) sont retirés');
-    proche(aireSignee(c[0]), 24);
+    assert.equal(c[0].points.length, 4, 'les points de la cloison (alignés) sont retirés');
+    proche(aireSignee(c[0].points), 24);
+    assert.ok(c[0].adosses.every(a => !a), 'rien au-dessus : aucun côté adossé');
   });
   test('un étage couvre ce qui est sous lui : le rez-de-chaussée n\'a plus de toit dessous', () => {
     const b = maison();
@@ -134,4 +135,57 @@ describe('sur un bâtiment', () => {
 test('les textures de toit : un usage de bâtiment, comme les revêtements', () => {
   const src = readFileSync(new URL('../src/textures-integrees.js', import.meta.url), 'utf8');
   assert.match(src, /USAGES_BATIMENT = \['mur-ext', 'mur-int', 'sol-int', 'plafond', 'toit'\]/);
+});
+
+describe('les raccords (signalé) : un toit adossé à l\'étage du dessus', () => {
+  const aile = (type) => {
+    const b = creerBatiment('M', fr);
+    ajouterRectangle(b, 'n0', { x: 0, z: 0 }, { x: 6, z: 5 }, 0.2);
+    ajouterRectangle(b, 'n0', { x: 6, z: 1 }, { x: 10, z: 4 }, 0.2);
+    actualiserPieces(b, 'n0', fr);
+    const n1 = ajouterEtage(b, fr);
+    ajouterRectangle(b, n1.id, { x: 0, z: 0 }, { x: 6, z: 5 }, 0.2);
+    actualiserPieces(b, n1.id, fr);
+    fixerToit(b, 'n0', { type, pente: 30, debord: 0.4 });
+    fixerToit(b, n1.id, { type: 'deux-pans', pente: 40, debord: 0.4 });
+    return { b, n1, t: toitsDuNiveau(b, 'n0')[0] };
+  };
+  const ys = (g, filtre) => g.pans.flatMap(p => p.points).filter(filtre).map(q => q.y);
+  test('le côté contre l\'étage est adossé : le toit s\'arrête à la face de son mur, sans débord ni rive', () => {
+    const { t } = aile('deux-pans');
+    assert.deepEqual(t.adosses.filter(Boolean).length, 1);
+    const xs = t.geometrie.pans.flatMap(p => p.points).map(q => q.x);
+    proche(Math.min(...xs), 6.1, 1e-6);   // la face du mur de l'étage, pas au-delà
+    assert.equal(t.geometrie.bordAdosses.filter(Boolean).length, 1);
+    assert.equal(t.geometrie.pignons.length, 1, 'un seul pignon, le côté libre ; contre l\'étage, son mur ferme');
+  });
+  test('un appentis MONTE vers le mur de l\'étage', () => {
+    const { t } = aile('un-pan');
+    const contreLeMur = ys(t.geometrie, q => q.x < 6.2), auBout = ys(t.geometrie, q => q.x > 10);
+    assert.ok(Math.min(...contreLeMur) > Math.max(...auBout));
+  });
+  test('un deux-pans amène son faîtage de face sur le mur (le pignon contre la maison)', () => {
+    const { t } = aile('deux-pans');
+    const haut = t.geometrie.haut;
+    const faitage = t.geometrie.pans.flatMap(p => p.points).filter(q => Math.abs(q.y - haut) < 1e-6);
+    assert.ok(faitage.every(q => Math.abs(q.z - 2.5) < 1e-6), 'le faîtage court en x, à mi-profondeur');
+  });
+  test('il reste sous l\'égout de l\'étage (pente réduite au besoin)', () => {
+    const { b, n1 } = aile('un-pan');
+    fixerToit(b, 'n0', { pente: 60 });
+    const [t] = toitsDuNiveau(b, 'n0');
+    const egoutEtage = toitsDuNiveau(b, n1.id)[0].geometrie.bord.reduce((m, p) => Math.min(m, p.y), Infinity);
+    assert.ok(t.geometrie.haut < egoutEtage - 0.12, `${t.geometrie.haut} sous ${egoutEtage}`);
+  });
+});
+
+test('un étage posé en partie sur une pièce (sans suivre ses murs) : elle reste plate, et c\'est dit', () => {
+  const b = maison(10, 6);
+  const n1 = ajouterEtage(b, fr);
+  ajouterRectangle(b, n1.id, { x: 6, z: 0 }, { x: 10, z: 6 }, 0.2);
+  actualiserPieces(b, n1.id, fr);
+  fixerToit(b, 'n0', { type: 'deux-pans' });
+  const [t] = toitsDuNiveau(b, 'n0');
+  assert.equal(t.sousUnEtage, true);
+  assert.equal(t.geometrie, null);
 });

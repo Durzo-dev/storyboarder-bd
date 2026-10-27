@@ -509,6 +509,12 @@ function remplirToit(){
       elements.push(tourner);
     }
     // Une forme en L, en T, en U : pas encore de toit en pente (#458b), elle reste plate.
+    if (toitsDuNiveau(E.batiment, n.id).some(x => x.sousUnEtage)) {
+      const info = document.createElement('p'); info.className = 'batiment-info';
+      info.textContent = tr('The level above covers only part of a room: that room stays flat. Make its walls follow the level above.',
+        'L\'étage du dessus ne couvre qu\'une partie d\'une pièce : elle reste plate. Faites suivre ses murs à ceux de l\'étage.');
+      elements.push(info);
+    }
     if (toitsDuNiveau(E.batiment, n.id).some(x => x.enAttente)) {
       const info = document.createElement('p'); info.className = 'batiment-info';
       info.textContent = tr('An L, T or U shape stays flat for now: sloped roofs on such shapes are coming.',

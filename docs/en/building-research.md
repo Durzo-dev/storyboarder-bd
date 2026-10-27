@@ -489,7 +489,11 @@ moves on screen.
   railing), single pitch, gable, hip; slope, overhang, direction; covering as texture and colour (the
   store's "roof" use). Each slope is a plane, the roof is their minimum: exact on a CONVEX shape; the
   gables close the walls under it (facade material). The building's height includes the roof (placed
-  buildings keep their size). Left: **#458b**, shapes with a re-entrant corner (L, T, U), through the
+  buildings keep their size). JOINS (reported): an outline side shared with a covered room of the same
+  level LEANS against the floor above: the roof stops at that floor's wall face, with no overhang, no
+  verge, no eave and no gable; a lean-to rises towards that wall, a gable roof brings its ridge
+  head-on to it (the gable against the house), like a real wing or lean-to (The Sims, Chief
+  Architect); and it stays below the upper floor's eave (its slope is reduced if needed). Left: **#458b**, shapes with a re-entrant corner (L, T, U), through the
   straight skeleton; **#458c**, Elements on the roof, roof coverings shipped with the application.
 - **#459** the cutaway view per Panel. **#459a DONE** (27 October 2026): picking a placed building in
   "Elements" shows the "Building display" section: "Show up to: The whole building / <level>". Stored
