@@ -114,7 +114,7 @@ if the graph stays acyclic.
 ## Rule #3 — shared state goes through `S`
 
 `src/state.js` exports an object `S` carrying the application's mutable state (`S.selectedId`,
-`S.modalTarget`, `S.buildTool`, `S.tomes`…). Modules read and write it, which avoids dozens of
+`S.modalTarget`, `S.traceTool`, `S.tomes`…). Modules read and write it, which avoids dozens of
 parameters passed from hand to hand.
 
 Accepted trade-off: a modification of `S` is invisible in the signatures. When a function depends on

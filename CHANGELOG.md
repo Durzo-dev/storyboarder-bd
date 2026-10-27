@@ -13,6 +13,82 @@ version coûterait plus qu'il ne rapporte.
 
 ---
 
+## v1.12.0
+
+**Un éditeur de bâtiment, un store de textures, et des planches déjà dessinées qu'on importe.**
+Les bâtiments se construisent désormais dans leur propre éditeur, sur plusieurs niveaux, habillés de
+vraies textures et meublés, puis se placent dans les Scènes, où chaque Case choisit ce qu'elle en
+montre.
+
+### Ce qui change pour vous
+
+**Éditeur de bâtiment.** Bouton maison du bandeau (H), « Créer un bâtiment » au clic droit dans une
+Scène, ou « Modifier » sur un bâtiment placé. Une vue de dessus en mètres et un aperçu 3D en fenêtre
+(ancrée à un coin, plein écran ou réduite). Murs aimantés (sommets, jonctions en T, angles, guides ;
+Alt libre), pièces détectées et nommées avec leur surface, portes, fenêtres, baies et passages
+(battants, coulissantes, vitrées, en arche, sens d'ouverture), escaliers droits, en L ou en U qui
+percent le plafond, plusieurs niveaux (ajouter, dupliquer, réordonner sans casser d'escalier). Une
+section « Commandes » en tête du menu dit, à chaque instant, ce que font les gestes.
+
+**Revêtements.** Façade du bâtiment, murs, sol et plafond de chaque pièce : une texture et une
+couleur, appliquées en direct. Une pièce née dans une autre en hérite.
+
+**Mobilier.** « Ajouter un élément » dans le menu d'une pièce pose un de vos modèles en son centre :
+on le déplace (aimanté aux murs), on le tourne, l'incline ou le bascule sur l'axe choisi, on règle sa
+taille et son élévation ; il revient à sa place s'il finit dans un mur.
+
+**Bâtiments dans les Scènes.** Un bâtiment se place en copie indépendante, et se range dans « Mes
+modèles » (catégorie Architecture). Depuis la fiche d'un Personnage ou d'un Objet, « Poser dans ce
+bâtiment » ouvre l'éditeur pour le placer dans une pièce, puis le ramène à sa place exacte dans la
+Scène. Choisi dans « Éléments », un bâtiment placé montre « Affichage du bâtiment » : le couper à un
+niveau, ou masquer des murs, plafonds et sols (choisis dans l'éditeur), pour filmer l'intérieur.
+Chaque Case a son réglage.
+
+**L'ancien outil de construction de la Scène est retiré**, comme « Ajouter → Murs », « Parois » et
+« Bâtiments » au clic droit : on construit dans l'éditeur. Les murs, parois et pièces de vos Projets
+restent tels quels, et « Modifier » en ouvre une copie dans l'éditeur.
+
+**Store de textures.** Son bouton dans le bandeau : Poly Haven et ambientCG (1k, 2k, 4k pour les
+bâtiments), import d'un dossier de textures, « Mes textures » avec fiche, aperçu 3D, poids, tags.
+Un grand carré de texture ouvre le store filtré sur l'usage : Sol d'une Case, Zones de terrain,
+routes et murets, revêtements de bâtiment.
+
+**Couleurs.** Le Sol, les Zones de terrain et les Tracés se teintent, en direct. Un sélecteur de
+couleur propre à l'application remplace celui du système dans tous les champs couleur (pipette,
+retour à la couleur d'origine).
+
+**Routes et Tracés.** La largeur d'une route se règle en mètres, la hauteur d'un muret en direct,
+et le marquage au sol se décoche.
+
+**Importer une planche.** Au clic droit dans le vide d'une Planche : une image de planche déjà
+dessinée devient une Planche, ses Cases détectées. On les corrige sur la Planche (déplacer,
+redimensionner, déformer, ajouter, retirer), on cadre l'image, on décrit chaque Case.
+
+**Formats.** Les formats de Tome sont propres au Projet : créés en mm ou en px, renommés, supprimés
+s'ils ne servent pas, depuis « Gérer les formats… ».
+
+**Polices.** Cinquante-cinq polices DaFont intégrées, choisies par licence.
+
+**Interface.** Une seule famille d'icônes au trait, plus aucun emoji ; un texte coupé par « … »
+défile au survol ; le Lecteur passe ses réglages en pictogrammes ; une section « Commandes » en tête
+du Lecteur, de l'Éditeur de modèle et de la correction des Cases ; les menus contextuels passent
+devant les éditeurs.
+
+### Sous le capot
+
+- Le bâtiment est un fichier à part (`src/batiment.js`, en mètres), rangé dans `Batiments/` (pont
+  `batiments:*`) ; un bâtiment placé embarque sa copie (`objType: 'batiment'`). Géométrie, pièces,
+  ouvertures, escaliers, niveaux, revêtements et mobilier vivent dans des modules purs `batiment-*.js`.
+- L'affichage d'un bâtiment placé (`affichage.jusquA`, `affichage.masques`) est un champ AJOUTÉ ;
+  le rig coupé ou masqué garde la boîte du bâtiment entier (gabarit invisible).
+- L'outil Construire de la Scène (environ 1 500 lignes) est retiré, avec ses couleurs et ses tests.
+- Le store de textures (`src/textures-*.js`) suit le guide « Faire un store »
+  (`docs/fr/store-guide.md`) ; les vignettes des stores se recadrent sur leur sujet.
+- Un système de design généré (`docs/design-system.html`, `tools/design-system.mjs`) et des règles
+  d'interface tenues par des tests (`docs/fr/interface.md`) ; échelle typographique et rayons en
+  jetons.
+- `docs/fr/gestes-3d.md` relève tous les gestes 3D de l'application, avec leurs incohérences.
+
 ## v1.11.0
 
 **Une bibliothèque de modèles et de polices, des Chapitres, et un Lecteur pour relire vos Tomes.**

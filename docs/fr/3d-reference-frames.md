@@ -9,7 +9,7 @@
 |---|---|---|
 | `GROUND_Y_DEFAULT_3D` | `-3` | Hauteur du Sol. Sous le centre de la Case, pour que les Éléments semblent y reposer. |
 | `WALL_PX_PER_UNIT_3D` | `40` | Taux de change px ↔ unités monde. Une Fenêtre de 60 px fait 1.5 unité. |
-| `BUILD_WALL_DEFAULT_HEIGHT` | `3.0` | Hauteur d'un Mur créé par l'outil Construire. |
+| `BUILD_WALL_DEFAULT_HEIGHT` | `3.0` | Hauteur d'un Mur créé par l'outil Construire (retiré par #454f ; les Murs déjà posés la gardent). |
 | `BUILD_WALL_THICKNESS_RATIO_3D` | `0.06` | Épaisseur d'un Mur = **6 % de sa propre hauteur**. Un Mur de 3.0 fait donc 0.18 d'épaisseur. |
 | `PANEL_CAM_DEFAULT_DIST_3D` | `PANEL_CAM_REF_DIST_3D × 2.5` | Distance caméra par défaut. |
 | `PANEL_SCENE_RENDER_MAX_PX` | `1400` | Plafond de résolution du rendu hors écran. Tout nouveau consommateur du renderer doit le respecter. |

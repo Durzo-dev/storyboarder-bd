@@ -120,7 +120,7 @@ seulement si le graphe reste acyclique.
 ## Règle n°3 — l'état partagé passe par `S`
 
 `src/state.js` exporte un objet `S` qui porte l'état mutable de l'application (`S.selectedId`,
-`S.modalTarget`, `S.buildTool`, `S.tomes`…). Les modules le lisent et l'écrivent, ce qui évite des
+`S.modalTarget`, `S.traceTool`, `S.tomes`…). Les modules le lisent et l'écrivent, ce qui évite des
 dizaines de paramètres passés de main en main.
 
 Contrepartie assumée : une modification de `S` est invisible dans les signatures. Quand une fonction

@@ -82,6 +82,9 @@ encoding a measurement rather than reporting it.
 | Selection against image-reframing outline | 43 |
 | Build tool against snapping guide | 30 |
 
+(The Scene's Build tool was removed by #454f, with its colours: only the first pair is still
+watched.)
+
 Both are weak in hue. Neither is the same defect as the top-down view, because each already carries
 a **second cue**: different dash patterns (`[4,3]` against `[6,4]`, `[4,4]` against `[2,4]`). The
 distinction survives without the hue. They are pinned in the test at both levels: the hue, so it

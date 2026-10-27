@@ -26,7 +26,7 @@ Element was not moved in height.
 | How thick? | `tracéWallThickness3D` | `scene3d.js` |
 | Where is the hole to cut? | `tracéOpeningHole3D` | `scene3d.js` |
 | Point + tangent on a Path | `tracéFrameAtFrac3D` | `scene3d.js` |
-| Thickness of a Build-tool Wall | `BUILD_WALL_THICKNESS_RATIO_3D` | `constants.js` |
+| Thickness of a Build-tool Wall (tool removed, #454f; Walls already placed) | `BUILD_WALL_THICKNESS_RATIO_3D` | `constants.js` |
 
 **None of these values is recomputed by hand.** If a formula is needed elsewhere, call the
 function; if it does not fit, change it, in the single place where it lives.

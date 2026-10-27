@@ -87,6 +87,9 @@ C'est l'argument le plus net pour inscrire une mesure plutôt que de la raconter
 | Sélection contre contour de recadrage d'image | 43 |
 | Outil Construire contre repère d'aimantation | 30 |
 
+(L'outil Construire de la Scène a été retiré par #454f, avec ses couleurs : seule la première paire
+reste surveillée.)
+
 Les deux sont faibles en teinte. Aucune n'est le même défaut que la vue de dessus, car chacune porte
 déjà un **second indice** : des motifs de tirets distincts (`[4,3]` contre `[6,4]`, `[4,4]` contre
 `[2,4]`). La distinction survit sans la teinte. Elles sont épinglées dans le test aux deux niveaux :

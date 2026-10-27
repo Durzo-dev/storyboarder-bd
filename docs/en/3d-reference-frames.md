@@ -9,7 +9,7 @@
 |---|---|---|
 | `GROUND_Y_DEFAULT_3D` | `-3` | Height of the Ground. Below the centre of the Panel, so that Elements appear to rest on it. |
 | `WALL_PX_PER_UNIT_3D` | `40` | Exchange rate px ↔ world units. A 60 px Window is 1.5 units. |
-| `BUILD_WALL_DEFAULT_HEIGHT` | `3.0` | Height of a Wall created by the Build tool. |
+| `BUILD_WALL_DEFAULT_HEIGHT` | `3.0` | Height of a Wall created by the Build tool (removed by #454f; Walls already placed keep it). |
 | `BUILD_WALL_THICKNESS_RATIO_3D` | `0.06` | Thickness of a Wall = **6 % of its own height**. A Wall of 3.0 is therefore 0.18 thick. |
 | `PANEL_CAM_DEFAULT_DIST_3D` | `PANEL_CAM_REF_DIST_3D × 2.5` | Default camera distance. |
 | `PANEL_SCENE_RENDER_MAX_PX` | `1400` | Resolution ceiling for the off-screen render. Every new consumer of the renderer must respect it. |

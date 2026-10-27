@@ -27,7 +27,7 @@ tant qu'on ne déplaçait pas l'Élément en hauteur.
 | Quelle épaisseur ? | `tracéWallThickness3D` | `scene3d.js` |
 | Où est le trou à découper ? | `tracéOpeningHole3D` | `scene3d.js` |
 | Point + tangente sur un Tracé | `tracéFrameAtFrac3D` | `scene3d.js` |
-| Épaisseur d'un Mur de l'outil Construire | `BUILD_WALL_THICKNESS_RATIO_3D` | `constants.js` |
+| Épaisseur d'un Mur de l'outil Construire (retiré, #454f ; Murs déjà posés) | `BUILD_WALL_THICKNESS_RATIO_3D` | `constants.js` |
 
 **Aucune de ces valeurs ne se recalcule à la main.** Si une formule est nécessaire ailleurs, on
 appelle la fonction ; si elle ne convient pas, on la modifie, au seul endroit où elle vit.

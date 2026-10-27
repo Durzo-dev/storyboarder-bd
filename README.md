@@ -2,7 +2,7 @@
 
 > 🇫🇷 [Version française](README.fr.md)
 
-**Version 1.11.173**
+**Version 1.12.0**
 
 **Comic book storyboarding application**: a desktop tool to create, organize and visualize comic book pages with real-time 3D scene rendering.
 
@@ -26,13 +26,24 @@ Previous versions and release notes: [all releases](https://github.com/val66/sto
 - 📝 Per-panel summaries and descriptions
 - 💬 **Speech bubbles**: eight shapes, five tails, photographed textures, sixty-five fonts sorted by use plus your own, from a file or an online store, bold and italic, saved styles, and merging two bubbles into one
 - 🖼️ **Panel images** (PNG, JPG, WebP), with adjustable framing and zoom
+- 📥 **Import a page** already drawn: its panels are detected, then corrected right on the page
+- 📐 **Volume formats** of your own per project, in mm or px, renamable
 - 🎨 Page background colour, adjustable panel and bubble borders
 
 ### 3D scenes
 - 🎬 **Reusable scenes**: compose a 3D setting once, load it into any panel
 - 🎥 **Free camera** in every panel, and a top-down view for placing elements
-- 👤 **Ready-made elements**: characters with poses and emotions, animals, furniture, vehicles, vegetation, buildings with rooms and openings, roads and walls, photographed grounds
+- 👤 **Ready-made elements**: characters with poses and emotions, animals, furniture, vehicles, vegetation, buildings, roads and walls, photographed grounds you can tint
 - ☀️ **Light**: Day, Night or Custom mode with a computed sky, placed light sources, cast shadows
+
+### Building editor
+- 🏠 **Build from above**: snapping walls, detected rooms, doors, windows, bay windows and passages, straight, L- or U-shaped stairs, several levels
+- 🧱 **Finishes**: facade, walls, floors and ceilings in textures and colours, room by room
+- 🪑 **Furniture**: your models placed in the rooms, snapped to the walls, orientable
+- 📍 **In scenes**: the building is placed as a copy; a character or an object is set in a room from its sheet; each panel can cut it at a level or hide walls, ceilings and floors
+
+### Textures
+- 🧩 **Texture store**: Poly Haven and ambientCG, your texture folders, and "My textures" for the ground, roads, low walls and building finishes
 
 ### Imported 3D models
 - 📦 **glTF import** (`.glb` / `.gltf`) at real size, into a panel or a scene
