@@ -226,7 +226,9 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, 
   const col = collecteur(T);
   visibles.forEach(n => {
     const dessous = niveauDessous(b, n.id);
-    const formesDuNiveau = formesDesPieces(b, n.id);
+    // Les vides (des cours) n'ont ni sol ni plafond, et leurs murs y regardent l'extérieur (la façade).
+    const vides = new Set((b.pieces || []).filter(p => p.niveauId === n.id && p.vide).map(p => p.id));
+    const formesDuNiveau = new Map([...formesDesPieces(b, n.id)].filter(([id]) => !vides.has(id)));
     const tremiesPlancher = dessous ? tremiesDe(dessous.id) : [];
     const tremiesPlafond = tremiesDe(n.id);
     const forme2D = (f, tremies = []) => {

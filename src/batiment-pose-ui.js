@@ -114,9 +114,10 @@ function meubleASaPlace(o, rep, { id, bat, bEl, panel }){
 /** La pièce où poser d'abord un Élément qui n'est pas encore dans le bâtiment : la première du rez-de-chaussée. */
 export function pieceDeDepart(bat){
   const tries = niveauxTries(bat);
-  const avecPieces = tries.filter(n => (bat.pieces || []).some(p => p.niveauId === n.id && p.repere));
+  const pleine = (p, n) => p.niveauId === n.id && p.repere && !p.vide;
+  const avecPieces = tries.filter(n => (bat.pieces || []).some(p => pleine(p, n)));
   const rdc = avecPieces.find(n => (n.elevation || 0) >= 0) || avecPieces[0];
-  return rdc ? bat.pieces.find(p => p.niveauId === rdc.id && p.repere) : null;
+  return rdc ? bat.pieces.find(p => pleine(p, rdc)) : null;
 }
 
 /**

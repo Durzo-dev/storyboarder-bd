@@ -180,3 +180,23 @@ describe('supprimer une pièce', () => {
     assert.equal(b.pieces.length, 1, 'la pièce de gauche reste fermée');
   });
 });
+
+test('#458 (signalé) : une pièce fermée par les cloisons de ses voisines devient un VIDE (une cour), qui se refait pièce', async () => {
+  const { creerBatiment } = await import('../src/batiment.js');
+  const { ajouterRectangle, supprimerMur } = await import('../src/batiment-trace.js');
+  const { actualiserPieces, supprimerPiece, pieceSous, estUnVide } = await import('../src/batiment-pieces.js');
+  const fr = (en, f) => f;
+  const b = creerBatiment('M', fr);
+  // Quatre pièces autour d'une cinquième, au centre (les pièces 1 à 5 du plan signalé).
+  for (const [a, c] of [[[0, 0], [3, 6]], [[3, 0], [6, 2]], [[3, 2], [6, 6]], [[6, 0], [9, 6]], [[0, 6], [9, 9]]]) {
+    ajouterRectangle(b, 'n0', { x: a[0], z: a[1] }, { x: c[0], z: c[1] }, 0.2);
+    actualiserPieces(b, 'n0', fr);
+  }
+  actualiserPieces(b, 'n0', fr);
+  const centre = pieceSous(b, 'n0', { x: 4.5, z: 4 });
+  assert.ok(centre, 'la pièce du centre existe');
+  const murs = b.murs.length;
+  assert.deepEqual(supprimerPiece(b, 'n0', centre, supprimerMur), []);
+  assert.equal(b.murs.length, murs, 'ses voisines gardent leurs murs');
+  assert.equal(estUnVide(b.pieces.find(p => p.id === centre)), true);
+});

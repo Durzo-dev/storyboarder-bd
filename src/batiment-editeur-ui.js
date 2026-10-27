@@ -40,7 +40,7 @@ import {
   aimanter, ajouterMur, ajouterRectangle, croiseUnMur, deplacerSommet, supprimerMur, sommetSous, murSous,
   sommetsDuNiveau,
 } from './batiment-trace.js';
-import { actualiserPieces, formesDesPieces, pieceSous, supprimerPiece } from './batiment-pieces.js';
+import { actualiserPieces, formesDesPieces, pieceSous, supprimerPiece, estUnVide } from './batiment-pieces.js';
 import {
   formeDeLEscalier, tremieDeLEscalier, validiteDeLEscalier, ajouterEscalier, modifierEscalier, supprimerEscalier,
   escalierSous, hauteurAFranchir, DEFAUTS_ESCALIER, TYPES_D_ESCALIER, essayerEscalier, aimanterEscalier, escaliersBloques,
@@ -291,7 +291,8 @@ function remplirPanneau(){
   const pieces = $('batimentPieces');
   const siennes = b.pieces.filter(p => p.niveauId === E.niveauId);
   pieces.replaceChildren(...(siennes.length ? siennes.map(p => {
-    const l = ligne(p.nom, formes.has(p.id) ? surface(formes.get(p.id).aire) : '');
+    const aire = formes.has(p.id) ? surface(formes.get(p.id).aire) : '';
+    const l = ligne(p.nom, estUnVide(p) ? `${tr('empty', 'vide')} · ${aire}` : aire);
     l.classList.add('cliquable');
     l.onclick = () => { choisirOutil('selection'); E.selection = { pieceId: p.id }; remplirPanneau(); dessinerPlan(); };
     // Le clic droit : renommer ou supprimer la pièce (demandé ; le menu est posé par events.js).
@@ -425,7 +426,18 @@ function remplirRevetements(){
     choisir: tr('Choose the facade', 'Choisir la façade') }, gardes));
   const piece = pieceSelectionnee();
   $('batimentSectionPiece').hidden = !piece;
-  if (piece) {
+  // #458 : un VIDE (une cour) n'a rien à habiller ni à meubler ; « Supprimer » devient « Refaire une pièce ».
+  const vide = estUnVide(piece);
+  $('batimentAjouterElement').hidden = vide;
+  $('batimentPieceSupprimer').textContent = vide ? tr('Make it a room again', 'Refaire une pièce') : tr('Delete the room', 'Supprimer la pièce');
+  $('batimentPieceSupprimer').classList.toggle('delete-btn', !vide);
+  $('batimentPieceSupprimer').classList.toggle('nav-btn', vide);
+  $('batimentPieceSupprimer').classList.toggle('full-btn', !vide);
+  if (piece && vide) {
+    zone.replaceChildren(vide && Object.assign(document.createElement('p'), { className: 'batiment-info',
+      textContent: tr('An empty space (a courtyard): no floor, no ceiling, no roof. Its neighbours keep their walls.',
+        'Un vide (une cour) : ni sol, ni plafond, ni toit. Ses voisines gardent leurs murs.') }));
+  } else if (piece) {
     const cible = { pieceId: piece.id };
     zone.replaceChildren(
       blocRevetement({ titre: tr('Walls', 'Murs'), usage: 'mur-int', cible, champ: 'murs', choisir: tr('Choose the walls', 'Choisir les murs') }, gardes),
@@ -513,6 +525,12 @@ function remplirToit(){
       const info = document.createElement('p'); info.className = 'batiment-info';
       info.textContent = tr('The level above covers only part of a room: that room stays flat. Make its walls follow the level above.',
         'L\'étage du dessus ne couvre qu\'une partie d\'une pièce : elle reste plate. Faites suivre ses murs à ceux de l\'étage.');
+      elements.push(info);
+    }
+    if (toitsDuNiveau(E.batiment, n.id).some(x => x.percee)) {
+      const info = document.createElement('p'); info.className = 'batiment-info';
+      info.textContent = tr('A courtyard (an empty space) cuts through this roof: it stays flat for now.',
+        'Une cour (un vide) perce ce toit : il reste plat pour l\'instant.');
       elements.push(info);
     }
     if (toitsDuNiveau(E.batiment, n.id).some(x => x.enAttente)) {
@@ -1681,6 +1699,15 @@ function dessinerPlan(){
     g.globalAlpha = (E.selection && E.selection.pieceId === id) ? 0.22 : pieceSurvolee === id ? 0.13 : 0.06;
     g.fill('evenodd');
     g.globalAlpha = 1;
+    // #458 : un VIDE (une cour), hachuré : on voit qu'il n'a pas de sol.
+    if (estUnVide(E.batiment.pieces.find(q => q.id === id))) {
+      g.save(); g.clip('evenodd');
+      const xs = f.points.map(p => versEcran(vue, l, h, p));
+      const x0 = Math.min(...xs.map(p => p.x)), x1 = Math.max(...xs.map(p => p.x)), y0 = Math.min(...xs.map(p => p.y)), y1 = Math.max(...xs.map(p => p.y));
+      g.strokeStyle = couleur('--ink-soft', '#9a9aa2'); g.globalAlpha = 0.35; g.lineWidth = 1; g.beginPath();
+      for (let x = x0 - (y1 - y0); x < x1; x += 10) { g.moveTo(x, y1); g.lineTo(x + (y1 - y0), y0); }
+      g.stroke(); g.restore();
+    }
   }
   const survole = E.outil === 'selection' && E.survol && E.survol.murId;
   // #454c : les escaliers du niveau (sous les murs), et la trémie de ceux du niveau du dessous.
@@ -1777,7 +1804,7 @@ function dessinerPlan(){
   g.textAlign = 'center';
   for (const p of E.batiment.pieces.filter(q => q.niveauId === E.niveauId && pieces.has(q.id) && q.repere)) {
     const e = versEcran(vue, l, h, p.repere);
-    g.font = '600 12.5px Inter, sans-serif'; g.fillStyle = encre; g.fillText(p.nom, e.x, e.y);
+    g.font = '600 12.5px Inter, sans-serif'; g.fillStyle = encre; g.fillText(estUnVide(p) ? `${p.nom} · ${tr('empty', 'vide')}` : p.nom, e.x, e.y);
     g.font = '11px Inter, sans-serif'; g.fillStyle = couleur('--ink-soft', '#9a9aa2'); g.fillText(surface(pieces.get(p.id).aire), e.x, e.y + 14);
     // #464 : ce qui est masqué de la pièce, sous sa surface.
     if (E.masquage) {
@@ -2742,7 +2769,13 @@ export function initEditeurDeBatiment(){
   if (!$('batimentEditeur')) return;
   cablerSectionsRepliables();
   $('batimentAjouterElement').onclick = () => { if (E) ajouterUnElement(); };
-  $('batimentPieceSupprimer').onclick = () => { const p = E && pieceSelectionnee(); if (p) supprimerPieceDeLEditeur(p.id); };
+  $('batimentPieceSupprimer').onclick = () => {
+    const p = E && pieceSelectionnee();
+    if (!p) return;
+    // #458 : un vide redevient une pièce ; une pièce se supprime (ou devient un vide si tous ses murs sont partagés).
+    if (estUnVide(p)) modifier(b => { const x = (b.pieces || []).find(q => q.id === p.id); if (x) delete x.vide; });
+    else supprimerPieceDeLEditeur(p.id);
+  };
   // Un grain de revêtement arrivé après le dessin (batiment-revetements.js) : refaire l'aperçu.
   window.addEventListener('grains-batiment', () => { if (E && E.apercu) E.apercu.reconstruire(E.batiment); });
   // La croix du menu : celle d'un élément choisi le DÉSÉLECTIONNE (on revient au menu du bâtiment) ;

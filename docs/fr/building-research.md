@@ -528,6 +528,9 @@ place : rien ne bouge à l'écran.
   tous les côtés libres à 1 ; deux pans : les bouts des ailes à 0 (pignons) ; un côté adossé à 0.
   Un pan unique garde son plan (exact sur toute forme). Vérifié sur des formes tirées au hasard : les
   pans recouvrent exactement la forme. Un squelette qui n'aboutit pas laisse la forme plate (dit).
+  VIDES (signalé) : supprimer une pièce dont tous les murs sont partagés avec ses voisines en fait un
+  VIDE (`piece.vide`, champ AJOUTÉ) : une cour, sans sol, plafond ni toit, hachurée sur le plan ;
+  « Refaire une pièce » la rend. Un toit en pente percé d'une cour reste plat pour l'instant.
   Reste **#458c** : les Éléments sur le toit, des toitures livrées avec l'application.
 - **#459** la vue en coupe par Case. **#459a FAIT** (27 octobre 2026) : choisir un bâtiment placé
   dans « Éléments » montre la section « Affichage du bâtiment » : « Montrer jusqu'à : Tout le

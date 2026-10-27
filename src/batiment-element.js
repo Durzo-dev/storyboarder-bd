@@ -132,7 +132,7 @@ export function etagesEtPieces(b){
   if (!b) return [];
   return niveauxTries(b).map(n => ({
     id: n.id, nom: n.nom, elevation: n.elevation || 0,
-    pieces: (b.pieces || []).filter(p => p.niveauId === n.id && p.repere).map(p => ({ id: p.id, nom: p.nom })),
+    pieces: (b.pieces || []).filter(p => p.niveauId === n.id && p.repere && !p.vide).map(p => ({ id: p.id, nom: p.nom })),
   })).filter(n => n.pieces.length);
 }
 

@@ -220,6 +220,9 @@ export function actualiserPieces(batiment, niveauId, traduire, avant = null){
   return pieces;
 }
 
+/** Une pièce devenue un vide (une cour) : ni sol, ni plafond, ni toit (#458, demandé). */
+export const estUnVide = (p) => !!(p && p.vide);
+
 /** Les formes des pièces d'un niveau, pour le dessin : id → { points, trous, aire }. Recalculées, jamais persistées. */
 export function formesDesPieces(batiment, niveauId){
   const faces = facesDesMurs((batiment.murs || []).filter(m => m.niveauId === niveauId));
@@ -258,6 +261,15 @@ export function supprimerPiece(batiment, niveauId, pieceId, supprimerMur){
   const murs = (batiment.murs || []).filter(m => m.niveauId === niveauId && siennes.has(cleDe(m.a, m.b)) && !partagees.has(cleDe(m.a, m.b)));
   // Les escaliers dont le pied est dans la pièce partent avec elle.
   batiment.escaliers = (batiment.escaliers || []).filter(e => !(e.niveauId === niveauId && e.depart && dansLaFace(e.depart, f)));
+  // UNE PIÈCE ENTIÈREMENT FERMÉE PAR LES CLOISONS DE SES VOISINES (signalé : elle ne se supprimait
+  // pas) : aucun mur n'est à elle seule. Elle devient un VIDE (`vide: true`, champ AJOUTÉ) : une
+  // cour, un patio, entre ses voisines, sans sol, sans plafond, sans toit ; ses voisines gardent leurs
+  // murs. « Refaire une pièce » la rend (cf. l'éditeur).
+  if (!murs.length) {
+    const p = (batiment.pieces || []).find(x => x.id === pieceId);
+    if (p) p.vide = true;
+    return [];
+  }
   murs.forEach(m => supprimerMur(batiment, m.id));
   return murs.map(m => m.id);
 }

@@ -500,8 +500,11 @@ moves on screen.
   and "spike" removal (a closed wing), common on orthogonal plans. Hip: all free sides at 1; gable:
   wing ends at 0 (gables); a leaning side at 0. A single pitch keeps its plane (exact on any shape).
   Checked on random shapes: the slopes cover the shape exactly. A skeleton that fails leaves the shape
-  flat (and says so). Left: **#458c**, Elements on the roof, roof coverings shipped with the
-  application.
+  flat (and says so). EMPTY SPACES (reported): deleting a room whose walls are all shared with its
+  neighbours makes it an EMPTY SPACE (`piece.vide`, an ADDED field): a courtyard, with no floor,
+  ceiling or roof, hatched on the plan; "Make it a room again" restores it. A sloped roof pierced by a
+  courtyard stays flat for now. Left: **#458c**, Elements on the roof, roof coverings shipped with
+  the application.
 - **#459** the cutaway view per Panel. **#459a DONE** (27 October 2026): picking a placed building in
   "Elements" shows the "Building display" section: "Show up to: The whole building / <level>". Stored
   on the placed Element (`affichage.jusquA`, an ADDED field), so per Panel. The cut rig carries the

@@ -84,7 +84,7 @@ export function piecesDecouvertes(b, niveauId){
   return [...formesDesPieces(b, niveauId).entries()]
     .filter(([id]) => {
       const p = (b.pieces || []).find(x => x.id === id);
-      return p && p.repere && !formesDessus.some(f => dansLaFace(p.repere, f));
+      return p && p.repere && !p.vide && !formesDessus.some(f => dansLaFace(p.repere, f));
     })
     .map(([id, f]) => ({ id, forme: f }));
 }
@@ -476,16 +476,18 @@ export function toitsDuNiveau(b, niveauId){
     // Un étage posé EN PARTIE sur la forme (sans suivre ses murs) : un toit en pente le traverserait.
     // Elle reste plate (signalé : les raccords), et `sousUnEtage` le dit.
     const sousUnEtage = enPente && formesDessus.some(f => serecouvrent(contour, f));
+    // Une cour (un vide) DANS la forme : le toit la couvrirait. Il reste plat (`percee` le dit).
+    const percee = enPente && (b.pieces || []).some(p => p.niveauId === niveauId && p.vide && p.repere && pointDansPolygone(p.repere, contour));
     // Convexe, ou un pan unique : les plans (exacts) ; sinon le squelette droit (#458b). S'il n'aboutit
     // pas, le toit reste plat plutôt que faux, et `enAttente` le dit.
     const options = { adosses, hautMax: adosses.some(Boolean) ? sousLEgout : Infinity };
     let geometrie = null;
-    if (enPente && !sousUnEtage) {
+    if (enPente && !sousUnEtage && !percee) {
       geometrie = (convexe || reglages.type === 'un-pan')
         ? geometrieDuToit(ext, reglages, base, options)
         : geometrieSquelette(ext, reglages, base, options);
     }
-    return { contour, adosses, ext, reglages, base, convexe, enAttente: enPente && !sousUnEtage && !geometrie, sousUnEtage, geometrie };
+    return { contour, adosses, ext, reglages, base, convexe, enAttente: enPente && !sousUnEtage && !percee && !geometrie, sousUnEtage, percee, geometrie };
   });
 }
 
