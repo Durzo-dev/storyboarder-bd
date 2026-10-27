@@ -99,3 +99,18 @@ describe('réordonner (glisser-déposer)', () => {
     assert.equal(deplacerNiveau(b, 'n0', 1, fr), false, 'déjà là');
   });
 });
+
+test('signalé : dupliquer deux fois le rez-de-chaussée ne laisse pas deux « Étage 1 »', async () => {
+  const { creerBatiment } = await import('../src/batiment.js');
+  const { dupliquerNiveau, niveauxTries } = await import('../src/batiment-niveaux.js');
+  const fr = (en, f) => f;
+  const b = creerBatiment('M', fr);
+  dupliquerNiveau(b, 'n0', fr);
+  dupliquerNiveau(b, 'n0', fr);
+  const noms = niveauxTries(b).map(n => n.nom);
+  assert.deepEqual(noms.slice(1), ['Étage 1', 'Étage 2']);
+  // Un nom choisi reste.
+  niveauxTries(b)[2].nom = 'Grenier';
+  dupliquerNiveau(b, 'n0', fr);
+  assert.equal(niveauxTries(b)[3].nom, 'Grenier');
+});

@@ -74,6 +74,10 @@ export function ajouterEtage(b, traduire){
 export function dupliquerNiveau(b, id, traduire){
   const source = (b.niveaux || []).find(n => n.id === id);
   if (!source) return null;
+  // Les noms par défaut de chaque place, AVANT l'insertion (signalé : deux « Étage 1 » après deux
+  // duplications ; les niveaux qui montent d'une place gardaient l'ancien nom de leur place).
+  const t0 = niveauxTries(b), zero0 = Math.max(0, t0.findIndex(x => x.elevation >= 0));
+  const defauts = new Set(t0.map((n, k) => nomDuNiveauParDefaut(k - zero0, traduire)));
   const copie = { ...source, id: nouvelId(b.niveaux, 'n'), nom: '' };
   // Placé entre la source et celui du dessus ; recalerNiveaux remonte les suivants.
   const dessus = niveauDessus(b, id);
@@ -92,7 +96,10 @@ export function dupliquerNiveau(b, id, traduire){
     b.pieces.push({ ...p, id: nouvelId(b.pieces, 'p'), niveauId: copie.id, repere: p.repere ? { ...p.repere } : p.repere });
   }
   recalerNiveaux(b);
-  copie.nom = nomDuNiveauParDefaut(rang(b, copie.id), traduire);
+  // La copie, et chaque niveau qui portait le nom par défaut de sa place, prennent celui de leur
+  // nouvelle place ; un nom choisi reste.
+  const t = niveauxTries(b), zero = Math.max(0, t.findIndex(x => x.elevation >= 0));
+  t.forEach((x, k) => { if (x === copie || defauts.has(x.nom)) x.nom = nomDuNiveauParDefaut(k - zero, traduire); });
   return copie;
 }
 
