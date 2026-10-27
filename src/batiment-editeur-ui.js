@@ -98,6 +98,8 @@ export function renommerPieceDeLEditeur(id, nom){
 export async function supprimerPieceDeLEditeur(id){
   if (!E) return;
   const ed = E, niveauId = E.niveauId;
+  // Une COUR se supprime comme son bouton (demandé : Suppr, et le clic droit de la liste) : à son niveau.
+  if (estUnVide((E.batiment.pieces || []).find(x => x.id === id))) { modifier(b => supprimerCour(b, niveauId, id, supprimerMur)); return; }
   const essai = JSON.parse(JSON.stringify(E.batiment));
   const partis = supprimerPiece(essai, niveauId, id, supprimerMur);
   const p = (essai.pieces || []).find(x => x.id === id);
@@ -2820,7 +2822,8 @@ function clavier(e){
     const id = E.selection.meubleId;
     modifier(b => supprimerMeuble(b, id));
   }
-  // Une pièce choisie : ses murs, sauf ceux qu'elle partage (comme « Supprimer » à son clic droit).
+  // Une pièce choisie : ses murs, sauf ceux qu'elle partage (comme « Supprimer » à son clic droit) ;
+  // une cour choisie : supprimée comme par son bouton (demandé).
   else if ((e.key === 'Delete' || e.key === 'Backspace') && pieceSelectionnee()) {
     supprimerPieceDeLEditeur(E.selection.pieceId);
   }
@@ -2858,9 +2861,7 @@ export function initEditeurDeBatiment(){
   };
   $('batimentCourSupprimer').onclick = () => {
     const p = E && pieceSelectionnee();
-    if (!p || !estUnVide(p)) return;
-    const niveauId = E.niveauId;
-    modifier(b => supprimerCour(b, niveauId, p.id, supprimerMur));
+    if (p && estUnVide(p)) supprimerPieceDeLEditeur(p.id);
   };
   // Un grain de revêtement arrivé après le dessin (batiment-revetements.js) : refaire l'aperçu.
   window.addEventListener('grains-batiment', () => { if (E && E.apercu) E.apercu.reconstruire(E.batiment); });
