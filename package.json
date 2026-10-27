@@ -1,6 +1,6 @@
 {
   "name": "storyboard-bd",
-  "version": "1.12.19",
+  "version": "1.12.20",
   "engines": {
     "node": ">=22"
   },
@@ -46,6 +46,7 @@
       "node_modules/three/build/three.min.js"
     ],
     "win": {
+      "icon": "assets/icone/storyboarder-bd.ico",
       "target": [
         {
           "target": "nsis",

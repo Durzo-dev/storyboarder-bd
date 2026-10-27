@@ -1,8 +1,10 @@
-# 🎬 Storyboarder BD
+<img src="assets/icone/storyboarder-bd-128.png" alt="Storyboarder BD icon" width="96">
+
+# Storyboarder BD
 
 > 🇫🇷 [Version française](README.fr.md)
 
-**Version 1.12.19**
+**Version 1.12.20**
 
 **Comic book storyboarding application**: a desktop tool to create, organize and visualize comic book pages with real-time 3D scene rendering.
 
@@ -153,6 +155,8 @@ You are free to use, modify and redistribute this project, provided you:
 - Distribute modified versions under the same license
 
 🔗 [Read the full license](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+**Exception: the application icon** (`assets/icone/`) is part of the visual identity of Storyboarder BD and is **not** covered by this license: all rights reserved.
 
 ---
 

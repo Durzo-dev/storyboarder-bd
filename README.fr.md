@@ -1,8 +1,10 @@
-# 🎬 Storyboarder BD
+<img src="assets/icone/storyboarder-bd-128.png" alt="Icône de Storyboarder BD" width="96">
+
+# Storyboarder BD
 
 > 🇬🇧 [English version](README.md)
 
-**Version 1.12.19**
+**Version 1.12.20**
 
 **Application de découpage de Bandes Dessinées** : outil de storyboard pour créer, organiser et visualiser des planches de BD avec rendu 3D des scènes.
 
@@ -156,6 +158,8 @@ Vous pouvez librement utiliser, modifier et redistribuer ce projet, **à conditi
 - Redistribuer les versions modifiées sous la même licence
 
 🔗 [Lire la licence complète](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+**Exception : l'icône de l'application** (`assets/icone/`) fait partie de l'identité visuelle de Storyboarder BD et n'est **pas** couverte par cette licence : tous droits réservés.
 
 ---
 

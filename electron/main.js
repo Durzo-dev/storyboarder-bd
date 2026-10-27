@@ -182,6 +182,9 @@ function createWindow(mode = 'app') {
     minWidth: LARGEUR_MINI,
     minHeight: HAUTEUR_MINI,
     backgroundColor: '#F2EBDD',
+    // L'icône de l'application (assets/icone, hors licence CC : tous droits réservés). Installée, la
+    // fenêtre prend celle de l'exécutable ; en développement, sans elle, ce serait celle d'Electron.
+    icon: path.join(RACINE, 'assets', 'icone', 'storyboarder-bd.ico'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
