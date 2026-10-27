@@ -24,8 +24,8 @@ affichée, dans le même Chapitre, **en correction des Cases**.
 par une modale) : un clic sélectionne une Case (hors des Cases : désélectionne), la tirer la déplace,
 tirer un coin ou le milieu d'un bord la redimensionne (comme une Case ordinaire), un coin seul la déforme (avec la même équerre), la Case sélectionnée clignote orange et noir (blanc quand le dessin sous son contour est sombre), un **clic droit sans glisser en crée une** (le seul moyen), Suppr la
 retire, Échap ou un clic hors de la Planche termine ; en sortant, plus rien n'est sélectionné. Le menu de la Planche porte
-la section **« Cases détectées »** : « Modifier les cases » y ramène à tout moment, « Terminer » en
-sort (le curseur de sensibilité a été retiré : la correction suffit). Les numéros suivent l'ordre de
+la section **« Cases détectées »** : « Modifier les cases » y ramène à tout moment ; pendant la
+correction, elle devient **« Commandes »** (une action par ligne) et « Terminer » en sort (le curseur de sensibilité a été retiré : la correction suffit). Les numéros suivent l'ordre de
 lecture à l'import ; ensuite, on les change en **glissant** les lignes de la liste du menu de la Planche
 (sauf depuis leur champ), et un clic sur une ligne **met la Case en surbrillance** (un second clic la
 désélectionne). Un

@@ -975,9 +975,37 @@ function dessinerALaProchaineImage(){
   _dessinPrevu = raf(() => { _dessinPrevu = 0; drawPersonaEditor(); });
 }
 
+/**
+ * La section « Commandes » du menu (demandé, en tête comme ailleurs) : une action par ligne, selon
+ * qu'une articulation est choisie (la molette change alors de réglage au lieu de zoomer).
+ */
+function majCommandesDeLEditeur(){
+  const aide = document.getElementById('personaEditorAide');
+  if (!aide) return;
+  const titre = document.getElementById('personaEditorCommandesHeading');
+  if (titre) titre.textContent = tr('Controls', 'Commandes');
+  const choisie = !!S.personaEditorHandleId;
+  const texte = (choisie ? [
+    tr('Drag the point: adjust its joint.', 'Tirer le point : régler son articulation.'),
+    tr('Double arrow: slide; ring: turn around it.', 'Double flèche : glisser ; anneau : tourner autour.'),
+    tr('Wheel: switch to the next setting.', 'Molette : passer au réglage suivant.'),
+    tr('Click in the empty space: deselect.', 'Clic dans le vide : désélectionner.'),
+  ] : [
+    tr('Click a point: select it.', 'Clic sur un point : le sélectionner.'),
+    tr('Drag a point: adjust its joint.', 'Tirer un point : régler son articulation.'),
+    tr('Wheel: zoom.', 'Molette : zoomer.'),
+  ]).concat([
+    tr('Hold left button in the empty space: turn the view.', 'Clic gauche maintenu dans le vide : tourner la vue.'),
+    tr('Hold right button: move the view.', 'Clic droit maintenu : déplacer la vue.'),
+    tr('Esc: close the editor.', 'Échap : fermer l\'éditeur.'),
+  ]).join('\n');
+  if (aide.textContent !== texte) aide.textContent = texte;
+}
+
 export function drawPersonaEditor(){
   const cnv = document.getElementById('personaEditorCanvas');
   if (!cnv || !S.personaEditorOpen) return;
+  majCommandesDeLEditeur();
   const target = personaEditorTarget();
   // Fix 53 : rendu AUX PROPORTIONS de la boîte. L'ancien calcul prenait le plus PETIT côté comme
   // largeur de rendu et gardait le format portrait de la modale : sur une boîte 1620×1036, cela

@@ -218,3 +218,20 @@ describe('les Commandes en tête du menu de droite (demandé)', () => {
     assert.match(html, /<p id="batimentAide" class="commandes-aide"><\/p>/);
   });
 });
+
+describe('les Commandes, partout raccord (demandé)', () => {
+  test('la correction des Cases d’une Planche importée : la section s’appelle Commandes, une action par ligne', () => {
+    const src = readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8');
+    assert.match(src, /\? tr\('Controls', 'Commandes'\) : tr\('Detected panels', 'Cases détectées'\)/);
+    assert.match(src, /aideEdition\.className = enEdition \? 'commandes-aide' : 'side-aide';/);
+    assert.ok(!/• Tirer une Case/.test(src), 'plus de puces ni d’intro « Sur la Planche »');
+  });
+  test('l’Éditeur de modèle : une section Commandes, en tête de son menu', () => {
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+    const panneau = html.slice(html.indexOf('<aside class="persona-editor-panel">'));
+    assert.ok(panneau.indexOf('id="personaEditorCommandesSection"') < panneau.indexOf('id="personaEditorModelSection"'));
+    assert.match(html, /<p id="personaEditorAide" class="commandes-aide"><\/p>/);
+    const src = readFileSync(new URL('../src/persona-editor.js', import.meta.url), 'utf8');
+    assert.match(src, /export function drawPersonaEditor\(\)\{\s*const cnv[^\n]*\n[^\n]*\n\s*majCommandesDeLEditeur\(\);/);
+  });
+});

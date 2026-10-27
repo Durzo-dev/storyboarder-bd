@@ -23,7 +23,8 @@ the Panels detected, and the new Page opens right after the displayed one, in th
 a click selects a Panel (outside the Panels: deselects), dragging it moves it, dragging a corner
 or the middle of a side resizes it (as with an ordinary Panel), a corner alone deforms it (with the same square snapping), the selected Panel blinks orange and black (white when the drawing under its outline is dark), a **right-click without dragging creates one** (the only way), Delete removes it, Esc or a click outside the Page
 finishes; on leaving, nothing stays selected. The Page menu carries the **"Detected
-panels"** section: "Edit the panels" goes back to it at any time, "Done" leaves (the sensitivity
+panels"** section: "Edit the panels" goes back to it at any time; during the correction it
+becomes **"Controls"** (one action per line) and "Done" leaves (the sensitivity
 slider was removed: correction is enough). Numbers follow reading order at import; afterwards they
 are changed by **dragging** the rows of the Page menu list (except from their field), and a click on
 a row **highlights the Panel** (a second click deselects it). An import is undone with Ctrl+Z.

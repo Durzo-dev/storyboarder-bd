@@ -2664,7 +2664,7 @@ button.store-chip:hover{ border-color:var(--accent); }
 .planche-case-row textarea.planche-case-saisie{ flex:1; width:auto; min-height:46px; padding:6px 8px; font-size:var(--texte-libelle); }
 .planche-case-row.case-importee{ cursor:grab; }
 /* L'aide de la correction des Cases : une commande par ligne. */
-#sidePageEditionHint{ white-space:pre-line; line-height:1.7; }
+#sidePageEditionHint.commandes-aide{ margin:0 0 12px; }   /* Commandes de la correction des Cases, puis « Terminer » */
 
 /* #453 : la modale « Formats du projet » (src/formats-ui.js). */
 .formats-aide{ margin:0 0 12px; font-size:var(--texte-courant); color:var(--sepia); line-height:1.4; }

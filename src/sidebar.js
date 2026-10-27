@@ -1600,10 +1600,18 @@ function updateSidePanelImpl(){
         const enEdition = editionDesCasesActive();
         document.getElementById('sidePageEditionBtn').textContent = enEdition
           ? tr('Done', 'Terminer') : tr('Edit the panels', 'Modifier les cases');
-        document.getElementById('sidePageEditionHint').textContent = enEdition
-          // Une commande par ligne (demandé : enchaînée en une phrase, elle se lisait mal).
-          ? tr('On the page:\n• Drag a panel: move it\n• Drag a corner or a side: resize it\n• Right-click: add a panel\n• Delete: remove the selected panel\n• Esc, or a click outside the page: finish',
-            'Sur la Planche :\n• Tirer une Case : la déplacer\n• Tirer un coin ou un bord : la redimensionner\n• Clic droit : ajouter une Case\n• Suppr : retirer la Case sélectionnée\n• Échap, ou un clic hors de la Planche : terminer')
+        // PENDANT LA CORRECTION, la section devient « Commandes » (demandé, raccord avec les autres
+        // menus : en tête, une action par ligne, « Geste : effet. »).
+        document.getElementById('sidePageEditionTitle').textContent = enEdition
+          ? tr('Controls', 'Commandes') : tr('Detected panels', 'Cases détectées');
+        const aideEdition = document.getElementById('sidePageEditionHint');
+        aideEdition.className = enEdition ? 'commandes-aide' : 'side-aide';
+        aideEdition.textContent = enEdition
+          ? [tr('Drag a panel: move it.', 'Tirer une Case : la déplacer.'),
+            tr('Drag a corner or a side: resize it.', 'Tirer un coin ou un bord : la redimensionner.'),
+            tr('Right-click: add a panel.', 'Clic droit : ajouter une Case.'),
+            tr('Del: remove the selected panel.', 'Suppr : retirer la Case sélectionnée.'),
+            tr('Esc or click outside the page: finish.', 'Échap ou clic hors de la Planche : terminer.')].join('\n')
           : '';
         sidePageEditionSection.style.display = 'block';
       }

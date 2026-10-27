@@ -321,7 +321,9 @@ describe('Retours suivants (13 octobre 2026) : correction', () => {
   });
   test('un clic hors de la Planche quitte la correction ; l\'aide a une commande par ligne', () => {
     assert.match(lire('src/events.js'), /if \(e\.target === canvas\) return;\n[^\n]*\n {2}if \(editionDesCasesActive\(\)\) sortirEditionDesCases\(\);/);
-    assert.match(lire('src/style.css'), /#sidePageEditionHint\{ white-space:pre-line;/);
+    // Une commande par ligne : le style commun des Commandes (pre-line), cf. interface.test.mjs.
+    assert.match(lire('src/style.css'), /\.commandes-aide \{[^}]*white-space: pre-line;/);
+    assert.match(lire('src/sidebar.js'), /aideEdition\.className = enEdition \? 'commandes-aide'/);
   });
 });
 
