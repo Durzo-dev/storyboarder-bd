@@ -514,8 +514,14 @@ place : rien ne bouge à l'écran.
   dans « Éléments » montre la section « Affichage du bâtiment » : « Montrer jusqu'à : Tout le
   bâtiment / <niveau> ». Enregistré sur l'Élément placé (`affichage.jusquA`, champ AJOUTÉ), donc par
   Case. Le rig coupé embarque le bâtiment entier, invisible et hors des rayons, pour garder sa taille
-  et sa place (le rendu centre la boîte du rig). Reste #459b (murs de devant effacés, plus tard) et
-  #464 (masquer un mur, un plafond, par l'éditeur).
+  et sa place (le rendu centre la boîte du rig). Reste #459b (murs de devant effacés, plus tard).
+- **#464 FAIT** (27 octobre 2026) : masquer un mur, un plafond, un sol d'un bâtiment placé, par
+  Case. Dans « Affichage du bâtiment », « Choisir ce qui est masqué » ouvre l'éditeur en MASQUAGE
+  (Sélection seule, rien du bâtiment ne se modifie) : clic sur un mur = masqué / réaffiché (en
+  pointillé sur le plan, absent de l'aperçu) ; une pièce choisie propose « Masquer son plafond » (la
+  dalle du dessus avec) et « Masquer son sol » ; « Valider » / « Annuler ». Stocké sur l'Élément
+  placé, `affichage.masques = { murs, plafonds, sols }` (champ AJOUTÉ ; un id disparu ne masque
+  rien). Rendu : `construireBatiment3D(…, { masques })` ; le rig garde la boîte entière (gabarit).
 - **#454g** le sous-sol et le Sol percé, en dernier.
 - **#456** (plan d'architecte) ensuite, dans l'éditeur : un plan = un niveau.
 

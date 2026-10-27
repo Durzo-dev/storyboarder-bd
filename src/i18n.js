@@ -273,6 +273,10 @@ export const I18N_TRAILING = [
   //    entrées vivent ici et non dans I18N_TEXT : `textContent` effacerait l'icône avec le texte.
   //    Ajoutées après constat que 49 boutons sur 123 restaient en français en mode anglais.
   ['#ctxCreerBatiment', 'Create a building', 'Créer un bâtiment'],
+  ['#sideBatimentMasquerBtn', 'Choose what is hidden', 'Choisir ce qui est masqué'],
+  ['#sideBatimentReafficherBtn', 'Show everything again', 'Tout réafficher'],
+  ['#sideBatimentTitle', 'Building display', 'Affichage du bâtiment'],
+  ['#sideBatimentCoupeLabel', 'Show up to', 'Montrer jusqu\'à'],
   ['#ctxModifierBatiment', 'Edit', 'Modifier'],
   ['#ctxImportModel', 'Import a model', 'Importer un modèle'],
   ['#ctxInsertImage', 'Insert an image', 'Insérer une image'],

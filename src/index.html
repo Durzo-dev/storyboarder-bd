@@ -279,6 +279,9 @@
              Position) et « Supprimer » sont construites par batiment-editeur-ui.js ; celles du bâtiment
              se cachent tant qu'il est choisi (classe mode-element du panneau). -->
         <div id="batimentMenuElement"></div>
+        <!-- #464 : le menu du MASQUAGE (ce qu'une Case ne montre pas d'un bâtiment placé), construit par
+             batiment-editeur-ui.js (remplirLeMasquage) ; seul affiché, avec les Commandes, en masquage. -->
+        <div id="batimentMenuMasquage"></div>
         <section class="side-section" id="batimentSecBatiment">
           <h2 id="batimentSectionNom">Bâtiment</h2>
           <input type="text" id="batimentNom" class="modal-input batiment-nom" autocomplete="off" spellcheck="false">
@@ -575,6 +578,10 @@
         <label for="sideBatimentCoupe" id="sideBatimentCoupeLabel">Montrer jusqu'à</label>
         <select id="sideBatimentCoupe"></select>
       </div>
+      <!-- #464 : ce que la Case ne montre pas (murs, plafonds, sols), choisi dans l'éditeur. -->
+      <p id="sideBatimentMasques" class="side-aide"></p>
+      <button id="sideBatimentMasquerBtn" type="button" class="nav-btn">Choisir ce qui est masqué</button>
+      <button id="sideBatimentReafficherBtn" type="button" class="nav-btn">Tout réafficher</button>
     </div>
     <!-- Section Image : elle REMPLACE Sol et Éléments, elle ne s'y ajoute pas. Une Case porte une
          image ou de la 3D (cf. docs/en/panel-images.md), et c'est ici que l'exclusivité s'explique

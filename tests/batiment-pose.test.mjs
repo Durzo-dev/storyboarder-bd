@@ -174,7 +174,7 @@ describe('l’éditeur en pose (demandé)', () => {
   });
   test('seul l’outil Sélection, et seul l’élément se prend', () => {
     assert.match(css, /\.batiment-editeur\.pose \.batiment-outil\[data-outil\]:not\(\[data-outil="selection"\]\)\{ display:none; \}/);
-    assert.match(ui, /if \(E\.pose && outil && outil !== 'selection'\) return;/);
+    assert.match(ui, /if \(\(E\.pose \|\| E\.masquage\) && outil && outil !== 'selection'\) return;/);
     assert.match(ui, /const sommet = E\.pose \? null : sommetSous/);
     assert.match(ui, /const ouvertureId = E\.pose \? null : ouvertureSous/);
     assert.ok(!/meubleSous\(E\.batiment, E\.niveauId, souris\(e\)\.p\)/.test(ui), 'les gestes passent par meubleVise');

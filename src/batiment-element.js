@@ -147,6 +147,47 @@ export function niveauDeCoupe(o){
   return id && ((o.batiment && o.batiment.niveaux) || []).some(n => n.id === id) ? id : null;
 }
 
+/**
+ * Ce que la Case ne montre pas de ce bâtiment (#464) : `{ murs, plafonds, sols }`, des ids qui
+ * existent ENCORE (un mur supprimé par « Modifier » ne masque plus rien), ou null s'il n'y a rien.
+ * `o.affichage.masques` est un champ AJOUTÉ. PURE.
+ */
+export function masquesDe(o){
+  const m = o && o.affichage && o.affichage.masques;
+  if (!m || !o.batiment) return null;
+  const murs = new Set((o.batiment.murs || []).map(x => x.id));
+  const pieces = new Set((o.batiment.pieces || []).map(x => x.id));
+  const r = {
+    murs: (m.murs || []).filter(id => murs.has(id)),
+    plafonds: (m.plafonds || []).filter(id => pieces.has(id)),
+    sols: (m.sols || []).filter(id => pieces.has(id)),
+  };
+  return r.murs.length || r.plafonds.length || r.sols.length ? r : null;
+}
+
+/** Pose les masques (`null` ou vides : tout réafficher). Le champ disparaît quand il ne dit rien. PURE. */
+export function fixerMasques(o, m){
+  const a = { ...(o.affichage || {}) };
+  const propre = m && {
+    murs: [...new Set(m.murs || [])], plafonds: [...new Set(m.plafonds || [])], sols: [...new Set(m.sols || [])],
+  };
+  if (propre && (propre.murs.length || propre.plafonds.length || propre.sols.length)) a.masques = propre;
+  else delete a.masques;
+  if (Object.keys(a).length) o.affichage = a; else delete o.affichage;
+  return o;
+}
+
+/** « 2 murs, 1 plafond » : le résumé des masques, ou '' s'il n'y en a pas. PURE. */
+export function resumeDesMasques(m, traduire){
+  if (!m) return '';
+  const n = (k, un, plusieurs) => (k ? `${k} ${k > 1 ? plusieurs : un}` : '');
+  return [
+    n(m.murs.length, traduire('wall', 'mur'), traduire('walls', 'murs')),
+    n(m.plafonds.length, traduire('ceiling', 'plafond'), traduire('ceilings', 'plafonds')),
+    n(m.sols.length, traduire('floor', 'sol'), traduire('floors', 'sols')),
+  ].filter(Boolean).join(', ');
+}
+
 /** Coupe au niveau `id`, ou montre tout (`null`). Le champ disparaît quand il ne dit plus rien. PURE. */
 export function fixerCoupe(o, id){
   const a = { ...(o.affichage || {}) };

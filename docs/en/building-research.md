@@ -489,8 +489,14 @@ moves on screen.
   "Elements" shows the "Building display" section: "Show up to: The whole building / <level>". Stored
   on the placed Element (`affichage.jusquA`, an ADDED field), so per Panel. The cut rig carries the
   whole building, invisible and out of the raycast layer, to keep its size and place (the render
-  centres the rig's box). Left: #459b (front walls hidden, later) and #464 (hide a wall, a ceiling,
-  through the editor).
+  centres the rig's box). Left: #459b (front walls hidden, later).
+- **#464 DONE** (27 October 2026): hide a wall, a ceiling, a floor of a placed building, per Panel.
+  In "Building display", "Choose what is hidden" opens the editor in HIDING mode (Selection only,
+  nothing of the building can be changed): clicking a wall hides / shows it (dashed on the plan,
+  absent from the preview); a picked room offers "Hide its ceiling" (with the slab above) and "Hide
+  its floor"; "Confirm" / "Cancel". Stored on the placed Element, `affichage.masques = { murs,
+  plafonds, sols }` (an ADDED field; a vanished id hides nothing). Render: `construireBatiment3D(…,
+  { masques })`; the rig keeps the whole box (template).
 - **#454g** the basement and the pierced Ground, last.
 - **#456** (architect's plan) afterwards, in the editor: one plan = one level.
 

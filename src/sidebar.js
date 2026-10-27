@@ -13,7 +13,7 @@
 
 import { policeADessiner, variantesDeLaPolice, policesImportees, nomsDesUsagesDeLaPolice } from './polices-utilisateur.js';
 import { S, currentPage, currentPageData, isLockedScenePanel, panelsInPage, ensurePanelNumbers, tr } from './state.js';
-import { estUnBatimentPlace, niveauDeCoupe, fixerCoupe } from './batiment-element.js';
+import { estUnBatimentPlace, niveauDeCoupe, fixerCoupe, masquesDe, fixerMasques, resumeDesMasques } from './batiment-element.js';
 import { niveauxTries } from './batiment-niveaux.js';
 import { lumiereDeCase3D, projeterSurDome3D, geometrieDome3D,
   AZIMUTS_CARDINAUX } from './lighting-3d.js';
@@ -1193,6 +1193,33 @@ function majSectionAffichageBatiment(el){
     choix.blur();
     drawCurrentPage();
   };
+  // #464 : ce qui est masqué, le choisir dans l'éditeur, tout réafficher.
+  const masques = masquesDe(el);
+  const resume = resumeDesMasques(masques, tr);
+  const ligne = document.getElementById('sideBatimentMasques');
+  ligne.textContent = resume ? tr(`Hidden: ${resume}.`, `Masqués : ${resume}.`) : tr('Nothing is hidden.', 'Rien n\'est masqué.');
+  const masquer = document.getElementById('sideBatimentMasquerBtn');
+  masquer.textContent = tr('Choose what is hidden', 'Choisir ce qui est masqué');
+  const id = el.id;
+  masquer.onclick = async () => {
+    const { ouvrirEditeurDeBatiment } = await import('./batiment-editeur-ui.js');
+    ouvrirEditeurDeBatiment({ batiment: el.batiment, masquage: {
+      masques: masquesDe(el),
+      annuler: () => {},
+      // Retrouvé par son id au retour : un Ctrl+Z a pu remplacer l'objet.
+      valider: (m) => {
+        const cible = currentPage().objects.find(o => o.id === id);
+        if (!cible || !estUnBatimentPlace(cible)) return;
+        _snapshot();
+        fixerMasques(cible, m);
+        drawCurrentPage();
+      },
+    } });
+  };
+  const reafficher = document.getElementById('sideBatimentReafficherBtn');
+  reafficher.textContent = tr('Show everything again', 'Tout réafficher');
+  reafficher.style.display = resume ? '' : 'none';
+  reafficher.onclick = () => { _snapshot(); fixerMasques(el, null); drawCurrentPage(); };
   const nouveau = _batimentPrecedent !== el.id;
   sideBatimentSection.style.display = 'block';
   _batimentDeLaSection = el.id;

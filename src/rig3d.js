@@ -47,7 +47,7 @@ import { fichiersDesMeubles } from './batiment-mobilier.js';
 import { isImportedModel } from './model-store.js';
 // #454a-4 : le bâtiment placé, dessiné par le MÊME constructeur que l'aperçu de l'éditeur.
 import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
-import { OBJ_TYPE_BATIMENT, signatureDuBatiment, niveauDeCoupe } from './batiment-element.js';
+import { OBJ_TYPE_BATIMENT, signatureDuBatiment, niveauDeCoupe, masquesDe } from './batiment-element.js';
 // cf. son en-tête : Object3D.clone() casse le lien SkinnedMesh↔Skeleton, faussant l'échelle
 // appliquée par placeRigCentered3D pour tout modèle importé articulé.
 import { cloneSkinned } from './vendor/SkeletonUtils.js';
@@ -4312,7 +4312,8 @@ let _materiauxBatiment3D = null;
  */
 function signatureDuBatimentRendu3D(b, o = null){
   // #459a : la coupe de SA Case en fait partie (changer de niveau montré refait le rig).
-  return signatureDuBatiment(b) + '|' + modelCacheSignature(fichiersDesMeubles(b)) + '|' + (niveauDeCoupe(o) || '');
+  // #464 : ses masques aussi.
+  return signatureDuBatiment(b) + '|' + modelCacheSignature(fichiersDesMeubles(b)) + '|' + (niveauDeCoupe(o) || '') + '|' + JSON.stringify(masquesDe(o));
 }
 
 /** Libère les géométries d'un rig (un bâtiment en porte des centaines) ; ses matières restent. */
@@ -4331,14 +4332,15 @@ export function buildPropRig3D(objType, colorHex, o){
       _materiauxBatiment3D.modele = (f) => { const c = getLoadedModel(f); return c && c.scene ? cloneSkinned(c.scene) : null; };
     }
     const b = (o && o.batiment) || { niveaux: [], murs: [] };
-    const jusquA = niveauDeCoupe(o);
-    const groupe = construireBatiment3D(THREE, b, _materiauxBatiment3D, { jusquA });
+    const jusquA = niveauDeCoupe(o), masques = masquesDe(o);
+    const groupe = construireBatiment3D(THREE, b, _materiauxBatiment3D, { jusquA, masques });
     // #459a : COUPÉ, il garde la place et la taille du bâtiment entier. Le rendu centre la BOÎTE du
     // rig et la met à la hauteur réelle : une boîte rétrécie par la coupe le grandirait et le
     // déplacerait. Le bâtiment entier est donc joint, INVISIBLE et hors de la couche des rayons
     // (sélection) : Box3.setFromObject le compte, le rendu et la sélection ne le voient pas. Ses
     // géométries sont libérées avec le rig.
-    if (jusquA) {
+    // #464 : masquer un mur extérieur ou un plafond rétrécit aussi la boîte : même remède.
+    if (jusquA || masques) {
       const gabarit = construireBatiment3D(THREE, b, _materiauxBatiment3D);
       gabarit.visible = false;
       gabarit.traverse(n => { n.layers.set(31); n.castShadow = false; n.receiveShadow = false; });

@@ -121,7 +121,7 @@ describe('montrer jusqu\'à un niveau (#459a)', () => {
     const gabarit = coupe.children.find(c => c.userData.gabarit);
     assert.ok(gabarit && gabarit.visible === false);
     assert.equal(gabarit.layers.test(new T.Layers()), false, 'les rayons de la sélection ne le voient pas');
-    assert.match(r.batimentSig, /\|n0$/, 'la coupe fait partie de la signature du rig');
+    assert.match(r.batimentSig, /\|n0\|null$/, 'la coupe fait partie de la signature du rig');
   });
 });
 
@@ -140,4 +140,55 @@ test('#459a, retours : la liste ne se refait pas sous la souris, et le menu remo
   assert.match(sb, /document\.activeElement !== document\.getElementById\('sideBatimentCoupe'\)\) sideBatimentSection\.style\.display = 'none'/);
   assert.match(sb, /const nouveau = _batimentPrecedent !== el\.id;/);
   assert.match(sb, /sideBatimentSection\.scrollIntoView\(\{ block: 'nearest', behavior: 'smooth' \}\)/);
+});
+
+// #464 : masquer un mur, un plafond, un sol d'un bâtiment placé, par Case.
+describe('masquer des parties d\'un bâtiment placé (#464)', () => {
+  const avecPieces = async () => { const { actualiserPieces } = await import('../src/batiment-pieces.js'); const b = maison(); actualiserPieces(b, 'n0', fr); return b; };
+  test('masquesDe ne garde que ce qui existe ; fixerMasques pose, dédoublonne et retire ; le résumé', async () => {
+    const { masquesDe, fixerMasques, resumeDesMasques } = await import('../src/batiment-element.js');
+    const o = creerElementBatiment({ panel, page, batiment: await avecPieces() });
+    const [m1, m2] = o.batiment.murs;
+    const piece = o.batiment.pieces[0];
+    assert.equal(masquesDe(o), null);
+    fixerMasques(o, { murs: [m1.id, m1.id, m2.id, 'disparu'], plafonds: [piece.id] });
+    assert.deepEqual(o.affichage.masques.murs, [m1.id, m2.id, 'disparu']);
+    assert.deepEqual(masquesDe(o), { murs: [m1.id, m2.id], plafonds: [piece.id], sols: [] }, 'un id disparu ne masque rien');
+    assert.equal(resumeDesMasques(masquesDe(o), fr), '2 murs, 1 plafond');
+    fixerMasques(o, { murs: [], plafonds: [], sols: [] });
+    assert.equal('affichage' in o, false, 'rien de masqué : plus de champ');
+  });
+  test('le rendu omet le mur, le plafond et sa dalle ; le rig garde la boîte entière', async () => {
+    await import('./helpers/dom-stub.mjs');
+    const T = globalThis.THREE;
+    const { construireBatiment3D, materiauxBatiment3D } = await import('../src/batiment-3d.js');
+    const { buildPropRig3D } = await import('../src/rig3d.js');
+    const { fixerMasques } = await import('../src/batiment-element.js');
+    const b = await avecPieces();
+    const mats = materiauxBatiment3D(T);
+    const taille = (g) => new T.Box3().setFromObject(g).getSize(new T.Vector3());
+    const entier = taille(construireBatiment3D(T, b, mats));
+    const sansMur = taille(construireBatiment3D(T, b, mats, { masques: { murs: [b.murs.find(m => Math.abs(m.a.z - m.b.z) < 1e-9 && m.a.z < 1).id] } }));
+    assert.ok(sansMur.z < entier.z - 0.05, 'le mur du bord z = 0 n\'est plus là');
+    const sansPlafond = taille(construireBatiment3D(T, b, mats, { masques: { plafonds: [b.pieces[0].id] } }));
+    assert.ok(sansPlafond.y < entier.y, 'la dalle du dessus est partie avec le plafond');
+    const o = creerElementBatiment({ panel, page, batiment: b });
+    fixerMasques(o, { plafonds: [b.pieces[0].id] });
+    const r = buildPropRig3D('batiment', '#888', o);
+    proche(taille(r.figureGroup).y, entier.y);
+    assert.match(r.batimentSig, /plafonds/, 'les masques font partie de la signature du rig');
+  });
+  test('câblage : l\'éditeur en masquage (Sélection seule, clic = masquer, Valider / Annuler), la section de la Case', async () => {
+    const { readFileSync } = await import('node:fs');
+    const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
+    const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
+    const sb = readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8');
+    assert.match(ui, /if \(m\) \{ basculerMasque\('murs', m\.mur\.id\); return; \}/);
+    assert.match(ui, /if \(\(E\.pose \|\| E\.masquage\) && outil && outil !== 'selection'\) return;/);
+    assert.match(ui, /if \(E && E\.masquage\) \{ annulerLeMasquage\(\); return; \}/);
+    assert.match(ui, /masques: E && E\.masquage \? E\.masquage\.masques : null/);
+    assert.match(css, /\.batiment-editeur\.masquage \.batiment-outil\[data-outil\]:not\(\[data-outil="selection"\]\)\{ display:none; \}/);
+    assert.match(sb, /ouvrirEditeurDeBatiment\(\{ batiment: el\.batiment, masquage: \{/);
+    assert.match(sb, /_snapshot\(\);\n\s*fixerMasques\(cible, m\);/);
+  });
 });

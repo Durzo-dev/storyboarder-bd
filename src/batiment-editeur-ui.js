@@ -24,7 +24,7 @@ import {
   ICONES_REMPLISSAGE, ICONES_DESSUS, iconeSensPorte,
 } from './batiment-icones.js';
 import { actionDEnregistrement } from './batiment-bibliotheque.js';
-import { signatureDuBatiment, signatureDeStructure } from './batiment-element.js';
+import { signatureDuBatiment, signatureDeStructure, resumeDesMasques } from './batiment-element.js';
 import { enregistrerBatiment, listerBatiments, lireBatimentDuDisque } from './batiment-store.js';
 import {
   versEcran, versBatiment, pasDeGrille, zoomerAutour, glisserVue, boiteDesMurs, cadrerSur,
@@ -96,7 +96,7 @@ export function supprimerPieceDeLEditeur(id){
  * Ouvre l'éditeur. `batiment` : celui à modifier (une copie est faite) ; absent, un bâtiment neuf.
  * `fichier` : son fichier dans la bibliothèque, s'il en vient (l'enregistrer le réécrit).
  */
-export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null, destination = null, pose = null } = {}){
+export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null, destination = null, pose = null, masquage = null } = {}){
   if (E) fermerSansDemander();
   _rappels.avantOuverture();
   const b = batiment ? JSON.parse(JSON.stringify(batiment)) : creerBatiment('', tr);
@@ -129,6 +129,14 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null, desti
     // valider(meuble, batiment), annuler() } : l'élément `id` est un meuble du bâtiment, le seul qu'on
     // puisse toucher ; le bâtiment, lui, ne change pas (rien ne lui revient).
     pose,
+    // #464 : CHOISIR CE QUI EST MASQUÉ d'un bâtiment placé (sa Case ne le montre pas). { masques,
+    // valider(masques), annuler() } : clic sur un mur = masqué / réaffiché ; une pièce choisie propose
+    // son plafond et son sol. Le bâtiment ne change pas ; seuls les masques reviennent.
+    masquage: masquage ? { ...masquage, masques: {
+      murs: [...((masquage.masques && masquage.masques.murs) || [])],
+      plafonds: [...((masquage.masques && masquage.masques.plafonds) || [])],
+      sols: [...((masquage.masques && masquage.masques.sols) || [])],
+    } } : null,
   };
   if (pose) {
     const m = (b.elements || []).find(x => x.id === pose.id);
@@ -136,11 +144,12 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null, desti
     E.selection = { meubleId: pose.id };
   }
   $('batimentEditeur').classList.toggle('pose', !!pose);
+  $('batimentEditeur').classList.toggle('masquage', !!masquage);
   $('batimentEditeur').classList.remove('hidden');
   $('batimentApercuCoupe').classList.toggle('actif', E.coupe);
   $('batimentNom').value = b.nom;
   // Un bâtiment vide s'ouvre sur l'outil Mur (demandé) : il n'y a rien d'autre à faire.
-  choisirOutil(b.murs.length || pose ? null : 'mur');
+  choisirOutil(b.murs.length || pose || masquage ? null : 'mur');
   recadrer();
   appliquerAffichage();
   E.apercu = ouvrirApercu($('batimentApercu'), b);
@@ -155,7 +164,7 @@ function fermerSansDemander(){
   if (E.apercu) E.apercu.fermer();
   E = null;
   $('batimentEditeur').classList.add('hidden');
-  $('batimentEditeur').classList.remove('pose');
+  $('batimentEditeur').classList.remove('pose', 'masquage');
   window.removeEventListener('keydown', clavier, true);
   window.removeEventListener('resize', dessinerPlan);
   _rappels.apresFermeture();
@@ -170,6 +179,7 @@ export async function fermerEditeurDeBatiment(){
   // #454e : une pose quittée par un autre chemin (le menu de gauche, le bandeau) est ANNULÉE : rien
   // à enregistrer, et la fiche de l'Élément, cachée le temps de l'éditeur, doit revenir.
   if (E.pose) { annulerLaPose(); return true; }
+  if (E.masquage) { annulerLeMasquage(); return true; }
   if (nonSauve()) {
     const ok = await _rappels.confirmer(
       tr('This building has unsaved changes. Close the editor without saving them?',
@@ -266,6 +276,8 @@ const metres = (v) => `${(Math.round(v * 100) / 100).toLocaleString(tr('en', 'fr
 const surface = (v) => `${(Math.round(v * 10) / 10).toLocaleString(tr('en', 'fr'))} m²`;
 
 function remplirPanneau(){
+  if (E.masquage) { remplirLeMasquage(); return; }
+  $('batimentPanneau').classList.remove('masquage');
   const b = E.batiment;
   // #454e : en pose, l'élément reste choisi, quoi qu'on fasse (il n'y a rien d'autre à choisir).
   if (E.pose) E.selection = { meubleId: E.pose.id };
@@ -1216,7 +1228,7 @@ function majOutilEscalier(){
 function choisirOutil(outil){
   if (!E) return;
   if (outil === 'escalier' && !niveauDessus(E.batiment, E.niveauId)) return;
-  if (E.pose && outil && outil !== 'selection') return;   // #454e : en pose, la Sélection seule
+  if ((E.pose || E.masquage) && outil && outil !== 'selection') return;   // #454e, #464 : la Sélection seule
   // Aucun outil, c'est la SÉLECTION (demandé : l'outil par défaut).
   E.outil = outil || 'selection'; E.chaine = null; E.survol = null;
   if (E.outil !== 'selection') E.selection = null;
@@ -1609,9 +1621,16 @@ function dessinerPlan(){
     const f = formes.get(m.id); if (!f) return;
     const siennes = ouvertures.filter(o => o.murId === m.id);
     const { pleins, percees } = morceauxDuMur(f, m, siennes.map(o => intervalleDe(o, m)));
+    // #464 : un mur masqué dans la Case, en POINTILLÉ (son contour, sans remplissage).
+    const masque = E.masquage && E.masquage.masques.murs.includes(m.id);
+    const survoleMasquage = E.masquage && E.survol && E.survol.murId === m.id;
     pleins.forEach(q => {
       poly(q);
-      g.fillStyle = (E.selection && E.selection.murId === m.id) ? accent : encre;
+      if (masque) {
+        g.save(); g.setLineDash([4, 3]); g.strokeStyle = survoleMasquage ? accent : couleur('--ink-soft', '#9a9aa2'); g.lineWidth = 1.5; g.stroke(); g.restore();
+        return;
+      }
+      g.fillStyle = (E.selection && E.selection.murId === m.id) || survoleMasquage ? accent : encre;
       g.fill();
       if (survole === m.id) { g.strokeStyle = accent; g.lineWidth = 2; g.stroke(); }
     });
@@ -1632,7 +1651,7 @@ function dessinerPlan(){
   }
 
   // Les sommets, en Sélection : des poignées (pas en pose : le bâtiment ne se touche pas).
-  if (E.outil === 'selection' && !E.pose) {
+  if (E.outil === 'selection' && !E.pose && !E.masquage) {
     sommetsDuNiveau(E.batiment, E.niveauId).forEach(q => {
       const e = versEcran(vue, l, h, q);
       const actif = E.survol && E.survol.sommet && Math.hypot(E.survol.sommet.x - q.x, E.survol.sommet.z - q.z) < 1e-6;
@@ -1654,6 +1673,12 @@ function dessinerPlan(){
     const e = versEcran(vue, l, h, p.repere);
     g.font = '600 12.5px Inter, sans-serif'; g.fillStyle = encre; g.fillText(p.nom, e.x, e.y);
     g.font = '11px Inter, sans-serif'; g.fillStyle = couleur('--ink-soft', '#9a9aa2'); g.fillText(surface(pieces.get(p.id).aire), e.x, e.y + 14);
+    // #464 : ce qui est masqué de la pièce, sous sa surface.
+    if (E.masquage) {
+      const mq = E.masquage.masques;
+      const dit = [mq.plafonds.includes(p.id) && tr('ceiling hidden', 'plafond masqué'), mq.sols.includes(p.id) && tr('floor hidden', 'sol masqué')].filter(Boolean).join(' · ');
+      if (dit) { g.fillStyle = accent; g.fillText(dit, e.x, e.y + 28); }
+    }
   }
   g.textAlign = 'start';
 
@@ -1719,6 +1744,7 @@ function dessinerPlan(){
  * qu'on pose : le mobilier du bâtiment et les autres Éléments de la Scène se voient, sans se prendre.
  */
 function meubleVise(p){
+  if (E.masquage) return null;   // #464 : rien ne bouge, le mobilier compris
   if (!E.pose) return meubleSous(E.batiment, E.niveauId, p);
   const m = (E.batiment.elements || []).find(x => x.id === E.pose.id);
   return m && m.niveauId === E.niveauId && meubleSous({ elements: [m] }, E.niveauId, p) ? m.id : null;
@@ -1812,6 +1838,12 @@ function survoler(e){
       return;
     }
     if (E.pose) { E.survol = { meubleId: meubleVise(p) }; dessinerPlan(); return; }
+    // #464 : le mur sous la souris, sinon la pièce.
+    if (E.masquage) {
+      const m = murSous(E.batiment, E.niveauId, p, tol / 2);
+      E.survol = { murId: m ? m.mur.id : null, pieceId: m ? null : pieceSous(E.batiment, E.niveauId, p) };
+      dessinerPlan(); return;
+    }
     const sommet = sommetSous(E.batiment, E.niveauId, p, tol);
     const ouvertureId = sommet ? null : ouvertureSous(E.batiment, E.niveauId, p, tol / 2);
     const m = (sommet || ouvertureId) ? null : murSous(E.batiment, E.niveauId, p, tol / 2);
@@ -1927,6 +1959,16 @@ function cablerPlan(){
       let id = null;
       modifier(b => { const r = ajouterOuverture(b, m.mur.id, m.t, E.reglagesOuverture); id = r.ouverture && r.ouverture.id; });
       if (id) { choisirOutil('selection'); E.selection = { ouvertureId: id }; remplirPanneau(); dessinerPlan(); }
+      return;
+    }
+    // #464 : un clic sur un mur le masque ou le réaffiche ; sur une pièce, la choisit (son plafond,
+    // son sol, dans le menu) ; ailleurs, la désélectionne. Rien d'autre ne se prend.
+    if (E.masquage) {
+      const m = murSous(E.batiment, E.niveauId, p, tol / 2);
+      if (m) { basculerMasque('murs', m.mur.id); return; }
+      const pieceId = pieceSous(E.batiment, E.niveauId, p);
+      E.selection = pieceId ? { pieceId } : null;
+      remplirPanneau(); dessinerPlan();
       return;
     }
     // #454e : en pose, seul l'élément se prend ; le bâtiment ne se touche pas.
@@ -2116,7 +2158,7 @@ function cablerPlan(){
           : (charniere === 'fin' ? { sens: -1, charniere: 'fin' } : { sens: 1, charniere: 'fin' });
         E.reglagesOuverture = { ...E.reglagesOuverture, ...suivant };
         remplirPanneau(); survoler(e);
-      } else if (!bouge && e && e.type === 'pointerup' && !E.pose) {
+      } else if (!bouge && e && e.type === 'pointerup' && !E.pose && !E.masquage) {
         // LE CLIC DROIT (demandé) : à l'outil Mur, il finit le tracé en cours, ou sans tracé revient à
         // la Sélection ; à la Sélection, il désélectionne, ou, rien n'étant choisi, prend l'outil Mur.
         if (E.outil === 'mur') { if (!finirLaChaine()) choisirOutil('selection'); }
@@ -2235,7 +2277,8 @@ function ouvrirApercu(conteneur, b){
     if (typeof f === 'string' && f.startsWith('@')) { const c = E && E.pose && E.pose.copies && E.pose.copies.get(f); return c ? cloneSkinned(c) : null; }
     const c = getLoadedModel(f); return c && c.scene ? cloneSkinned(c.scene) : null;
   };
-  const options = () => ({ jusquA: E && E.coupe ? E.niveauId : null, rouge: E ? E.collisionMeuble : null });
+  const options = () => ({ jusquA: E && E.coupe ? E.niveauId : null, rouge: E ? E.collisionMeuble : null,
+    masques: E && E.masquage ? E.masquage.masques : null });
   let groupe = construireBatiment3D(T, b, mats, options());
   scene.add(groupe);
   const meubles = fichiersDesMeubles(b).filter(f => !f.startsWith('@'));
@@ -2342,6 +2385,96 @@ function annulerLaPose(){
   pose.annuler();
 }
 
+// ── #464 : choisir ce qui est masqué d'un bâtiment placé ─────────────────────────────────────────
+
+/** Masque ou réaffiche `id` dans la liste `cle` ('murs', 'plafonds', 'sols'). */
+function basculerMasque(cle, id){
+  const l = E.masquage.masques[cle];
+  const i = l.indexOf(id);
+  if (i >= 0) l.splice(i, 1); else l.push(id);
+  remplirPanneau(); dessinerPlan();
+  if (E.apercu) E.apercu.reconstruire(E.batiment);
+}
+
+/**
+ * Le menu du masquage : ce qui est masqué (le résumé, « Tout réafficher »), la pièce choisie (son
+ * plafond, son sol), et la sortie, « Valider » ou « Annuler ». Les sections du bâtiment sont
+ * cachées (classe masquage du panneau) : rien ne s'y modifie.
+ */
+function remplirLeMasquage(){
+  const panneau = $('batimentPanneau');
+  panneau.classList.remove('fils', 'fils-element', 'fils-escalier', 'fils-piece');
+  panneau.classList.add('masquage');
+  construireColonneDesNiveaux();
+  const m = E.masquage.masques;
+  const piece = pieceSelectionnee();
+  $('batimentEditeurTitre').textContent = tr('Hidden parts', 'Ce qui est masqué');
+  $('batimentEditeurFermerX').title = tr('Cancel (Esc)', 'Annuler (Échap)');
+  $('batimentAide').textContent = [
+    tr('Click a wall: hide it, or show it again.', 'Clic sur un mur : le masquer, ou le réafficher.'),
+    tr('Click a room: its ceiling and floor, in the menu.', 'Clic sur une pièce : son plafond et son sol, dans le menu.'),
+    tr('Dashed: hidden in the Panel.', 'En pointillé : masqué dans la Case.'),
+    tr('Round buttons on the left: change level.', 'Pastilles à gauche : changer de niveau.'),
+    tr('Wheel: zoom.', 'Molette : zoomer.'),
+    tr('Hold right button: move the view.', 'Clic droit maintenu : déplacer la vue.'),
+    tr('Esc: cancel.', 'Échap : annuler.'),
+  ].join('\n');
+  const section = (titre, ...contenu) => {
+    const sec = document.createElement('section');
+    sec.className = 'side-section';
+    const h = document.createElement('h2'); h.textContent = titre;
+    sec.append(h, ...contenu);
+    return sec;
+  };
+  const bouton = (texte, classe, faire, inactif = false) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = classe; b.textContent = texte; b.onclick = faire; b.disabled = inactif;
+    return b;
+  };
+  const resume = resumeDesMasques(m, tr);
+  const etat = document.createElement('p');
+  etat.className = resume ? 'batiment-masquage-resume' : 'empty-hint';
+  etat.textContent = resume ? tr(`Hidden: ${resume}.`, `Masqués : ${resume}.`) : tr('Nothing is hidden.', 'Rien n\'est masqué.');
+  const toutReafficher = bouton(tr('Show everything again', 'Tout réafficher'), 'nav-btn', () => {
+    m.murs.length = 0; m.plafonds.length = 0; m.sols.length = 0;
+    remplirPanneau(); dessinerPlan();
+    if (E.apercu) E.apercu.reconstruire(E.batiment);
+  }, !resume);
+  const sections = [section(tr('Hidden', 'Masqués'), etat, toutReafficher)];
+  if (piece) {
+    const coche = (texte, cle) => {
+      const l = document.createElement('label'); l.className = 'modal-checkbox-line';
+      const c = document.createElement('input'); c.type = 'checkbox'; c.checked = m[cle].includes(piece.id);
+      c.addEventListener('change', () => basculerMasque(cle, piece.id));
+      l.append(c, document.createTextNode(' ' + texte));
+      return l;
+    };
+    sections.push(section(piece.nom,
+      coche(tr('Hide its ceiling', 'Masquer son plafond'), 'plafonds'),
+      coche(tr('Hide its floor', 'Masquer son sol'), 'sols')));
+  }
+  const sortie = document.createElement('div');
+  sortie.className = 'batiment-pose-sortie';
+  sortie.append(bouton(tr('Confirm', 'Valider'), 'full-btn', validerLeMasquage), bouton(tr('Cancel', 'Annuler'), 'nav-btn', annulerLeMasquage));
+  $('batimentMenuMasquage').replaceChildren(...sections, sortie);
+}
+
+/** « Valider » : les masques reviennent à la Case ; l'éditeur se ferme. */
+function validerLeMasquage(){
+  if (!E || !E.masquage) return;
+  const { masquage } = E;
+  const masques = JSON.parse(JSON.stringify(masquage.masques));
+  fermerSansDemander();
+  masquage.valider(masques);
+}
+/** « Annuler », la croix ou Échap : rien ne change. */
+function annulerLeMasquage(){
+  if (!E || !E.masquage) return;
+  const { masquage } = E;
+  fermerSansDemander();
+  masquage.annuler();
+}
+
 /** « Placer dans la scène » / « Appliquer les modifications » : le bâtiment part, l'éditeur se ferme. */
 function versLaScene(){
   if (!E || !E.destination || !E.batiment.murs.length) return;
@@ -2398,6 +2531,15 @@ function clavier(e){
   // Une modale ouverte par-dessus (la confirmation) garde ses touches.
   if (document.querySelector('.modal-overlay:not(.hidden)')) return;
   const avale = () => { e.preventDefault(); e.stopImmediatePropagation(); };
+  // #464 : en masquage, Échap annule ; les étages restent ; rien d'autre.
+  if (E.masquage) {
+    if (e.key === 'Escape') { avale(); annulerLeMasquage(); return; }
+    if (dansUnChamp) return;
+    if (e.key === 'PageUp' || e.key === 'ArrowUp') changerDeNiveau(1);
+    else if (e.key === 'PageDown' || e.key === 'ArrowDown') changerDeNiveau(-1);
+    avale();
+    return;
+  }
   // #454e : en pose, Échap annule ; annuler / rétablir et les étages restent ; rien d'autre.
   if (E.pose) {
     const t = e.key.toLowerCase();
@@ -2501,6 +2643,7 @@ export function initEditeurDeBatiment(){
   // sinon elle ferme l'éditeur.
   $('batimentEditeurFermerX').onclick = () => {
     if (E && E.pose) { annulerLaPose(); return; }   // #454e : la croix vaut « Annuler » (demandé)
+    if (E && E.masquage) { annulerLeMasquage(); return; }   // #464 : de même
     if (E && (meubleSelectionne() || escalierSelectionne() || pieceSelectionnee())) { E.selection = null; remplirPanneau(); dessinerPlan(); }
     else fermerEditeurDeBatiment();
   };

@@ -187,8 +187,19 @@ function construireArche(T, mur, o, mats){
  * `jusquA` (#454b) : l'id du DERNIER niveau à montrer ; ceux du dessus sont omis (la « coupe » de
  * l'aperçu de l'éditeur, pour voir dans l'étage qu'on retouche). Absent : tout le bâtiment.
  */
-export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null } = {}){
+/*
+ * `masques` (#464) : ce que la Case d'un bâtiment placé ne montre pas, `{ murs, plafonds, sols }`
+ * (des ids de murs, de pièces). Un mur masqué disparaît avec ses ouvertures, et ses voisins se
+ * referment sans lui (leurs jonctions sont recalculées) ; un plafond masqué emporte la dalle du
+ * dessus de SA pièce ; un sol masqué, la dalle de dessous. Le bâtiment n'est pas touché.
+ */
+export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, masques = null } = {}){
   const groupe = new T.Group();
+  const cache = {
+    murs: new Set((masques && masques.murs) || []),
+    plafonds: new Set((masques && masques.plafonds) || []),
+    sols: new Set((masques && masques.sols) || []),
+  };
   const tries = niveauxTries(b);
   const limite = jusquA ? tries.findIndex(n => n.id === jusquA) : -1;
   const visibles = limite >= 0 ? tries.slice(0, limite + 1) : tries;
@@ -225,14 +236,16 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null }
     for (const [pieceId, f] of formesDuNiveau) {
       // Le sol de chaque pièce (#454a-3b), un peu au-dessus de la grille pour ne pas scintiller avec elle.
       // #454d : son revêtement (uni par défaut, la couleur d'avant).
-      const geo = new T.ShapeGeometry(forme2D(f, tremiesPlancher));
-      geo.rotateX(-Math.PI / 2);
-      const sol = new T.Mesh(geo, mats.revetement ? mats.revetement(revetementDeLaPiece(b, pieceId, 'sol'), 'sol-int') : mats.sol);
-      sol.position.y = n.elevation + 0.005;
-      groupe.add(sol);
+      if (!cache.sols.has(pieceId)) {
+        const geo = new T.ShapeGeometry(forme2D(f, tremiesPlancher));
+        geo.rotateX(-Math.PI / 2);
+        const sol = new T.Mesh(geo, mats.revetement ? mats.revetement(revetementDeLaPiece(b, pieceId, 'sol'), 'sol-int') : mats.sol);
+        sol.position.y = n.elevation + 0.005;
+        groupe.add(sol);
+      }
       // #454d : le PLAFOND, sous la dalle du dessus, tourné vers le bas (dessiné dans x, z puis basculé
       // de +90° : la normale descend et z garde son sens). Pas sous un dernier niveau ouvert par la coupe.
-      if (mats.revetement && !(coupe && n.id === dernier) && epaisseurDuDessus(b, n.id) > 0) {
+      if (mats.revetement && !(coupe && n.id === dernier) && !cache.plafonds.has(pieceId) && epaisseurDuDessus(b, n.id) > 0) {
         const fp = new T.Shape(f.points.map(p => new T.Vector2(p.x, p.z)));
         [...(f.trous || []), ...percees(f, tremiesPlafond)].forEach(t => fp.holes.push(new T.Path(t.map(p => new T.Vector2(p.x, p.z)))));
         const gp = new T.ShapeGeometry(fp);
@@ -242,15 +255,15 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null }
         groupe.add(plafond);
       }
       // #454b : la dalle, SOUS le sol d'un étage (le plus bas des niveaux est posé sur le Sol).
-      if (n.id !== lePlusBas && n.dalle > 0) dalle(f, n.elevation - n.dalle, n.dalle, tremiesPlancher);
+      if (n.id !== lePlusBas && n.dalle > 0 && !cache.sols.has(pieceId)) dalle(f, n.elevation - n.dalle, n.dalle, tremiesPlancher);
       // ET LE DESSUS DE CHAQUE PIÈCE (signalé : une pièce qui dépassait de l'étage du dessus restait à
       // ciel ouvert). Chaque pièce est couverte d'une dalle à sa hauteur sous plafond, de l'épaisseur
       // du plancher du dessus : sous une pièce de l'étage, elle se confond avec son plancher ;
       // ailleurs, c'est un toit plat (en attendant les toits de #458). Le dernier niveau montré par
       // une coupe reste ouvert, pour voir dedans.
-      if (!(coupe && n.id === dernier)) dalle(f, n.elevation + n.hauteur, epaisseurDuDessus(b, n.id), tremiesPlafond);
+      if (!(coupe && n.id === dernier) && !cache.plafonds.has(pieceId)) dalle(f, n.elevation + n.hauteur, epaisseurDuDessus(b, n.id), tremiesPlafond);
     }
-    const murs = b.murs.filter(m => m.niveauId === n.id);
+    const murs = b.murs.filter(m => m.niveauId === n.id && !cache.murs.has(m.id));
     const formes = polygonesDesMurs(murs);
     // #454d : un morceau de mur, FACE PAR FACE. Chaque face regarde une pièce (ses murs) ou l'extérieur
     // (la façade du niveau, ou celle du mur) ; le dessus et le dessous gardent la matière du mur.
