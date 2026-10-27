@@ -41,3 +41,6 @@ a row, and on a row without a file. Add the row when you bake a new texture.
 | `route.png` | Trace: road | Asphalt033 | ambientCG | CC0 1.0 | https://ambientcg.com/view?id=Asphalt033 |
 | `sable.couleur.png` | Ground: sand | Ground033 | ambientCG | CC0 1.0 | https://ambientcg.com/view?id=Ground033 |
 | `terre.couleur.png` | Ground: dirt | Ground103 | ambientCG | CC0 1.0 | https://ambientcg.com/view?id=Ground103 |
+| `toit-ardoise.couleur.png` | Roof: slate | grey_roof_tiles_02 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/grey_roof_tiles_02 |
+| `toit-tuiles-canal.png` | Roof: barrel tiles | RoofingTiles014A | ambientCG | CC0 1.0 | https://ambientcg.com/view?id=RoofingTiles014A |
+| `toit-tuiles-plates.couleur.png` | Roof: old flat tiles | roof_09 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/roof_09 |

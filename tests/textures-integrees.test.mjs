@@ -218,3 +218,19 @@ describe('le marquage au sol d\'une route (demandé, coché par défaut)', () =>
     assert.match(lire('events.js'), /\['color', 'width', 'wallHeight', 'marquage'\]/);
   });
 });
+
+// #458c : trois couvertures de toit livrées (choisies par Valentin dans ses textures téléchargées).
+describe('les couvertures de toit livrées', () => {
+  test('trois, pour le toit seulement, avec leur grain, leur provenance et une taille de tuile', () => {
+    const toits = I.texturesIntegrees().filter(t => t.toit);
+    assert.deepEqual(toits.map(t => t.id), ['toit:tuiles-plates', 'toit:tuiles-canal', 'toit:ardoise']);
+    for (const t of toits) {
+      assert.deepEqual(t.usages, ['toit']);
+      assert.ok(I.PROVENANCE[t.grain] && t.dimensions, t.id);
+      assert.equal(I.valeurChoisie(t, 'toit'), 'int:' + t.id);
+      assert.equal(I.valeurChoisie(t, 'mur-ext'), undefined);
+      assert.equal(I.textureDeLaValeur('int:' + t.id, 'toit').id, t.id);
+    }
+  });
+});
+

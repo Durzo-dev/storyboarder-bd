@@ -794,7 +794,8 @@ function ficheIntegree(t){
   const liste = (lignes) => el('ul', {}, lignes.filter(Boolean).map(x => (typeof x === 'string' ? el('li', { texte: x }) : x)));
   const id = t.choix.sol;
   const usages = id ? utilisationsDe(id, { tomes: S.tomes || [], scenes: S.scenes || [] }) : null;
-  const phrase = !usages ? tr('The original texture of this path type, used by every path that has not been given another.', 'La texture d\'origine de ce type de Tracé, portée par chaque Tracé qui n\'en a pas reçu une autre.')
+  const phrase = t.toit ? tr('A roof covering shipped with the application: choose it in the Roof section of a level.', 'Une couverture de toit livrée avec l\'application : choisissez-la dans la section Toit d\'un niveau.')
+    : !usages ? tr('The original texture of this path type, used by every path that has not been given another.', 'La texture d\'origine de ce type de Tracé, portée par chaque Tracé qui n\'en a pas reçu une autre.')
     : (!usages.tomes && !usages.scenes ? tr('Used nowhere in this Project.', 'Utilisée nulle part dans ce Projet.')
       : tr(`Used ${usages.tomes + usages.scenes} time(s) in this Project.`, `Utilisée ${usages.tomes + usages.scenes} fois dans ce Projet.`));
   // La taille réelle d'une tuile : celle du Tracé, ou pour le Sol le plan divisé par sa répétition

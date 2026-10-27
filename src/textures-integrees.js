@@ -41,6 +41,9 @@ export const PROVENANCE = {
   'route': ['Asphalt033', 'ambientCG', 'https://ambientcg.com/view?id=Asphalt033'],
   'sable.couleur': ['Ground033', 'ambientCG', 'https://ambientcg.com/view?id=Ground033'],
   'terre.couleur': ['Ground103', 'ambientCG', 'https://ambientcg.com/view?id=Ground103'],
+  'toit-ardoise.couleur': ['grey_roof_tiles_02', 'Poly Haven', 'https://polyhaven.com/a/grey_roof_tiles_02'],
+  'toit-tuiles-canal': ['RoofingTiles014A', 'ambientCG', 'https://ambientcg.com/view?id=RoofingTiles014A'],
+  'toit-tuiles-plates.couleur': ['roof_09', 'Poly Haven', 'https://polyhaven.com/a/roof_09'],
 };
 
 /** La matière (texture-matieres.js) de chaque texture livrée, pour le filtre « Toutes les matières ». */
@@ -77,6 +80,17 @@ const USAGES_BATIMENT_LIVREES = {
   'trace:cloture': ['mur-ext', 'mur-int', 'plafond'],
 };
 
+/**
+ * #458c : LES COUVERTURES DE TOIT LIVRÉES (choisies par Valentin parmi ses textures téléchargées,
+ * grains repris tels qu'ils avaient été cuits). Usage `toit` seulement ; `dimensions` : la taille
+ * réelle d'une tuile du grain, en mètres (celle de la texture d'origine).
+ */
+export const TOITS_LIVRES = [
+  { id: 'tuiles-plates', grain: 'toit-tuiles-plates.couleur', nom: 'Tuiles plates anciennes', nomEn: 'Old flat tiles', teinte: '#857360', dimensions: [4, 4] },
+  { id: 'tuiles-canal', grain: 'toit-tuiles-canal', nom: 'Tuiles canal', nomEn: 'Barrel tiles', teinte: '#8E5A42', dimensions: [2.9, 2.9] },
+  { id: 'ardoise', grain: 'toit-ardoise.couleur', nom: 'Ardoise', nomEn: 'Slate', teinte: '#787A78', dimensions: [1.5, 1.5] },
+];
+
 /** La couleur d'un bâtiment sans revêtement, par usage (celle d'avant #446e : rien ne change à l'écran). */
 export const COULEURS_BATIMENT = { 'mur-ext': '#d9d4c7', 'mur-int': '#d9d4c7', 'sol-int': '#a89c86', plafond: '#d9d4c7', toit: '#8e4f3c' };
 
@@ -106,12 +120,17 @@ export function texturesIntegrees(){
     usages: [...(type === 'barriere' ? [] : [type]), ...(USAGES_BATIMENT_LIVREES[`trace:${type}`] || [])],
     dessinee: false, provenance: provenance(t.grain), choix: { trace: type },
   }));
+  const toits = TOITS_LIVRES.map(x => ({
+    cle: `${SOURCE}:toit:${x.id}`, source: SOURCE, id: `toit:${x.id}`, integree: true, toit: true,
+    nom: x.nom, nomEn: x.nomEn, grain: x.grain, teinte: x.teinte, dimensions: x.dimensions,
+    matieres: ['tuiles'], usages: ['toit'], dessinee: false, provenance: provenance(x.grain), choix: {},
+  }));
   // « Sans texture » : la couleur unie d'un bâtiment, celle d'avant les revêtements. Proposée
   // seulement pour choisir (textures-store-ui.js la cache ailleurs).
   const uni = { cle: `${SOURCE}:uni`, source: SOURCE, id: 'uni', integree: true, uni: true,
     nom: 'Sans texture', nomEn: 'No texture', grain: null, teinte: COULEURS_BATIMENT['mur-ext'],
     matieres: [], usages: USAGES_BATIMENT.slice(), dessinee: true, provenance: null, choix: {} };
-  return [...sol, ...traces, uni];
+  return [...sol, ...traces, ...toits, uni];
 }
 
 /**
