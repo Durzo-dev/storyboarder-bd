@@ -132,3 +132,12 @@ test('#459a : la section « Affichage du bâtiment » suit l\'Élément choisi, 
   assert.match(sb, /_snapshot\(\);\n\s*fixerCoupe\(el, choix\.value \|\| null\);/);
   assert.match(readFileSync(new URL('../src/index.html', import.meta.url), 'utf8'), /id="sideBatimentSection"/);
 });
+
+test('#459a, retours : la liste ne se refait pas sous la souris, et le menu remonte vers la section', async () => {
+  const { readFileSync } = await import('node:fs');
+  const sb = readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8');
+  assert.match(sb, /if \(document\.activeElement !== choix\) \{\n\s*if \(choix\.dataset\.cle !== cle\)/, 'refaite seulement si elle a changé, et jamais ouverte');
+  assert.match(sb, /document\.activeElement !== document\.getElementById\('sideBatimentCoupe'\)\) sideBatimentSection\.style\.display = 'none'/);
+  assert.match(sb, /const nouveau = _batimentPrecedent !== el\.id;/);
+  assert.match(sb, /sideBatimentSection\.scrollIntoView\(\{ block: 'nearest', behavior: 'smooth' \}\)/);
+});

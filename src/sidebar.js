@@ -1165,27 +1165,51 @@ export function renderSidePagePanels(page){
  * quel niveau SA Case le montre (« Tout le bâtiment », puis ses niveaux du plus haut au plus bas).
  * Cachée pour tout le reste.
  */
+// Le bâtiment que la section montrait au dessin PRÉCÉDENT, et celui de ce dessin.
+let _batimentPrecedent = null, _batimentDeLaSection = null;
 function majSectionAffichageBatiment(el){
   if (!sideBatimentSection) return;
   if (!estUnBatimentPlace(el)) { sideBatimentSection.style.display = 'none'; return; }
   document.getElementById('sideBatimentTitle').textContent = tr('Building display', 'Affichage du bâtiment');
   document.getElementById('sideBatimentCoupeLabel').textContent = tr('Show up to', 'Montrer jusqu\'à');
   const choix = document.getElementById('sideBatimentCoupe');
+  // ⚠️ LA LISTE N'EST REFAITE QUE SI ELLE A CHANGÉ (signalé : elle se refermait aussitôt ouverte).
+  // Le menu de droite est rempli à CHAQUE dessin (drawCurrentPage → updateSidePanel) : remplacer ses
+  // options referme une liste déroulante ouverte. Ouverte (elle a le focus), on n'y touche pas.
   const niveaux = niveauxTries(el.batiment).reverse();
   const options = [['', tr('The whole building', 'Tout le bâtiment')], ...niveaux.map(n => [n.id, n.nom])];
-  choix.replaceChildren(...options.map(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; return o; }));
-  choix.value = niveauDeCoupe(el) || '';
+  const cle = JSON.stringify(options);
+  if (document.activeElement !== choix) {
+    if (choix.dataset.cle !== cle) {
+      choix.replaceChildren(...options.map(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; return o; }));
+      choix.dataset.cle = cle;
+    }
+    const valeur = niveauDeCoupe(el) || '';
+    if (choix.value !== valeur) choix.value = valeur;
+  }
   choix.onchange = () => {
     _snapshot();
     fixerCoupe(el, choix.value || null);
+    choix.blur();
     drawCurrentPage();
   };
+  const nouveau = _batimentPrecedent !== el.id;
   sideBatimentSection.style.display = 'block';
+  _batimentDeLaSection = el.id;
+  // Elle apparaît SOUS la liste des Éléments, souvent hors de vue (signalé) : le menu remonte jusqu'à
+  // elle, une fois, quand on choisit le bâtiment, pas à chaque dessin.
+  if (nouveau && sideBatimentSection.scrollIntoView) {
+    requestAnimationFrame(() => sideBatimentSection.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+  }
 }
 
 function updateSidePanelImpl(){
   const page = currentPage();
-  majSectionAffichageBatiment(null);
+  // Cachée d'emblée, remontrée plus bas si l'Élément choisi est un bâtiment placé (sans oublier
+  // lequel elle montrait : la remonter vers elle ne se fait qu'au CHANGEMENT de bâtiment).
+  // Pas pendant que sa liste est ouverte : la cacher, même un instant, la refermerait.
+  if (sideBatimentSection && document.activeElement !== document.getElementById('sideBatimentCoupe')) sideBatimentSection.style.display = 'none';
+  _batimentPrecedent = _batimentDeLaSection; _batimentDeLaSection = null;
   // Le cadrage d'une Planche importée n'appartient qu'au menu Planche, qui la remontre plus bas.
   sidePageCadrageSection.style.display = 'none';
   sidePageEditionSection.style.display = 'none';
