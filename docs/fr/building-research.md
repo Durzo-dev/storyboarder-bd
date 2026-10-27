@@ -536,7 +536,8 @@ place : rien ne bouge à l'écran.
   (`ajouterContour`) ; un mur, un escalier ou une trémie dans l'emprise : erreur, rien ne change. Son
   sol (`estUneTerrasse`) : sur une pièce, une terrasse ; sur une cour ou au rez-de-chaussée, aucun. Le
   toit fait le tour des cours (squelette droit à trous : un trou se soude au front qui l'entoure ;
-  triangulation à ponts pour un pan unique), et l'acrotère ou le garde-corps aussi.
+  triangulation à ponts pour un pan unique), et l'acrotère ou le garde-corps aussi. Autour d'une cour,
+  un deux-pans n'a pas de pignon (chaque aile s'égoutte des deux côtés).
   Reste **#458c** : les Éléments sur le toit, des toitures livrées avec l'application.
 - **#459** la vue en coupe par Case. **#459a FAIT** (27 octobre 2026) : choisir un bâtiment placé
   dans « Éléments » montre la section « Affichage du bâtiment » : « Montrer jusqu'à : Tout le

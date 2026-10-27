@@ -48,9 +48,14 @@ function segmentDedans(a, b, poly){
   return false;
 }
 
-/** Deux polygones se recouvrent-ils (au-delà de leurs bords) ? */
+/**
+ * Deux polygones se recouvrent-ils (au-delà de leurs bords) ? Deux formes IDENTIQUES aussi (signalé :
+ * un étage dupliqué a la même pièce au-dessus, sommet pour sommet, et rien n'était trouvé) : un point
+ * intérieur de l'une est dans l'autre.
+ */
 function serecouvrent(A, B){
   if (A.some(p => dedansStrict(p, B)) || B.some(p => dedansStrict(p, A))) return true;
+  if (dedansStrict(pointInterieur(A), B) || dedansStrict(pointInterieur(B), A)) return true;
   return A.some((a, i) => segmentDedans(a, A[(i + 1) % A.length], B));
 }
 

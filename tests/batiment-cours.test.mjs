@@ -85,3 +85,18 @@ describe('le sol et le toit d\'une cour', () => {
     }
   });
 });
+
+test('signalé : un étage DUPLIQUÉ (la même pièce, sommet pour sommet, au-dessus) : la cour y monte', async () => {
+  const { dupliquerNiveau } = await import('../src/batiment-niveaux.js');
+  const b = creerBatiment('M', fr);
+  for (const [a, c] of [[[0, 0], [3, 6]], [[3, 0], [6, 2]], [[3, 2], [6, 6]], [[6, 0], [9, 6]], [[0, 6], [9, 9]]]) {
+    ajouterRectangle(b, 'n0', { x: a[0], z: a[1] }, { x: c[0], z: c[1] }, 0.2);
+    actualiserPieces(b, 'n0', fr);
+  }
+  const n1 = dupliquerNiveau(b, 'n0', fr);
+  const centre = pieceSous(b, 'n0', { x: 4.5, z: 4 });
+  supprimerPiece(b, 'n0', centre, supprimerMur);
+  assert.deepEqual(etagesAuDessus(b, 'n0', empriseDeLaPiece(b, 'n0', centre)), [n1.id]);
+  assert.deepEqual(prolongerLaCour(b, 'n0', centre, 0.2, fr), { etages: [n1.id] });
+  assert.equal(b.pieces.find(p => p.id === pieceSous(b, n1.id, { x: 4.5, z: 4 })).vide, true);
+});

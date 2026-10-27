@@ -418,18 +418,7 @@ export function pignonsDeLAile(ext, sens = 0, adosses = []){
   if (!bouts.length) return new Set();
   const min = Math.min(...bouts.map(b => b.L));
   const courts = bouts.filter(b => b.L <= min * 1.25 + 1e-6), longs = bouts.filter(b => b.L > min * 1.25 + 1e-6);
-  let choisis = (sens % 2 && longs.length) ? longs : courts;
-  // Une forme CONVEXE dont tous les bouts se valent (un carré autour d'une cour, #458c) : une seule
-  // paire de côtés parallèles fait les pignons, au choix de `sens`.
-  if (estConvexe(ext)) {
-    const groupes = [];
-    for (const b of choisis) {
-      const d = dir(b.i);
-      const g = groupes.find(x => Math.abs(x.d.x * d.z - x.d.z * d.x) < 1e-6);
-      if (g) g.l.push(b); else groupes.push({ d, l: [b] });
-    }
-    if (groupes.length > 1) choisis = groupes[sens % groupes.length].l;
-  }
+  const choisis = (sens % 2 && longs.length) ? longs : courts;
   return new Set(choisis.map(b => b.i));
 }
 
@@ -441,7 +430,9 @@ export function pignonsDeLAile(ext, sens = 0, adosses = []){
  */
 export function geometrieSquelette(ext, reglages, base, { adosses = [], hautMax = Infinity, trous = [] } = {}){
   const t = toitDuNiveau({ toit: reglages });
-  const gables = t.type === 'deux-pans' ? pignonsDeLAile(ext, t.sens, adosses) : new Set();
+  // Autour d'une COUR (#458c), pas de pignon (signalé : le rendu) : un côté en pignon couperait l'aile
+  // qui longe la cour ; chaque aile s'égoutte des deux côtés, comme un quatre-pans.
+  const gables = t.type === 'deux-pans' && !trous.length ? pignonsDeLAile(ext, t.sens, adosses) : new Set();
   const poids = ext.map((_, i) => (adosses[i] || gables.has(i) ? 0 : 1));
   if (!poids.some(Boolean) && !trous.length) return null;
   const d = t.debord;
