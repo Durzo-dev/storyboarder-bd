@@ -508,7 +508,7 @@ function remplirToit(){
       tourner.onclick = () => changer({ sens: (t.sens + 1) % (t.type === 'deux-pans' ? 2 : 4) });
       elements.push(tourner);
     }
-    // Une forme en L, en T, en U : pas encore de toit en pente (#458b), elle reste plate.
+    // Un squelette droit qui n'aboutit pas (#458b) : la forme reste plate, et c'est dit.
     if (toitsDuNiveau(E.batiment, n.id).some(x => x.sousUnEtage)) {
       const info = document.createElement('p'); info.className = 'batiment-info';
       info.textContent = tr('The level above covers only part of a room: that room stays flat. Make its walls follow the level above.',
@@ -517,8 +517,8 @@ function remplirToit(){
     }
     if (toitsDuNiveau(E.batiment, n.id).some(x => x.enAttente)) {
       const info = document.createElement('p'); info.className = 'batiment-info';
-      info.textContent = tr('An L, T or U shape stays flat for now: sloped roofs on such shapes are coming.',
-        'Une forme en L, en T ou en U reste plate pour l\'instant : le toit en pente y arrive bientôt.');
+      info.textContent = tr('This shape could not take a sloped roof: it stays flat. Try another type.',
+        'Cette forme n\'a pas pu recevoir ce toit en pente : elle reste plate. Essayez un autre type.');
       elements.push(info);
     }
   }

@@ -328,11 +328,15 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, 
 }
 
 
-/** Un polygone convexe 3D en éventail : positions (et UV) dans les tableaux, les deux faces si `deux`. */
-function eventail(pts, uv, pos, uvs, deux = false){
-  for (let i = 1; i + 1 < pts.length; i++) {
-    for (const j of [0, i, i + 1]) { pos.push(pts[j].x, pts[j].y, pts[j].z); uvs.push(...(uv ? uv[j] : [0, 0])); }
-    if (deux) for (const j of [0, i + 1, i]) { pos.push(pts[j].x, pts[j].y, pts[j].z); uvs.push(...(uv ? uv[j] : [0, 0])); }
+/**
+ * Un polygone 3D en triangles : positions (et UV) dans les tableaux, les deux faces si `deux`.
+ * `triangles` : sa triangulation (#458b, une face non convexe) ; absente, un éventail (convexe).
+ */
+function eventail(pts, uv, pos, uvs, deux = false, triangles = null){
+  const tris = triangles || pts.slice(2).map((_, i) => [0, i + 1, i + 2]);
+  for (const [a, b, c] of tris) {
+    for (const j of [a, b, c]) { pos.push(pts[j].x, pts[j].y, pts[j].z); uvs.push(...(uv ? uv[j] : [0, 0])); }
+    if (deux) for (const j of [a, c, b]) { pos.push(pts[j].x, pts[j].y, pts[j].z); uvs.push(...(uv ? uv[j] : [0, 0])); }
   }
 }
 function maillage(T, pos, uvs, mat){
@@ -356,9 +360,10 @@ function construireToits(T, b, n, mats, groupe){
       const matToit = mats.revetement ? mats.revetement(t.reglages.revetement, 'toit') : mats.mur;
       const pos = [], uvs = [];
       g.pans.forEach(p => {
-        eventail(p.points, p.uv, pos, uvs);
-        // Le dessous, à l'épaisseur du toit, tourné vers le bas.
-        eventail(p.points.map(q => ({ ...q, y: q.y - EPAISSEUR_TOIT })).reverse(), p.uv.slice().reverse(), pos, uvs);
+        eventail(p.points, p.uv, pos, uvs, false, p.triangles);
+        // Le dessous, à l'épaisseur du toit, tourné vers le bas (les triangles retournés).
+        const tris = p.triangles ? p.triangles.map(([a, b, c]) => [a, c, b]) : null;
+        eventail(p.points.map(q => ({ ...q, y: q.y - EPAISSEUR_TOIT })), p.uv, pos, uvs, false, tris || p.points.slice(2).map((_, i) => [0, i + 2, i + 1]));
       });
       // La rive : le pourtour débordant, de l'épaisseur du toit, en SUIVANT le toit (montée et descente
       // d'un pignon) ; pas contre un mur de l'étage (elle le traverserait, ou passerait au travers de son
@@ -377,7 +382,7 @@ function construireToits(T, b, n, mats, groupe){
       g.pignons.forEach(p => {
         const a = p.points[0], c = p.points[1];
         const L = Math.hypot(c.x - a.x, c.z - a.z) || 1, d = { x: (c.x - a.x) / L, z: (c.z - a.z) / L };
-        eventail(p.points, p.points.map(q => [q.x * d.x + q.z * d.z, q.y]), pp, pu, true);
+        eventail(p.points, p.points.map(q => [q.x * d.x + q.z * d.z, q.y]), pp, pu, true, p.triangles || null);
       });
       if (pp.length) groupe.add(maillage(T, pp, pu, facade));
     } else if (t.reglages.bordure === 'acrotere') {

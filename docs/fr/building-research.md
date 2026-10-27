@@ -520,8 +520,15 @@ place : rien ne bouge à l'écran.
   pignon ; un appentis monte vers ce mur, un deux-pans y amène son faîtage de face (le pignon contre
   la maison), comme une aile ou un appentis réels (les Sims, Chief Architect) ; et il reste sous
   l'égout de l'étage (sa pente est réduite au besoin).
-  Reste **#458b** : les formes à angle rentrant (L, T, U), par le squelette droit ; **#458c** : les
-  Éléments sur le toit, des toitures livrées avec l'application.
+  **#458b FAIT** (27 octobre 2026, `src/batiment-squelette.js`) : les formes à angle rentrant (L, T, U,
+  quelconques) par le SQUELETTE DROIT PONDÉRÉ (Aichholzer et Aurenhammer) : chaque côté avance vers
+  l'intérieur à son poids, les sommets suivent les bissectrices ; deux événements (un côté se réduit
+  à rien, un sommet rentrant touche un côté d'en face), plus la rencontre de deux sommets rentrants
+  et le retrait des « pics » (une aile refermée), fréquents sur les plans orthogonaux. Quatre pans :
+  tous les côtés libres à 1 ; deux pans : les bouts des ailes à 0 (pignons) ; un côté adossé à 0.
+  Un pan unique garde son plan (exact sur toute forme). Vérifié sur des formes tirées au hasard : les
+  pans recouvrent exactement la forme. Un squelette qui n'aboutit pas laisse la forme plate (dit).
+  Reste **#458c** : les Éléments sur le toit, des toitures livrées avec l'application.
 - **#459** la vue en coupe par Case. **#459a FAIT** (27 octobre 2026) : choisir un bâtiment placé
   dans « Éléments » montre la section « Affichage du bâtiment » : « Montrer jusqu'à : Tout le
   bâtiment / <niveau> ». Enregistré sur l'Élément placé (`affichage.jusquA`, champ AJOUTÉ), donc par

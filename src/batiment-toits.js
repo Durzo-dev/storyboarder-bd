@@ -27,6 +27,7 @@
 import { niveauxTries, niveauDessus, hauteurDesMursDuNiveau } from './batiment-niveaux.js';
 import { formesDesPieces, dansLaFace, pointDansPolygone } from './batiment-pieces.js';
 import { TOLERANCE_SOMMET } from './batiment-geometrie.js';
+import { squeletteDroit, trianguler } from './batiment-squelette.js';
 
 export const TYPES_TOIT = ['plat', 'un-pan', 'deux-pans', 'quatre-pans'];
 export const BORDURES_TOIT = ['aucune', 'acrotere', 'garde-corps'];
@@ -320,6 +321,8 @@ export function geometrieDuToit(ext, reglages, base, { adosses = [], hautMax = I
     pans.push({
       points: poly.map(p => ({ x: p.x, y: base + hauteur(pl, p), z: p.z })),
       uv: poly.map(p => [le.x * p.x + le.z * p.z, (pl.n.x * p.x + pl.n.z * p.z - pl.c) / cos]),
+      // Un pan unique sur une forme à angle rentrant n'est pas convexe : triangulé, pas en éventail.
+      triangles: trianguler(poly),
     });
   });
   // Les pignons : sur chaque côté LIBRE des murs, ce qui sépare le dessus des murs du dessous du toit
@@ -359,6 +362,90 @@ function serecouvrent(A, B){
 }
 
 /**
+ * Les PIGNONS d'un deux-pans sur une forme quelconque (#458b) : les bouts des ailes. Un côté est un
+ * bout d'aile quand ses deux angles sont saillants et que ses deux voisins partent en sens opposés
+ * (un « U » vu de dessus). Parmi eux, les plus courts (le faîtage suit la longueur des ailes) ; `sens`
+ * impair prend les autres. PURE.
+ */
+export function pignonsDeLAile(ext, sens = 0, adosses = []){
+  const n = ext.length;
+  const dir = (i) => { const a = ext[i], c = ext[(i + 1) % n]; const L = Math.hypot(c.x - a.x, c.z - a.z) || 1; return { L, x: (c.x - a.x) / L, z: (c.z - a.z) / L }; };
+  const saillant = (i) => { const d0 = dir((i + n - 1) % n), d1 = dir(i); return d0.x * d1.z - d0.z * d1.x > 1e-9; };
+  const bouts = [];
+  for (let i = 0; i < n; i++) {
+    if (adosses[i]) continue;
+    const p = dir((i + n - 1) % n), q = dir((i + 1) % n);
+    if (saillant(i) && saillant((i + 1) % n) && p.x * q.x + p.z * q.z < -0.99) bouts.push({ i, L: dir(i).L });
+  }
+  if (!bouts.length) return new Set();
+  const min = Math.min(...bouts.map(b => b.L));
+  const courts = bouts.filter(b => b.L <= min * 1.25 + 1e-6), longs = bouts.filter(b => b.L > min * 1.25 + 1e-6);
+  return new Set(((sens % 2 && longs.length) ? longs : courts).map(b => b.i));
+}
+
+/**
+ * Le toit d'une forme À ANGLE RENTRANT (#458b), en L, en T, en U… : le squelette droit pondéré du
+ * contour débordant. Quatre pans : tous les côtés libres montent (poids 1). Deux pans : les bouts
+ * des ailes restent droits (poids 0) et deviennent des pignons. Un côté adossé à l'étage ne bouge pas
+ * non plus. Même sortie que geometrieDuToit ; null si le squelette n'aboutit pas. PURE.
+ */
+export function geometrieSquelette(ext, reglages, base, { adosses = [], hautMax = Infinity } = {}){
+  const t = toitDuNiveau({ toit: reglages });
+  const gables = t.type === 'deux-pans' ? pignonsDeLAile(ext, t.sens, adosses) : new Set();
+  const poids = ext.map((_, i) => (adosses[i] || gables.has(i) ? 0 : 1));
+  if (!poids.some(Boolean)) return null;
+  const d = t.debord;
+  const deborde = d > 0 ? decaler(ext, ext.map((_, i) => (adosses[i] ? 0 : d))) : ext;
+  const sq = squeletteDroit(deborde, poids);
+  if (!sq) return null;
+  let k = Math.tan(t.pente * Math.PI / 180);
+  const tMax = Math.max(...sq.faces.flatMap(f => f.points.map(p => p.t)));
+  // Le plus haut au-dessus de `base` : (tMax − débord) · k ; réduit sous l'égout de l'étage au besoin.
+  if ((tMax - d) * k > hautMax && hautMax > 0.1 && tMax - d > 1e-6) k = hautMax / (tMax - d);
+  const y = (p) => base + (p.t - d) * k;
+  const cos = Math.cos(Math.atan(k));
+  const pans = [], pignons = [], rives = [];
+  sq.faces.forEach(f => {
+    const i = f.cote;
+    const a = deborde[i], c = deborde[(i + 1) % deborde.length];
+    const L = Math.hypot(c.x - a.x, c.z - a.z) || 1, dx = (c.x - a.x) / L, dz = (c.z - a.z) / L;
+    if (poids[i] > 0) {
+      pans.push({
+        points: f.points.map(p => ({ x: p.x, y: y(p), z: p.z })),
+        uv: f.points.map(p => [p.x * dx + p.z * dz, p.t / cos]),
+        triangles: trianguler(f.points),
+      });
+      rives.push({ adosse: false, points: [{ x: a.x, y: y({ t: 0 }), z: a.z }, { x: c.x, y: y({ t: 0 }), z: c.z }] });
+      return;
+    }
+    if (adosses[i]) { rives.push({ adosse: true, points: [] }); return; }
+    // Un pignon : le profil du toit au-dessus du bout de l'aile, ramené du débord sur la face du mur,
+    // et coupé au dessus des murs.
+    const chaine = [f.points[1], ...f.points.slice(2), f.points[0]];
+    rives.push({ adosse: false, points: chaine.map(p => ({ x: p.x, y: y(p), z: p.z })) });
+    const ext0 = ext[i];
+    const nx = -dz, nz = dx;   // vers l'intérieur
+    const decal = (ext0.x - a.x) * nx + (ext0.z - a.z) * nz;
+    const profil = f.points.map(p => ({ u: (p.x - a.x) * dx + (p.z - a.z) * dz, h: y(p) }));
+    // Le polygone du pignon dans le plan vertical (u le long du mur, h la hauteur), coupé à h ≥ base.
+    const coupe = [];
+    for (let j = 0; j < profil.length; j++) {
+      const P = profil[j], Q = profil[(j + 1) % profil.length];
+      if (P.h >= base - 1e-9) coupe.push(P);
+      if ((P.h - base) * (Q.h - base) < -1e-12) { const s = (base - P.h) / (Q.h - P.h); coupe.push({ u: P.u + (Q.u - P.u) * s, h: base }); }
+    }
+    if (coupe.length < 3) return;
+    const vers3D = (q) => ({ x: a.x + dx * q.u + nx * decal, y: q.h, z: a.z + dz * q.u + nz * decal });
+    pignons.push({ points: coupe.map(vers3D), triangles: trianguler(coupe.map(q => ({ x: q.u, z: q.h }))) });
+  });
+  const bord = deborde.map(p => ({ x: p.x, y: y({ t: 0 }), z: p.z }));
+  const haut = Math.max(base, ...pans.flatMap(p => p.points.map(q => q.y)));
+  // Les rives dans l'ordre des côtés, comme geometrieDuToit.
+  const parCote = new Map(sq.faces.map((f, j) => [f.cote, rives[j]]));
+  return { pans, pignons, bord, rives: ext.map((_, i) => parCote.get(i) || { adosse: true, points: [] }), bordAdosses: ext.map((_, i) => !!adosses[i]), haut };
+}
+
+/**
  * Les toits d'un niveau, prêts à dessiner : `[{ contour, adosses, ext, reglages, base, convexe,
  * enAttente, geometrie }]`. `ext` : le contour poussé à la face extérieure des murs, sauf contre
  * l'étage du dessus, où il s'arrête à la face du mur de l'étage (`adosses`). `geometrie` : celle d'un
@@ -389,10 +476,16 @@ export function toitsDuNiveau(b, niveauId){
     // Un étage posé EN PARTIE sur la forme (sans suivre ses murs) : un toit en pente le traverserait.
     // Elle reste plate (signalé : les raccords), et `sousUnEtage` le dit.
     const sousUnEtage = enPente && formesDessus.some(f => serecouvrent(contour, f));
-    const geometrie = enPente && convexe && !sousUnEtage
-      ? geometrieDuToit(ext, reglages, base, { adosses, hautMax: adosses.some(Boolean) ? sousLEgout : Infinity })
-      : null;
-    return { contour, adosses, ext, reglages, base, convexe, enAttente: enPente && !convexe && !sousUnEtage, sousUnEtage, geometrie };
+    // Convexe, ou un pan unique : les plans (exacts) ; sinon le squelette droit (#458b). S'il n'aboutit
+    // pas, le toit reste plat plutôt que faux, et `enAttente` le dit.
+    const options = { adosses, hautMax: adosses.some(Boolean) ? sousLEgout : Infinity };
+    let geometrie = null;
+    if (enPente && !sousUnEtage) {
+      geometrie = (convexe || reglages.type === 'un-pan')
+        ? geometrieDuToit(ext, reglages, base, options)
+        : geometrieSquelette(ext, reglages, base, options);
+    }
+    return { contour, adosses, ext, reglages, base, convexe, enAttente: enPente && !sousUnEtage && !geometrie, sousUnEtage, geometrie };
   });
 }
 

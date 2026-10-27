@@ -493,8 +493,15 @@ moves on screen.
   level LEANS against the floor above: the roof stops at that floor's wall face, with no overhang, no
   verge, no eave and no gable; a lean-to rises towards that wall, a gable roof brings its ridge
   head-on to it (the gable against the house), like a real wing or lean-to (The Sims, Chief
-  Architect); and it stays below the upper floor's eave (its slope is reduced if needed). Left: **#458b**, shapes with a re-entrant corner (L, T, U), through the
-  straight skeleton; **#458c**, Elements on the roof, roof coverings shipped with the application.
+  Architect); and it stays below the upper floor's eave (its slope is reduced if needed). **#458b DONE** (27 October 2026, `src/batiment-squelette.js`): shapes with
+  a re-entrant corner (L, T, U, any) through the WEIGHTED STRAIGHT SKELETON (Aichholzer and
+  Aurenhammer): each side moves inwards at its weight, vertices follow the bisectors; two events (a
+  side shrinks to nothing, a reflex vertex hits an opposite side), plus two reflex vertices meeting
+  and "spike" removal (a closed wing), common on orthogonal plans. Hip: all free sides at 1; gable:
+  wing ends at 0 (gables); a leaning side at 0. A single pitch keeps its plane (exact on any shape).
+  Checked on random shapes: the slopes cover the shape exactly. A skeleton that fails leaves the shape
+  flat (and says so). Left: **#458c**, Elements on the roof, roof coverings shipped with the
+  application.
 - **#459** the cutaway view per Panel. **#459a DONE** (27 October 2026): picking a placed building in
   "Elements" shows the "Building display" section: "Show up to: The whole building / <level>". Stored
   on the placed Element (`affichage.jusquA`, an ADDED field), so per Panel. The cut rig carries the

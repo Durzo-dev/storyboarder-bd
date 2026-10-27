@@ -97,7 +97,7 @@ describe('les pans', () => {
 });
 
 describe('sur un bâtiment', () => {
-  test('toitsDuNiveau : posé sur le dessus des murs ; une forme en L attend #458b', () => {
+  test('toitsDuNiveau : posé sur le dessus des murs ; une forme en L a son toit (squelette droit, #458b)', () => {
     const b = maison();
     fixerToit(b, 'n0', { type: 'deux-pans' });
     const [t] = toitsDuNiveau(b, 'n0');
@@ -109,8 +109,9 @@ describe('sur un bâtiment', () => {
     actualiserPieces(l, 'n0', fr);
     fixerToit(l, 'n0', { type: 'quatre-pans' });
     const [tl] = toitsDuNiveau(l, 'n0');
-    assert.equal(tl.enAttente, true);
-    assert.equal(tl.geometrie, null);
+    assert.equal(tl.convexe, false);
+    assert.equal(tl.enAttente, false);
+    assert.equal(tl.geometrie.pans.length, 6, 'un pan par côté du L');
   });
   test('la hauteur du bâtiment compte le toit (les bâtiments placés gardent leur taille)', () => {
     const b = maison();
@@ -200,4 +201,50 @@ test('la rive d\'un pignon suit le toit jusqu\'au faîtage (signalé : elle trav
   egouts.forEach(r => proche(r.points[0].y, r.points[1].y, 1e-9));
   const src = readFileSync(new URL('../src/batiment-3d.js', import.meta.url), 'utf8');
   assert.match(src, /g\.rives\.forEach\(r => \{\n\s*if \(r\.adosse\) return;/);
+});
+
+describe('#458b : le squelette droit, pour les formes en L, en T, en U', async () => {
+  const { squeletteDroit, trianguler } = await import('../src/batiment-squelette.js');
+  const { geometrieSquelette, pignonsDeLAile } = await import('../src/batiment-toits.js');
+  const aire = (p) => { let s = 0; p.forEach((a, i) => { const b = p[(i + 1) % p.length]; s += a.x * b.z - b.x * a.z; }); return s / 2; };
+  const L = [{ x: 0, z: 0 }, { x: 6, z: 0 }, { x: 6, z: 3 }, { x: 3, z: 3 }, { x: 3, z: 6 }, { x: 0, z: 6 }];
+  const plus = [{ x: 3, z: 3 }, { x: 12, z: 3 }, { x: 12, z: 9 }, { x: 9, z: 9 }, { x: 9, z: 12 }, { x: 6, z: 12 }, { x: 6, z: 9 }, { x: 3, z: 9 }];
+  const croix = [{ x: 0, z: 0 }, { x: 3, z: 0 }, { x: 3, z: 6 }, { x: 6, z: 6 }, { x: 6, z: 0 }, { x: 9, z: 0 }, { x: 9, z: 3 }, { x: 12, z: 3 }, { x: 12, z: 9 }, { x: 9, z: 9 }, { x: 9, z: 12 }, { x: 0, z: 12 }];
+  test('un pan par côté, et les pans recouvrent exactement la forme (L, aile, rencontre de deux angles rentrants)', () => {
+    for (const f of [L, plus, croix]) {
+      const r = squeletteDroit(f, f.map(() => 1));
+      assert.ok(r, 'le squelette aboutit');
+      assert.equal(r.faces.length, f.length);
+      proche(r.faces.reduce((s, x) => s + Math.abs(aire(x.points)), 0), aire(f), 1e-6);
+    }
+  });
+  test('quatre pans sur un L : le faîtage à mi-largeur des ailes', () => {
+    const r = squeletteDroit(L, L.map(() => 1));
+    proche(Math.max(...r.faces.flatMap(f => f.points.map(p => p.t))), 1.5, 1e-9);
+  });
+  test('deux pans sur un L : les bouts des ailes sont des pignons', () => {
+    assert.deepEqual([...pignonsDeLAile(L)].sort(), [1, 4]);
+    const g = geometrieSquelette(L, { type: 'deux-pans', pente: 45, debord: 0 }, 3);
+    assert.equal(g.pans.length, 4);
+    assert.equal(g.pignons.length, 2);
+    proche(g.haut, 4.5, 1e-9);
+  });
+  test('trianguler : un polygone en L donne quatre triangles', () => {
+    assert.equal(trianguler(L).length, 4);
+  });
+  test('sur un bâtiment : un rez-de-chaussée autour d\'un étage posé dans un coin a son toit, adossé', () => {
+    const b = creerBatiment('M', fr);
+    for (const [x0, z0] of [[0, 0], [5, 0], [0, 4], [5, 4]]) ajouterRectangle(b, 'n0', { x: x0, z: z0 }, { x: x0 + 5, z: z0 + 4 }, 0.2);
+    actualiserPieces(b, 'n0', fr);
+    const n1 = ajouterEtage(b, fr);
+    ajouterRectangle(b, n1.id, { x: 0, z: 0 }, { x: 5, z: 4 }, 0.2);
+    actualiserPieces(b, n1.id, fr);
+    for (const type of ['un-pan', 'deux-pans', 'quatre-pans']) {
+      fixerToit(b, 'n0', { type });
+      const [t] = toitsDuNiveau(b, 'n0');
+      assert.equal(t.convexe, false);
+      assert.ok(t.geometrie, type);
+      assert.equal(t.adosses.filter(Boolean).length, 2);
+    }
+  });
 });
