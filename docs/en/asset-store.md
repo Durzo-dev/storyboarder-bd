@@ -169,8 +169,10 @@ and a failure to read them does not stop the export.
 - **#444d** Downloading: direct GLB, or glTF zip converted to GLB, progress, size.
 - **#444e** Attributions. Done.
 - **#444f** Credits in exports. Done.
-- **#444g** Placing a model straight from its detail view.
-- **#444h** Finishing touches: remembered filters, manual, README, translations.
+- **#444g** Placing a model straight from its detail view. Dropped (the “choose” mode covers it: see
+  [store-guide.md](store-guide.md)).
+- **#444h** Finishing touches: manual, README, translations, documented simulation. Done (remembered
+  filters dropped: the store starts afresh at each launch, as requested).
 - **#445** Poly Haven: search and tabs, then downloading. Done.
 - **#446** the texture store.
 
@@ -229,7 +231,7 @@ responses, and everything else only knows the common format (`type: 'texture'`).
 - **ambientCG** (`store-textures-ambientcg.js`): `api/v2/full_json?type=Material`, server-side pages
   (`limit`, `offset`, `q`, `category` as a list), 2,037 materials; one JPG zip per resolution (1K ≈ 7
   to 10 MB). The real size, in cm, is often missing (0).
-- **cc0-textures.com** (#446f, later): an aggregator with no API, serving 4K zips only. It repeats
+- **cc0-textures.com** (#446f, DROPPED on 27 October 2026: not useful): an aggregator with no API, serving 4K zips only. It repeats
   Poly Haven and ambientCG under their former names; only ShareTextures is new there. Planned as a
   third source, limited to ShareTextures, scaled down to 1k on import.
 

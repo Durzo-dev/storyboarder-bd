@@ -48,6 +48,14 @@ repérée ; un clic sur une carte l'applique et referme, en la téléchargeant d
 carte « Importer » ni fiche dans ce mode. Ce que l'application livre figure dans « Mes … », sans
 pouvoir être supprimé.
 
+Le **store de modèles** a son propre mode « choisir » (`ouvrirStore({ choisir, accepter, importer })`),
+ouvert par l'Éditeur de modèle, « Importer un modèle » d'une Case ou d'une Scène, et « Ajouter un
+élément » de l'Éditeur de bâtiment (pièce ou toit). Il s'ouvre sur « Mes modèles », mais TOUS les
+onglets restent (demandé : chercher en ligne et poser). Une vignette de « Mes modèles » choisit le
+modèle ; ce que l'appelant refuse (`accepter`, par défaut un modèle articulé et pas un bâtiment) reste
+visible mais inactif. En ligne, la fiche s'ouvre comme d'habitude, et « Télécharger » range le modèle
+PUIS le rend à l'appelant (`telechargerModele`). Fermer le store rend l'onglet d'avant.
+
 ## Les cartes
 
 ![Une carte du store](../img/store-guide/carte.fr.svg)

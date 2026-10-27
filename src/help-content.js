@@ -239,6 +239,7 @@ export const HELP_MANUAL_EN = [
     '"Download" on a Poly Haven model puts it in your models, as a single .glb; it then appears in "My models".',
     'The arrow on the button picks the texture quality: 1k by default, 2k or 4k for a close-up. Another resolution replaces the file, and its panels follow. From Sketchfab, downloading will require signing in to an account: it is coming in a future version.',
     'A model you already downloaded carries a tick at the top right of its thumbnail, and its details give the file name instead of downloading it twice.',
+    'Opened to pick a model (Model editor, "Import a model", "Add an element" in a building), the store starts on "My models": a thumbnail picks it. The other tabs stay: "Download" on an online model saves it and places it at once.',
     'In "My models", the category under the source opens a list to change it. "+ Tags" adds your own tags (several per model), and renames or deletes them. The "Tags" filter, next to the categories, does the same and keeps the models that have all the ticked ones.',
   ]},
   { id: 'modeles_articules', title: 'Rigged models', paragraphs: [
@@ -500,6 +501,7 @@ export const HELP_MANUAL_FR = [
     "« Télécharger », sur un modèle Poly Haven, le range dans vos modèles, en un seul .glb ; il apparaît aussitôt dans « Mes modèles ».",
     "La flèche du bouton choisit la qualité des textures : 1k par défaut, 2k ou 4k pour un gros plan. Une autre résolution remplace le fichier, et ses Cases suivent. Depuis Sketchfab, le téléchargement demandera de se connecter à un compte : il arrive dans une prochaine version.",
     "Un modèle déjà téléchargé porte une coche en haut à droite de sa vignette, et sa fiche donne le nom du fichier au lieu de le télécharger une seconde fois.",
+    "Ouvert pour choisir un modèle (Éditeur de modèle, « Importer un modèle », « Ajouter un élément » d'un bâtiment), le store part de « Mes modèles » : une vignette le choisit. Les autres onglets restent : « Télécharger » sur un modèle en ligne le range et le pose aussitôt.",
     "Dans « Mes modèles », la catégorie sous la source s'ouvre pour la changer. « + Tags » ajoute vos propres tags (plusieurs par modèle), et les renomme ou les supprime. Le filtre « Tags », à côté des catégories, en fait autant et garde les modèles qui portent tous les tags cochés.",
   ]},
   { id: 'modeles_articules', title: 'Modèles articulés', paragraphs: [

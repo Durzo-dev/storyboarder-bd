@@ -45,6 +45,14 @@ Ground or a path). It opens “My …”, the use locked, the current resource m
 applies it and closes, downloading it first if needed. No “Import” card and no detail page in this
 mode. What the application ships appears in “My …”, and cannot be deleted.
 
+The **model store** has its own “choose” mode (`ouvrirStore({ choisir, accepter, importer })`),
+opened by the Model editor, “Import a model” in a panel or a Scene, and “Add an element” in the
+Building editor (room or roof). It opens on “My models”, but EVERY tab stays (requested: search
+online and place). A thumbnail in “My models” picks the model; what the caller refuses (`accepter`,
+by default a rigged model that is not a building) stays visible but inactive. Online, the detail
+page opens as usual, and “Download” saves the model THEN hands it to the caller
+(`telechargerModele`). Closing the store brings back the previous tab.
+
 ## The cards
 
 ![A store card](../img/store-guide/carte.en.svg)
