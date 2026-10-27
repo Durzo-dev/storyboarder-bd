@@ -23,7 +23,7 @@ import {
   ICONES_TYPE_ESCALIER, ICONES_SENS_ESCALIER, ICONES_RAMPE, ICONES_MARCHES, ICONES_OUVERTURE, ICONES_MANOEUVRE,
   ICONES_REMPLISSAGE, ICONES_DESSUS, iconeSensPorte, ICONES_TOIT, ICONES_BORDURE_TOIT,
 } from './batiment-icones.js';
-import { toitDuNiveau, fixerToit, toitsDuNiveau, piecesDecouvertes, BORNES_TOIT, centreDuToit } from './batiment-toits.js';
+import { toitDuNiveau, fixerToit, toitsDuNiveau, piecesDecouvertes, BORNES_TOIT, centreDuToit, ramenerSurLeToit } from './batiment-toits.js';
 import { actionDEnregistrement } from './batiment-bibliotheque.js';
 import { signatureDuBatiment, signatureDeStructure, resumeDesMasques } from './batiment-element.js';
 import { enregistrerBatiment, listerBatiments, lireBatimentDuDisque } from './batiment-store.js';
@@ -1076,14 +1076,22 @@ function reglagesDuMeuble(meuble){
   const hw = document.createElement('span'); hw.className = 'batiment-champ-valeur';
   const hi = document.createElement('input'); hi.type = 'number'; hi.step = '1';
   hi.value = String(meuble.colle !== false ? 0 : Math.round((meuble.y || 0) * 100));
-  hi.disabled = meuble.colle !== false;
-  hi.title = !hi.disabled ? '' : meuble.surLeToit ? tr('Untick “Stuck to the roof” to raise it above the roof.', 'Décochez « Collé au toit » pour l\'élever au-dessus du toit.')
-    : tr('Untick “Stuck to the floor” to raise it.', 'Décochez « Collé au sol » pour l\'élever.');
-  if (!meuble.traverse) hi.min = '0';
+  // #458c (demandé) : SUR LE TOIT, il y reste, posé : l'élévation est seulement une marge au-dessus
+  // du toit (un modèle qui s'y enfonce sur une pente), toujours modifiable ; 0 le repose.
+  const surLeToit = !!meuble.surLeToit;
+  hi.disabled = !surLeToit && meuble.colle !== false;
+  hi.title = surLeToit ? tr('Margin above the roof', 'Marge au-dessus du toit')
+    : (hi.disabled ? tr('Untick “Stuck to the floor” to raise it.', 'Décochez « Collé au sol » pour l\'élever.') : '');
+  if (!meuble.traverse || surLeToit) hi.min = '0';
   hi.addEventListener('change', () => {
     const n = Number(hi.value);
     if (!Number.isFinite(n)) { hi.value = String(Math.round((meuble.y || 0) * 100)); return; }
-    modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (x) collerAuSol(x, false, n / 100); });
+    modifier(b => {
+      const x = (b.elements || []).find(q => q.id === id);
+      if (!x) return;
+      if (x.surLeToit && n <= 0) collerAuSol(x, true);
+      else collerAuSol(x, false, n / 100);
+    });
   });
   hw.append(hi, document.createTextNode(' cm'));
   hauteur.append(ht, hw);
@@ -1109,16 +1117,18 @@ function reglagesDuMeuble(meuble){
     sectionDElement('batimentElemOrientation', tr('Orientation', 'Orientation'), repereDAxes(meuble), angles, boutons),
     sectionDElement('batimentElemTaille', tr('Size', 'Taille'), ligneTaille),
     // Dans cet ordre (demandé) : l'élévation, puis « Collé au sol », puis « Peut traverser les murs ».
+    // #458c (demandé) : SUR LE TOIT, ni « Sur le toit », ni « Collé au toit », ni « Peut traverser les
+    // murs » (rien à traverser là-haut) : l'élévation seule, une marge. Sa place (pièce ou toit) se
+    // décide en l'ajoutant (« Ajouter un élément » ou « … sur le toit ») : plus de case pour en changer.
     sectionDElement('batimentElemPosition', tr('Position', 'Position'),
       hauteur,
-      // #458c : sur le toit de son niveau, ou dans ses pièces.
-      coche(tr('On the roof', 'Sur le toit'), !!meuble.surLeToit,
-        (v) => modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (!x) return; if (v) x.surLeToit = true; else delete x.surLeToit; })),
-      coche(meuble.surLeToit ? tr('Stuck to the roof', 'Collé au toit') : tr('Stuck to the floor', 'Collé au sol'), meuble.colle !== false,
-        (v) => modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (x) collerAuSol(x, v); })),
-      // Décoché (par défaut), il ne traverse ni les murs ni, décollé, le sol (demandé).
-      coche(tr('Can pass through walls', 'Peut traverser les murs'), !!meuble.traverse,
-        (v) => modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (!x) return; if (v) x.traverse = true; else { delete x.traverse; if (x.colle === false) collerAuSol(x, false); } }))),
+      ...(surLeToit ? [] : [
+        coche(tr('Stuck to the floor', 'Collé au sol'), meuble.colle !== false,
+          (v) => modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (x) collerAuSol(x, v); })),
+        // Décoché (par défaut), il ne traverse ni les murs ni, décollé, le sol (demandé).
+        coche(tr('Can pass through walls', 'Peut traverser les murs'), !!meuble.traverse,
+          (v) => modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (!x) return; if (v) x.traverse = true; else { delete x.traverse; if (x.colle === false) collerAuSol(x, false); } })),
+      ])),
     sortie);
 }
 
@@ -1419,7 +1429,7 @@ function choisirOutil(outil){
  */
 function commandes({ m, piece, ouv, esc, meuble }){
   // Une action par ligne, sans ligne vide (demandé).
-  const lignes = (...l) => l.join('\n');
+  const lignes = (...l) => l.filter(x => x != null).join('\n');
   const vue = [tr('Wheel: zoom.', 'Molette : zoomer.'), tr('Hold right button: move the view.', 'Clic droit maintenu : déplacer la vue.')];
   const sortir = tr('Esc: leave the tool.', 'Échap : quitter l\'outil.');
   const deselect = tr('Esc: deselect.', 'Échap : désélectionner.');
@@ -1458,7 +1468,9 @@ function commandes({ m, piece, ouv, esc, meuble }){
     ...vue, tr('Esc: cancel.', 'Échap : annuler.'));
   if (E.outil === 'selection') {
     if (meuble) return lignes(
-      tr('Drag: move it (it snaps to the walls).', 'Tirer : le déplacer (il s\'aimante aux murs).'),
+      // #458c : sur le toit, ni aimant ni mur ; il ne quitte pas le toit.
+      meuble.surLeToit ? tr('Drag: move it (it stays on the roof).', 'Tirer : le déplacer (il reste sur le toit).')
+        : tr('Drag: move it (it snaps to the walls).', 'Tirer : le déplacer (il s\'aimante aux murs).'),
       tr('Right-click: turn it by 90°.', 'Clic droit : le tourner de 90°.'),
       axeActif === 'y'
         ? tr('Hold right button and circle around it: turn it. Ctrl: by 15°.', 'Clic droit maintenu, en tournant autour : le tourner. Ctrl : par 15°.')
@@ -1467,11 +1479,11 @@ function commandes({ m, piece, ouv, esc, meuble }){
           : tr('Hold right button, left / right: lean it. Ctrl: by 15°.', 'Clic droit maintenu, gauche / droite : le basculer. Ctrl : par 15°.'),
       tr('It snaps every 90° (Alt: free).', 'Il s\'aimante tous les 90° (Alt : libre).'),
       tr('The axis is chosen in the axes (Orientation).', 'L\'axe se choisit dans le repère (Orientation).'),
-      tr('In red: inside a wall, it will go back on release.', 'En rouge : dans un mur, il reviendra au relâcher.'),
+      meuble.surLeToit ? null : tr('In red: inside a wall, it will go back on release.', 'En rouge : dans un mur, il reviendra au relâcher.'),
       meuble.colle === false
         ? tr('Wheel: raise or lower it (Shift: by 1 cm).', 'Molette : le monter ou le descendre (Maj : au centimètre).')
         : tr('Wheel: make it bigger or smaller.', 'Molette : l\'agrandir ou le rétrécir.'),
-      tr('Alt: move without snapping.', 'Alt : déplacer sans aimant.'),
+      meuble.surLeToit ? null : tr('Alt: move without snapping.', 'Alt : déplacer sans aimant.'),
       tr('Del: delete it.', 'Suppr : le supprimer.'), deselect);
     if (ouv) return lignes(
       tr('Drag: slide it along its wall.', 'Tirer : la faire glisser sur son mur.'),
@@ -2016,6 +2028,8 @@ function survoler(e){
       if (x) {
         let centre = { x: g.depart.x + p.x - g.p.x, z: g.depart.z + p.z - g.p.z };
         if (!e.altKey && !x.surLeToit) centre = aimanterMeuble(E.batiment, x, centre);   // sur le toit, pas de mur
+        // Sur le toit, il ne quitte pas le toit (demandé) : ramené à son bord.
+        if (x.surLeToit) centre = ramenerSurLeToit(E.batiment, x.niveauId, centre);
         x.x = Math.round(centre.x * 1000) / 1000; x.z = Math.round(centre.z * 1000) / 1000;
         g.bouge = true;
         // Forcé dans un mur qu'il ne peut pas traverser : rouge ; il reviendra au relâcher (demandé).

@@ -274,3 +274,20 @@ describe('#458c : les éléments posés sur le toit', async () => {
     assert.ok(centreDuToit(b, 'n0'));
   });
 });
+
+// Demandé : un élément sur le toit ne le quitte pas en glissant.
+test('ramenerSurLeToit : sur le toit, le point reste ; dehors, il revient au bord le plus proche', async () => {
+  const { creerBatiment } = await import('../src/batiment.js');
+  const { ajouterRectangle } = await import('../src/batiment-trace.js');
+  const { actualiserPieces } = await import('../src/batiment-pieces.js');
+  const { ramenerSurLeToit, toitsDuNiveau } = await import('../src/batiment-toits.js');
+  const fr = (en, f) => f;
+  const b = creerBatiment('M', fr);
+  ajouterRectangle(b, 'n0', { x: 0, z: 0 }, { x: 6, z: 4 }, 0.2);
+  actualiserPieces(b, 'n0', fr);
+  assert.ok(toitsDuNiveau(b, 'n0').length);
+  assert.deepEqual(ramenerSurLeToit(b, 'n0', { x: 3, z: 2 }), { x: 3, z: 2 });
+  const q = ramenerSurLeToit(b, 'n0', { x: 20, z: 2 });
+  assert.ok(Math.abs(q.x - 6.1) < 1e-6 && Math.abs(q.z - 2) < 1e-6, JSON.stringify(q));   // la face extérieure du mur
+  assert.deepEqual(ramenerSurLeToit(b, 'nX', { x: 20, z: 2 }), { x: 20, z: 2 }, 'sans toit, rien ne change');
+});

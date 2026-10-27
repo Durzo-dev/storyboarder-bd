@@ -513,8 +513,9 @@ moves on screen.
   courtyard too (its walls stay). **#458c, elements on the roof, DONE**: "Add an element on the roof"
   (Roof section) sets a store model on the level's roof (`surLeToit`, an ADDED furniture field); it is
   planted at the lowest roof point under its footprint (`baseSurLeToit`, `hauteurDuToitEn`), does not
-  collide with walls nor snap to them, is drawn dashed on the plan; "On the roof" moves it between
-  room and roof; the building's height includes it. **#458c, shipped roof coverings, DONE**: old
+  collide with walls nor snap to them, is drawn dashed on the plan; it cannot be dragged off the roof
+  (`ramenerSurLeToit`) and its only Position setting is an elevation margin above the roof (no "On
+  the roof", "Stuck to the roof" or "Can pass through walls", as requested); the building's height includes it. **#458c, shipped roof coverings, DONE**: old
   flat tiles, barrel tiles, slate (`TOITS_LIVRES`, textures-integrees.js; `int:toit:<id>`), for the
   "roof" use only. A courtyard can be deleted too ("Delete the courtyard", Del): on its level, its own
   walls go, or, closed by its neighbours, it merges into the one sharing the longest side

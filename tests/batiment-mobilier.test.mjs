@@ -240,8 +240,16 @@ describe('les retouches de la section (demandé)', () => {
     const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
     assert.match(ui, /bouton\('quartDeTour',/);
     assert.match(ui, /bouton\('reinitialiser',/);
-    // L'élévation, puis « Sur le toit » (#458c), puis « Collé au sol » (« Collé au toit » sur le toit).
-    assert.match(ui, /hauteur,[\s\S]{0,200}coche\(tr\('On the roof', 'Sur le toit'\)[\s\S]{0,300}coche\(meuble\.surLeToit \? tr\('Stuck to the roof', 'Collé au toit'\) : tr\('Stuck to the floor', 'Collé au sol'\)/);
+    // L'élévation, puis « Collé au sol » et « Peut traverser les murs » ; SUR LE TOIT, l'élévation seule
+    // (demandé : ni « Sur le toit », ni « Collé au toit », ni traverser).
+    assert.match(ui, /hauteur,\s*\.\.\.\(surLeToit \? \[\] : \[\s*coche\(tr\('Stuck to the floor', 'Collé au sol'\)/);
+    assert.doesNotMatch(ui, /tr\('On the roof', 'Sur le toit'\)/);
+    assert.doesNotMatch(ui, /'Collé au toit'\)/);
+    // Sur le toit, l'élévation est une marge, toujours modifiable ; 0 le repose.
+    assert.match(ui, /hi\.disabled = !surLeToit && meuble\.colle !== false;/);
+    assert.match(ui, /if \(x\.surLeToit && n <= 0\) collerAuSol\(x, true\);/);
+    // Et il ne quitte pas le toit en glissant.
+    assert.match(ui, /if \(x\.surLeToit\) centre = ramenerSurLeToit\(E\.batiment, x\.niveauId, centre\);/);
     assert.match(ui, /ht\.textContent = tr\('Elevation', 'Élévation'\);/);
     assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /\.batiment-meuble-boutons\{ display:flex; justify-content:center;/);
   });

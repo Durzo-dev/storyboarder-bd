@@ -597,6 +597,28 @@ export function baseSurLeToit(b, niveauId, empreinte){
   return n ? (n.elevation || 0) + hauteurDesMursDuNiveau(b, niveauId) : 0;
 }
 
+/**
+ * Un élément SUR LE TOIT ne le quitte pas (demandé) : `p` s'il est sur un toit du niveau (dans sa
+ * forme, à la face des murs, hors des cours), sinon le point le plus proche de son bord. Sans toit,
+ * `p`. PURE.
+ */
+export function ramenerSurLeToit(b, niveauId, p){
+  const toits = toitsDuNiveau(b, niveauId);
+  if (!toits.length) return p;
+  if (toits.some(t => pointDansPolygone(p, t.ext) && !t.extTrous.some(h => pointDansPolygone(p, h)))) return p;
+  let meilleur = null, d2 = Infinity;
+  for (const poly of toits.flatMap(t => [t.ext, ...t.extTrous])) {
+    poly.forEach((a, i) => {
+      const c = poly[(i + 1) % poly.length];
+      const dx = c.x - a.x, dz = c.z - a.z, L2 = dx * dx + dz * dz || 1;
+      const k = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / L2));
+      const q = { x: a.x + dx * k, z: a.z + dz * k }, d = (q.x - p.x) ** 2 + (q.z - p.z) ** 2;
+      if (d < d2) { d2 = d; meilleur = q; }
+    });
+  }
+  return meilleur || p;
+}
+
 /** Un point où poser un élément sur le toit d'un niveau : le milieu de sa première forme couverte. */
 export function centreDuToit(b, niveauId){
   const t = toitsDuNiveau(b, niveauId)[0];

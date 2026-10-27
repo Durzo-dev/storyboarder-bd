@@ -541,8 +541,10 @@ place : rien ne bouge à l'écran.
   cour aussi (ses murs restent). **#458c, les éléments sur le toit, FAIT** : « Ajouter un élément sur
   le toit » (section Toit) pose un modèle du store sur le toit du niveau (`surLeToit`, champ AJOUTÉ du
   meuble) ; il se plante au plus bas du toit sous son empreinte (`baseSurLeToit`, `hauteurDuToitEn`),
-  ne heurte pas les murs, n'est pas aimanté à eux, se dessine en pointillé sur le plan ; « Sur le
-  toit » le fait passer de la pièce au toit ; la hauteur du bâtiment le compte. **#458c, les toitures livrées,
+  ne heurte pas les murs, n'est pas aimanté à eux, se dessine en pointillé sur le plan ; on ne
+  peut pas le sortir du toit en le glissant (`ramenerSurLeToit`), et sa seule Position est une marge
+  d'élévation au-dessus du toit (ni « Sur le toit », ni « Collé au toit », ni « Peut traverser les
+  murs », demandé) ; la hauteur du bâtiment le compte. **#458c, les toitures livrées,
   FAIT** : tuiles plates anciennes, tuiles canal, ardoise (`TOITS_LIVRES`, textures-integrees.js ;
   `int:toit:<id>`), usage « toit » seulement. Une cour se supprime aussi (« Supprimer la cour », Suppr) :
   à son niveau, ses murs propres partent, ou, fermée par ses voisines, elle se fond dans celle du plus
