@@ -200,3 +200,19 @@ test('#458 (signalé) : une pièce fermée par les cloisons de ses voisines devi
   assert.equal(b.murs.length, murs, 'ses voisines gardent leurs murs');
   assert.equal(estUnVide(b.pieces.find(p => p.id === centre)), true);
 });
+
+test('signalé : supprimer un ÎLOT (une pièce posée au milieu d\'une autre) en fait une cour, ses murs restent', async () => {
+  const { creerBatiment } = await import('../src/batiment.js');
+  const { ajouterRectangle, supprimerMur } = await import('../src/batiment-trace.js');
+  const { actualiserPieces, supprimerPiece, pieceSous } = await import('../src/batiment-pieces.js');
+  const fr = (en, f) => f;
+  const b = creerBatiment('M', fr);
+  ajouterRectangle(b, 'n0', { x: 0, z: 0 }, { x: 10, z: 10 }, 0.2);
+  ajouterRectangle(b, 'n0', { x: 3, z: 3 }, { x: 7, z: 6 }, 0.2);
+  actualiserPieces(b, 'n0', fr);
+  const ilot = pieceSous(b, 'n0', { x: 5, z: 4.5 });
+  const murs = b.murs.length;
+  assert.deepEqual(supprimerPiece(b, 'n0', ilot, supprimerMur), []);
+  assert.equal(b.murs.length, murs);
+  assert.equal(b.pieces.find(p => p.id === ilot).vide, true);
+});

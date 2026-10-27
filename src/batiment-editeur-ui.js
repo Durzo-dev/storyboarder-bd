@@ -547,14 +547,9 @@ function remplirToit(){
       champ(tr('Slope', 'Pente'), Math.round(t.pente), '°', BORNES_TOIT.pente, (v) => ({ pente: v })),
       champ(tr('Overhang', 'Débord'), Math.round(t.debord * 100), 'cm', BORNES_TOIT.debord.map(v => v * 100), (v) => ({ debord: v / 100 })));
     // Un quatre-pans n'a pas de sens (toutes ses faces descendent) ; autour d'une cour, un deux-pans non
-    // plus (pas de pignon, #458c) : rien à tourner, et c'est dit plutôt qu'un bouton sans effet (signalé).
+    // plus (pas de pignon, #458c) : pas de bouton sans effet (signalé), et pas d'explication non plus.
     const autourDUneCour = toitsDuNiveau(E.batiment, n.id).some(x => (x.trous || []).length);
-    if (t.type === 'deux-pans' && autourDUneCour) {
-      const info = document.createElement('p'); info.className = 'batiment-info';
-      info.textContent = tr('Around a courtyard, each wing slopes on both sides: there is no ridge to turn.',
-        'Autour d\'une cour, chaque aile descend des deux côtés : il n\'y a pas de faîtage à tourner.');
-      elements.push(info);
-    } else if (t.type !== 'quatre-pans') {
+    if (t.type !== 'quatre-pans' && !(t.type === 'deux-pans' && autourDUneCour)) {
       const tourner = document.createElement('button');
       tourner.type = 'button'; tourner.className = 'nav-btn';
       tourner.textContent = t.type === 'deux-pans' ? tr('Turn the ridge', 'Tourner le faîtage') : tr('Turn the slope', 'Tourner la pente');

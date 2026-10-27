@@ -265,7 +265,11 @@ export function supprimerPiece(batiment, niveauId, pieceId, supprimerMur){
   // pas) : aucun mur n'est à elle seule. Elle devient un VIDE (`vide: true`, champ AJOUTÉ) : une
   // cour, un patio, entre ses voisines, sans sol, sans plafond, sans toit ; ses voisines gardent leurs
   // murs. « Refaire une pièce » la rend (cf. l'éditeur).
-  if (!murs.length) {
+  // UN ÎLOT aussi (signalé) : une pièce posée au milieu d'une autre, dont elle perce le sol. Retirer ses
+  // murs la fondrait dans celle qui l'entoure ; c'est une cour qu'on veut. Ses murs restent ; on les
+  // supprime un par un pour vraiment l'effacer.
+  const ilot = [...formes].some(([id, g]) => id !== pieceId && (g.trous || []).some(t => t.every(p => f.points.some(q => cle(p) === cle(q)))));
+  if (!murs.length || ilot) {
     const p = (batiment.pieces || []).find(x => x.id === pieceId);
     if (p) p.vide = true;
     return [];
