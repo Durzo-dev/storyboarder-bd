@@ -483,8 +483,14 @@ moves on screen.
   the editor ("Create a building"). Valentin's decision: walls, openings and rooms already placed in
   Projects stay AS THEY ARE (rendered, selectable, editable); a traced room is taken into the editor
   with "Modify" (a copy).
-- **#458** the automatic roof: types, pitch, overhang, materials, roof terrace with railing,
-  Elements on the roof.
+- **#458** the automatic roof. **#458a DONE** (27 October 2026, `src/batiment-toits.js`): one roof PER
+  LEVEL (`niveau.toit`, an ADDED field, absent = flat), over the union of its rooms with no level above
+  (axis faces: shared edges cancel out), pushed out to the walls' outer face. Flat (no edge, parapet,
+  railing), single pitch, gable, hip; slope, overhang, direction; covering as texture and colour (the
+  store's "roof" use). Each slope is a plane, the roof is their minimum: exact on a CONVEX shape; the
+  gables close the walls under it (facade material). The building's height includes the roof (placed
+  buildings keep their size). Left: **#458b**, shapes with a re-entrant corner (L, T, U), through the
+  straight skeleton; **#458c**, Elements on the roof, roof coverings shipped with the application.
 - **#459** the cutaway view per Panel. **#459a DONE** (27 October 2026): picking a placed building in
   "Elements" shows the "Building display" section: "Show up to: The whole building / <level>". Stored
   on the placed Element (`affichage.jusquA`, an ADDED field), so per Panel. The cut rig carries the

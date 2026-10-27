@@ -15,6 +15,7 @@ import { WALL_PX_PER_UNIT_3D } from './constants.js';
 import { newId } from './state.js';
 import { clamp } from './utils.js';
 import { hauteurDesMursDuNiveau, niveauxTries } from './batiment-niveaux.js';
+import { hauteurDesToits } from './batiment-toits.js';
 
 /** Le discriminant persisté. */
 export const OBJ_TYPE_BATIMENT = 'batiment';
@@ -43,6 +44,8 @@ export function encombrementDuBatiment(b){
       minZ = Math.min(minZ, p.z - e); maxZ = Math.max(maxZ, p.z + e);
     }
   }
+  // #458 : le toit compte (le rendu se normalise sur la boîte du rig : un toit oublié le rétrécirait).
+  haut = Math.max(haut, hauteurDesToits(b));
   return { hauteur: Math.max(0.1, haut), largeur: Math.max(0.1, maxX - minX), profondeur: Math.max(0.1, maxZ - minZ) };
 }
 

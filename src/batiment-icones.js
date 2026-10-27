@@ -87,3 +87,20 @@ export function iconeSensPorte(sens, charniere, geste){
   return svg(32, 30, `<path d="M2 ${mur}h10M20 ${mur}h10" stroke-width="3"/><path d="M${hx} ${mur}V${bout}"/>`
     + `<path d="M${hx} ${bout}A8 8 0 0 ${balayage} ${ox} ${mur}" stroke-dasharray="2 2"/>${fleche}`);
 }
+
+/** Les toits (tâche 458), de face : la maison et sa couverture. */
+const maison = (toit) => svg(32, 28, `<path d="M6 26V14h20v12z"/>${toit}`);
+export const ICONES_TOIT = {
+  plat: maison('<path d="M4 14h24" stroke-width="2.6"/>'),
+  'un-pan': maison('<path d="M4 14 28 6v8" stroke-width="2"/>'),
+  'deux-pans': maison('<path d="M3 15 16 4l13 11" stroke-width="2"/>'),
+  // Quatre pans, de face : un trapèze (le faîtage court entre deux croupes).
+  'quatre-pans': maison('<path d="M3 15 11 6h10l8 9" stroke-width="2"/>'),
+};
+
+/** Le bord d'un toit plat : rien, un acrotère (un muret), un garde-corps (une lisse sur poteaux). */
+export const ICONES_BORDURE_TOIT = {
+  aucune: svg(32, 22, '<path d="M3 12h26M3 12v8M29 12v8"/>'),
+  acrotere: svg(32, 22, '<path d="M3 12h26M3 12v8M29 12v8"/><path d="M3 12V6h4v6M25 12V6h4v6" fill="currentColor" fill-opacity=".25"/>'),
+  'garde-corps': svg(32, 22, '<path d="M3 12h26M3 12v8M29 12v8"/><path d="M4 4h24M4 4v8M12 4v8M20 4v8M28 4v8"/>'),
+};

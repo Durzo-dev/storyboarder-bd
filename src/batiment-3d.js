@@ -16,6 +16,7 @@ import { formeDeLEscalier, tremieDeLEscalier } from './batiment-escaliers.js';
 import { niveauxTries, hauteurDesMursDuNiveau, epaisseurDuDessus, niveauDessous } from './batiment-niveaux.js';
 import { fabriqueDeRevetements, revetementDeLaFace, revetementDeLaPiece, pieceDevantLaFace } from './batiment-revetements.js';
 import { meublesDuNiveau, hauteurAuSol, basDuMeuble } from './batiment-mobilier.js';
+import { toitsDuNiveau, decaler, ACROTERE, GARDE_CORPS } from './batiment-toits.js';
 
 /** Les matières d'un bâtiment, à créer une fois par renderer. */
 export function materiauxBatiment3D(T){
@@ -319,9 +320,94 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, 
     (b.escaliers || []).filter(x => x.niveauId === n.id).forEach(x => construireEscalier(T, b, x, mats, n.elevation, groupe));
     // #454e : le mobilier du niveau, posé au sol.
     meublesDuNiveau(b, n.id).forEach(m => groupe.add(construireMeuble(T, m, mats, n.elevation, m.id === rouge)));
+    // #458 : le toit du niveau, sur ses pièces découvertes ; pas sur un dernier niveau ouvert par la coupe.
+    if (!(coupe && n.id === dernier)) construireToits(T, b, n, mats, groupe);
   });
   col.maillages().forEach(m => groupe.add(m));
   return groupe;
+}
+
+/** L'épaisseur d'un toit en pente (couverture et charpente), visible à sa rive. */
+const EPAISSEUR_TOIT = 0.12;
+
+/** Un polygone convexe 3D en éventail : positions (et UV) dans les tableaux, les deux faces si `deux`. */
+function eventail(pts, uv, pos, uvs, deux = false){
+  for (let i = 1; i + 1 < pts.length; i++) {
+    for (const j of [0, i, i + 1]) { pos.push(pts[j].x, pts[j].y, pts[j].z); uvs.push(...(uv ? uv[j] : [0, 0])); }
+    if (deux) for (const j of [0, i + 1, i]) { pos.push(pts[j].x, pts[j].y, pts[j].z); uvs.push(...(uv ? uv[j] : [0, 0])); }
+  }
+}
+function maillage(T, pos, uvs, mat){
+  const g = new T.BufferGeometry();
+  g.setAttribute('position', new T.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new T.Float32BufferAttribute(uvs, 2));
+  g.computeVertexNormals();
+  return new T.Mesh(g, mat);
+}
+
+/**
+ * Les toits d'un niveau (#458) : les pans (épaissis : dessous et rive), les pignons qui ferment les
+ * murs sous eux (de la matière de la façade), ou, sur un toit plat, son acrotère ou son garde-corps.
+ * Un toit plat sans bordure ne dessine rien de plus : la dalle du dessus de chaque pièce le fait déjà.
+ */
+function construireToits(T, b, n, mats, groupe){
+  for (const t of toitsDuNiveau(b, n.id)) {
+    const facade = mats.revetement ? mats.revetement(revetementDeLaFace(b, n.id, null, null), 'mur-ext') : mats.mur;
+    if (t.geometrie) {
+      const g = t.geometrie;
+      const matToit = mats.revetement ? mats.revetement(t.reglages.revetement, 'toit') : mats.mur;
+      const pos = [], uvs = [];
+      g.pans.forEach(p => {
+        eventail(p.points, p.uv, pos, uvs);
+        // Le dessous, à l'épaisseur du toit, tourné vers le bas.
+        eventail(p.points.map(q => ({ ...q, y: q.y - EPAISSEUR_TOIT })).reverse(), p.uv.slice().reverse(), pos, uvs);
+      });
+      // La rive : le pourtour débordant, de l'épaisseur du toit.
+      g.bord.forEach((a, i) => {
+        const c = g.bord[(i + 1) % g.bord.length];
+        const L = Math.hypot(c.x - a.x, c.z - a.z);
+        eventail([{ x: a.x, y: a.y - EPAISSEUR_TOIT, z: a.z }, { x: c.x, y: c.y - EPAISSEUR_TOIT, z: c.z }, c, a],
+          [[0, 0], [L, 0], [L, EPAISSEUR_TOIT], [0, EPAISSEUR_TOIT]], pos, uvs, true);
+      });
+      groupe.add(maillage(T, pos, uvs, matToit));
+      const pp = [], pu = [];
+      g.pignons.forEach(p => {
+        const a = p.points[0], c = p.points[1];
+        const L = Math.hypot(c.x - a.x, c.z - a.z) || 1, d = { x: (c.x - a.x) / L, z: (c.z - a.z) / L };
+        eventail(p.points, p.points.map(q => [q.x * d.x + q.z * d.z, q.y]), pp, pu, true);
+      });
+      if (pp.length) groupe.add(maillage(T, pp, pu, facade));
+    } else if (t.reglages.bordure === 'acrotere') {
+      // Un anneau entre la face extérieure des murs et son retrait, sur le toit plat.
+      const forme = new T.Shape(t.ext.map(p => new T.Vector2(p.x, -p.z)));
+      forme.holes.push(new T.Path(decaler(t.ext, -ACROTERE.epaisseur).map(p => new T.Vector2(p.x, -p.z))));
+      const geo = new T.ExtrudeGeometry(forme, { depth: ACROTERE.hauteur, bevelEnabled: false });
+      geo.rotateX(-Math.PI / 2);
+      const m = new T.Mesh(geo, facade);
+      m.position.y = t.base;
+      groupe.add(m);
+    } else if (t.reglages.bordure === 'garde-corps') {
+      // Une lisse et des poteaux, un peu en retrait de la façade : le toit-terrasse.
+      const tour = decaler(t.ext, -GARDE_CORPS.retrait);
+      tour.forEach((a, i) => {
+        const c = tour[(i + 1) % tour.length];
+        const L = Math.hypot(c.x - a.x, c.z - a.z);
+        if (L < 1e-3) return;
+        const angle = Math.atan2(-(c.z - a.z), c.x - a.x);
+        const lisse = new T.Mesh(new T.BoxGeometry(L, 0.05, 0.05), mats.metal);
+        lisse.position.set((a.x + c.x) / 2, t.base + GARDE_CORPS.hauteur, (a.z + c.z) / 2);
+        lisse.rotation.y = angle;
+        groupe.add(lisse);
+        const nb = Math.max(1, Math.round(L / 1.5));
+        for (let k = 0; k < nb; k++) {
+          const s = k / nb;
+          const poteau = new T.Mesh(new T.BoxGeometry(0.04, GARDE_CORPS.hauteur, 0.04), mats.metal);
+          poteau.position.set(a.x + (c.x - a.x) * s, t.base + GARDE_CORPS.hauteur / 2, a.z + (c.z - a.z) * s);
+          groupe.add(poteau);
+        }
+      });
+    }
+  }
 }
 
 /**

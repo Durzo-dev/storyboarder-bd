@@ -21,8 +21,9 @@ import { tr } from './state.js';
 import { creerBatiment, nomAfficheDuFichier, DEFAUTS_BATIMENT, TYPES_D_OUVERTURE } from './batiment.js';
 import {
   ICONES_TYPE_ESCALIER, ICONES_SENS_ESCALIER, ICONES_RAMPE, ICONES_MARCHES, ICONES_OUVERTURE, ICONES_MANOEUVRE,
-  ICONES_REMPLISSAGE, ICONES_DESSUS, iconeSensPorte,
+  ICONES_REMPLISSAGE, ICONES_DESSUS, iconeSensPorte, ICONES_TOIT, ICONES_BORDURE_TOIT,
 } from './batiment-icones.js';
+import { toitDuNiveau, fixerToit, toitsDuNiveau, piecesDecouvertes, BORNES_TOIT } from './batiment-toits.js';
 import { actionDEnregistrement } from './batiment-bibliotheque.js';
 import { signatureDuBatiment, signatureDeStructure, resumeDesMasques } from './batiment-element.js';
 import { enregistrerBatiment, listerBatiments, lireBatimentDuDisque } from './batiment-store.js';
@@ -298,6 +299,7 @@ function remplirPanneau(){
     return l;
   }) : [vide(tr('No room yet: close a contour of walls.', 'Aucune pièce : fermez un contour de murs.'))]));
   remplirRevetements();
+  remplirToit();
   const m = murSelectionne(), piece = pieceSelectionnee(), ouv = ouvertureSelectionnee(), esc = escalierSelectionne(), meuble = meubleSelectionne();
   $('batimentSelectionOuverture').hidden = !ouv;
   $('batimentSelectionEscalier').hidden = !esc;
@@ -351,6 +353,13 @@ const carresRevetement = new Map();
 /** Où vit un revêtement, retrouvé PAR SON ID à chaque lecture : une annulation refait le bâtiment. */
 function porteurDuRevetement(b, cible){
   if (cible.batiment) return b;
+  // #458 : le toit d'un niveau porte son revêtement (créé à la première écriture).
+  if (cible.toitNiveau) {
+    const n = (b.niveaux || []).find(x => x.id === cible.toitNiveau);
+    if (!n) return null;
+    if (!n.toit) n.toit = toitDuNiveau(n);
+    return n.toit;
+  }
   return (b.pieces || []).find(p => p.id === cible.pieceId) || null;
 }
 
@@ -362,7 +371,7 @@ function blocRevetement(l, gardes){
   const porteur = porteurDuRevetement(E.batiment, l.cible);
   const rev = normaliserRevetement(porteur && porteur[l.champ]);
   const texture = rev ? rev.texture : null;
-  const cle = `${l.cible.batiment ? 'batiment' : l.cible.pieceId}|${l.champ}|${texture}`;
+  const cle = `${l.cible.batiment ? 'batiment' : l.cible.toitNiveau ? 'toit:' + l.cible.toitNiveau : l.cible.pieceId}|${l.champ}|${texture}`;
   gardes.add(cle);
   // Écrire le revêtement (null efface le champ : rien ne change pour un bâtiment sans revêtement).
   const ecrire = (b, valeur) => {
@@ -423,7 +432,98 @@ function remplirRevetements(){
       blocRevetement({ titre: tr('Floor', 'Sol'), usage: 'sol-int', cible, champ: 'sol', choisir: tr('Choose the floor', 'Choisir le sol') }, gardes),
       blocRevetement({ titre: tr('Ceiling', 'Plafond'), usage: 'plafond', cible, champ: 'plafond', choisir: tr('Choose the ceiling', 'Choisir le plafond') }, gardes));
   } else zone.replaceChildren();
-  for (const k of [...carresRevetement.keys()]) if (!gardes.has(k)) carresRevetement.delete(k);
+  // Les carrés du toit sont gardés par remplirToit (#458).
+  for (const k of [...carresRevetement.keys()]) if (!gardes.has(k) && !k.startsWith('toit:')) carresRevetement.delete(k);
+}
+
+// ── Le toit (#458) ───────────────────────────────────────────────────────────────────────────────
+
+/**
+ * La section « Toit » du niveau courant : le type (plat, un pan, deux pans, quatre pans), puis selon
+ * lui la pente, le débord et le sens, ou la bordure d'un toit plat ; sa couverture (texture et
+ * couleur, comme les revêtements). Le toit couvre les pièces du niveau sans étage au-dessus.
+ */
+function remplirToit(){
+  const zone = $('batimentToit');
+  if (!zone) return;
+  const n = E.batiment.niveaux.find(x => x.id === E.niveauId);
+  if (!n) { zone.replaceChildren(); return; }
+  $('batimentSectionToit').textContent = tr(`Roof: ${n.nom}`, `Toit : ${n.nom}`);
+  const t = toitDuNiveau(n);
+  // Régler le toit le MONTRE : la coupe de l'aperçu (cochée par défaut) ouvre le niveau courant par le
+  // haut, toit compris ; on la décoche pour voir ce qu'on règle.
+  const changer = (c) => {
+    if (E.coupe) { E.coupe = false; $('batimentApercuCoupe').classList.remove('actif'); }
+    modifier(b => fixerToit(b, n.id, c));
+  };
+  if (!piecesDecouvertes(E.batiment, n.id).length) {
+    const rien = E.batiment.pieces.some(p => p.niveauId === n.id);
+    zone.replaceChildren(vide(rien
+      ? tr('Covered by the level above: no roof here.', 'Couvert par l\'étage du dessus : pas de toit ici.')
+      : tr('No room yet: nothing to cover.', 'Aucune pièce : rien à couvrir.')));
+    return;
+  }
+  const choix = (valeurs, actuelle, quoi, genre = 'type') => {
+    const d = document.createElement('div'); d.className = 'choix ' + (genre === 'option' ? 'choix-options' : 'choix-types');
+    valeurs.forEach(([val, lib, ic]) => {
+      const b = document.createElement('button'); b.type = 'button';
+      b.classList.add('icone'); b.innerHTML = ic; b.title = lib; b.setAttribute('aria-label', lib);
+      b.classList.toggle('actif', actuelle === val);
+      b.onclick = () => changer({ [quoi]: val });
+      d.appendChild(b);
+    });
+    return d;
+  };
+  const champ = (libelle, valeur, unite, bornes, versStocke) => {
+    const l = document.createElement('label'); l.className = 'batiment-champ';
+    const lt = document.createElement('span'); lt.textContent = libelle;
+    const lw = document.createElement('span'); lw.className = 'batiment-champ-valeur';
+    const i = document.createElement('input'); i.type = 'number'; i.step = '1'; i.min = String(bornes[0]); i.max = String(bornes[1]);
+    i.value = String(valeur);
+    i.addEventListener('change', () => { const v = Number(i.value); if (Number.isFinite(v)) changer(versStocke(v)); else i.value = String(valeur); });
+    lw.append(i, document.createTextNode(' ' + unite)); l.append(lt, lw);
+    return l;
+  };
+  const I = ICONES_TOIT, B = ICONES_BORDURE_TOIT;
+  const elements = [choix([
+    ['plat', tr('Flat', 'Plat'), I.plat],
+    ['un-pan', tr('Single pitch', 'Un pan'), I['un-pan']],
+    ['deux-pans', tr('Gable (two slopes)', 'Deux pans (pignons)'), I['deux-pans']],
+    ['quatre-pans', tr('Hip (four slopes)', 'Quatre pans (croupes)'), I['quatre-pans']],
+  ], t.type, 'type')];
+  if (t.type === 'plat') {
+    elements.push(groupeOptions(choix([
+      ['aucune', tr('No edge', 'Sans bordure'), B.aucune],
+      ['acrotere', tr('Parapet', 'Acrotère'), B.acrotere],
+      ['garde-corps', tr('Railing (roof terrace)', 'Garde-corps (toit-terrasse)'), B['garde-corps']],
+    ], t.bordure, 'bordure', 'option')));
+  } else {
+    elements.push(
+      champ(tr('Slope', 'Pente'), Math.round(t.pente), '°', BORNES_TOIT.pente, (v) => ({ pente: v })),
+      champ(tr('Overhang', 'Débord'), Math.round(t.debord * 100), 'cm', BORNES_TOIT.debord.map(v => v * 100), (v) => ({ debord: v / 100 })));
+    if (t.type !== 'quatre-pans') {
+      const tourner = document.createElement('button');
+      tourner.type = 'button'; tourner.className = 'nav-btn';
+      tourner.textContent = t.type === 'deux-pans' ? tr('Turn the ridge', 'Tourner le faîtage') : tr('Turn the slope', 'Tourner la pente');
+      tourner.onclick = () => changer({ sens: (t.sens + 1) % (t.type === 'deux-pans' ? 2 : 4) });
+      elements.push(tourner);
+    }
+    // Une forme en L, en T, en U : pas encore de toit en pente (#458b), elle reste plate.
+    if (toitsDuNiveau(E.batiment, n.id).some(x => x.enAttente)) {
+      const info = document.createElement('p'); info.className = 'batiment-info';
+      info.textContent = tr('An L, T or U shape stays flat for now: sloped roofs on such shapes are coming.',
+        'Une forme en L, en T ou en U reste plate pour l\'instant : le toit en pente y arrive bientôt.');
+      elements.push(info);
+    }
+  }
+  // La couverture d'un toit en pente (un toit plat garde la dalle, comme avant).
+  const gardes = new Set();
+  if (t.type !== 'plat') {
+    elements.push(blocRevetement({ titre: tr('Covering', 'Couverture'), usage: 'toit',
+      cible: { toitNiveau: n.id }, champ: 'revetement', choisir: tr('Choose the roof', 'Choisir le toit') }, gardes));
+  }
+  for (const k of [...carresRevetement.keys()]) if (k.startsWith('toit:') && !gardes.has(k)) carresRevetement.delete(k);
+  zone.replaceChildren(...elements);
 }
 
 // ── Les niveaux (#454b) ────────────────────────────────────────────────────────────────────────

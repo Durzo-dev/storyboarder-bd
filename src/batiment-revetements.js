@@ -65,7 +65,7 @@ export function pieceDevantLaFace(formes, milieu, normale, ecart = 0.06){
 
 /**
  * Ce qu'il faut pour peindre un revêtement : `{ grain, teinte, tuile }` (tuile en mètres), ou
- * `{ couleur }` pour un uni. `usage` : 'mur-ext', 'mur-int', 'sol-int', 'plafond'. PURE, sauf la
+ * `{ couleur }` pour un uni. `usage` : 'mur-ext', 'mur-int', 'sol-int', 'plafond', 'toit' (#458). PURE, sauf la
  * lecture du registre de « Mes textures » (textures-utilisateur.js).
  */
 export function peintureDuRevetement(rev, usage){
@@ -119,7 +119,7 @@ export function fabriqueDeRevetements(T){
     if (p.grain && !img) demanderLeGrain(p.grain);
     const cle = p.grain ? `${p.grain}|${p.teinte}|${p.tuile.join('x')}|${img ? 'pret' : 'attente'}|${usage}` : `uni|${p.couleur}|${usage}`;
     if (cache.has(cle)) { const m = cache.get(cle); cache.delete(cle); cache.set(cle, m); return m; }
-    const doubleFace = usage === 'sol-int' || usage === 'plafond';
+    const doubleFace = usage === 'sol-int' || usage === 'plafond' || usage === 'toit';
     let m;
     if (img && typeof document !== 'undefined') {
       const toile = document.createElement('canvas');

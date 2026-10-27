@@ -89,8 +89,8 @@ export function traceDe(entree){
 /** Les textures de Tracé de l'utilisateur, par identifiant. Remplie par `installerTexturesUtilisateur`. */
 const _traces = new Map();
 
-/** Les usages de bâtiment (#446e), comme dans textures-integrees.js (le toit attend #458). */
-const USAGES_BATIMENT = ['mur-ext', 'mur-int', 'sol-int', 'plafond'];
+/** Les usages de bâtiment (#446e), comme dans textures-integrees.js (toit compris, #458). */
+const USAGES_BATIMENT = ['mur-ext', 'mur-int', 'sol-int', 'plafond', 'toit'];
 
 /**
  * La texture de bâtiment d'une entrée (#446e) : `{ id, grain, teinte, tuile, usages }`, ou null si

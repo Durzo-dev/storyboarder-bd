@@ -58,9 +58,9 @@ const NOMS_TRACE = {
 
 /**
  * Les usages de BÂTIMENT (#446e) : où une texture habille un bâtiment. Ceux de la table du store
- * (texture-matieres.js), moins le toit, qui attend #458.
+ * (texture-matieres.js), toit compris depuis #458.
  */
-export const USAGES_BATIMENT = ['mur-ext', 'mur-int', 'sol-int', 'plafond'];
+export const USAGES_BATIMENT = ['mur-ext', 'mur-int', 'sol-int', 'plafond', 'toit'];
 export const estUsageBatiment = (u) => USAGES_BATIMENT.includes(u);
 
 /**
@@ -78,7 +78,7 @@ const USAGES_BATIMENT_LIVREES = {
 };
 
 /** La couleur d'un bâtiment sans revêtement, par usage (celle d'avant #446e : rien ne change à l'écran). */
-export const COULEURS_BATIMENT = { 'mur-ext': '#d9d4c7', 'mur-int': '#d9d4c7', 'sol-int': '#a89c86', plafond: '#d9d4c7' };
+export const COULEURS_BATIMENT = { 'mur-ext': '#d9d4c7', 'mur-int': '#d9d4c7', 'sol-int': '#a89c86', plafond: '#d9d4c7', toit: '#8e4f3c' };
 
 const provenance = (grain) => {
   const p = grain && PROVENANCE[grain];

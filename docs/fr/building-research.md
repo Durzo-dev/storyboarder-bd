@@ -508,8 +508,15 @@ place : rien ne bouge à l'écran.
   construction se fait UNIQUEMENT dans l'éditeur (« Créer un bâtiment »). Décision de Valentin : les
   murs, parois et pièces déjà posés dans les Projets restent TELS QUELS (rendus, sélectionnables,
   modifiables) ; une pièce tracée se reprend dans l'éditeur par « Modifier » (une copie).
-- **#458** le toit automatique : types, pente, débord, matières, toit-terrasse avec garde-corps,
-  Éléments sur le toit.
+- **#458** le toit automatique. **#458a FAIT** (27 octobre 2026, `src/batiment-toits.js`) : un toit PAR
+  NIVEAU (`niveau.toit`, champ AJOUTÉ, absent = plat), sur l'union de ses pièces sans étage au-dessus
+  (faces des axes : les arêtes partagées s'annulent), poussée à la face extérieure des murs. Plat
+  (sans bordure, acrotère, garde-corps), un pan, deux pans, quatre pans ; pente, débord, sens ;
+  couverture en texture et couleur (usage « toit » du store). Chaque pan est un plan, le toit est leur
+  minimum : exact sur une forme CONVEXE ; les pignons ferment les murs sous lui (matière de la
+  façade). La hauteur du bâtiment compte le toit (les bâtiments placés gardent leur taille).
+  Reste **#458b** : les formes à angle rentrant (L, T, U), par le squelette droit ; **#458c** : les
+  Éléments sur le toit, des toitures livrées avec l'application.
 - **#459** la vue en coupe par Case. **#459a FAIT** (27 octobre 2026) : choisir un bâtiment placé
   dans « Éléments » montre la section « Affichage du bâtiment » : « Montrer jusqu'à : Tout le
   bâtiment / <niveau> ». Enregistré sur l'Élément placé (`affichage.jusquA`, champ AJOUTÉ), donc par
