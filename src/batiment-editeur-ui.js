@@ -2485,20 +2485,29 @@ function ouvrirApercu(conteneur, b){
     rendu.render(scene, camera);
   };
   const redessiner = () => { if (!demande) demande = requestAnimationFrame(dessiner); };
-  const recadrerApercu = () => {
-    const boite = new T.Box3().setFromObject(groupe);
+  // LE SUIVI (demandé) : tant que l'utilisateur n'a pas bougé la caméra, l'aperçu recentre la
+  // construction à chaque changement (pièce, mur, étage…). Un geste (orbite, déplacement, molette)
+  // le suspend ; « Recadrer » le rend. L'angle de vue n'est jamais changé, seuls centre et distance.
+  let suivre = true, derniereBoite = '';
+  const cadrer = (force) => {
+    // La boîte OS COMPRIS : un modèle articulé mesuré sur sa géométrie brute serait cent fois trop grand.
+    const boite = box3FromObjectSkinAware3D(groupe);
     const min = boite.isEmpty() ? [-5, 0, -5] : boite.min.toArray();
     const max = boite.isEmpty() ? [5, 3, 5] : boite.max.toArray();
+    const signature = [...min, ...max].map(v => v.toFixed(2)).join(',');
+    if (!force && signature === derniereBoite) return;
+    derniereBoite = signature;
     const r = cadrage3D(min, max, CHAMP, (conteneur.clientWidth || 1) / (conteneur.clientHeight || 1));
     centre = r.centre; distance = distanceCadrage = r.distance;
-    redessiner();
   };
+  const recadrerApercu = () => { suivre = true; cadrer(true); redessiner(); };
 
   let glisser = null;
   const el = rendu.domElement;
   el.addEventListener('pointerdown', (e) => {
     if (e.button !== 0 && e.button !== 2) return;
     glisser = { x: e.clientX, y: e.clientY, deplacer: e.button === 2 };
+    suivre = false;
     el.setPointerCapture(e.pointerId);
   });
   el.addEventListener('pointermove', (e) => {
@@ -2513,21 +2522,23 @@ function ouvrirApercu(conteneur, b){
   el.addEventListener('pointerup', relache);
   el.addEventListener('pointercancel', relache);
   el.addEventListener('contextmenu', (e) => e.preventDefault());
-  el.addEventListener('wheel', (e) => { e.preventDefault(); distance = zoom3D(distance, e.deltaY, distanceCadrage); redessiner(); }, { passive: false });
+  el.addEventListener('wheel', (e) => { e.preventDefault(); suivre = false; distance = zoom3D(distance, e.deltaY, distanceCadrage); redessiner(); }, { passive: false });
   const Observateur = globalThis.ResizeObserver;
-  const observateur = Observateur ? new Observateur(redessiner) : null;
+  // La fenêtre agrandie ou réduite : suivie, la construction y est recadrée à sa nouvelle forme.
+  const observateur = Observateur ? new Observateur(() => { if (suivre) cadrer(true); redessiner(); }) : null;
   if (observateur) observateur.observe(conteneur);
   recadrerApercu();
 
   return {
     recadrer: recadrerApercu,
     redessiner,
-    /** Les murs ont changé : on refait le groupe, sans toucher au cadrage. */
+    /** Les murs ont changé : on refait le groupe, et l'on recentre s'il est suivi (demandé). */
     reconstruire(nouveau){
       scene.remove(groupe);
       groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); });
       groupe = construireBatiment3D(T, nouveau, mats, options());
       scene.add(groupe);
+      if (suivre) cadrer(false);
       redessiner();
     },
     fermer(){

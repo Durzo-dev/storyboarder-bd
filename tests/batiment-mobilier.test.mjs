@@ -328,3 +328,15 @@ test('signalé : un modèle articulé (anime_girl1) se mesure et se pose OS COMP
   assert.match(store, /zone\.replaceChildren\(\.\.\.SOURCES_STORE\.map\(id =>/, 'en mode choix, tous les onglets (chercher en ligne et poser)');
   assert.match(store, /if \(choix && accepterChoix\(\{ fichier: issue\.fichier, local: true, batiment: false \}\)\) \{\n      const rendre = choix;\n      fermerStore\(\);\n      rendre\(issue\.fichier\);/, 'un téléchargement en mode choix rend le modèle');
 });
+
+test('demandé : l\'aperçu 3D de l\'éditeur recentre la construction tant que la caméra n\'a pas été bougée', () => {
+  const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
+  const apercu = ui.slice(ui.indexOf('function ouvrirApercu'), ui.indexOf('function validerLaPose'));
+  assert.match(apercu, /let suivre = true/);
+  assert.match(apercu, /if \(suivre\) cadrer\(false\);/, 'chaque reconstruction recentre');
+  assert.match(apercu, /deplacer: e\.button === 2 \};\n    suivre = false;/, 'un geste suspend le suivi');
+  assert.match(apercu, /e\.preventDefault\(\); suivre = false; distance/, 'la molette aussi');
+  assert.match(apercu, /const recadrerApercu = \(\) => \{ suivre = true; cadrer\(true\);/, '« Recadrer » le rend');
+  assert.match(apercu, /box3FromObjectSkinAware3D\(groupe\)/);
+});
+
