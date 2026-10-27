@@ -28,6 +28,7 @@ import { niveauxTries, niveauDessus, niveauDessous, hauteurDesMursDuNiveau } fro
 import { formesDesPieces, dansLaFace, pointDansPolygone } from './batiment-pieces.js';
 import { TOLERANCE_SOMMET } from './batiment-geometrie.js';
 import { squeletteDroit, trianguler } from './batiment-squelette.js';
+import { meublesDuNiveau, empreinteDuMeuble, hauteurAuSol, basDuMeuble, sommetDuMeuble } from './batiment-mobilier.js';
 
 export const TYPES_TOIT = ['plat', 'un-pan', 'deux-pans', 'quatre-pans'];
 export const BORDURES_TOIT = ['aucune', 'acrotere', 'garde-corps'];
@@ -548,6 +549,59 @@ export function hauteurDesToits(b){
       else if (t.reglages.bordure === 'acrotere') h = Math.max(h, t.base + ACROTERE.hauteur);
       else if (t.reglages.bordure === 'garde-corps') h = Math.max(h, t.base + GARDE_CORPS.hauteur);
     }
+    // #458c : ce qui dépasse du toit (une cheminée) compte aussi, comme le rendu le pose.
+    for (const m of meublesDuNiveau(b, n.id).filter(x => x.surLeToit)) {
+      h = Math.max(h, baseSurLeToit(b, n.id, empreinteDuMeuble(m)) + hauteurAuSol(m) - basDuMeuble(m) + sommetDuMeuble(m));
+    }
   }
   return h;
+}
+
+// ── Les éléments posés sur le toit (#458c) ─────────────────────────────────────────────────────
+
+/**
+ * La hauteur du dessus du toit d'un niveau au point p (vu de dessus) : sur un pan, le plan du pan ;
+ * sur un toit plat, le dessus de sa dalle. Null hors du toit (hors de la forme, dans une cour). PURE.
+ */
+export function hauteurDuToitEn(b, niveauId, p){
+  for (const t of toitsDuNiveau(b, niveauId)) {
+    const dedans = (poly) => pointDansPolygone(p, poly);
+    const forme = t.geometrie ? decaler(t.ext, t.adosses.map(a => (a ? 0 : t.reglages.debord))) : t.ext;
+    if (!dedans(forme) || (t.extTrous || []).some(dedans)) continue;
+    if (!t.geometrie) return t.base;
+    for (const pan of t.geometrie.pans) {
+      const tris = pan.triangles || pan.points.slice(2).map((_, i) => [0, i + 1, i + 2]);
+      for (const [i, j, k] of tris) {
+        const A = pan.points[i], B = pan.points[j], C = pan.points[k];
+        const det = (B.x - A.x) * (C.z - A.z) - (C.x - A.x) * (B.z - A.z);
+        if (Math.abs(det) < 1e-12) continue;
+        const u = ((p.x - A.x) * (C.z - A.z) - (C.x - A.x) * (p.z - A.z)) / det;
+        const v = ((B.x - A.x) * (p.z - A.z) - (p.x - A.x) * (B.z - A.z)) / det;
+        if (u >= -1e-9 && v >= -1e-9 && u + v <= 1 + 1e-9) return A.y + u * (B.y - A.y) + v * (C.y - A.y);
+      }
+    }
+    return t.base;
+  }
+  return null;
+}
+
+/**
+ * Où poser un élément sur le toit (une cheminée, une antenne) : le plus BAS du toit sous son empreinte,
+ * pour qu'il s'y plante sans flotter (il traverse la pente du côté qui monte, comme une vraie
+ * cheminée). Hors du toit : le dessus des murs. PURE.
+ */
+export function baseSurLeToit(b, niveauId, empreinte){
+  const ys = empreinte.map(p => hauteurDuToitEn(b, niveauId, p)).filter(y => y != null);
+  if (ys.length) return Math.min(...ys);
+  const n = ((b && b.niveaux) || []).find(x => x.id === niveauId);
+  return n ? (n.elevation || 0) + hauteurDesMursDuNiveau(b, niveauId) : 0;
+}
+
+/** Un point où poser un élément sur le toit d'un niveau : le milieu de sa première forme couverte. */
+export function centreDuToit(b, niveauId){
+  const t = toitsDuNiveau(b, niveauId)[0];
+  if (!t) return null;
+  const c = t.contour;
+  const p = { x: c.reduce((s, q) => s + q.x, 0) / c.length, z: c.reduce((s, q) => s + q.z, 0) / c.length };
+  return pointDansPolygone(p, c) ? p : c[0];
 }

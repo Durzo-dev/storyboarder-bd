@@ -45,13 +45,15 @@ export function dimensionsDeDepart(mesurees){
 }
 
 /** Pose un meuble au point `centre` du niveau. Rend le meuble créé. */
-export function ajouterMeuble(b, niveauId, { modelFile, nom, centre, mesurees }){
+export function ajouterMeuble(b, niveauId, { modelFile, nom, centre, mesurees, surLeToit = false }){
   if (!Array.isArray(b.elements)) b.elements = [];
   const { dims, base } = dimensionsDeDepart(mesurees);
   const m = {
     id: nouvelId(b.elements), niveauId, modelFile, nom: nom || String(modelFile || '').replace(/\.glb$/i, ''),
     x: arrondi(centre.x), z: arrondi(centre.z), rotY: 0, echelle: 1, dims, base,
   };
+  // #458c : posé sur le toit de son niveau (une cheminée, une antenne), pas sur son sol.
+  if (surLeToit) m.surLeToit = true;
   b.elements.push(m);
   return m;
 }
@@ -87,6 +89,9 @@ function coins3D(m){
 export function axesDuMeuble(m){
   return { x: tourner3D(m, { x: 1, y: 0, z: 0 }), y: tourner3D(m, { x: 0, y: 1, z: 0 }), z: tourner3D(m, { x: 0, y: 0, z: 1 }) };
 }
+
+/** Le plus haut de ses coins une fois tourné (sa hauteur s'il est droit), depuis le bas de sa boîte d'origine. */
+export const sommetDuMeuble = (m) => Math.max(...coins3D(m).map(c => c.y));
 
 /** Le plus bas de ses coins une fois tourné (0 s'il est droit) : ce qu'on remonte pour le poser au sol. */
 export const basDuMeuble = (m) => Math.min(...coins3D(m).map(c => c.y));
@@ -201,7 +206,7 @@ function serecouvrent(A, B, eps){
  * quand `traverse` est coché.
  */
 export function meubleEnCollision(b, m, eps = 0.005){
-  if (m.traverse) return false;
+  if (m.traverse || m.surLeToit) return false;   // #458c : sur le toit, au-dessus des murs
   const e = empreinteDuMeuble(m);
   for (const poly of polygonesDesMurs((b.murs || []).filter(w => w.niveauId === m.niveauId)).values()) {
     if (serecouvrent(e, poly, eps)) return true;

@@ -248,3 +248,29 @@ describe('#458b : le squelette droit, pour les formes en L, en T, en U', async (
     }
   });
 });
+
+describe('#458c : les éléments posés sur le toit', async () => {
+  const { hauteurDuToitEn, baseSurLeToit, centreDuToit } = await import('../src/batiment-toits.js');
+  const { ajouterMeuble, empreinteDuMeuble, meubleEnCollision } = await import('../src/batiment-mobilier.js');
+  test('la hauteur du toit en un point : le plan du pan, le dessus d\'un toit plat, rien dans le vide', () => {
+    const b = maison(8, 4);
+    fixerToit(b, 'n0', { type: 'deux-pans', pente: 45, debord: 0 });
+    const base = hauteurDesMursDuNiveau(b, 'n0');
+    proche(hauteurDuToitEn(b, 'n0', { x: 4, z: 2 }), base + 2.1, 1e-6);   // le faîtage (mur de 0,2 compris)
+    proche(hauteurDuToitEn(b, 'n0', { x: 4, z: 1 }), base + 1.1, 1e-6);
+    assert.equal(hauteurDuToitEn(b, 'n0', { x: 20, z: 20 }), null);
+    fixerToit(b, 'n0', { type: 'plat' });
+    proche(hauteurDuToitEn(b, 'n0', { x: 4, z: 2 }), base, 1e-9);
+  });
+  test('une cheminée se plante au plus bas du toit sous elle ; elle ne heurte pas les murs ; la hauteur du bâtiment la compte', () => {
+    const b = maison(8, 4);
+    fixerToit(b, 'n0', { type: 'deux-pans', pente: 45, debord: 0 });
+    const avant = encombrementDuBatiment(b).hauteur;
+    const m = ajouterMeuble(b, 'n0', { modelFile: 'cheminee.glb', centre: { x: 4, z: 1.5 }, mesurees: [0.6, 0.6, 3], surLeToit: true });
+    const e = empreinteDuMeuble(m);
+    proche(baseSurLeToit(b, 'n0', e), Math.min(...e.map(p => hauteurDuToitEn(b, 'n0', p))), 1e-9);
+    assert.equal(meubleEnCollision(b, { ...m, x: 0 }), false, 'sur le toit, au-dessus des murs');
+    assert.ok(encombrementDuBatiment(b).hauteur > avant);
+    assert.ok(centreDuToit(b, 'n0'));
+  });
+});

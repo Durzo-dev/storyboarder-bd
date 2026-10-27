@@ -508,8 +508,14 @@ moves on screen.
   (`ajouterContour`); a wall, a staircase or a stair opening in the footprint: error, nothing changes.
   Its floor (`estUneTerrasse`): over a room, a terrace; over a courtyard or on the ground floor, none.
   The roof goes around courtyards (straight skeleton with holes: a hole welds onto the front around
-  it; bridged triangulation for a single pitch), and so do the parapet and the railing. Left: **#458c**, Elements on the roof, roof coverings shipped with
-  the application.
+  it; bridged triangulation for a single pitch), and so do the parapet and the railing. Around a
+  courtyard, a gable roof has no gable (each wing drains on both sides). Deleting an island makes a
+  courtyard too (its walls stay). **#458c, elements on the roof, DONE**: "Add an element on the roof"
+  (Roof section) sets a store model on the level's roof (`surLeToit`, an ADDED furniture field); it is
+  planted at the lowest roof point under its footprint (`baseSurLeToit`, `hauteurDuToitEn`), does not
+  collide with walls nor snap to them, is drawn dashed on the plan; "On the roof" moves it between
+  room and roof; the building's height includes it. Left of #458c: roof coverings shipped with the
+  application.
 - **#459** the cutaway view per Panel. **#459a DONE** (27 October 2026): picking a placed building in
   "Elements" shows the "Building display" section: "Show up to: The whole building / <level>". Stored
   on the placed Element (`affichage.jusquA`, an ADDED field), so per Panel. The cut rig carries the

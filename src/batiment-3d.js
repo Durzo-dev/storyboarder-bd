@@ -15,8 +15,8 @@ import { formesDesPieces, dansLaFace, pointDansPolygone } from './batiment-piece
 import { formeDeLEscalier, tremieDeLEscalier } from './batiment-escaliers.js';
 import { niveauxTries, hauteurDesMursDuNiveau, epaisseurDuDessus, niveauDessous } from './batiment-niveaux.js';
 import { fabriqueDeRevetements, revetementDeLaFace, revetementDeLaPiece, pieceDevantLaFace } from './batiment-revetements.js';
-import { meublesDuNiveau, hauteurAuSol, basDuMeuble } from './batiment-mobilier.js';
-import { toitsDuNiveau, decaler, ACROTERE, GARDE_CORPS, EPAISSEUR_TOIT, estUneTerrasse } from './batiment-toits.js';
+import { meublesDuNiveau, hauteurAuSol, basDuMeuble, empreinteDuMeuble } from './batiment-mobilier.js';
+import { toitsDuNiveau, decaler, ACROTERE, GARDE_CORPS, EPAISSEUR_TOIT, estUneTerrasse, baseSurLeToit } from './batiment-toits.js';
 
 /** Les matières d'un bâtiment, à créer une fois par renderer. */
 export function materiauxBatiment3D(T){
@@ -331,7 +331,12 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, 
     // #454c : les escaliers du niveau.
     (b.escaliers || []).filter(x => x.niveauId === n.id).forEach(x => construireEscalier(T, b, x, mats, n.elevation, groupe));
     // #454e : le mobilier du niveau, posé au sol.
-    meublesDuNiveau(b, n.id).forEach(m => groupe.add(construireMeuble(T, m, mats, n.elevation, m.id === rouge)));
+    // #458c : un élément SUR LE TOIT (une cheminée) s'y plante ; caché avec le toit quand la coupe l'ouvre.
+    meublesDuNiveau(b, n.id).forEach(m => {
+      if (m.surLeToit && coupe && n.id === dernier) return;
+      const base = m.surLeToit ? baseSurLeToit(b, n.id, empreinteDuMeuble(m)) : n.elevation;
+      groupe.add(construireMeuble(T, m, mats, base, m.id === rouge));
+    });
     // #458 : le toit du niveau, sur ses pièces découvertes ; pas sur un dernier niveau ouvert par la coupe.
     if (!(coupe && n.id === dernier)) construireToits(T, b, n, mats, groupe);
   });

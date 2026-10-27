@@ -240,7 +240,8 @@ describe('les retouches de la section (demandé)', () => {
     const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
     assert.match(ui, /bouton\('quartDeTour',/);
     assert.match(ui, /bouton\('reinitialiser',/);
-    assert.match(ui, /hauteur,\s*coche\(tr\('Stuck to the floor', 'Collé au sol'\)/);
+    // L'élévation, puis « Sur le toit » (#458c), puis « Collé au sol » (« Collé au toit » sur le toit).
+    assert.match(ui, /hauteur,[\s\S]{0,200}coche\(tr\('On the roof', 'Sur le toit'\)[\s\S]{0,300}coche\(meuble\.surLeToit \? tr\('Stuck to the roof', 'Collé au toit'\) : tr\('Stuck to the floor', 'Collé au sol'\)/);
     assert.match(ui, /ht\.textContent = tr\('Elevation', 'Élévation'\);/);
     assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /\.batiment-meuble-boutons\{ display:flex; justify-content:center;/);
   });

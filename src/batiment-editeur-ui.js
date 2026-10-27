@@ -23,7 +23,7 @@ import {
   ICONES_TYPE_ESCALIER, ICONES_SENS_ESCALIER, ICONES_RAMPE, ICONES_MARCHES, ICONES_OUVERTURE, ICONES_MANOEUVRE,
   ICONES_REMPLISSAGE, ICONES_DESSUS, iconeSensPorte, ICONES_TOIT, ICONES_BORDURE_TOIT,
 } from './batiment-icones.js';
-import { toitDuNiveau, fixerToit, toitsDuNiveau, piecesDecouvertes, BORNES_TOIT } from './batiment-toits.js';
+import { toitDuNiveau, fixerToit, toitsDuNiveau, piecesDecouvertes, BORNES_TOIT, centreDuToit } from './batiment-toits.js';
 import { actionDEnregistrement } from './batiment-bibliotheque.js';
 import { signatureDuBatiment, signatureDeStructure, resumeDesMasques } from './batiment-element.js';
 import { enregistrerBatiment, listerBatiments, lireBatimentDuDisque } from './batiment-store.js';
@@ -570,6 +570,12 @@ function remplirToit(){
       elements.push(info);
     }
   }
+  // #458c : poser un élément sur le toit (une cheminée, une antenne), depuis le store de modèles.
+  const surLeToit = document.createElement('button');
+  surLeToit.type = 'button'; surLeToit.className = 'full-btn';
+  surLeToit.textContent = tr('Add an element on the roof', 'Ajouter un élément sur le toit');
+  surLeToit.onclick = () => ajouterUnElement({ surLeToit: true });
+  elements.push(surLeToit);
   // La couverture d'un toit en pente (un toit plat garde la dalle, comme avant).
   const gardes = new Set();
   if (t.type !== 'plat') {
@@ -866,10 +872,10 @@ function meubleSelectionne(){
  * choisi est posé au centre de la pièce, au sol, puis choisi (outil Sélection). Ses dimensions : ce
  * que les vignettes ont relevé, sinon mesurées sur le modèle décodé.
  */
-function ajouterUnElement(){
-  const piece = pieceSelectionnee();
-  if (!piece) return;
-  const pieceId = piece.id, niveauId = E.niveauId;
+function ajouterUnElement({ surLeToit = false } = {}){
+  const piece = surLeToit ? null : pieceSelectionnee();
+  if (!piece && !surLeToit) return;
+  const pieceId = piece && piece.id, niveauId = E.niveauId;
   ouvrirStore({
     accepter: (e) => !e.introuvable && !e.batiment,
     choisir: async (fichier) => {
@@ -882,10 +888,11 @@ function ajouterUnElement(){
         if (c && c.scene && T) { const t = new T.Box3().setFromObject(c.scene).getSize(new T.Vector3()); mesurees = [t.x, t.z, t.y]; }
       }
       if (!E) return;
-      const p = (E.batiment.pieces || []).find(x => x.id === pieceId);
-      if (!p || !p.repere) return;
+      // #458c : sur le toit, au milieu de sa forme ; sinon au centre de la pièce.
+      const centre = surLeToit ? centreDuToit(E.batiment, niveauId) : ((E.batiment.pieces || []).find(x => x.id === pieceId) || {}).repere;
+      if (!centre) return;
       let id = null;
-      modifier(b => { id = ajouterMeuble(b, niveauId, { modelFile: fichier, centre: p.repere, mesurees }).id; });
+      modifier(b => { id = ajouterMeuble(b, niveauId, { modelFile: fichier, centre, mesurees, surLeToit }).id; });
       choisirOutil('selection');
       E.selection = { meubleId: id };
       remplirPanneau(); dessinerPlan();
@@ -1093,7 +1100,10 @@ function reglagesDuMeuble(meuble){
     // Dans cet ordre (demandé) : l'élévation, puis « Collé au sol », puis « Peut traverser les murs ».
     sectionDElement('batimentElemPosition', tr('Position', 'Position'),
       hauteur,
-      coche(tr('Stuck to the floor', 'Collé au sol'), meuble.colle !== false,
+      // #458c : sur le toit de son niveau, ou dans ses pièces.
+      coche(tr('On the roof', 'Sur le toit'), !!meuble.surLeToit,
+        (v) => modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (!x) return; if (v) x.surLeToit = true; else delete x.surLeToit; })),
+      coche(meuble.surLeToit ? tr('Stuck to the roof', 'Collé au toit') : tr('Stuck to the floor', 'Collé au sol'), meuble.colle !== false,
         (v) => modifier(b => { const x = (b.elements || []).find(q => q.id === id); if (x) collerAuSol(x, v); })),
       // Décoché (par défaut), il ne traverse ni les murs ni, décollé, le sol (demandé).
       coche(tr('Can pass through walls', 'Peut traverser les murs'), !!meuble.traverse,
@@ -1766,7 +1776,10 @@ function dessinerPlan(){
     g.save();
     poly(coins);
     g.globalAlpha = 0.18; g.fillStyle = teinte; g.fill();
+    // #458c : un élément sur le toit, en pointillé (il n'est pas dans la pièce, mais au-dessus).
+    if (x.surLeToit) g.setLineDash([5, 3]);
     g.globalAlpha = 1; g.strokeStyle = teinte; g.lineWidth = choisi ? 2 : 1.5; g.stroke();
+    g.setLineDash([]);
     // Le devant (le côté +z du modèle) : un trait du centre vers lui, pour voir où il regarde.
     const centre = versEsc({ x: x.x, z: x.z }), devant = versEsc(devantDuMeuble(x));
     g.lineWidth = choisi ? 3 : 2; g.beginPath(); g.moveTo(centre.x, centre.y); g.lineTo(devant.x, devant.y); g.stroke();
@@ -1978,7 +1991,7 @@ function survoler(e){
       const x = E.batiment.elements.find(q => q.id === g.id);
       if (x) {
         let centre = { x: g.depart.x + p.x - g.p.x, z: g.depart.z + p.z - g.p.z };
-        if (!e.altKey) centre = aimanterMeuble(E.batiment, x, centre);
+        if (!e.altKey && !x.surLeToit) centre = aimanterMeuble(E.batiment, x, centre);   // sur le toit, pas de mur
         x.x = Math.round(centre.x * 1000) / 1000; x.z = Math.round(centre.z * 1000) / 1000;
         g.bouge = true;
         // Forcé dans un mur qu'il ne peut pas traverser : rouge ; il reviendra au relâcher (demandé).
@@ -2215,7 +2228,7 @@ function cablerPlan(){
         const base = axeActif === 'x' ? g.base.rotX : g.base.rotZ;
         fixerAngle(x, axeActif, angleAimante(base + delta, reglage));
       }
-      if (!e.altKey) { const c = aimanterMeuble(E.batiment, x, { x: x.x, z: x.z }); x.x = c.x; x.z = c.z; }
+      if (!e.altKey && !x.surLeToit) { const c = aimanterMeuble(E.batiment, x, { x: x.x, z: x.z }); x.x = c.x; x.z = c.z; }
       E.collisionMeuble = meubleEnCollision(E.batiment, x) ? x.id : null;
       E.selection = { meubleId: x.id };
       apresModification();

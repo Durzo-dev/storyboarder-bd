@@ -537,7 +537,13 @@ place : rien ne bouge à l'écran.
   sol (`estUneTerrasse`) : sur une pièce, une terrasse ; sur une cour ou au rez-de-chaussée, aucun. Le
   toit fait le tour des cours (squelette droit à trous : un trou se soude au front qui l'entoure ;
   triangulation à ponts pour un pan unique), et l'acrotère ou le garde-corps aussi. Autour d'une cour,
-  un deux-pans n'a pas de pignon (chaque aile s'égoutte des deux côtés).
+  un deux-pans n'a pas de pignon (chaque aile s'égoutte des deux côtés). Supprimer un îlot en fait une
+  cour aussi (ses murs restent). **#458c, les éléments sur le toit, FAIT** : « Ajouter un élément sur
+  le toit » (section Toit) pose un modèle du store sur le toit du niveau (`surLeToit`, champ AJOUTÉ du
+  meuble) ; il se plante au plus bas du toit sous son empreinte (`baseSurLeToit`, `hauteurDuToitEn`),
+  ne heurte pas les murs, n'est pas aimanté à eux, se dessine en pointillé sur le plan ; « Sur le
+  toit » le fait passer de la pièce au toit ; la hauteur du bâtiment le compte. Reste de #458c : des toitures
+  livrées avec l'application.
   Reste **#458c** : les Éléments sur le toit, des toitures livrées avec l'application.
 - **#459** la vue en coupe par Case. **#459a FAIT** (27 octobre 2026) : choisir un bâtiment placé
   dans « Éléments » montre la section « Affichage du bâtiment » : « Montrer jusqu'à : Tout le
