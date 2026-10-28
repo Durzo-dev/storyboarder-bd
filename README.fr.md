@@ -4,7 +4,7 @@
 
 > 🇬🇧 [English version](README.md)
 
-**Version 1.13.3**
+**Version 1.13.4**
 
 **Application de découpage de Bandes Dessinées** : outil de storyboard pour créer, organiser et visualiser des planches de BD avec rendu 3D des scènes.
 
@@ -12,12 +12,12 @@
 
 ## ⬇️ Télécharger
 
-[![Télécharger pour Windows](https://img.shields.io/badge/T%C3%A9l%C3%A9charger-Installeur_Windows-0078D6?style=for-the-badge&logo=windows)](https://github.com/val66/storyboarder-bd/releases/latest/download/Storyboarder-BD-Setup.exe)
+[![Télécharger pour Windows](https://img.shields.io/badge/T%C3%A9l%C3%A9charger-Installeur_Windows-0078D6?style=for-the-badge&logo=windows)](https://github.com/Durzo-dev/storyboarder-bd/releases/latest/download/Storyboarder-BD-Setup.exe)
 
 Lancez le fichier téléchargé et suivez les étapes, sans ligne de commande. L'application se met
 ensuite à jour d'elle-même.
 
-Versions précédentes et notes de version : [toutes les releases](https://github.com/val66/storyboarder-bd/releases).
+Versions précédentes et notes de version : [toutes les releases](https://github.com/Durzo-dev/storyboarder-bd/releases).
 
 ---
 
@@ -79,7 +79,7 @@ sert à la lancer depuis les sources ou à contribuer.
 
 ### Lancer en développement
 ```bash
-git clone https://github.com/val66/storyboarder-bd.git
+git clone https://github.com/Durzo-dev/storyboarder-bd.git
 cd storyboarder-bd
 npm install
 npm start
@@ -167,4 +167,4 @@ Vous pouvez librement utiliser, modifier et redistribuer ce projet, **à conditi
 
 ## 👤 Auteur
 
-**Valentin**, [@val66](https://github.com/val66)
+**Valentin**, [@Durzo-dev](https://github.com/Durzo-dev)

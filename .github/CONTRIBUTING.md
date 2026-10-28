@@ -7,7 +7,7 @@ Thanks for looking. This file is deliberately short; the reasoning lives in [`do
 ## Setup
 
 ```bash
-git clone https://github.com/val66/storyboarder-bd.git
+git clone https://github.com/Durzo-dev/storyboarder-bd.git
 cd storyboarder-bd
 npm install
 npm run setup-hooks     # ← do not skip this one

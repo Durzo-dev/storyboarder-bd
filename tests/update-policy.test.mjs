@@ -193,8 +193,8 @@ describe('latest.yml', () => {
 describe('le reste', () => {
   test('l\'adresse de l\'installeur', () => {
     assert.equal(urlInstalleur('1.9.0', 'Storyboarder-BD-Setup-1.9.0.exe'),
-      'https://github.com/val66/storyboarder-bd/releases/download/v1.9.0/Storyboarder-BD-Setup-1.9.0.exe');
-    assert.equal(urlInstalleur('v1.9.0', 'a.exe'), 'https://github.com/val66/storyboarder-bd/releases/download/v1.9.0/a.exe');
+      'https://github.com/Durzo-dev/storyboarder-bd/releases/download/v1.9.0/Storyboarder-BD-Setup-1.9.0.exe');
+    assert.equal(urlInstalleur('v1.9.0', 'a.exe'), 'https://github.com/Durzo-dev/storyboarder-bd/releases/download/v1.9.0/a.exe');
   });
   test('la taille lisible', () => {
     assert.equal(tailleLisible(130180869), '124 Mo');

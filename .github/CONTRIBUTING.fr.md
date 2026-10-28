@@ -8,7 +8,7 @@ Merci d'être passé. Ce fichier est volontairement court ; le raisonnement est 
 ## Mise en route
 
 ```bash
-git clone https://github.com/val66/storyboarder-bd.git
+git clone https://github.com/Durzo-dev/storyboarder-bd.git
 cd storyboarder-bd
 npm install
 npm run setup-hooks     # ← ne pas sauter celle-là

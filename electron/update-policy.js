@@ -35,7 +35,7 @@ const BAIL_HORS_LIGNE_MS = 14 * JOUR_MS;
 /** Une horloge un peu en avance sur GitHub n'est pas une triche : on tolère une heure. */
 const TOLERANCE_HORLOGE_MS = 3600 * 1000;
 
-const DEPOT = 'val66/storyboarder-bd';
+const DEPOT = 'Durzo-dev/storyboarder-bd';
 const URL_ATTESTATION = `https://raw.githubusercontent.com/${DEPOT}/attestation/attestation.json`;
 const URL_LATEST_YML = `https://github.com/${DEPOT}/releases/latest/download/latest.yml`;
 /** Les arguments que l'installeur NSIS d'electron-builder comprend pour une mise à jour silencieuse. */

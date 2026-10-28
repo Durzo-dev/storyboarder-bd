@@ -181,7 +181,7 @@ describe('la publication', () => {
     // Avec `publish: null`, electron-builder construit l'installeur mais pas latest.yml : la
     // première release (v1.9.0) a échoué au téléversement pour cette raison. La cible doit être le
     // dépôt même que l'application interroge ; `--publish never` empêche de publier pour autant.
-    assert.deepEqual(PKG.build.publish, { provider: 'github', owner: 'val66', repo: 'storyboarder-bd' });
+    assert.deepEqual(PKG.build.publish, { provider: 'github', owner: 'Durzo-dev', repo: 'storyboarder-bd' });
     assert.equal(`${PKG.build.publish.owner}/${PKG.build.publish.repo}`, politique.DEPOT);
   });
   test('la publication de la note est rejouable : une release existante est mise à jour', () => {
@@ -189,7 +189,7 @@ describe('la publication', () => {
     assert.match(RELEASE, /gh release edit "\$\{\{ github\.ref_name \}\}" --notes-file NOTE\.md/);
   });
   test('le bouton « Télécharger » des README vise une copie sans version, que la release téléverse', () => {
-    const URL = 'https://github.com/val66/storyboarder-bd/releases/latest/download/Storyboarder-BD-Setup.exe';
+    const URL = 'https://github.com/Durzo-dev/storyboarder-bd/releases/latest/download/Storyboarder-BD-Setup.exe';
     for (const f of ['README.md', 'README.fr.md']) assert.ok(lire(f).includes(`](${URL})`), f);
     assert.match(RELEASE, /cp dist\/Storyboarder-BD-Setup-\*\.exe dist\/Storyboarder-BD-Setup\.exe/);
     assert.match(RELEASE, /gh release upload [^\n]* dist\/Storyboarder-BD-Setup\.exe --clobber/);

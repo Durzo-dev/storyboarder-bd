@@ -1,6 +1,6 @@
 {
   "name": "storyboard-bd",
-  "version": "1.13.3",
+  "version": "1.13.4",
   "engines": {
     "node": ">=22"
   },
@@ -74,7 +74,7 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "val66",
+      "owner": "Durzo-dev",
       "repo": "storyboarder-bd"
     }
   }

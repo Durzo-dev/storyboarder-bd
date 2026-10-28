@@ -27,7 +27,7 @@ const WORKFLOW_BRUT = readFileSync(join(RACINE, '.github/workflows/release.yml')
 // documentation ; cette fois la parade est en tête de fichier, pour tout le monde.
 const WORKFLOW = WORKFLOW_BRUT.split('\n').filter(l => !l.trimStart().startsWith('#')).join('\n');
 
-const URL_DEPOT = 'https://github.com/val66/storyboarder-bd';
+const URL_DEPOT = 'https://github.com/Durzo-dev/storyboarder-bd';
 const note = (o) => buildReleaseNotes({
   tag: 'v1.2.0', previousTag: 'v1.1.0', subjects: ['Premier', 'Second'], repoUrl: URL_DEPOT, ...o,
 });
@@ -99,10 +99,10 @@ describe('Note de version : les cas où l\'on se serait tu', () => {
 
 describe('normaliseRepoUrl : les deux formes de remote', () => {
   test('https avec .git', () => {
-    assert.equal(normaliseRepoUrl('https://github.com/val66/storyboarder-bd.git'), URL_DEPOT);
+    assert.equal(normaliseRepoUrl('https://github.com/Durzo-dev/storyboarder-bd.git'), URL_DEPOT);
   });
   test('ssh', () => {
-    assert.equal(normaliseRepoUrl('git@github.com:val66/storyboarder-bd.git'), URL_DEPOT);
+    assert.equal(normaliseRepoUrl('git@github.com:Durzo-dev/storyboarder-bd.git'), URL_DEPOT);
   });
   test('déjà propre', () => {
     assert.equal(normaliseRepoUrl(URL_DEPOT), URL_DEPOT);

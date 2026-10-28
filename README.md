@@ -4,7 +4,7 @@
 
 > 🇫🇷 [Version française](README.fr.md)
 
-**Version 1.13.3**
+**Version 1.13.4**
 
 **Comic book storyboarding application**: a desktop tool to create, organize and visualize comic book pages with real-time 3D scene rendering.
 
@@ -12,12 +12,12 @@
 
 ## ⬇️ Download
 
-[![Download for Windows](https://img.shields.io/badge/Download-Windows_installer-0078D6?style=for-the-badge&logo=windows)](https://github.com/val66/storyboarder-bd/releases/latest/download/Storyboarder-BD-Setup.exe)
+[![Download for Windows](https://img.shields.io/badge/Download-Windows_installer-0078D6?style=for-the-badge&logo=windows)](https://github.com/Durzo-dev/storyboarder-bd/releases/latest/download/Storyboarder-BD-Setup.exe)
 
 Run the downloaded file and follow the steps; no command line needed. The application then updates
 itself.
 
-Previous versions and release notes: [all releases](https://github.com/val66/storyboarder-bd/releases).
+Previous versions and release notes: [all releases](https://github.com/Durzo-dev/storyboarder-bd/releases).
 
 ---
 
@@ -79,7 +79,7 @@ is for running it from source or contributing.
 
 ### Run in development
 ```bash
-git clone https://github.com/val66/storyboarder-bd.git
+git clone https://github.com/Durzo-dev/storyboarder-bd.git
 cd storyboarder-bd
 npm install
 npm start
@@ -164,4 +164,4 @@ You are free to use, modify and redistribute this project, provided you:
 
 ## 👤 Author
 
-**Valentin**, [@val66](https://github.com/val66)
+**Valentin**, [@Durzo-dev](https://github.com/Durzo-dev)
