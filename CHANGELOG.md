@@ -13,6 +13,31 @@ version coûterait plus qu'il ne rapporte.
 
 ---
 
+## v1.14.0
+
+**Le dépôt change d'adresse, et les éléments posés sur un toit y restent.**
+
+### Ce qui change pour vous
+
+**Nouvelle adresse.** Le projet vit désormais sur GitHub sous `Durzo-dev/storyboarder-bd`.
+L'application y cherche ses mises à jour ; rien à faire de votre côté.
+
+**Éléments sur le toit.** Un élément posé sur le toit ne peut plus en sortir : tiré au-delà, il
+s'arrête au bord. Sa section Position ne garde que l'Élévation, une marge au-dessus du toit (utile
+quand un modèle s'enfonce dans une pente) ; la molette la règle, 5 cm par cran (1 cm avec Maj), et
+0 le repose sur le toit. « Sur le toit », « Collé au toit » et « Peut traverser les murs » ne sont
+plus proposés : la place d'un élément, pièce ou toit, se choisit en l'ajoutant.
+
+**Menu d'un élément de bâtiment.** Le curseur de taille rejoint la section Dimensions, sous la
+largeur, la longueur et la hauteur : une section de moins.
+
+### Sous le capot
+
+- `ramenerSurLeToit` (batiment-toits.js) : un point hors du toit revient au bord le plus proche
+  (face extérieure des murs, hors des cours).
+- Adresse du dépôt mise à jour partout (attestation, installeur, publication, User-Agent du store,
+  README, LICENSE).
+
 ## v1.13.0
 
 **Des toits, des cours, et une icône.** Chaque niveau d'un bâtiment reçoit son toit automatiquement,
