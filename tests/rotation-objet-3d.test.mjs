@@ -62,12 +62,13 @@ test('vu de biais aussi, un bouton rotatif : un tour complet de la souris, un to
   proche(pas.at(-1), -360, 1e-6);
 });
 
-test('le geste selon la caméra : de face (moins de 30° de plongée), le plateau ; de biais ou de dessus, le bouton', () => {
+test('le geste selon la caméra : de face (moins de 45° de plongée), le plateau ; de biais ou de dessus, le bouton', () => {
   const r = (d) => d * Math.PI / 180;
   assert.equal(modeSelonLaCamera3D(r(0)), 'droit');
   assert.equal(modeSelonLaCamera3D(r(25)), 'droit');
   assert.equal(modeSelonLaCamera3D(r(-20)), 'droit');   // contre-plongée légère
-  assert.equal(modeSelonLaCamera3D(r(35)), 'circulaire');
+  assert.equal(modeSelonLaCamera3D(r(40)), 'droit');
+  assert.equal(modeSelonLaCamera3D(r(50)), 'circulaire');
   assert.equal(modeSelonLaCamera3D(r(90)), 'circulaire');
   const ev = readFileSync(new URL('../src/events.js', import.meta.url), 'utf8');
   assert.match(ev, /const _mode = modeSelonLaCamera3D\(Math\.asin\(Math\.max\(-1, Math\.min\(1, b\.backward\.y\)\)\)\);/);

@@ -201,7 +201,7 @@ Les mouvements de la caméra sont **lissés** (elle rejoint sa cible en quelques
 |---|---|---|
 | Glisser gauche un Élément | le déplacer dans le plan face à la caméra | suit la vraie caméra (un rayon) ; il ne passe pas sous le sol |
 | Molette, un Élément choisi | l'avancer ou le reculer le long de l'axe de la caméra | 0,72 m par cran |
-| Clic droit maintenu sur l'Élément choisi (#463d) | le tourner autour de la verticale | selon la caméra au début du geste (`rotation-objet-3d.js`) : de face (moins de 30° de plongée), un plateau tournant, glisser horizontal à 0,5°/px ; de biais ou de dessus, un bouton rotatif, l'angle que la souris parcourt autour de lui, cumulé (le glisser en ligne s'y inversait à mi-tour, signalé) ; aimant 90° (6°), Ctrl par 15°, Alt libre, Maj cinq fois plus fin ; sans bouger, le menu |
+| Clic droit maintenu sur l'Élément choisi (#463d) | le tourner autour de la verticale | selon la caméra au début du geste (`rotation-objet-3d.js`) : de face (moins de 45° de plongée), un plateau tournant, glisser horizontal à 0,5°/px ; de biais ou de dessus, un bouton rotatif, l'angle que la souris parcourt autour de lui, cumulé (le glisser en ligne s'y inversait à mi-tour, signalé) ; aimant 90° (6°), Ctrl par 15°, Alt libre, Maj cinq fois plus fin ; sans bouger, le menu |
 | R (#463d) | un quart de tour, horaire vu de dessus | |
 | Les curseurs de sa fenêtre | les trois angles | ±180°, par degré, champ en degrés (#463a) |
 

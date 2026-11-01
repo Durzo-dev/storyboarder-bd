@@ -6,7 +6,7 @@
  *
  * LE GESTE DÉPEND DE LA CAMÉRA, choisi au DÉBUT du geste et gardé jusqu'au relâchement (décidé avec
  * Valentin, comme les articulations : en ligne vu de côté, rotatif vu par la pointe de l'axe) :
- *   - caméra DE FACE ou presque (elle plonge de moins de 30°, `PLONGEE_PLATEAU_3D`) : un PLATEAU
+ *   - caméra DE FACE ou presque (elle plonge de moins de 45°, `PLONGEE_PLATEAU_3D`) : un PLATEAU
  *     TOURNANT, glisser à gauche ou à droite, à 0,5° par pixel ; vers la droite, la face de l'objet
  *     tourne vers la droite. De face, le plan de rotation est vu par la tranche : tourner la souris
  *     autour de l'objet n'y correspond à rien de visible ;
@@ -20,7 +20,7 @@ import { POSE_DRAG_DEG_PER_PX, pointerSweepAngle3D, accumulateSweepDegrees3D } f
 import { angleAimante } from './batiment-mobilier.js';
 
 /** En deçà de cette plongée de la caméra (radians), le plateau tournant ; au-delà, le bouton rotatif. */
-export const PLONGEE_PLATEAU_3D = 30 * Math.PI / 180;
+export const PLONGEE_PLATEAU_3D = 45 * Math.PI / 180;   // 30° d'abord, 45° demandé à l'essai
 
 /**
  * Le geste pour une caméra qui plonge de `plongee` radians (vers le bas, positif ; une caméra en
