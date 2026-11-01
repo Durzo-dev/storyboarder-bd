@@ -45,7 +45,7 @@ import {
 import {
   ensureElementUnits3D, ensureElementWorldPos3D,
   findOwningPanel, groundMagnetEligible,
-  getCamOrbitWorld, mergedBuildWallRigCache3D, panelCamBasis3D, panelSceneCache3D, slabMeshCache3D,
+  getCamOrbitWorld, mergedBuildWallRigCache3D, panelCamBasis3D, panelSceneCache3D, slabMeshCache3D, tracéWallThickness3D,
 } from './scene3d.js';
 import { preparerPoseDansUnBatiment } from './batiment-pose-ui.js';
 import {
@@ -1771,7 +1771,7 @@ export function openTracéModal(obj){
   // La couleur s'applique EN DIRECT à la Trace (demandé) ; ce qu'elle était à l'ouverture est gardé
   // pour la lui rendre si la fenêtre se ferme sans « Enregistrer » (events.js).
   // La largeur et la hauteur aussi (demandé : visibles pendant la saisie, pas seulement à l'enregistrement).
-  S.tracéModalOrigine = { target: obj, color: obj.color, width: obj.width, wallHeight: obj.wallHeight,
+  S.tracéModalOrigine = { target: obj, color: obj.color, width: obj.width, wallHeight: obj.wallHeight, wallThickness: obj.wallThickness,
     marquage: obj.marquage, largeur: obj.world ? obj.world.width : undefined };
   // Le marquage au sol, pour une route seulement ; absent du fichier = affiché.
   document.getElementById('tracéMarquageField').style.display = obj.tracéType === 'route' ? '' : 'none';
@@ -1787,6 +1787,14 @@ export function openTracéModal(obj){
   if (_hasHeight) {
     document.getElementById('tracéHeightInput').value =
       obj.wallHeight != null ? obj.wallHeight : (_def.wallHeight || 0.5);
+  }
+  // L'épaisseur d'un muret (demandé), en cm : la sienne, ou celle qui suit sa hauteur.
+  const _epaisseur = obj.tracéType === 'muret';
+  document.getElementById('tracéThicknessField').style.display = _epaisseur ? '' : 'none';
+  if (_epaisseur) {
+    const champ = document.getElementById('tracéThicknessInput');
+    champ.value = String(Math.round(tracéWallThickness3D(obj) * 100));
+    champ.dataset.initial = champ.value;
   }
   S.tracéModalCarre = null;
   buildTracéTextureGrid(obj.tracéType, obj.traceTexture || null);

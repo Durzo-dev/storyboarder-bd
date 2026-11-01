@@ -199,7 +199,7 @@ describe('la largeur et la hauteur d\'un Tracé, EN DIRECT (demandé)', () => {
     const ev = lire('events.js');
     assert.match(ev, /largeurDeTrace3D\(\{ width: o\.width, world: \{ width: o\.largeur \} \}, largeur\.value\)/);
     assert.match(ev, /hauteur\.addEventListener\('input'/);
-    assert.match(ev, /for \(const k of \['color', 'width', 'wallHeight'(, 'marquage')?\]\)/);
+    assert.match(ev, /for \(const k of \['color', 'width', 'wallHeight', 'wallThickness', 'marquage'\]\)/);
     assert.match(ev, /if \(t\.world && o\.largeur !== undefined\) t\.world\.width = o\.largeur;/);
     assert.match(lire('modals.js'), /largeur: obj\.world \? obj\.world\.width : undefined/);
   });
@@ -215,7 +215,7 @@ describe('le marquage au sol d\'une route (demandé, coché par défaut)', () =>
   test('la case, pour une route seulement, en direct, rendue si l\'on ferme sans enregistrer', () => {
     assert.match(lire('index.html'), /<input type="checkbox" id="tracéMarquageInput" checked>/);
     assert.match(lire('modals.js'), /tracéMarquageField'\)\.style\.display = obj\.tracéType === 'route' \? '' : 'none'/);
-    assert.match(lire('events.js'), /\['color', 'width', 'wallHeight', 'marquage'\]/);
+    assert.match(lire('events.js'), /\['color', 'width', 'wallHeight', 'wallThickness', 'marquage'\]/);
   });
 });
 
@@ -255,3 +255,18 @@ describe('les textures de Bulle dans le store', () => {
     assert.equal(I.textureDeLaValeur('int:sol:gazon', I.USAGE_BULLE).id, 'sol:gazon');
   });
 });
+
+// Demandé : l'épaisseur d'un muret se règle (en cm), en direct ; sans réglage, elle suit la hauteur.
+describe('l\'épaisseur d\'un muret', () => {
+  const lire = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
+  test('le champ (muret seulement), en direct, écrit seulement s\'il change ; le rendu la lit', () => {
+    assert.match(lire('index.html'), /id="tracéThicknessInput" min="2" max="200" step="1"/);
+    assert.match(lire('modals.js'), /const _epaisseur = obj\.tracéType === 'muret';/);
+    assert.match(lire('events.js'), /o\.target\.wallThickness = Math\.min\(2, Math\.max\(0\.02, cm \/ 100\)\);/);
+    assert.match(lire('events.js'), /if \(champ\.value !== champ\.dataset\.initial && isFinite\(cm\) && cm > 0\)/);
+    assert.match(lire('scene3d.js'), /if \(host\.tracéType === 'muret' && host\.wallThickness > 0\) return host\.wallThickness;/);
+    assert.match(lire('scene3d.js'), /wt: o\.wallThickness/);
+    assert.match(lire('io.js'), /o\.wallThickness \*= invS/);
+  });
+});
+

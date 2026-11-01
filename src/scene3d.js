@@ -1640,6 +1640,8 @@ export function tracéWallHeight3D(o){
 const TRACÉ_WALL_THICKNESS_RATIO_3D = { muret: 0.12, haie: 0.611, barriere: 0.55 * 0.529, cloture: 0.06 };
 export function tracéWallThickness3D(host){
   if (!host) return 0;
+  // L'ÉPAISSEUR RÉGLÉE d'un muret (demandé, en mètres), sinon celle qui suit sa hauteur.
+  if (host.tracéType === 'muret' && host.wallThickness > 0) return host.wallThickness;
   const h = tracéWallHeight3D(host);
   return h * (TRACÉ_WALL_THICKNESS_RATIO_3D[host.tracéType] ?? 0.12);
 }
@@ -2936,7 +2938,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
           .map(c => ({ f: c.wallAlongFrac, y: c.wallYFrac, w: c.w, h: c.h }))
       : null;
     // #437 : l'arrivée du grain refait la Trace, qui passe de l'aplat à sa texture.
-    const sigKey = JSON.stringify({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, wh: o.wallHeight, world: o.world, holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) });
+    const sigKey = JSON.stringify({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, wh: o.wallHeight, wt: o.wallThickness, world: o.world, holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) });
     let entry = tracéMeshCache3D.get(o.id);
     if (!entry || entry.sigKey !== sigKey) {
       sondeCompter('Trace reconstruite');

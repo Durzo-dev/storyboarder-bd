@@ -446,6 +446,7 @@ export function migratePanelWorldCoords(){
           o.polygon = o.polygon.map(pt => ({ x: pt.x * invS, z: pt.z * invS }));
         // wallHeight (low wall/fence/hedge Path)
         if (typeof o.wallHeight === 'number') o.wallHeight *= invS;
+        if (typeof o.wallThickness === 'number') o.wallThickness *= invS;   // l'épaisseur d'un muret
         // world (Terrain Zone / route / path / low wall Path)
         if (o.world) {
           if (o.tracéType === 'terrain') {

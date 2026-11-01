@@ -4074,8 +4074,8 @@ canvas.addEventListener('contextmenu', (e) => {
   document.getElementById('ctxInsertImage').style.display = _img.insererImage ? '' : 'none';
   document.getElementById('ctxMoveImage').style.display = _img.deplacerImage ? '' : 'none';
   document.getElementById('ctxImportModel').style.display = (_surCase && _img.ajouter3D) ? '' : 'none';
-  // #454a : « Créer un bâtiment », dans une Scène seulement (demandé).
-  document.getElementById('ctxCreerBatiment').style.display = isSceneCanvas ? '' : 'none';
+  // #454a : « Créer un bâtiment », dans une Scène, et dans une Case (demandé ensuite) qui prend la 3D.
+  document.getElementById('ctxCreerBatiment').style.display = (isSceneCanvas || (_surCase && _img.ajouter3D)) ? '' : 'none';
   ctxLoadSceneTrigger.style.display = (isSceneCanvas || !_img.ajouter3D) ? 'none' : '';
   document.getElementById('ctxBringForward').style.display = isSceneCanvas ? 'none' : '';
   document.getElementById('ctxSendBackward').style.display = isSceneCanvas ? 'none' : '';
@@ -5992,13 +5992,13 @@ document.getElementById('openBatimentEditorBtn').onclick = () => {
 // Un bouton du bandeau rend le focus après un clic : gardé, il s'entourait de la bague orange du
 // clavier à la première touche frappée ensuite (signalé avec les raccourcis H, E, B, P).
 document.querySelectorAll('header button').forEach(b => b.addEventListener('click', () => b.blur()));
-// « Créer un bâtiment » dans une Scène (#454a-4) : l'éditeur s'ouvre, et « Placer dans la scène »
-// y pose le bâtiment, au centre du canevas, comme un modèle importé.
+// « Créer un bâtiment » dans une Scène (#454a-4) ou une Case (demandé ensuite) : l'éditeur s'ouvre, et
+// « Placer dans la scène » (ou « … la Case ») y pose le bâtiment, au centre, comme un modèle importé.
 document.getElementById('ctxCreerBatiment').onclick = () => {
   const { panel } = _cibleDuMenu();
   hideContextMenu();
   const panelId = panel && panel.id;
-  ouvrirEditeurDeBatiment({ destination: { mode: 'placer', valider: (batiment) => {
+  ouvrirEditeurDeBatiment({ destination: { mode: 'placer', dansUneCase: !!panel && !isLockedScenePanel(panel), valider: (batiment) => {
     const page = currentPage();
     const cible = page.objects.find(o => o.id === panelId);
     if (!cible) return;
@@ -7288,7 +7288,7 @@ document.getElementById('tracéModalCancel').addEventListener('click', () => {
 /** Rend à une Trace ce que l'aperçu en direct a changé : couleur, largeur (2D et 3D), hauteur. */
 function rendreTrace(o){
   const t = o.target;
-  for (const k of ['color', 'width', 'wallHeight', 'marquage']) { if (o[k] === undefined) delete t[k]; else t[k] = o[k]; }
+  for (const k of ['color', 'width', 'wallHeight', 'wallThickness', 'marquage']) { if (o[k] === undefined) delete t[k]; else t[k] = o[k]; }
   if (t.world && o.largeur !== undefined) t.world.width = o.largeur;
 }
 
@@ -7322,6 +7322,16 @@ function rendreTrace(o){
     o.target.wallHeight = h;
     drawCurrentPage();
   });
+  // L'ÉPAISSEUR d'un muret (demandé), en centimètres, en direct elle aussi.
+  const epaisseur = document.getElementById('tracéThicknessInput');
+  epaisseur.addEventListener('input', () => {
+    const o = S.tracéModalOrigine;
+    if (!o) return;
+    const cm = parseFloat(String(epaisseur.value).replace(',', '.'));
+    if (!(isFinite(cm) && cm > 0)) return;
+    o.target.wallThickness = Math.min(2, Math.max(0.02, cm / 100));
+    drawCurrentPage();
+  });
 }
 
 document.getElementById('tracéModalSave').addEventListener('click', () => {
@@ -7351,6 +7361,12 @@ document.getElementById('tracéModalSave').addEventListener('click', () => {
   if (document.getElementById('tracéHeightField').style.display !== 'none') {
     const _h = parseFloat(document.getElementById('tracéHeightInput').value);
     S.tracéModalTarget.wallHeight = isFinite(_h) && _h > 0 ? _h : null;
+  }
+  // L'épaisseur d'un muret : écrite seulement si on l'a changée (sinon elle continue de suivre la hauteur).
+  if (document.getElementById('tracéThicknessField').style.display !== 'none') {
+    const champ = document.getElementById('tracéThicknessInput');
+    const cm = parseFloat(String(champ.value).replace(',', '.'));
+    if (champ.value !== champ.dataset.initial && isFinite(cm) && cm > 0) S.tracéModalTarget.wallThickness = Math.min(2, Math.max(0.02, cm / 100));
   }
   // Invalidate the 3D cache to force a re-render with the new height.
   const _cEntry = tracéMeshCache3D.get(S.tracéModalTarget.id);

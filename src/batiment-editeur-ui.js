@@ -280,7 +280,9 @@ function majBoutonsDeSortie(){
   dest.hidden = !E.destination;
   if (E.destination) {
     const appliquer = E.destination.mode === 'appliquer';
-    dest.textContent = appliquer ? tr('Apply the changes', 'Appliquer les modifications') : tr('Place in the scene', 'Placer dans la scène');
+    // Ouvert depuis une CASE (demandé), « Placer dans la Case » ; depuis une Scène, « … la scène ».
+    dest.textContent = appliquer ? tr('Apply the changes', 'Appliquer les modifications')
+      : E.destination.dansUneCase ? tr('Place in the panel', 'Placer dans la Case') : tr('Place in the scene', 'Placer dans la scène');
     dest.classList.toggle('edit-btn', appliquer);
     dest.disabled = sansMur || (appliquer && !differeScene());
     dest.title = sansMur ? tr('Draw at least one wall first.', 'Tracez d\'abord au moins un mur.')

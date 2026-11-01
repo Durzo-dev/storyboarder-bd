@@ -181,3 +181,12 @@ test('signalé : dans une Case, les murs du sous-sol ne ressortent pas du Sol', 
   assert.ok(haut(construireBatiment3D(T, b, materiauxBatiment3D(T))) > -0.01, 'dans l\'éditeur, jusqu\'en haut');
 });
 
+
+// Demandé : « Créer un bâtiment » depuis une Case aussi, et « Placer dans la Case ».
+test('« Créer un bâtiment » dans une Case (qui prend la 3D) et dans une Scène ; le bouton dit où', () => {
+  const ev = readFileSync(new URL('../src/events.js', import.meta.url), 'utf8');
+  assert.match(ev, /'ctxCreerBatiment'\).style.display = \(isSceneCanvas \|\| \(_surCase && _img\.ajouter3D\)\) \? '' : 'none';/);
+  assert.match(ev, /dansUneCase: !!panel && !isLockedScenePanel\(panel\)/);
+  const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
+  assert.match(ui, /E\.destination\.dansUneCase \? tr\('Place in the panel', 'Placer dans la Case'\)/);
+});
