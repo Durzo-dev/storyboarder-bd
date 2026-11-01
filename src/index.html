@@ -1937,12 +1937,22 @@
         <span class="modal-section-caret">▾</span>
       </div>
       <div class="modal-section-body">
-        <label class="modal-field-label">Rotation horizontale</label>
-        <input type="range" id="personaRotYInput" min="-180" max="180" step="1" value="0" style="margin-bottom:12px;">
-        <label class="modal-field-label">Inclinaison</label>
-        <input type="range" id="personaRotXInput" min="-180" max="180" step="1" value="0" style="margin-bottom:12px;">
-        <label class="modal-field-label">Roulis</label>
-        <input type="range" id="personaRotZInput" min="-180" max="180" step="1" value="0">
+        <label class="modal-field-label" for="personaRotYInput">Rotation</label>
+        <div class="orientation-ligne">
+          <input type="range" id="personaRotYInput" min="-180" max="180" step="1" value="0">
+          <input type="number" id="personaRotYInputDeg" class="orientation-degres" min="-180" max="180" step="1" value="0"><span class="orientation-unite">°</span>
+        </div>
+        <label class="modal-field-label" for="personaRotXInput">Inclinaison</label>
+        <div class="orientation-ligne">
+          <input type="range" id="personaRotXInput" min="-180" max="180" step="1" value="0">
+          <input type="number" id="personaRotXInputDeg" class="orientation-degres" min="-180" max="180" step="1" value="0"><span class="orientation-unite">°</span>
+        </div>
+        <label class="modal-field-label" for="personaRotZInput">Bascule</label>
+        <div class="orientation-ligne">
+          <input type="range" id="personaRotZInput" min="-180" max="180" step="1" value="0">
+          <input type="number" id="personaRotZInputDeg" class="orientation-degres" min="-180" max="180" step="1" value="0"><span class="orientation-unite">°</span>
+        </div>
+        <button type="button" class="nav-btn orientation-redresser" id="personaRedresserBtn">Remettre droit</button>
       </div>
     </div>
     </div>
@@ -2194,12 +2204,22 @@
       <div class="modal-section-body">
         <p id="objectRoomWallOrientNotice" style="display:none; font-size:var(--texte-capitales); opacity:.6; margin:0 0 8px; line-height:1.4; font-style:italic;">Orientation gérée par la Pièce — à modifier via la modale de la Pièce.</p>
         <p id="objectWallOpeningMagnetOrientNotice" style="display:none; font-size:var(--texte-capitales); opacity:.6; margin:0 0 8px; line-height:1.4; font-style:italic;">Orientation gouvernée par le Mur hôte — aucune rotation manuelle possible.</p>
-        <label class="modal-field-label">Rotation horizontale</label>
-        <input type="range" id="objectRotXInput" min="-180" max="180" step="1" value="0" style="margin-bottom:12px;">
-        <label class="modal-field-label">Inclinaison</label>
-        <input type="range" id="objectRotYInput" min="-180" max="180" step="1" value="0" style="margin-bottom:12px;">
-        <label class="modal-field-label">Roulis</label>
-        <input type="range" id="objectRotZInput" min="-180" max="180" step="1" value="0">
+        <label class="modal-field-label" for="objectRotYInput">Rotation</label>
+        <div class="orientation-ligne">
+          <input type="range" id="objectRotYInput" min="-180" max="180" step="1" value="0">
+          <input type="number" id="objectRotYInputDeg" class="orientation-degres" min="-180" max="180" step="1" value="0"><span class="orientation-unite">°</span>
+        </div>
+        <label class="modal-field-label" for="objectRotXInput">Inclinaison</label>
+        <div class="orientation-ligne">
+          <input type="range" id="objectRotXInput" min="-180" max="180" step="1" value="0">
+          <input type="number" id="objectRotXInputDeg" class="orientation-degres" min="-180" max="180" step="1" value="0"><span class="orientation-unite">°</span>
+        </div>
+        <label class="modal-field-label" for="objectRotZInput">Bascule</label>
+        <div class="orientation-ligne">
+          <input type="range" id="objectRotZInput" min="-180" max="180" step="1" value="0">
+          <input type="number" id="objectRotZInputDeg" class="orientation-degres" min="-180" max="180" step="1" value="0"><span class="orientation-unite">°</span>
+        </div>
+        <button type="button" class="nav-btn orientation-redresser" id="objectRedresserBtn">Remettre droit</button>
       </div>
     </div>
     </div>
@@ -2373,12 +2393,22 @@
         <span class="modal-section-caret">▾</span>
       </div>
       <div class="modal-section-body">
-        <label class="modal-field-label">Rotation horizontale</label>
-        <input type="range" id="roomRotYInput" min="-180" max="180" step="1" value="0" style="margin-bottom:12px;">
-        <label class="modal-field-label">Inclinaison</label>
-        <input type="range" id="roomRotXInput" min="-180" max="180" step="1" value="0" style="margin-bottom:12px;">
-        <label class="modal-field-label">Roulis</label>
-        <input type="range" id="roomRotZInput" min="-180" max="180" step="1" value="0">
+        <label class="modal-field-label" for="roomRotYInput">Rotation</label>
+        <div class="orientation-ligne">
+          <input type="range" id="roomRotYInput" min="-180" max="180" step="1" value="0">
+          <input type="number" id="roomRotYInputDeg" class="orientation-degres" min="-180" max="180" step="1" value="0"><span class="orientation-unite">°</span>
+        </div>
+        <label class="modal-field-label" for="roomRotXInput">Inclinaison</label>
+        <div class="orientation-ligne">
+          <input type="range" id="roomRotXInput" min="-180" max="180" step="1" value="0">
+          <input type="number" id="roomRotXInputDeg" class="orientation-degres" min="-180" max="180" step="1" value="0"><span class="orientation-unite">°</span>
+        </div>
+        <label class="modal-field-label" for="roomRotZInput">Bascule</label>
+        <div class="orientation-ligne">
+          <input type="range" id="roomRotZInput" min="-180" max="180" step="1" value="0">
+          <input type="number" id="roomRotZInputDeg" class="orientation-degres" min="-180" max="180" step="1" value="0"><span class="orientation-unite">°</span>
+        </div>
+        <button type="button" class="nav-btn orientation-redresser" id="roomRedresserBtn">Remettre droit</button>
       </div>
     </div>
     </div>
@@ -2459,12 +2489,21 @@
         <span class="modal-section-caret">▾</span>
       </div>
       <div class="modal-section-body">
-        <label class="modal-field-label">Rotation horizontale</label>
-        <input type="range" id="buildingRotYInput" min="-180" max="180" step="1" value="0" style="margin-bottom:12px;">
-        <label class="modal-field-label">Inclinaison</label>
-        <input type="range" id="buildingRotXFixe" min="-180" max="180" step="1" value="0" disabled style="margin-bottom:12px;">
-        <label class="modal-field-label">Roulis</label>
-        <input type="range" id="buildingRotZFixe" min="-180" max="180" step="1" value="0" disabled>
+        <label class="modal-field-label" for="buildingRotYInput">Rotation</label>
+        <div class="orientation-ligne">
+          <input type="range" id="buildingRotYInput" min="-180" max="180" step="1" value="0">
+          <input type="number" id="buildingRotYInputDeg" class="orientation-degres" min="-180" max="180" step="1" value="0"><span class="orientation-unite">°</span>
+        </div>
+        <label class="modal-field-label" for="buildingRotXFixe">Inclinaison</label>
+        <div class="orientation-ligne">
+          <input type="range" id="buildingRotXFixe" min="-180" max="180" step="1" value="0" disabled>
+          <input type="number" id="buildingRotXFixeDeg" class="orientation-degres" min="-180" max="180" step="1" value="0" disabled><span class="orientation-unite">°</span>
+        </div>
+        <label class="modal-field-label" for="buildingRotZFixe">Bascule</label>
+        <div class="orientation-ligne">
+          <input type="range" id="buildingRotZFixe" min="-180" max="180" step="1" value="0" disabled>
+          <input type="number" id="buildingRotZFixeDeg" class="orientation-degres" min="-180" max="180" step="1" value="0" disabled><span class="orientation-unite">°</span>
+        </div>
       </div>
     </div>
     </div>

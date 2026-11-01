@@ -3008,3 +3008,11 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 #batimentPanneau:not(.masquage) #batimentMenuMasquage{ display:none; }
 #batimentPanneau.masquage #batimentMenuElement{ display:none; }
 .batiment-masquage-resume{ margin:0 0 10px; font-size:var(--texte-libelle); color:var(--ink); }
+
+/* #463a : l'orientation des fenêtres d'Élément, un curseur et son champ en degrés sur une ligne. */
+.orientation-ligne{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+.orientation-ligne input[type="range"]{ flex:1 1 auto; min-width:0; margin:0; }
+.orientation-ligne .orientation-degres{ width:64px; flex:none; text-align:right; margin:0; }
+.orientation-unite{ color:var(--ink-soft); }
+.orientation-redresser{ width:100%; margin-top:2px; }
+

@@ -73,18 +73,18 @@ La fenêtre d'un Personnage et celle d'un Objet ont un **aperçu**, que seule la
 |---|---|---|
 | Molette sur l'aperçu | zoomer l'aperçu (pas l'Élément) | ×1,08 par cran, de 0,2 à 6 |
 
-L'**orientation** de l'Élément se règle par des curseurs, de −180° à 180° par degré :
+L'**orientation** de l'Élément se règle par des curseurs, de −180° à 180° par degré, chacun avec un
+**champ en degrés** à côté (**#463a**, 1er novembre 2026, `src/orientation-champs.js`), et « Remettre
+droit » (Inclinaison et Bascule à zéro, la Rotation gardée) :
 
 | Fenêtre | Premier curseur | Deuxième | Troisième |
 |---|---|---|---|
-| Personnage | « Rotation horizontale » → `rotY` | « Inclinaison » → `rotX` | « Roulis » → `rotZ` |
-| Objet | « Rotation horizontale » → **`rotX`** | « Inclinaison » → **`rotY`** | « Roulis » → `rotZ` |
-| Pièce | « Rotation horizontale » → `rotY` | → `rotX` | → `rotZ` |
-| Bâtiment placé | « Rotation horizontale » → `rotY` | grisé | grisé |
+| Personnage, Objet, Pièce | « Rotation » → `rotY` | « Inclinaison » → `rotX` | « Bascule » → `rotZ` |
+| Bâtiment placé | « Rotation » → `rotY` | grisé | grisé |
 
-**Incohérence relevée** : dans la fenêtre d'un Objet, « Rotation horizontale » règle `rotX` et
-« Inclinaison » règle `rotY`. Le rendu tourne un Élément autour de la verticale avec `rotY` : les
-deux libellés y sont donc vraisemblablement inversés (**à vérifier** à l'écran).
+Les mêmes noms, dans le même ordre, que l'éditeur de bâtiment. **Corrigé en #463a** : la fenêtre
+d'un Objet reliait « Rotation horizontale » à `rotX` et « Inclinaison » à `rotY` (le rendu tourne
+autour de la verticale avec `rotY`).
 
 La position se règle par des champs (profondeur, hauteur…), et la case « Collé au sol ».
 
@@ -257,9 +257,8 @@ Le Lecteur, les vignettes, la fenêtre des Polices. L'image d'une Case a ses pro
    l'Éditeur de modèle un (pour les articulations).
 6. **Les aimants d'angle** : 90° (6°) et Ctrl 15° sur un élément du bâtiment ; 15° seulement à la
    pose d'un escalier ; aucun sur une articulation ni dans les fenêtres.
-7. **Les libellés de l'orientation** : « Roulis » dans les fenêtres, « Bascule » dans l'éditeur de
-   bâtiment ; et la fenêtre d'un Objet relie vraisemblablement « Rotation horizontale » au mauvais
-   axe (**à vérifier**).
+7. ~~**Les libellés de l'orientation**~~ : corrigés en #463a (Rotation, Inclinaison, Bascule
+   partout ; la fenêtre d'un Objet sur les bons axes).
 8. **Le quart de tour** : R pour un escalier, clic droit ou bouton pour un élément, rien ailleurs.
 9. **Le sens des rotations au glisser** : l'aperçu du store retranche le glisser horizontal à son
    angle, l'Éditeur de modèle et la caméra des Cases l'ajoutent. Les repères n'étant pas les mêmes,

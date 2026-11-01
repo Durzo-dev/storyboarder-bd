@@ -72,18 +72,18 @@ The Character modal and the Object modal have a **preview** that only the wheel 
 |---|---|---|
 | Wheel on the preview | zoom the preview (not the Element) | ×1.08 per notch, from 0.2 to 6 |
 
-The Element's **orientation** is set by sliders, from −180° to 180° by the degree:
+The Element's **orientation** is set by sliders, from −180° to 180° by the degree, each with a
+**field in degrees** next to it (**#463a**, 1 November 2026, `src/orientation-champs.js`), and
+“Set upright” (Tilt and Lean back to zero, Turn kept):
 
 | Modal | First slider | Second | Third |
 |---|---|---|---|
-| Character | “Horizontal rotation” → `rotY` | “Tilt” → `rotX` | “Roll” → `rotZ` |
-| Object | “Horizontal rotation” → **`rotX`** | “Tilt” → **`rotY`** | “Roll” → `rotZ` |
-| Room | “Horizontal rotation” → `rotY` | → `rotX` | → `rotZ` |
-| Placed building | “Horizontal rotation” → `rotY` | greyed | greyed |
+| Character, Object, Room | “Turn” → `rotY` | “Tilt” → `rotX` | “Lean” → `rotZ` |
+| Placed building | “Turn” → `rotY` | greyed | greyed |
 
-**Inconsistency found**: in the Object modal, “Horizontal rotation” sets `rotX` and “Tilt” sets
-`rotY`. The renderer turns an Element around the vertical with `rotY`: both labels are therefore
-most likely swapped there (**to check** on screen).
+The same names, in the same order, as the building editor. **Fixed in #463a**: the Object modal
+tied “Horizontal rotation” to `rotX` and “Tilt” to `rotY` (the renderer turns around the vertical
+with `rotY`).
 
 Position is set by fields (depth, height…) and the “Stuck to the ground” box.
 
@@ -253,8 +253,8 @@ image; drag: its anchor), in 2D.
    joints).
 6. **Angle snapping**: 90° (6°) and Ctrl 15° on a building element; 15° only when placing a
    staircase; none on a joint nor in the modals.
-7. **Orientation labels**: “Roll” in the modals, “Lean” in the building editor; and the Object modal
-   most likely ties “Horizontal rotation” to the wrong axis (**to check**).
+7. ~~**Orientation labels**~~: fixed in #463a (Turn, Tilt, Lean everywhere; the Object modal on the
+   right axes).
 8. **The quarter turn**: R for a staircase, right-click or button for an element, nothing elsewhere.
 9. **The direction of drag rotations**: the store preview subtracts the horizontal drag from its
    angle, the Model editor and the Panels' camera add it. The frames differ, so the on-screen result

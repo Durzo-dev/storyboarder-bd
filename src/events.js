@@ -11,6 +11,7 @@
  * This module is now the application's real entry point: app.js is now just a
  * simple redirect (`import './events.js'`) kept so index.html doesn't have to change.
  */
+import { cablerChampsDOrientation } from './orientation-champs.js';
 import { icone } from './icones.js';
 import { demarrer as sondeDemarrer, arreter as sondeArreter, rapport as sondeRapport, synthese as sondeSynthese } from './perf-probe.js';
 import {
@@ -9154,6 +9155,8 @@ async function supprimerBatimentDeLaBibliotheque(fichier){
 // refait la liste des polices de la fiche ouverte.
 enregistrerFermeture('policesModal', fermerPolices);
 // #446c : le store de textures, une fenêtre à part (demandé).
+// #463a : le champ en degrés à côté de chaque curseur d'orientation, et « Remettre droit ».
+cablerChampsDOrientation();
 cablerTextures({ confirmer: (message, titre, options) => confirmAction(message, titre, options), menuTexture: (e, t) => openTextureContextMenu(e, t) });
 cablerPolices({
   confirmer: (message, titre, options) => confirmAction(message, titre, options),
