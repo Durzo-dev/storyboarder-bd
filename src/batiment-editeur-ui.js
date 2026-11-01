@@ -17,6 +17,7 @@
  * gestes et le cadrage) : il ne touche pas à la scène partagée des Cases (cf. rendreApercu3D), il
  * dessine à la demande et libère tout à la fermeture.
  */
+import { deltaMolette3D, facteurDeZoom3D } from './utils.js';
 import { tr } from './state.js';
 import { creerBatiment, nomAfficheDuFichier, DEFAUTS_BATIMENT, TYPES_D_OUVERTURE } from './batiment.js';
 import {
@@ -2100,6 +2101,9 @@ function survoler(e){
 function cablerPlan(){
   const c = $('batimentPlan');
   c.addEventListener('wheel', (e) => {
+    // #463b : le Δ de la molette, Maj comprise (Maj + molette défile EN LARGEUR sous Windows : sans
+    // cela, Maj + molette vers le haut descendait).
+    const dm = deltaMolette3D(e);
     if (!E) return;
     e.preventDefault();
     // Une ouverture choisie : la molette la MONTE ou la DESCEND au lieu de zoomer (demandé ; 5 cm par
@@ -2115,17 +2119,17 @@ function cablerPlan(){
       // SUR LE TOIT, la molette règle toujours sa marge d'élévation (demandé), jamais sous le toit :
       // revenue à 0, il s'y repose (collé).
       if (x.surLeToit) {
-        const pas = (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 0.01 : 0.05);
+        const pas = (dm < 0 ? 1 : -1) * (e.shiftKey ? 0.01 : 0.05);
         const y = (x.colle === false ? x.y || 0 : 0) + pas;
         if (y <= 1e-6) collerAuSol(x, true); else collerAuSol(x, false, y);
       } else if (x.colle === false) {
         // DÉCOLLÉ, la molette le monte ou le descend (demandé) : 5 cm par cran, 1 cm avec Maj ; sous
         // le plancher seulement s'il peut traverser (collerAuSol le borne).
-        const pas = (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 0.01 : 0.05);
+        const pas = (dm < 0 ? 1 : -1) * (e.shiftKey ? 0.01 : 0.05);
         collerAuSol(x, false, (x.y || 0) + pas);
       } else {
         const avant = x.echelle;
-        echelonnerMeuble(x, e.deltaY < 0 ? 1 : -1);
+        echelonnerMeuble(x, dm < 0 ? 1 : -1);
         // Un cran qui le mettrait dans un mur qu'il ne peut pas traverser est refusé.
         if (meubleEnCollision(E.batiment, x)) x.echelle = avant;
       }
@@ -2139,7 +2143,7 @@ function cablerPlan(){
       const maintenant = Date.now();
       const nouveauGeste = !E.molette || E.molette.id !== ouv.id || maintenant - E.molette.t > 800;
       if (nouveauGeste) { E.historique.push(JSON.stringify(E.batiment)); E.refaire = []; }
-      const pas = (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 0.01 : PAS_ALLEGE);
+      const pas = (dm < 0 ? 1 : -1) * (e.shiftKey ? 0.01 : PAS_ALLEGE);
       if (monterOuverture(E.batiment, ouv.id, pas)) {
         E.molette = { id: ouv.id, t: maintenant };
         apresModification();
@@ -2149,7 +2153,7 @@ function cablerPlan(){
     // L'outil Ouverture : la molette change le type de l'ouverture à poser (demandé) ; Ctrl + molette zoome.
     if (E.outil === 'ouverture' && !e.ctrlKey) {
       const types = TYPES_D_OUVERTURE, i = types.indexOf(E.reglagesOuverture.type);
-      const type = types[(i + (e.deltaY > 0 ? 1 : types.length - 1)) % types.length];
+      const type = types[(i + (dm > 0 ? 1 : types.length - 1)) % types.length];
       E.reglagesOuverture = { ...reglagesParDefaut(type), sens: E.reglagesOuverture.sens, charniere: E.reglagesOuverture.charniere };
       remplirPanneau(); survoler(e);
       return;
@@ -2157,12 +2161,12 @@ function cablerPlan(){
     // L'outil Escalier : la molette change le type de l'escalier à poser (demandé) ; Ctrl + molette zoome.
     if (E.outil === 'escalier' && !e.ctrlKey) {
       const types = TYPES_D_ESCALIER, i = types.indexOf(E.reglagesEscalier.type);
-      E.reglagesEscalier = { ...E.reglagesEscalier, type: types[(i + (e.deltaY > 0 ? 1 : types.length - 1)) % types.length] };
+      E.reglagesEscalier = { ...E.reglagesEscalier, type: types[(i + (dm > 0 ? 1 : types.length - 1)) % types.length] };
       remplirPanneau(); survoler(e);
       return;
     }
     const r = c.getBoundingClientRect();
-    E.vue = zoomerAutour(E.vue, r.width, r.height, { x: e.clientX - r.left, y: e.clientY - r.top }, Math.exp(-e.deltaY * 0.0015));
+    E.vue = zoomerAutour(E.vue, r.width, r.height, { x: e.clientX - r.left, y: e.clientY - r.top }, 1 / facteurDeZoom3D(dm));
     survoler(e);
   }, { passive: false });
   c.addEventListener('pointerdown', (e) => {
@@ -2590,7 +2594,7 @@ function ouvrirApercu(conteneur, b){
   el.addEventListener('pointerup', relache);
   el.addEventListener('pointercancel', relache);
   el.addEventListener('contextmenu', (e) => e.preventDefault());
-  el.addEventListener('wheel', (e) => { e.preventDefault(); fixerCadrageAuto(false); distance = zoom3D(distance, e.deltaY, distanceCadrage); redessiner(); }, { passive: false });
+  el.addEventListener('wheel', (e) => { e.preventDefault(); fixerCadrageAuto(false); distance = zoom3D(distance, deltaMolette3D(e), distanceCadrage); redessiner(); }, { passive: false });
   const Observateur = globalThis.ResizeObserver;
   // La fenêtre agrandie ou réduite : suivie, la construction y est recadrée à sa nouvelle forme.
   const observateur = Observateur ? new Observateur(() => { if (cadrageAuto) cadrer(true); redessiner(); }) : null;

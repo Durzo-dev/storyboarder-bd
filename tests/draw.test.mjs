@@ -1406,10 +1406,11 @@ describe('#403f : le zoom et le retour au cadrage d\'origine, câblage', () => {
     // l'ACCORD entre les deux molettes de l'application : roulette vers l'avant (`deltaY < 0`) =
     // zoom avant, des deux côtés. Deux gestes identiques qui tournent en sens contraire dans la
     // même fenêtre sont une faute que l'utilisateur paie à chaque usage.
-    assert.match(blocMolette(), /e\.deltaY < 0 \? PAS_ZOOM_IMAGE : -PAS_ZOOM_IMAGE/,
+    assert.match(blocMolette(), /dm < 0 \? PAS_ZOOM_IMAGE : -PAS_ZOOM_IMAGE/,
       'la molette du cadrage ne zoome pas vers l\'avant quand on pousse la roulette');
-    // Le témoin : la caméra RÉDUIT sa distance sur `deltaY < 0`, ce qui est aussi un zoom avant.
-    assert.match(EVENTS, /clamp\(oldDist \* \(e\.deltaY < 0 \? 0\.92 : 1\.08\)/,
+    // Le témoin : la caméra RÉDUIT sa distance sur un Δ négatif (facteurDeZoom3D < 1, #463b), ce qui
+    // est aussi un zoom avant.
+    assert.match(EVENTS, /clamp\(oldDist \* facteurDeZoom3D\(dm\)/,
       'la convention de référence a changé : relire ce test avant de le croire');
   });
 

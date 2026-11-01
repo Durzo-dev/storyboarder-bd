@@ -20,7 +20,7 @@ import { CLE_ACTUELLE, AMBIANTE_ACTUELLE } from './lighting-3d.js';
 import { preparerModeleImporte3D } from './model-cache.js';
 import { box3FromObjectSkinAware3D } from './skinned-box-3d.js';
 import { maillagesHorsCorps3D, maillagesParNom3D } from './stray-meshes-3d.js';
-import { deplacement3D, vitesseRotation3D } from './utils.js';
+import { deplacement3D, vitesseRotation3D, facteurDeZoom3D, deltaMolette3D } from './utils.js';
 
 /** L'angle de vue de la caméra, en degrés. */
 const CHAMP = 35;
@@ -98,7 +98,7 @@ export { deplacement3D };
 
 /** Zoomer : la molette rapproche ou éloigne, entre deux bornes relatives au cadrage. PURE. */
 export function zoom3D(distance, deltaY, distanceCadrage){
-  const d = distance * Math.exp(deltaY * 0.001);
+  const d = distance * facteurDeZoom3D(deltaY);   // #463b : le zoom commun
   return Math.max(distanceCadrage * 0.25, Math.min(distanceCadrage * 4, d));
 }
 
@@ -184,7 +184,7 @@ export async function ouvrirApercu3D(conteneur, octets, { objet = null } = {}){
   // Le menu contextuel du navigateur volerait le glisser droit.
   const menu = (e) => e.preventDefault();
   const relache = () => { glisser = null; };
-  const molette = (e) => { e.preventDefault(); distance = zoom3D(distance, e.deltaY, distanceCadrage); redessiner(); };
+  const molette = (e) => { e.preventDefault(); distance = zoom3D(distance, deltaMolette3D(e), distanceCadrage); redessiner(); };
   const el = rendu.domElement;
   el.addEventListener('pointerdown', appui);
   el.addEventListener('pointermove', deplacement);

@@ -246,6 +246,12 @@ image; drag: its anchor), in 2D.
 3. **Five different zooms**: ×1.105 (previews), ×1.08 (Panels, Scenes, modals), ×1.12 (Model
    editor), ×1.16 (building plan), and ×1.1 for an element's size. Some follow the wheel (`e^Δ`),
    others count fixed notches: a notchless wheel (touchpad) does not behave the same everywhere.
+   **Fixed in #463b** (1 November 2026): a single zoom, `facteurDeZoom3D` (utils.js), proportional to
+   the wheel (×1.105 per notch) wherever one zooms; `deltaMolette3D` turns lines and pages into
+   pixels, and counts Shift + wheel (which Windows turns into horizontal scrolling: Shift + wheel up
+   used to go down). Ctrl + wheel always zooms (Model editor with a joint selected, Scene or Camera
+   mode with an Element selected); Shift refines an Element's depth (a fifth of the step). A
+   building element's size keeps its ×1.1 notches: it is a property, not a view.
 4. **Two rotation speeds**: the view turns at 0.14° per pixel (adjustable), a joint or an element at
    0.5° per pixel (not adjustable), three and a half times faster.
 5. **Turning an object** has no gesture in Panels and Scenes (sliders only), while the building

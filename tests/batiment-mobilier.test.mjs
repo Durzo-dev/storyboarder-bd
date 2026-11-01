@@ -107,7 +107,7 @@ describe('le mobilier d\'un bâtiment (#454e)', () => {
     assert.match(ui, /\$\('batimentAjouterElement'\)\.onclick = \(\) => \{ if \(E\) ajouterUnElement\(\); \};/);
     assert.match(ui, /ouvrirStore\(\{\s*accepter: \(e\) => !e\.introuvable && !e\.batiment,/);
     assert.match(ui, /retoucherMeuble\(meubleClic, tournerMeuble\);/);
-    assert.match(ui, /echelonnerMeuble\(x, e\.deltaY < 0 \? 1 : -1\);/);
+    assert.match(ui, /echelonnerMeuble\(x, dm < 0 \? 1 : -1\);/);
     assert.match(ui, /modifier\(b => supprimerMeuble\(b, id\)\);/);
   });
 });

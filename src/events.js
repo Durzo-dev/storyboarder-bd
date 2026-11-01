@@ -122,7 +122,7 @@ import {
   hauteurBase3D, hauteurDepuisPourcentage3D, pourcentageDepuisHauteur3D,
 
   pageVoisine3D, libelleTypeObjet3D, libelleTable3D, positionInfobulle3D,
-  vitesseRotation3D, vitesseDeplacement3D, reglerVitessesGestes3D, pourcentGeste3D,
+  vitesseRotation3D, vitesseDeplacement3D, reglerVitessesGestes3D, pourcentGeste3D, deltaMolette3D, facteurDeZoom3D,
 } from './utils.js';
 import {
   S, currentPageData, currentPage, newId, createVolume, addPageToVolume, tr, isLockedScenePanel,
@@ -2175,9 +2175,11 @@ canvasWrap.addEventListener('mousedown', (e) => {
 
 canvasWrap.addEventListener('wheel', (e) => {
   e.preventDefault();
+  // #463b : le Δ de la molette, Maj comprise (Maj + molette défile en largeur sous Windows).
+  const dm = deltaMolette3D(e);
   // Scroll wheel during the Road/Path tool: adjusts the thickness of the current tracé.
   if (S.traceTool && (S.traceTool.type === 'route' || S.traceTool.type === 'chemin')) {
-    const step = e.deltaY < 0 ? 1 : -1;
+    const step = dm < 0 ? 1 : -1;
     S.traceTool.width = clamp((S.traceTool.width || 8) + step, 2, 60);
     scheduleDrawCurrentPage();
     return;
@@ -2212,7 +2214,7 @@ canvasWrap.addEventListener('wheel', (e) => {
       S.imageZoomWheelTimer = setTimeout(() => { S.imageZoomWheelSnapshotTaken = false; }, MOLETTE_FIN_DE_SALVE_MS);
       // Le même pas que le curseur, pour que les deux commandes se comportent pareil : passer de
       // l'une à l'autre ne doit pas changer la sensation du réglage.
-      const pas = e.deltaY < 0 ? PAS_ZOOM_IMAGE : -PAS_ZOOM_IMAGE;
+      const pas = dm < 0 ? PAS_ZOOM_IMAGE : -PAS_ZOOM_IMAGE;
       sel[CHAMP_ZOOM_IMAGE] = zoomValide3D(zoomDeLImage3D(sel) + pas);
       S.projectDirty = true;
       // Le panneau droit suit : le curseur doit montrer la même valeur, et « Recentrer » apparaître
@@ -2226,8 +2228,11 @@ canvasWrap.addEventListener('wheel', (e) => {
 
   // Dans une Scène (plus de mode Caméra, demandé), la molette zoome la caméra quand aucun Élément
   // n'est sélectionné ; un Élément sélectionné garde la molette pour sa profondeur (branche suivante).
+  // #463b : Ctrl + molette zoome TOUJOURS la caméra, même un Élément choisi (comme partout).
+  const _proprio = (e.ctrlKey && sel && (sel.type === 'perso' || sel.type === 'objet3d')) ? findOwningPanel(sel, page) : null;
   const _camSel = (sel && sel.type === 'panel' && sel.cameraMode) ? sel
-    : ((!sel || isLockedScenePanel(sel)) ? toileDeSceneOuverte(page) : null);
+    : (_proprio && (_proprio.cameraMode || isLockedScenePanel(_proprio))) ? _proprio
+      : ((!sel || isLockedScenePanel(sel)) ? toileDeSceneOuverte(page) : null);
   if (_camSel) {
     const sel = _camSel;
     // In Camera mode (cf. ctxToggleCamera), the scroll wheel moves the Panel's camera forward/back
@@ -2239,7 +2244,8 @@ canvasWrap.addEventListener('wheel', (e) => {
     // Pure exponential zoom: × or ÷ 1.08 per notch, identical to the Scene's canvas zoom.
     // Minimum 0.3 u (instead of 0.01) + dolly-through (Fix 18b) to avoid getting stuck on the sphere.
     // Max × 200 (= 6000): Phase 2/3 can set camDist = PANEL_CAM_DEFAULT_DIST_3D / s (e.g. s=0.005 → 6000).
-    sel.camDistTarget = clamp(oldDist * (e.deltaY < 0 ? 0.92 : 1.08), 0.3, PANEL_CAM_DEFAULT_DIST_3D * 200);
+    // #463b : le zoom commun, proportionnel à la molette (il était de ×1,08 par cran, fixe).
+    sel.camDistTarget = clamp(oldDist * facteurDeZoom3D(dm), 0.3, PANEL_CAM_DEFAULT_DIST_3D * 200);
     // Fix 23: during a rotation (S.dragMode = 'panelCamRotate'), do NOT modify camWxTarget/y/z.
     // Fix 16 locks the orbit (camWx = S.dragOrig.camWx) on every mousemove, but if
     // startCamSmoothing is called here with a camWxTarget ≠ S.dragOrig.camWx (zoom-to-cursor or
@@ -2285,7 +2291,7 @@ canvasWrap.addEventListener('wheel', (e) => {
       // pivot forward (along -backward). Without this, the camera stays stuck to the orbit sphere
       // as soon as camDist = minimum: the sphere grows, the view gets blocked.
       // The effect ramps up progressively (t = 0 at 3 u → 1 at 0 u) to avoid any jump.
-      if (e.deltaY < 0 && sel.camDistTarget < 3.0) {
+      if (dm < 0 && sel.camDistTarget < 3.0) {
         const _t18 = 1 - sel.camDistTarget / 3.0;   // 0 at dist=3, ~1 at dist=0.3
         // Fixed reference (3 u × 8%) = same amplitude as normal zoom at the threshold → smooth
         // continuity. Avoids the oldDist×0.08 formula which becomes microscopic at low distance.
@@ -2309,8 +2315,9 @@ canvasWrap.addEventListener('wheel', (e) => {
     const distOld = panelDepthToDistance3D(oldZ);
     const factorOld = WALL_PX_PER_UNIT_3D * (PANEL_CAM_DEFAULT_DIST_3D / distOld);
     const realW = sel.w / factorOld, realH = sel.h / factorOld;
-    const depthStep = PANEL_CAM_REF_DIST_3D * 0.06;
-    const stepSigned = e.deltaY < 0 ? depthStep : -depthStep;
+    // #463b : Maj, plus fin (un cinquième du pas), comme partout.
+    const depthStep = PANEL_CAM_REF_DIST_3D * 0.06 * (e.shiftKey ? 0.2 : 1);
+    const stepSigned = dm < 0 ? depthStep : -depthStep;
 
     // The scroll wheel moves depth in a STRAIGHT line along the Camera's real viewing axis
     // (basis.backward), not just along the world Z axis (which only coincides with the viewing
@@ -2370,7 +2377,7 @@ canvasWrap.addEventListener('wheel', (e) => {
   }
   if (sel && sel.type === 'bulle') {
     if (!sel.baseW || !sel.baseH) { sel.baseW = sel.w; sel.baseH = sel.h; }
-    const factor = e.deltaY < 0 ? 1.08 : 1 / 1.08;
+    const factor = dm < 0 ? 1.08 : 1 / 1.08;
     const cx = sel.x + sel.w / 2, cy = sel.y + sel.h / 2;
     const newW = clamp(sel.w * factor, 12, page.w * 0.95);
     const newH = clamp(sel.h * factor, 12, page.h * 0.95);
@@ -2385,7 +2392,7 @@ canvasWrap.addEventListener('wheel', (e) => {
     // anything (and without falling through to the canvas zoom below).
     return;
   }
-  const factor = e.deltaY < 0 ? 1.08 : 1 / 1.08;
+  const factor = dm < 0 ? 1.08 : 1 / 1.08;
   S.zoomLevel = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, S.zoomLevel * factor));
   applyZoom();
   // We explicitly re-center .canvas-wrap's scroll after every scroll-wheel notch, in a Scene as on

@@ -1053,6 +1053,31 @@ export function orbiteDeFace3D(avantDuCorps){
  * Le réglage de sensibilité d'une Case (camRotSensitivity, camPanSensitivity) reste un
  * multiplicateur par-dessus, à 1 par défaut.
  */
+/**
+ * #463b, UN SEUL ZOOM (demandé) : tous les zooms de l'application (aperçus, fenêtres d'Élément,
+ * Éditeur de modèle, plan du bâtiment, caméra des Cases et des Scènes) en dépendent. PROPORTIONNEL
+ * à la molette, e^(Δ × 0,001) : ×1,105 par cran de 100, et un pavé tactile, qui envoie de petits
+ * pas, zoome à la même vitesse qu'une molette crantée. Il y en avait cinq (×1,08 à ×1,16, certains
+ * comptant des crans fixes).
+ */
+export const ZOOM_PAR_DELTA_3D = 0.001;
+
+/**
+ * Le Δ d'un événement de molette, en pixels : les lignes et les pages ramenées aux pixels ; et Maj +
+ * molette, que Windows et macOS changent en défilement HORIZONTAL (deltaX), compte encore (Maj y
+ * veut dire « plus fin », pas « de côté »). PURE.
+ */
+export function deltaMolette3D(e){
+  const brut = (e && (e.deltaY || e.deltaX)) || 0;
+  const k = e && e.deltaMode === 1 ? 33 : e && e.deltaMode === 2 ? 400 : 1;
+  return brut * k;
+}
+
+/** Le facteur de zoom d'un Δ de molette : > 1 s'éloigne (molette vers soi), < 1 se rapproche. PURE. */
+export function facteurDeZoom3D(delta){
+  return Math.exp((Number(delta) || 0) * ZOOM_PAR_DELTA_3D);
+}
+
 export const VITESSE_ROTATION_3D = 0.0025;
 export const VITESSE_DEPLACEMENT_3D = 0.5;
 

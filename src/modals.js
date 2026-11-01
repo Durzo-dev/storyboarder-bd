@@ -41,7 +41,7 @@ import {
 
   hauteurBase3D, hauteurDepuisPourcentage3D, bornesHauteur3D, libelleTypeObjet3D,
   libelleAnimal3D, libelleTable3D,
-} from './utils.js';
+  deltaMolette3D, facteurDeZoom3D } from './utils.js';
 import {
   ensureElementUnits3D, ensureElementWorldPos3D,
   findOwningPanel, groundMagnetEligible,
@@ -1478,8 +1478,8 @@ objectPreview3D.addEventListener('wheel', (e) => {
   e.preventDefault();
   e.stopPropagation();
   if (!S.modalTarget) return;
-  const zoomStep = 1.08;
-  S.objectPreviewZoom = clamp(S.objectPreviewZoom * (e.deltaY < 0 ? zoomStep : 1 / zoomStep), 0.2, 6);
+  // #463b : le zoom commun (proportionnel à la molette).
+  S.objectPreviewZoom = clamp(S.objectPreviewZoom / facteurDeZoom3D(deltaMolette3D(e)), 0.2, 6);
   refreshObjectPreview();
 }, { passive: false });
 
@@ -1906,8 +1906,7 @@ personaPreview3D.addEventListener('wheel', (e) => {
   e.preventDefault();
   e.stopPropagation();
   if (!S.modalTarget) return;
-  const zoomStep = 1.08;
-  S.personaPreviewZoom = clamp(S.personaPreviewZoom * (e.deltaY < 0 ? zoomStep : 1 / zoomStep), 0.2, 6);
+  S.personaPreviewZoom = clamp(S.personaPreviewZoom / facteurDeZoom3D(deltaMolette3D(e)), 0.2, 6);
   refreshPersonaPreview();
 }, { passive: false });
 

@@ -250,6 +250,13 @@ Le Lecteur, les vignettes, la fenêtre des Polices. L'image d'une Case a ses pro
    modèle), ×1,16 (plan du bâtiment), et ×1,1 pour la taille d'un élément. Certains suivent la
    molette (`e^Δ`), d'autres comptent des crans fixes : une molette sans crans (pavé tactile) ne se
    comporte pas pareil partout.
+   **Corrigé en #463b** (1er novembre 2026) : un seul zoom, `facteurDeZoom3D` (utils.js),
+   proportionnel à la molette (×1,105 par cran) partout où l'on zoome ; `deltaMolette3D` ramène les
+   lignes et les pages en pixels, et compte Maj + molette (que Windows change en défilement
+   horizontal : Maj + molette vers le haut descendait). Ctrl + molette zoome toujours (Éditeur de
+   modèle avec une articulation choisie, Scène ou mode Caméra avec un Élément choisi) ; Maj affine la
+   profondeur d'un Élément (un cinquième du pas). La taille d'un élément du bâtiment garde ses crans
+   de ×1,1 : c'est une propriété, pas une vue.
 4. **Deux vitesses de rotation** : la vue tourne à 0,14° par pixel (réglable), une articulation ou
    un élément à 0,5° par pixel (non réglable), trois fois et demie plus vite.
 5. **Tourner un objet** n'a pas de geste dans les Cases et les Scènes (curseurs seulement), alors

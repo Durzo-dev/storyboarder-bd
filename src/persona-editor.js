@@ -27,7 +27,7 @@ import {
   writePoseSliderDeg3D, axeDePose3D, modelAxisVector3D, squelettePourAnimal3D,
 
   orbiteDeFace3D, deplacement3D, vitesseRotation3D,
-} from './utils.js';
+  deltaMolette3D, facteurDeZoom3D } from './utils.js';
 import {
   cloneJoints, figuresDeLaBibliotheque3D,
   getEffectiveJoints, objectRigCache3D, poseOsPourModeleImporte, repereDuCorpsPourFichier3D,
@@ -2026,11 +2026,13 @@ export function wirePersonaEditor(){
       // champ à proposer : le geste doit vouloir dire la même chose dans les deux cas, sans quoi il
       // faudrait se souvenir du nombre de champs de chaque articulation pour savoir si la vue va
       // bouger. Cliquer dans le vide désélectionne et rend la molette au zoom.
-      if (S.personaEditorHandleId) {
-        if (cyclePersonaEditorSpec(e.deltaY < 0 ? -1 : 1) !== null) drawPersonaEditor();
+      // #463b : Ctrl + molette zoome TOUJOURS, articulation choisie ou non (comme partout).
+      if (S.personaEditorHandleId && !e.ctrlKey) {
+        if (cyclePersonaEditorSpec(deltaMolette3D(e) < 0 ? -1 : 1) !== null) drawPersonaEditor();
         return;
       }
-      const k = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+      // #463b : le zoom commun (proportionnel à la molette), au lieu de ×1,12 par cran.
+      const k = 1 / facteurDeZoom3D(deltaMolette3D(e));
       S.personaEditorZoom = clamp(S.personaEditorZoom * k,
         PERSONA_EDITOR_ZOOM_MIN, PERSONA_EDITOR_ZOOM_MAX);
       drawPersonaEditor();
