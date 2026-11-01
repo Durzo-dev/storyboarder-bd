@@ -3020,3 +3020,9 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 .camera-repere{ cursor:grab; touch-action:none; user-select:none; }
 .camera-angles{ display:flex; justify-content:center; gap:14px; margin:6px 0 10px; }
 
+/* #463f : les Commandes d'une Case ou d'une Scène gardent la hauteur de leur version la plus longue
+   (un fantôme invisible dans la même case de grille), pour que le menu ne saute pas au choix d'un Élément. */
+.commandes-stables{ display:grid; }
+.commandes-stables > span{ grid-area:1 / 1; }
+#sideCommandesFantome{ visibility:hidden; }
+

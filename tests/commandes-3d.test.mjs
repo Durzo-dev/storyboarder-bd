@@ -44,3 +44,20 @@ test('câblage : la section en tête (sous « Caméra » en mode Caméra) ; info
   }
   assert.match(html, /id="objectPreview3D" width="240" height="161" title="Molette : zoomer"/);
 });
+
+// Signalé : choisir un Élément allongeait les Commandes, la liste descendait, le double-clic tombait à côté.
+test('les Commandes gardent la hauteur de leur version la plus longue (fantôme superposé)', () => {
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+  assert.match(html, /<span id="sideCommandesTexte"><\/span><span id="sideCommandesFantome" aria-hidden="true"><\/span>/);
+  const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
+  assert.match(css, /\.commandes-stables > span\{ grid-area:1 \/ 1; \}/);
+  assert.match(css, /#sideCommandesFantome\{ visibility:hidden; \}/);
+  const sb = readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8');
+  assert.match(sb, /if \(fantome\.textContent !== longue\) fantome\.textContent = longue;/);
+  // La version « Élément choisi » est bien la plus longue de chaque écran.
+  for (const ecran of ['case', 'camera', 'scene']) {
+    const sans = commandesDuMenu3D({ ecran }, fr).join('\n').length;
+    const avec = commandesDuMenu3D({ ecran, element: 'perso', axe: ecran === 'case' ? null : 'y' }, fr).join('\n').length;
+    assert.ok(avec >= sans, ecran);
+  }
+});

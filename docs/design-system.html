@@ -3024,6 +3024,12 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 .camera-repere{ cursor:grab; touch-action:none; user-select:none; }
 .camera-angles{ display:flex; justify-content:center; gap:14px; margin:6px 0 10px; }
 
+/* #463f : les Commandes d'une Case ou d'une Scène gardent la hauteur de leur version la plus longue
+   (un fantôme invisible dans la même case de grille), pour que le menu ne saute pas au choix d'un Élément. */
+.commandes-stables{ display:grid; }
+.commandes-stables > span{ grid-area:1 / 1; }
+#sideCommandesFantome{ visibility:hidden; }
+
 
 /* ── La page du système de design (préfixe ds-), posée SUR la feuille de l'application ── */
 html, body{ height:auto !important; overflow:auto !important; }
@@ -3371,7 +3377,8 @@ html[lang="fr"] .ds-en, html[lang="en"] .ds-fr{ display:none; }
     
     <div id="sideCommandesSection" class="side-section">
       <h2 id="sideCommandesTitle">Commandes</h2>
-      <p id="sideCommandesAide" class="commandes-aide"></p>
+      
+      <p id="sideCommandesAide" class="commandes-aide commandes-stables"><span id="sideCommandesTexte"></span><span id="sideCommandesFantome" aria-hidden="true"></span></p>
     </div>
     
     
