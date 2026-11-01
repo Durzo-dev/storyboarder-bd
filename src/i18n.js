@@ -63,6 +63,8 @@ export const I18N_TEXT = [
   ['#batimentPieceSupprimer', 'Delete the room', 'Supprimer la pièce'],
   ['#batimentCourSupprimer', 'Delete the courtyard', 'Supprimer la cour'],
   ['#tracéThicknessLabel', 'Thickness (cm)', 'Épaisseur (cm)'],
+  ['#messagesMasquesLabel', 'Confirmation messages', 'Messages de confirmation'],
+  ['#reafficherMessagesBtn', 'Show hidden messages again', 'Réafficher les messages masqués'],
   ['#batimentSectionRevetements', 'Furnishing', 'Aménagement'],
   ['#batimentApercuTitre', '3D preview', 'Aperçu 3D'],
   ['#batimentApercuReduire', null, null, 'title', 'Minimise the preview', "Réduire l'aperçu"],
@@ -491,6 +493,7 @@ export const I18N_TRAILING = [
   ['#sideBubbleTailMirrorWrap', 'Flip the tail', 'Inverser la pointe'],
   // #426b — la case qui AUTORISE la fusion, et qu'il faut cocher des DEUX côtés.
   ['#sideBubbleFusionnableWrap', 'Mergeable bubble', 'Bulle fusionnable'],
+  ['#confirmActionMasquerLigne', 'Don\'t show this message again', 'Ne plus afficher ce message'],
   // La section Lumière (#414d, simplifiée en #414h : la case à cocher a disparu, « Jour » étant
   // exactement l'éclairage que le style pose déjà).
   ['#sideLightTitle', 'Light', 'Lumière'],

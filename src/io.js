@@ -150,7 +150,7 @@ export async function proposerRepointageModeles(){
   const aRepointer = modelesARepointer3D({ tomes: S.tomes, scenes: S.scenes }, S.modelRenames, presents);
   if (!aRepointer.length) return 0;
   const ok = await confirmAction(messageRepointageModeles(aRepointer, tr),
-    tr('Renamed models', 'Modèles renommés'));
+    tr('Renamed models', 'Modèles renommés'), { masquable: 'repointer-modeles' });
   if (!ok) return 0;
   let n = 0;
   aRepointer.forEach(({ de, vers }) => {
@@ -1328,8 +1328,34 @@ const confirmActionCancel = document.getElementById('confirmActionCancel');
 // [STATE→S] let S.confirmActionResolve = null;
 // `options` (#454b) : `ok`, le texte du bouton de confirmation (« Confirmer » par défaut), et
 // `danger`, qui le passe en rouge quand confirmer supprime quelque chose.
+// #434 : `masquable`, la CLÉ d'une confirmation qui offre « Ne plus afficher ce message » (choisies
+// avec Valentin : jamais une suppression de données, ni un vrai choix). Cochée puis confirmée, la clé
+// est retenue (réglage `messagesMasques`) et la confirmation répond « oui » d'elle-même ensuite ;
+// annulée, rien n'est retenu. « Réafficher les messages masqués » (Configuration) les rend toutes.
+const confirmActionMasquerLigne = document.getElementById('confirmActionMasquerLigne');
+const confirmActionMasquer = document.getElementById('confirmActionMasquer');
+let _masquableEnCours = null;
+/** Les clés des messages masqués (lues au démarrage dans les réglages). */
+export function definirMessagesMasques(cles){ S.messagesMasques = Array.isArray(cles) ? cles.filter(c => typeof c === 'string') : []; }
+/** Un message est-il masqué ? */
+export const messageMasque = (cle) => !!cle && (S.messagesMasques || []).includes(cle);
+/** « Réafficher les messages masqués » : tous reviennent. */
+export function reafficherLesMessages(){
+  S.messagesMasques = [];
+  if (hasElectronAPI()) window.storyboarderAPI.setSetting('messagesMasques', []);
+}
+function masquerLeMessage(cle){
+  if (messageMasque(cle)) return;
+  S.messagesMasques = [...(S.messagesMasques || []), cle];
+  if (hasElectronAPI()) window.storyboarderAPI.setSetting('messagesMasques', S.messagesMasques);
+}
 export function confirmAction(message, title, options = {}){
+  // Masquée : la réponse retenue (« oui »), sans fenêtre.
+  if (messageMasque(options.masquable)) return Promise.resolve(true);
   preemptConfirmAction();
+  _masquableEnCours = options.masquable || null;
+  confirmActionMasquerLigne.style.display = _masquableEnCours ? '' : 'none';
+  confirmActionMasquer.checked = false;
   confirmActionCancel.style.display = '';
   confirmActionOk.classList.toggle('delete-btn', !!options.danger);
   // Le texte du bouton est RÉÉCRIT à chaque ouverture, parce que la variante « information »
@@ -1348,6 +1374,8 @@ export function confirmAction(message, title, options = {}){
 // the same keyboard-focus-desync issue we're trying to avoid with confirm()/prompt().
 export function alertAction(message, title){
   preemptConfirmAction();
+  _masquableEnCours = null;
+  confirmActionMasquerLigne.style.display = 'none';
   confirmActionCancel.style.display = 'none';
   confirmActionOk.classList.remove('delete-btn');
   confirmActionOk.textContent = 'OK';   // même mot dans les deux langues
@@ -1373,6 +1401,8 @@ function preemptConfirmAction(){
 
 export function settleConfirmAction(result){
   confirmActionModal.classList.add('hidden');
+  if (result && _masquableEnCours && confirmActionMasquer.checked) masquerLeMessage(_masquableEnCours);
+  _masquableEnCours = null;
   const resolve = S.confirmActionResolve;
   S.confirmActionResolve = null;
   if (resolve) resolve(result);

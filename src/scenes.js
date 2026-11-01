@@ -103,7 +103,7 @@ export async function loadSceneIntoPanel(scene, panel){
   const pageData = currentPageData();
   const existing = pageData.objects.filter(o => o.homePanelId === panel.id && o.type !== 'panel');
   if (existing.length > 0) {
-    if (!await confirmAction(tr(`Loading the Scene "${scene.name}" will replace the ${existing.length} Element(s) already present in this Panel. Continue?`, `Charger la Scène "${scene.name}" va remplacer les ${existing.length} Élément(s) déjà présents dans cette Case. Continuer ?`))) return;
+    if (!await confirmAction(tr(`Loading the Scene "${scene.name}" will replace the ${existing.length} Element(s) already present in this Panel. Continue?`, `Charger la Scène "${scene.name}" va remplacer les ${existing.length} Élément(s) déjà présents dans cette Case. Continuer ?`), undefined, { masquable: 'charger-scene' })) return;
   }
   _snapshot();
   pageData.objects = pageData.objects.filter(o => !(o.homePanelId === panel.id && o.type !== 'panel'));

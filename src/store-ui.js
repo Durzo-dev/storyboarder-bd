@@ -1093,7 +1093,7 @@ function remplirListeTags(menu, { estCoche, cocher, apresCreation, refaire }){
     renommer: (tag, nom) => operer('renommerTag', { id: tag.id, nom }),
     supprimer: async (tag) => {
       const n = Object.values((bibliotheque && bibliotheque.tagsParModele) || {}).filter(ids => ids.includes(tag.id)).length;
-      const ok = _rappels.confirmer ? await _rappels.confirmer(t.confirmerSuppressionTag(tag.nom, n)) : true;
+      const ok = _rappels.confirmer ? await _rappels.confirmer(t.confirmerSuppressionTag(tag.nom, n), undefined, { masquable: 'supprimer-tag-modele' }) : true;
       if (!ok) return false;
       await operer('supprimerTag', { id: tag.id });
       tagsFiltre = tagsFiltre.filter(x => x !== tag.id);

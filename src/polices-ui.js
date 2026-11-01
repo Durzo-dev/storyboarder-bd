@@ -100,7 +100,7 @@ function remplirUsages(menu, { estCoche, cocher, apresCreation, refaire }){
       const n = Object.values(classementDesUsages(langue()).usagesDesPolices).filter(ids => ids.includes(u.id)).length;
       const ok = await _rappels.confirmer(tr(
         `Delete the use "${u.nom}"? ${n ? `It will be removed from ${n} font(s).` : 'No font has it.'} The fonts themselves are not touched.`,
-        `Supprimer l'usage « ${u.nom} » ? ${n ? `Il sera retiré de ${n} police(s).` : 'Aucune police ne le porte.'} Les polices elles-mêmes ne sont pas touchées.`));
+        `Supprimer l'usage « ${u.nom} » ? ${n ? `Il sera retiré de ${n} police(s).` : 'Aucune police ne le porte.'} Les polices elles-mêmes ne sont pas touchées.`), undefined, { masquable: 'supprimer-usage-police' });
       if (!ok) return false;
       await operationUsage('supprimer', { id: u.id }, langue());
       usagesFiltre = usagesFiltre.filter(x => x !== u.id);

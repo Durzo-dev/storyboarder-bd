@@ -1859,7 +1859,7 @@ async function quitterEditeurParNavigation(cible){
     const ok = await confirmAction(
       tr('Leaving the editor will discard the pose being composed. Continue?',
          'Quitter l\'éditeur abandonnera la pose en cours de composition. Continuer ?'),
-      tr('Leave the editor', 'Quitter l\'éditeur'));
+      tr('Leave the editor', 'Quitter l\'éditeur'), { masquable: 'quitter-editeur-modele' });
     if (!ok) return;
   }
   quitterEditeurSansRetour();

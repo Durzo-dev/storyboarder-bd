@@ -110,7 +110,7 @@ export async function supprimerPieceDeLEditeur(id){
   const ok = await _rappels.confirmer(
     tr(`This room becomes a courtyard. A courtyard is open to the sky: it will go up through the levels above (${noms}), whose walls around it will be drawn.`,
       `Cette pièce devient une cour. Une cour est ouverte jusqu'au ciel : elle montera aux étages du dessus (${noms}), où les murs de son contour seront tracés.`),
-    tr('Make a courtyard', 'Faire une cour'), { ok: tr('Make the courtyard', 'Faire la cour') });
+    tr('Make a courtyard', 'Faire une cour'), { ok: tr('Make the courtyard', 'Faire la cour'), masquable: 'faire-une-cour' });
   if (!ok || E !== ed) return;
   const r = prolongerLaCour(essai, niveauId, id, DEFAUTS_BATIMENT.epaisseur, tr);
   if (r.erreur) {
@@ -222,7 +222,7 @@ export async function fermerEditeurDeBatiment(){
     const ok = await _rappels.confirmer(
       tr('This building has unsaved changes. Close the editor without saving them?',
         'Ce bâtiment a des modifications non enregistrées. Fermer l\'éditeur sans les enregistrer ?'),
-      tr('Building editor', 'Éditeur de bâtiment'));
+      tr('Building editor', 'Éditeur de bâtiment'), { masquable: 'fermer-editeur-batiment' });
     if (!ok || !E) return !E;
   }
   fermerSansDemander();
@@ -2763,7 +2763,7 @@ async function enregistrer(){
     const ok = await _rappels.confirmer(tr(
       `This replaces the model "${nomAfficheDuFichier(ed.fichier)}" in the library. The buildings already placed in your Scenes are copies: they do not change. To keep the model as it is and make a new one, give this building another name first.`,
       `Ceci remplace le modèle « ${nomAfficheDuFichier(ed.fichier)} » de la bibliothèque. Les bâtiments déjà placés dans vos Scènes sont des copies : ils ne changent pas. Pour garder le modèle tel quel et en faire un nouveau, donnez d'abord un autre nom à ce bâtiment.`),
-    tr('Replace the model', 'Remplacer le modèle'));
+    tr('Replace the model', 'Remplacer le modèle'), { masquable: 'remplacer-modele-batiment' });
     if (!ok || E !== ed) return;
     ed.remplacementAccepte = true;
   }

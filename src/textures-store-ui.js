@@ -613,7 +613,7 @@ function remplirListeTags(menu, { estCoche, cocher, apresCreation, refaire }){
     supprimer: async (e) => {
       const n = mes.filter(x => (x.tags || []).includes(e.id)).length;
       const ok = _rappels.confirmer ? await _rappels.confirmer(tr(`Delete the tag “${e.nom}”? ${n ? `It will be removed from ${n} texture(s).` : 'No texture has it.'}`,
-        `Supprimer le tag « ${e.nom} » ? ${n ? `Il sera retiré de ${n} texture(s).` : 'Aucune texture ne le porte.'}`)) : true;
+        `Supprimer le tag « ${e.nom} » ? ${n ? `Il sera retiré de ${n} texture(s).` : 'Aucune texture ne le porte.'}`), undefined, { masquable: 'supprimer-tag-texture' }) : true;
       if (!ok) return false;
       await operer('supprimerTag', { id: e.id });
       tagsFiltre = tagsFiltre.filter(x => x !== e.id);

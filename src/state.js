@@ -271,6 +271,7 @@ export const S = {
   lastSaveDate:            null,
   renameModalContext:      null,
   confirmActionResolve:    null,
+  messagesMasques:         [],   // #434 : les confirmations masquées (« Ne plus afficher ce message »)
   quittingConfirmed:       false,
   appTheme:                'dark',
   // Contraste renforcé (#409c). Un MODIFICATEUR, indépendant de appTheme : les deux se combinent,

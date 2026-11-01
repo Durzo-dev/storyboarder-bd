@@ -160,7 +160,7 @@ import {
   getRoomScreenBBoxFrom2DProjections, getBuildingJunctionCorners,
 } from './scene3d.js';
 import {
-  setIOCallbacks, hasElectronAPI, applyProjectData, startAutosave, stopAutosave, confirmAction, alertAction,
+  setIOCallbacks, hasElectronAPI, applyProjectData, startAutosave, stopAutosave, confirmAction, definirMessagesMasques, reafficherLesMessages, alertAction,
   setDemarrageProjetVierge,
   loadPoseLibrary, loadDismissedPoses, restoreBuiltinPoses, missingBuiltinPoseCount,
   openRenameEntityModal, setRenameModelCallback, setRenameImageCallback,
@@ -2007,7 +2007,7 @@ async function supprimerLaSelection3D(){
     if (survivants.length && !await confirmAction(
       tr(`${survivants.length + 1} merged Bubbles will be separated, each recovering the appearance it had before the merge.`,
          `${survivants.length + 1} Bulles fusionnées seront séparées, chacune retrouvant l'apparence qu'elle avait avant la fusion.`),
-      tr('Delete a merged Bubble', 'Supprimer une Bulle fusionnée'))) return;
+      tr('Delete a merged Bubble', 'Supprimer une Bulle fusionnée'), { masquable: 'supprimer-bulle-fusionnee' })) return;
 
     snapshot();
     pageData.objects = pageData.objects.filter(o => !toRemove.has(o.id));
@@ -4431,7 +4431,7 @@ async function _renommerModele(ancien, nomVoulu){
   const nouveau = sanitizeModelName(nomVoulu);
   if (!ancien || nouveau === ancien) return;
   const usages = countModelUsages(ancien, { tomes: S.tomes, scenes: S.scenes });
-  const ok = await confirmAction(messageRenommageModele(ancien, nouveau, usages, tr));
+  const ok = await confirmAction(messageRenommageModele(ancien, nouveau, usages, tr), undefined, { masquable: 'renommer-modele' });
   if (!ok) return;
 
   const r = await renameModel(ancien, nouveau);
@@ -4540,7 +4540,7 @@ async function _renommerImage(ancien, nomVoulu){
   const nouveau = sanitizeImageName(nomVoulu);
   if (!ancien || !nouveau || nouveau === ancien) return;
   const usages = countImageUsages(ancien, { tomes: S.tomes });
-  const ok = await confirmAction(messageRenommageImage(ancien, nouveau, usages, tr));
+  const ok = await confirmAction(messageRenommageImage(ancien, nouveau, usages, tr), undefined, { masquable: 'renommer-image' });
   if (!ok) return;
 
   const r = await renameImage(ancien, nouveau);
@@ -5617,7 +5617,7 @@ document.getElementById('ctxClearPanel').onclick = async () => {
   // de #370, « les fixtures mesuraient des noms que l'application ne voit jamais ».
   if (count > 0 && !await confirmAction(
     tr(`Empty this panel? Its ${count} element(s) will be permanently removed.`,
-      `Vider cette Case ? Ses ${count} élément(s) seront définitivement supprimés.`))) return;
+      `Vider cette Case ? Ses ${count} élément(s) seront définitivement supprimés.`), undefined, { masquable: 'vider-case' })) return;
   snapshot();
   // DÉTACHER, PAS EFFACER : deux Cases peuvent porter la même image, et l'une n'a pas à décider pour
   // l'autre (cf. docs/en/panel-images.md, décision 4). Le fichier reste dans le dossier partagé.
@@ -5920,7 +5920,7 @@ document.getElementById('ctxDeleteChapter').onclick = async () => {
   const ok = await confirmAction(n
     ? tr(`Delete the chapter "${ch.nom}"? Its ${n} page(s) are kept, directly under the volume.`,
       `Supprimer le chapitre « ${ch.nom} » ? Ses ${n} planche(s) sont conservées, directement sous le tome.`)
-    : tr(`Delete the chapter "${ch.nom}"?`, `Supprimer le chapitre « ${ch.nom} » ?`));
+    : tr(`Delete the chapter "${ch.nom}"?`, `Supprimer le chapitre « ${ch.nom} » ?`), undefined, { masquable: 'supprimer-chapitre' });
   if (!ok) return;
   const courante = (S.currentTomeIndex === ti && t.pages[S.currentPageIndex]) ? t.pages[S.currentPageIndex].id : null;
   snapshot();
@@ -6905,7 +6905,7 @@ async function demanderLaFusion3D(source, candidate){
   const ok = await confirmAction(
     tr('Réunir ces deux Bulles en une seule ? Leur apparence sera celle de la Bulle déplacée, et chacune gardera son texte.',
        'Merge these two Bubbles into one? They will take the appearance of the Bubble you moved, and each keeps its own text.'),
-    tr('Fusionner les Bulles', 'Merge bubbles'));
+    tr('Fusionner les Bulles', 'Merge bubbles'), { masquable: 'fusionner-bulles' });
   if (!ok) { S.fusionsRefusees.add(clePaire3D(source, candidate)); return; }
   const page = currentPageData();
   if (!page) return;
@@ -7916,7 +7916,7 @@ sideBubbleStyleDeleteBtn.addEventListener('click', async () => {
   const ok = await confirmAction(
     tr(`Delete the style "${nom}"? The Bubbles that use it keep their look.`,
        `Supprimer le style « ${nom} » ? Les Bulles qui le portent gardent leur apparence.`),
-    tr('Delete the style', 'Supprimer le style'));
+    tr('Delete the style', 'Supprimer le style'), { masquable: 'supprimer-style-bulle' });
   if (!ok) return;
   await poserBibliothequeStyles3D(supprimerStyle3D(bibliothequeStyles3D(), i));
 });
@@ -8475,8 +8475,20 @@ document.querySelectorAll('#configOnglets .onglet').forEach(b => {
   b.addEventListener('click', () => choisirOngletConfig(b.dataset.onglet));
 });
 
+/** #434 : le bouton « Réafficher les messages masqués », avec leur nombre ; éteint s'il n'y en a aucun. */
+function majBoutonMessagesMasques(){
+  const b = document.getElementById('reafficherMessagesBtn');
+  if (!b) return;
+  const n = (S.messagesMasques || []).length;
+  b.disabled = !n;
+  b.textContent = n ? tr(`Show the ${n} hidden message(s) again`, `Réafficher les ${n} message(s) masqué(s)`)
+    : tr('No hidden message', 'Aucun message masqué');
+}
+document.getElementById('reafficherMessagesBtn').addEventListener('click', () => { reafficherLesMessages(); majBoutonMessagesMasques(); });
+
 function openSettingsModal(){
   choisirOngletConfig(ongletConfig);
+  majBoutonMessagesMasques();
   autosaveIntervalSelect.value = String(S.autosaveIntervalMs);
   themeSelect.value = S.appTheme;
   contrastCheckbox.checked = S.appContrast;
@@ -8694,6 +8706,8 @@ async function loadAppSettings(){
     if (settings && typeof settings.autosaveIntervalMs === 'number') {
       S.autosaveIntervalMs = settings.autosaveIntervalMs;
     }
+    // #434 : les confirmations masquées (« Ne plus afficher ce message »).
+    definirMessagesMasques(settings && settings.messagesMasques);
     // Le contraste est lu AVANT d'appliquer le theme, sinon la premiere application se ferait sans
     // lui et l'interface clignoterait de la version normale a la version contrastee au demarrage.
     if (settings && typeof settings.contrast === 'boolean') {
@@ -9064,7 +9078,7 @@ cablerStore({
     ouvrirEditeurSurModele(fichier);
   },
   // Confirmer la suppression d'un tag : la fenêtre de confirmation habituelle, devant la bibliothèque.
-  confirmer: (message) => confirmAction(message),
+  confirmer: (message, titre, options) => confirmAction(message, titre, options),
   // #454a-4b : les bâtiments de la bibliothèque.
   menuBatiment: (e, fichier) => openBatimentBiblioMenu(e, fichier),
   editerBatiment: (fichier) => editerBatimentDeLaBibliotheque(fichier),
@@ -9140,9 +9154,9 @@ async function supprimerBatimentDeLaBibliotheque(fichier){
 // refait la liste des polices de la fiche ouverte.
 enregistrerFermeture('policesModal', fermerPolices);
 // #446c : le store de textures, une fenêtre à part (demandé).
-cablerTextures({ confirmer: (message) => confirmAction(message), menuTexture: (e, t) => openTextureContextMenu(e, t) });
+cablerTextures({ confirmer: (message, titre, options) => confirmAction(message, titre, options), menuTexture: (e, t) => openTextureContextMenu(e, t) });
 cablerPolices({
-  confirmer: (message) => confirmAction(message),
+  confirmer: (message, titre, options) => confirmAction(message, titre, options),
   menuPolice: (e, nom) => openFontContextMenu(e, nom),
   apresChangement: () => { updateSidePanel(); drawCurrentPage(); },
 });

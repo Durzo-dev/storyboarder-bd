@@ -1639,6 +1639,11 @@
          (les modèles renommés, un par ligne). Sans cette règle les retours à la ligne sont
          écrasés et tout se met sur une seule ligne. -->
     <p id="confirmActionMessage" style="margin:0 0 14px; font-size:var(--texte-courant); color:var(--ink); line-height:1.4; white-space:pre-line;"></p>
+    <!-- #434 : sur les confirmations qui le permettent, « Ne plus afficher ce message » ; rétabli
+         par « Réafficher les messages masqués » dans la Configuration. -->
+    <label class="modal-checkbox-line" id="confirmActionMasquerLigne" style="display:none; margin:0 0 12px;">
+      <input type="checkbox" id="confirmActionMasquer"> Ne plus afficher ce message
+    </label>
     <div class="modal-actions">
       <button class="nav-btn" id="confirmActionCancel" type="button">Annuler</button>
       <button class="full-btn" id="confirmActionOk" type="button">Confirmer</button>
@@ -1739,6 +1744,10 @@
           <span style="--i:0">0</span><span style="--i:1">150</span><span style="--i:2">300</span><span style="--i:3">450</span><span style="--i:4">600</span><span style="--i:5">750</span><span style="--i:6">900</span>
         </div>
       </div>
+      <!-- #434 : les confirmations masquées par « Ne plus afficher ce message » reviennent. Éteint
+           quand aucune ne l'est ; le nombre est dit. -->
+      <label class="modal-field-label" id="messagesMasquesLabel">Messages de confirmation</label>
+      <button type="button" class="nav-btn" id="reafficherMessagesBtn">Réafficher les messages masqués</button>
     </div>
     <div class="config-page" data-onglet="projets" role="tabpanel" hidden>
       <label class="modal-field-label">Délai de sauvegarde automatique</label>
