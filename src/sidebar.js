@@ -1271,6 +1271,8 @@ function updateSidePanelImpl(){
     sideDescSection.style.display = 'none';
     sideHelpSection.style.display = 'none';
     sideCameraSection.style.display = 'block';
+    // En mode Caméra d'une Case, l'en-tête « Caméra » et sa croix (pour en sortir) sont là.
+    sideCameraSection.querySelector('.menu-header').style.display = '';
     { const fermer = document.getElementById('sideCameraCloseBtn'); if (fermer) fermer.style.display = ''; }
     refreshCameraSliders(sel);
     renderSideCameraGizmo(sel);
@@ -1278,7 +1280,12 @@ function updateSidePanelImpl(){
     return;
   }
   S.sideCameraTarget = null;
-  sideCameraSection.style.display = 'none';
+  // ⚠️ PAS DE « none » PUIS « block » POUR UNE SCÈNE (signalé, deux fois : la liste du centre de
+  // rotation se refermait aussitôt ouverte). Ce menu est refait à chaque dessin ; masquer un instant
+  // l'ancêtre d'une liste déroulante ouverte la referme, même s'il est réaffiché aussitôt. Le défaut
+  // de « Montrer jusqu'à » (#459a), réglé de la même façon : on ne masque que ce qui doit disparaître.
+  const _sceneCamera = sel && sel.type === 'panel' && isLockedScenePanel(sel);
+  if (!_sceneCamera && document.activeElement !== camOrbitTargetSelect) sideCameraSection.style.display = 'none';
   if (sel && sel.type === 'panel') {
     // A Scene's locked canvas (cf. isLockedScenePanel) is not a Panel: its header
     // therefore shows "Scène" rather than "Case", and its "Dimensions" section (edges in mm) doesn't
@@ -1480,9 +1487,9 @@ function updateSidePanelImpl(){
     // sensibilités, vue de dessus) sont TOUJOURS là, sous son menu. Sans bouton « Quitter le mode ».
     if (isSceneCanvas) {
       S.sideCameraTarget = sel;
-      sideCameraSection.style.display = 'block';
-      const fermer = document.getElementById('sideCameraCloseBtn');
-      if (fermer) fermer.style.display = 'none';
+      if (sideCameraSection.style.display !== 'block') sideCameraSection.style.display = 'block';
+      // Dans une Scène, pas de titre « Caméra » (demandé) : le nom de la Scène est juste au-dessus.
+      sideCameraSection.querySelector('.menu-header').style.display = 'none';
       refreshCameraSliders(sel);
       renderSideCameraGizmo(sel);
       refreshSceneTopDownBtn(sel);

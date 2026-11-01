@@ -113,3 +113,12 @@ test('caméra : la liste du centre de rotation n\'est refaite que si elle change
   assert.doesNotMatch(i18n, /sideCameraSection \.side-section:nth-of-type/, 'un sélecteur par rang renommerait la section Mesure');
 });
 
+// Signalé une 2e fois : la liste se refermait encore. La vraie cause : la section Caméra était
+// masquée puis réaffichée à chaque dessin, ce qui referme une liste ouverte (le défaut de #459a).
+test('caméra d\'une Scène : jamais masquée puis réaffichée ; pas de titre « Caméra » ; un écart sous « Vue de dessus »', () => {
+  const sb = readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8');
+  assert.match(sb, /if \(!_sceneCamera && document\.activeElement !== camOrbitTargetSelect\) sideCameraSection\.style\.display = 'none';/);
+  assert.match(sb, /sideCameraSection\.querySelector\('\.menu-header'\)\.style\.display = 'none';/);
+  assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /#sceneTopDownBtn\{\s*display:block; width:100%; margin-top:10px; margin-bottom:12px;/);
+});
+

@@ -2428,7 +2428,7 @@ describe('éditeur de Personnage : quitter par le menu de gauche', () => {
     assert.match(SC, /if \(repereDOrbiteVisible3D\(panel\)\) \{/, 'le repère pendant la rotation');
     assert.match(SC, /repere: repereDOrbiteVisible3D\(panel\),/, 'et dans la signature, sans quoi le cache le garderait');
     const SB = readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8');
-    assert.match(SB, /if \(isSceneCanvas\) \{\n      S\.sideCameraTarget = sel;\n      sideCameraSection\.style\.display = 'block';/);
+    assert.match(SB, /if \(isSceneCanvas\) \{\n      S\.sideCameraTarget = sel;\n      if \(sideCameraSection\.style\.display !== 'block'\) sideCameraSection\.style\.display = 'block';/);
   });
 
   test('une classe n\'est pas reconnue par simple préfixe', () => {
