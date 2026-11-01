@@ -22,7 +22,7 @@
 | Éditeur de modèle | glisser gauche (dans le vide) | glisser droit | molette | — | glisser une articulation (pose) |
 | Éditeur de bâtiment, plan | — (vue de dessus) | clic droit ou milieu maintenu | molette | glisser gauche | clic droit, clic droit maintenu, boutons, champs |
 | Éditeur de bâtiment, aperçu 3D | glisser gauche | glisser droit | molette | — | — |
-| Case, mode Caméra | glisser gauche | Ctrl + glisser, ou glisser milieu, ou flèches | molette | glisser gauche (l'Élément) | curseurs de la fenêtre |
+| Case, mode Caméra | glisser gauche | glisser droit, Ctrl + glisser, ou glisser milieu, ou flèches | molette | glisser gauche (l'Élément) | curseurs de la fenêtre |
 | Scène | glisser gauche dans le vide | glisser droit, ou flèches | molette | glisser gauche (l'Élément) | curseurs de la fenêtre |
 
 ## Les réglages communs
@@ -189,7 +189,7 @@ On y entre par la touche **C** ou le menu contextuel « Caméra ».
 | Geste | Effet | Valeurs |
 |---|---|---|
 | Glisser gauche | tourner la caméra | vitesse commune × sensibilité de la Case ; inclinaison bornée à ±85° |
-| Ctrl + glisser gauche, ou glisser milieu | déplacer la caméra | vitesse commune × distance × sensibilité |
+| Glisser droit (#463c), Ctrl + glisser gauche, ou glisser milieu | déplacer la caméra ; sans bouger, le clic droit ouvre le menu | vitesse commune × distance × sensibilité |
 | Molette | avancer, reculer, vers le curseur | ×1,08 par cran ; distance de 0,3 à 6 000 ; au plus près, elle passe à travers |
 | Flèches, ou W A S D | déplacer la caméra | 4 % de la distance par appui × sensibilité |
 
@@ -244,8 +244,9 @@ Le Lecteur, les vignettes, la fenêtre des Polices. L'image d'une Case a ses pro
 1. **Le bouton droit** : il déplace la vue partout, SAUF sur un élément de l'éditeur de bâtiment, où
    il le tourne. Dans une Case hors mode Caméra, il fait défiler la Planche. Le même geste n'a pas le
    même sens d'un écran à l'autre.
-2. **Déplacer la caméra d'une Case** se fait au Ctrl + glisser gauche ou au glisser milieu, alors que
-   les Scènes et les aperçus le font au glisser droit.
+2. ~~**Déplacer la caméra d'une Case** se fait au Ctrl + glisser gauche ou au glisser milieu, alors que
+   les Scènes et les aperçus le font au glisser droit.~~ Corrigé en #463c : au glisser droit, comme
+   les Scènes (les deux autres restent).
 3. **Cinq zooms différents** : ×1,105 (aperçus), ×1,08 (Cases, Scènes, fenêtres), ×1,12 (Éditeur de
    modèle), ×1,16 (plan du bâtiment), et ×1,1 pour la taille d'un élément. Certains suivent la
    molette (`e^Δ`), d'autres comptent des crans fixes : une molette sans crans (pavé tactile) ne se

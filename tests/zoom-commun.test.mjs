@@ -39,3 +39,10 @@ test('Ctrl + molette zoome toujours ; Maj affine la profondeur d\'un Élément',
   assert.match(lire('events.js'), /const _proprio = \(e\.ctrlKey && sel && \(sel\.type === 'perso' \|\| sel\.type === 'objet3d'\)\)/);
   assert.match(lire('events.js'), /PANEL_CAM_REF_DIST_3D \* 0\.06 \* \(e\.shiftKey \? 0\.2 : 1\)/);
 });
+
+// #463c : la caméra d'une Case en mode Caméra se déplace au glisser droit, comme une Scène.
+test('mode Caméra : clic droit maintenu = déplacer la caméra, sans bouger = le menu', () => {
+  const ev = lire('events.js');
+  assert.match(ev, /const _cam = currentPage\(\)\.objects\.find\(o => o\.id === S\.selectedId && o\.type === 'panel' && o\.cameraMode\);/);
+  assert.match(ev, /S\.dragOrig = \{ panelId: _cam\.id, enAttente: true, boutonDroit: true,/);
+});

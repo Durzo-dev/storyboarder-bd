@@ -21,7 +21,7 @@
 | Model editor | left drag (in empty space) | right drag | wheel | — | drag a joint (pose) |
 | Building editor, plan | — (top view) | hold right or middle button | wheel | left drag | right-click, held right button, buttons, fields |
 | Building editor, 3D preview | left drag | right drag | wheel | — | — |
-| Panel, Camera mode | left drag | Ctrl + drag, middle drag, or arrows | wheel | left drag (the Element) | the modal's sliders |
+| Panel, Camera mode | left drag | right drag, Ctrl + drag, middle drag, or arrows | wheel | left drag (the Element) | the modal's sliders |
 | Scene | left drag in empty space | right drag, or arrows | wheel | left drag (the Element) | the modal's sliders |
 
 ## The shared settings
@@ -188,7 +188,7 @@ Entered with the **C** key or the “Camera” context menu.
 | Gesture | Effect | Values |
 |---|---|---|
 | Left drag | turn the camera | shared speed × the Panel's sensitivity; tilt bounded to ±85° |
-| Ctrl + left drag, or middle drag | move the camera | shared speed × distance × sensitivity |
+| Right drag (#463c), Ctrl + left drag, or middle drag | move the camera; a right click without moving opens the menu | shared speed × distance × sensitivity |
 | Wheel | move forward, back, towards the cursor | ×1.08 per notch; distance from 0.3 to 6,000; very close, it goes through |
 | Arrows, or W A S D | move the camera | 4 % of the distance per press × sensitivity |
 
@@ -241,8 +241,8 @@ image; drag: its anchor), in 2D.
 1. **The right button**: it moves the view everywhere, EXCEPT on a building-editor element, where it
    turns it. In a Panel outside Camera mode, it scrolls the Page. The same gesture does not mean the
    same thing from one screen to another.
-2. **Moving a Panel's camera** uses Ctrl + left drag or middle drag, while Scenes and previews use
-   right drag.
+2. ~~**Moving a Panel's camera** used Ctrl + left drag or middle drag, while Scenes and previews use
+   right drag.~~ Fixed in #463c: right drag, like Scenes (the other two stay).
 3. **Five different zooms**: ×1.105 (previews), ×1.08 (Panels, Scenes, modals), ×1.12 (Model
    editor), ×1.16 (building plan), and ×1.1 for an element's size. Some follow the wheel (`e^Δ`),
    others count fixed notches: a notchless wheel (touchpad) does not behave the same everywhere.

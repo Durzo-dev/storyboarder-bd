@@ -2576,6 +2576,22 @@ canvas.addEventListener('mousedown', (e) => {
         return;
       }
     }
+    // #463c (demandé) : en mode Caméra, le clic droit maintenu sur la Case DÉPLACE SA CAMÉRA, comme
+    // dans une Scène et les aperçus (Ctrl + glisser et le glisser milieu restent). Sans bouger, le
+    // menu contextuel s'ouvre au relâchement.
+    {
+      const _cam = currentPage().objects.find(o => o.id === S.selectedId && o.type === 'panel' && o.cameraMode);
+      const { x: _cx, y: _cy } = getCoords(e);
+      if (_cam && _cx >= _cam.x && _cx <= _cam.x + _cam.w && _cy >= _cam.y && _cy <= _cam.y + _cam.h) {
+        S.panMoved = false;
+        getCamOrbitWorld(_cam, panelCamBasis3D(_cam));
+        S.dragMode = 'panelCamPan'; S.dragStart = { x: _cx, y: _cy };
+        S.dragOrig = { panelId: _cam.id, enAttente: true, boutonDroit: true,
+          camWx: _cam.camWx || 0, camWy: _cam.camWy || 0, camWz: _cam.camWz || 0,
+          camDist: _cam.camDist || PANEL_CAM_DEFAULT_DIST_3D };
+        return;
+      }
+    }
     S.isPanning = true; S.panMoved = false;
     S.panStart = { x: e.clientX, y: e.clientY };
     S.panScrollStart = { left: canvasWrap.scrollLeft, top: canvasWrap.scrollTop };
