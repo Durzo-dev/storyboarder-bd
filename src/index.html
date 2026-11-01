@@ -687,10 +687,6 @@
              `src/bubble-particle.js` reste au dépôt, avec ses tests, et ses exports sont inscrits
              dans la liste EN_ATTENTE du détecteur de code mort : rien ne pourrit, et le jour où
              l'axe revient, il suffit de remettre ce menu et l'appel du dessin. -->
-        <div id="sideBubblePaddingWrap" class="tome-format">
-          <label for="sideBubblePaddingInput">Écart intérieur (<span id="sideBubblePaddingValue">20</span>%)</label>
-          <input type="range" id="sideBubblePaddingInput" min="0" max="40" step="1" value="20">
-        </div>
         <div id="sideBubbleBgColorWrap" class="tome-format side-border-color">
           <label for="sideBubbleBgColorInput">Couleur du fond</label>
           <input type="color" id="sideBubbleBgColorInput" value="#ffffff">
@@ -701,6 +697,11 @@
         <div id="sideBubbleFillOpacityWrap" class="tome-format">
           <label for="sideBubbleFillOpacityInput">Opacité du fond (<span id="sideBubbleFillOpacityValue">100</span>%)</label>
           <input type="range" id="sideBubbleFillOpacityInput" min="0" max="100" step="1" value="100">
+        </div>
+        <!-- Ordre demandé : forme, pointe, texture, couleur, opacité, puis l'écart intérieur en dernier. -->
+        <div id="sideBubblePaddingWrap" class="tome-format">
+          <label for="sideBubblePaddingInput">Écart intérieur (<span id="sideBubblePaddingValue">20</span>%)</label>
+          <input type="range" id="sideBubblePaddingInput" min="0" max="40" step="1" value="20">
         </div>
         <!-- #426b — LA FUSION SE DEMANDE, ELLE NE S'IMPOSE PAS. Des Bulles se chevauchent dans
              presque toutes les planches : c'est la façon ordinaire de serrer un dialogue. Cochée

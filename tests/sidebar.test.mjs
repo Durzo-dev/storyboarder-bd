@@ -2059,3 +2059,13 @@ describe('#425h — le GESTE de glisser la queue, exécuté pour de bon', () => 
     }
   });
 });
+
+// Demandé : l'ordre de « Apparence de la bulle ».
+test('Apparence de la bulle : forme, pointe, texture, couleur, opacité, écart intérieur', async () => {
+  const { readFileSync } = await import('node:fs');
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+  const ids = ['sideBubbleShapeSelect"', 'sideBubbleTailShapeSelect"', 'sideBubbleTextureWrap', 'sideBubbleBgColorWrap', 'sideBubbleFillOpacityWrap', 'sideBubblePaddingWrap'];
+  const pos = ids.map(id => html.indexOf('id="' + id));
+  assert.ok(pos.every(p => p > 0), JSON.stringify(pos));
+  assert.deepEqual(pos.slice().sort((a, b) => a - b), pos);
+});
