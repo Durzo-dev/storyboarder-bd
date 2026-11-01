@@ -1502,7 +1502,7 @@ window.addEventListener('keydown', (e) => {
       // The pan step is proportional to camDist: same gesture → same apparent movement, regardless
       // of distance. Like Blender/Maya: step ∝ camera distance ÷ orbit.
       const _panCamDist = selPanel.camDistTarget ?? selPanel.camDist ?? PANEL_CAM_DEFAULT_DIST_3D;
-      const panStep = _panCamDist * 0.04 * (selPanel.camPanSensitivity != null ? selPanel.camPanSensitivity : 1);
+      const panStep = _panCamDist * 0.04;   // la sensibilité : celle de la Configuration (« Gestes 3D »)
       const panLimit = PANEL_CAM_REF_DIST_3D * 20;
       // Orbit center in world coordinates: stable, independent of camera rotation.
       // We start from the CURRENT TARGET (not the real value, still converging) so each keypress
@@ -3708,7 +3708,8 @@ window.addEventListener('mousemove', (e) => {
     const obj = page.objects.find(o => o.id === ((S.dragOrig && S.dragOrig.panelId) || S.selectedId));
     if (!obj) return;
     const dx = x - S.dragStart.x, dy = y - S.dragStart.y;
-    const camRotSens = obj.camRotSensitivity != null ? obj.camRotSensitivity : 1;
+    // La sensibilité propre à une Case est retirée (demandé) : celle de la Configuration vaut partout.
+    const camRotSens = 1;
     // LA VITESSE COMMUNE À TOUS LES GESTES 3D (demandé) : celle de l'aperçu du store,
     // vitesseRotation3D() radians par pixel D'ÉCRAN (utils.js, préférence comprise), multipliée par le
     // réglage de la Case.
@@ -3718,8 +3719,10 @@ window.addEventListener('mousemove', (e) => {
     // Le tangage reste borné à ±85° (Phase 10 A) : au-delà, la caméra passerait de l'autre côté.
     const _k9 = vitesseRotation3D() * camRotSens * pixelsEcranParUnitePage();
     const _CAM_PITCH_MAX = 85 * Math.PI / 180;   // ±1.4835 rad
-    obj.camRotYTarget = wrapAngle(S.dragOrig.camRotY + dx * _k9);
-    obj.camRotXTarget = clamp(S.dragOrig.camRotX - dy * _k9, -_CAM_PITCH_MAX, _CAM_PITCH_MAX);
+    // L'axe choisi sur le repère de la caméra (demandé) VERROUILLE aussi le glisser sur la Case :
+    // Y, l'horizontale seule ; X, la verticale seule.
+    obj.camRotYTarget = S.camAxeActif === 'x' ? S.dragOrig.camRotY : wrapAngle(S.dragOrig.camRotY + dx * _k9);
+    obj.camRotXTarget = S.camAxeActif === 'y' ? S.dragOrig.camRotX : clamp(S.dragOrig.camRotX - dy * _k9, -_CAM_PITCH_MAX, _CAM_PITCH_MAX);
     // Fix 13: rotation is IMMEDIATE (current value = target) to avoid any jitter.
     // The orbit center (camWx/Wy/Wz) is in world coordinates: it naturally stays fixed during
     // rotation (we don't touch it), with no reprojection needed.
@@ -3768,7 +3771,7 @@ window.addEventListener('mousemove', (e) => {
     if (_pObj9) {
       const _dx9 = x - S.dragStart.x, _dy9 = y - S.dragStart.y;
       const _K9     = WALL_PX_PER_UNIT_3D * PANEL_CAM_DEFAULT_DIST_3D;
-      const _pSens9 = _pObj9.camPanSensitivity != null ? _pObj9.camPanSensitivity : 1;
+      const _pSens9 = 1;   // la sensibilité de la Configuration seule (demandé)
       // Le point visé suit le pointeur (en unités de Page, le cadrage d'une Case est calibré sur la
       // hauteur de la Page, cf. framePanelCamera3D), à la vitesse commune vitesseDeplacement3D()
       // (utils.js, celle de l'aperçu du store, demandé), multipliée par le réglage de la Case.
@@ -7212,10 +7215,6 @@ const rightPanel = document.getElementById('rightPanel');
 const helpMenuCloseBtn = document.getElementById('helpMenuCloseBtn');
 const sideCameraCloseBtn = document.getElementById('sideCameraCloseBtn');
 const sideCameraRepere = document.getElementById('sideCameraRepere');
-const camSensRotInput = document.getElementById('camSensRotInput');
-const camSensRotValue = document.getElementById('camSensRotValue');
-const camSensPanInput = document.getElementById('camSensPanInput');
-const camSensPanValue = document.getElementById('camSensPanValue');
 const camRotYInput = document.getElementById('camRotYInput');
 const camRotXInput = document.getElementById('camRotXInput');
 const sceneTopDownBtn = document.getElementById('sceneTopDownBtn');
@@ -7623,23 +7622,6 @@ camOrbitTargetSelect.addEventListener('change', () => {
   panel.camOrbitTargetId = camOrbitTargetSelect.value || null;
   drawCurrentPage();
 });
-// [STATE→S] let S.camSensSnapshotTaken = false;
-camSensRotInput.addEventListener('input', () => {
-  if (!S.sideCameraTarget) return;
-  if (!S.camSensSnapshotTaken) { snapshot(); S.camSensSnapshotTaken = true; }
-  const pct = parseInt(camSensRotInput.value, 10);
-  camSensRotValue.textContent = pct;
-  S.sideCameraTarget.camRotSensitivity = pct / 100;
-});
-camSensRotInput.addEventListener('change', () => { S.camSensSnapshotTaken = false; });
-camSensPanInput.addEventListener('input', () => {
-  if (!S.sideCameraTarget) return;
-  if (!S.camSensSnapshotTaken) { snapshot(); S.camSensSnapshotTaken = true; }
-  const pct = parseInt(camSensPanInput.value, 10);
-  camSensPanValue.textContent = pct;
-  S.sideCameraTarget.camPanSensitivity = pct / 100;
-});
-camSensPanInput.addEventListener('change', () => { S.camSensSnapshotTaken = false; });
 // [STATE→S] let S.camRotSliderSnapshotTaken = false;
 camRotYInput.addEventListener('input', () => {
   if (!S.sideCameraTarget) return;
@@ -7766,7 +7748,7 @@ window.addEventListener('mousemove', (e) => {
   const panel = S.camGizmoDrag.panel;
   const dx = e.clientX - S.camGizmoDrag.x, dy = e.clientY - S.camGizmoDrag.y;
   if (Math.hypot(dx, dy) > 3) S.camGizmoDrag.bouge = true;
-  const camRotSens = panel.camRotSensitivity != null ? panel.camRotSensitivity : 1;
+  const camRotSens = 1;   // la sensibilité de la Configuration seule (demandé)
   // La vitesse commune à tous les gestes 3D (vitesseRotation3D, utils.js, demandé) ; ici déjà en
   // pixels d'écran.
   // L'axe actif (cliqué sur le repère) limite le glisser à son angle.

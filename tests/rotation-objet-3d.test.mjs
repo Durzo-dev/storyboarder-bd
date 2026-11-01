@@ -89,3 +89,14 @@ test('caméra : le repère SVG (axes du monde vus par la caméra), Y et X cliqua
   assert.match(ev, /if \(S\.camAxeActif !== 'x'\) panel\.camRotYTarget =/);
   assert.match(ev, /S\.camAxeActif = S\.camAxeActif === g\.axe \? null : g\.axe;/);
 });
+
+// Demandé : l'axe choisi verrouille AUSSI le glisser sur la Case ; plus de sensibilités dans le menu Caméra.
+test('caméra : l\'axe verrouille le glisser sur la Case ; le centre de rotation dans le Repère 3D ; plus de sensibilités', () => {
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+  const ev = readFileSync(new URL('../src/events.js', import.meta.url), 'utf8');
+  assert.match(ev, /obj\.camRotYTarget = S\.camAxeActif === 'x' \? S\.dragOrig\.camRotY :/);
+  assert.match(ev, /obj\.camRotXTarget = S\.camAxeActif === 'y' \? S\.dragOrig\.camRotX :/);
+  assert.doesNotMatch(html, /camSensRotInput|camSensPanInput|sideCameraRotSection|sideCameraTransSection/);
+  assert.ok(html.indexOf('id="camOrbitTargetSelect"') > html.indexOf('id="sideCameraRepere"'));
+});
+

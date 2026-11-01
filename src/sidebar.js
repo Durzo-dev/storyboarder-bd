@@ -366,10 +366,6 @@ export function majAffichageReglagesTraitBulle3D(bordureVisible){
 
 
 const rightPanel = document.getElementById('rightPanel');
-const camSensRotInput = document.getElementById('camSensRotInput');
-const camSensRotValue = document.getElementById('camSensRotValue');
-const camSensPanInput = document.getElementById('camSensPanInput');
-const camSensPanValue = document.getElementById('camSensPanValue');
 const camRotYInput = document.getElementById('camRotYInput');
 const camRotXInput = document.getElementById('camRotXInput');
 const camOrbitTargetSelect = document.getElementById('camOrbitTargetSelect');
@@ -1785,10 +1781,6 @@ export function updateSidePanel(){
 }
 
 export function refreshCameraSliders(panel){
-  const sensRot = Math.round((panel.camRotSensitivity != null ? panel.camRotSensitivity : 1) * 100);
-  const sensPan = Math.round((panel.camPanSensitivity != null ? panel.camPanSensitivity : 1) * 100);
-  camSensRotInput.value = sensRot; camSensRotValue.textContent = sensRot;
-  camSensPanInput.value = sensPan; camSensPanValue.textContent = sensPan;
   const rotYDeg = Math.round((panel.camRotY || 0) * 180 / Math.PI);
   const rotXDeg = Math.round((panel.camRotX || 0) * 180 / Math.PI);
   // Les champs d'angle (demandé, à la place des curseurs) : pas réécrits pendant qu'on y tape.

@@ -155,7 +155,7 @@ export const HELP_MANUAL_EN = [
   ]},
   { id: 'camera', title: 'Camera', paragraphs: [
     'Right-click a panel → "Camera" (only visible if the panel already contains at least one Element) to switch to Camera mode and show the 3D gizmo.',
-    'In Camera mode: drag with the left button on the panel to orient the view, with the right button to move it, the wheel to move forward/backward, and the settings (sensitivities, rotation, movement) appear in the right-hand menu.',
+    'In Camera mode: drag with the left button on the panel to orient the view, with the right button to move it, the wheel to move forward/backward, and the right-hand menu shows the 3D axes (click Y or X to turn around it only), the two angles and the rotation centre.',
     'Rotation pivots around whatever sits at the centre of the panel: the rotation centre re-anchors itself onto the first Element aimed at (or onto the Ground) at the start of every drag, without the image moving. Without this, repeated zooming could leave the centre stranded behind in empty space, making the whole scene appear to slide on the slightest rotation.',
     'The arrow keys, or W/A/S/D, pan the camera sideways and vertically (Camera mode only, outside a text field).',
     'The F key centres the panel\u2019s view on the selected Element; a second press returns to the previous framing. In Camera mode, the selected Element becomes the permanent centre of rotation.',
@@ -438,7 +438,7 @@ export const HELP_MANUAL_FR = [
   ]},
   { id: 'camera', title: 'Caméra', paragraphs: [
     'Clic droit sur une case → « Caméra » (visible uniquement si la case contient déjà au moins un Élément) pour passer en mode Caméra et afficher le repère 3D.',
-    'En mode Caméra : glisser au clic gauche sur la case pour orienter la vue, au clic droit pour la déplacer, molette pour avancer/reculer, et les réglages (sensibilités, rotation, déplacement) apparaissent dans le menu de droite.',
+    'En mode Caméra : glisser au clic gauche sur la case pour orienter la vue, au clic droit pour la déplacer, molette pour avancer/reculer, et le menu de droite montre le repère 3D (cliquer Y ou X pour ne tourner que sur lui), les deux angles et le centre de rotation.',
     "La rotation pivote autour de ce que vous avez au centre de la Case : le centre de rotation se replace tout seul sur le premier Élément visé (ou sur le Sol) au début de chaque glisser, sans que l'image ne bouge. Sans cela, après plusieurs zooms le centre pouvait rester en arrière dans le vide et toute la scène semblait déraper à la moindre rotation.",
     'Les flèches directionnelles ou W/A/S/D permettent de translater la caméra latéralement et verticalement (uniquement en mode Caméra, hors champ texte).',
     "La touche F centre la vue de la Case sur l'Élément sélectionné ; un second appui revient au cadrage précédent. En mode Caméra, l'Élément sélectionné devient le centre de rotation permanent.",

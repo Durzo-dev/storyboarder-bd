@@ -755,8 +755,6 @@ export const I18N_CASES = [
  * premier nœud texte change, parenthèse comprise, sans espace ajouté (I18N_LEADING en ajoute un).
  */
 export const I18N_AVANT_NOMBRE = [
-  ['label[for="camSensRotInput"]', 'Sensitivity (', 'Sensibilité ('],
-  ['label[for="camSensPanInput"]', 'Sensitivity (', 'Sensibilité ('],
   // Écrits un par un dans applyI18n jusqu'à #461 ; même forme, donc même table.
   ['label[for="sideBubblePaddingInput"]', 'Inside padding (', 'Écart intérieur ('],
   ['label[for="sideBubbleFillOpacityInput"]', 'Fill opacity (', 'Opacité du fond ('],

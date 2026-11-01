@@ -805,14 +805,8 @@
              normales : sur demande utilisateur, un bouton pour basculer en vue de dessus, et y
              rebasculer fait revenir à la vue qui était active juste avant le premier clic. -->
         <button id="sceneTopDownBtn" type="button" style="display:none;">Vue de dessus</button>
-      </div>
-
-      <div class="side-section" id="sideCameraRotSection">
-        <h2>Rotation</h2>
-        <div class="tome-format">
-          <label for="camSensRotInput">Sensibilité (<span id="camSensRotValue">100</span>%)</label>
-          <input type="range" id="camSensRotInput" min="20" max="300" step="5" value="100">
-        </div>
+        <!-- Le centre de rotation, ici (demandé) : les sections Rotation et Translation, qui ne portaient
+             que des sensibilités (réglées dans la Configuration, « Gestes 3D »), sont retirées. -->
         <div class="tome-format">
           <label for="camOrbitTargetSelect">Centre de rotation</label>
           <select id="camOrbitTargetSelect" style="width:100%; margin-top:4px;">
@@ -821,13 +815,6 @@
         </div>
       </div>
 
-      <div class="side-section" id="sideCameraTransSection">
-        <h2>Translation</h2>
-        <div class="tome-format">
-          <label for="camSensPanInput">Sensibilité (<span id="camSensPanValue">100</span>%)</label>
-          <input type="range" id="camSensPanInput" min="20" max="300" step="5" value="100">
-        </div>
-      </div>
 
       <!-- Section Mesure : visible uniquement en vue de dessus, gérée par startMeasureTool/stopMeasureTool -->
       <div class="side-section" id="sideMesureSection" style="display:none;">
