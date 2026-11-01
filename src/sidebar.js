@@ -11,6 +11,8 @@
  * getRoomConnectedComponents.
  */
 
+import { commandesDuMenu3D } from './commandes-3d.js';
+import { modeSelonLaCamera3D } from './rotation-objet-3d.js';
 import { policeADessiner, variantesDeLaPolice, policesImportees, nomsDesUsagesDeLaPolice } from './polices-utilisateur.js';
 import { S, currentPage, currentPageData, isLockedScenePanel, panelsInPage, ensurePanelNumbers, tr } from './state.js';
 import { estUnBatimentPlace, niveauDeCoupe, fixerCoupe, masquesDe, fixerMasques, resumeDesMasques } from './batiment-element.js';
@@ -370,6 +372,7 @@ const camRotYInput = document.getElementById('camRotYInput');
 const camRotXInput = document.getElementById('camRotXInput');
 const camOrbitTargetSelect = document.getElementById('camOrbitTargetSelect');
 const sideCameraRepere = document.getElementById('sideCameraRepere');
+const sideCommandesSection = document.getElementById('sideCommandesSection');
 const sceneTopDownBtn = document.getElementById('sceneTopDownBtn');
 
 
@@ -1234,6 +1237,8 @@ function updateSidePanelImpl(){
   sidePageCadrageSection.style.display = 'none';
   sidePageEditionSection.style.display = 'none';
   const selRaw = page.objects.find(o => o.id === S.selectedId);
+  // #463f : les Commandes, cachées d'emblée, remplies plus bas pour une Case, son mode Caméra ou une Scène.
+  sideCommandesSection.style.display = 'none';
   // The right-hand panel (Dimensions / Elements / Description) must stay displayed as long as we're
   // "inside" a panel, even when the selected object is an Element (persona/object) of
   // that panel rather than the panel itself: otherwise, selecting an Element in the
@@ -1277,6 +1282,7 @@ function updateSidePanelImpl(){
     refreshCameraSliders(sel);
     renderSideCameraGizmo(sel);
     refreshSceneTopDownBtn(sel);
+    remplirCommandes3D('camera', sel, selRaw);
     return;
   }
   S.sideCameraTarget = null;
@@ -1494,6 +1500,7 @@ function updateSidePanelImpl(){
       renderSideCameraGizmo(sel);
       refreshSceneTopDownBtn(sel);
     }
+    remplirCommandes3D(isSceneCanvas ? 'scene' : 'case', sel, selRaw);
   } else if (sel && sel.type === 'bulle') {
     // A speech Bubble has neither border dimensions nor contained Elements: only its text
     // (description) is edited here, like for a Panel, plus the option to show/hide its
@@ -1785,6 +1792,26 @@ export function manuelEstAffiche(){
 export function updateSidePanel(){
   updateSidePanelImpl();
   if (_restoreSectionCollapseStates) _restoreSectionCollapseStates();
+}
+
+/**
+ * #463f : remplit les Commandes (commandes-3d.js) et les place : en tête du menu (sous l'en-tête de
+ * la Case ou de la Scène), ou, en mode Caméra, sous l'en-tête « Caméra ». Le geste de rotation dit
+ * est celui que prendrait un clic droit maintenu maintenant (selon la plongée de la caméra).
+ */
+function remplirCommandes3D(ecran, panel, selRaw){
+  const element = selRaw && (selRaw.type === 'perso' || selRaw.type === 'objet3d') ? (selRaw.type === 'perso' ? 'perso' : 'objet') : null;
+  const b = panelCamBasis3D(panel);
+  const plateau = modeSelonLaCamera3D(Math.asin(Math.max(-1, Math.min(1, b.backward.y)))) === 'droit';
+  const texte = commandesDuMenu3D({ ecran, element, plateau, axe: S.camAxeActif }, tr).join('\n');
+  const aide = document.getElementById('sideCommandesAide');
+  if (aide.textContent !== texte) aide.textContent = texte;
+  // Sa place : sous l'en-tête « Caméra » en mode Caméra, sinon juste avant le bloc Caméra (en tête).
+  const camera = document.getElementById('sideCameraSection');
+  const entete = camera.querySelector('.menu-header');
+  if (ecran === 'camera') { if (entete.nextElementSibling !== sideCommandesSection) entete.after(sideCommandesSection); }
+  else if (camera.previousElementSibling !== sideCommandesSection) camera.before(sideCommandesSection);
+  sideCommandesSection.style.display = 'block';
 }
 
 export function refreshCameraSliders(panel){

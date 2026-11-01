@@ -2576,6 +2576,8 @@ function ouvrirApercu(conteneur, b){
 
   let glisser = null;
   const el = rendu.domElement;
+  // #463f : les gestes de l'aperçu, en infobulle (demandé).
+  el.title = tr('Left drag: turn · right drag: move · wheel: zoom', 'Clic gauche : tourner · clic droit : déplacer · molette : zoomer');
   el.addEventListener('pointerdown', (e) => {
     if (e.button !== 0 && e.button !== 2) return;
     glisser = { x: e.clientX, y: e.clientY, deplacer: e.button === 2 };

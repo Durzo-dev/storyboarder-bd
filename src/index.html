@@ -457,6 +457,13 @@
       <span class="menu-title"><span id="panelMenuTitle">Case</span><span id="panelMenuNumber" class="case-menu-number"></span></span>
       <button id="panelMenuCloseBtn" class="menu-close-btn" type="button" title="Fermer">&times;</button>
     </div>
+    <!-- #463f : les COMMANDES d'une Case ou d'une Scène (demandé), en tête comme dans les éditeurs ;
+         remplies par sidebar.js (commandes-3d.js) selon l'écran et l'Élément choisi. En mode Caméra,
+         elles se placent sous l'en-tête « Caméra ». -->
+    <div id="sideCommandesSection" class="side-section" style="display:none;">
+      <h2 id="sideCommandesTitle">Commandes</h2>
+      <p id="sideCommandesAide" class="commandes-aide"></p>
+    </div>
     <!-- La Caméra, TOUT EN HAUT du menu d'une Scène (demandé), juste sous son en-tête ; en mode Caméra
          d'une Case, elle est seule à l'écran. -->
     <div id="sideCameraSection" style="display:none;">
@@ -1963,7 +1970,7 @@
       </div>
       <div class="modal-section-body">
         <div class="persona-preview-wrap">
-          <canvas id="personaPreview3D" width="180" height="260"></canvas>
+          <canvas id="personaPreview3D" width="180" height="260" title="Molette : zoomer"></canvas>
           <!-- Ouvre l'éditeur de Personnage plein écran sur CE Personnage (cf. showPersonaEditor).
                Bouton-icône posé dans le coin de l'aperçu plutôt qu'une pleine largeur sous lui : il
                agit SUR cet aperçu, le placer dessus le dit sans qu'un libellé ait à l'expliquer.
@@ -2230,7 +2237,7 @@
       </div>
       <div class="modal-section-body">
         <div class="persona-preview-wrap">
-          <canvas id="objectPreview3D" width="240" height="161"></canvas>
+          <canvas id="objectPreview3D" width="240" height="161" title="Molette : zoomer"></canvas>
           <!-- Ouvre l'Éditeur de modèle sur CE modèle importé, quand il porte des
                articulations reconnues. Même bouton, même coin, même geste que pour un Personnage
                (cf. personaEditorOpenBtn) : deux corps qui se posent pareil doivent s'éditer pareil.

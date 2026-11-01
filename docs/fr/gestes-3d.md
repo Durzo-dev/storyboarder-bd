@@ -308,7 +308,7 @@ vue le permet ; une vitesse de rotation d'objet (0,5°/px) ajoutée aux réglage
 Bascule), dans le même ordre, sur les mêmes axes (corriger la fenêtre d'un Objet), avec un champ en
 degrés à côté de chaque curseur et « Remettre droit ».
 
-**7. Des Commandes partout** : chaque écran qui a des gestes 3D les liste, comme le menu de
+**7. Des Commandes partout** (fait en #463f : en tête du menu d'une Case, de son mode Caméra et d'une Scène, `commandes-3d.js` ; infobulles sur les aperçus) : chaque écran qui a des gestes 3D les liste, comme le menu de
 l'éditeur de bâtiment (« Geste : effet. »), y compris les aperçus (une infobulle sur l'aperçu).
 
 **Un découpage possible**, du moins risqué au plus long : corriger les libellés de la fenêtre d'un

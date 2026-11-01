@@ -300,7 +300,7 @@ rotation speed (0.5°/px) added to the “3D gestures” settings.
 order, on the same axes (fix the Object modal), with a degree field next to each slider and
 “Straighten”.
 
-**7. Controls everywhere**: every screen with 3D gestures lists them, like the building editor's
+**7. Controls everywhere** (done in #463f: at the top of the menu of a Panel, its Camera mode and a Scene, `commandes-3d.js`; tooltips on the previews): every screen with 3D gestures lists them, like the building editor's
 menu (“Gesture: effect.”), previews included (a tooltip on the preview).
 
 **A possible breakdown**, from least risky to longest: fix the Object modal's labels (6); unify zooms

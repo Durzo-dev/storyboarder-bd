@@ -21,6 +21,7 @@ import { preparerModeleImporte3D } from './model-cache.js';
 import { box3FromObjectSkinAware3D } from './skinned-box-3d.js';
 import { maillagesHorsCorps3D, maillagesParNom3D } from './stray-meshes-3d.js';
 import { deplacement3D, vitesseRotation3D, facteurDeZoom3D, deltaMolette3D } from './utils.js';
+import { tr } from './state.js';
 
 /** L'angle de vue de la caméra, en degrés. */
 const CHAMP = 35;
@@ -186,6 +187,8 @@ export async function ouvrirApercu3D(conteneur, octets, { objet = null } = {}){
   const relache = () => { glisser = null; };
   const molette = (e) => { e.preventDefault(); distance = zoom3D(distance, deltaMolette3D(e), distanceCadrage); redessiner(); };
   const el = rendu.domElement;
+  // #463f : les gestes de l'aperçu, en infobulle (demandé).
+  el.title = tr('Left drag: turn · right drag: move · wheel: zoom', 'Clic gauche : tourner · clic droit : déplacer · molette : zoomer');
   el.addEventListener('pointerdown', appui);
   el.addEventListener('pointermove', deplacement);
   el.addEventListener('pointerup', relache);
