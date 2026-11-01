@@ -261,10 +261,12 @@ describe('l\'épaisseur d\'un muret', () => {
   const lire = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
   test('le champ (muret seulement), en direct, écrit seulement s\'il change ; le rendu la lit', () => {
     assert.match(lire('index.html'), /id="tracéThicknessInput" min="2" max="200" step="1"/);
-    assert.match(lire('modals.js'), /const _epaisseur = obj\.tracéType === 'muret';/);
+    assert.match(lire('modals.js'), /const _epaisseur = TRACÉS_A_EPAISSEUR\.includes\(obj\.tracéType\);/);
+    assert.match(lire('scene3d.js'), /export const TRACÉS_A_EPAISSEUR = \['muret', 'haie'\];/);
+    assert.match(lire('scene3d.js'), /const epH = tracéWallThickness3D\(o\);/);
     assert.match(lire('events.js'), /o\.target\.wallThickness = Math\.min\(2, Math\.max\(0\.02, cm \/ 100\)\);/);
     assert.match(lire('events.js'), /if \(champ\.value !== champ\.dataset\.initial && isFinite\(cm\) && cm > 0\)/);
-    assert.match(lire('scene3d.js'), /if \(host\.tracéType === 'muret' && host\.wallThickness > 0\) return host\.wallThickness;/);
+    assert.match(lire('scene3d.js'), /if \(TRACÉS_A_EPAISSEUR\.includes\(host\.tracéType\) && host\.wallThickness > 0\) return host\.wallThickness;/);
     assert.match(lire('scene3d.js'), /wt: o\.wallThickness/);
     assert.match(lire('io.js'), /o\.wallThickness \*= invS/);
   });

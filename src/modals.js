@@ -45,7 +45,7 @@ import {
 import {
   ensureElementUnits3D, ensureElementWorldPos3D,
   findOwningPanel, groundMagnetEligible,
-  getCamOrbitWorld, mergedBuildWallRigCache3D, panelCamBasis3D, panelSceneCache3D, slabMeshCache3D, tracéWallThickness3D,
+  getCamOrbitWorld, mergedBuildWallRigCache3D, panelCamBasis3D, panelSceneCache3D, slabMeshCache3D, tracéWallThickness3D, TRACÉS_A_EPAISSEUR,
 } from './scene3d.js';
 import { preparerPoseDansUnBatiment } from './batiment-pose-ui.js';
 import {
@@ -1788,8 +1788,8 @@ export function openTracéModal(obj){
     document.getElementById('tracéHeightInput').value =
       obj.wallHeight != null ? obj.wallHeight : (_def.wallHeight || 0.5);
   }
-  // L'épaisseur d'un muret (demandé), en cm : la sienne, ou celle qui suit sa hauteur.
-  const _epaisseur = obj.tracéType === 'muret';
+  // L'épaisseur d'un muret ou d'une haie (demandé), en cm : la sienne, ou celle qui suit sa hauteur.
+  const _epaisseur = TRACÉS_A_EPAISSEUR.includes(obj.tracéType);
   document.getElementById('tracéThicknessField').style.display = _epaisseur ? '' : 'none';
   if (_epaisseur) {
     const champ = document.getElementById('tracéThicknessInput');

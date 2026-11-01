@@ -1637,11 +1637,13 @@ export function tracéWallHeight3D(o){
 // flush against a face instead of floating on the path's centre line. Mirrors the ratios the
 // renderer builds each type with; for the Jersey Barrier it deliberately takes the NARROW upper
 // part rather than the wide base, so the Opening is never pushed out beyond the wall.
+/** Les Tracés dont l'épaisseur se règle (demandé : le muret, puis la haie). */
+export const TRACÉS_A_EPAISSEUR = ['muret', 'haie'];
 const TRACÉ_WALL_THICKNESS_RATIO_3D = { muret: 0.12, haie: 0.611, barriere: 0.55 * 0.529, cloture: 0.06 };
 export function tracéWallThickness3D(host){
   if (!host) return 0;
-  // L'ÉPAISSEUR RÉGLÉE d'un muret (demandé, en mètres), sinon celle qui suit sa hauteur.
-  if (host.tracéType === 'muret' && host.wallThickness > 0) return host.wallThickness;
+  // L'ÉPAISSEUR RÉGLÉE d'un muret ou d'une haie (demandé, en mètres), sinon celle qui suit sa hauteur.
+  if (TRACÉS_A_EPAISSEUR.includes(host.tracéType) && host.wallThickness > 0) return host.wallThickness;
   const h = tracéWallHeight3D(host);
   return h * (TRACÉ_WALL_THICKNESS_RATIO_3D[host.tracéType] ?? 0.12);
 }
@@ -3049,14 +3051,16 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         const wallH = tracéWallHeight3D(o);
         // Thicknesses proportional to wallH (design ratios 0.55/0.90≈0.611 and 0.38/0.90≈0.422)
         // to remain correct after loadSceneIntoPanel scaling (wallHeight *= s).
-        const hedgeGeo = buildTracéWallGeometry3D(w.pts, wallH, wallH * 0.611, GROUND_Y_DEFAULT_3D, _tmHoles);
+        // L'épaisseur RÉGLÉE (demandé) remplace la proportionnelle ; la couche intérieure garde son rapport.
+        const epH = tracéWallThickness3D(o);
+        const hedgeGeo = buildTracéWallGeometry3D(w.pts, wallH, epH, GROUND_Y_DEFAULT_3D, _tmHoles);
         if (hedgeGeo) {
           // La couche intérieure, plus sombre : la même matière, à l'ombre.
           group.add(new THREE.Mesh(hedgeGeo, materiauDeTrace3D('haie', o.color, { texture: o.traceTexture,
             couleurAplat: '#2A5C2A', ombre: 0.7, plaquage: 'trace', roughness: 1.0, metalness: 0, side: THREE.DoubleSide,
           })));
         }
-        const hedgeGeo2 = buildTracéWallGeometry3D(w.pts, wallH * 0.97, wallH * 0.422, GROUND_Y_DEFAULT_3D + 0.02, _tmHoles);
+        const hedgeGeo2 = buildTracéWallGeometry3D(w.pts, wallH * 0.97, epH * (0.422 / 0.611), GROUND_Y_DEFAULT_3D + 0.02, _tmHoles);
         if (hedgeGeo2) {
           group.add(new THREE.Mesh(hedgeGeo2, materiauDeTrace3D('haie', o.color, { texture: o.traceTexture,
             couleurAplat: col, plaquage: 'trace', roughness: 0.97, metalness: 0, side: THREE.DoubleSide,
