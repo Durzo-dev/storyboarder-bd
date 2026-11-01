@@ -13,6 +13,66 @@ version coûterait plus qu'il ne rapporte.
 
 ---
 
+## v1.15.0
+
+**Les mêmes gestes 3D partout, des sous-sols, et des Bulles habillées par le store.** On tourne
+désormais un Personnage ou un Objet à la souris, la caméra se manie pareil d'un écran à l'autre, et
+une section Commandes dit à chaque instant ce que font les gestes.
+
+### Ce qui change pour vous
+
+**Tourner un Élément à la souris.** Dans une Case ou une Scène, clic droit maintenu sur le
+Personnage ou l'Objet choisi : de face, un plateau tournant (glisser à gauche ou à droite) ; de
+biais ou de dessus (plus de 45° de plongée), un bouton rotatif (tourner autour de lui, un tour complet
+sans inversion). Aimant tous les 90°, Ctrl par 15°, Alt libre, Maj plus fin ; R : un quart de tour.
+
+**Déplacer un Élément.** Le glisser le déplace de côté (et en hauteur s'il n'est pas collé au Sol),
+sans plus dériver en profondeur ; la molette l'avance ou le recule le long de la direction de la
+caméra (Maj : plus fin).
+
+**La caméra.** Un seul zoom, proportionnel à la molette, partout (aperçus, fenêtres, Éditeur de
+modèle, plan du bâtiment, Cases, Scènes) ; Ctrl + molette zoome toujours. En mode Caméra, le glisser
+droit déplace la vue, comme dans les Scènes. Le menu Caméra prend le repère de l'éditeur de bâtiment
+(un clic sur Y ou X bloque le glisser sur cet angle), ses deux angles en champs, et le centre de
+rotation ; il passe en tête du menu d'une Scène. Plus de repère dans l'image.
+
+**Commandes.** Une section en tête du menu d'une Case, de son mode Caméra et d'une Scène liste les
+gestes, selon l'Élément choisi et le geste de rotation actif ; les aperçus 3D les donnent en
+infobulle.
+
+**Fenêtres d'Élément.** Rotation, Inclinaison, Bascule, comme dans l'éditeur de bâtiment, chacune
+avec un champ en degrés, et « Remettre droit ». La fenêtre d'un Objet reliait « Rotation
+horizontale » au mauvais axe : corrigé.
+
+**Configuration.** « Vitesse de rotation des objets » rejoint les vitesses de la vue ; les
+sensibilités propres à une Case disparaissent (celles de la Configuration valent partout).
+
+**Sous-sols.** Quatre boutons images dans « Niveaux » : ajouter un étage (N) ou un sous-sol (Maj+N),
+dupliquer au-dessus (D) ou en dessous (Maj+D). Le rez-de-chaussée reste au Sol ; un sous-sol montre
+le niveau du dessus, n'a pas de toit, et dans une Case le Sol le couvre ; il s'ouvre quand on coupe
+le bâtiment au sous-sol.
+
+**Bâtiments.** « Créer un bâtiment » aussi depuis une Case (« Placer dans la Case »). L'épaisseur
+d'un muret et d'une haie se règle en centimètres.
+
+**Bulles.** La texture du fond se choisit dans le store des textures, ouvert sur le tag livré
+« Bulle de dialogue », retirable pour prendre n'importe quelle texture. La section Style passe en
+second, et l'Apparence suit l'ordre forme, pointe, texture, couleur, opacité, écart intérieur.
+
+**Polices.** La carte « Importer une police » en tête de la grille, comme dans les autres stores.
+
+**Confirmations.** « Ne plus afficher ce message » sur seize confirmations choisies ; « Réafficher
+les messages masqués » dans la Configuration.
+
+### Sous le capot
+
+- `rotation-objet-3d.js` (plateau ou bouton rotatif selon la plongée), `commandes-3d.js`,
+  `orientation-champs.js` ; `facteurDeZoom3D` et `deltaMolette3D` (utils.js) pour tous les zooms.
+- Sous-sols : `nbSousSols`, `recalerNiveaux(b, sousSols)`, `empriseDesSousSols` ; le Sol percé par
+  un masque au pochoir (`MARQUE_SOL_PERCE`), le bâtiment posé par sa boîte hors Sol.
+- Textures de Bulle `int:` / `tex:` par un résolveur (`definirResolveurDeTexturesDeBulle`) ; tag
+  livré `bulle` dans la bibliothèque des textures.
+
 ## v1.14.0
 
 **Le dépôt change d'adresse, et les éléments posés sur un toit y restent.**

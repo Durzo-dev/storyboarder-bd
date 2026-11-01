@@ -4,7 +4,7 @@
 
 > 🇫🇷 [Version française](README.fr.md)
 
-**Version 1.14.26**
+**Version 1.15.0**
 
 **Comic book storyboarding application**: a desktop tool to create, organize and visualize comic book pages with real-time 3D scene rendering.
 
@@ -26,7 +26,7 @@ Previous versions and release notes: [all releases](https://github.com/Durzo-dev
 ### Storyboard
 - 📖 **Volume → Chapter → Page → Panel** organization (optional chapters) with automatic numbering, duplication and drag-and-drop reordering
 - 📝 Per-panel summaries and descriptions
-- 💬 **Speech bubbles**: eight shapes, five tails, photographed textures, sixty-five fonts sorted by use plus your own, from a file or an online store, bold and italic, saved styles, and merging two bubbles into one
+- 💬 **Speech bubbles**: eight shapes, five tails, textures picked in the texture store (any texture), sixty-five fonts sorted by use plus your own, from a file or an online store, bold and italic, saved styles, and merging two bubbles into one
 - 🖼️ **Panel images** (PNG, JPG, WebP), with adjustable framing and zoom
 - 📥 **Import a page** already drawn: its panels are detected, then corrected right on the page
 - 📐 **Volume formats** of your own per project, in mm or px, renamable
@@ -35,11 +35,12 @@ Previous versions and release notes: [all releases](https://github.com/Durzo-dev
 ### 3D scenes
 - 🎬 **Reusable scenes**: compose a 3D setting once, load it into any panel
 - 🎥 **Free camera** in every panel, and a top-down view for placing elements
+- 🖱️ **The same 3D gestures everywhere**: left drag to turn, right drag to move, one zoom; turn a character or an object with the right button held on it; a Controls section lists them
 - 👤 **Ready-made elements**: characters with poses and emotions, animals, furniture, vehicles, vegetation, buildings, roads and walls, photographed grounds you can tint
 - ☀️ **Light**: Day, Night or Custom mode with a computed sky, placed light sources, cast shadows
 
 ### Building editor
-- 🏠 **Build from above**: snapping walls, detected rooms, doors, windows, bay windows and passages, straight, L- or U-shaped stairs, several levels
+- 🏠 **Build from above**: snapping walls, detected rooms, doors, windows, bay windows and passages, straight, L- or U-shaped stairs, several levels and basements (the Ground is pierced over them)
 - 🧱 **Finishes**: facade, walls, floors and ceilings in textures and colours, room by room
 - 🪑 **Furniture**: your models placed in the rooms, snapped to the walls, orientable
 - 🏡 **Roofs**: automatic per level, flat (parapet, railing), single pitch, gable or hip, even on L, T or U shapes; tiles, barrel tiles or slate; a chimney on top

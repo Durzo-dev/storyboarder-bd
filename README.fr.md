@@ -4,7 +4,7 @@
 
 > 🇬🇧 [English version](README.md)
 
-**Version 1.14.26**
+**Version 1.15.0**
 
 **Application de découpage de Bandes Dessinées** : outil de storyboard pour créer, organiser et visualiser des planches de BD avec rendu 3D des scènes.
 
@@ -26,7 +26,7 @@ Versions précédentes et notes de version : [toutes les releases](https://githu
 ### Storyboard
 - 📖 Organisation **Tomes → Chapitres → Planches → Cases** (chapitres facultatifs) avec numérotation automatique, duplication et réorganisation par glisser-déposer
 - 📝 Résumés et descriptions par Case
-- 💬 **Bulles de dialogue** : huit formes, cinq pointes, textures photographiées, soixante-cinq polices rangées par usage et les vôtres, depuis un fichier ou un store en ligne, gras et italique, styles enregistrés, et fusion de deux Bulles en une
+- 💬 **Bulles de dialogue** : huit formes, cinq pointes, textures choisies dans le store (n'importe laquelle), soixante-cinq polices rangées par usage et les vôtres, depuis un fichier ou un store en ligne, gras et italique, styles enregistrés, et fusion de deux Bulles en une
 - 🖼️ **Images de Case** (PNG, JPG, WebP), au cadrage et au zoom réglables
 - 📥 **Importer une planche** déjà dessinée : ses Cases sont détectées, puis se corrigent sur la Planche
 - 📐 **Formats de Tome** propres au Projet, en mm ou en px, renommables
@@ -35,11 +35,12 @@ Versions précédentes et notes de version : [toutes les releases](https://githu
 ### Scènes 3D
 - 🎬 **Scènes réutilisables** : composez un décor 3D une fois, chargez-le dans n'importe quelle Case
 - 🎥 **Caméra libre** dans chaque Case, et vue de dessus pour placer les Éléments
+- 🖱️ **Les mêmes gestes 3D partout** : glisser gauche pour tourner, droit pour déplacer, un seul zoom ; un Personnage ou un Objet se tourne au clic droit maintenu sur lui ; une section Commandes les rappelle
 - 👤 **Éléments prêts à l'emploi** : Personnages avec poses et émotions, Animaux, mobilier, véhicules, végétation, bâtiments, routes et murets, sols photographiés teintables
 - ☀️ **Lumière** : mode Jour, Nuit ou Personnalisé avec ciel calculé, sources de lumière posées, ombres portées
 
 ### Éditeur de bâtiment
-- 🏠 **Construire en vue de dessus** : murs aimantés, pièces détectées, portes, fenêtres, baies et passages, escaliers droits, en L ou en U, plusieurs niveaux
+- 🏠 **Construire en vue de dessus** : murs aimantés, pièces détectées, portes, fenêtres, baies et passages, escaliers droits, en L ou en U, plusieurs niveaux et des sous-sols (le Sol est percé au-dessus)
 - 🧱 **Revêtements** : façade, murs, sols et plafonds en textures et couleurs, pièce par pièce
 - 🪑 **Mobilier** : vos modèles posés dans les pièces, aimantés aux murs, orientables
 - 🏡 **Toits** : automatiques par niveau, plats (acrotère, garde-corps), à un, deux ou quatre pans, même sur des formes en L, T ou U ; tuiles plates, tuiles canal ou ardoise ; une cheminée dessus
