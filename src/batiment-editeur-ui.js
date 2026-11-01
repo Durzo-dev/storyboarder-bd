@@ -47,7 +47,7 @@ import {
   escalierSous, hauteurAFranchir, DEFAUTS_ESCALIER, TYPES_D_ESCALIER, essayerEscalier, aimanterEscalier, escaliersBloques,
 } from './batiment-escaliers.js';
 import {
-  niveauxTries, niveauDessous, niveauDessus, ajouterEtage, dupliquerNiveau, supprimerNiveau, modifierNiveau,
+  niveauxTries, niveauDessous, niveauDessus, ajouterEtage, ajouterSousSol, estUnSousSol, dupliquerNiveau, supprimerNiveau, modifierNiveau,
   deplacerNiveau,
 } from './batiment-niveaux.js';
 import { cadrageOriente3D, orbite3D, zoom3D, positionCamera3D, deplacement3D } from './store-apercu-3d.js';
@@ -507,6 +507,13 @@ function remplirToit(){
     if (E.coupe) { E.coupe = false; $('batimentApercuCoupe').classList.remove('actif'); }
     modifier(b => fixerToit(b, n.id, c));
   };
+  // #454g : un sous-sol n'a pas de toit : ce qui n'est pas sous le rez-de-chaussée est couvert d'une
+  // dalle qui affleure le Sol.
+  if (estUnSousSol(n)) {
+    zone.replaceChildren(vide(tr('A basement has no roof: what the ground floor does not cover gets a slab flush with the Ground.',
+      'Un sous-sol n\'a pas de toit : ce que le rez-de-chaussée ne couvre pas reçoit une dalle qui affleure le Sol.')));
+    return;
+  }
   if (!piecesDecouvertes(E.batiment, n.id).length) {
     const rien = E.batiment.pieces.some(p => p.niveauId === n.id);
     zone.replaceChildren(vide(rien
@@ -620,6 +627,11 @@ function choisirNiveau(id){
 /** Ajoute un étage vide en haut, y passe, et prend l'outil Mur (demandé : il est vide). Raccourci N. */
 function ajouterUnEtage(){
   let n = null; modifier(b => { n = ajouterEtage(b, tr); });
+  if (n) { choisirNiveau(n.id); choisirOutil('mur'); }
+}
+/** #454g : ajoute un sous-sol vide sous le plus bas des niveaux, y passe, et prend l'outil Mur. */
+function ajouterUnSousSol(){
+  let n = null; modifier(b => { n = ajouterSousSol(b, tr); });
   if (n) { choisirNiveau(n.id); choisirOutil('mur'); }
 }
 /** Copie le niveau courant juste au-dessus, et y passe. Raccourci D. */
@@ -774,7 +786,12 @@ function remplirNiveaux(){
     dupliquer.title = tr('Duplicate the floor: impossible, this level has no room yet (close a contour of walls)',
       'Dupliquer l\'étage : impossible, ce niveau n\'a encore aucune pièce (fermez un contour de murs)');
   }
-  actions.append(ajouter, dupliquer);
+  // #454g : un sous-sol, sous le plus bas (le rez-de-chaussée reste au Sol).
+  const sousSol = document.createElement('button');
+  sousSol.type = 'button'; sousSol.className = 'full-btn'; sousSol.textContent = tr('Basement', 'Sous-sol');
+  sousSol.title = tr('Add a basement: an empty level under the lowest one; the ground floor stays on the Ground', 'Ajouter un sous-sol : un niveau vide sous le plus bas ; le rez-de-chaussée reste au Sol');
+  sousSol.onclick = ajouterUnSousSol;
+  actions.append(ajouter, sousSol, dupliquer);
   zone.replaceChildren(...lignes, actions);
 }
 
@@ -831,7 +848,7 @@ function lignesDesEscaliers(bloques){
 
 /** Supprime un niveau qui porte quelque chose après confirmation ; un niveau vide, directement. */
 async function supprimerUnNiveau(n){
-  const transformer = (b) => supprimerNiveau(b, n.id);
+  const transformer = (b) => supprimerNiveau(b, n.id, tr);
   const plein = E.batiment.murs.some(m => m.niveauId === n.id);
   const bloques = escaliersBloquesPar(transformer);
   // UNE SEULE FENÊTRE (demandé) : ce que le niveau emporte, et les escaliers d'autres niveaux qu'il

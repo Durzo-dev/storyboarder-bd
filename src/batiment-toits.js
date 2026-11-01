@@ -85,13 +85,17 @@ export function aireSignee(pts){
  */
 export function estUneTerrasse(b, piece){
   if (!piece || !piece.vide || !piece.repere) return false;
+  // #454g : une cour de SOUS-SOL sans rien dessous a un sol (le fond de la fosse, sous le Sol de la
+  // Scène, que le bâtiment perce) ; ailleurs, sans rien dessous, la cour est ouverte sur le Sol.
+  const niveau = (b.niveaux || []).find(x => x.id === piece.niveauId);
+  const enSousSol = !!niveau && niveau.elevation < -1e-9;
   const dessous = niveauDessous(b, piece.niveauId);
-  if (!dessous) return false;
+  if (!dessous) return enSousSol;
   for (const [id, f] of formesDesPieces(b, dessous.id)) {
     const p = (b.pieces || []).find(x => x.id === id);
     if (dansLaFace(piece.repere, f)) return !(p && p.vide);
   }
-  return false;   // rien dessous (l'étage déborde) : pas de sol, la cour est ouverte
+  return enSousSol;   // rien dessous (l'étage déborde) : pas de sol, la cour est ouverte (sauf en sous-sol)
 }
 
 /** Les pièces du niveau qui n'ont pas d'étage au-dessus (leur repère hors des pièces du dessus). PURE. */
@@ -502,7 +506,8 @@ export function geometrieSquelette(ext, reglages, base, { adosses = [], hautMax 
  */
 export function toitsDuNiveau(b, niveauId){
   const n = ((b && b.niveaux) || []).find(x => x.id === niveauId);
-  if (!n) return [];
+  // #454g : pas de toit sur un SOUS-SOL ; la dalle du dessus de ses pièces affleure le Sol.
+  if (!n || n.elevation < -1e-9) return [];
   const reglages = toitDuNiveau(n);
   const base = (n.elevation || 0) + hauteurDesMursDuNiveau(b, niveauId);
   const e = demiEpaisseur(b, niveauId);
@@ -627,3 +632,24 @@ export function centreDuToit(b, niveauId){
   const p = { x: c.reduce((s, q) => s + q.x, 0) / c.length, z: c.reduce((s, q) => s + q.z, 0) / c.length };
   return pointDansPolygone(p, c) ? p : c[0];
 }
+
+/**
+ * #454g, LE SOL PERCÉ : là où le bâtiment descend sous le Sol, le Sol de la Scène ne se dessine pas.
+ * Les formes de toutes les pièces (cours comprises) de ses SOUS-SOLS, poussées à la face extérieure
+ * de leurs murs : des polygones en mètres, dans le repère du bâtiment (qui se recouvrent : le
+ * masque du rendu les additionne). Vide sans sous-sol. PURE.
+ */
+export function empriseDesSousSols(b){
+  const polys = [];
+  for (const n of niveauxTries(b || {}).filter(x => x.elevation < -1e-9)) {
+    const e = demiEpaisseur(b, n.id);
+    for (const f of formesDesPieces(b, n.id).values()) {
+      const p = decaler(f.points, e), q = decaler(f.points, -e);
+      // Le décalage qui AGRANDIT la forme (son sens dépend de celui du contour).
+      polys.push(aire(p) >= aire(q) ? p : q);
+    }
+  }
+  return polys;
+}
+const aire = (pts) => Math.abs(pts.reduce((s, a, i) => { const c = pts[(i + 1) % pts.length]; return s + a.x * c.z - c.x * a.z; }, 0)) / 2;
+

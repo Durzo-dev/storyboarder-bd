@@ -378,6 +378,17 @@ export function findOwningPanel(perso, page){
  * remises comme on les a trouvées). Mêmes sources que le rendu pour le centre : `wxFloor`, `wyFloor`
  * sinon la projection de la boîte 2D, `wzFloor` sinon la profondeur.
  */
+/**
+ * #454g : la boîte d'un BÂTIMENT pour le placer, rognée au niveau de son rez-de-chaussée (y ≥ 0 dans
+ * son repère) : ce qui est AU-DESSUS du Sol se pose sur lui et se met à la hauteur réelle, et ses
+ * sous-sols descendent dessous. Sans sous-sol, rien n'est sous 0 : la boîte est la même qu'avant.
+ */
+export function boiteDuBatimentHorsSol3D(fg){
+  const box = new THREE.Box3().setFromObject(fg);
+  if (!box.isEmpty() && box.min.y < 0 && box.max.y > 0) box.min.y = 0;
+  return box;
+}
+
 export function pointDuBatimentPlace3D(o, panel, p){
   return pointDuRigPlace3D(ensureObjectRigEntry3D(o).figureGroup, o, panel, p);
 }
@@ -387,7 +398,7 @@ export function pointDuRigPlace3D(fg, o, panel, p){
   const pos = fg.position.clone(), ech = fg.scale.clone();
   fg.position.set(0, 0, 0); fg.scale.set(1, 1, 1);
   fg.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(fg);
+  const box = boiteDuBatimentHorsSol3D(fg);
   fg.position.copy(pos); fg.scale.copy(ech);
   fg.updateMatrixWorld(true);
   const size = new THREE.Vector3(), centre = new THREE.Vector3();
@@ -2681,6 +2692,8 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
     // sinon l'échelle appliquée ici (déduite de cette boîte) diverge de ce que le GPU dessine,
     // symptôme observé : boîte de sélection décalée vers le bas, modèle à la mauvaise échelle.
     const _boxFn3D = WALL_TYPES.includes(o.objType) ? wallOnlyBoxFn3D(entry)
+      // #454g : un bâtiment se pose par sa partie hors Sol ; ses sous-sols descendent dessous.
+      : o.objType === 'batiment' ? boiteDuBatimentHorsSol3D
       // ⚠️ LA BOÎTE DU MAILLAGE ICI, ET C'EST DÉLIBÉRÉ. Ce n'est pas un cadrage de caméra mais le
       // PLACEMENT : `placeRigCentered3D` en déduit l'échelle appliquée au rig. Y basculer sur la
       // boîte des os changerait la taille de TOUS les modèles déjà posés dans les Projets existants

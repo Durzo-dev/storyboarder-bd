@@ -532,7 +532,14 @@ moves on screen.
   its floor"; "Confirm" / "Cancel". Stored on the placed Element, `affichage.masques = { murs,
   plafonds, sols }` (an ADDED field; a vanished id hides nothing). Render: `construireBatiment3D(…,
   { masques })`; the rig keeps the whole box (template).
-- **#454g** the basement and the pierced Ground, last.
+- **#454g** basement and pierced Ground: DONE (1 November 2026, to be validated). "Basement" (Levels
+  menu) adds a level under the lowest; the GROUND FLOOR is the anchor, at elevation 0, and the number
+  of basements is kept across operations (`nbSousSols`, `recalerNiveaux(b, sousSols)`). No roof on a
+  basement (its top slab is flush with the Ground); a basement courtyard has a floor. In a panel the
+  building is placed by its part above the Ground (`boiteDuBatimentHorsSol3D`), and an invisible MASK
+  over the basements' footprint (`empriseDesSousSols`) marks the stencil, which the Ground tests
+  (`NotEqualStencilFunc`): the Ground is pierced. Limits: terrain zones and paths on top are not
+  pierced; the editor preview keeps its grid.
 - **#456** (architect's plan) afterwards, in the editor: one plan = one level.
 
 ## Sources

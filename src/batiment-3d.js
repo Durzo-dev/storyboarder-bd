@@ -17,7 +17,7 @@ import { formeDeLEscalier, tremieDeLEscalier } from './batiment-escaliers.js';
 import { niveauxTries, hauteurDesMursDuNiveau, epaisseurDuDessus, niveauDessous } from './batiment-niveaux.js';
 import { fabriqueDeRevetements, revetementDeLaFace, revetementDeLaPiece, pieceDevantLaFace } from './batiment-revetements.js';
 import { meublesDuNiveau, hauteurAuSol, basDuMeuble, empreinteDuMeuble } from './batiment-mobilier.js';
-import { toitsDuNiveau, decaler, ACROTERE, GARDE_CORPS, EPAISSEUR_TOIT, estUneTerrasse, baseSurLeToit } from './batiment-toits.js';
+import { toitsDuNiveau, decaler, ACROTERE, GARDE_CORPS, EPAISSEUR_TOIT, estUneTerrasse, baseSurLeToit, empriseDesSousSols } from './batiment-toits.js';
 
 /** Les matières d'un bâtiment, à créer une fois par renderer. */
 export function materiauxBatiment3D(T){
@@ -195,7 +195,7 @@ function construireArche(T, mur, o, mats){
  * referment sans lui (leurs jonctions sont recalculées) ; un plafond masqué emporte la dalle du
  * dessus de SA pièce ; un sol masqué, la dalle de dessous. Le bâtiment n'est pas touché.
  */
-export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, masques = null } = {}){
+export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, masques = null, percerLeSol = false } = {}){
   const groupe = new T.Group();
   const cache = {
     murs: new Set((masques && masques.murs) || []),
@@ -342,8 +342,36 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, 
     if (!(coupe && n.id === dernier)) construireToits(T, b, n, mats, groupe);
   });
   col.maillages().forEach(m => groupe.add(m));
+  // #454g, LE SOL PERCÉ (dans les Cases et les Scènes) : sur l'emprise des sous-sols, au ras du Sol,
+  // un MASQUE invisible qui marque le tampon de pochoir ; le Sol (rig3d.js) ne se dessine pas là où
+  // il est marqué. Dessiné avant le Sol (renderOrder), sans couleur ni profondeur, ni ombre, ni
+  // sélection : on voit le sous-sol par le trou, et rien d'autre ne change.
+  if (percerLeSol) {
+    const emprise = empriseDesSousSols(b);
+    if (emprise.length) {
+      if (!mats.masqueDuSol) {
+        mats.masqueDuSol = new T.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: T.DoubleSide,
+          stencilWrite: true, stencilRef: MARQUE_SOL_PERCE, stencilFunc: T.AlwaysStencilFunc,
+          stencilZPass: T.ReplaceStencilOp, stencilFail: T.KeepStencilOp, stencilZFail: T.KeepStencilOp });
+      }
+      for (const poly of emprise) {
+        const geo = new T.ShapeGeometry(new T.Shape(poly.map(p => new T.Vector2(p.x, -p.z))));
+        geo.rotateX(-Math.PI / 2);
+        const m = new T.Mesh(geo, mats.masqueDuSol);
+        m.position.y = 0.01;
+        m.renderOrder = -1000;
+        m.castShadow = false; m.receiveShadow = false;
+        m.raycast = () => {};
+        m.userData.masqueDuSol = true;
+        groupe.add(m);
+      }
+    }
+  }
   return groupe;
 }
+
+/** La marque du pochoir du Sol percé (#454g), partagée avec le Sol de rig3d.js. */
+export const MARQUE_SOL_PERCE = 1;
 
 
 /**

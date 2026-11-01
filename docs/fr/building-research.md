@@ -561,7 +561,14 @@ place : rien ne bouge à l'écran.
   dalle du dessus avec) et « Masquer son sol » ; « Valider » / « Annuler ». Stocké sur l'Élément
   placé, `affichage.masques = { murs, plafonds, sols }` (champ AJOUTÉ ; un id disparu ne masque
   rien). Rendu : `construireBatiment3D(…, { masques })` ; le rig garde la boîte entière (gabarit).
-- **#454g** le sous-sol et le Sol percé, en dernier.
+- **#454g** le sous-sol et le Sol percé : FAIT (1er novembre 2026, à valider). « Sous-sol » (menu
+  Niveaux) ajoute un niveau sous le plus bas ; le REZ-DE-CHAUSSÉE est l'ancre, à l'élévation 0, et le
+  nombre de sous-sols se garde d'une opération à l'autre (`nbSousSols`, `recalerNiveaux(b, sousSols)`).
+  Pas de toit en sous-sol (sa dalle du dessus affleure le Sol) ; une cour de sous-sol a un sol (le fond
+  de la fosse). Dans une Case, le bâtiment se pose par sa partie hors Sol (`boiteDuBatimentHorsSol3D`)
+  et un MASQUE invisible sur l'emprise des sous-sols (`empriseDesSousSols`) marque le pochoir, que le
+  Sol teste (`NotEqualStencilFunc`) : le Sol est percé. Limites : les Zones de terrain et les Tracés
+  posés dessus ne sont pas percés ; l'aperçu de l'éditeur garde sa grille.
 - **#456** (plan d'architecte) ensuite, dans l'éditeur : un plan = un niveau.
 
 ## Sources

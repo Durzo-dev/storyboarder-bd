@@ -46,7 +46,7 @@ import { getLoadedModel, loadedModelNames, modelState, modelCacheSignature } fro
 import { fichiersDesMeubles } from './batiment-mobilier.js';
 import { isImportedModel } from './model-store.js';
 // #454a-4 : le bâtiment placé, dessiné par le MÊME constructeur que l'aperçu de l'éditeur.
-import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
+import { construireBatiment3D, materiauxBatiment3D, MARQUE_SOL_PERCE } from './batiment-3d.js';
 import { OBJ_TYPE_BATIMENT, signatureDuBatiment, niveauDeCoupe, masquesDe } from './batiment-element.js';
 // cf. son en-tête : Object3D.clone() casse le lien SkinnedMesh↔Skeleton, faussant l'échelle
 // appliquée par placeRigCentered3D pour tout modèle importé articulé.
@@ -1758,6 +1758,10 @@ export function ensurePersonaScene3D(){
   // partout. Relevé : 1,49 % de pixels changés, dont 0,000 % LOIN du projeteur. Aucune acné, et le
   // nombre de segments du plan n'y change rien — recevoir se décide par fragment.
   groundMesh3D.receiveShadow = true;
+  // #454g, LE SOL PERCÉ : le Sol ne se dessine pas là où le masque d'un sous-sol a marqué le pochoir
+  // (batiment-3d.js). Sans sous-sol, rien n'est marqué : le Sol est dessiné partout, comme avant.
+  Object.assign(groundMesh3D.material, { stencilWrite: true, stencilRef: MARQUE_SOL_PERCE, stencilFunc: THREE.NotEqualStencilFunc,
+    stencilFail: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp, stencilZPass: THREE.KeepStencilOp });
   // ⚠️ LE PAVAGE EST INSTALLÉ UNE FOIS, SUR LE MATÉRIAU PARTAGÉ, et c'est l'uniforme `uPavage` qui
   // l'active Case par Case. Le désactiver rend exactement le chemin d'origine de three.js : c'est
   // ce qui permet de le réserver aux matières qui le supportent sans dupliquer le matériau.
@@ -4333,7 +4337,8 @@ export function buildPropRig3D(objType, colorHex, o){
     }
     const b = (o && o.batiment) || { niveaux: [], murs: [] };
     const jusquA = niveauDeCoupe(o), masques = masquesDe(o);
-    const groupe = construireBatiment3D(THREE, b, _materiauxBatiment3D, { jusquA, masques });
+    // #454g : un bâtiment placé PERCE le Sol sur l'emprise de ses sous-sols.
+    const groupe = construireBatiment3D(THREE, b, _materiauxBatiment3D, { jusquA, masques, percerLeSol: true });
     // #459a : COUPÉ, il garde la place et la taille du bâtiment entier. Le rendu centre la BOÎTE du
     // rig et la met à la hauteur réelle : une boîte rétrécie par la coupe le grandirait et le
     // déplacerait. Le bâtiment entier est donc joint, INVISIBLE et hors de la couche des rayons
