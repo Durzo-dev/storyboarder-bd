@@ -17,7 +17,7 @@ import {
   elementsInPanel,
   renderSidePersonas,
   afficherManuelLateral, masquerManuelLateral, manuelEstAffiche,
-  majAffichageReglagesTraitBulle3D, updateSidePanel, _oublierZonesDeLobes3D,
+  majAffichageReglagesTraitBulle3D, updateSidePanel, _oublierZonesDeLobes3D, appliquerTextureDeBulle,
 } from '../src/sidebar.js';
 import { longueurMinimaleDeLaQueue3D } from '../src/bubble-tail.js';
 import { definirBibliothequeStyles3D, bibliothequeStyles3D } from '../src/sidebar.js';
@@ -1435,14 +1435,13 @@ describe('#425c — la fiche montre ce que le dessin applique, et la création p
     // fois : une fiche qui affiche correctement et un menu qui n'écrit rien sont compatibles.
     const b = nouvelleBulle();
     S.selectedId = b.id;
-    const select = document.getElementById('sideBubbleTextureSelect');
-    for (const texture of texturesConnues()) {
-      select.value = texture;
-      (select._ecouteurs.change || []).forEach(fn => fn({ target: select }));
+    // Depuis le carré de texture (demandé : le store), par `appliquerTextureDeBulle`, son rappel.
+    const zone = document.getElementById('sideBubbleTextureGrid');
+    for (const texture of [...texturesConnues(), 'int:sol:gazon']) {
+      appliquerTextureDeBulle(b, texture);
       assert.equal(b.bulleTexture, texture, `choisir « ${texture} » a posé « ${b.bulleTexture} »`);
-      select.value = 'fondus';            // on brouille la fiche…
-      updateSidePanel();                  // …et on vérifie qu'elle relit l'objet
-      assert.equal(select.value, texture, `la fiche affiche « ${select.value} » pour « ${texture} »`);
+      updateSidePanel();                  // la fiche relit l'objet : son carré porte la texture posée
+      assert.equal(zone.children[0] && zone.children[0]._texture, texture, `le carré montre une autre texture que « ${texture} »`);
     }
   });
 
@@ -1485,11 +1484,7 @@ describe('#425c — la fiche montre ce que le dessin applique, et la création p
   test('⚠️ CHANGER DE TEXTURE REPREND LES DEUX COULEURS de la nouvelle matière', () => {
     const b = nouvelleBulle();
     S.selectedId = b.id;
-    const select = document.getElementById('sideBubbleTextureSelect');
-    const choisir = (t) => {
-      select.value = t;
-      (select._ecouteurs.change || []).forEach(fn => fn({ target: select }));
-    };
+    const choisir = (t) => appliquerTextureDeBulle(b, t);
 
     choisir('papier');
     // L'utilisateur règle les deux couleurs à la main, sur le parchemin.

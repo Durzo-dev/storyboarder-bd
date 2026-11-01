@@ -17,6 +17,8 @@
  * un Tracé, `null`, sa texture d'origine. Fonctions PURES.
  */
 import { GROUND_TYPE_DEFS, TRACÉ_TEXTURES } from './constants.js';
+import { TEXTURE_AUCUNE, TEXTURE_PAPIER, TEXTURE_GLACE, TEXTURE_LAVE, TEXTURE_NUIT, GRAIN_PAPIER, GRAIN_GLACE, GRAIN_LAVE, GRAIN_NUIT,
+  teinteParDefautDeLaTexture, estTextureExterneDeBulle } from './bubble-texture.js';
 
 /** Le préfixe des clés : distinct des clés de « Mes textures » (`polyhaven:…`, `import:…`). */
 export const SOURCE = 'integree';
@@ -41,6 +43,10 @@ export const PROVENANCE = {
   'route': ['Asphalt033', 'ambientCG', 'https://ambientcg.com/view?id=Asphalt033'],
   'sable.couleur': ['Ground033', 'ambientCG', 'https://ambientcg.com/view?id=Ground033'],
   'terre.couleur': ['Ground103', 'ambientCG', 'https://ambientcg.com/view?id=Ground103'],
+  'glace': ['Ice002', 'ambientCG', 'https://ambientcg.com/view?id=Ice002'],
+  'lave.couleur': ['Lava004', 'ambientCG', 'https://ambientcg.com/view?id=Lava004'],
+  'nuit-etoile': ['NightSkyHDRI012', 'ambientCG', 'https://ambientcg.com/view?id=NightSkyHDRI012'],
+  'papier-froisse': ['Paper005', 'ambientCG', 'https://ambientcg.com/view?id=Paper005'],
   'toit-ardoise.couleur': ['grey_roof_tiles_02', 'Poly Haven', 'https://polyhaven.com/a/grey_roof_tiles_02'],
   'toit-tuiles-canal': ['RoofingTiles014A', 'ambientCG', 'https://ambientcg.com/view?id=RoofingTiles014A'],
   'toit-tuiles-plates.couleur': ['roof_09', 'Poly Haven', 'https://polyhaven.com/a/roof_09'],
@@ -63,6 +69,9 @@ const NOMS_TRACE = {
  * Les usages de BÂTIMENT (#446e) : où une texture habille un bâtiment. Ceux de la table du store
  * (texture-matieres.js), toit compris depuis #458.
  */
+/** Le pseudo-usage du store ouvert depuis une Bulle : pas un usage de la table, un mode de choix. */
+export const USAGE_BULLE = 'bulle';
+
 export const USAGES_BATIMENT = ['mur-ext', 'mur-int', 'sol-int', 'plafond', 'toit'];
 export const estUsageBatiment = (u) => USAGES_BATIMENT.includes(u);
 
@@ -89,6 +98,19 @@ export const TOITS_LIVRES = [
   { id: 'tuiles-plates', grain: 'toit-tuiles-plates.couleur', nom: 'Tuiles plates anciennes', nomEn: 'Old flat tiles', teinte: '#857360', dimensions: [4, 4] },
   { id: 'tuiles-canal', grain: 'toit-tuiles-canal', nom: 'Tuiles canal', nomEn: 'Barrel tiles', teinte: '#8E5A42', dimensions: [2.9, 2.9] },
   { id: 'ardoise', grain: 'toit-ardoise.couleur', nom: 'Ardoise', nomEn: 'Slate', teinte: '#787A78', dimensions: [1.5, 1.5] },
+];
+
+/**
+ * LES TEXTURES DE BULLE LIVRÉES (demandé : choisies dans le store comme les autres). Elles portent
+ * le tag livré « Bulle de dialogue » (`bulle`, bibliotheque-textures.js), sur lequel le store des
+ * Bulles s'ouvre. Ce qu'on applique : la clé du registre des Bulles (bubble-texture.js).
+ */
+export const TAG_BULLE = 'bulle';
+const BULLES_LIVREES = [
+  { cle: TEXTURE_PAPIER, grain: GRAIN_PAPIER, nom: 'Vieux papier', nomEn: 'Aged paper' },
+  { cle: TEXTURE_GLACE, grain: GRAIN_GLACE, nom: 'Glace', nomEn: 'Ice' },
+  { cle: TEXTURE_LAVE, grain: GRAIN_LAVE, nom: 'Lave', nomEn: 'Lava' },
+  { cle: TEXTURE_NUIT, grain: GRAIN_NUIT, nom: 'Nuit étoilée', nomEn: 'Starry night' },
 ];
 
 /** La couleur d'un bâtiment sans revêtement, par usage (celle d'avant #446e : rien ne change à l'écran). */
@@ -125,12 +147,18 @@ export function texturesIntegrees(){
     nom: x.nom, nomEn: x.nomEn, grain: x.grain, teinte: x.teinte, dimensions: x.dimensions,
     matieres: ['tuiles'], usages: ['toit'], dessinee: false, provenance: provenance(x.grain), choix: {},
   }));
+  const bulles = BULLES_LIVREES.map(x => ({
+    cle: `${SOURCE}:bulle:${x.cle}`, source: SOURCE, id: `bulle:${x.cle}`, integree: true, bulle: true,
+    nom: x.nom, nomEn: x.nomEn, grain: x.grain, teinte: teinteParDefautDeLaTexture({ bulleTexture: x.cle }),
+    dimensions: null, matieres: [], usages: [], tags: [TAG_BULLE], dessinee: false, provenance: provenance(x.grain),
+    choix: { bulle: x.cle },
+  }));
   // « Sans texture » : la couleur unie d'un bâtiment, celle d'avant les revêtements. Proposée
   // seulement pour choisir (textures-store-ui.js la cache ailleurs).
   const uni = { cle: `${SOURCE}:uni`, source: SOURCE, id: 'uni', integree: true, uni: true,
     nom: 'Sans texture', nomEn: 'No texture', grain: null, teinte: COULEURS_BATIMENT['mur-ext'],
-    matieres: [], usages: USAGES_BATIMENT.slice(), dessinee: true, provenance: null, choix: {} };
-  return [...sol, ...traces, ...toits, uni];
+    matieres: [], usages: USAGES_BATIMENT.slice(), tags: [TAG_BULLE], dessinee: true, provenance: null, choix: {} };
+  return [...sol, ...traces, ...toits, ...bulles, uni];
 }
 
 /**
@@ -138,6 +166,16 @@ export function texturesIntegrees(){
  * ou sur le Tracé (`traceTexture`, null pour l'originale). `undefined` si elle ne sert pas cet usage.
  */
 export function valeurChoisie(t, usage){
+  // Une BULLE (demandé) : n'importe quelle texture qui a un grain, sans usage à porter. Une texture
+  // de Bulle livrée rend sa clé du registre, « Sans texture » « aucune », une autre livrée `int:`,
+  // une de « Mes textures » `tex:`.
+  if (usage === USAGE_BULLE) {
+    if (!t) return undefined;
+    if (t.bulle) return t.choix.bulle;
+    if (t.uni) return TEXTURE_AUCUNE;
+    if (!t.grain) return undefined;
+    return t.integree ? 'int:' + t.id : 'tex:' + t.dossier;
+  }
   if (!t || !Array.isArray(t.usages) || !t.usages.includes(usage)) return undefined;
   // Un bâtiment : `int:<id>` pour une texture livrée, null pour « Sans texture ».
   if (estUsageBatiment(usage)) return t.integree ? (t.uni ? null : 'int:' + t.id) : 'tex:' + t.dossier;
@@ -148,6 +186,12 @@ export function valeurChoisie(t, usage){
 /** La texture (livrée ou de l'utilisateur) qui correspond à la valeur posée, pour l'afficher. */
 export function textureDeLaValeur(valeur, usage, mes = []){
   const integrees = texturesIntegrees();
+  if (usage === USAGE_BULLE) {
+    if (typeof valeur === 'string' && valeur.startsWith('tex:')) return mes.find(t => 'tex:' + t.dossier === valeur) || null;
+    if (typeof valeur === 'string' && valeur.startsWith('int:')) return integrees.find(t => t.id === valeur.slice(4)) || null;
+    if (estTextureExterneDeBulle(valeur)) return null;
+    return integrees.find(t => t.bulle && t.choix.bulle === valeur) || integrees.find(t => t.uni) || null;
+  }
   if (estUsageBatiment(usage)) {
     if (typeof valeur === 'string' && valeur.startsWith('tex:')) return mes.find(t => 'tex:' + t.dossier === valeur) || null;
     if (typeof valeur === 'string' && valeur.startsWith('int:')) return integrees.find(t => t.id === valeur.slice(4)) || null;

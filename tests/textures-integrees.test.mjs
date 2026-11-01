@@ -234,3 +234,24 @@ describe('les couvertures de toit livrées', () => {
   });
 });
 
+
+// Demandé : la texture d'une Bulle se choisit dans le store, filtré sur le tag « Bulle de dialogue ».
+describe('les textures de Bulle dans le store', () => {
+  test('les quatre livrées portent le tag « bulle », « Sans texture » aussi ; chacune rend sa clé du registre', () => {
+    const t = I.texturesIntegrees();
+    const bulles = t.filter(x => x.bulle);
+    assert.deepEqual(bulles.map(x => I.valeurChoisie(x, I.USAGE_BULLE)), ['papier', 'glace', 'lave', 'nuit-etoile']);
+    for (const x of bulles) assert.deepEqual(x.tags, [I.TAG_BULLE]);
+    assert.equal(I.valeurChoisie(t.find(x => x.uni), I.USAGE_BULLE), 'aucune');
+    assert.deepEqual(t.find(x => x.uni).tags, [I.TAG_BULLE]);
+  });
+  test('n\'importe quelle texture à grain : `int:` pour une livrée, `tex:` pour une de Mes textures', () => {
+    const t = I.texturesIntegrees();
+    assert.equal(I.valeurChoisie(t.find(x => x.id === 'sol:gazon'), I.USAGE_BULLE), 'int:sol:gazon');
+    assert.equal(I.valeurChoisie(t.find(x => x.id === 'sol:neutre'), I.USAGE_BULLE), undefined, 'une matière dessinée n\'a pas de grain');
+    assert.equal(I.valeurChoisie({ dossier: 'polyhaven-x', grain: 'grain.png', usages: [] }, I.USAGE_BULLE), 'tex:polyhaven-x');
+    assert.equal(I.textureDeLaValeur('lave', I.USAGE_BULLE).id, 'bulle:lave');
+    assert.equal(I.textureDeLaValeur(undefined, I.USAGE_BULLE).uni, true);
+    assert.equal(I.textureDeLaValeur('int:sol:gazon', I.USAGE_BULLE).id, 'sol:gazon');
+  });
+});

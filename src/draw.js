@@ -101,7 +101,7 @@ const EPAISSEUR_CONTOUR_TEXTE = 0.16;
  * polyligne suive d'assez près une courbe, y compris sur une grande Bulle.
  */
 const POINTS_EPINE = 240;
-import { motifDuGrain3D, nouvelleImage3D } from './bubble-grain.js';
+import { motifDuGrain3D, nouvelleImage3D, demanderGrain3D } from './bubble-grain.js';
 import { groupeDeLaBulle3D } from './bubble-merge.js';
 
 // ── Callbacks injected by app.js (avoids circular imports draw→app) ───────────────────────
@@ -1310,6 +1310,9 @@ function remplirEtCernerBulle3D(c, o, app, largeurTrait, construireChemin, ancre
     // repli est la TEINTE de la couche : une Bulle privée de grain reste du parchemin, elle perd
     // son relief, pas son identité. C'est ce qui manquait au préchargement des polices de #408a,
     // où une famille absente redevenait `sans-serif` sans que rien ne le dise.
+    // Une texture de la bibliothèque (demandé) dont le grain n'est pas encore là : il est demandé,
+    // et la Bulle se redessine à son arrivée ; d'ici là, l'aplat de sa teinte.
+    if (couche.motif) demanderGrain3D(couche.motif, scheduleDrawCurrentPage);
     c.fillStyle = (couche.motif && motifDuGrain3D(c, couche.motif, couche.couleur, ancre))
       || couche.couleur;
     c.fill();

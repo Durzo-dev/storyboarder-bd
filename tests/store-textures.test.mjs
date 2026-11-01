@@ -396,7 +396,18 @@ describe('les tags de « Mes textures » (purs)', () => {
     assert.deepEqual(b.textures[0].tags, [c1.id]);
     b = B.supprimerTag(b, c1.id);
     assert.deepEqual(b.textures[0].tags, []);
-    assert.deepEqual(B.tagsDe(b).map(t => t.nom), ['Ruines']);
+    assert.deepEqual(B.tagsDe(b).map(t => t.nom), ['Bulle de dialogue', 'Ruines'], 'le tag livré d\'abord');
+  });
+  // Demandé : le tag « Bulle de dialogue », livré, que l'utilisateur pose sur ses textures.
+  test('le tag livré « Bulle de dialogue » : toujours là, posable, ni renommé, ni supprimé, jamais écrit', () => {
+    let b = B.ajouter(B.vide(), { cle: 'p:a', dossier: 'p-a', matieres: [], usages: [] });
+    assert.deepEqual(B.tagsDe(b)[0], { id: 'bulle', nom: 'Bulle de dialogue', nomEn: 'Speech bubble', integre: true });
+    b = B.tagTexture(b, 'p:a', 'bulle', true);
+    assert.deepEqual(b.textures[0].tags, ['bulle']);
+    assert.equal(B.renommerTag(b, 'bulle', 'Autre').erreur, 'integre');
+    assert.deepEqual(B.supprimerTag(b, 'bulle').textures[0].tags, ['bulle']);
+    assert.ok(!b.tags.some(t => t.id === 'bulle'), 'pas écrit dans le fichier');
+    assert.equal(B.creerTag(b, 'bulle de dialogue').id, 'bulle', 'son nom est pris');
   });
   test('RÉGRESSION : retélécharger une texture garde ses tags, et ajouter / retirer gardent la liste des tags', () => {
     let b = B.creerTag(B.vide(), 'X').biblio;

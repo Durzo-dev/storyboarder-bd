@@ -675,14 +675,10 @@
           </label>
         </div>
         <div id="sideBubbleTextureWrap" class="tome-format">
-          <label for="sideBubbleTextureSelect">Texture du fond</label>
-          <select id="sideBubbleTextureSelect">
-            <option value="aucune">Aucune</option>
-            <option value="papier">Vieux papier</option>
-            <option value="glace">Glace</option>
-            <option value="lave">Lave</option>
-            <option value="nuit-etoile">Nuit étoilée</option>
-          </select>
+          <!-- Le CARRÉ DE TEXTURE (demandé, comme le Sol et les Tracés) : un clic ouvre le store des
+               textures, filtré sur le tag « Bulle de dialogue » (que l'on peut retirer). -->
+          <label id="sideBubbleTextureLabel">Texture du fond</label>
+          <div id="sideBubbleTextureGrid" class="texture-carre-zone"></div>
         </div>
         <!-- ⚠️ LA SECTION « PARTICULE » A ÉTÉ RETIRÉE D'ICI, ET SON CODE EST CONSERVÉ. L'axe
              semait un mouchetis d'encre ou des langues de flamme autour d'une Bulle. L'idée tient,

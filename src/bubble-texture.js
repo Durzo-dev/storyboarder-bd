@@ -457,6 +457,29 @@ const REGISTRE = {
 export const CHAMPS_RENDUS_PAR_LA_TEXTURE =
   ['bulleColor', 'bulleTextColor', 'bulleTextOutlineColor'];
 
+// ── Les textures de la BIBLIOTHÈQUE (demandé : choisir n'importe quelle texture) ──────────────────
+
+/**
+ * Une Bulle peut aussi porter une texture de la bibliothèque : `int:<id>` (une texture livrée, du
+ * Sol, d'un Tracé, d'un toit…) ou `tex:<dossier>` (une de « Mes textures »). Ce module, PUR, ne sait
+ * pas les lire : un RÉSOLVEUR lui est donné par le côté impur (textures-utilisateur.js), qui rend
+ * `{ grain, teinte }` ou null. Une texture introuvable (supprimée, autre machine) se peint en aplat,
+ * comme « Aucune », sans lever : le Projet reste ouvrable, et la retrouver la rend.
+ */
+const PREFIXES_EXTERNES = ['int:', 'tex:'];
+export const estTextureExterneDeBulle = (v) => typeof v === 'string' && PREFIXES_EXTERNES.some(p => v.startsWith(p));
+let _resoudre = () => null;
+/** Le résolveur des textures de la bibliothèque : `(cle) => { grain, teinte } | null`. */
+export function definirResolveurDeTexturesDeBulle(fn){ _resoudre = typeof fn === 'function' ? fn : () => null; }
+
+/** L'entrée du registre d'une clé, ou celle, fabriquée, d'une texture de la bibliothèque. */
+function entreeDe(cle){
+  if (!estTextureExterneDeBulle(cle)) return REGISTRE[cle];
+  const t = _resoudre(cle);
+  if (!t || !t.grain) return REGISTRE[TEXTURE_AUCUNE];
+  return { rendu: couchesDUneMatiere(t.grain), teinteParDefaut: t.teinte || null, couleurTexteParDefaut: null, couleurContourTexteParDefaut: null };
+}
+
 /** Les clés enregistrées, pour la fiche et pour les tests. */
 export function texturesConnues(){
   return Object.keys(REGISTRE);
@@ -476,6 +499,7 @@ export function textureDeLaBulle(o){
   // comme une clé inventée — or ce n'est pas la même faute : l'une est un Projet d'hier, l'autre un
   // fichier abîmé. Après le défaut, parce qu'un champ absent n'est pas une valeur à migrer.
   if (Object.prototype.hasOwnProperty.call(ALIAS_TEXTURE, v)) return ALIAS_TEXTURE[v];
+  if (estTextureExterneDeBulle(v)) return v;
   if (!Object.prototype.hasOwnProperty.call(REGISTRE, v)) {
     throw new Error(`Texture de Bulle inconnue : « ${v} ». Textures enregistrées : ${texturesConnues().join(', ')}.`);
   }
@@ -484,7 +508,7 @@ export function textureDeLaBulle(o){
 
 /** La couleur de texte qu'une texture suggère À DÉFAUT, ou `null`. Fonction PURE. */
 export function couleurTexteParDefautDeLaTexture(o){
-  return REGISTRE[textureDeLaBulle(o)].couleurTexteParDefaut;
+  return entreeDe(textureDeLaBulle(o)).couleurTexteParDefaut;
 }
 
 /**
@@ -502,7 +526,7 @@ export function couleurTexteParDefautDeLaTexture(o){
  * d'aspect en #430 et pour laquelle c'était le sens même du remplacement.
  */
 export function couleurContourTexteParDefautDeLaTexture(o){
-  return REGISTRE[textureDeLaBulle(o)].couleurContourTexteParDefaut;
+  return entreeDe(textureDeLaBulle(o)).couleurContourTexteParDefaut;
 }
 
 /**
@@ -514,7 +538,7 @@ export function couleurContourTexteParDefautDeLaTexture(o){
  * texture ne se colore pas » et « cette texture a une couleur d'origine ».
  */
 export function teinteParDefautDeLaTexture(o){
-  return REGISTRE[textureDeLaBulle(o)].teinteParDefaut;
+  return entreeDe(textureDeLaBulle(o)).teinteParDefaut;
 }
 
 /**
@@ -592,7 +616,7 @@ export function couchesDeTextureBulle(o, ctx){
     couleur: (ctx && ctx.couleur) || '#fff',
     opacite: ctx && Number.isFinite(ctx.opacite) ? ctx.opacite : 1,
   };
-  return REGISTRE[cle].rendu(o, contexte);
+  return entreeDe(cle).rendu(o, contexte);
 }
 
 /**

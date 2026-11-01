@@ -700,3 +700,18 @@ describe('⚠️ UNE TEXTURE NE CONNAÎT RIEN DE LA FORME', () => {
     assert.ok(r.couches[0].motif, 'le papier sans grain n’est plus du papier');
   });
 });
+
+// Demandé : une Bulle peut porter une texture de la bibliothèque (livrée `int:`, ou de Mes textures `tex:`).
+test('une texture de la bibliothèque : son grain et sa teinte par le résolveur ; introuvable, un aplat', async () => {
+  const T = await import('../src/bubble-texture.js');
+  await import('../src/textures-utilisateur.js');   // installe le résolveur
+  const o = { bulleTexture: 'int:sol:gazon' };
+  assert.equal(T.textureDeLaBulle(o), 'int:sol:gazon');
+  const { couches } = T.couchesDeTextureBulle(o, { couleur: '#123456', opacite: 1 });
+  assert.equal(couches[0].motif, 'gazon');
+  assert.ok(T.teinteParDefautDeLaTexture(o), 'sa teinte naturelle');
+  const perdue = { bulleTexture: 'tex:disparue' };
+  assert.equal(T.textureDeLaBulle(perdue), 'tex:disparue', 'gardée telle quelle : la retrouver la rend');
+  assert.equal(T.couchesDeTextureBulle(perdue, { couleur: '#123456', opacite: 1 }).couches[0].motif, undefined);
+  assert.throws(() => T.textureDeLaBulle({ bulleTexture: 'inventee' }), /inconnue/);
+});

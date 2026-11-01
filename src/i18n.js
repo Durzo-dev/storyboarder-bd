@@ -177,12 +177,7 @@ export const I18N_TEXT = [
   ['#sideBubbleTailShapeSelect option[value="aucune"]', 'None', 'Aucune'],
   // #425m — l'axe TEXTURE. Indépendant de la forme : une couronne d'épines peut être marbrée, et
   // la tache d'encre rester en aplat.
-  ['label[for="sideBubbleTextureSelect"]', 'Fill texture', 'Texture du fond'],
-  ['#sideBubbleTextureSelect option[value="aucune"]', 'None', 'Aucune'],
-  ['#sideBubbleTextureSelect option[value="papier"]', 'Aged paper', 'Vieux papier'],
-  ['#sideBubbleTextureSelect option[value="glace"]', 'Ice', 'Glace'],
-  ['#sideBubbleTextureSelect option[value="lave"]', 'Lava', 'Lave'],
-  ['#sideBubbleTextureSelect option[value="nuit-etoile"]', 'Starry night', 'Nuit étoilée'],
+  ['#sideBubbleTextureLabel', 'Fill texture', 'Texture du fond'],
   // #425p — l'axe PARTICULE, semé AUTOUR du bord. Distinct du motif de trait : un motif est une
   // propriété d'une ligne, une particule une nuée en deux dimensions.
   ['#sideBubbleStackSection > h2', 'Stacking order', "Niveau d'avancement"],

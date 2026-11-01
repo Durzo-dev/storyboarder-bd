@@ -14,7 +14,7 @@
  */
 import { tr, S } from './state.js';
 import { utilisationsDe, PREFIXE, chargerTexturesUtilisateur } from './textures-utilisateur.js';
-import { texturesIntegrees, valeurChoisie, textureDeLaValeur, SOURCE as INTEGREE } from './textures-integrees.js';
+import { texturesIntegrees, valeurChoisie, textureDeLaValeur, SOURCE as INTEGREE, USAGE_BULLE, TAG_BULLE } from './textures-integrees.js';
 import { appliquerTeinteAuMotif3D, rvbDeCouleur3D, natureDuNom3D } from './bubble-texture.js';
 import { GROUND_PLANE_SIZE_3D } from './constants.js';
 import { enregistrerFermeture } from './modal-stack.js';
@@ -164,7 +164,10 @@ function mesFiltrees(){
   // En mode « choisir », seulement ce qui peut servir ici : une texture sans grain (bâtiments
   // seulement) ne s'applique ni au Sol ni à un Tracé.
   // « Sans texture » (bâtiments) ne se montre que pour choisir : ce n'est pas une texture qu'on a.
-  const utile = (t) => (!choix ? !t.uni : (t.usages.includes(choix.usage) && (t.integree || !!t.grain)));
+  const utile = (t) => (!choix ? !t.uni
+    // Pour une Bulle (demandé), toute texture qui a un grain, sans usage à porter.
+    : choix.usage === USAGE_BULLE ? valeurChoisie(t, USAGE_BULLE) !== undefined
+      : (t.usages.includes(choix.usage) && (t.integree || !!t.grain)));
   return [...mes, ...integrees].filter(t => utile(t) && (!texte || nomTexture(t).toLowerCase().includes(texte))
     && (!p.matiere || t.matieres.includes(p.matiere)) && (!p.usage || t.usages.includes(p.usage))
     && tagsFiltre.every(id => (t.tags || []).includes(id)));
@@ -200,7 +203,9 @@ function phraseUtilisation(t){
 
 async function relireMes(){
   [mes, tags] = await Promise.all([api().texturesMes(), api().texturesTags ? api().texturesTags() : []]);
-  mes = mes || []; tags = (tags || []).slice().sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  // Le tag LIVRÉ (« Bulle de dialogue ») dans la langue de l'interface, en tête de liste.
+  mes = mes || []; tags = (tags || []).map(t => (t.integre ? { ...t, nom: tr(t.nomEn || t.nom, t.nom) } : t))
+    .sort((a, b) => (b.integre ? 1 : 0) - (a.integre ? 1 : 0) || a.nom.localeCompare(b.nom, 'fr'));
   await relireIntegrees();
   mesCharges = true;
   tagsFiltre = tagsFiltre.filter(id => tags.some(t => t.id === id));
@@ -794,7 +799,8 @@ function ficheIntegree(t){
   const liste = (lignes) => el('ul', {}, lignes.filter(Boolean).map(x => (typeof x === 'string' ? el('li', { texte: x }) : x)));
   const id = t.choix.sol;
   const usages = id ? utilisationsDe(id, { tomes: S.tomes || [], scenes: S.scenes || [] }) : null;
-  const phrase = t.toit ? tr('A roof covering shipped with the application: choose it in the Roof section of a level.', 'Une couverture de toit livrée avec l\'application : choisissez-la dans la section Toit d\'un niveau.')
+  const phrase = t.bulle ? tr('A speech bubble texture shipped with the application: choose it from the texture square of a Bubble.', 'Une texture de Bulle livrée avec l\'application : choisissez-la depuis le carré de texture d\'une Bulle.')
+    : t.toit ? tr('A roof covering shipped with the application: choose it in the Roof section of a level.', 'Une couverture de toit livrée avec l\'application : choisissez-la dans la section Toit d\'un niveau.')
     : !usages ? tr('The original texture of this path type, used by every path that has not been given another.', 'La texture d\'origine de ce type de Tracé, portée par chaque Tracé qui n\'en a pas reçu une autre.')
     : (!usages.tomes && !usages.scenes ? tr('Used nowhere in this Project.', 'Utilisée nulle part dans ce Projet.')
       : tr(`Used ${usages.tomes + usages.scenes} time(s) in this Project.`, `Utilisée ${usages.tomes + usages.scenes} fois dans ce Projet.`));
@@ -883,7 +889,14 @@ export async function ouvrirTextures(){
   $('texturesSimulation').textContent = infos.simulation ? tr('Simulation: recorded answers, nothing is downloaded.', 'Simulation : réponses enregistrées, rien n\'est téléchargé.') : '';
   rafraichirTextesTextures();
   await relireMes();
-  if (choix) {
+  if (choix && choix.usage === USAGE_BULLE) {
+    // Une Bulle (demandé) : aucun usage imposé, et le filtre part du tag « Bulle de dialogue », que
+    // l'utilisateur peut retirer pour choisir n'importe quelle texture.
+    $('texturesUsage').value = '';
+    $('texturesUsage').disabled = false;
+    rendreFiltres();
+    rendreOnglets();
+  } else if (choix) {
     // L'usage est imposé par l'endroit d'où l'on choisit, et ne se change pas ici.
     $('texturesUsage').value = choix.usage;
     $('texturesUsage').disabled = true;
@@ -896,6 +909,7 @@ export function fermerTextures(){
   fermerFiche();
   $('texturesModal').classList.add('hidden');
   if (choix) {
+    if (choix.tagsAvant) tagsFiltre = choix.tagsAvant;
     choix = null;
     $('texturesUsage').disabled = false;
     $('texturesUsage').value = '';
@@ -911,7 +925,9 @@ export function fermerTextures(){
 export async function choisirTexture({ usage, actuelle = null, appliquer, titre }){
   if (!api()) return;
   if (!$('texturesModal').classList.contains('hidden')) fermerTextures();
-  choix = { usage, actuelle: usage === 'sol' ? (actuelle || 'herbe') : (actuelle || null), appliquer, titre };
+  choix = { usage, actuelle: usage === 'sol' ? (actuelle || 'herbe') : usage === USAGE_BULLE ? (actuelle || 'aucune') : (actuelle || null), appliquer, titre };
+  // Une Bulle : le filtre « Bulle de dialogue » d'emblée ; celui d'avant revient à la fermeture.
+  if (usage === USAGE_BULLE) { choix.tagsAvant = tagsFiltre; tagsFiltre = [TAG_BULLE]; }
   onglet = LOCAL;
   // Par-dessus la fenêtre d'un Tracé, d'où il peut s'ouvrir (style.css).
   $('texturesModal').classList.add('textures-mode-choix');

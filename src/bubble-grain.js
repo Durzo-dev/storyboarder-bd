@@ -122,6 +122,18 @@ export async function prechargerGrains3D(cles, apresChargement){
 }
 
 /**
+ * Un grain LIVRÉ demandé au dessin et pas encore chargé (une Bulle habillée d'une texture du Sol, par
+ * exemple, que rien n'avait préchargée) : chargé une fois, puis `apres` (un redessin). Les grains de
+ * « Mes textures » (`tex:`) arrivent par textures-utilisateur.js, qui connaît leur adresse.
+ */
+const _demandes = new Set();
+export function demanderGrain3D(cle, apres){
+  if (!cle || _grains.has(cle) || _demandes.has(cle) || String(cle).startsWith('tex:')) return;
+  _demandes.add(cle);
+  prechargerGrains3D([cle], apres);
+}
+
+/**
  * Le motif d'un grain habillé d'une teinte, ou `null` si le grain n'est pas là.
  *
  * ⚠️ LA COMPOSITION SE FAIT DANS UN CANEVAS À PART, ET C'EST LA RAISON D'ÊTRE DE CE CACHE. On

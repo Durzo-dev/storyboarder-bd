@@ -615,7 +615,7 @@ The three questions of placement left open here are **all settled**:
 
 | what was missing | where it went | who settled it |
 |---|---|---|
-| ~~fill textures~~ | "Fill texture" dropdown, Appearance section | #425m |
+| ~~fill textures~~ | "Fill texture" square, Appearance section: the texture store, filtered on the shipped "Speech bubble" tag (removable: any texture with a grain, `int:<id>` or `tex:<folder>`, see `definirResolveurDeTexturesDeBulle`) | #425m |
 | ~~the speckle~~ | an axis of its own, "Particle", not a stroke pattern | #425n |
 | ~~translucent edges~~ | **fill**, not border | #425n |
 

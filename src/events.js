@@ -99,7 +99,6 @@ import { queueDeLaBulle, longueurMinimaleDeLaQueue3D } from './bubble-tail.js';
 import { styleDeLaBulle3D, appliquerStyle3D, refusDuNomDeStyle3D, ajouterStyle3D,
          peutEnregistrerLeStyle3D, NOM_STYLE_MAX, renommerStyle3D, supprimerStyle3D,
          indexDuStyleDeLaBulle3D, renommageSansEffet3D } from './bubble-library.js';
-import { textureDeLaBulle, CHAMPS_RENDUS_PAR_LA_TEXTURE } from './bubble-texture.js';
 import {
   candidateDeFusion3D, refusPerimes3D, clePaire3D, fusionner3D, separer3D, groupeDeLaBulle3D,
   etatAuContactDuGroupe3D, rapprocherDuGroupe3D, lobesADissoudre3D,
@@ -7094,7 +7093,6 @@ const bubbleStyleInput = document.getElementById('bubbleStyleInput');
 const bubbleStyleError = document.getElementById('bubbleStyleError');
 const bubbleStyleCancel = document.getElementById('bubbleStyleCancel');
 const bubbleStyleConfirm = document.getElementById('bubbleStyleConfirm');
-const sideBubbleTextureSelect = document.getElementById('sideBubbleTextureSelect');
 const sideBubbleShapeSelect = document.getElementById('sideBubbleShapeSelect');
 const sideBubblePaddingInput = document.getElementById('sideBubblePaddingInput');
 const sideBubblePaddingValue = document.getElementById('sideBubblePaddingValue');
@@ -7706,23 +7704,6 @@ sideBubbleFusionnableToggle.addEventListener('change', () => {
   if (!S.sideDescTarget || S.sideDescTarget.type !== 'bulle') return;
   snapshot();
   S.sideDescTarget.bulleFusionnable = sideBubbleFusionnableToggle.checked;
-  drawCurrentPage();
-});
-
-sideBubbleTextureSelect.addEventListener('change', () => {
-  if (!S.sideDescTarget || S.sideDescTarget.type !== 'bulle') return;
-  snapshot();
-  // Validé par le registre, comme la forme et la queue : une option ajoutée au menu sans entrée au
-  // registre lève ICI, au moment du choix, et non plus tard au dessin.
-  S.sideDescTarget.bulleTexture = textureDeLaBulle({ bulleTexture: sideBubbleTextureSelect.value });
-  // ⚠️ CHANGER DE MATIÈRE REND LA MAIN À LA MATIÈRE. Les couleurs choisies sont effacées, donc les
-  // défauts de la nouvelle texture reprennent : on choisit une lave pour la VOIR, pas pour la
-  // découvrir en ocre. C'est la seule exception à « choisi > suggéré », et le `snapshot()`
-  // ci-dessus la rend annulable — c'est ce qui la distingue d'une perte.
-  for (const champ of CHAMPS_RENDUS_PAR_LA_TEXTURE) delete S.sideDescTarget[champ];
-  // Le champ « Couleur du fond » ne se masque plus (#430) ; la fiche relit ses pastilles pour
-  // montrer les teintes de la nouvelle matière plutôt que celles de l'ancienne.
-  updateSidePanel();
   drawCurrentPage();
 });
 

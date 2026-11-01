@@ -25,6 +25,8 @@
  */
 import { GROUND_TYPE_DEFS, TRACÉ_TEXTURES } from './constants.js';
 import { definirAdresseDuGrain3D, prechargerGrains3D, grainCharge3D } from './bubble-grain.js';
+import { definirResolveurDeTexturesDeBulle } from './bubble-texture.js';
+import { texturesIntegrees } from './textures-integrees.js';
 
 /** Le préfixe des identifiants : rien de ce qui est livré ne commence ainsi. */
 export const PREFIXE = 'tex:';
@@ -108,6 +110,27 @@ export function batimentDe(entree){
 /** Les textures de bâtiment de l'utilisateur, par identifiant (`tex:<dossier>`). */
 const _batiment = new Map();
 
+/**
+ * LES TEXTURES DES BULLES (demandé : n'importe quelle texture qui a un grain). Celles de « Mes
+ * textures », par identifiant `tex:<dossier>` : `{ grain, teinte }`.
+ */
+const _bulles = new Map();
+
+/**
+ * Le résolveur donné à bubble-texture.js (qui reste pur) : `int:<id>` → une texture livrée,
+ * `tex:<dossier>` → une de « Mes textures » ; `{ grain, teinte }` ou null.
+ */
+export function textureDeBulle(cle){
+  if (typeof cle !== 'string') return null;
+  if (cle.startsWith(PREFIXE)) return _bulles.get(cle) || null;
+  if (cle.startsWith('int:')) {
+    const t = texturesIntegrees().find(x => x.id === cle.slice(4));
+    return t && t.grain ? { grain: t.grain, teinte: t.teinte } : null;
+  }
+  return null;
+}
+definirResolveurDeTexturesDeBulle(textureDeBulle);
+
 /** La texture de bâtiment d'un identifiant `tex:…`, ou null (absente : le bâtiment reste uni). */
 export const textureDeBatiment = (id) => _batiment.get(id) || null;
 
@@ -120,13 +143,16 @@ export function installerTexturesUtilisateur(entrees){
   for (let i = GROUND_TYPE_DEFS.length - 1; i >= 0; i--) if (GROUND_TYPE_DEFS[i].importee) GROUND_TYPE_DEFS.splice(i, 1);
   _traces.clear();
   _batiment.clear();
+  _bulles.clear();
   const grains = new Map();
   for (const e of Array.isArray(entrees) ? entrees : []) {
     const sol = defSolDe(e), trace = traceDe(e), bati = batimentDe(e);
     if (sol) GROUND_TYPE_DEFS.push(sol);
     if (trace) _traces.set(trace.id, trace);
     if (bati) _batiment.set(bati.id, bati);
-    if (sol || trace || bati) grains.set(cleDuGrain(e), e);
+    // Toute texture qui a un grain peut habiller une Bulle : son grain se charge aussi.
+    if (utilisable(e)) _bulles.set(idDe(e), { grain: cleDuGrain(e), teinte: couleur(e.teinte) });
+    if (sol || trace || bati || utilisable(e)) grains.set(cleDuGrain(e), e);
   }
   return [...grains].map(([cle, entree]) => ({ cle, entree }));
 }
@@ -165,7 +191,7 @@ export async function chargerTexturesUtilisateur(api, apres){
   try { entrees = await api.texturesMes(); } catch (e) { return 0; }
   const aCharger = installerTexturesUtilisateur(entrees);
   // Rien de changé pour le rendu (un tag ajouté, une fiche rouverte) : on ne refait pas les Cases.
-  const signature = JSON.stringify([...GROUND_TYPE_DEFS.filter(d => d.importee), ..._traces.values(), ..._batiment.values()]);
+  const signature = JSON.stringify([...GROUND_TYPE_DEFS.filter(d => d.importee), ..._traces.values(), ..._batiment.values(), ..._bulles]);
   const change = signature !== _signature;
   _signature = signature;
   const cles = [];

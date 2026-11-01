@@ -646,7 +646,7 @@ Les trois questions de rattachement laissées ouvertes ici sont **toutes tranch�
 
 | ce qui manquait | où c'est allé | qui a tranché |
 |---|---|---|
-| ~~les textures de remplissage~~ | menu « Texture du fond », section Apparence | #425m |
+| ~~les textures de remplissage~~ | carré « Texture du fond », section Apparence : le store des textures, filtré sur le tag livré « Bulle de dialogue » (retirable : toute texture à grain, `int:<id>` ou `tex:<dossier>`, cf. `definirResolveurDeTexturesDeBulle`) | #425m |
 | ~~le mouchetis~~ | un axe à part entière, « Particule », et non un motif du trait | #425n |
 | ~~les bords translucides~~ | du **remplissage**, et non de la bordure | #425n |
 

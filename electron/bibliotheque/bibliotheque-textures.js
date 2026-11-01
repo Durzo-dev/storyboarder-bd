@@ -59,12 +59,21 @@ function entreeTexture(r, { resolution, cartes, cuisson = null, date = new Date(
 
 const vide = () => ({ version: 1, textures: [], tags: [] });
 const liste = (b) => (b && Array.isArray(b.textures) ? b.textures.filter(t => t && t.cle && t.dossier) : []);
-const tagsDe = (b) => (b && Array.isArray(b.tags) ? b.tags.filter(t => t && t.id && t.nom) : []);
+/**
+ * LE TAG LIVRÉ « Bulle de dialogue » (demandé) : porté par les textures de Bulle livrées, et que
+ * l'utilisateur peut poser sur les siennes. Toujours là, ni renommé ni supprimé, jamais écrit dans
+ * le fichier (il vient de l'application). Le store des Bulles s'ouvre filtré sur lui.
+ */
+const TAG_BULLE = Object.freeze({ id: 'bulle', nom: 'Bulle de dialogue', nomEn: 'Speech bubble', integre: true });
+/** Les tags ÉCRITS dans la bibliothèque : ceux de l'utilisateur. */
+const tagsStockes = (b) => (b && Array.isArray(b.tags) ? b.tags.filter(t => t && t.id && t.nom && t.id !== TAG_BULLE.id) : []);
+/** Tous les tags : le livré d'abord, puis ceux de l'utilisateur. */
+const tagsDe = (b) => [{ ...TAG_BULLE }, ...tagsStockes(b)];
 /** Une bibliothèque refaite avec ces textures, en GARDANT ses tags (ils n'appartiennent à aucune texture). */
 // ⚠️ LES NOMS DONNÉS AUX TEXTURES LIVRÉES voyagent avec chaque réécriture : une opération sur les
 // tags ou les matières ne doit pas les perdre (demandé : renommer aussi une texture intégrée).
 const nomsIntegreesDe = (b) => (b && b.nomsIntegrees && typeof b.nomsIntegrees === 'object' ? { ...b.nomsIntegrees } : {});
-const avec = (b, textures) => ({ version: 1, textures, tags: tagsDe(b), nomsIntegrees: nomsIntegreesDe(b) });
+const avec = (b, textures) => ({ version: 1, textures, tags: tagsStockes(b), nomsIntegrees: nomsIntegreesDe(b) });
 
 /** Ajoute (ou REMPLACE : un second téléchargement de la même texture met l'entrée à jour, ses tags restent). */
 function ajouter(biblio, entree){
@@ -90,7 +99,7 @@ function creerTag(biblio, nom){
   const existant = tags.find(t => cleNom(t.nom) === cleNom(propre));
   if (existant) return { biblio: avec(biblio, liste(biblio)), id: existant.id };
   const id = `t${tags.reduce((m, t) => Math.max(m, Number(String(t.id).slice(1)) || 0), 0) + 1}`;
-  return { biblio: { ...avec(biblio, liste(biblio)), tags: [...tags, { id, nom: propre }] }, id };
+  return { biblio: { ...avec(biblio, liste(biblio)), tags: [...tagsStockes(biblio), { id, nom: propre }] }, id };
 }
 
 /** Renomme un tag : `{ biblio }` ou `{ biblio, erreur }` (inconnu, vide, pris par un autre). */
@@ -98,15 +107,17 @@ function renommerTag(biblio, id, nom){
   const propre = nomPropre(nom);
   const tags = tagsDe(biblio);
   if (!tags.some(t => t.id === id)) return { biblio, erreur: 'inconnu' };
+  if (id === TAG_BULLE.id) return { biblio, erreur: 'integre' };   // le tag livré garde son nom
   if (!propre) return { biblio, erreur: 'vide' };
   if (tags.some(t => t.id !== id && cleNom(t.nom) === cleNom(propre))) return { biblio, erreur: 'pris' };
-  return { biblio: { ...avec(biblio, liste(biblio)), tags: tags.map(t => (t.id === id ? { ...t, nom: propre } : t)) } };
+  return { biblio: { ...avec(biblio, liste(biblio)), tags: tagsStockes(biblio).map(t => (t.id === id ? { ...t, nom: propre } : t)) } };
 }
 
 /** Supprime un tag, et le retire de toutes les textures qui le portaient. */
 function supprimerTag(biblio, id){
+  if (id === TAG_BULLE.id) return avec(biblio, liste(biblio));   // le tag livré ne se supprime pas
   const textures = liste(biblio).map(t => (Array.isArray(t.tags) ? { ...t, tags: t.tags.filter(x => x !== id) } : t));
-  return { version: 1, textures, tags: tagsDe(biblio).filter(t => t.id !== id), nomsIntegrees: nomsIntegreesDe(biblio) };
+  return { version: 1, textures, tags: tagsStockes(biblio).filter(t => t.id !== id), nomsIntegrees: nomsIntegreesDe(biblio) };
 }
 
 /** Pose (`actif`) ou retire un tag d'une texture. */
@@ -212,5 +223,5 @@ module.exports = {
   renommer, nomsIntegreesDe,
   FICHIER, DOSSIER, dossierDe, tailleDeCuisson, entreeTexture, vide, ajouter, retirer, presentes,
   cartesDuDossier, idImport, TAILLE_IMPORT, avecMatieres,
-  tagsDe, creerTag, renommerTag, supprimerTag, tagTexture,
+  tagsDe, creerTag, renommerTag, supprimerTag, tagTexture, TAG_BULLE,
 };

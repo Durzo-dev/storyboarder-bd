@@ -24,7 +24,7 @@ import { estPlancheImportee, estCaseImportee, cadrageLu, cadragePlancheParDefaut
 import { editionDesCasesActive, mettreEnSurbrillance, caseEnSurbrillance } from './import-planche-ui.js';
 import { TRAIT_PLEIN, TRAIT_NET, opaciteRemplissageBulle } from './bubble-style.js';
 import { formeDeLaBulle } from './bubble-shape.js';
-import { textureDeLaBulle, teinteParDefautDeLaTexture,
+import { textureDeLaBulle, teinteParDefautDeLaTexture, CHAMPS_RENDUS_PAR_LA_TEXTURE, couleurDeFondDeLaBulle3D,
          couleurTexteParDefautDeLaTexture,
          couleurContourTexteParDefautDeLaTexture } from './bubble-texture.js';
 import { queuePeutSInverser3D, queueInverseeDeLaBulle3D } from './bubble-tail.js';
@@ -256,7 +256,6 @@ const sideBubbleBorderRegularitySelect = document.getElementById('sideBubbleBord
 const sideBubbleFillOpacityInput = document.getElementById('sideBubbleFillOpacityInput');
 const sideBubbleFillOpacityValue = document.getElementById('sideBubbleFillOpacityValue');
 const sideBubbleTailShapeSelect = document.getElementById('sideBubbleTailShapeSelect');
-const sideBubbleTextureSelect = document.getElementById('sideBubbleTextureSelect');
 const sideBubbleShapeSelect = document.getElementById('sideBubbleShapeSelect');
 const sideBubblePaddingInput = document.getElementById('sideBubblePaddingInput');
 const sideBubblePaddingValue = document.getElementById('sideBubblePaddingValue');
@@ -1599,7 +1598,24 @@ function updateSidePanelImpl(){
     // autre queue deviendra inversible.
     majAffichageMiroirQueue3D(queueEffectiveDeLaBulle(sel));
     document.getElementById('sideBubbleTailMirrorToggle').checked = queueInverseeDeLaBulle3D(sel);
-    sideBubbleTextureSelect.value = textureDeLaBulle(sel);
+    // Le CARRÉ DE TEXTURE (demandé) : le même tant que c'est la même Bulle et la même texture (le
+    // menu est refait à chaque dessin) ; seule sa teinte suit la couleur du fond.
+    {
+      const zone = document.getElementById('sideBubbleTextureGrid');
+      const texture = textureDeLaBulle(sel);
+      const ancien = zone.children[0];
+      if (ancien && ancien._bulle === sel && ancien._texture === texture && ancien.teinter) ancien.teinter(couleurDeFondDeLaBulle3D(sel));
+      else {
+        const carre = carreDeTexture({
+          valeur: texture, usage: 'bulle', titre: tr('Choose the Bubble texture', 'Choisir la texture de la Bulle'),
+          teinte: couleurDeFondDeLaBulle3D(sel),
+          appliquer: (v) => appliquerTextureDeBulle(sel, v),
+        });
+        carre._bulle = sel;
+        carre._texture = texture;
+        zone.replaceChildren(carre);
+      }
+    }
     // ⚠️ ON RELIT PAR L'ACCESSEUR, PAS PAR LE CHAMP. Une Bulle enregistrée avant #426b n'a pas de
     // champ du tout : `sel.bulleFusionnable` vaudrait `undefined`, que la case afficherait comme
     // décochée — juste par accident. `bulleEstFusionnable3D` le dit, lui, et continuera de le dire
@@ -2066,3 +2082,20 @@ export function remplirMesPolicesDuSelecteur(){
     return opt;
   }));
 }
+
+/**
+ * Pose la texture `valeur` sur une Bulle (le carré de sa fiche, demandé : choisie dans le store).
+ * Validée par le registre (une clé inconnue lève ICI, au choix, plutôt qu'au dessin).
+ * ⚠️ CHANGER DE MATIÈRE REND LA MAIN À LA MATIÈRE : les couleurs choisies sont effacées, donc les
+ * défauts de la nouvelle texture reprennent (on choisit une lave pour la VOIR). Le `snapshot` la rend
+ * annulable.
+ */
+export function appliquerTextureDeBulle(bulle, valeur){
+  if (!bulle || bulle.type !== 'bulle') return;
+  if (_snapshot) _snapshot();
+  bulle.bulleTexture = textureDeLaBulle({ bulleTexture: valeur });
+  for (const champ of CHAMPS_RENDUS_PAR_LA_TEXTURE) delete bulle[champ];
+  updateSidePanel();
+  drawCurrentPage();
+}
+

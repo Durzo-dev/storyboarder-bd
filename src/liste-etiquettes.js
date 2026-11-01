@@ -37,7 +37,8 @@ export function remplirListeEtiquettes(menu, { etiquettes, estCoche, cocher, cre
     const libelle = el('label', { classe: 'store-tag-coche' }, [coche, el('span', { texte: e.nom, classe: 'store-tag-nom' })]);
     const crayon = el('button', { classe: 'store-tag-outil', attrs: { type: 'button', title: t.renommer, 'aria-label': t.renommer } }, [noeudIcone('renommer')]);
     const corbeille = el('button', { classe: 'store-tag-outil store-tag-corbeille', attrs: { type: 'button', title: t.supprimer, 'aria-label': t.supprimer } }, [noeudIcone('supprimer')]);
-    const ligne = el('div', { classe: 'store-tag-ligne' }, [libelle, crayon, corbeille]);
+    // Une étiquette LIVRÉE (le tag « Bulle de dialogue » des textures) se coche, sans se renommer ni se supprimer.
+    const ligne = el('div', { classe: 'store-tag-ligne' }, e.integre ? [libelle] : [libelle, crayon, corbeille]);
     crayon.onclick = () => {
       const champ = el('input', { classe: 'store-tag-champ', attrs: { type: 'text', maxlength: '40' } });
       champ.value = e.nom;
