@@ -93,11 +93,12 @@ describe('la préférence de la Configuration (pourcentage des vitesses de base)
     const ev = sansCommentaires(lire('src/events.js'));
     assert.match(ev, /S\.appVitesseRotation3D = pourcentGeste3D\(settings\.vitesseRotation3D\)/);
     assert.match(ev, /S\.appVitesseDeplacement3D = pourcentGeste3D\(settings\.vitesseDeplacement3D\)/);
-    assert.match(ev, /reglerVitessesGestes3D\(\{ rotation: S\.appVitesseRotation3D, deplacement: S\.appVitesseDeplacement3D \}\)/);
+    assert.match(ev, /reglerVitessesGestes3D\(\{ rotation: S\.appVitesseRotation3D, deplacement: S\.appVitesseDeplacement3D, objet: S\.appVitesseObjet3D \}\)/);
+    assert.match(ev, /S\.appVitesseObjet3D = pourcentGeste3D\(settings\.vitesseObjet3D\)/);
     assert.match(ev, /setSetting\('vitesseRotation3D', S\.appVitesseRotation3D\)/);
     assert.match(ev, /setSetting\('vitesseDeplacement3D', S\.appVitesseDeplacement3D\)/);
     const html = lire('src/index.html');
-    for (const id of ['gestesRotationRange', 'gestesDeplacementRange']) {
+    for (const id of ['gestesRotationRange', 'gestesDeplacementRange', 'gestesObjetRange']) {
       const balise = html.slice(html.lastIndexOf('<', html.indexOf(`id="${id}"`)), html.indexOf('>', html.indexOf(`id="${id}"`)));
       assert.match(balise, new RegExp(`min="${POURCENT_GESTES_3D.min}" max="${POURCENT_GESTES_3D.max}" step="${POURCENT_GESTES_3D.pas}" value="${POURCENT_GESTES_3D.defaut}"`), id);
     }

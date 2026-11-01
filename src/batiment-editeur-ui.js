@@ -17,7 +17,7 @@
  * gestes et le cadrage) : il ne touche pas à la scène partagée des Cases (cf. rendreApercu3D), il
  * dessine à la demande et libère tout à la fermeture.
  */
-import { deltaMolette3D, facteurDeZoom3D } from './utils.js';
+import { deltaMolette3D, facteurDeZoom3D, degresParPixelObjet3D } from './utils.js';
 import { tr } from './state.js';
 import { creerBatiment, nomAfficheDuFichier, DEFAUTS_BATIMENT, TYPES_D_OUVERTURE } from './batiment.js';
 import {
@@ -2299,7 +2299,7 @@ function cablerPlan(){
         // INCLINER et BASCULER ne se voient presque pas de dessus : tourner AUTOUR de l'élément n'y
         // correspond à rien (signalé : difficile). Un mouvement LINÉAIRE, comme un manche, 0,5° par
         // pixel : haut / bas incline (X), gauche / droite bascule (Z).
-        const VITESSE = Math.PI / 180 * 0.5;
+        const VITESSE = Math.PI / 180 * degresParPixelObjet3D();   // #463e : la préférence « Gestes 3D »
         const delta = axeActif === 'x' ? (e.clientY - g.y0) * VITESSE : (e.clientX - g.x0) * VITESSE;
         const base = axeActif === 'x' ? g.base.rotX : g.base.rotZ;
         fixerAngle(x, axeActif, angleAimante(base + delta, reglage));

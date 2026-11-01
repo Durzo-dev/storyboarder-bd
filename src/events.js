@@ -8438,6 +8438,8 @@ const gestesRotationRange = document.getElementById('gestesRotationRange');
 const gestesRotationValue = document.getElementById('gestesRotationValue');
 const gestesDeplacementRange = document.getElementById('gestesDeplacementRange');
 const gestesDeplacementValue = document.getElementById('gestesDeplacementValue');
+const gestesObjetRange = document.getElementById('gestesObjetRange');
+const gestesObjetValue = document.getElementById('gestesObjetValue');
 const gestesResetBtn = document.getElementById('gestesResetBtn');
 const languageSelect = document.getElementById('languageSelect');
 const exportShowPanelBadgesCheckbox = document.getElementById('exportShowPanelBadgesCheckbox');
@@ -8524,9 +8526,10 @@ function rafraichirValeursGestes3D(){
   const pc = (n) => (S.appLang === 'en' ? `${n}%` : `${n} %`);
   gestesRotationValue.textContent = pc(S.appVitesseRotation3D);
   gestesDeplacementValue.textContent = pc(S.appVitesseDeplacement3D);
+  gestesObjetValue.textContent = pc(S.appVitesseObjet3D);
 }
 function appliquerVitessesGestes3D(){
-  reglerVitessesGestes3D({ rotation: S.appVitesseRotation3D, deplacement: S.appVitesseDeplacement3D });
+  reglerVitessesGestes3D({ rotation: S.appVitesseRotation3D, deplacement: S.appVitesseDeplacement3D, objet: S.appVitesseObjet3D });
 }
 
 function applyTheme(theme, contraste = S.appContrast){
@@ -8584,6 +8587,7 @@ function openSettingsModal(){
   rafraichirValeurCacheMo();
   gestesRotationRange.value = String(S.appVitesseRotation3D);
   gestesDeplacementRange.value = String(S.appVitesseDeplacement3D);
+  gestesObjetRange.value = String(S.appVitesseObjet3D);
   rafraichirValeursGestes3D();
   languageSelect.value = S.appLang;
   exportShowPanelBadgesCheckbox.checked = S.exportShowPanelBadges;
@@ -8702,13 +8706,20 @@ gestesDeplacementRange.addEventListener('input', () => {
   appliquerVitessesGestes3D();
   if (hasElectronAPI()) window.storyboarderAPI.setSetting('vitesseDeplacement3D', S.appVitesseDeplacement3D);
 });
+gestesObjetRange.addEventListener('input', () => {
+  S.appVitesseObjet3D = pourcentGeste3D(gestesObjetRange.value);
+  rafraichirValeursGestes3D();
+  appliquerVitessesGestes3D();
+  if (hasElectronAPI()) window.storyboarderAPI.setSetting('vitesseObjet3D', S.appVitesseObjet3D);
+});
 gestesResetBtn.addEventListener('click', () => {
-  S.appVitesseRotation3D = 100; S.appVitesseDeplacement3D = 100;
-  gestesRotationRange.value = '100'; gestesDeplacementRange.value = '100';
+  S.appVitesseRotation3D = 100; S.appVitesseDeplacement3D = 100; S.appVitesseObjet3D = 100;
+  gestesRotationRange.value = '100'; gestesDeplacementRange.value = '100'; gestesObjetRange.value = '100';
   rafraichirValeursGestes3D();
   appliquerVitessesGestes3D();
   if (hasElectronAPI()) {
     window.storyboarderAPI.setSetting('vitesseRotation3D', 100);
+    window.storyboarderAPI.setSetting('vitesseObjet3D', 100);
     window.storyboarderAPI.setSetting('vitesseDeplacement3D', 100);
   }
 });
@@ -8812,6 +8823,7 @@ async function loadAppSettings(){
     // pourcentGeste3D ramène une valeur éditée à la main aux bornes et au pas du curseur.
     if (settings && settings.vitesseRotation3D != null) S.appVitesseRotation3D = pourcentGeste3D(settings.vitesseRotation3D);
     if (settings && settings.vitesseDeplacement3D != null) S.appVitesseDeplacement3D = pourcentGeste3D(settings.vitesseDeplacement3D);
+    if (settings && settings.vitesseObjet3D != null) S.appVitesseObjet3D = pourcentGeste3D(settings.vitesseObjet3D);
     appliquerVitessesGestes3D();
     // ⚠️ LA BIBLIOTHÈQUE DE STYLES EST UN RÉGLAGE DE L'APPLICATION, PAS DU PROJET. Arbitré avec
     // l'utilisateur : un style créé dans un Projet doit être disponible dans tous les autres, ce

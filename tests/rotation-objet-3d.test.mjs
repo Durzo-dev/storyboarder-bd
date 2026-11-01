@@ -122,3 +122,19 @@ test('caméra d\'une Scène : jamais masquée puis réaffichée ; pas de titre �
   assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /#sceneTopDownBtn\{\s*display:block; width:100%; margin-top:10px; margin-bottom:12px;/);
 });
 
+
+// #463e : la vitesse de rotation des objets, dans la Configuration (« Gestes 3D »).
+test('la vitesse de rotation des objets : réglée, appliquée au plateau, aux articulations et au mobilier', async () => {
+  const U = await import('../src/utils.js');
+  U.reglerVitessesGestes3D({ rotation: 100, deplacement: 100, objet: 200 });
+  assert.equal(U.degresParPixelObjet3D(), 1);
+  const s = debutDeRotation3D({ angle: 0, pivot: { x: 0, y: 0 }, pointeur: { x: 0, y: 0 }, axe: { x: 0, y: -1, versOeil: false }, mode: 'droit' });
+  proche(deg(angleDeRotation3D(s, { x: 20, y: 0 }, { alt: true })), 20);   // 1°/px à 200 %
+  U.reglerVitessesGestes3D({ rotation: 100, deplacement: 100, objet: 100 });
+  assert.equal(U.degresParPixelObjet3D(), 0.5);
+  const lire = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
+  assert.match(lire('persona-editor.js'), /straightDragDegrees3D\(session\.axis, session\.orbit, dx, dy, degresParPixelObjet3D\(\)\)/);
+  assert.match(lire('batiment-editeur-ui.js'), /const VITESSE = Math\.PI \/ 180 \* degresParPixelObjet3D\(\);/);
+  assert.match(lire('index.html'), /id="gestesObjetRange" min="25" max="200" step="25" value="100"/);
+  assert.match(lire('events.js'), /window\.storyboarderAPI\.setSetting\('vitesseObjet3D', S\.appVitesseObjet3D\)/);
+});

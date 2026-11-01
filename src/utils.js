@@ -1094,12 +1094,22 @@ export function pourcentGeste3D(v){
 
 let _facteurRotation3D = 1;
 let _facteurDeplacement3D = 1;
+let _facteurObjet3D = 1;
 
 /** Applique la préférence de l'utilisateur (en pourcentages) à tous les gestes 3D à la fois. */
-export function reglerVitessesGestes3D({ rotation, deplacement } = {}){
+export function reglerVitessesGestes3D({ rotation, deplacement, objet } = {}){
   _facteurRotation3D = pourcentGeste3D(rotation) / 100;
   _facteurDeplacement3D = pourcentGeste3D(deplacement) / 100;
+  _facteurObjet3D = pourcentGeste3D(objet) / 100;
 }
+
+/**
+ * #463e, LA VITESSE DE ROTATION DES OBJETS (demandé) : les degrés par pixel quand on tourne un objet
+ * EN LIGNE (le plateau tournant d'un Élément vu de face, une articulation vue de côté, l'inclinaison
+ * et la bascule d'un meuble du bâtiment) : 0,5°/px à 100 %, fois la préférence. Le BOUTON ROTATIF,
+ * lui, suit la souris à l'angle près : il n'a pas de vitesse.
+ */
+export function degresParPixelObjet3D(){ return POSE_DRAG_DEG_PER_PX * _facteurObjet3D; }
 
 /** La vitesse de rotation effective : la base, fois la préférence. */
 export function vitesseRotation3D(){ return VITESSE_ROTATION_3D * _facteurRotation3D; }

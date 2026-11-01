@@ -274,7 +274,7 @@ Le Lecteur, les vignettes, la fenêtre des Polices. L'image d'une Case a ses pro
    angle, l'Éditeur de modèle et la caméra des Cases l'ajoutent. Les repères n'étant pas les mêmes,
    le résultat à l'écran peut être identique : **à vérifier** que « glisser vers la droite » tourne
    partout dans le même sens.
-10. **La préférence « Gestes 3D »** ne couvre ni les articulations ni le mobilier.
+10. ~~**La préférence « Gestes 3D »** ne couvre ni les articulations ni le mobilier.~~ Corrigé en #463e : « Vitesse de rotation des objets » (`degresParPixelObjet3D`), pour le plateau d'un Élément, les articulations et l'inclinaison et la bascule d'un meuble ; le bouton rotatif suit la souris et n'a pas de vitesse.
 
 ## Recommandations
 

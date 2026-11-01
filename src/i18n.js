@@ -637,6 +637,9 @@ export const I18N_MODALS = [
   ['#gestesDeplacementLabel', '3D panning speed', 'Vitesse de déplacement 3D'],
   ['#gestesDeplacementRange', null],
   ['#gestesDeplacementValue', null],
+  ['#gestesObjetLabel', 'Object rotation speed', 'Vitesse de rotation des objets'],
+  ['#gestesObjetRange', null],
+  ['#gestesObjetValue', null],
   ['#gestesResetBtn', '↺ Default speeds', '↺ Vitesses par défaut'],
   ['#exportShowPanelBadgesCheckbox', null], // handled via trailing helper below
   ['#exportShowPanelDescriptionsCheckbox', null],

@@ -16,7 +16,7 @@
  * Ctrl : par 15° ; sinon l'aimant tous les 90° (à moins de 6°), qu'Alt retire ; Maj : cinq fois plus
  * fin. Les angles sont en RADIANS.
  */
-import { POSE_DRAG_DEG_PER_PX, pointerSweepAngle3D, accumulateSweepDegrees3D } from './utils.js';
+import { degresParPixelObjet3D, pointerSweepAngle3D, accumulateSweepDegrees3D } from './utils.js';
 import { angleAimante } from './batiment-mobilier.js';
 
 /** En deçà de cette plongée de la caméra (radians), le plateau tournant ; au-delà, le bouton rotatif. */
@@ -52,7 +52,7 @@ export function angleDeRotation3D(s, pointeur, { ctrl = false, alt = false, maj 
     // Perpendiculaire à l'axe projeté : pour un axe vertical vu de face, vers la droite.
     const l = Math.hypot(s.axe.x, s.axe.y) || 1;
     const dir = { x: -s.axe.y / l, y: s.axe.x / l };
-    deg = ((pointeur.x - s.p0.x) * dir.x + (pointeur.y - s.p0.y) * dir.y) * POSE_DRAG_DEG_PER_PX;
+    deg = ((pointeur.x - s.p0.x) * dir.x + (pointeur.y - s.p0.y) * dir.y) * degresParPixelObjet3D();   // #463e
   } else {
     const a = pointerSweepAngle3D(s.pivot, pointeur);
     if (a !== null) { s.balaye = accumulateSweepDegrees3D(s.balaye, s.angleSouris, a); s.angleSouris = a; }

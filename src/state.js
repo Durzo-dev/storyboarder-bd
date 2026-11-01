@@ -292,6 +292,7 @@ export const S = {
   // de l'application (settings.json), pas du Projet : elle dépend de la souris et de l'écran.
   appVitesseRotation3D:    100,
   appVitesseDeplacement3D: 100,
+  appVitesseObjet3D: 100,   // #463e : la rotation des objets en ligne, en %
   // Un seul instantané d'annulation par GESTE sur les deux réglages continus de la Lumière : un
   // sélecteur de couleur et un curseur émettent en continu, et empiler une annulation par nuance
   // survolée noierait l'historique de 50 actions (#414d).

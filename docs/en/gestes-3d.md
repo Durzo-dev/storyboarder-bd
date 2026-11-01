@@ -267,7 +267,7 @@ image; drag: its anchor), in 2D.
 9. **The direction of drag rotations**: the store preview subtracts the horizontal drag from its
    angle, the Model editor and the Panels' camera add it. The frames differ, so the on-screen result
    may be the same: **to check** that “drag right” turns the same way everywhere.
-10. **The “3D gestures” preference** covers neither joints nor furniture.
+10. ~~**The “3D gestures” preference** covers neither joints nor furniture.~~ Fixed in #463e: “Object rotation speed” (`degresParPixelObjet3D`), for an Element's turntable, joints, and a building element's tilt and lean; the rotary knob follows the mouse and has no speed.
 
 ## Recommendations
 

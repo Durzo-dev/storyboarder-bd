@@ -48,7 +48,7 @@ export const HELP_MANUAL_EN = [
     'Settings (General, Projects, 3D) offer a dark or light theme, "Increased contrast" and four interface sizes, without touching your Pages.',
     '"Pages kept in memory" keeps the pages you leave ready, without redrawing their panels when you return; at zero, only the page on screen is kept.',
     '"Don\'t show this message again", on some confirmations, lets them go through; the General tab shows them again.',
-    'The 3D rotation and panning speeds set the left and right click everywhere: store, Model editor, Scenes.',
+    'The 3D rotation and panning speeds set the left and right click everywhere; the object rotation speed, turning an Element, a joint or a building element.',
   ]},
   { id: 'maj', title: 'Updates', paragraphs: [
     'When a newer version is published, an "Update" button appears next to the version number. It shows what is new and the download size; the application saves your Project, installs the update and restarts.',
@@ -331,7 +331,7 @@ export const HELP_MANUAL_FR = [
     "La Configuration (Général, Projets, 3D) propose un thème sombre ou clair, « Contraste renforcé » et quatre tailles d'interface, sans toucher à vos Planches.",
     "« Planches en mémoire » garde prêtes les Planches quittées, sans redessiner leurs Cases au retour ; à zéro, seule la Planche affichée reste.",
     "« Ne plus afficher ce message », sur certaines confirmations, les fait passer d'office ; l'onglet Général les réaffiche.",
-    "Les vitesses de rotation et de déplacement 3D règlent le clic gauche et le clic droit partout : store, Éditeur, Scènes.",
+    "Les vitesses de rotation et de déplacement 3D règlent le clic gauche et le clic droit partout ; celle des objets, tourner un Élément, une articulation, un élément du bâtiment.",
   ]},
   { id: 'maj', title: 'Mises à jour', paragraphs: [
     "Quand une version plus récente est publiée, un bouton « Mise à jour » apparaît à côté du numéro de version. Il montre les nouveautés et le poids du téléchargement ; l'application enregistre votre Projet, installe la mise à jour et redémarre.",

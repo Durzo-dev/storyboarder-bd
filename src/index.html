@@ -1787,6 +1787,18 @@
           <span style="--i:0">25</span><span style="--i:1">50</span><span style="--i:2">75</span><span style="--i:3">100</span><span style="--i:4">125</span><span style="--i:5">150</span><span style="--i:6">175</span><span style="--i:7">200</span>
         </div>
       </div>
+      <!-- #463e : la vitesse quand on tourne un OBJET en ligne (un Élément vu de face, une articulation,
+           un meuble du bâtiment), 0,5° par pixel à 100 %. -->
+      <label class="modal-field-label" id="gestesObjetLabel">Vitesse de rotation des objets</label>
+      <div class="curseur-gradue" style="--crans-moins-un:7;">
+        <div class="curseur-gradue-ligne">
+          <input type="range" id="gestesObjetRange" min="25" max="200" step="25" value="100">
+          <span id="gestesObjetValue">100 %</span>
+        </div>
+        <div class="curseur-gradue-crans" aria-hidden="true">
+          <span style="--i:0">25</span><span style="--i:1">50</span><span style="--i:2">75</span><span style="--i:3">100</span><span style="--i:4">125</span><span style="--i:5">150</span><span style="--i:6">175</span><span style="--i:7">200</span>
+        </div>
+      </div>
       <button class="project-modal-btn nav-btn" id="gestesResetBtn" type="button" style="margin-top:0; margin-bottom:14px; width:100%;">↺ Vitesses par défaut</button>
       <!-- Bibliothèque de poses : réglage de l'Application (cf. settings.json, clé poseLibrary), d'où
            sa place ici. Le bouton ne réajoute que les poses de base MANQUANTES — il ne touche ni aux

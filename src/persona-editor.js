@@ -27,7 +27,7 @@ import {
   writePoseSliderDeg3D, axeDePose3D, modelAxisVector3D, squelettePourAnimal3D,
 
   orbiteDeFace3D, deplacement3D, vitesseRotation3D,
-  deltaMolette3D, facteurDeZoom3D } from './utils.js';
+  deltaMolette3D, facteurDeZoom3D, degresParPixelObjet3D } from './utils.js';
 import {
   cloneJoints, figuresDeLaBibliotheque3D,
   getEffectiveJoints, objectRigCache3D, poseOsPourModeleImporte, repereDuCorpsPourFichier3D,
@@ -700,7 +700,7 @@ export function advancePersonaEditorSweep(session, geste){
 export function applyPersonaEditorJointDrag(session, dx, dy, geste){
   if (!session || !S.personaEditorOpen || !S.personaEditorDraft) return null;
   const deltaDeg = session.droit
-    ? straightDragDegrees3D(session.axis, session.orbit, dx, dy)
+    ? straightDragDegrees3D(session.axis, session.orbit, dx, dy, degresParPixelObjet3D())   // #463e
     : advancePersonaEditorSweep(session, geste);
   // Les bornes viennent du DESCRIPTEUR, figé à l'appui comme tout le reste de la session : un
   // Animal les porte, un os importé n'en a pas et retombe sur ±180°.
