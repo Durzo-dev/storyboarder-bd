@@ -2554,12 +2554,19 @@ canvas.addEventListener('mousedown', (e) => {
       const _elR = _pgR.objects.find(o => o.id === S.selectedId);
       const { x: _ex, y: _ey } = getCoords(e);
       const _caseR = _elR && peutTournerALaSouris3D(_elR) ? findOwningPanel(_elR, _pgR) : null;
-      if (_caseR && _ex >= _elR.x && _ex <= _elR.x + _elR.w && _ey >= _elR.y && _ey <= _elR.y + _elR.h) {
+      // ⚠️ LA BOÎTE VUE, PAS o.x / o.y (signalé : le geste déplaçait la caméra) : la boîte 2D brute
+      // n'est plus où l'Élément s'affiche dès que la caméra a bougé. La même que le glisser gauche
+      // et le cadre de sélection : son centre et ses demi-côtés projetés par la vraie caméra.
+      const _cR = _caseR ? projectElementCenterToCanvas3D(_elR, _caseR, _pgR) : null;
+      const _eR = _cR ? getElementProjectedHalfExtents3D(_elR, _caseR, _pgR) : null;
+      const _boite = (_cR && _eR) ? { x: _cR.x - _eR.halfW - 8, y: _cR.y - _eR.halfH - 8, w: 2 * _eR.halfW + 16, h: 2 * _eR.halfH + 16 }
+        : (_elR ? { x: _elR.x, y: _elR.y, w: _elR.w, h: _elR.h } : null);
+      if (_caseR && _boite && _ex >= _boite.x && _ex <= _boite.x + _boite.w && _ey >= _boite.y && _ey <= _boite.y + _boite.h) {
         const b = panelCamBasis3D(_caseR);
         S.panMoved = false;
         S.dragMode = 'objetRotation'; S.dragStart = { x: _ex, y: _ey };
         S.dragOrig = { id: _elR.id, enAttente: true, boutonDroit: true,
-          session: debutDeRotation3D({ angle: _elR.rotY || 0, pivot: { x: _elR.x + _elR.w / 2, y: _elR.y + _elR.h / 2 },
+          session: debutDeRotation3D({ angle: _elR.rotY || 0, pivot: { x: _boite.x + _boite.w / 2, y: _boite.y + _boite.h / 2 },
             pointeur: { x: _ex, y: _ey }, axe: { x: b.right.y, y: -b.up.y, versOeil: b.backward.y > 0 } }) };
         return;
       }
