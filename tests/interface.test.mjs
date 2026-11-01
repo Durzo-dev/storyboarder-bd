@@ -97,10 +97,11 @@ describe('icônes et infobulles', () => {
 });
 
 describe('les boutons qui créent sont orange', () => {
-  test('« Ajouter un étage » et « Dupliquer l\'étage » portent .full-btn', () => {
+  // #454g : les quatre boutons images des niveaux (ajouter, dupliquer, au-dessus et en dessous).
+  test('les quatre boutons des niveaux portent .full-btn', () => {
     const f = fonction('remplirNiveaux');
-    assert.match(f, /ajouter\.className = 'full-btn'/);
-    assert.match(f, /dupliquer\.className = 'full-btn'/);
+    assert.match(f, /b\.className = 'full-btn icone'/);
+    for (const k of ['ajouterEtage', 'dupliquerDessus', 'ajouterSousSol', 'dupliquerDessous']) assert.match(f, new RegExp(`ICONES_NIVEAUX\\.${k}`));
   });
 });
 
@@ -199,7 +200,10 @@ describe('les menus contextuels passent devant tout', () => {
 
 describe('éditeur de bâtiment : un étage sans pièce ne se duplique pas (demandé)', () => {
   test('le bouton s\'éteint et dit pourquoi ; le raccourci D est refusé aussi', () => {
-    assert.match(fonction('remplirNiveaux'), /if \(!niveauAvecPieces\(\)\) \{\n\s+dupliquer\.disabled = true;\n\s+dupliquer\.title = tr\(/);
+    const f = fonction('remplirNiveaux');
+    assert.match(f, /const sansPiece = !niveauAvecPieces\(\);/);
+    assert.match(f, /if \(eteint\) b\.disabled = true;/);
+    assert.match(f, /\(\) => dupliquerLEtage\(true\), sansPiece \? pasDePiece\(/);
     assert.match(fonction('dupliquerLEtage'), /if \(!niveauAvecPieces\(\)\) return;/);
   });
 });

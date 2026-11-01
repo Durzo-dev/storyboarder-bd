@@ -303,9 +303,9 @@ export const HELP_MANUAL_EN = [
   ]},
   { id: 'batiments_niveaux', title: 'Building levels', paragraphs: [
     'The round buttons on the left of the top view switch level (Page Up / Page Down too); the level below shows faintly under the current one, and its walls and corners snap too, to draw a floor over the one beneath.',
-    'In the right-hand menu, "Levels": rename a level, set its ceiling height (the levels above move with it), drag it to change its place in the stack, delete it (with what it holds). "Add" (N) adds an empty level on top; "Duplicate" (D) copies the current level just above it. ↑ / ↓ or Page Up / Down change level.',
+    'In the right-hand menu, "Levels": rename a level, set its ceiling height (the levels above move with it), drag it to change its place in the stack, delete it (with what it holds). Four buttons: on top, add a floor (N) and duplicate the current level above (D); below, add a basement and duplicate it underneath. ↑ / ↓ or Page Up / Down change level.',
     'If a staircase would no longer fit after such a change, a window names it with the reason, and offers to delete it to go on.',
-    '"Basement" adds an empty level under the lowest one: the ground floor stays on the Ground. A basement has no roof; in a panel or a scene the building pierces the Ground over it, so it shows when the building is cut.',
+    'A basement goes under the lowest level: the ground floor stays on the Ground, and the level above shows faintly. No roof: in a panel the Ground covers it, and opens when the building is cut at the basement.',
     'In 3D, every room is covered: by the floor of the room above, or else by a flat roof; the walls run through the slabs. The layers button of the preview cuts it at the current level, to see inside.',
   ]},
   { id: 'batiments_escaliers', title: 'Staircases', paragraphs: [
@@ -566,9 +566,9 @@ export const HELP_MANUAL_FR = [
   ]},
   { id: 'batiments_niveaux', title: 'Niveaux d\'un bâtiment', paragraphs: [
     "Les boutons ronds à gauche de la vue de dessus changent de niveau (Page haut / Page bas aussi) ; le niveau du dessous s'affiche en transparence sous le niveau courant, et ses murs et ses angles aimantent aussi, pour tracer un étage par-dessus celui d'en dessous.",
-    "Dans le menu de droite, « Niveaux » : renommer un niveau, régler sa hauteur sous plafond (les niveaux du dessus suivent), le glisser pour changer sa place dans la pile, le supprimer (avec ce qu'il porte). « Ajouter » (N) ajoute un niveau vide en haut ; « Dupliquer » (D) copie le niveau courant juste au-dessus. ↑ / ↓ ou Page haut / bas changent de niveau.",
+    "Dans le menu de droite, « Niveaux » : renommer un niveau, régler sa hauteur sous plafond (les niveaux du dessus suivent), le glisser pour changer sa place dans la pile, le supprimer (avec ce qu'il porte). Quatre boutons : en haut, ajouter un étage (N) et dupliquer le niveau courant au-dessus (D) ; en bas, ajouter un sous-sol et le dupliquer en dessous. ↑ / ↓ ou Page haut / bas changent de niveau.",
     "Si un escalier ne tiendrait plus après un tel changement, une fenêtre le cite avec la raison, et propose de le supprimer pour continuer.",
-    "« Sous-sol » ajoute un niveau vide sous le plus bas : le rez-de-chaussée reste au Sol. Un sous-sol n'a pas de toit ; dans une Case ou une Scène, le bâtiment perce le Sol au-dessus, et on le voit en coupant le bâtiment.",
+    "Un sous-sol s'ajoute sous le plus bas : le rez-de-chaussée reste au Sol, et le niveau du dessus s'y voit en transparence. Pas de toit : dans une Case, le Sol le couvre, et s'ouvre quand on coupe le bâtiment au sous-sol.",
     "En 3D, chaque pièce est couverte : par le plancher de la pièce du dessus, sinon par un toit plat ; les murs traversent les dalles. Le bouton des calques de l'aperçu le coupe au niveau courant, pour voir dedans.",
   ]},
   { id: 'batiments_escaliers', title: 'Escaliers', paragraphs: [

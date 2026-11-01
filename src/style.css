@@ -2838,6 +2838,10 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
    (6 px) : la marge propre du bouton est retirée. */
 .batiment-boutons-ligne{ display:flex; gap:6px; margin-top:10px; }
 .batiment-boutons-ligne > button{ flex:1 1 0; min-width:0; margin:0; }
+/* #454g : les quatre boutons images des niveaux, deux par rangée (étage en haut, sous-sol en bas). */
+.batiment-niveaux-actions{ display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:10px; }
+.batiment-niveaux-actions > button{ margin:0; min-width:0; display:flex; align-items:center; justify-content:center; padding:6px 0; }
+.batiment-niveaux-actions > button svg{ display:block; }
 /* Les sous-sections d'un formulaire (Type, Marches d'un escalier) : un creux, un titre un cran sous
    celui de la section, comme les sous-sections de l'Éditeur de modèle. */
 .batiment-sous-section{ background:var(--creux); border-radius:var(--rayon-moyen); padding:7px 9px 9px; margin:0 0 10px; display:flex; flex-direction:column; gap:8px; }

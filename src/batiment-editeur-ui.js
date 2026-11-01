@@ -21,7 +21,7 @@ import { tr } from './state.js';
 import { creerBatiment, nomAfficheDuFichier, DEFAUTS_BATIMENT, TYPES_D_OUVERTURE } from './batiment.js';
 import {
   ICONES_TYPE_ESCALIER, ICONES_SENS_ESCALIER, ICONES_RAMPE, ICONES_MARCHES, ICONES_OUVERTURE, ICONES_MANOEUVRE,
-  ICONES_REMPLISSAGE, ICONES_DESSUS, iconeSensPorte, ICONES_TOIT, ICONES_BORDURE_TOIT,
+  ICONES_REMPLISSAGE, ICONES_DESSUS, iconeSensPorte, ICONES_TOIT, ICONES_BORDURE_TOIT, ICONES_NIVEAUX,
 } from './batiment-icones.js';
 import { toitDuNiveau, fixerToit, toitsDuNiveau, piecesDecouvertes, BORNES_TOIT, centreDuToit, ramenerSurLeToit } from './batiment-toits.js';
 import { actionDEnregistrement } from './batiment-bibliotheque.js';
@@ -609,8 +609,17 @@ function libelleCourt(n){
   return r === 0 ? tr('GF', 'RDC') : String(r);
 }
 
-/** L'id du niveau du dessous (ses murs aimantent le tracé, demandé), ou null. */
-function idDessous(){ const d = niveauDessous(E.batiment, E.niveauId); return d ? d.id : null; }
+/**
+ * Le niveau DE RÉFÉRENCE du niveau courant, montré en transparence et dont les murs aimantent le
+ * tracé (demandé) : celui du dessous pour un étage, celui du DESSUS pour un sous-sol (#454g : on
+ * creuse sous la maison), ou null.
+ */
+function niveauDeReference(){
+  const n = E.batiment.niveaux.find(x => x.id === E.niveauId);
+  return estUnSousSol(n) ? niveauDessus(E.batiment, E.niveauId) : niveauDessous(E.batiment, E.niveauId);
+}
+/** L'id du niveau de référence (ses murs aimantent le tracé, demandé), ou null. */
+function idDessous(){ const d = niveauDeReference(); return d ? d.id : null; }
 
 /** Change le niveau courant : ce qu'on trace, ce qu'on voit, ce que coupe l'aperçu. */
 function choisirNiveau(id){
@@ -640,9 +649,9 @@ function niveauAvecPieces(){
   return !!E && E.batiment.pieces.some(p => p.niveauId === E.niveauId);
 }
 
-function dupliquerLEtage(){
+function dupliquerLEtage(dessous = false){
   if (!niveauAvecPieces()) return;   // le raccourci D aussi : le bouton éteint ne suffit pas
-  let n = null; const src = E.niveauId; modifier(b => { n = dupliquerNiveau(b, src, tr); });
+  let n = null; const src = E.niveauId; modifier(b => { n = dupliquerNiveau(b, src, tr, { dessous }); });
   if (n) choisirNiveau(n.id);
 }
 
@@ -768,30 +777,30 @@ function remplirNiveaux(){
     });
     return d;
   });
-  // Côte à côte, libellés courts, « Ajouter » à gauche (demandé) ; le nom complet en infobulle.
+  // #454g (demandé) : QUATRE boutons images, deux rangées. En haut, ajouter un étage et dupliquer
+  // le niveau courant au-dessus ; en bas, ajouter un sous-sol et le dupliquer en dessous. Orange :
+  // ils CRÉENT un niveau ; le nom complet en infobulle.
   const actions = document.createElement('div');
-  actions.className = 'batiment-boutons-ligne';
-  const ajouter = document.createElement('button');
-  // Orange (demandé) : ces deux boutons CRÉENT un niveau.
-  ajouter.type = 'button'; ajouter.className = 'full-btn'; ajouter.textContent = tr('Add', 'Ajouter');
-  ajouter.title = tr('Add a floor: an empty level on top (N)', 'Ajouter un étage : un niveau vide en haut (N)');
-  ajouter.onclick = ajouterUnEtage;
-  const dupliquer = document.createElement('button');
-  dupliquer.type = 'button'; dupliquer.className = 'full-btn'; dupliquer.textContent = tr('Duplicate', 'Dupliquer');
-  dupliquer.title = tr('Duplicate the floor: copy the current level (walls, openings, rooms) just above it (D)', 'Dupliquer l\'étage : copier le niveau courant (murs, ouvertures, pièces) juste au-dessus (D)');
-  dupliquer.onclick = dupliquerLEtage;
-  // Un étage sans pièce ne se duplique pas (demandé) : bouton éteint, la raison en infobulle.
-  if (!niveauAvecPieces()) {
-    dupliquer.disabled = true;
-    dupliquer.title = tr('Duplicate the floor: impossible, this level has no room yet (close a contour of walls)',
-      'Dupliquer l\'étage : impossible, ce niveau n\'a encore aucune pièce (fermez un contour de murs)');
-  }
-  // #454g : un sous-sol, sous le plus bas (le rez-de-chaussée reste au Sol).
-  const sousSol = document.createElement('button');
-  sousSol.type = 'button'; sousSol.className = 'full-btn'; sousSol.textContent = tr('Basement', 'Sous-sol');
-  sousSol.title = tr('Add a basement: an empty level under the lowest one; the ground floor stays on the Ground', 'Ajouter un sous-sol : un niveau vide sous le plus bas ; le rez-de-chaussée reste au Sol');
-  sousSol.onclick = ajouterUnSousSol;
-  actions.append(ajouter, sousSol, dupliquer);
+  actions.className = 'batiment-niveaux-actions';
+  const sansPiece = !niveauAvecPieces();
+  const bouton = (icone, titre, faire, eteint = null) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'full-btn icone'; b.innerHTML = icone;
+    b.title = eteint || titre; b.setAttribute('aria-label', titre);
+    if (eteint) b.disabled = true;
+    b.onclick = faire;
+    return b;
+  };
+  const pasDePiece = (quoi) => tr(`${quoi}: impossible, this level has no room yet (close a contour of walls)`,
+    `${quoi} : impossible, ce niveau n'a encore aucune pièce (fermez un contour de murs)`);
+  actions.append(
+    bouton(ICONES_NIVEAUX.ajouterEtage, tr('Add a floor: an empty level on top (N)', 'Ajouter un étage : un niveau vide en haut (N)'), ajouterUnEtage),
+    bouton(ICONES_NIVEAUX.dupliquerDessus, tr('Duplicate above: copy the current level (walls, openings, rooms) just above it (D)', 'Dupliquer au-dessus : copier le niveau courant (murs, ouvertures, pièces) juste au-dessus (D)'),
+      () => dupliquerLEtage(false), sansPiece ? pasDePiece(tr('Duplicate above', 'Dupliquer au-dessus')) : null),
+    bouton(ICONES_NIVEAUX.ajouterSousSol, tr('Add a basement: an empty level under the lowest one; the ground floor stays on the Ground', 'Ajouter un sous-sol : un niveau vide sous le plus bas ; le rez-de-chaussée reste au Sol'), ajouterUnSousSol),
+    bouton(ICONES_NIVEAUX.dupliquerDessous, tr('Duplicate below: copy the current level just under it (under the ground floor, a basement)', 'Dupliquer en dessous : copier le niveau courant juste sous lui (sous le rez-de-chaussée, un sous-sol)'),
+      () => dupliquerLEtage(true), sansPiece ? pasDePiece(tr('Duplicate below', 'Dupliquer en dessous')) : null),
+  );
   zone.replaceChildren(...lignes, actions);
 }
 
@@ -1767,8 +1776,9 @@ function dessinerPlan(){
   const formes = polygonesDesMurs(murs);
   const accent = couleur('--accent', '#ff7a45'), encre = couleur('--ink', '#ededef');
 
-  // #454b : le niveau du DESSOUS, en transparence, pour tracer l'étage par-dessus ses murs.
-  const dessous = niveauDessous(E.batiment, E.niveauId);
+  // #454b : le niveau du DESSOUS, en transparence, pour tracer l'étage par-dessus ses murs ; pour un
+  // sous-sol, celui du DESSUS (#454g, demandé).
+  const dessous = niveauDeReference();
   if (dessous) {
     const mursDessous = E.batiment.murs.filter(m => m.niveauId === dessous.id);
     const fd = polygonesDesMurs(mursDessous);

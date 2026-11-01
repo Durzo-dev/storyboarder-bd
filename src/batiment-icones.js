@@ -104,3 +104,20 @@ export const ICONES_BORDURE_TOIT = {
   acrotere: svg(32, 22, '<path d="M3 12h26M3 12v8M29 12v8"/><path d="M3 12V6h4v6M25 12V6h4v6" fill="currentColor" fill-opacity=".25"/>'),
   'garde-corps': svg(32, 22, '<path d="M3 12h26M3 12v8M29 12v8"/><path d="M4 4h24M4 4v8M12 4v8M20 4v8M28 4v8"/>'),
 };
+
+/**
+ * #454g, LES QUATRE BOUTONS DES NIVEAUX (demandé : des boutons images). Des niveaux vus de profil,
+ * le Sol en trait long : un niveau AJOUTÉ est en pointillé avec un « + », un niveau DUPLIQUÉ est
+ * plein et grisé, une flèche dit où il va.
+ */
+const sol = (y) => `<path d="M2 ${y}h28" stroke-width="2"/>`;
+const plein = (y) => `<rect x="8" y="${y}" width="16" height="8"/>`;
+const ajoute = (y) => `<rect x="8" y="${y}" width="16" height="8" stroke-dasharray="2.5 2"/><path d="M16 ${y + 2}v4M14 ${y + 4}h4"/>`;
+const copie = (y) => `<rect x="8" y="${y}" width="16" height="8" fill="currentColor" fill-opacity=".3"/>`;
+export const ICONES_NIVEAUX = {
+  ajouterEtage: svg(32, 28, `${sol(26)}${plein(17)}${ajoute(5)}`),
+  dupliquerDessus: svg(32, 28, `${sol(26)}${plein(17)}${copie(5)}<path d="M28 15V7m-2 2 2-2 2 2"/>`),
+  ajouterSousSol: svg(32, 28, `${sol(12)}${plein(3)}${ajoute(15)}`),
+  dupliquerDessous: svg(32, 28, `${sol(12)}${plein(3)}${copie(15)}<path d="M28 13v8m-2-2 2 2 2-2"/>`),
+};
+

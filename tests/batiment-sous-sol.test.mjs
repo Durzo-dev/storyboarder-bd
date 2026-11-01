@@ -90,11 +90,13 @@ describe('le sous-sol dans le bâtiment', () => {
     assert.ok(Math.abs(Math.min(...xs) + 0.1) < 1e-6 && Math.abs(Math.max(...xs) - 9.1) < 1e-6, JSON.stringify([Math.min(...xs), Math.max(...xs)]));
     assert.deepEqual(empriseDesSousSols(creerBatiment('M', fr)), [], 'sans sous-sol, rien');
   });
-  test('le masque : invisible, marque le pochoir, avant le Sol, hors sélection ; seulement placé', () => {
+  test('le masque : seulement coupé au sous-sol ; invisible, marque le pochoir, avant le Sol, hors sélection ; seulement placé', () => {
     const T = globalThis.THREE;
     const { b } = avecSousSol();
     const masques = (g) => { const r = []; g.traverse(o => { if (o.userData && o.userData.masqueDuSol) r.push(o); }); return r; };
-    const g = construireBatiment3D(T, b, materiauxBatiment3D(T), { percerLeSol: true });
+    // Entier (non coupé) : le Sol n'est pas percé, il couvre le sous-sol (demandé).
+    assert.equal(masques(construireBatiment3D(T, b, materiauxBatiment3D(T), { percerLeSol: true })).length, 0);
+    const g = construireBatiment3D(T, b, materiauxBatiment3D(T), { percerLeSol: true, jusquA: N.niveauxTries(b)[0].id });
     const m = masques(g);
     assert.ok(m.length >= 1);
     assert.equal(m[0].material.colorWrite, false);
@@ -125,5 +127,31 @@ test('câblage : le Sol ne se dessine pas où le pochoir est marqué ; le bâtim
   assert.match(sc, /o\.objType === 'batiment' \? boiteDuBatimentHorsSol3D/);
   assert.match(sc, /const box = boiteDuBatimentHorsSol3D\(fg\);/);
   const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
-  assert.match(ui, /sousSol\.onclick = ajouterUnSousSol;/);
+  assert.match(ui, /ICONES_NIVEAUX\.ajouterSousSol, tr\([^)]*\), ajouterUnSousSol\)/);
+  // Pour un sous-sol, le niveau de référence (transparence, aimant) est celui du DESSUS (demandé).
+  assert.match(ui, /return estUnSousSol\(n\) \? niveauDessus\(E\.batiment, E\.niveauId\) : niveauDessous\(E\.batiment, E\.niveauId\);/);
+});
+
+test('dupliquer EN DESSOUS : sous le rez-de-chaussée, un sous-sol de plus ; sous un étage, un étage de plus', () => {
+  const b = creerBatiment('M', fr);
+  ajouterRectangle(b, 'n0', { x: 0, z: 0 }, { x: 6, z: 4 }, 0.2);
+  actualiserPieces(b, 'n0', fr);
+  const copie = N.dupliquerNiveau(b, 'n0', fr, { dessous: true });
+  assert.equal(N.nbSousSols(b), 1);
+  assert.ok(copie.elevation < 0 && N.niveauxTries(b)[1].id === 'n0' && N.niveauxTries(b)[1].elevation === 0);
+  assert.equal(b.murs.filter(m => m.niveauId === copie.id).length, 4, 'ses murs sont copiés');
+  const e = N.ajouterEtage(b, fr);
+  N.dupliquerNiveau(b, e.id, fr, { dessous: true });
+  assert.equal(N.nbSousSols(b), 1);
+  assert.equal(N.niveauxTries(b).at(-1).id, e.id, 'l\'étage monte d\'un cran');
+});
+
+test('dans une Case, le Sol couvre ce que le sous-sol a hors du rez-de-chaussée : pas de dalle là', () => {
+  const T = globalThis.THREE;
+  const { b } = avecSousSol();
+  // La dalle du dessus du sous-sol (jusqu'à x = 9, au ras du Sol) : là où il dépasse du rez-de-chaussée.
+  const dallesDehors = (g) => { let n = 0; g.traverse(o => { if (!o.isMesh || !o.geometry) return; const bb = new T.Box3().setFromObject(o);
+    if (bb.max.x > 8.5 && bb.max.x - bb.min.x > 5 && bb.max.y <= 1e-6 && bb.max.y > -0.05 && bb.min.y > -0.5) n++; }); return n; };
+  assert.ok(dallesDehors(construireBatiment3D(T, b, materiauxBatiment3D(T))) >= 1, 'l\'éditeur la montre');
+  assert.equal(dallesDehors(construireBatiment3D(T, b, materiauxBatiment3D(T), { percerLeSol: true })), 0);
 });

@@ -109,23 +109,31 @@ export function ajouterSousSol(b, traduire){
 }
 
 /**
- * Duplique le niveau `id` JUSTE AU-DESSUS de lui (les niveaux du dessus montent d'autant) : ses murs,
+ * Duplique le niveau `id` JUSTE AU-DESSUS de lui (les niveaux du dessus montent d'autant), ou EN DESSOUS
+ * (`dessous`, #454g : sous le rez-de-chaussée, c'est un sous-sol de plus) : ses murs,
  * leurs ouvertures, ses pièces (mêmes noms, mêmes repères), avec de nouveaux identifiants. Rend le
  * nouveau niveau, ou null.
  */
-export function dupliquerNiveau(b, id, traduire){
+export function dupliquerNiveau(b, id, traduire, { dessous = false } = {}){
   const source = (b.niveaux || []).find(n => n.id === id);
   if (!source) return null;
   // Les noms par défaut de chaque place, AVANT l'insertion (signalé : deux « Étage 1 » après deux
   // duplications ; les niveaux qui montent d'une place gardaient l'ancien nom de leur place).
   const t0 = niveauxTries(b), zero0 = Math.max(0, t0.findIndex(x => x.elevation >= 0));
   const defauts = new Set(t0.map((n, k) => nomDuNiveauParDefaut(k - zero0, traduire)));
-  // #454g : un sous-sol dupliqué en fait un de plus (la copie est entre lui et le rez-de-chaussée).
-  const sousSols = nbSousSols(b) + (estUnSousSol(source) ? 1 : 0);
+  // #454g : un sous-sol dupliqué en fait un de plus (la copie est entre lui et le rez-de-chaussée) ;
+  // dupliqué EN DESSOUS (demandé), le rez-de-chaussée ou un sous-sol donne un sous-sol de plus, un
+  // étage un étage de plus (il monte d'un cran).
+  const sousSols = nbSousSols(b) + ((dessous ? source.elevation < 1e-9 : estUnSousSol(source)) ? 1 : 0);
   const copie = { ...source, id: nouvelId(b.niveaux, 'n'), nom: '' };
-  // Placé entre la source et celui du dessus ; recalerNiveaux remonte les suivants.
-  const dessus = niveauDessus(b, id);
-  copie.elevation = dessus ? (source.elevation + dessus.elevation) / 2 : source.elevation + source.hauteur + source.dalle;
+  // Placé entre la source et celui du dessus (ou du dessous) ; recalerNiveaux refait les élévations.
+  if (dessous) {
+    const bas = niveauDessous(b, id);
+    copie.elevation = bas ? (source.elevation + bas.elevation) / 2 : source.elevation - 1;
+  } else {
+    const dessus = niveauDessus(b, id);
+    copie.elevation = dessus ? (source.elevation + dessus.elevation) / 2 : source.elevation + source.hauteur + source.dalle;
+  }
   b.niveaux.push(copie);
   const ids = new Map();
   for (const m of b.murs.filter(x => x.niveauId === id)) {
