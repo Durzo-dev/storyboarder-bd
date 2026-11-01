@@ -791,14 +791,13 @@ function remplirNiveaux(){
     b.onclick = faire;
     return b;
   };
-  const pasDePiece = (quoi) => tr(`${quoi}: impossible, this level has no room yet (close a contour of walls)`,
-    `${quoi} : impossible, ce niveau n'a encore aucune pièce (fermez un contour de murs)`);
+  const pasDePiece = (quoi) => tr(`${quoi}: no room on this level yet`, `${quoi} : aucune pièce sur ce niveau`);
   actions.append(
-    bouton(ICONES_NIVEAUX.ajouterEtage, tr('Add a floor: an empty level on top (N)', 'Ajouter un étage : un niveau vide en haut (N)'), ajouterUnEtage),
-    bouton(ICONES_NIVEAUX.dupliquerDessus, tr('Duplicate above: copy the current level (walls, openings, rooms) just above it (D)', 'Dupliquer au-dessus : copier le niveau courant (murs, ouvertures, pièces) juste au-dessus (D)'),
+    bouton(ICONES_NIVEAUX.ajouterEtage, tr('Add a floor (N)', 'Ajouter un étage (N)'), ajouterUnEtage),
+    bouton(ICONES_NIVEAUX.dupliquerDessus, tr('Duplicate above (D)', 'Dupliquer au-dessus (D)'),
       () => dupliquerLEtage(false), sansPiece ? pasDePiece(tr('Duplicate above', 'Dupliquer au-dessus')) : null),
-    bouton(ICONES_NIVEAUX.ajouterSousSol, tr('Add a basement: an empty level under the lowest one; the ground floor stays on the Ground', 'Ajouter un sous-sol : un niveau vide sous le plus bas ; le rez-de-chaussée reste au Sol'), ajouterUnSousSol),
-    bouton(ICONES_NIVEAUX.dupliquerDessous, tr('Duplicate below: copy the current level just under it (under the ground floor, a basement)', 'Dupliquer en dessous : copier le niveau courant juste sous lui (sous le rez-de-chaussée, un sous-sol)'),
+    bouton(ICONES_NIVEAUX.ajouterSousSol, tr('Add a basement (Shift+N)', 'Ajouter un sous-sol (Maj+N)'), ajouterUnSousSol),
+    bouton(ICONES_NIVEAUX.dupliquerDessous, tr('Duplicate below (Shift+D)', 'Dupliquer en dessous (Maj+D)'),
       () => dupliquerLEtage(true), sansPiece ? pasDePiece(tr('Duplicate below', 'Dupliquer en dessous')) : null),
   );
   zone.replaceChildren(...lignes, actions);
@@ -2848,8 +2847,9 @@ function clavier(e){
   }
   else if (e.key === 'PageUp' || e.key === 'ArrowUp') changerDeNiveau(1);
   else if (e.key === 'PageDown' || e.key === 'ArrowDown') changerDeNiveau(-1);
-  else if (touche === 'n') ajouterUnEtage();
-  else if (touche === 'd') dupliquerLEtage();
+  // #454g : Maj + N un sous-sol, Maj + D dupliquer en dessous (demandé).
+  else if (touche === 'n') { if (e.shiftKey) ajouterUnSousSol(); else ajouterUnEtage(); }
+  else if (touche === 'd') dupliquerLEtage(e.shiftKey);
   else if (touche === 'v') basculerOutil('selection');
   else if (e.key === 'Enter') finirLaChaine();
   else if ((e.key === 'Delete' || e.key === 'Backspace') && escalierSelectionne()) {

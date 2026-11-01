@@ -127,7 +127,7 @@ test('câblage : le Sol ne se dessine pas où le pochoir est marqué ; le bâtim
   assert.match(sc, /o\.objType === 'batiment' \? boiteDuBatimentHorsSol3D/);
   assert.match(sc, /const box = boiteDuBatimentHorsSol3D\(fg\);/);
   const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
-  assert.match(ui, /ICONES_NIVEAUX\.ajouterSousSol, tr\([^)]*\), ajouterUnSousSol\)/);
+  assert.match(ui, /ICONES_NIVEAUX\.ajouterSousSol, tr\('Add a basement \(Shift\+N\)', 'Ajouter un sous-sol \(Maj\+N\)'\), ajouterUnSousSol\)/);
   // Pour un sous-sol, le niveau de référence (transparence, aimant) est celui du DESSUS (demandé).
   assert.match(ui, /return estUnSousSol\(n\) \? niveauDessus\(E\.batiment, E\.niveauId\) : niveauDessous\(E\.batiment, E\.niveauId\);/);
 });
@@ -155,3 +155,11 @@ test('dans une Case, le Sol couvre ce que le sous-sol a hors du rez-de-chaussée
   assert.ok(dallesDehors(construireBatiment3D(T, b, materiauxBatiment3D(T))) >= 1, 'l\'éditeur la montre');
   assert.equal(dallesDehors(construireBatiment3D(T, b, materiauxBatiment3D(T), { percerLeSol: true })), 0);
 });
+
+test('raccourcis : Maj+N un sous-sol, Maj+D dupliquer en dessous ; infobulles courtes', () => {
+  const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
+  assert.match(ui, /else if \(touche === 'n'\) \{ if \(e\.shiftKey\) ajouterUnSousSol\(\); else ajouterUnEtage\(\); \}/);
+  assert.match(ui, /else if \(touche === 'd'\) dupliquerLEtage\(e\.shiftKey\);/);
+  for (const t of ['Ajouter un étage (N)', 'Dupliquer au-dessus (D)', 'Ajouter un sous-sol (Maj+N)', 'Dupliquer en dessous (Maj+D)']) assert.ok(ui.includes(`'${t}'`), t);
+});
+
