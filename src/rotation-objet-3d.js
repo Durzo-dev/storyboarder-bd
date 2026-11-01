@@ -4,31 +4,29 @@
  * (utils.js), pour les Éléments des Cases et des Scènes, et le même que suit déjà le mobilier de
  * l'éditeur de bâtiment. Fonctions PURES.
  *
- * DEUX GESTES, CHOISIS SELON LA VUE (comme une articulation) :
- *   - l'axe se voit DE CÔTÉ (sa projection à l'écran est longue) : GLISSER DROIT, perpendiculaire à
- *     l'axe, à 0,5° par pixel. Vu de face, glisser vers la droite fait tourner la face de l'objet
- *     vers la droite ;
- *   - l'axe pointe vers l'ŒIL (vu de dessus) : un geste CIRCULAIRE autour de l'objet, comme un
- *     bouton rotatif, cumulé d'une image à l'autre (un tour complet sans saut).
+ * UN BOUTON ROTATIF, QUELLE QUE SOIT LA VUE (signalé : vu de biais, faire le tour de l'objet à la
+ * souris inversait le sens à mi-chemin, le défaut déjà corrigé pour le mobilier du bâtiment) :
+ * l'objet tourne de l'angle que la souris parcourt AUTOUR de lui à l'écran, cumulé d'une image à
+ * l'autre (un tour complet sans saut). Le principe du mobilier, partout.
+ *
+ * (Le glisser DROIT, perpendiculaire à l'axe, n'est gardé que pour un axe vu de côté exactement
+ * — `mode: 'droit'` explicite, inutilisé aujourd'hui : il s'inverse dès qu'on passe de l'autre côté.)
  * Ctrl : par 15° ; sinon l'aimant tous les 90° (à moins de 6°), qu'Alt retire ; Maj : cinq fois plus
  * fin. Les angles sont en RADIANS.
  */
 import { POSE_DRAG_DEG_PER_PX, pointerSweepAngle3D, accumulateSweepDegrees3D } from './utils.js';
 import { angleAimante } from './batiment-mobilier.js';
 
-/** En deçà de cette longueur de projection de l'axe (sur 1), il « pointe vers l'œil ». */
-export const AXE_VISIBLE_3D = 0.5;
-
 /**
  * Commence une rotation. `angle` : l'angle de départ ; `pivot`, `pointeur` : à l'écran ; `axe` : la
  * projection de l'axe à l'écran `{ x, y }` (ordonnée vers le BAS, longueur ≤ 1), et `versOeil` s'il
  * pointe vers la caméra.
  */
-export function debutDeRotation3D({ angle = 0, pivot, pointeur, axe }){
+export function debutDeRotation3D({ angle = 0, pivot, pointeur, axe, mode = 'circulaire' }){
   const longueur = Math.hypot(axe.x, axe.y);
   return {
     angle0: angle, pivot, p0: pointeur, axe,
-    mode: longueur >= AXE_VISIBLE_3D ? 'droit' : 'circulaire',
+    mode, longueur,
     balaye: 0, angleSouris: pointerSweepAngle3D(pivot, pointeur),
   };
 }

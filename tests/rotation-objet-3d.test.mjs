@@ -10,8 +10,8 @@ import { debutDeRotation3D, angleDeRotation3D, quartDeTour3D } from '../src/rota
 const deg = (r) => r * 180 / Math.PI;
 const proche = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} ≉ ${b}`);
 
-test('vu de face (axe vertical à l\'écran) : glisser à droite tourne, à 0,5° par pixel ; Maj cinq fois plus fin', () => {
-  const s = debutDeRotation3D({ angle: 0, pivot: { x: 100, y: 100 }, pointeur: { x: 100, y: 100 }, axe: { x: 0, y: -1, versOeil: false } });
+test('le glisser droit (gardé, explicite) : 0,5° par pixel ; Maj cinq fois plus fin', () => {
+  const s = debutDeRotation3D({ angle: 0, pivot: { x: 100, y: 100 }, pointeur: { x: 100, y: 100 }, axe: { x: 0, y: -1, versOeil: false }, mode: 'droit' });
   assert.equal(s.mode, 'droit');
   proche(deg(angleDeRotation3D(s, { x: 140, y: 100 }, { alt: true })), 20);
   proche(deg(angleDeRotation3D(s, { x: 140, y: 100 }, { alt: true, maj: true })), 4);
@@ -19,7 +19,7 @@ test('vu de face (axe vertical à l\'écran) : glisser à droite tourne, à 0,5�
 });
 
 test('aimant tous les 90° (à moins de 6°), Ctrl par 15°, Alt libre', () => {
-  const s = debutDeRotation3D({ angle: 0, pivot: { x: 0, y: 0 }, pointeur: { x: 0, y: 0 }, axe: { x: 0, y: -1, versOeil: false } });
+  const s = debutDeRotation3D({ angle: 0, pivot: { x: 0, y: 0 }, pointeur: { x: 0, y: 0 }, axe: { x: 0, y: -1, versOeil: false }, mode: 'droit' });
   proche(deg(angleDeRotation3D(s, { x: 170, y: 0 })), 90);            // 85° → 90°
   proche(deg(angleDeRotation3D(s, { x: 170, y: 0 }, { alt: true })), 85);
   proche(deg(angleDeRotation3D(s, { x: 50, y: 0 }, { ctrl: true })), 30);  // 25° → 30°
@@ -50,3 +50,15 @@ test('câblage : clic droit maintenu SUR l\'Élément choisi, avant le recadrage
   assert.match(ev, /_o\.rotY = quartDeTour3D\(_o\.rotY\);/);
   assert.match(ev, /if \(o\.type === 'objet3d' && o\.magnetWallId && WALL_OPENING_MAGNET_TYPES\.includes\(o\.objType\)\) return false;/);
 });
+
+// Signalé : vu de biais, faire le tour du Personnage inversait le sens à mi-chemin. Un bouton
+// rotatif, quelle que soit la vue : le tour complet tourne toujours dans le même sens.
+test('vu de biais aussi, un bouton rotatif : un tour complet de la souris, un tour complet de l\'objet, sans inversion', () => {
+  const s = debutDeRotation3D({ angle: 0, pivot: { x: 0, y: 0 }, pointeur: { x: 100, y: 0 }, axe: { x: 0, y: -0.9, versOeil: true } });
+  assert.equal(s.mode, 'circulaire');
+  const pas = [];
+  for (let k = 1; k <= 36; k++) { const a = k * Math.PI / 18; pas.push(deg(angleDeRotation3D(s, { x: 100 * Math.cos(a), y: 100 * Math.sin(a) }, { alt: true }))); }
+  for (let k = 1; k < pas.length; k++) assert.ok(pas[k] < pas[k - 1], `le sens s'inverse au pas ${k}`);
+  proche(pas.at(-1), -360, 1e-6);
+});
+

@@ -2567,7 +2567,7 @@ canvas.addEventListener('mousedown', (e) => {
         S.dragMode = 'objetRotation'; S.dragStart = { x: _ex, y: _ey };
         S.dragOrig = { id: _elR.id, enAttente: true, boutonDroit: true,
           session: debutDeRotation3D({ angle: _elR.rotY || 0, pivot: { x: _boite.x + _boite.w / 2, y: _boite.y + _boite.h / 2 },
-            pointeur: { x: _ex, y: _ey }, axe: { x: b.right.y, y: -b.up.y, versOeil: b.backward.y > 0 } }) };
+            pointeur: { x: _ex, y: _ey }, axe: { x: b.right.y, y: -b.up.y, versOeil: b.backward.y >= 0 } }) };
         return;
       }
     }
