@@ -2118,9 +2118,6 @@ function computePanelSceneSignature3D(panel, page, styleKey){
     groundColor: panel.groundColor || null,
     // Phase 12: cameraMode in the signature so activation/deactivation invalidates the cache.
     cameraMode: panel.cameraMode || false,
-    // Le repère pendant une rotation dans une Scène (qui n'a plus de mode Caméra) : il apparaît et
-    // disparaît avec le geste, l'image doit donc changer avec lui.
-    repere: repereDOrbiteVisible3D(panel),
     // Fix 12.7: when cameraMode is active, the orbit center depends on camOrbitTargetId and on
     // S.selectedId (selected element = dynamic orbit). Including them in the signature guarantees
     // that the sphere repositions correctly as soon as the orbit target changes.
@@ -3188,47 +3185,9 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       }
     }
   }
-  // Phase 12 (updated): 3D sphere + XYZ axes at the orbit center, visible only in Camera mode.
-  // Temporary group: added just before rendering, removed+disposed right after.
-  // depthTest:false → always visible regardless of the geometry between the camera and this point
-  // (Blender's "3D cursor" behavior). The axes (AxesHelper: X red, Y green, Z blue) rotate
-  // with the camera and indicate the current world orientation (Blender/Maya-style viewport gizmo).
-  let _orbitGroup3D = null;
-  if (repereDOrbiteVisible3D(panel)) {
-    // Fix 12.7: use the exact orbit center computed by framePanelCamera3D
-    // (stored in panel._orbitCx/Cy/Cz just before calling personaRenderer3D.render).
-    // This covers all cases: free orbit (camPanX/Y), camOrbitTargetId, and selected element.
-    const _osx = panel._orbitCx || 0;
-    const _osy = panel._orbitCy || 0;
-    const _osz = panel._orbitCz || 0;
-    const _dist = panel.camDist || PANEL_CAM_DEFAULT_DIST_3D;
-    // Fix 23: no minimum clamp on the radius: the sphere stays proportional to camDist
-    // (r = dist × 0.02) at every distance, so its apparent ANGULAR size stays
-    // constant (~1.1°) regardless of the zoom level.
-    // The old Math.max(0.03, ...) made the sphere grow below camDist=1.5 because the radius
-    // stayed at 0.03 while the camera→sphere distance kept decreasing.
-    const _r    = Math.min(0.60, _dist * 0.02);
-    const _aLen = Math.min(1.80, _dist * 0.07);
-
-    _orbitGroup3D = new THREE.Group();
-    _orbitGroup3D.position.set(_osx, _osy, _osz);
-
-    // Blue sphere
-    const _smesh = new THREE.Mesh(
-      new THREE.SphereGeometry(_r, 14, 10),
-      new THREE.MeshBasicMaterial({ color: 0x4496ff, transparent: true, opacity: 0.82, depthTest: false })
-    );
-    _smesh.renderOrder = 999;
-    _orbitGroup3D.add(_smesh);
-
-    // World XYZ gizmo : AxesHelper: X=red, Y=green, Z=blue
-    const _ax = new THREE.AxesHelper(_aLen);
-    _ax.traverse(o => { if (o.material) o.material.depthTest = false; });
-    _ax.renderOrder = 998;
-    _orbitGroup3D.add(_ax);
-
-    personaScene3D.add(_orbitGroup3D);
-  }
+  // #463 (demandé) : PLUS DE REPÈRE DANS L'IMAGE (la sphère et les axes au centre d'orbite, en mode
+  // Caméra et pendant une rotation de Scène) : le repère vit désormais dans le menu de droite, au style
+  // de l'éditeur de bâtiment, et celui de l'image cachait ce qu'on cadrait.
   // The shared renderer (personaRenderer3D) is configured with alpha:true/clearAlpha 0 (see
   // ensurePersonaScene3D) for renders of a SINGLE Element (e.g. preview in the modals), where
   // transparency around the rig is desired. For a Panel's COMBINED scene, however, this transparent
@@ -3351,15 +3310,6 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
   // C'est le rendu de Case qui les veut, c'est donc lui qui les allume et lui qui les repose ; un
   // aperçu n'a rien à savoir des ombres, et le prochain chemin d'aperçu sera correct sans effort.
   reposerOmbresPartagees3D();
-  // Immediate removal of the orbit group (sphere + axes) after rendering.
-  if (_orbitGroup3D) {
-    personaScene3D.remove(_orbitGroup3D);
-    _orbitGroup3D.traverse(o => {
-      if (o.geometry) o.geometry.dispose();
-      if (o.material) o.material.dispose();
-    });
-    _orbitGroup3D = null;
-  }
   // 2D copy of the WebGL render (canvas SHARED between all Panels) to a <canvas> dedicated to this
   // Panel, so it can be cached (see panelSceneCache3D) without risking a later render
   // of ANOTHER Panel overwriting this bitmap before it is drawn/reused.
@@ -3451,17 +3401,6 @@ export function elementNonVisible3D(o, panel, page, demander = true){
 // "Draw onto the page's 2D canvas" variant of renderPanelScene3D, with the same call signature as
 // drawPersona3D/drawObject3D (which it replaces, for Elements owned by a Panel, in
 // drawContent): a single combined render per Panel rather than an independent render per Element.
-/**
- * Le repère du centre d'orbite (sphère et axes) est-il affiché ? En mode Caméra d'une Case, comme
- * avant ; dans une Scène, qui n'a plus de mode Caméra, PENDANT une rotation (demandé) : il dit
- * autour de quoi l'on tourne, et s'efface une fois le geste fini.
- */
-export function repereDOrbiteVisible3D(panel){
-  if (!panel) return false;
-  if (panel.cameraMode) return true;
-  const g = S.dragOrig;
-  return !!S.editingSceneId && S.dragMode === 'panelCamRotate' && !!g && g.panelId === panel.id && !g.enAttente;
-}
 
 export function drawPanelScene3D(c, panel, page, styleKey, scale = 1){
   if (typeof THREE === 'undefined') return;

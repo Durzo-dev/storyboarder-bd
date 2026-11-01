@@ -138,3 +138,15 @@ test('la vitesse de rotation des objets : réglée, appliquée au plateau, aux a
   assert.match(lire('index.html'), /id="gestesObjetRange" min="25" max="200" step="25" value="100"/);
   assert.match(lire('events.js'), /window\.storyboarderAPI\.setSetting\('vitesseObjet3D', S\.appVitesseObjet3D\)/);
 });
+
+// Signalés : le glisser bougeait parfois en profondeur ; la molette semblait suivre un axe de l'Élément ;
+// le repère dans l'image faisait doublon avec celui du menu.
+test('déplacer un Élément : glisser dans un plan VERTICAL face à la caméra ; molette le long de l\'axe de la caméra (wxFloor écrit) ; plus de repère dans l\'image', () => {
+  const ev = readFileSync(new URL('../src/events.js', import.meta.url), 'utf8');
+  assert.match(ev, /const normaleGlisser = _bh >= 0\.5 \? \{ x: basis\.backward\.x \/ _bh, y: 0, z: basis\.backward\.z \/ _bh \} : \{ x: 0, y: 1, z: 0 \};/);
+  assert.match(ev, /panelDragRayOnPlane\(panel, page, x, y, planePoint, normaleGlisser\)/);
+  assert.match(ev, /const _dir = _bh > 1e-3 \? \{ x: basis\.backward\.x \/ _bh, z: basis\.backward\.z \/ _bh \}/);
+  assert.match(ev, /sel\.wxFloor = worldX;   \/\/ le côté aussi/);
+  const sc = readFileSync(new URL('../src/scene3d.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(sc, /_orbitGroup3D/);
+});

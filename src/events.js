@@ -2346,10 +2346,16 @@ canvasWrap.addEventListener('wheel', (e) => {
       // The scroll wheel changes depth (Z) and lateral offset (X, if the camera has a yaw), but
       // does NOT touch world height (Y): avoids the impression of "floating" when the camera is
       // tilted (backward.y ≠ 0) and the Element moves back along the viewing axis.
-      const rawDeltaZ = basis.backward.z * stepSigned;
+      // ⚠️ LE LONG DE L'AXE DE LA CAMÉRA, RAMENÉ À L'HORIZONTALE ET NORMÉ (signalé : il semblait
+      // suivre un axe de l'Élément). Deux défauts : le déplacement en X n'était écrit que dans la
+      // boîte 2D, alors que le rendu lit `wxFloor` (seul Z bougeait : l'axe Z du monde, quelle que
+      // soit la caméra) ; et une caméra plongeante le raccourcissait (cos de la plongée).
+      const _bh = Math.hypot(basis.backward.x, basis.backward.z);
+      const _dir = _bh > 1e-3 ? { x: basis.backward.x / _bh, z: basis.backward.z / _bh } : { x: 0, z: 1 };
+      const rawDeltaZ = _dir.z * stepSigned;
       const newZ = clampPanelDepth3D(oldZ + rawDeltaZ);
       const effectiveFraction = Math.abs(rawDeltaZ) > 1e-6 ? (newZ - oldZ) / rawDeltaZ : 1;
-      const worldX = worldX0 + basis.backward.x * stepSigned * effectiveFraction;
+      const worldX = (typeof sel.wxFloor === 'number' ? sel.wxFloor : worldX0) + _dir.x * stepSigned * effectiveFraction;
       const worldY = worldY0; // world height unchanged
       const panelCx = panel.x + panel.w / 2, panelCy = panel.y + panel.h / 2;
       const distNew = panelDepthToDistance3D(newZ);
@@ -2358,6 +2364,7 @@ canvasWrap.addEventListener('wheel', (e) => {
       const newCx = panelCx + worldX * factorNew, newCy = panelCy - worldY * factorNew;
       sel.z = newZ;
       sel.wzFloor = newZ;  // Phase 1: sync 3D source of truth
+      sel.wxFloor = worldX;   // le côté aussi : c'est lui que le rendu lit
       sel.w = newW; sel.h = newH;
       sel.x = newCx - newW / 2;
       sel.y = newCy - newH / 2;
@@ -3285,8 +3292,16 @@ window.addEventListener('mousemove', (e) => {
         // an un-rotated Camera, depth unchanged).
         const basis = panelCamBasis3D(panel);
         const planePoint = { x: worldX0, y: worldY0, z: oldZ };
-        const rayStart = panelDragRayOnPlane(panel, page, S.dragStart.x, S.dragStart.y, planePoint, basis.backward);
-        const rayNow = panelDragRayOnPlane(panel, page, x, y, planePoint, basis.backward);
+        // ⚠️ LE PLAN DU GLISSER EST VERTICAL, FACE À LA CAMÉRA (signalé : « il bouge parfois un peu en
+        // profondeur »). Le plan perpendiculaire à l'axe de visée PENCHE avec la caméra : un geste
+        // vertical y glissait aussi le long du sol, en profondeur. Vertical, il ne laisse que le côté
+        // (et la hauteur, qu'un Élément collé au Sol perd aussitôt) ; la profondeur, c'est la molette.
+        // Vue presque de dessus (plus de 60° de plongée), ce plan serait vu par la tranche : le sol
+        // (horizontal) le remplace, comme avant.
+        const _bh = Math.hypot(basis.backward.x, basis.backward.z);
+        const normaleGlisser = _bh >= 0.5 ? { x: basis.backward.x / _bh, y: 0, z: basis.backward.z / _bh } : { x: 0, y: 1, z: 0 };
+        const rayStart = panelDragRayOnPlane(panel, page, S.dragStart.x, S.dragStart.y, planePoint, normaleGlisser);
+        const rayNow = panelDragRayOnPlane(panel, page, x, y, planePoint, normaleGlisser);
         let worldX = worldX0 + dx / factorOld;
         let worldY = worldY0 - dy / factorOld;
         let newZ = oldZ;
