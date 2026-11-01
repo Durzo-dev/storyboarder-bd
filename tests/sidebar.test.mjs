@@ -2069,3 +2069,12 @@ test('Apparence de la bulle : forme, pointe, texture, couleur, opacité, écart 
   assert.ok(pos.every(p => p > 0), JSON.stringify(pos));
   assert.deepEqual(pos.slice().sort((a, b) => a - b), pos);
 });
+
+// Demandé : la section Style en second, juste sous le niveau d'avancement.
+test('menu des Bulles : Niveau d\'avancement, puis Style, puis Apparence', async () => {
+  const { readFileSync } = await import('node:fs');
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+  const pos = ['sideBubbleStackSection', 'sideBubbleStyleSection', 'sideBubbleAppearanceSection', 'sideBubbleBorderSection'].map(id => html.indexOf(`id="${id}"`));
+  assert.ok(pos.every(p => p > 0));
+  assert.deepEqual(pos.slice().sort((a, b) => a - b), pos);
+});

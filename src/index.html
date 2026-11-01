@@ -632,6 +632,31 @@
       <h2>Niveau d'avancement</h2>
       <div id="sideBubbleStackLevel" class="dim-chip"></div>
     </div>
+    <!-- ⚠️ EN SECOND, SOUS LE NIVEAU D'AVANCEMENT, À LA DEMANDE (elle était entre « Bordure » et
+         « Texte ») : on choisit un style d'abord, puis on retouche ce qu'il pose. Un style retient la
+         forme, la pointe, le trait, la texture, les couleurs et les réglages du texte.
+         ⚠️ LE MENU N'EXISTE QUE S'IL Y A QUELQUE CHOSE DEDANS. Une liste vide serait un contrôle
+         visible et inopérant, défaut que ce dépôt nomme et refuse ; il apparaît au premier style
+         enregistré. Le bouton, lui, s'ÉTEINT quand la Bulle porte déjà un style de la
+         bibliothèque — il n'y aurait rien à enregistrer que le doublon de ce qui existe. -->
+    <div id="sideBubbleStyleSection" class="side-section" style="display:none;">
+      <h2>Style</h2>
+      <div id="sideBubbleStyleListWrap" class="tome-format" style="display:none;">
+        <label for="sideBubbleStyleSelect">Styles enregistrés</label>
+        <select id="sideBubbleStyleSelect"></select>
+      </div>
+      <!-- ⚠️ UN BOUTON OU DEUX, JAMAIS UN BOUTON ÉTEINT. La première livraison grisait
+           « Enregistrer » quand la Bulle portait déjà un style : un contrôle visible et inopérant,
+           le défaut que ce dépôt nomme et refuse, et qui n'apprenait rien à qui le regardait.
+           Ce sont maintenant deux jeux exclusifs — enregistrer un style qui n'existe pas, ou agir
+           sur celui qu'on porte. `peutEnregistrerLeStyle3D` tranche, comme elle tranchait l'état
+           grisé : la décision n'a pas changé, seulement ce qu'on en fait. -->
+      <button id="sideBubbleStyleSaveBtn" class="full-btn" type="button">Enregistrer</button>
+      <button id="sideBubbleStyleRenameBtn" class="full-btn" type="button">Renommer</button>
+      <!-- ⚠️ ROUGE, PARCE QUE LE ROUGE VEUT DIRE SUPPRIMER (#398). Le bouton « Séparer » avait été
+           mis en orange pour cette raison exacte : il ne supprimait rien. Ici, si. -->
+      <button id="sideBubbleStyleDeleteBtn" class="full-btn delete-btn" type="button">Supprimer</button>
+    </div>
     <div id="sideBubbleAppearanceSection" class="side-section" style="display:none;">
       <h2 id="sideBubbleAppearanceTitle">Apparence de la bulle</h2>
       <div id="sideBubbleAppearanceWrap" class="side-bulle-appearance">
@@ -758,31 +783,6 @@
           <option value="tremble">Tremblé</option>
         </select>
       </div>
-    </div>
-    <!-- ⚠️ ENTRE « BORDURE » ET « TEXTE », À LA DEMANDE. Un style retient tout ce qui précède —
-         forme, pointe, trait, texture, couleurs — ET les réglages de texte qui suivent : la section
-         se lit donc naturellement au milieu de ce qu'elle résume.
-         ⚠️ LE MENU N'EXISTE QUE S'IL Y A QUELQUE CHOSE DEDANS. Une liste vide serait un contrôle
-         visible et inopérant, défaut que ce dépôt nomme et refuse ; il apparaît au premier style
-         enregistré. Le bouton, lui, s'ÉTEINT quand la Bulle porte déjà un style de la
-         bibliothèque — il n'y aurait rien à enregistrer que le doublon de ce qui existe. -->
-    <div id="sideBubbleStyleSection" class="side-section" style="display:none;">
-      <h2>Style</h2>
-      <div id="sideBubbleStyleListWrap" class="tome-format" style="display:none;">
-        <label for="sideBubbleStyleSelect">Styles enregistrés</label>
-        <select id="sideBubbleStyleSelect"></select>
-      </div>
-      <!-- ⚠️ UN BOUTON OU DEUX, JAMAIS UN BOUTON ÉTEINT. La première livraison grisait
-           « Enregistrer » quand la Bulle portait déjà un style : un contrôle visible et inopérant,
-           le défaut que ce dépôt nomme et refuse, et qui n'apprenait rien à qui le regardait.
-           Ce sont maintenant deux jeux exclusifs — enregistrer un style qui n'existe pas, ou agir
-           sur celui qu'on porte. `peutEnregistrerLeStyle3D` tranche, comme elle tranchait l'état
-           grisé : la décision n'a pas changé, seulement ce qu'on en fait. -->
-      <button id="sideBubbleStyleSaveBtn" class="full-btn" type="button">Enregistrer</button>
-      <button id="sideBubbleStyleRenameBtn" class="full-btn" type="button">Renommer</button>
-      <!-- ⚠️ ROUGE, PARCE QUE LE ROUGE VEUT DIRE SUPPRIMER (#398). Le bouton « Séparer » avait été
-           mis en orange pour cette raison exacte : il ne supprimait rien. Ici, si. -->
-      <button id="sideBubbleStyleDeleteBtn" class="full-btn delete-btn" type="button">Supprimer</button>
     </div>
     <div id="sideCameraSection" style="display:none;">
       <div class="menu-header">
