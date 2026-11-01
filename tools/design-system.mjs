@@ -248,10 +248,14 @@ const scene = (titre, note, contenu, { hauteur = null, classe = '' } = {}) => `
 function specimens(html){
   const s = {};
   // L'en-tête et l'application entière : menu de gauche, Planche, menu de droite (la Case).
-  const scroll = fragment(html, 'rightPanelScroll');
-  const marqueurs = ['pageMenuHeader', 'panelMenuHeader', 'bubbleMenuHeader', 'sideCameraSection', 'helpMenuHeader'];
+  // La Caméra est un BLOC à part (en tête du menu d'une Scène, demandé) : prise entière, puis retirée,
+  // pour que les autres groupes se découpent d'un en-tête à l'autre quel que soit son rang.
+  const camera = fragment(html, 'sideCameraSection');
+  const scroll = fragment(html, 'rightPanelScroll').replace(camera, '');
+  const marqueurs = ['pageMenuHeader', 'panelMenuHeader', 'bubbleMenuHeader', 'helpMenuHeader'];
   const debuts = marqueurs.map(id => scroll.lastIndexOf('<', scroll.indexOf(`id="${id}"`)));
   const groupes = Object.fromEntries(marqueurs.map((id, k) => [id, scroll.slice(debuts[k], k + 1 < debuts.length ? debuts[k + 1] : scroll.lastIndexOf('</div>'))]));
+  groupes.sideCameraSection = camera;
   const panneau = (contenu) => `<div class="right-panel" id="rightPanel"><div class="right-panel-scroll" id="rightPanelScroll">${equilibrer(montrer(contenu))}</div></div>`;
   let case_ = remplir(montrer(groupes.panelMenuHeader), 'sideDims', DIMENSIONS);
   case_ = texte(case_, 'sideStackLevel', 'Encrage', 'Inking');

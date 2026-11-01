@@ -1807,14 +1807,22 @@ export function refreshCameraSliders(panel){
       options.push({ value: 'el:' + o.id, label: o.name || type });
     }
   }
-  // Rebuild the select's options only if they changed (avoids unnecessary flicker)
-  camOrbitTargetSelect.innerHTML = '';
-  for (const opt of options) {
-    const el = document.createElement('option');
-    el.value = opt.value; el.textContent = opt.label;
-    camOrbitTargetSelect.appendChild(el);
+  // ⚠️ LA LISTE N'EST REFAITE QUE SI ELLE A CHANGÉ, ET JAMAIS PENDANT QU'ELLE EST OUVERTE (signalé :
+  // elle se refermait aussitôt ouverte). Cette fonction est appelée à CHAQUE image pendant que la
+  // caméra glisse vers sa cible ; vider le <select> le referme. Le même défaut que le menu « Montrer
+  // jusqu'à » du bâtiment (#459a), et le même remède : une signature, et le focus respecté.
+  const signature = JSON.stringify(options);
+  if (document.activeElement === camOrbitTargetSelect) return;
+  if (camOrbitTargetSelect._signature !== signature) {
+    camOrbitTargetSelect._signature = signature;
+    camOrbitTargetSelect.innerHTML = '';
+    for (const opt of options) {
+      const el = document.createElement('option');
+      el.value = opt.value; el.textContent = opt.label;
+      camOrbitTargetSelect.appendChild(el);
+    }
   }
-  camOrbitTargetSelect.value = panel.camOrbitTargetId || '';
+  if (camOrbitTargetSelect.value !== (panel.camOrbitTargetId || '')) camOrbitTargetSelect.value = panel.camOrbitTargetId || '';
   // If the stored value no longer exists (element deleted), fall back to "None"
   if (camOrbitTargetSelect.value !== (panel.camOrbitTargetId || '')) {
     panel.camOrbitTargetId = null;

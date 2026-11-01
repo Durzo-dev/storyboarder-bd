@@ -213,7 +213,7 @@ export const I18N_TEXT = [
   ['#sideBubbleBorderRegularitySelect option[value="tremble"]', 'Wobbly', 'Tremblé'],
   // Caméra menu
   ['#sideCameraCloseBtn', null, null, 'title', 'Exit Camera mode (C)', 'Quitter le mode Caméra (C)'],
-  ['#sideCameraSection .side-section:nth-of-type(2) > h2', '3D gizmo', 'Repère 3D'],
+  ['#sideCameraGizmoSection > h2', '3D gizmo', 'Repère 3D'],
   ['#sceneTopDownBtn', 'Top-down view', 'Vue de dessus'],
   ['#sideCameraRepere', null, null, 'title', 'Drag to orient the camera; click Y or X to turn around it only', 'Glisser pour orienter la caméra ; cliquer Y ou X pour ne tourner que sur lui'],
   // ⚠️ ICI, ET PAS AILLEURS. Une entrée à ATTRIBUT n'est lue que par I18N_TEXT ; les autres tables
@@ -222,8 +222,6 @@ export const I18N_TEXT = [
   ['#sideLightDomeCanvas', null, null, 'title',
     'Click and drag: move the sun. Right-drag: rotate the view',
     'Cliquer-glisser : déplacer le soleil. Clic droit glissé : tourner la vue'],
-  ['#sideCameraSection .side-section:nth-of-type(3) > h2', 'Rotation', 'Rotation'],
-  ['#sideCameraSection .side-section:nth-of-type(4) > h2', 'Translation', 'Translation'],
   // Description / Bulle text
   ['#sideDescTitle', 'Description', 'Description'],
   ['label[for="sideBubbleFontSelect"]', 'Font', "Police d'écriture"],

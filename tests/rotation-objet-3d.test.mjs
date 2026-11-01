@@ -100,3 +100,16 @@ test('caméra : l\'axe verrouille le glisser sur la Case ; le centre de rotation
   assert.ok(html.indexOf('id="camOrbitTargetSelect"') > html.indexOf('id="sideCameraRepere"'));
 });
 
+// Signalé : la liste du centre de rotation se refermait aussitôt ouverte (refaite à chaque image).
+test('caméra : la liste du centre de rotation n\'est refaite que si elle change, jamais ouverte ; la Caméra en tête du menu', () => {
+  const sb = readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8');
+  const f = sb.slice(sb.indexOf('export function refreshCameraSliders'), sb.indexOf('export function renderSideCameraGizmo'));
+  assert.match(f, /if \(document\.activeElement === camOrbitTargetSelect\) return;/);
+  assert.match(f, /if \(camOrbitTargetSelect\._signature !== signature\) \{/);
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+  const h = html.indexOf('id="panelMenuHeader"'), c = html.indexOf('id="sideCameraSection"');
+  assert.ok(h > 0 && c > h && c < html.indexOf('id="sideDimsSection"') && c < html.indexOf('id="sideLightSection"'));
+  const i18n = readFileSync(new URL('../src/i18n.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(i18n, /sideCameraSection \.side-section:nth-of-type/, 'un sélecteur par rang renommerait la section Mesure');
+});
+

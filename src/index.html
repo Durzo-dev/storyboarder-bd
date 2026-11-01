@@ -457,6 +457,48 @@
       <span class="menu-title"><span id="panelMenuTitle">Case</span><span id="panelMenuNumber" class="case-menu-number"></span></span>
       <button id="panelMenuCloseBtn" class="menu-close-btn" type="button" title="Fermer">&times;</button>
     </div>
+    <!-- La Caméra, TOUT EN HAUT du menu d'une Scène (demandé), juste sous son en-tête ; en mode Caméra
+         d'une Case, elle est seule à l'écran. -->
+    <div id="sideCameraSection" style="display:none;">
+      <div class="menu-header">
+        <span></span>
+        <span class="menu-title">Caméra</span>
+        <button id="sideCameraCloseBtn" class="menu-close-btn" type="button" title="Quitter le mode Caméra (C)">&times;</button>
+      </div>
+
+      <div class="side-section" id="sideCameraGizmoSection">
+        <h2>Repère 3D</h2>
+        <!-- Le repère de l'éditeur de bâtiment (demandé) : les axes du monde vus par la caméra ; glisser
+             l'oriente, un clic sur Y ou X limite le glisser à cet angle. Ses angles se saisissent dessous
+             (plus de curseurs). -->
+        <div id="sideCameraRepere" class="batiment-meuble-repere camera-repere" title="Glisser pour orienter la caméra ; cliquer Y ou X pour ne tourner que sur lui"></div>
+        <div class="batiment-meuble-angles camera-angles">
+          <label id="camRotYLabel"><span>Horizontale</span><input type="number" id="camRotYInput" min="-180" max="180" step="1" value="0"></label>
+          <label id="camRotXLabel"><span>Verticale</span><input type="number" id="camRotXInput" min="-85" max="85" step="1" value="0"></label>
+        </div>
+        <!-- Uniquement pour le canevas d'une Scène (cf. isLockedScenePanel), pas pour les Cases
+             normales : sur demande utilisateur, un bouton pour basculer en vue de dessus, et y
+             rebasculer fait revenir à la vue qui était active juste avant le premier clic. -->
+        <button id="sceneTopDownBtn" type="button" style="display:none;">Vue de dessus</button>
+        <!-- Le centre de rotation, ici (demandé) : les sections Rotation et Translation, qui ne portaient
+             que des sensibilités (réglées dans la Configuration, « Gestes 3D »), sont retirées. -->
+        <div class="tome-format">
+          <label for="camOrbitTargetSelect">Centre de rotation</label>
+          <select id="camOrbitTargetSelect" style="width:100%; margin-top:4px;">
+            <option value="">Aucun (caméra libre)</option>
+          </select>
+        </div>
+      </div>
+
+
+      <!-- Section Mesure : visible uniquement en vue de dessus, gérée par startMeasureTool/stopMeasureTool -->
+      <div class="side-section" id="sideMesureSection" style="display:none;">
+        <h2>Mesure</h2>
+        <div id="sideMesureStatus" style="font-size:var(--texte-libelle); color:var(--text-muted,#aaa); margin-bottom:6px;">Cliquez un 1er point sur le sol.</div>
+        <div id="sideMesureResult" style="font-size:20px; font-weight:bold; text-align:center; padding:4px 0; display:none;"></div>
+        <button id="sideMesureEffacer" type="button" style="width:100%; margin-top:6px;">✖ Terminer</button>
+      </div>
+    </div>
     <div id="sideDimsSection" class="side-section" style="display:none;">
       <h2 id="sideDimsTitle">Dimensions</h2>
       <div id="sideDims" class="side-dims"></div>
@@ -782,46 +824,6 @@
           <option value="net" selected>Net</option>
           <option value="tremble">Tremblé</option>
         </select>
-      </div>
-    </div>
-    <div id="sideCameraSection" style="display:none;">
-      <div class="menu-header">
-        <span></span>
-        <span class="menu-title">Caméra</span>
-        <button id="sideCameraCloseBtn" class="menu-close-btn" type="button" title="Quitter le mode Caméra (C)">&times;</button>
-      </div>
-
-      <div class="side-section" id="sideCameraGizmoSection">
-        <h2>Repère 3D</h2>
-        <!-- Le repère de l'éditeur de bâtiment (demandé) : les axes du monde vus par la caméra ; glisser
-             l'oriente, un clic sur Y ou X limite le glisser à cet angle. Ses angles se saisissent dessous
-             (plus de curseurs). -->
-        <div id="sideCameraRepere" class="batiment-meuble-repere camera-repere" title="Glisser pour orienter la caméra ; cliquer Y ou X pour ne tourner que sur lui"></div>
-        <div class="batiment-meuble-angles camera-angles">
-          <label id="camRotYLabel"><span>Horizontale</span><input type="number" id="camRotYInput" min="-180" max="180" step="1" value="0"></label>
-          <label id="camRotXLabel"><span>Verticale</span><input type="number" id="camRotXInput" min="-85" max="85" step="1" value="0"></label>
-        </div>
-        <!-- Uniquement pour le canevas d'une Scène (cf. isLockedScenePanel), pas pour les Cases
-             normales : sur demande utilisateur, un bouton pour basculer en vue de dessus, et y
-             rebasculer fait revenir à la vue qui était active juste avant le premier clic. -->
-        <button id="sceneTopDownBtn" type="button" style="display:none;">Vue de dessus</button>
-        <!-- Le centre de rotation, ici (demandé) : les sections Rotation et Translation, qui ne portaient
-             que des sensibilités (réglées dans la Configuration, « Gestes 3D »), sont retirées. -->
-        <div class="tome-format">
-          <label for="camOrbitTargetSelect">Centre de rotation</label>
-          <select id="camOrbitTargetSelect" style="width:100%; margin-top:4px;">
-            <option value="">Aucun (caméra libre)</option>
-          </select>
-        </div>
-      </div>
-
-
-      <!-- Section Mesure : visible uniquement en vue de dessus, gérée par startMeasureTool/stopMeasureTool -->
-      <div class="side-section" id="sideMesureSection" style="display:none;">
-        <h2>Mesure</h2>
-        <div id="sideMesureStatus" style="font-size:var(--texte-libelle); color:var(--text-muted,#aaa); margin-bottom:6px;">Cliquez un 1er point sur le sol.</div>
-        <div id="sideMesureResult" style="font-size:20px; font-weight:bold; text-align:center; padding:4px 0; display:none;"></div>
-        <button id="sideMesureEffacer" type="button" style="width:100%; margin-top:6px;">✖ Terminer</button>
       </div>
     </div>
     <div id="sideDescSection" class="side-section">
