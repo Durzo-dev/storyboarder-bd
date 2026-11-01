@@ -314,7 +314,11 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, 
       murCourant = m;
       const f = formes.get(m.id); if (!f) return;
       // #454b : les murs montent jusqu'au plancher du dessus, à travers sa dalle (façade continue).
-      const hauteur = m.hauteurPropre || hauteurDesMursDuNiveau(b, n.id);
+      let hauteur = m.hauteurPropre || hauteurDesMursDuNiveau(b, n.id);
+      // #454g (signalé) : dans une Case, les murs d'un SOUS-SOL s'arrêtent juste SOUS le Sol : sinon
+      // leur dessus, au ras du Sol, s'y voyait là où le sous-sol dépasse du rez-de-chaussée. Sous la
+      // maison, ils finissent dans la dalle de son plancher.
+      if (sansDalleDuDessus(n)) hauteur = Math.min(hauteur, -SOUS_LE_SOL - n.elevation);
       // #454a-3c : le mur tranché à ses ouvertures ; sous et au-dessus de chacune, l'allège et le linteau.
       const siennes = (b.ouvertures || []).filter(o => o.murId === m.id);
       const { pleins, percees } = morceauxDuMur(f, m, siennes.map(o => intervalleDe(o, m)));
@@ -376,6 +380,9 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, 
   }
   return groupe;
 }
+
+/** De combien les murs d'un sous-sol restent sous le Sol dans une Case (#454g) : plus que l'écart du contact au Sol. */
+const SOUS_LE_SOL = 0.03;
 
 /** La marque du pochoir du Sol percé (#454g), partagée avec le Sol de rig3d.js. */
 export const MARQUE_SOL_PERCE = 1;

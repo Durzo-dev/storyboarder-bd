@@ -163,3 +163,21 @@ test('raccourcis : Maj+N un sous-sol, Maj+D dupliquer en dessous ; infobulles co
   for (const t of ['Ajouter un étage (N)', 'Dupliquer au-dessus (D)', 'Ajouter un sous-sol (Maj+N)', 'Dupliquer en dessous (Maj+D)']) assert.ok(ui.includes(`'${t}'`), t);
 });
 
+test('signalé : dans une Case, les murs du sous-sol ne ressortent pas du Sol', () => {
+  const T = globalThis.THREE;
+  const { b } = avecSousSol();
+  // Au-delà du rez-de-chaussée (x > 6.5), rien ne monte au ras du Sol.
+  const haut = (g) => {
+    let y = -Infinity;
+    g.updateMatrixWorld(true);
+    g.traverse(o => {
+      if (!o.isMesh || !o.geometry || (o.userData && o.userData.masqueDuSol)) return;
+      const pos = o.geometry.attributes.position, v = new T.Vector3();
+      for (let i = 0; i < pos.count; i++) { v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld); if (v.x > 6.5) y = Math.max(y, v.y); }
+    });
+    return y;
+  };
+  assert.ok(haut(construireBatiment3D(T, b, materiauxBatiment3D(T), { percerLeSol: true })) <= -0.03 + 1e-6);
+  assert.ok(haut(construireBatiment3D(T, b, materiauxBatiment3D(T))) > -0.01, 'dans l\'éditeur, jusqu\'en haut');
+});
+
