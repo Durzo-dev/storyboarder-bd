@@ -75,3 +75,17 @@ test('le geste selon la caméra : de face (moins de 45° de plongée), le platea
   assert.match(ev, /axe: _mode === 'droit' \? \{ x: 0, y: -1, versOeil: false \}/);
 });
 
+
+// Demandé : le repère de la caméra au style de l'éditeur de bâtiment, ses angles en champs (plus de curseurs).
+test('caméra : le repère SVG (axes du monde vus par la caméra), Y et X cliquables, deux champs d\'angle', () => {
+  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+  const sb = readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8');
+  const ev = readFileSync(new URL('../src/events.js', import.meta.url), 'utf8');
+  assert.match(html, /id="sideCameraRepere" class="batiment-meuble-repere camera-repere"/);
+  assert.match(html, /<input type="number" id="camRotYInput"/);
+  assert.match(html, /<input type="number" id="camRotXInput"/);
+  assert.doesNotMatch(html, /id="sideCameraGizmoCanvas"|type="range" id="camRot[XY]Input"/);
+  assert.match(sb, /const p = projectAxisDir3D\(v, basis\);/);
+  assert.match(ev, /if \(S\.camAxeActif !== 'x'\) panel\.camRotYTarget =/);
+  assert.match(ev, /S\.camAxeActif = S\.camAxeActif === g\.axe \? null : g\.axe;/);
+});

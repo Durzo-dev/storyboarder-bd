@@ -271,6 +271,7 @@ export const S = {
   lastSaveDate:            null,
   renameModalContext:      null,
   confirmActionResolve:    null,
+  camAxeActif:             null, // le repère de la caméra : 'y' (horizontale), 'x' (verticale) ou null
   messagesMasques:         [],   // #434 : les confirmations masquées (« Ne plus afficher ce message »)
   quittingConfirmed:       false,
   appTheme:                'dark',

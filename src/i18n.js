@@ -63,6 +63,8 @@ export const I18N_TEXT = [
   ['#batimentPieceSupprimer', 'Delete the room', 'Supprimer la pièce'],
   ['#batimentCourSupprimer', 'Delete the courtyard', 'Supprimer la cour'],
   ['#tracéThicknessLabel', 'Thickness (cm)', 'Épaisseur (cm)'],
+  ['#camRotYLabel > span', 'Horizontal', 'Horizontale'],
+  ['#camRotXLabel > span', 'Vertical', 'Verticale'],
   ['#messagesMasquesLabel', 'Confirmation messages', 'Messages de confirmation'],
   ['#reafficherMessagesBtn', 'Show hidden messages again', 'Réafficher les messages masqués'],
   ['#personaRedresserBtn', 'Set upright', 'Remettre droit'],
@@ -213,7 +215,7 @@ export const I18N_TEXT = [
   ['#sideCameraCloseBtn', null, null, 'title', 'Exit Camera mode (C)', 'Quitter le mode Caméra (C)'],
   ['#sideCameraSection .side-section:nth-of-type(2) > h2', '3D gizmo', 'Repère 3D'],
   ['#sceneTopDownBtn', 'Top-down view', 'Vue de dessus'],
-  ['#sideCameraGizmoCanvas', null, null, 'title', 'Click and drag to orient the camera', "Cliquer-glisser pour orienter la caméra"],
+  ['#sideCameraRepere', null, null, 'title', 'Drag to orient the camera; click Y or X to turn around it only', 'Glisser pour orienter la caméra ; cliquer Y ou X pour ne tourner que sur lui'],
   // ⚠️ ICI, ET PAS AILLEURS. Une entrée à ATTRIBUT n'est lue que par I18N_TEXT ; les autres tables
   // déstructurent `[sel, en, fr]` et l'ignoreraient en silence. C'est exactement le défaut #371, et
   // c'est son test qui m'a repris quand j'avais rangé celle-ci à côté des libellés de la section.
@@ -754,8 +756,6 @@ export const I18N_CASES = [
  */
 export const I18N_AVANT_NOMBRE = [
   ['label[for="camSensRotInput"]', 'Sensitivity (', 'Sensibilité ('],
-  ['label[for="camRotYInput"]', 'Horizontal rotation (', 'Rotation horizontale ('],
-  ['label[for="camRotXInput"]', 'Vertical rotation (', 'Rotation verticale ('],
   ['label[for="camSensPanInput"]', 'Sensitivity (', 'Sensibilité ('],
   // Écrits un par un dans applyI18n jusqu'à #461 ; même forme, donc même table.
   ['label[for="sideBubblePaddingInput"]', 'Inside padding (', 'Écart intérieur ('],

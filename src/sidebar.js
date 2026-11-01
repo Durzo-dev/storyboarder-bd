@@ -43,7 +43,7 @@ import { estUneLumiere3D } from './light-source-3d.js';
 import { groupeReplie, memoriserGroupe } from './section-memory.js';
 import {
   findOwningPanel, centerSceneCameraOnElement, centerSceneCameraOnRoom,
-  drawAxisGizmoAt, panelSceneCache3D,
+  panelCamBasis3D, projectAxisDir3D, panelSceneCache3D,
   elementNonVisible3D, cameraEnMouvement3D,
 } from './scene3d.js';
 import { getPanelPoints, drawCurrentPage, queueEffectiveDeLaBulle } from './draw.js';
@@ -371,11 +371,9 @@ const camSensRotValue = document.getElementById('camSensRotValue');
 const camSensPanInput = document.getElementById('camSensPanInput');
 const camSensPanValue = document.getElementById('camSensPanValue');
 const camRotYInput = document.getElementById('camRotYInput');
-const camRotYValue = document.getElementById('camRotYValue');
 const camRotXInput = document.getElementById('camRotXInput');
-const camRotXValue = document.getElementById('camRotXValue');
 const camOrbitTargetSelect = document.getElementById('camOrbitTargetSelect');
-const sideCameraGizmoCanvas = document.getElementById('sideCameraGizmoCanvas');
+const sideCameraRepere = document.getElementById('sideCameraRepere');
 const sceneTopDownBtn = document.getElementById('sceneTopDownBtn');
 
 
@@ -1793,8 +1791,11 @@ export function refreshCameraSliders(panel){
   camSensPanInput.value = sensPan; camSensPanValue.textContent = sensPan;
   const rotYDeg = Math.round((panel.camRotY || 0) * 180 / Math.PI);
   const rotXDeg = Math.round((panel.camRotX || 0) * 180 / Math.PI);
-  camRotYInput.value = rotYDeg; camRotYValue.textContent = rotYDeg;
-  camRotXInput.value = rotXDeg; camRotXValue.textContent = rotXDeg;
+  // Les champs d'angle (demandé, à la place des curseurs) : pas réécrits pendant qu'on y tape.
+  if (document.activeElement !== camRotYInput) camRotYInput.value = rotYDeg;
+  if (document.activeElement !== camRotXInput) camRotXInput.value = rotXDeg;
+  document.getElementById('camRotYLabel').classList.toggle('actif', S.camAxeActif === 'y');
+  document.getElementById('camRotXLabel').classList.toggle('actif', S.camAxeActif === 'x');
   // Populates the "Rotation center" selector with this panel's Elements (perso + objet3d).
   // Walls belonging to the same Room are grouped into a single "Room: [label]" entry.
   const page = currentPageData();
@@ -1829,12 +1830,30 @@ export function refreshCameraSliders(panel){
   }
 }
 
+/**
+ * LE REPÈRE DE LA CAMÉRA, au style de celui de l'éditeur de bâtiment (demandé) : les axes X, Y, Z du
+ * MONDE vus par la caméra de la Case (ils tournent avec elle), du plus loin au plus proche. Y et X se
+ * cliquent : l'axe actif (`S.camAxeActif`) est épais, et le glisser sur le repère ne tourne plus que
+ * sur lui (Y : horizontale, X : verticale) ; Z, le roulis, n'existe pas pour la caméra.
+ */
 export function renderSideCameraGizmo(panel){
-  if (!sideCameraGizmoCanvas) return;
-  const ctx = sideCameraGizmoCanvas.getContext('2d');
-  const w = sideCameraGizmoCanvas.width, h = sideCameraGizmoCanvas.height;
-  ctx.clearRect(0, 0, w, h);
-  drawAxisGizmoAt(ctx, w / 2, h / 2, 32, panel);
+  if (!sideCameraRepere) return;
+  const basis = panelCamBasis3D(panel);
+  const o = { x: 70, y: 62 };
+  const axe = (v, coul, nom, cliquable) => {
+    const p = projectAxisDir3D(v, basis);
+    const q = { x: o.x + p.sx * 48, y: o.y + p.sy * 48, depth: p.depth };
+    const actif = cliquable && S.camAxeActif === nom.toLowerCase();
+    const attenue = cliquable && S.camAxeActif && !actif;
+    return { depth: p.depth, svg: `<g${cliquable ? ` data-axe="${nom.toLowerCase()}"` : ''} opacity="${attenue ? 0.4 : 1}">`
+      + (cliquable ? `<line x1="${o.x}" y1="${o.y}" x2="${q.x.toFixed(1)}" y2="${q.y.toFixed(1)}" stroke="transparent" stroke-width="14" stroke-linecap="round"/>` : '')
+      + `<line x1="${o.x}" y1="${o.y}" x2="${q.x.toFixed(1)}" y2="${q.y.toFixed(1)}" stroke="${coul}" stroke-width="${actif ? 3.5 : 2.5}" stroke-linecap="round"/>`
+      + `<circle cx="${q.x.toFixed(1)}" cy="${q.y.toFixed(1)}" r="${actif ? 5 : 3.5}" fill="${coul}"/>`
+      + `<text x="${(q.x + (q.x - o.x) * 0.2).toFixed(1)}" y="${(q.y + (q.y - o.y) * 0.2 + 4).toFixed(1)}" fill="${coul}" font-size="12" font-weight="700" text-anchor="middle">${nom}</text></g>` };
+  };
+  const axes = [axe({ x: 1, y: 0, z: 0 }, '#e5534b', 'X', true), axe({ x: 0, y: 1, z: 0 }, '#57ab5a', 'Y', true), axe({ x: 0, y: 0, z: 1 }, '#539bf5', 'Z', false)]
+    .sort((a, b) => a.depth - b.depth);
+  sideCameraRepere.innerHTML = `<svg viewBox="0 0 140 124">${axes.map(a => a.svg).join('')}<circle cx="${o.x}" cy="${o.y}" r="3" fill="currentColor"/></svg>`;
 }
 
 export function refreshSceneTopDownBtn(panel){

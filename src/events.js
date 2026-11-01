@@ -7211,15 +7211,13 @@ const bubbleMenuCloseBtn = document.getElementById('bubbleMenuCloseBtn');
 const rightPanel = document.getElementById('rightPanel');
 const helpMenuCloseBtn = document.getElementById('helpMenuCloseBtn');
 const sideCameraCloseBtn = document.getElementById('sideCameraCloseBtn');
-const sideCameraGizmoCanvas = document.getElementById('sideCameraGizmoCanvas');
+const sideCameraRepere = document.getElementById('sideCameraRepere');
 const camSensRotInput = document.getElementById('camSensRotInput');
 const camSensRotValue = document.getElementById('camSensRotValue');
 const camSensPanInput = document.getElementById('camSensPanInput');
 const camSensPanValue = document.getElementById('camSensPanValue');
 const camRotYInput = document.getElementById('camRotYInput');
-const camRotYValue = document.getElementById('camRotYValue');
 const camRotXInput = document.getElementById('camRotXInput');
-const camRotXValue = document.getElementById('camRotXValue');
 const sceneTopDownBtn = document.getElementById('sceneTopDownBtn');
 const camOrbitTargetSelect = document.getElementById('camOrbitTargetSelect');
 // [STATE→S] let S.sideDescTarget = null;
@@ -7576,7 +7574,7 @@ document.getElementById('terrainModal').addEventListener('click', function(e){
 // Draws the panel's 3D gizmo (X/Y/Z axes) in the Camera menu's dedicated small canvas (cf.
 // sideCameraGizmoCanvas), centered on this canvas rather than anchored to a Panel's corner on the
 // main canvas, per user request ("the 3D gizmo should no longer display at the bottom left of a
-// Panel but in the Camera menu"). Reuses drawAxisGizmoAt/panelCamBasis3D, which only depend on
+// Panel but in the Camera menu"). Reuses panelCamBasis3D/projectAxisDir3D (the SVG repère), which only depend on
 // panel.camRotX/camRotY, so the rendering stays consistent with the Panel's real Three.js camera.
 // Camera menu's "Top-down view" button: only relevant for a Scene's locked canvas (cf.
 // isLockedScenePanel), not for normal Panels (per user request, "This button should only be
@@ -7647,7 +7645,7 @@ camRotYInput.addEventListener('input', () => {
   if (!S.sideCameraTarget) return;
   if (!S.camRotSliderSnapshotTaken) { snapshot(); S.camRotSliderSnapshotTaken = true; }
   const deg = parseInt(camRotYInput.value, 10);
-  camRotYValue.textContent = deg;
+  if (!Number.isFinite(deg)) return;   // un champ vidé pendant la saisie
   S.sideCameraTarget.camRotYTarget = deg * Math.PI / 180;
   // Fix 13c (slider): same principle as the reverse snap on panelCamRotate mousedown,
   // freeze the orbit center at its CURRENT value to prevent post-zoom smoothing
@@ -7664,7 +7662,7 @@ camRotXInput.addEventListener('input', () => {
   if (!S.sideCameraTarget) return;
   if (!S.camRotSliderSnapshotTaken) { snapshot(); S.camRotSliderSnapshotTaken = true; }
   const deg = clamp(parseInt(camRotXInput.value, 10), -85, 85);  // Phase 10: ±85° max
-  camRotXValue.textContent = deg;
+  if (!Number.isFinite(deg)) return;
   S.sideCameraTarget.camRotXTarget = deg * Math.PI / 180;
   // Fix 13c (slider): same as camRotYInput above.
   const _st = S.sideCameraTarget;
@@ -7749,27 +7747,31 @@ helpMenuCloseBtn.addEventListener('click', () => {
 // Dedicated drag state (S.camGizmoDrag), independent of the main canvas's global S.dragMode since
 // it's a completely different element (the side menu's small canvas).
 // [STATE→S] let S.camGizmoDrag = null;
-sideCameraGizmoCanvas.addEventListener('mousedown', (e) => {
+sideCameraRepere.addEventListener('mousedown', (e) => {
   if (!S.sideCameraTarget) return;
   snapshot();
   S.camGizmoDrag = {
     x: e.clientX, y: e.clientY,
+    // Un clic SANS glisser sur Y ou X le rend actif (ou le relâche) : le glisser ne tourne plus que sur lui.
+    axe: (e.target.closest && e.target.closest('[data-axe]')) ? e.target.closest('[data-axe]').dataset.axe : null, bouge: false,
     panel: S.sideCameraTarget,
     camRotX: S.sideCameraTarget.camRotX || 0,
     camRotY: S.sideCameraTarget.camRotY || 0
   };
-  sideCameraGizmoCanvas.style.cursor = 'grabbing';
+  sideCameraRepere.style.cursor = 'grabbing';
   e.preventDefault();
 });
 window.addEventListener('mousemove', (e) => {
   if (!S.camGizmoDrag) return;
   const panel = S.camGizmoDrag.panel;
   const dx = e.clientX - S.camGizmoDrag.x, dy = e.clientY - S.camGizmoDrag.y;
+  if (Math.hypot(dx, dy) > 3) S.camGizmoDrag.bouge = true;
   const camRotSens = panel.camRotSensitivity != null ? panel.camRotSensitivity : 1;
   // La vitesse commune à tous les gestes 3D (vitesseRotation3D, utils.js, demandé) ; ici déjà en
   // pixels d'écran.
-  panel.camRotYTarget = wrapAngle(S.camGizmoDrag.camRotY + dx * vitesseRotation3D() * camRotSens);
-  panel.camRotXTarget = wrapAngle(S.camGizmoDrag.camRotX - dy * vitesseRotation3D() * camRotSens);
+  // L'axe actif (cliqué sur le repère) limite le glisser à son angle.
+  if (S.camAxeActif !== 'x') panel.camRotYTarget = wrapAngle(S.camGizmoDrag.camRotY + dx * vitesseRotation3D() * camRotSens);
+  if (S.camAxeActif !== 'y') panel.camRotXTarget = wrapAngle(S.camGizmoDrag.camRotX - dy * vitesseRotation3D() * camRotSens);
   // Fix 13c (gizmo): freeze the orbit center at its CURRENT value on every frame of the drag.
   // Fix 13d: the snap is applied on EVERY mousemove (no more one-shot _snapped flag) because
   // framePanelCamera3D can rewrite camWxTarget between two animation frames (notably via the
@@ -7783,8 +7785,14 @@ window.addEventListener('mousemove', (e) => {
 });
 window.addEventListener('mouseup', () => {
   if (!S.camGizmoDrag) return;
+  const g = S.camGizmoDrag;
   S.camGizmoDrag = null;
-  sideCameraGizmoCanvas.style.cursor = 'grab';
+  sideCameraRepere.style.cursor = '';
+  // Un clic sur Y ou X : il devient l'axe actif, ou cesse de l'être.
+  if (!g.bouge && g.axe) {
+    S.camAxeActif = S.camAxeActif === g.axe ? null : g.axe;
+    if (g.panel) { renderSideCameraGizmo(g.panel); refreshCameraSliders(g.panel); }
+  }
 });
 
 sideDescInput.addEventListener('input', () => {

@@ -3016,3 +3016,7 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 .orientation-unite{ color:var(--ink-soft); }
 .orientation-redresser{ width:100%; margin-top:2px; }
 
+/* La caméra (demandé) : le repère de l'éditeur de bâtiment, glissable ; ses deux angles dessous. */
+.camera-repere{ cursor:grab; touch-action:none; user-select:none; }
+.camera-angles{ display:flex; justify-content:center; gap:14px; margin:6px 0 10px; }
+

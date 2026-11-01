@@ -3706,69 +3706,11 @@ export function centerSceneCameraOnRoom(panel, pieceId, page){
 // downward) and `depth` its alignment with the view axis (>0 = points toward the viewer, out of
 // the screen; <0 = points away, into the screen). sx²+sy²+depth² = 1 since the basis is
 // orthonormal: an axis nearly aligned with the view axis therefore has a nearly-zero (sx, sy) projection.
-function projectAxisDir3D(v, basis){
+export function projectAxisDir3D(v, basis){
   const sx = v.x * basis.right.x + v.y * basis.right.y + v.z * basis.right.z;
   const sy = -(v.x * basis.up.x + v.y * basis.up.y + v.z * basis.up.z);
   const depth = v.x * basis.backward.x + v.y * basis.backward.y + v.z * basis.backward.z;
   return { sx, sy, depth };
-}
-// Generic 3D gizmo (X/Y/Z axes), drawn centered on (ox,oy) with arms of length `len`, to
-// orient oneself in a Panel's 3D scene in Camera mode. Reprojected on every render according to
-// panel.camRotX/camRotY (see panelCamBasis3D): a click-drag in Camera mode (see S.dragMode
-// 'panelCamRotate') or adjusting the rotation sliders (see refreshCameraSliders) thus rotates
-// this gizmo along with the real camera. An axis nearly aligned with the view (the default case for Z,
-// as long as no rotation has been applied) is drawn as a "circle + dot" (filled dot = points toward
-// the viewer, hollow circle = points away) rather than an arrow, which would be illegible once nearly
-// face-on. Now displayed in the side panel's Camera menu (see renderSideCameraGizmo) rather than
-// at the bottom-left of the Panel on the main canvas.
-export function drawAxisGizmoAt(c, ox, oy, len, panel){
-  const basis = panelCamBasis3D(panel);
-  c.save();
-  c.lineWidth = 2;
-  c.lineCap = 'round';
-  c.font = '600 11px sans-serif';
-  c.textBaseline = 'middle';
-  drawPanelAxisGizmoArrow3D(c, ox, oy, len, basis, { x: 1, y: 0, z: 0 }, '#D6432D', 'X');
-  drawPanelAxisGizmoArrow3D(c, ox, oy, len, basis, { x: 0, y: 1, z: 0 }, '#3F8F4F', 'Y');
-  drawPanelAxisGizmoArrow3D(c, ox, oy, len, basis, { x: 0, y: 0, z: 1 }, '#2E6FA8', 'Z');
-  c.restore();
-}
-// Draws a single gizmo axis (origin (ox,oy)) according to its screen projection (see projectAxisDir3D):
-// full-length arrow if the axis is sufficiently "flat" facing the camera, otherwise a circle (+dot if
-// pointing toward the viewer). The arrow's length is slightly shortened based on the tilt
-// (mag) to suggest perspective, without ever fully disappearing before the circle threshold.
-function drawPanelAxisGizmoArrow3D(c, ox, oy, len, basis, v, color, label){
-  const proj = projectAxisDir3D(v, basis);
-  const mag = Math.hypot(proj.sx, proj.sy);
-  c.strokeStyle = color;
-  c.fillStyle = color;
-  if (mag < 0.3) {
-    c.beginPath(); c.arc(ox, oy, 5, 0, Math.PI * 2); c.stroke();
-    if (proj.depth > 0) { c.beginPath(); c.arc(ox, oy, 1.6, 0, Math.PI * 2); c.fill(); }
-    c.fillText(label, ox + 9, oy + 11);
-    return;
-  }
-  const ux = proj.sx / mag, uy = proj.sy / mag;
-  const arrowLen = len * (0.5 + 0.5 * mag);
-  const ex = ox + ux * arrowLen, ey = oy + uy * arrowLen;
-  c.beginPath(); c.moveTo(ox, oy); c.lineTo(ex, ey); c.stroke();
-  drawAxisArrowHead3D(c, ex, ey, Math.atan2(uy, ux), color);
-  c.fillText(label, ox + ux * (arrowLen + 10) - 4, oy + uy * (arrowLen + 10));
-}
-// Small triangular arrowhead, oriented by `angle` (0 = points toward screen +X).
-function drawAxisArrowHead3D(c, x, y, angle, color){
-  const s = 5;
-  c.save();
-  c.translate(x, y);
-  c.rotate(angle);
-  c.beginPath();
-  c.moveTo(0, 0);
-  c.lineTo(-s, -s * 0.55);
-  c.lineTo(-s, s * 0.55);
-  c.closePath();
-  c.fillStyle = color;
-  c.fill();
-  c.restore();
 }
 
 // FIX (pre-existing bug, regression from extraction #158): useObjectFormat3D/useObjectBoxFormat3D
