@@ -98,8 +98,9 @@ ou simulée. Les quatre styles de chaque police sont préchargés au démarrage.
   l'utilisateur n'y a pas touché, ce sont ceux d'origine (un par police intégrée), amorcés dans sa
   langue au premier changement ;
 - un clic droit sur une police importée la renomme ou la supprime ;
-- « Ajouter une police » : depuis un fichier, ou « Rechercher en ligne », qui ouvre l'onglet
-  « En ligne » (ci-dessous).
+- La carte « Importer une police », en tête de la grille comme dans les autres stores : depuis un
+  fichier. Chercher en ligne, c'est l'onglet « En ligne » (ci-dessous). (Il y avait un bouton
+  « Ajouter une police » et son menu, retirés : demandé.)
 
 ## Importer un fichier
 

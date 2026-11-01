@@ -2547,7 +2547,7 @@ button.store-chip:hover{ border-color:var(--accent); }
 .polices-box{ position:relative; }
 .polices-barre{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:8px; }
 .polices-barre[hidden], .polices-pied[hidden]{ display:none; }
-/* La rangée prend la largeur qui reste à côté de « Ajouter une police » ; les boutons et le filtre
+/* La rangée prend toute la largeur ; les boutons et le filtre
    gardent leur taille (flex:none), seule la phrase d'exemple s'étire. Sans cela, le champ ajouté en
    liste écrasait les boutons d'affichage et le filtre (signalé). Tout est à 34 px de haut : la
    hauteur du filtre, sur laquelle les boutons et le champ s'alignent. */
@@ -2594,14 +2594,6 @@ button.store-chip:hover{ border-color:var(--accent); }
 .polices-vue-btn{ width:32px; height:30px; padding:0; border-radius:var(--rayon-petit); border:1px solid var(--line-strong); background:var(--white); color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; }
 .polices-vue-btn svg{ width:16px; height:16px; stroke:currentColor; fill:none; }
 .polices-vue-btn[aria-pressed="true"]{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
-.polices-ajout{ position:relative; flex:none; }
-.polices-ajout .project-modal-btn{ margin:0; width:auto; padding:7px 14px; }
-.polices-ajout-menu{ position:absolute; right:0; top:calc(100% + 4px); z-index:5; min-width:230px; padding:4px;
-  background:var(--white); border:1px solid var(--line); border-radius:var(--rayon-moyen); box-shadow:0 8px 24px rgba(0,0,0,.35); }
-.polices-ajout-menu[hidden]{ display:none; }
-.polices-ajout-menu button{ display:block; width:100%; text-align:left; padding:7px 10px; border:0; border-radius:var(--rayon-petit); background:none; color:var(--ink); font:inherit; font-size:var(--texte-courant); cursor:pointer; }
-.polices-ajout-menu button:hover:not(:disabled){ background:var(--nav-bg); color:var(--accent); }
-.polices-ajout-menu button:disabled{ color:var(--ink-soft); cursor:default; }
 .polices-groupe{ font-family:'Inter',sans-serif; font-size:var(--texte-capitales); font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin:14px 0 8px; }
 .polices-groupe:first-child{ margin-top:0; }
 .polices-vide{ font-size:var(--texte-courant); color:var(--ink-soft); margin:0; }
@@ -2808,6 +2800,9 @@ select option.option-separateur{ color:var(--ink-soft); font-size:6px; line-heig
 .store-carte-ajout:hover{ border-color:var(--accent); color:var(--accent); }
 .store-carte-ajout .store-ajout-icone{ width:44px; height:44px; display:block; }
 .store-carte-ajout .store-carte-nom{ color:inherit; }
+/* Dans « Mes polices » (demandé : comme les autres stores), à la hauteur des cartes de police. */
+.police-carte.store-carte-ajout{ align-items:center; text-align:center; min-height:0; }
+.police-carte.store-carte-ajout.en-liste{ flex-direction:row; padding:10px; }
 /* #454b : la colonne des niveaux, à gauche de la vue de dessus, et leurs lignes dans le menu. */
 .batiment-niveaux-plan { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); z-index: 2; display: flex;
                          flex-direction: column; gap: 6px; zoom: var(--echelle-ui); }

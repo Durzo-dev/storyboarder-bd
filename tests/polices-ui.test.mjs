@@ -118,9 +118,12 @@ describe('le câblage', () => {
     assert.match(ev, /menuPolice: \(e, nom\) => openFontContextMenu\(e, nom\)/);
   });
 
-  test('l\'ajout : depuis un fichier, ou en ligne (l\'onglet du store)', () => {
-    assert.match(ui, /\$\('policesAjoutFichier'\)\.onclick = ajouterDepuisFichiers;/);
-    assert.match(ui, /\$\('policesAjoutEnLigne'\)\.onclick = \(\) => \{ fermerMenuAjout\(\); choisirMode\('enLigne'\); \};/);
+  // Demandé : la carte « Importer une police » en tête de la grille, comme les autres stores (plus
+  // de bouton « Ajouter une police ») ; chercher en ligne, c'est l'onglet « En ligne ».
+  test('l\'ajout : la carte d\'import (un fichier), ou en ligne (l\'onglet du store)', () => {
+    assert.match(ui, /c\.onclick = ajouterDepuisFichiers;/);
+    assert.match(ui, /\[\.\.\.\(ajout \? \[carteImport\(\)\] : \[\]\), \.\.\.polices\.map\(carte\)\]/);
+    assert.doesNotMatch(lire('src/index.html'), /id="policesAjouter"/);
     assert.match(ui, /await pont\.pickFonts\(NOMS_INTEGRES\)/);
     assert.match(ui, /await pont\.commitFonts\(r\.jeton, choix, NOMS_INTEGRES\)/);
   });

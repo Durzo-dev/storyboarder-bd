@@ -93,7 +93,8 @@ every font are preloaded at start-up.
   `usagesDesPolices`, channel `fonts:usage`); until the user touches them, they are the original
   ones (one per built-in font), seeded in their language at the first change;
 - a right click on an imported font renames or deletes it;
-- "Add a font": from a file, or "Search online", which opens the "Online" tab (below).
+- The "Import a font" card, first in the grid as in the other stores: from a file. Searching online
+  is the "Online" tab (below). (There was an "Add a font" button and its menu, removed as requested.)
 
 ## Importing a file
 

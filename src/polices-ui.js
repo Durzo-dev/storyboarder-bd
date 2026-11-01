@@ -22,6 +22,7 @@ import {
   classementDesUsages, tousLesUsages, usagesDeLaPolice, filtrerParUsages, operationUsage, nomsDesUsagesDeLaPolice,
 } from './polices-utilisateur.js';
 import { remplirListeEtiquettes } from './liste-etiquettes.js';
+import { icone } from './icones.js';
 import { menuFlottant } from './store-ui.js';
 import {
   familleDApercu, libelleCategorie, explicationCategorie, texteErreur, chercherEnLigne, resultatsEnLigne, chargerVariantes,
@@ -254,15 +255,18 @@ function rendreListe(){
   const integrees = filtrerParUsages(toutesIntegrees, usagesFiltre, attributions);
   const importees = filtrerParUsages(toutesImportees, usagesFiltre, attributions);
   const zone = $('policesListe');
-  const grille = (polices) => el('div', { classe: vue() === 'liste' ? 'polices-lignes' : 'polices-grille' }, polices.map(carte));
+  // La carte « Importer » en tête, comme dans les autres stores (demandé, à la place du bouton
+  // « Ajouter une police ») ; chercher en ligne, c'est l'onglet « En ligne ».
+  const grille = (polices, ajout = false) => el('div', { classe: vue() === 'liste' ? 'polices-lignes' : 'polices-grille' },
+    [...(ajout ? [carteImport()] : []), ...polices.map(carte)]);
   // Les deux groupes ne sont nommés que s'il y a des polices ajoutées (demandé : pas de groupe vide
   // ni de message quand il n'y en a pas).
   const groupes = toutesImportees.length;
   zone.replaceChildren(...[
     groupes && integrees.length ? el('h4', { texte: tr('Built-in', 'Intégrées'), classe: 'polices-groupe' }) : null,
-    integrees.length ? grille(integrees) : null,
+    integrees.length || !importees.length ? grille(integrees, true) : null,
     groupes && importees.length ? el('h4', { texte: tr('Added', 'Ajoutées'), classe: 'polices-groupe' }) : null,
-    importees.length ? grille(importees) : null,
+    importees.length ? grille(importees, !integrees.length) : null,
     !integrees.length && !importees.length ? el('p', { texte: tr('No font has these uses.', 'Aucune police n\'a ces usages.'), classe: 'polices-vide' }) : null,
   ].filter(Boolean));
   placerVariantes();
@@ -415,7 +419,6 @@ function message(texte, erreur = false){
  * deux sous un autre nom, ou passer), puis le pont écrit.
  */
 async function ajouterDepuisFichiers(){
-  fermerMenuAjout();
   const pont = window.storyboarderAPI;
   if (!pont || !pont.pickFonts) return;
   const r = await pont.pickFonts(NOMS_INTEGRES);
@@ -473,13 +476,17 @@ async function ajouterDepuisLeStore(){
   bouton.disabled = n > 0 || dejaPossedee(p.nom);
 }
 
-function basculerMenuAjout(){
-  const menu = $('policesAjoutMenu');
-  menu.hidden = !menu.hidden;
-}
-function fermerMenuAjout(){
-  const menu = $('policesAjoutMenu');
-  if (menu) menu.hidden = true;
+/** La carte « Importer une police » (un fichier .ttf, .otf, .woff, .woff2), comme celle des autres stores. */
+function carteImport(){
+  const pictogramme = el('span', { classe: 'store-ajout-icone' });
+  pictogramme.innerHTML = icone('importer');
+  const c = el('button', { classe: 'police-carte store-carte-ajout' + (vue() === 'liste' ? ' en-liste' : ''), attrs: { type: 'button',
+    title: tr('Add a font from a file (.ttf, .otf, .woff, .woff2)', 'Ajouter une police depuis un fichier (.ttf, .otf, .woff, .woff2)') } }, [
+    pictogramme,
+    el('span', { texte: tr('Import a font', 'Importer une police'), classe: 'store-carte-nom' }),
+  ]);
+  c.onclick = ajouterDepuisFichiers;
+  return c;
 }
 
 /** Renommer une police importée (appelé par le menu du clic droit). */
@@ -527,7 +534,6 @@ export async function ouvrirPolices(){
 }
 
 export function fermerPolices(){
-  fermerMenuAjout();
   fermerFiche();
   $('policesModal').classList.add('hidden');
 }
@@ -547,18 +553,14 @@ export function cablerPolices(rappels = {}){
   $('policesFermer').onclick = fermerPolices;
   $('policesRetour').onclick = fermerFiche;
   $('policesAjouterEnLigne').onclick = ajouterDepuisLeStore;
-  $('policesAjoutEnLigne').onclick = () => { fermerMenuAjout(); choisirMode('enLigne'); };
   document.querySelectorAll('#policesOnglets .onglet').forEach(b => { b.onclick = () => choisirMode(b.dataset.mode); });
   cablerStorePolices(() => { if (mode === 'enLigne' && $('policesFiche').hidden) rendreListe(); }, message,
     () => mode === 'enLigne' && $('policesFiche').hidden && !$('policesModal').classList.contains('hidden'));
   $('policesPhrase').addEventListener('input', majPhraseDExemple);
   $('policesVueGrille').onclick = () => { memoriserVue('grille'); rendreListe(); };
   $('policesVueListe').onclick = () => { memoriserVue('liste'); rendreListe(); };
-  $('policesAjouter').onclick = basculerMenuAjout;
-  $('policesAjoutFichier').onclick = ajouterDepuisFichiers;
   policesModal.addEventListener('mousedown', (e) => {
     if (e.target === policesModal) fermerPolices();
-    else if (!e.target.closest || !e.target.closest('.polices-ajout')) fermerMenuAjout();
   });
   rafraichirTextesPolices();
 }
