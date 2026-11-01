@@ -11,6 +11,7 @@
  * This module is now the application's real entry point: app.js is now just a
  * simple redirect (`import './events.js'`) kept so index.html doesn't have to change.
  */
+import { debutDeRotation3D, angleDeRotation3D, quartDeTour3D } from './rotation-objet-3d.js';
 import { cablerChampsDOrientation } from './orientation-champs.js';
 import { icone } from './icones.js';
 import { demarrer as sondeDemarrer, arreter as sondeArreter, rapport as sondeRapport, synthese as sondeSynthese } from './perf-probe.js';
@@ -1528,6 +1529,19 @@ window.addEventListener('keydown', (e) => {
   // Scene's locked panel AND automatically pin that Element as the orbit target
   // (camOrbitTargetId), which sets it directly in the Camera menu and avoids the confusing
   // behavior where the element appeared deselected without being visible anywhere.
+  // #463d : R, un quart de tour de l'Élément choisi (sens horaire vu de dessus), comme le mobilier et
+  // les escaliers de l'éditeur de bâtiment.
+  if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey && !e.altKey && tag !== 'INPUT' && tag !== 'TEXTAREA') {
+    const _o = currentPageData().objects.find(o => o.id === S.selectedId);
+    if (_o && peutTournerALaSouris3D(_o)) {
+      e.preventDefault();
+      snapshot();
+      _o.rotY = quartDeTour3D(_o.rotY);
+      S.projectDirty = true;
+      updateSidePanel(); drawCurrentPage();
+      return;
+    }
+  }
   if (e.key === 'c' && !e.ctrlKey && !e.metaKey && !e.altKey && tag !== 'INPUT' && tag !== 'TEXTAREA') {
     const page = currentPageData();
     let panel = page.objects.find(o => o.id === S.selectedId && o.type === 'panel');
@@ -2507,6 +2521,18 @@ function demarrerOrbiteDeScene(toile, page, x, y){
   };
 }
 
+/**
+ * #463d : cet Élément se tourne-t-il à la souris (et à R) ? Un Personnage ou un Objet, sauf ceux dont
+ * l'orientation est imposée : une ouverture aimantée à un mur, un mur de Pièce (comme leur fenêtre,
+ * dont les curseurs sont alors grisés).
+ */
+function peutTournerALaSouris3D(o){
+  if (!o || (o.type !== 'perso' && o.type !== 'objet3d')) return false;
+  if (o.type === 'objet3d' && o.magnetWallId && WALL_OPENING_MAGNET_TYPES.includes(o.objType)) return false;
+  if (o.type === 'objet3d' && o.pieceId && WALL_TYPES.includes(o.objType)) return false;
+  return true;
+}
+
 canvas.addEventListener('mousedown', (e) => {
   // ---- Measure tool: right-click = stop
   if (e.button === 2 && S.measureTool) {
@@ -2520,6 +2546,24 @@ canvas.addEventListener('mousedown', (e) => {
   }
 
   if (e.button === 2) {
+    // #463d (demandé) : clic droit MAINTENU SUR L'ÉLÉMENT CHOISI, on le TOURNE (le moteur des
+    // articulations, rotation-objet-3d.js) ; ailleurs, le clic droit garde son sens (déplacer la vue,
+    // défiler). Sans bouger, le menu contextuel s'ouvre au relâchement, comme avant.
+    {
+      const _pgR = currentPage();
+      const _elR = _pgR.objects.find(o => o.id === S.selectedId);
+      const { x: _ex, y: _ey } = getCoords(e);
+      const _caseR = _elR && peutTournerALaSouris3D(_elR) ? findOwningPanel(_elR, _pgR) : null;
+      if (_caseR && _ex >= _elR.x && _ex <= _elR.x + _elR.w && _ey >= _elR.y && _ey <= _elR.y + _elR.h) {
+        const b = panelCamBasis3D(_caseR);
+        S.panMoved = false;
+        S.dragMode = 'objetRotation'; S.dragStart = { x: _ex, y: _ey };
+        S.dragOrig = { id: _elR.id, enAttente: true, boutonDroit: true,
+          session: debutDeRotation3D({ angle: _elR.rotY || 0, pivot: { x: _elR.x + _elR.w / 2, y: _elR.y + _elR.h / 2 },
+            pointeur: { x: _ex, y: _ey }, axe: { x: b.right.y, y: -b.up.y, versOeil: b.backward.y > 0 } }) };
+        return;
+      }
+    }
     // ── Clic droit MAINTENU sur une Case à image : on recadre (#403j) ──
     //
     // Un raccourci, pas un mode : le geste dure ce que dure le bouton. Il vient DOUBLER l'entrée
@@ -3677,6 +3721,20 @@ window.addEventListener('mousemove', (e) => {
     obj.camWy = S.dragOrig.camWy; obj.camWyTarget = S.dragOrig.camWy;
     obj.camWz = S.dragOrig.camWz; obj.camWzTarget = S.dragOrig.camWz;
     startCamSmoothing(obj);
+  } else if (S.dragMode === 'objetRotation') {
+    // #463d : tourner l'Élément choisi (clic droit maintenu sur lui). En deçà du seuil, c'est peut-être
+    // un clic (le menu s'ouvrira) ; au-delà, le menu est empêché et l'annulation reçoit un instantané.
+    const _o = page.objects.find(o => o.id === S.dragOrig.id);
+    if (!_o) return;
+    if (S.dragOrig.enAttente) {
+      if (Math.hypot(x - S.dragStart.x, y - S.dragStart.y) < SEUIL_GESTE_SCENE_PX) return;
+      S.dragOrig.enAttente = false;
+      S.panMoved = true;
+      snapshot();
+      canvas.style.cursor = 'grabbing';
+    }
+    _o.rotY = angleDeRotation3D(S.dragOrig.session, { x, y }, { ctrl: e.ctrlKey, alt: e.altKey, maj: e.shiftKey });
+    S.projectDirty = true;
   } else if (S.dragMode === 'panelCamPan') {
     // Phase 9: mouse-driven camera pan (middle-click or Ctrl+LMB).
     // "Grab" style: the scene follows the mouse, the world point under the cursor stays fixed.
@@ -3838,6 +3896,8 @@ window.addEventListener('mouseup', () => {
   // ⚠️ LA CONFIRMATION ARRIVE AU RELÂCHEMENT, JAMAIS PENDANT. Poser une question à chaque
   // mouvement rendrait le glissement impraticable ; l'aperçu suffit à annoncer ce qui va être
   // demandé. On lit la paire AVANT de vider l'état du geste, qui est réinitialisé juste après.
+  // #463d : fin d'une rotation d'Élément ; sa fenêtre (si ouverte) et le menu relisent l'angle.
+  if (S.dragMode === 'objetRotation') { canvas.style.cursor = ''; if (S.dragOrig && !S.dragOrig.enAttente) updateSidePanel(); }
   if (S.dragMode === 'plancheEdition') finGesteEdition();
   if (S.dragMode === 'plancheCadrage' && S.dragOrig && S.dragOrig.creerCase && !S.dragOrig.bouge) creerCaseAuPoint(S.dragStart);
   const fusionProposee = S.apercuFusion;

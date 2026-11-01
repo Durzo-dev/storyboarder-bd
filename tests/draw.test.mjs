@@ -1435,7 +1435,8 @@ describe('#403f : le zoom et le retour au cadrage d\'origine, câblage', () => {
   });
 
   test('LE CLIC DROIT MAINTENU recadre, sur la Case visée seulement (#403j)', () => {
-    const i = EVENTS.indexOf('boutonDroit: true');
+    // (#463d : la rotation d'un Élément au clic droit passe avant, sur l'Élément choisi seulement.)
+    const i = EVENTS.indexOf('panelId: _selD.id, boutonDroit: true');
     assert.ok(i > 0, 'le recadrage au clic droit n\'est branché nulle part');
     const corps = EVENTS.slice(EVENTS.lastIndexOf('const { x: _rx, y: _ry }', i), i + 200);
     // Mêmes deux conditions que la molette, et pour la même raison : sans le test de position, un

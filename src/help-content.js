@@ -204,7 +204,7 @@ export const HELP_MANUAL_EN = [
   ]},
   { id: 'objets', title: 'Objects & scenery', paragraphs: [
     'Right-click a panel → "Add" groups all the categories: Vehicles, Furniture, Plants, Animals, Garden, Town… Walls, doors, windows and rooms are built in the Building editor ("Create a building" in a panel or a Scene).',
-    'Double-click an object to adjust its rotations and size.',
+    'Double-click an object to adjust its rotations and size. Hold the right button on the selected character or object to turn it (Ctrl: by 15°, Alt: free, Shift: finer); R: a quarter turn.',
     'Right after adding, Cancel (or Escape) in the dialog deletes the Element: it is only kept if you save. Once saved, cancelling merely closes the dialog.',
     'Mouse wheel over a selected character or object to move it closer or further away. It looks bigger or smaller, but its real size does not change.',
     'Position X/Y fields in the dialog to place it precisely; disabled if the object is snapped to the ground (Position Y) or to a wall (Position X/Y).',
@@ -468,7 +468,7 @@ export const HELP_MANUAL_FR = [
   ]},
   { id: 'objets', title: 'Objets & décor', paragraphs: [
     'Clic droit sur une case → « Ajouter » regroupe toutes les catégories : Véhicules, Mobiliers, Plantes, Animaux, Jardin, Ville… Les murs, portes, fenêtres et pièces se construisent dans l\'éditeur de bâtiment (« Créer un bâtiment » dans une Case ou une Scène).',
-    'Double-clic sur un objet pour ajuster ses rotations et sa taille.',
+    'Double-clic sur un objet pour ajuster ses rotations et sa taille. Clic droit maintenu sur le personnage ou l\'objet choisi pour le tourner (Ctrl : par 15°, Alt : libre, Maj : plus fin) ; R : un quart de tour.',
     "Juste après l'ajout, « Annuler » (ou Échap) dans la modale supprime l'Élément : il n'est conservé que si vous validez. Une fois enregistré, annuler ne fait plus que fermer la modale.",
     'Molette de la souris sur un personnage ou un objet sélectionné pour le rapprocher ou l\'éloigner. Il paraît plus grand ou plus petit, mais sa taille réelle ne change pas.',
     "Champs Position X/Y dans la modale pour le placer précisément ; désactivés si l'objet est aimanté au Sol (Position Y) ou à un Mur (Position X/Y).",

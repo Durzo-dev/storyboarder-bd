@@ -200,7 +200,9 @@ Camera moves are **smoothed** (it reaches its target in a few frames).
 |---|---|---|
 | Left drag an Element | move it in the plane facing the camera | follows the real camera (a ray); it does not go under the ground |
 | Wheel, an Element selected | move it forward or back along the camera's axis | 0.72 m per notch |
-| Turn | only with its modal's sliders | ±180°, by the degree |
+| Right button held on the selected Element (#463d) | turn it around the vertical | joint engine (`rotation-objet-3d.js`): straight drag at 0.5°/px seen from the side, circular gesture seen from above; 90° snap (6°), Ctrl by 15°, Alt free, Shift five times finer; without moving, the menu |
+| R (#463d) | a quarter turn, clockwise seen from above | |
+| Its modal's sliders | the three angles | ±180°, by the degree, field in degrees (#463a) |
 
 An opening snapped to a wall follows its wall; moving a wall takes its openings along.
 
@@ -254,9 +256,9 @@ image; drag: its anchor), in 2D.
    building element's size keeps its ×1.1 notches: it is a property, not a view.
 4. **Two rotation speeds**: the view turns at 0.14° per pixel (adjustable), a joint or an element at
    0.5° per pixel (not adjustable), three and a half times faster.
-5. **Turning an object** has no gesture in Panels and Scenes (sliders only), while the building
+5. ~~**Turning an object** has no gesture in Panels and Scenes (sliders only), while the building
    editor has four (right-click, held right button, buttons, fields) and the Model editor one (for
-   joints).
+   joints).~~ Fixed in #463d (right button held on the selected Element, R; the building furniture already followed the same engine: circular for Y seen from above, straight for X and Z).
 6. **Angle snapping**: 90° (6°) and Ctrl 15° on a building element; 15° only when placing a
    staircase; none on a joint nor in the modals.
 7. ~~**Orientation labels**~~: fixed in #463a (Turn, Tilt, Lean everywhere; the Object modal on the

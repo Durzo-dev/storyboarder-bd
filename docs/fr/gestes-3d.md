@@ -201,7 +201,9 @@ Les mouvements de la caméra sont **lissés** (elle rejoint sa cible en quelques
 |---|---|---|
 | Glisser gauche un Élément | le déplacer dans le plan face à la caméra | suit la vraie caméra (un rayon) ; il ne passe pas sous le sol |
 | Molette, un Élément choisi | l'avancer ou le reculer le long de l'axe de la caméra | 0,72 m par cran |
-| Tourner | seulement par les curseurs de sa fenêtre | ±180°, par degré |
+| Clic droit maintenu sur l'Élément choisi (#463d) | le tourner autour de la verticale | moteur des articulations (`rotation-objet-3d.js`) : glisser droit à 0,5°/px vu de côté, geste circulaire vu de dessus ; aimant 90° (6°), Ctrl par 15°, Alt libre, Maj cinq fois plus fin ; sans bouger, le menu |
+| R (#463d) | un quart de tour, horaire vu de dessus | |
+| Les curseurs de sa fenêtre | les trois angles | ±180°, par degré, champ en degrés (#463a) |
 
 Une ouverture aimantée à un mur suit son mur ; déplacer un mur emporte ses ouvertures.
 
@@ -260,9 +262,9 @@ Le Lecteur, les vignettes, la fenêtre des Polices. L'image d'une Case a ses pro
    de ×1,1 : c'est une propriété, pas une vue.
 4. **Deux vitesses de rotation** : la vue tourne à 0,14° par pixel (réglable), une articulation ou
    un élément à 0,5° par pixel (non réglable), trois fois et demie plus vite.
-5. **Tourner un objet** n'a pas de geste dans les Cases et les Scènes (curseurs seulement), alors
+5. ~~**Tourner un objet** n'a pas de geste dans les Cases et les Scènes (curseurs seulement), alors
    que l'éditeur de bâtiment en a quatre (clic droit, clic droit maintenu, boutons, champs) et
-   l'Éditeur de modèle un (pour les articulations).
+   l'Éditeur de modèle un (pour les articulations).~~ Corrigé en #463d (clic droit maintenu sur l'Élément choisi, R ; le mobilier du bâtiment suivait déjà le même moteur : circulaire pour Y vu de dessus, droit pour X et Z).
 6. **Les aimants d'angle** : 90° (6°) et Ctrl 15° sur un élément du bâtiment ; 15° seulement à la
    pose d'un escalier ; aucun sur une articulation ni dans les fenêtres.
 7. ~~**Les libellés de l'orientation**~~ : corrigés en #463a (Rotation, Inclinaison, Bascule
