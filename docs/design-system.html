@@ -3024,11 +3024,18 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 .camera-repere{ cursor:grab; touch-action:none; user-select:none; }
 .camera-angles{ display:flex; justify-content:center; gap:14px; margin:6px 0 10px; }
 
-/* #463f : les Commandes d'une Case ou d'une Scène gardent la hauteur de leur version la plus longue
-   (un fantôme invisible dans la même case de grille), pour que le menu ne saute pas au choix d'un Élément. */
-.commandes-stables{ display:grid; }
-.commandes-stables > span{ grid-area:1 / 1; }
-#sideCommandesFantome{ visibility:hidden; }
+/* LES COMMANDES ONT UNE HAUTEUR FIXE PAR MENU, avec un ascenseur au-delà (décidé avec Valentin, après
+   relevé de leurs tailles : 2 à 13 lignes). Le menu ne saute plus quand on choisit quelque chose
+   (signalé : le double-clic sur un Élément de la liste tombait à côté). La hauteur se compte en
+   lignes à l'écran (1,45 em chacune, celle de .commandes-aide) : de quoi lire les cas courants de
+   chaque menu sans défiler. */
+#sideCommandesAide, #batimentAide, #personaEditorAide, #lecteurAide, #sidePageEditionHint.commandes-aide{
+  overflow-y:auto; overscroll-behavior:contain; padding-right:4px; }
+#sideCommandesAide{ height:calc(1.45em * 9); }        /* Case 4, Élément 9, Caméra ou Scène 7 à 13 lignes */
+#batimentAide{ height:calc(1.45em * 9); }             /* 2 à 10 lignes, dont plusieurs sur deux */
+#personaEditorAide{ height:calc(1.45em * 8); }        /* 6 ou 7 lignes */
+#lecteurAide{ height:calc(1.45em * 8); }              /* 7 lignes, toujours */
+#sidePageEditionHint.commandes-aide{ height:calc(1.45em * 6); }   /* 5 lignes, toujours */
 
 
 /* ── La page du système de design (préfixe ds-), posée SUR la feuille de l'application ── */
@@ -3378,7 +3385,7 @@ html[lang="fr"] .ds-en, html[lang="en"] .ds-fr{ display:none; }
     <div id="sideCommandesSection" class="side-section">
       <h2 id="sideCommandesTitle">Commandes</h2>
       
-      <p id="sideCommandesAide" class="commandes-aide commandes-stables"><span id="sideCommandesTexte"></span><span id="sideCommandesFantome" aria-hidden="true"></span></p>
+      <p id="sideCommandesAide" class="commandes-aide"></p>
     </div>
     
     

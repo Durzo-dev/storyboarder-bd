@@ -1804,15 +1804,9 @@ function remplirCommandes3D(ecran, panel, selRaw){
   const b = panelCamBasis3D(panel);
   const plateau = modeSelonLaCamera3D(Math.asin(Math.max(-1, Math.min(1, b.backward.y)))) === 'droit';
   const texte = commandesDuMenu3D({ ecran, element, plateau, axe: S.camAxeActif }, tr).join('\n');
-  const aide = document.getElementById('sideCommandesTexte');
+  // La section a une HAUTEUR FIXE (style.css) : choisir un Élément ne fait plus sauter le menu.
+  const aide = document.getElementById('sideCommandesAide');
   if (aide.textContent !== texte) aide.textContent = texte;
-  // ⚠️ LA HAUTEUR NE BOUGE PAS QUAND ON CHOISIT UN ÉLÉMENT (signalé : le menu sautait sous la souris,
-  // et le double-clic sur l'Élément de la liste tombait à côté). Le fantôme porte la version la plus
-  // LONGUE de cet écran (un Élément choisi, l'axe bloqué) : sa hauteur est celle de la section.
-  const fantome = document.getElementById('sideCommandesFantome');
-  const longue = [true, false].map(p => commandesDuMenu3D({ ecran, element: 'perso', plateau: p, axe: ecran === 'case' ? null : 'y' }, tr).join('\n'))
-    .sort((a, b) => b.length - a.length)[0];
-  if (fantome.textContent !== longue) fantome.textContent = longue;
   // Sa place : sous l'en-tête « Caméra » en mode Caméra, sinon juste avant le bloc Caméra (en tête).
   const camera = document.getElementById('sideCameraSection');
   const entete = camera.querySelector('.menu-header');

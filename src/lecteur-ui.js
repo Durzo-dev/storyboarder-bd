@@ -507,6 +507,7 @@ function construirePanneau(){
   // par ligne. Elles étaient une ligne d'aide en bas du menu.
   const aide = document.createElement('p');
   aide.className = 'commandes-aide';
+  aide.id = 'lecteurAide';   // sa hauteur fixe (style.css)
   aide.textContent = [
     tr('← →: turn the pages.', '← → : tourner les pages.'),
     tr('Click the edges: turn the pages.', 'Clic sur les bords : tourner les pages.'),

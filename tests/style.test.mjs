@@ -878,7 +878,7 @@ describe('#402a : le CSS ne garde pas de règles pour des éléments disparus', 
   const cssNu = css.replace(/\/\*[\s\S]*?\*\//g, '');
   const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
   const SRC = ['modals.js', 'events.js', 'draw.js', 'persona-editor.js', 'scene3d.js', 'rig3d.js',
-    'sidebar.js', 'skeleton-map.js', 'i18n.js', 'help-content.js', 'modal-stack.js']
+    'sidebar.js', 'skeleton-map.js', 'i18n.js', 'help-content.js', 'modal-stack.js', 'lecteur-ui.js']
     .map(f => readFileSync(new URL('../src/' + f, import.meta.url), 'utf8')).join('\n');
 
   // ⚠️ LA LISTE EST VIDE, ET ELLE DOIT LE RESTER. Elle a compté quatre entrées : deux identifiants

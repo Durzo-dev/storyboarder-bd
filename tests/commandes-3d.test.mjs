@@ -46,18 +46,13 @@ test('câblage : la section en tête (sous « Caméra » en mode Caméra) ; info
 });
 
 // Signalé : choisir un Élément allongeait les Commandes, la liste descendait, le double-clic tombait à côté.
-test('les Commandes gardent la hauteur de leur version la plus longue (fantôme superposé)', () => {
-  const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
-  assert.match(html, /<span id="sideCommandesTexte"><\/span><span id="sideCommandesFantome" aria-hidden="true"><\/span>/);
+// Décidé ensuite : une HAUTEUR FIXE PAR MENU, avec un ascenseur, pour toutes les sections Commandes.
+test('toutes les sections Commandes ont une hauteur fixe par menu, et défilent au-delà', () => {
   const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
-  assert.match(css, /\.commandes-stables > span\{ grid-area:1 \/ 1; \}/);
-  assert.match(css, /#sideCommandesFantome\{ visibility:hidden; \}/);
-  const sb = readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8');
-  assert.match(sb, /if \(fantome\.textContent !== longue\) fantome\.textContent = longue;/);
-  // La version « Élément choisi » est bien la plus longue de chaque écran.
-  for (const ecran of ['case', 'camera', 'scene']) {
-    const sans = commandesDuMenu3D({ ecran }, fr).join('\n').length;
-    const avec = commandesDuMenu3D({ ecran, element: 'perso', axe: ecran === 'case' ? null : 'y' }, fr).join('\n').length;
-    assert.ok(avec >= sans, ecran);
+  assert.match(css, /#sideCommandesAide, #batimentAide, #personaEditorAide, #lecteurAide, #sidePageEditionHint\.commandes-aide\{\s*overflow-y:auto;/);
+  for (const [id, n] of [['#sideCommandesAide', 9], ['#batimentAide', 9], ['#personaEditorAide', 8], ['#lecteurAide', 8], ['#sidePageEditionHint\\.commandes-aide', 6]]) {
+    assert.match(css, new RegExp(`${id}\\{ height:calc\\(1\\.45em \\* ${n}\\); \\}`), id);
   }
+  assert.match(readFileSync(new URL('../src/lecteur-ui.js', import.meta.url), 'utf8'), /aide\.id = 'lecteurAide';/);
+  assert.doesNotMatch(readFileSync(new URL('../src/index.html', import.meta.url), 'utf8'), /sideCommandesFantome/);
 });
