@@ -200,7 +200,7 @@ Camera moves are **smoothed** (it reaches its target in a few frames).
 |---|---|---|
 | Left drag an Element | move it in the plane facing the camera | follows the real camera (a ray); it does not go under the ground |
 | Wheel, an Element selected | move it forward or back along the camera's axis | 0.72 m per notch |
-| Right button held on the selected Element (#463d) | turn it around the vertical | a rotary knob whatever the view (`rotation-objet-3d.js`): the angle the mouse sweeps around it, accumulated (the straight drag reversed halfway round, reported); 90° snap (6°), Ctrl by 15°, Alt free, Shift five times finer; without moving, the menu |
+| Right button held on the selected Element (#463d) | turn it around the vertical | depending on the camera when the gesture starts (`rotation-objet-3d.js`): from the front (less than 30° of downward tilt), a turntable, horizontal drag at 0.5°/px; at an angle or from above, a rotary knob, the angle the mouse sweeps around it, accumulated (the straight drag reversed halfway round there, reported); 90° snap (6°), Ctrl by 15°, Alt free, Shift five times finer; without moving, the menu |
 | R (#463d) | a quarter turn, clockwise seen from above | |
 | Its modal's sliders | the three angles | ±180°, by the degree, field in degrees (#463a) |
 

@@ -5,12 +5,12 @@ import './helpers/dom-stub.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { debutDeRotation3D, angleDeRotation3D, quartDeTour3D } from '../src/rotation-objet-3d.js';
+import { debutDeRotation3D, angleDeRotation3D, quartDeTour3D, modeSelonLaCamera3D } from '../src/rotation-objet-3d.js';
 
 const deg = (r) => r * 180 / Math.PI;
 const proche = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} ≉ ${b}`);
 
-test('le glisser droit (gardé, explicite) : 0,5° par pixel ; Maj cinq fois plus fin', () => {
+test('le plateau tournant (de face) : glisser à droite tourne à droite, 0,5° par pixel ; Maj cinq fois plus fin', () => {
   const s = debutDeRotation3D({ angle: 0, pivot: { x: 100, y: 100 }, pointeur: { x: 100, y: 100 }, axe: { x: 0, y: -1, versOeil: false }, mode: 'droit' });
   assert.equal(s.mode, 'droit');
   proche(deg(angleDeRotation3D(s, { x: 140, y: 100 }, { alt: true })), 20);
@@ -60,5 +60,17 @@ test('vu de biais aussi, un bouton rotatif : un tour complet de la souris, un to
   for (let k = 1; k <= 36; k++) { const a = k * Math.PI / 18; pas.push(deg(angleDeRotation3D(s, { x: 100 * Math.cos(a), y: 100 * Math.sin(a) }, { alt: true }))); }
   for (let k = 1; k < pas.length; k++) assert.ok(pas[k] < pas[k - 1], `le sens s'inverse au pas ${k}`);
   proche(pas.at(-1), -360, 1e-6);
+});
+
+test('le geste selon la caméra : de face (moins de 30° de plongée), le plateau ; de biais ou de dessus, le bouton', () => {
+  const r = (d) => d * Math.PI / 180;
+  assert.equal(modeSelonLaCamera3D(r(0)), 'droit');
+  assert.equal(modeSelonLaCamera3D(r(25)), 'droit');
+  assert.equal(modeSelonLaCamera3D(r(-20)), 'droit');   // contre-plongée légère
+  assert.equal(modeSelonLaCamera3D(r(35)), 'circulaire');
+  assert.equal(modeSelonLaCamera3D(r(90)), 'circulaire');
+  const ev = readFileSync(new URL('../src/events.js', import.meta.url), 'utf8');
+  assert.match(ev, /const _mode = modeSelonLaCamera3D\(Math\.asin\(Math\.max\(-1, Math\.min\(1, b\.backward\.y\)\)\)\);/);
+  assert.match(ev, /axe: _mode === 'droit' \? \{ x: 0, y: -1, versOeil: false \}/);
 });
 

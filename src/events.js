@@ -11,7 +11,7 @@
  * This module is now the application's real entry point: app.js is now just a
  * simple redirect (`import './events.js'`) kept so index.html doesn't have to change.
  */
-import { debutDeRotation3D, angleDeRotation3D, quartDeTour3D } from './rotation-objet-3d.js';
+import { debutDeRotation3D, angleDeRotation3D, quartDeTour3D, modeSelonLaCamera3D } from './rotation-objet-3d.js';
 import { cablerChampsDOrientation } from './orientation-champs.js';
 import { icone } from './icones.js';
 import { demarrer as sondeDemarrer, arreter as sondeArreter, rapport as sondeRapport, synthese as sondeSynthese } from './perf-probe.js';
@@ -2563,11 +2563,17 @@ canvas.addEventListener('mousedown', (e) => {
         : (_elR ? { x: _elR.x, y: _elR.y, w: _elR.w, h: _elR.h } : null);
       if (_caseR && _boite && _ex >= _boite.x && _ex <= _boite.x + _boite.w && _ey >= _boite.y && _ey <= _boite.y + _boite.h) {
         const b = panelCamBasis3D(_caseR);
+        // Le geste selon la caméra (décidé) : de face, le plateau tournant (glisser horizontal) ; de
+        // biais ou de dessus, le bouton rotatif. `backward` va de la cible vers la caméra : sa
+        // composante verticale est le sinus de la plongée.
+        const _mode = modeSelonLaCamera3D(Math.asin(Math.max(-1, Math.min(1, b.backward.y))));
         S.panMoved = false;
         S.dragMode = 'objetRotation'; S.dragStart = { x: _ex, y: _ey };
         S.dragOrig = { id: _elR.id, enAttente: true, boutonDroit: true,
           session: debutDeRotation3D({ angle: _elR.rotY || 0, pivot: { x: _boite.x + _boite.w / 2, y: _boite.y + _boite.h / 2 },
-            pointeur: { x: _ex, y: _ey }, axe: { x: b.right.y, y: -b.up.y, versOeil: b.backward.y >= 0 } }) };
+            pointeur: { x: _ex, y: _ey }, mode: _mode,
+            // Le plateau : purement horizontal à l'écran (l'axe « vertical »), vers la droite = tourner à droite.
+            axe: _mode === 'droit' ? { x: 0, y: -1, versOeil: false } : { x: b.right.y, y: -b.up.y, versOeil: b.backward.y >= 0 } }) };
         return;
       }
     }

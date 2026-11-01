@@ -4,18 +4,31 @@
  * (utils.js), pour les Éléments des Cases et des Scènes, et le même que suit déjà le mobilier de
  * l'éditeur de bâtiment. Fonctions PURES.
  *
- * UN BOUTON ROTATIF, QUELLE QUE SOIT LA VUE (signalé : vu de biais, faire le tour de l'objet à la
- * souris inversait le sens à mi-chemin, le défaut déjà corrigé pour le mobilier du bâtiment) :
- * l'objet tourne de l'angle que la souris parcourt AUTOUR de lui à l'écran, cumulé d'une image à
- * l'autre (un tour complet sans saut). Le principe du mobilier, partout.
- *
- * (Le glisser DROIT, perpendiculaire à l'axe, n'est gardé que pour un axe vu de côté exactement
- * — `mode: 'droit'` explicite, inutilisé aujourd'hui : il s'inverse dès qu'on passe de l'autre côté.)
+ * LE GESTE DÉPEND DE LA CAMÉRA, choisi au DÉBUT du geste et gardé jusqu'au relâchement (décidé avec
+ * Valentin, comme les articulations : en ligne vu de côté, rotatif vu par la pointe de l'axe) :
+ *   - caméra DE FACE ou presque (elle plonge de moins de 30°, `PLONGEE_PLATEAU_3D`) : un PLATEAU
+ *     TOURNANT, glisser à gauche ou à droite, à 0,5° par pixel ; vers la droite, la face de l'objet
+ *     tourne vers la droite. De face, le plan de rotation est vu par la tranche : tourner la souris
+ *     autour de l'objet n'y correspond à rien de visible ;
+ *   - caméra DE BIAIS OU DE DESSUS : un BOUTON ROTATIF, l'angle que la souris parcourt AUTOUR de
+ *     l'objet à l'écran, cumulé d'une image à l'autre (un tour complet sans saut ; le glisser en ligne
+ *     s'y inversait à mi-tour, signalé). Le principe du mobilier du bâtiment, toujours vu de dessus.
  * Ctrl : par 15° ; sinon l'aimant tous les 90° (à moins de 6°), qu'Alt retire ; Maj : cinq fois plus
  * fin. Les angles sont en RADIANS.
  */
 import { POSE_DRAG_DEG_PER_PX, pointerSweepAngle3D, accumulateSweepDegrees3D } from './utils.js';
 import { angleAimante } from './batiment-mobilier.js';
+
+/** En deçà de cette plongée de la caméra (radians), le plateau tournant ; au-delà, le bouton rotatif. */
+export const PLONGEE_PLATEAU_3D = 30 * Math.PI / 180;
+
+/**
+ * Le geste pour une caméra qui plonge de `plongee` radians (vers le bas, positif ; une caméra en
+ * contre-plongée compte par sa valeur absolue). PURE.
+ */
+export function modeSelonLaCamera3D(plongee){
+  return Math.abs(plongee || 0) < PLONGEE_PLATEAU_3D ? 'droit' : 'circulaire';
+}
 
 /**
  * Commence une rotation. `angle` : l'angle de départ ; `pivot`, `pointeur` : à l'écran ; `axe` : la
