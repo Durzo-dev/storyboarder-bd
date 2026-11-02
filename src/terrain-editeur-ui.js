@@ -578,7 +578,8 @@ function dessinerApercu(){
   const scale = Math.max(c.width / sc.page.w, c.height / sc.page.h);
   // Rendu seulement si la caméra, la taille ou la Scène ont changé : un rendu de Scène coûte cher, et
   // l'éditeur se redessine souvent (survol, tracé en cours).
-  if (T.coup) return;   // pendant un coup de pinceau, le plan seul ; l'aperçu suit au relâcher
+  // Pendant un coup de pinceau aussi (demandé : l'aperçu suit le geste) ; les images se regroupent
+  // d'elles-mêmes (une par image d'écran au plus, cf. redessiner), et la grille 3D se met à jour sur place.
   const sig = JSON.stringify([T.cam, c.width, c.height, signatureDuRelief(sc.panel.relief), sc.page.objects.map(o => [o.id, o.world, o.color, o.terrainType, o.terrainColor,
     o.wallHeight, o.wallThickness, o.marquage, o.traceTexture, o.wxFloor, o.wzFloor, o.rotY, o.hidden3d])]);
   if (sig === T.sigApercu) return;

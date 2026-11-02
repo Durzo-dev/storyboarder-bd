@@ -143,3 +143,11 @@ test('« Retirer tout le relief » : demandé, puis la Scène redevient plate ; 
   assert.equal(instantanes, 1);
   assert.equal(panel.relief, undefined, 'validé : plat');
 });
+
+// Signalé : l'aperçu 3D ne suivait le pinceau qu'au relâcher.
+test('l\'aperçu suit le coup de pinceau ; la grille 3D se met à jour sur place', () => {
+  const ui = lire('terrain-editeur-ui.js');
+  assert.doesNotMatch(ui, /if \(T\.coup\) return;/);
+  const sc = lire('scene3d.js');
+  assert.match(sc, /if \(e && e\.sig !== sig && e\.dims === dims\) \{/);
+});

@@ -2510,9 +2510,20 @@ function poserRelief3D(panel, visible){
   if (!visible || reliefPlat(r)) return;
   const sig = signatureDuRelief(r);
   let e = _reliefs3D.get(panel.id);
+  // Mêmes dimensions (un coup de pinceau dans la grille) : les hauteurs sont mises à jour SUR PLACE,
+  // sans refaire la géométrie, pour que l'aperçu suive le geste.
+  const dims = `${r.pas}|${r.x0}|${r.z0}|${r.nx}|${r.nz}`;
+  if (e && e.sig !== sig && e.dims === dims) {
+    const geo = e.groupe.children[0].geometry, pos = geo.attributes.position, y0 = groundMesh3D.position.y;
+    for (let k = 0; k < r.h.length; k++) pos.array[k * 3 + 1] = y0 + (r.h[k] || 0);
+    pos.needsUpdate = true;
+    geo.computeVertexNormals();
+    geo.computeBoundingSphere(); geo.computeBoundingBox();
+    e.sig = sig;
+  }
   if (!e || e.sig !== sig) {
     if (e) { personaScene3D.remove(e.groupe); e.groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); }); }
-    e = { sig, groupe: construireRelief3D(r) };
+    e = { sig, dims, groupe: construireRelief3D(r) };
     personaScene3D.add(e.groupe);
     _reliefs3D.set(panel.id, e);
   }
