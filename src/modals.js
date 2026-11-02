@@ -1760,7 +1760,7 @@ export function closeBuildingModal() {
 export function openTracéModal(obj){
   S.tracéModalTarget = obj;
   const _tracéTitles = {
-    route: tr('Road', 'Route'), chemin: tr('Dirt path', 'Chemin de terre'),
+    route: tr('Road', 'Route'), chemin: tr('Dirt path', 'Chemin de terre'), riviere: tr('River', 'Rivière'),
     muret: tr('Low wall', 'Muret'), cloture: tr('Fence', 'Clôture'),
     haie: tr('Hedge', 'Haie végétale'), barriere: tr('Road barrier', 'Barrière de route'),
   };

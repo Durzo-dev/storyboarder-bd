@@ -34,7 +34,7 @@ export function contenuDuPlan(page, panel, outils = {}){
       const w = o.world || {};
       if (o.tracéType === 'terrain') {
         if (Array.isArray(w.corners) && w.corners.length >= 3 && w.corners.every(pointFini)) {
-          zones.push({ type: 'zone', id: o.id, nom: o.name || '', pts: w.corners.map(c => ({ x: c.x, z: c.z })), couleur: o.color || null });
+          zones.push({ type: 'zone', id: o.id, nom: o.name || '', pts: w.corners.map(c => ({ x: c.x, z: c.z })), eau: o.terrainType === 'eau', couleur: o.terrainType === 'eau' ? '#2E6E9E' : (o.color || null) });
         }
       } else if (Array.isArray(w.pts) && w.pts.length >= 2 && w.pts.every(pointFini)) {
         traces.push({ type: 'trace', id: o.id, nom: o.name || '', sorte: o.tracéType, pts: w.pts.map(c => ({ x: c.x, z: c.z })),
@@ -111,7 +111,7 @@ export function pasDeLaGrille(ppm){
 // ── #462b-1 : tracer et retoucher les Zones et les Tracés ────────────────────────────────────
 
 /** La largeur 3D d'une route ou d'un chemin posé dans l'éditeur, en mètres (réglable ensuite). */
-export const LARGEUR_PAR_DEFAUT_M = Object.freeze({ route: 5, chemin: 1.5 });
+export const LARGEUR_PAR_DEFAUT_M = Object.freeze({ route: 5, chemin: 1.5, riviere: 4 });
 /** En deçà, un rectangle de Zone est un glissement de souris, pas une intention (mètres). */
 export const COTE_MIN_DE_ZONE = 0.5;
 

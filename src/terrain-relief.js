@@ -178,3 +178,59 @@ export function aplanirSousLesEmprises(r, emprises, marge = 0.6){
   }
   return { ...r, h };
 }
+
+// ── #462d : l'eau ─────────────────────────────────────────────────────────────────────────────
+
+/** La profondeur du lit d'une rivière (mètres) et l'eau qui y coule (sous le bord), par défaut. */
+export const PROFONDEUR_RIVIERE = 1.2;
+export const EAU_SOUS_LA_BERGE = 0.35;
+/** Le niveau d'un lac ou d'une mer, par défaut (mètres, par rapport au Sol). */
+export const NIVEAU_EAU_PAR_DEFAUT = -0.3;
+/** La pente des berges, au-delà du lit (mètres). */
+const BERGE = 1.5;
+
+function distanceAuTrait(p, pts){
+  let d = Infinity;
+  for (let i = 0; i + 1 < pts.length; i++) {
+    const a = pts[i], b = pts[i + 1], dx = b.x - a.x, dz = b.z - a.z, l2 = dx * dx + dz * dz;
+    const t = l2 > 0 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / l2)) : 0;
+    d = Math.min(d, Math.hypot(p.x - (a.x + t * dx), p.z - (a.z + t * dz)));
+  }
+  return d;
+}
+
+/** Le creux d'un lit de rivière à la distance d de son axe : plein au milieu, nul au haut de la berge. */
+export function creuxDuLit(d, largeur, profondeur){
+  const demi = largeur / 2;
+  if (d <= demi) return profondeur * (1 - 0.5 * (d / demi) * (d / demi));
+  if (d < demi + BERGE) { const t = (d - demi) / BERGE; return profondeur * 0.5 * (1 - t) * (1 - t); }
+  return 0;
+}
+
+/**
+ * Le relief CREUSÉ par les rivières (#462d) : `rivieres` = [{ pts, largeur, profondeur }]. La grille
+ * est créée ou agrandie au besoin (une Scène plate reçoit son relief à cet endroit). PUR.
+ */
+export function creuserLesRivieres(r, rivieres){
+  const liste = (rivieres || []).filter(v => Array.isArray(v.pts) && v.pts.length >= 2 && v.largeur > 0 && v.profondeur > 0);
+  if (!liste.length) return r;
+  let g = r;
+  for (const v of liste) {
+    const m = v.largeur / 2 + BERGE + 1;
+    const xs = v.pts.map(p => p.x), zs = v.pts.map(p => p.z);
+    g = etendreLeRelief(g, Math.min(...xs) - m, Math.min(...zs) - m, Math.max(...xs) + m, Math.max(...zs) + m);
+  }
+  const h = g.h.slice();
+  for (const v of liste) {
+    const m = v.largeur / 2 + BERGE;
+    const xs = v.pts.map(p => p.x), zs = v.pts.map(p => p.z);
+    const i0 = Math.max(1, Math.floor((Math.min(...xs) - m - g.x0) / g.pas)), i1 = Math.min(g.nx - 2, Math.ceil((Math.max(...xs) + m - g.x0) / g.pas));
+    const j0 = Math.max(1, Math.floor((Math.min(...zs) - m - g.z0) / g.pas)), j1 = Math.min(g.nz - 2, Math.ceil((Math.max(...zs) + m - g.z0) / g.pas));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const k = j * g.nx + i;
+      const c = creuxDuLit(distanceAuTrait({ x: g.x0 + i * g.pas, z: g.z0 + j * g.pas }, v.pts), v.largeur, v.profondeur);
+      if (c > 0) h[k] = Math.min(h[k], g.h[k] - c);
+    }
+  }
+  return { ...g, h };
+}

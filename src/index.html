@@ -428,9 +428,16 @@
           <!-- Tout retirer (demandé), après confirmation masquable. -->
           <button id="terrainReliefRetirerBtn" type="button" class="full-btn delete-btn">Retirer tout le relief</button>
         </section>
+        <!-- #462d : la Zone à poser : de terrain, ou d'eau (lac, mer). -->
+        <section class="side-section" id="terrainSecZone" hidden>
+          <h2 id="terrainSectionZone">Zone à poser</h2>
+          <div id="terrainSortesZone" class="terrain-sortes"></div>
+        </section>
         <section class="side-section" id="terrainSecChoisi" hidden>
           <h2 id="terrainSectionChoisi">Sélection</h2>
           <p id="terrainChoisiNom" class="terrain-scene-nom"></p>
+          <!-- #462d : les réglages propres (rivière : largeur, profondeur ; eau : niveau). -->
+          <div id="terrainChoisiReglages"></div>
           <button id="terrainReglerBtn" type="button" class="full-btn">Régler</button>
           <button id="terrainSupprimerBtn" type="button" class="full-btn delete-btn">Supprimer</button>
         </section>
@@ -1172,6 +1179,9 @@
             </button>
             <button type="button" class="help-group" data-help="terrain">
               <span class="help-group-title">Éditeur de terrain</span><span class="help-group-compte"></span>
+            </button>
+            <button type="button" class="help-group" data-help="terrain_relief">
+              <span class="help-group-title">Relief et eau</span><span class="help-group-compte"></span>
             </button>
           </div>
         </div>

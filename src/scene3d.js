@@ -14,7 +14,9 @@
 import { mursDevantMasques, mursDeDevant, versLaCameraDansLeBatiment, retenirMursDevant } from './batiment-murs-devant.js';
 import { estUnBatimentPlace } from './batiment-element.js';
 import { MARQUE_SOL_PERCE } from './batiment-3d.js';
-import { reliefPlat, signatureDuRelief, hauteurDuRelief, densifierLaLigne, aplanirSousLesEmprises } from './terrain-relief.js';
+import { reliefPlat, signatureDuRelief, hauteurDuRelief, densifierLaLigne, aplanirSousLesEmprises,
+  creuserLesRivieres, PROFONDEUR_RIVIERE, EAU_SOUS_LA_BERGE, NIVEAU_EAU_PAR_DEFAUT } from './terrain-relief.js';
+import { installerEau3D } from './ground-water-3d.js';
 import { niveauxTries } from './batiment-niveaux.js';
 import { formesDesPieces } from './batiment-pieces.js';
 import { sondeDebut, sondeFin, sondeCompter, sondeActive, sondeValeur } from './perf-probe.js';
@@ -2544,7 +2546,11 @@ function poserRelief3D(panel, visible, r){
  * hauteur du relief en son centre (décidé : le terrain s'aplanit sous un bâtiment), ou null sans relief.
  */
 function reliefEffectif3D(panel, page){
-  const r = panel && panel.relief;
+  // #462d : les rivières creusent leur lit (une Scène plate reçoit alors un relief à cet endroit).
+  const rivieres = ((page && page.objects) || []).filter(o => o.type === 'tracé' && o.panelId === panel.id && o.tracéType === 'riviere'
+    && o.world && Array.isArray(o.world.pts) && o.world.pts.length >= 2)
+    .map(o => ({ pts: o.world.pts, largeur: o.world.width || 4, profondeur: o.profondeur || PROFONDEUR_RIVIERE }));
+  const r = creuserLesRivieres(panel && panel.relief, rivieres);
   if (reliefPlat(r)) return null;
   const emprises = [];
   for (const o of panelOwnedElements3D(panel, page)) {
@@ -2589,6 +2595,22 @@ function draperSurLeRelief3D(groupe, r){
     m.geometry.computeVertexNormals();
     m.geometry.computeBoundingSphere(); m.geometry.computeBoundingBox();
   });
+}
+/**
+ * #462d : LA MATIÈRE DE L'EAU des rivières et des lacs : celle de l'eau du Sol (ground-water-3d.js :
+ * vagues, reflet du ciel), sur une matière à elle, toujours allumée. Le ciel de la Case est reposé
+ * à chaque rendu (une seule matière, partagée par toutes les eaux).
+ */
+const _uniformesEauDesTraces3D = { uEau: { value: 1 }, uEauCiel: { value: null } };
+let _matiereEau3D = null;
+function matiereEau3D(ciel){
+  if (!_matiereEau3D) {
+    _matiereEau3D = installerEau3D(new THREE.MeshStandardMaterial({ color: 0x1a6090, roughness: 0.15, metalness: 0, side: THREE.DoubleSide,
+      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }), _uniformesEauDesTraces3D);
+    _uniformesEauDesTraces3D.uEauCiel.value = new THREE.Color(0x9fc9ee);
+  }
+  if (ciel != null) _uniformesEauDesTraces3D.uEauCiel.value.set(ciel);
+  return _matiereEau3D;
 }
 /** Libère les reliefs (changement de Projet). */
 function libererReliefs3D(){
@@ -3204,7 +3226,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       : null;
     // #437 : l'arrivée du grain refait la Trace, qui passe de l'aplat à sa texture.
     const sigKey = JSON.stringify({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, wh: o.wallHeight, wt: o.wallThickness, world: o.world, holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),
-      relief: signatureDuRelief(_relief) });   // #462c-2 : drapé sur le relief
+      relief: signatureDuRelief(_relief), eau: [o.niveauEau, o.profondeur] });   // #462c-2 : drapé sur le relief ; #462d : l'eau
     let entry = tracéMeshCache3D.get(o.id);
     if (!entry || entry.sigKey !== sigKey) {
       sondeCompter('Trace reconstruite');
@@ -3238,7 +3260,25 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
             tracéOpeningHole3D(c, _tmSmoothed, _tmTotal, _yBase0, _wallHGlobal));
         }
       }
-      if (o.tracéType === 'terrain') {
+      if (o.tracéType === 'terrain' && o.terrainType === 'eau') {
+        // #462d : une Zone d'EAU (lac, mer) : une nappe PLATE à son niveau (par rapport au Sol), jamais
+        // drapée. Ce qui est plus bas que ce niveau (le relief creusé) est sous l'eau ; plus haut, la
+        // nappe passe dessous et ne se voit pas.
+        const nappe = new THREE.Mesh(new THREE.PlaneGeometry(w.w, w.h), matiereEau3D(_eclairage.ciel));
+        nappe.rotation.x = -Math.PI / 2;
+        nappe.rotation.z = -(w.rotY || 0);
+        nappe.position.set(w.cx, GROUND_Y_DEFAULT_3D + (Number.isFinite(o.niveauEau) ? o.niveauEau : NIVEAU_EAU_PAR_DEFAUT), w.cz);
+        nappe.userData.dessinAuSol = true;
+        group.add(nappe);
+      } else if (o.tracéType === 'riviere') {
+        // #462d : une RIVIÈRE : son lit est creusé dans le relief (reliefEffectif3D) ; l'eau est un ruban
+        // posé sur le relief d'AVANT le creusement, un peu sous la berge.
+        const ruban = buildTracéRouteGeometry3D(w.pts, w.width || 4, GROUND_Y_DEFAULT_3D);
+        if (!ruban) return;
+        const m = new THREE.Mesh(ruban, matiereEau3D(_eclairage.ciel));
+        m.userData.dessinAuSol = true;
+        group.add(m);
+      } else if (o.tracéType === 'terrain') {
         // Terrain Zone: opaque PlaneGeometry with the real texture of the chosen Ground type.
         // Logic identical to Building Slabs (floor): covers the Ground without transparency.
         const tType = o.terrainType || 'herbe';
@@ -3403,7 +3443,10 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         }
         if (group.children.length === 0) return; // empty geometry
       }
-      draperSurLeRelief3D(group, _relief);
+      // #462d : l'eau ne se drape pas sur le relief rendu : une nappe reste plate, une rivière suit le
+      // relief d'AVANT son lit (sinon elle coulerait au fond, sous la berge).
+      if (o.tracéType === 'riviere') { draperSurLeRelief3D(group, panel.relief); group.position.y = -EAU_SOUS_LA_BERGE; }
+      else if (!(o.tracéType === 'terrain' && o.terrainType === 'eau')) draperSurLeRelief3D(group, _relief);
       // #462c : un dessin à plat (route, chemin, Zone) reste un dessin au sol même drapé sur une
       // colline : il ne projette pas d'ombre (marquerProjectionDOmbre3D lit cette marque).
       if (o.tracéType === 'route' || o.tracéType === 'chemin' || o.tracéType === 'terrain') group.traverse(m => { m.userData.dessinAuSol = true; });

@@ -137,7 +137,7 @@ export const ICONE_TYPE_OBJET = {
 /** L'icône de chaque type de Tracé. */
 export const ICONE_TRACÉ = {
   route: 'tracer', chemin: 'chemin_terre', terrain: 'zone',
-  muret: 'muret', cloture: 'cloture', haie: 'haie', barriere: 'barriere',
+  muret: 'muret', cloture: 'cloture', haie: 'haie', barriere: 'barriere', riviere: 'piscine',
 };
 
 /** Le visage de chaque émotion d'un Personnage (sa ligne dans la liste des Éléments). */

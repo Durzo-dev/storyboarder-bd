@@ -410,6 +410,8 @@ export const TRACÉ_DEFAULTS = {
   cloture:  { color: '#7A5230', width: 2,  wallHeight: 0.80 },
   haie:     { color: '#3A7A3A', width: 8,  wallHeight: 0.90 },
   barriere: { color: '#A8A8A8', width: 5,  wallHeight: 0.55 },
+  // #462d : la rivière, un Tracé qui creuse son lit et se remplit d'eau (largeur et profondeur en mètres).
+  riviere:  { color: '#2E6E9E', width: 8 },
 };
 
 /**

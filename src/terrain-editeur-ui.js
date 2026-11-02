@@ -24,7 +24,8 @@ import { contenuDuPlan, cadrageDuPlan, versLePlan, zoomerLePlan, pasDeLaGrille, 
 import { rendreSceneVueLibre3D, ensureElementWorldPos3D, pointDuBatimentPlace3D, panelCamBasis3D, getCamOrbitWorld,
   tracéUpdateScreenPts } from './scene3d.js';
 import { nomDuTrace } from './canvas-tools.js';
-import { hauteurDuRelief, peindreLeRelief, reliefValide, reliefPlat, signatureDuRelief, MODES_DU_PINCEAU } from './terrain-relief.js';
+import { hauteurDuRelief, peindreLeRelief, reliefValide, reliefPlat, signatureDuRelief, MODES_DU_PINCEAU,
+  PROFONDEUR_RIVIERE, NIVEAU_EAU_PAR_DEFAUT } from './terrain-relief.js';
 import { TRACÉ_DEFAULTS } from './constants.js';
 import { getElementDepth, vitesseRotation3D, vitesseDeplacement3D, facteurDeZoom3D, deltaMolette3D } from './utils.js';
 import { niveauxTries } from './batiment-niveaux.js';
@@ -98,7 +99,7 @@ export function ouvrirEditeurDeTerrain(sceneId, { choisi = null } = {}){
   T = { sceneId, vue: null, cam: null, formes: [], choisi, geste: null, demande: 0,
     // #462b : l'outil, le Tracé à poser, la ligne en cours (et le point sous la souris), le rectangle de
     // Zone en cours, la Zone ou le Tracé qu'on fait glisser ; la signature du dernier aperçu rendu.
-    outil: 'selection', sorteTrace: 'route', chaine: null, fantome: null, rectangle: null, glisser: null, sigApercu: null,
+    outil: 'selection', sorteTrace: 'route', sorteZone: 'terrain', chaine: null, fantome: null, rectangle: null, glisser: null, sigApercu: null,
     // #462c : le pinceau du relief (réglages gardés pendant la session), le coup en cours, le survol.
     pinceau: { ...T_PINCEAU }, coup: null, survol: null,
     // L'état de départ (remis si l'on quitte sans valider), l'historique de l'éditeur.
@@ -245,7 +246,8 @@ function clavier(e){
 
 // ── Les outils (#462b) ────────────────────────────────────────────────────────────────────────
 
-const SORTES_DE_TRACE = ['route', 'chemin', 'muret', 'cloture', 'haie', 'barriere'];
+const SORTES_DE_TRACE = ['route', 'chemin', 'riviere', 'muret', 'cloture', 'haie', 'barriere'];
+const SORTES_DE_ZONE = ['terrain', 'eau'];
 const OUTILS = [['terrainOutilSelection', 'selection'], ['terrainOutilZone', 'zone'], ['terrainOutilTrace', 'trace'], ['terrainOutilRelief', 'relief']];
 function nomDeMode(m){
   return ({ monter: tr('Raise', 'Monter'), creuser: tr('Dig', 'Creuser'), aplanir: tr('Flatten', 'Aplanir'), adoucir: tr('Smooth', 'Adoucir') })[m] || m;
@@ -260,7 +262,8 @@ function peindre(m){
 }
 function nomDeSorte(sorte){
   return ({ route: tr('Road', 'Route'), chemin: tr('Dirt path', 'Chemin'), muret: tr('Low wall', 'Muret'),
-    cloture: tr('Fence', 'Clôture'), haie: tr('Hedge', 'Haie'), barriere: tr('Barrier', 'Barrière') })[sorte] || sorte;
+    cloture: tr('Fence', 'Clôture'), haie: tr('Hedge', 'Haie'), barriere: tr('Barrier', 'Barrière'), riviere: tr('River', 'Rivière'),
+    terrain: tr('Terrain', 'Terrain'), eau: tr('Water (lake, sea)', 'Eau (lac, mer)') })[sorte] || sorte;
 }
 
 function choisirOutil(outil){
@@ -293,9 +296,13 @@ function poser(sorte, world){
   if (!sc || !world) return;
   retenirPourAnnuler();
   const def = TRACÉ_DEFAULTS[sorte] || {};
-  const obj = sorte === 'terrain'
-    ? { id: newId(), type: 'tracé', tracéType: 'terrain', name: nomDuTrace('terrain'), panelId: sc.panel.id, terrainType: 'herbe', label: '', world }
+  const obj = sorte === 'terrain' || sorte === 'eau'
+    ? { id: newId(), type: 'tracé', tracéType: 'terrain', name: sorte === 'eau' ? tr('Water', 'Eau') : nomDuTrace('terrain'), panelId: sc.panel.id,
+      terrainType: sorte === 'eau' ? 'eau' : 'herbe', label: '', world }
     : { id: newId(), type: 'tracé', tracéType: sorte, name: nomDuTrace(sorte), panelId: sc.panel.id, color: def.color, width: def.width, world };
+  // #462d : un lac à son niveau ; une rivière avec sa profondeur.
+  if (sorte === 'eau') obj.niveauEau = NIVEAU_EAU_PAR_DEFAUT;
+  if (sorte === 'riviere') obj.profondeur = PROFONDEUR_RIVIERE;
   if (def.wallHeight !== undefined) obj.wallHeight = def.wallHeight;
   sc.page.objects.push(obj);
   T.choisi = obj.id;
@@ -366,6 +373,53 @@ export function commandesDuTerrain(trad = tr, outil = 'selection'){
 }
 
 /**
+ * #462d : les réglages propres à la Zone ou au Tracé choisi : une rivière (largeur, profondeur), une
+ * Zone d'eau (son niveau). Des curseurs construits UNE FOIS par objet (même raison que boutonsDeChoix) ;
+ * le premier mouvement d'un curseur retient l'état pour Ctrl+Z.
+ */
+function reglagesDuChoisi(obj){
+  const boite = $('terrainChoisiReglages');
+  const defs = !obj ? [] : obj.tracéType === 'riviere'
+    ? [{ cle: 'largeur', nom: tr('Width (m)', 'Largeur (m)'), min: 1, max: 30, pas: 0.5,
+         lire: () => (obj.world && obj.world.width) || 4, ecrire: (v) => { obj.world = { ...obj.world, width: v }; } },
+       { cle: 'profondeur', nom: tr('Depth (m)', 'Profondeur (m)'), min: 0.3, max: 5, pas: 0.1,
+         lire: () => obj.profondeur || PROFONDEUR_RIVIERE, ecrire: (v) => { obj.profondeur = v; } }]
+    : (obj.tracéType === 'terrain' && obj.terrainType === 'eau')
+      ? [{ cle: 'niveau', nom: tr('Water level (m)', "Niveau de l'eau (m)"), min: -5, max: 1, pas: 0.05,
+           lire: () => (Number.isFinite(obj.niveauEau) ? obj.niveauEau : NIVEAU_EAU_PAR_DEFAUT), ecrire: (v) => { obj.niveauEau = v; } }]
+      : [];
+  const cle = obj ? obj.id + ':' + defs.map(d => d.cle).join(',') : '';
+  if (boite.dataset.cle !== cle) {
+    boite.replaceChildren(...defs.flatMap(d => {
+      const l = document.createElement('label');
+      l.className = 'terrain-curseur-libelle';
+      const valeur = document.createElement('span');
+      l.textContent = d.nom + ' ';
+      l.appendChild(valeur);
+      const c = document.createElement('input');
+      c.type = 'range'; c.min = String(d.min); c.max = String(d.max); c.step = String(d.pas);
+      c.dataset.cle = d.cle;
+      let retenu = false;
+      c.oninput = () => {
+        if (!retenu) { retenirPourAnnuler(); retenu = true; }
+        d.ecrire(Number(c.value));
+        valeur.textContent = String(Number(c.value)).replace('.', ',');
+        apresModification(obj);
+      };
+      c.onchange = () => { retenu = false; };
+      c._lire = d.lire; c._valeur = valeur;
+      return [l, c];
+    }));
+    boite.dataset.cle = cle;
+  }
+  for (const c of boite.children || []) {
+    if (!c._lire || document.activeElement === c) continue;
+    c.value = String(c._lire());
+    c._valeur.textContent = String(c._lire()).replace('.', ',');
+  }
+}
+
+/**
  * Une rangée de boutons de choix (genre de Tracé, mode du pinceau). ⚠️ CONSTRUITE UNE FOIS, PUIS
  * SEULEMENT RECOLORÉE (signalé : cliquer « Creuser » ne faisait rien). majContenu repasse à chaque
  * dessin de la page ; refaire les boutons remplaçait celui qu'on pressait entre l'appui et le
@@ -411,6 +465,10 @@ function majContenu(){
   const obj = terrainChoisi();
   $('terrainSecChoisi').hidden = !obj;
   if (obj) $('terrainChoisiNom').textContent = obj.name || nomDeSorte(obj.tracéType);
+  reglagesDuChoisi(obj);
+  // La Zone à poser (outil Zone).
+  $('terrainSecZone').hidden = T.outil !== 'zone';
+  if (T.outil === 'zone') boutonsDeChoix($('terrainSortesZone'), SORTES_DE_ZONE, nomDeSorte, T.sorteZone, (z) => { T.sorteZone = z; majContenu(); });
   // La liste des Éléments : refaite seulement si elle a changé (même raison que boutonsDeChoix).
   const liste = $('terrainContenu');
   const nommes = T.formes.filter(f => f.type === 'element' || f.type === 'batiment');
@@ -765,7 +823,7 @@ export function initEditeurDeTerrain(){
     if (T.coup) { T.coup = null; apresModification(null); }
     if (T.rectangle && e && e.type === 'pointerup') {
       const { a, b } = T.rectangle; T.rectangle = null;
-      poser('terrain', zoneEntre(a, b));
+      poser(T.sorteZone, zoneEntre(a, b));
       redessiner();
     }
     T.rectangle = null;

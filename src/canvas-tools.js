@@ -51,7 +51,7 @@ function setCanvasCursor(valeur){
 // the user and stored in the project file.
 const TRACÉ_NAMES = {
   route: 'Route', chemin: 'Chemin de terre', muret: 'Muret',
-  cloture: 'Clôture', haie: 'Haie végétale', barriere: 'Barrière de route',
+  cloture: 'Clôture', haie: 'Haie végétale', barriere: 'Barrière de route', riviere: 'Rivière',
 };
 /** Le nom donné à un Tracé neuf (aussi par l'éditeur de terrain, #462b). */
 export const nomDuTrace = (type) => (type === 'terrain' ? 'Terrain' : TRACÉ_NAMES[type] || 'Tracé');

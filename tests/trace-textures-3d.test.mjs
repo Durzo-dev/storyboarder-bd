@@ -23,8 +23,9 @@ const THREE = globalThis.THREE;
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 describe('Traces : le registre des textures', () => {
-  test('⚠️ CHAQUE TRACE A SA TEXTURE, SAUF LE TERRAIN QUI EMPRUNTE CELLES DU SOL', () => {
-    const attendus = Object.keys(TRACÉ_DEFAULTS).filter(t => t !== 'terrain').sort();
+  test('⚠️ CHAQUE TRACE A SA TEXTURE, SAUF LE TERRAIN QUI EMPRUNTE CELLES DU SOL, ET LA RIVIÈRE (DE L\'EAU)', () => {
+    // #462d : la rivière n'a pas de texture, c'est la matière d'eau qui la dessine.
+    const attendus = Object.keys(TRACÉ_DEFAULTS).filter(t => t !== 'terrain' && t !== 'riviere').sort();
     assert.deepEqual(Object.keys(TRACÉ_TEXTURES).sort(), attendus);
     assert.equal(couleurDeTrace3D('terrain', '#123456'), null);
   });
@@ -171,7 +172,7 @@ describe('Traces : chaque Trace est branchée', () => {
   test('⚠️ L’ARRIVÉE DU GRAIN REFAIT LA TRACE ET LA CASE', () => {
     // #446d : la texture choisie entre aussi dans la signature, et c'est SON grain qu'on attend.
     // #462c-2 : la signature du relief la suit (le drapé).
-    assert.ok(scene.includes('holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),\n      relief: signatureDuRelief(_relief) });'));
+    assert.ok(scene.includes('holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),\n      relief: signatureDuRelief(_relief), eau: [o.niveauEau, o.profondeur] });'));
     assert.ok(scene.includes('world: o.world, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) }))'));
     const events = readFileSync(join(RACINE, 'src', 'events.js'), 'utf8');
     assert.ok(events.includes('...grainsDesTraces3D()'), 'les grains des Traces ne sont pas préchargés');

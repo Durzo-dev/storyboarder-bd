@@ -65,6 +65,7 @@ export const I18N_TEXT = [
   ['#terrainReliefRetirerBtn', 'Remove all the relief', 'Retirer tout le relief'],
   ['#terrainSectionTrace', 'Path to draw', 'Tracé à poser'],
   ['#terrainSectionChoisi', 'Selection', 'Sélection'],
+  ['#terrainSectionZone', 'Zone to draw', 'Zone à poser'],
   ['#terrainReglerBtn', 'Settings', 'Régler'],
   ['#terrainSupprimerBtn', 'Delete', 'Supprimer'],
   ['#batimentEditeurTitre', 'Building editor', 'Éditeur de bâtiment'],

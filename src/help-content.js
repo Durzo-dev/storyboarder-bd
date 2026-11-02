@@ -320,8 +320,11 @@ export const HELP_MANUAL_EN = [
     'Nothing reaches the Scene before "Validate" (Ctrl+Z and Ctrl+Y undo and redo inside the editor); "Quit" or Esc without validating asks first, then drops the changes.',
     'Terrain zones and paths are made here only. Zone tool (Z): drag a rectangle. Paths tool (T): pick the kind (road, path, low wall, fence, hedge, barrier), click one point per bend, double-click, Enter or right-click to finish.',
     'Selection tool (V): click a zone or path to select it, drag to move it, Del to delete it; a double-click or "Settings" opens its settings (texture, colour, width, height).',
+  ]},
+  { id: 'terrain_relief', title: 'Relief and water', paragraphs: [
     'Relief tool (R): drag to paint the ground: Raise, Dig, Flatten (to the height under the first click) or Smooth, with a size and a strength. The circle shows the brush, with the height under it; brown is above the ground, blue below. "Remove all the relief" makes the Scene flat again.',
     'What stands on the ground follows the relief: Elements, paths, low walls, zones. Under a building, the ground is flattened at the height of its centre. A Scene loaded into a panel brings its relief.',
+    'Water: the River path (Paths tool) digs its bed and fills it, with its width and depth under "Selection". A Water zone (Zone tool, "Water (lake, sea)") is a flat sheet at its level: whatever is dug below it is under water.',
     'In the Elements list, zones and paths sit in the "Terrain" group (it folds, like "Not visible"); right-click: "Edit" opens the terrain editor on them. They can no longer be moved or deleted on the Scene itself.',
   ]},
 ];
@@ -594,8 +597,11 @@ export const HELP_MANUAL_FR = [
     "Rien ne va sur la Scène avant « Valider » (Ctrl+Z et Ctrl+Y annulent et rétablissent dans l'éditeur) ; « Quitter » ou Échap sans valider demande d'abord, puis abandonne les modifications.",
     "Les Zones et les Tracés se font ici seulement. Outil Zone (Z) : glisser un rectangle. Outil Tracés (T) : choisir le genre (route, chemin, muret, clôture, haie, barrière), un clic par virage, double-clic, Entrée ou clic droit pour terminer.",
     "Outil Sélection (V) : clic sur une Zone ou un Tracé pour le choisir, glisser pour le déplacer, Suppr pour le supprimer ; un double-clic ou « Régler » ouvre ses réglages (texture, couleur, largeur, hauteur).",
+  ]},
+  { id: 'terrain_relief', title: 'Relief et eau', paragraphs: [
     "Outil Relief (R) : glisser pour peindre le sol : Monter, Creuser, Aplanir (à la hauteur du premier clic) ou Adoucir, avec une taille et une force. Le cercle montre le pinceau et la hauteur dessous ; le brun est au-dessus du Sol, le bleu en dessous. « Retirer tout le relief » rend la Scène plate.",
     "Ce qui est posé suit le relief : Éléments, Tracés, murets, Zones. Sous un bâtiment, le sol est aplani à la hauteur de son centre. Une Scène chargée dans une Case apporte son relief.",
+    "L'eau : le Tracé Rivière (outil Tracés) creuse son lit et s'y remplit, avec sa largeur et sa profondeur dans « Sélection ». Une Zone d'eau (outil Zone, « Eau (lac, mer) ») est une nappe plate à son niveau : ce qui est creusé plus bas est sous l'eau.",
     "Dans la liste des Éléments, Zones et Tracés sont rangés dans « Terrain » (repliable, comme « Non visible ») ; clic droit : « Modifier » ouvre l'éditeur de terrain sur eux. Ils ne se déplacent ni ne se suppriment plus sur la Scène elle-même.",
   ]},
 ];
