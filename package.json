@@ -1,13 +1,13 @@
 {
   "name": "storyboard-bd",
-  "version": "1.15.25",
+  "version": "1.15.26",
   "engines": {
     "node": ">=22"
   },
   "description": "Storyboarder BD — Découpage de planches BD",
   "main": "electron/main.js",
   "author": "Valentin",
-  "license": "UNLICENSED",
+  "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "scripts": {
     "start": "electron .",
