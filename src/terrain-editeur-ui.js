@@ -31,7 +31,12 @@ export function editeurDeTerrainOuvert(){ return !!T; }
 /** La Scène éditée, sa page et son canevas (null si elle a disparu). */
 function laScene(){
   const scene = T && (S.scenes || []).find(s => s.id === T.sceneId);
-  const page = scene && scene.pages && scene.pages[0];
+  const donnees = scene && scene.pages && scene.pages[0];
+  // ⚠️ LA PAGE COMME LA DONNE currentPage() (signalé : l'aperçu restait uni) : les dimensions, l'échelle
+  // et le style sont ceux de la SCÈNE, pas de sa page brute, qui n'en a pas. Sans w / h, le champ de la
+  // caméra et la taille du rendu valaient NaN.
+  const page = donnees && { w: scene.w, h: scene.h, scale: scene.scale, format: scene.format, style3d: scene.style3d,
+    objects: donnees.objects, bgColor: donnees.bgColor };
   const panel = page && (page.objects || []).find(o => o.type === 'panel');
   return panel ? { scene, page, panel } : null;
 }
@@ -74,7 +79,9 @@ export function ouvrirEditeurDeTerrain(sceneId, { choisi = null } = {}){
   // L'aperçu part de la caméra de la Scène.
   const p = sc.panel;
   const centre = getCamOrbitWorld(p, panelCamBasis3D(p));
-  T.cam = { rotX: Number.isFinite(p.camRotX) ? p.camRotX : 0.4, rotY: p.camRotY || 0,
+  // Une Scène est souvent en vue de dessus (son défaut) : l'aperçu, lui, part de biais (55° au plus),
+  // le plan montrant déjà le dessus.
+  T.cam = { rotX: Math.min(0.96, Number.isFinite(p.camRotX) ? p.camRotX : 0.6), rotY: p.camRotY || 0,
     dist: p.camDist || PANEL_CAM_DEFAULT_DIST_3D, x: centre.x, y: centre.y, z: centre.z };
   $('terrainEditeur').classList.remove('hidden');
   $('terrainSceneNom').textContent = sc.scene.name || '';

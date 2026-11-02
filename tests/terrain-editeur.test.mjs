@@ -97,3 +97,10 @@ test('câblage : bouton à droite de l\'Éditeur de bâtiment, inerte sans Scèn
   assert.match(sc, /export function rendreSceneVueLibre3D\(panel, page, cam, scale = 0\.5\)\{/);
   assert.match(sc, /for \(const \[k, avait, v\] of avant\) \{ if \(avait\) panel\[k\] = v; else delete panel\[k\]; \}/);
 });
+
+// Signalé : l'aperçu 3D restait uni. La page brute d'une Scène n'a ni w ni h (ils sont sur la Scène) :
+// le rendu recevait NaN. L'éditeur reconstruit la page comme currentPage().
+test('la page de la Scène porte ses dimensions et son style (comme currentPage)', () => {
+  const ui = lire('terrain-editeur-ui.js');
+  assert.match(ui, /const page = donnees && \{ w: scene\.w, h: scene\.h, scale: scene\.scale, format: scene\.format, style3d: scene\.style3d,/);
+});
