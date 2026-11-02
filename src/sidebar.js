@@ -1209,15 +1209,22 @@ function majSectionAffichageBatiment(el){
   const id = el.id;
   masquer.onclick = async () => {
     const { ouvrirEditeurDeBatiment } = await import('./batiment-editeur-ui.js');
+    // Au retour, le bâtiment est RESÉLECTIONNÉ (demandé) : les clics dans l'éditeur tombent hors du
+    // canevas et le désélectionnaient (deselection.js) ; on revient à la Case / Scène sur lui.
+    const resselectionner = (cible) => { S.selectedId = cible.id; S.selectedRoomId = null; };
     ouvrirEditeurDeBatiment({ batiment: el.batiment, masquage: {
       masques: masquesDe(el),
-      annuler: () => {},
+      annuler: () => {
+        const cible = currentPage().objects.find(o => o.id === id);
+        if (cible && estUnBatimentPlace(cible)) { resselectionner(cible); drawCurrentPage(); }
+      },
       // Retrouvé par son id au retour : un Ctrl+Z a pu remplacer l'objet.
       valider: (m) => {
         const cible = currentPage().objects.find(o => o.id === id);
         if (!cible || !estUnBatimentPlace(cible)) return;
         _snapshot();
         fixerMasques(cible, m);
+        resselectionner(cible);
         drawCurrentPage();
       },
     } });

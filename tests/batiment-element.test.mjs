@@ -192,3 +192,13 @@ describe('masquer des parties d\'un bâtiment placé (#464)', () => {
     assert.match(sb, /_snapshot\(\);\n\s*fixerMasques\(cible, m\);/);
   });
 });
+
+// Signalé : après « Choisir ce qui est masqué », Valider (ou Annuler) ramenait à la Case / Scène sans
+// le bâtiment sélectionné (les clics dans l'éditeur, hors canevas, le désélectionnaient).
+test('le masquage validé ou annulé : le bâtiment placé reste sélectionné au retour', async () => {
+  const { readFileSync } = await import('node:fs');
+  const sb = readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8');
+  assert.match(sb, /const resselectionner = \(cible\) => \{ S\.selectedId = cible\.id; S\.selectedRoomId = null; \};/);
+  assert.match(sb, /annuler: \(\) => \{\n\s*const cible = currentPage\(\)\.objects\.find\(o => o\.id === id\);\n\s*if \(cible && estUnBatimentPlace\(cible\)\) \{ resselectionner\(cible\); drawCurrentPage\(\); \}/);
+  assert.match(sb, /fixerMasques\(cible, m\);\n\s*resselectionner\(cible\);\n\s*drawCurrentPage\(\);/);
+});
