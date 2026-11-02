@@ -160,3 +160,14 @@ test('câblage : Tracer et Zone ne sont plus au clic droit d\'une Scène ; la pa
   const html = lire('index.html');
   for (const id of ['terrainOutilSelection', 'terrainOutilZone', 'terrainOutilTrace', 'terrainSecTrace', 'terrainSecChoisi']) assert.match(html, new RegExp(`id="${id}"`));
 });
+
+// Signalé : la rotation et le déplacement de l'aperçu étaient bien plus rapides que dans l'éditeur de bâtiment.
+test('l\'aperçu tourne et se déplace aux vitesses communes (comme l\'éditeur de bâtiment)', async () => {
+  const { vitesseRotation3D, vitesseDeplacement3D, facteurDeZoom3D } = await import('../src/utils.js');
+  const cam = { rotX: Math.PI / 2 - 0.01, rotY: 0, dist: 40, x: 0, y: 0, z: 0 };
+  assert.ok(Math.abs(bougerCameraApercu(cam, 'tourner', 100, 0).rotY - -100 * vitesseRotation3D()) < 1e-12);
+  // Vu de dessus, glisser de 100 px déplace de 100 px d'aperçu à la distance de la caméra, à la vitesse commune.
+  const d = bougerCameraApercu(cam, 'deplacer', 100, 0, 0.001);
+  assert.ok(Math.abs(d.x - -100 * 0.001 * 40 * vitesseDeplacement3D()) < 1e-9);
+  assert.ok(Math.abs(zoomerCameraApercu(cam, 100).dist - 40 * facteurDeZoom3D(100)) < 1e-9);
+});

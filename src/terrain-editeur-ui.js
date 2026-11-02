@@ -19,10 +19,10 @@ import { rendreSceneVueLibre3D, ensureElementWorldPos3D, pointDuBatimentPlace3D,
   tracéUpdateScreenPts } from './scene3d.js';
 import { nomDuTrace } from './canvas-tools.js';
 import { TRACÉ_DEFAULTS } from './constants.js';
-import { getElementDepth } from './utils.js';
+import { getElementDepth, vitesseRotation3D, vitesseDeplacement3D, facteurDeZoom3D, deltaMolette3D } from './utils.js';
 import { niveauxTries } from './batiment-niveaux.js';
 import { formesDesPieces } from './batiment-pieces.js';
-import { PANEL_CAM_DEFAULT_DIST_3D } from './constants.js';
+import { PANEL_CAM_DEFAULT_DIST_3D, WALL_PX_PER_UNIT_3D } from './constants.js';
 import { sectionDroitePliee, memoriserSectionDroite } from './section-memory.js';
 
 const $ = (id) => document.getElementById(id);
@@ -397,22 +397,34 @@ function dessinerApercu(){
   if (!img || !g) return;
   const r = Math.min(img.width / c.width, img.height / c.height);
   const lw = c.width * r, lh = c.height * r;
+  // La taille d'un pixel de l'aperçu à une distance de 1 : le champ vertical de la Scène (calé sur sa
+  // page, cf. framePanelCamera3D) réduit à la part de l'image gardée, rapporté aux pixels affichés.
+  const tanDemiChamp = (sc.page.h / WALL_PX_PER_UNIT_3D / 2) / PANEL_CAM_DEFAULT_DIST_3D;
+  T.mParPixel = 2 * tanDemiChamp * (lh / img.height) / h;
   g.clearRect(0, 0, c.width, c.height);
   g.drawImage(img, (img.width - lw) / 2, (img.height - lh) / 2, lw, lh, 0, 0, c.width, c.height);
 }
 
-/** Le geste de la caméra de l'aperçu, PUR : tourner (gauche), déplacer (droit), en pixels. */
-export function bougerCameraApercu(cam, geste, dx, dy){
+/**
+ * Le geste de la caméra de l'aperçu, PUR : tourner (gauche), déplacer (droit), en pixels. LES MÊMES
+ * VITESSES QUE L'ÉDITEUR DE BÂTIMENT (signalé : bien trop rapide) : vitesseRotation3D par pixel pour
+ * tourner ; pour déplacer, le point visé suit la souris, `mParPixel` étant la taille d'un pixel de
+ * l'aperçu à une distance de 1 (fournie par le dernier rendu : champ de la Scène, recadrage).
+ */
+export function bougerCameraApercu(cam, geste, dx, dy, mParPixel = 0.002){
   if (geste === 'tourner') {
-    return { ...cam, rotY: cam.rotY - dx * 0.008, rotX: Math.min(Math.PI / 2 - 0.01, Math.max(0.03, cam.rotX + dy * 0.008)) };
+    const v = vitesseRotation3D();
+    return { ...cam, rotY: cam.rotY - dx * v, rotX: Math.min(Math.PI / 2 - 0.01, Math.max(0.03, cam.rotX + dy * v)) };
   }
-  // Déplacer : le centre glisse sur le Sol, selon l'orientation de la caméra.
-  const k = cam.dist * 0.0025, c = Math.cos(cam.rotY), s = Math.sin(cam.rotY);
-  return { ...cam, x: cam.x - (dx * c + dy * s) * k, z: cam.z - (-dx * s + dy * c) * k };
+  // Déplacer : le centre glisse sur le Sol, selon l'orientation de la caméra (le vertical de l'écran
+  // couvre plus de Sol quand la caméra est basse).
+  const k = vitesseDeplacement3D() * cam.dist * mParPixel, c = Math.cos(cam.rotY), s = Math.sin(cam.rotY);
+  const kz = k / Math.max(0.3, Math.sin(cam.rotX));
+  return { ...cam, x: cam.x - dx * c * k - dy * s * kz, z: cam.z + dx * s * k - dy * c * kz };
 }
-/** La molette de l'aperçu : la distance, bornée. */
-export function zoomerCameraApercu(cam, deltaY){
-  return { ...cam, dist: Math.min(800, Math.max(2, cam.dist * (deltaY > 0 ? 1.12 : 1 / 1.12))) };
+/** La molette de l'aperçu : le zoom commun (facteurDeZoom3D), borné. */
+export function zoomerCameraApercu(cam, delta){
+  return { ...cam, dist: Math.min(800, Math.max(2, cam.dist * facteurDeZoom3D(delta))) };
 }
 
 // ── Dessin ────────────────────────────────────────────────────────────────────────────────────
@@ -558,7 +570,7 @@ export function initEditeurDeTerrain(){
   });
   ap.addEventListener('pointermove', (e) => {
     if (!T || !T.geste || T.geste.sorte === 'plan') return;
-    T.cam = bougerCameraApercu(T.cam, T.geste.sorte, e.clientX - T.geste.x, e.clientY - T.geste.y);
+    T.cam = bougerCameraApercu(T.cam, T.geste.sorte, e.clientX - T.geste.x, e.clientY - T.geste.y, T.mParPixel);
     T.geste.x = e.clientX; T.geste.y = e.clientY;
     redessiner();
   });
@@ -568,7 +580,7 @@ export function initEditeurDeTerrain(){
   ap.addEventListener('wheel', (e) => {
     if (!T) return;
     e.preventDefault();
-    T.cam = zoomerCameraApercu(T.cam, e.deltaY);
+    T.cam = zoomerCameraApercu(T.cam, deltaMolette3D(e));
     redessiner();
   }, { passive: false });
   majBoutonEditeurDeTerrain();
