@@ -18,7 +18,7 @@ import { contenuDuPlan, cadrageDuPlan, versLePlan, zoomerLePlan, pasDeLaGrille, 
 import { rendreSceneVueLibre3D, ensureElementWorldPos3D, pointDuBatimentPlace3D, panelCamBasis3D, getCamOrbitWorld,
   tracéUpdateScreenPts } from './scene3d.js';
 import { nomDuTrace } from './canvas-tools.js';
-import { hauteurDuRelief, peindreLeRelief, reliefValide, signatureDuRelief, MODES_DU_PINCEAU } from './terrain-relief.js';
+import { hauteurDuRelief, peindreLeRelief, reliefValide, reliefPlat, signatureDuRelief, MODES_DU_PINCEAU } from './terrain-relief.js';
 import { TRACÉ_DEFAULTS } from './constants.js';
 import { getElementDepth, vitesseRotation3D, vitesseDeplacement3D, facteurDeZoom3D, deltaMolette3D } from './utils.js';
 import { niveauxTries } from './batiment-niveaux.js';
@@ -27,7 +27,7 @@ import { PANEL_CAM_DEFAULT_DIST_3D, WALL_PX_PER_UNIT_3D } from './constants.js';
 import { sectionDroitePliee, memoriserSectionDroite } from './section-memory.js';
 
 const $ = (id) => document.getElementById(id);
-let _rappels = { avantOuverture: () => {}, apresFermeture: () => {}, ouvrirLaScene: () => {}, instantane: () => {},
+let _rappels = { avantOuverture: () => {}, apresFermeture: () => {}, ouvrirLaScene: () => {}, instantane: () => {}, confirmer: async () => true,
   regler: () => {}, apresModification: () => {} };
 /**
  * Les rappels de l'application (events.js) : fermer les autres écrans du centre, redessiner après ;
@@ -224,6 +224,21 @@ function supprimerLeChoisi(){
   apresModification(null);
 }
 
+/** « Retirer tout le relief » (demandé) : la Scène redevient plate, après confirmation (masquable). */
+async function retirerLeRelief(){
+  const sc = laScene();
+  if (!sc || reliefPlat(sc.panel.relief)) return;
+  const ok = await _rappels.confirmer(
+    tr('Remove all the relief of this scene? The ground becomes flat again (Ctrl+Z undoes it).',
+      'Retirer tout le relief de cette scène ? Le sol redevient plat (Ctrl+Z l\'annule).'),
+    tr('Remove the relief', 'Retirer le relief'), { masquable: 'retirer-relief' });
+  const sc2 = ok && T && laScene();
+  if (!sc2) return;
+  _rappels.instantane();
+  delete sc2.panel.relief;
+  apresModification(null);
+}
+
 /** Rafraîchit l'éditeur ouvert (la Scène a pu changer : annulation, fenêtre de réglage). */
 export function rafraichirEditeurDeTerrain(){
   if (!T) return;
@@ -291,6 +306,7 @@ function majContenu(){
   $('terrainSecRelief').hidden = T.outil !== 'relief';
   if (T.outil === 'relief') {
     boutonsDeChoix($('terrainModesRelief'), MODES_DU_PINCEAU, nomDeMode, T.pinceau.mode, (mode) => { T.pinceau.mode = T_PINCEAU.mode = mode; majContenu(); });
+    { const sc = laScene(); $('terrainReliefRetirerBtn').disabled = !sc || reliefPlat(sc.panel.relief); }
     if (document.activeElement !== $('terrainReliefTaille')) $('terrainReliefTaille').value = String(T.pinceau.rayon);
     if (document.activeElement !== $('terrainReliefForce')) $('terrainReliefForce').value = String(T.pinceau.force);
   }
@@ -563,6 +579,7 @@ export function initEditeurDeTerrain(){
   }
   $('terrainReliefTaille').oninput = () => { if (T) { T.pinceau.rayon = T_PINCEAU.rayon = Number($('terrainReliefTaille').value) || 4; redessiner(); } };
   $('terrainReliefForce').oninput = () => { if (T) T.pinceau.force = T_PINCEAU.force = Number($('terrainReliefForce').value) || 0.5; };
+  $('terrainReliefRetirerBtn').onclick = () => retirerLeRelief();
   $('terrainReglerBtn').onclick = () => { const o = terrainChoisi(); if (o) _rappels.regler(o); };
   $('terrainSupprimerBtn').onclick = () => supprimerLeChoisi();
   $('terrainSceneAnnuler').onclick = () => fermerChoixDeScene();

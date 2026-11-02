@@ -6110,6 +6110,7 @@ setTerrainEditeurCallbacks({
   apresFermeture: () => renderAll(),
   // #462b : les Zones et Tracés se règlent dans leurs fenêtres habituelles, sur la Scène ouverte.
   ouvrirLaScene: (id) => { openScene(id); renderAll(); },
+  confirmer: (message, titre, options) => confirmAction(message, titre, options),
   instantane: () => snapshot(),
   regler: (obj) => { if (obj.tracéType === 'terrain') openTerrainModal(obj); else openTracéModal(obj); },
   apresModification: () => drawCurrentPage(),

@@ -3063,3 +3063,4 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 .side-terrain.collapsed, .side-hors-champ.collapsed{ display:none; }
 .terrain-curseur-libelle{ display:block; margin:10px 0 2px; font-size:var(--texte-libelle); color:var(--ink-soft); }
 #terrainSecRelief input[type="range"]{ width:100%; }
+#terrainReliefRetirerBtn{ width:100%; margin-top:14px; }

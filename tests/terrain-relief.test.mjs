@@ -113,3 +113,30 @@ test('les boutons de mode survivent au rafraîchissement, et choisissent ; le re
   const sc = lire('scene3d.js');
   assert.match(sc, /const maillage = new THREE\.Mesh\(geo, groundMesh3D\.material\);\n\s*maillage\.renderOrder = -2000;/);
 });
+
+// Demandé : « Retirer tout le relief », après une confirmation masquable.
+test('« Retirer tout le relief » : demandé, puis la Scène redevient plate ; refusé, rien ne change', async () => {
+  globalThis.requestAnimationFrame = (f) => { f(); return 0; };
+  globalThis.getComputedStyle = () => ({ getPropertyValue: () => '' });
+  const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
+  panel.relief = R.peindreLeRelief(null, { x: 0, z: 0 }, { mode: 'monter', rayon: 4, force: 1 });
+  S.scenes = [{ id: 's1', name: 'Scène 1', w: 480, h: 360, pages: [{ objects: [panel] }] }];
+  S.editingSceneId = 's1';
+  let reponse = false, demandes = [], instantanes = 0;
+  U.setTerrainEditeurCallbacks({ instantane: () => { instantanes++; }, ouvrirLaScene: () => {}, apresModification: () => {},
+    confirmer: async (m, t, o) => { demandes.push(o.masquable); return reponse; } });
+  U.initEditeurDeTerrain();
+  U.ouvrirEditeurDeTerrain('s1');
+  document.getElementById('terrainOutilRelief').onclick();
+  const btn = document.getElementById('terrainReliefRetirerBtn');
+  assert.equal(btn.disabled, false);
+  await btn.onclick();
+  assert.ok(panel.relief, 'refusé : le relief reste');
+  reponse = true;
+  await btn.onclick();
+  assert.equal(panel.relief, undefined);
+  assert.deepEqual(demandes, ['retirer-relief', 'retirer-relief']);
+  assert.equal(instantanes, 1);
+  assert.equal(btn.disabled, true, 'plus rien à retirer');
+  U.fermerEditeurDeTerrain();
+});

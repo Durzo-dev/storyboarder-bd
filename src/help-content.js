@@ -319,7 +319,7 @@ export const HELP_MANUAL_EN = [
     'The top view of the Scene fills it (wheel: zoom, right button held: move the view), with a 3D preview over it (left drag: turn, right drag: move, wheel: zoom). Every Element of the Scene shows, but none can be changed or moved here. Esc or "Quit" goes back to the Scene.',
     'Terrain zones and paths are made here only. Zone tool (Z): drag a rectangle. Paths tool (T): pick the kind (road, path, low wall, fence, hedge, barrier), click one point per bend, double-click, Enter or right-click to finish.',
     'Selection tool (V): click a zone or path to select it, drag to move it, Del to delete it; a double-click or "Settings" opens its settings (texture, colour, width, height).',
-    'Relief tool (R): drag to paint the ground: Raise, Dig, Flatten (to the height under the first click) or Smooth, with a size and a strength. The circle shows the brush, with the height under it; brown is above the ground, blue below.',
+    'Relief tool (R): drag to paint the ground: Raise, Dig, Flatten (to the height under the first click) or Smooth, with a size and a strength. The circle shows the brush, with the height under it; brown is above the ground, blue below. "Remove all the relief" makes the Scene flat again.',
     'In the Elements list, zones and paths sit in the "Terrain" group (it folds, like "Not visible"); right-click: "Edit" opens the terrain editor on them. They can no longer be moved or deleted on the Scene itself.',
   ]},
 ];
@@ -591,7 +591,7 @@ export const HELP_MANUAL_FR = [
     "La vue de dessus de la Scène l'occupe (molette : zoomer, clic droit maintenu : déplacer la vue), avec un aperçu 3D par-dessus (glisser gauche : tourner, droit : déplacer, molette : zoomer). Les Éléments de la Scène s'y voient tous, mais aucun ne s'y modifie ni ne s'y déplace. Échap ou « Quitter » ramène à la Scène.",
     "Les Zones et les Tracés se font ici seulement. Outil Zone (Z) : glisser un rectangle. Outil Tracés (T) : choisir le genre (route, chemin, muret, clôture, haie, barrière), un clic par virage, double-clic, Entrée ou clic droit pour terminer.",
     "Outil Sélection (V) : clic sur une Zone ou un Tracé pour le choisir, glisser pour le déplacer, Suppr pour le supprimer ; un double-clic ou « Régler » ouvre ses réglages (texture, couleur, largeur, hauteur).",
-    "Outil Relief (R) : glisser pour peindre le sol : Monter, Creuser, Aplanir (à la hauteur du premier clic) ou Adoucir, avec une taille et une force. Le cercle montre le pinceau et la hauteur dessous ; le brun est au-dessus du Sol, le bleu en dessous.",
+    "Outil Relief (R) : glisser pour peindre le sol : Monter, Creuser, Aplanir (à la hauteur du premier clic) ou Adoucir, avec une taille et une force. Le cercle montre le pinceau et la hauteur dessous ; le brun est au-dessus du Sol, le bleu en dessous. « Retirer tout le relief » rend la Scène plate.",
     "Dans la liste des Éléments, Zones et Tracés sont rangés dans « Terrain » (repliable, comme « Non visible ») ; clic droit : « Modifier » ouvre l'éditeur de terrain sur eux. Ils ne se déplacent ni ne se suppriment plus sur la Scène elle-même.",
   ]},
 ];

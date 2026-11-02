@@ -61,6 +61,7 @@ export const I18N_TEXT = [
   ['#terrainSectionRelief', 'Relief', 'Relief'],
   ['#terrainReliefTailleLabel', 'Size', 'Taille'],
   ['#terrainReliefForceLabel', 'Strength', 'Force'],
+  ['#terrainReliefRetirerBtn', 'Remove all the relief', 'Retirer tout le relief'],
   ['#terrainSectionTrace', 'Path to draw', 'Tracé à poser'],
   ['#terrainSectionChoisi', 'Selection', 'Sélection'],
   ['#terrainReglerBtn', 'Settings', 'Régler'],
