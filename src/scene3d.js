@@ -11,6 +11,8 @@
  * Callbacks injected by app.js (setScene3DCallbacks) to avoid circular imports:
  * drawCurrentPage, refreshCameraSliders, renderSideCameraGizmo.
  */
+import { modeMursDevant, mursDeDevant, versLaCameraDansLeBatiment, retenirMursDevant } from './batiment-murs-devant.js';
+import { estUnBatimentPlace } from './batiment-element.js';
 import { sondeDebut, sondeFin, sondeCompter, sondeActive, sondeValeur } from './perf-probe.js';
 import { materiauDeTrace3D, grainDeTracePret3D, libererMateriauDeTrace3D } from './trace-textures-3d.js';
 import { poserCiel3D, retirerCiel3D, abaissementDeLHorizon3D } from './sky-3d.js';
@@ -2627,6 +2629,16 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       const children = page.objects.filter(c => c.type === 'objet3d' && c.magnetWallId === o.id && WALL_OPENING_MAGNET_TYPES.includes(c.objType));
       entry = ensureWallRenderEntry3D(o, children);
     } else {
+      // #459b : un bâtiment placé efface ses murs de devant selon la caméra de CETTE Case ; le calcul
+      // est retenu pour la signature du rig, qui n'est refait que quand la liste change.
+      if (estUnBatimentPlace(o)) {
+        const mode = modeMursDevant(o);
+        if (mode === 'visibles') retenirMursDevant(o, null);
+        else {
+          const bk = panelCamBasis3D(panel).backward;
+          retenirMursDevant(o, { mode, ids: mursDeDevant(o.batiment, versLaCameraDansLeBatiment({ x: bk.x, z: bk.z }, o.rotY || 0)) });
+        }
+      }
       entry = ensureObjectRigEntry3D(o);
     }
     if (o.type === 'perso' || (o.type === 'objet3d' && !WALL_TYPES.includes(o.objType))) _groupesVisibilite.set(o.id, entry.figureGroup);

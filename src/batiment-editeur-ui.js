@@ -17,6 +17,7 @@
  * gestes et le cadrage) : il ne touche pas à la scène partagée des Cases (cf. rendreApercu3D), il
  * dessine à la demande et libère tout à la fermeture.
  */
+import { mursDeDevant, MODES_MURS_DEVANT } from './batiment-murs-devant.js';
 import { deltaMolette3D, facteurDeZoom3D, degresParPixelObjet3D } from './utils.js';
 import { tr } from './state.js';
 import { creerBatiment, nomAfficheDuFichier, DEFAUTS_BATIMENT, TYPES_D_OUVERTURE } from './batiment.js';
@@ -186,6 +187,7 @@ export function ouvrirEditeurDeBatiment({ batiment = null, fichier = null, desti
   $('batimentEditeur').classList.remove('hidden');
   $('batimentApercuCoupe').classList.toggle('actif', E.coupe);
   $('batimentApercuSuivi').classList.toggle('actif', cadrageAuto);
+  majBoutonDevant();
   $('batimentNom').value = b.nom;
   // Un bâtiment vide s'ouvre sur l'outil Mur (demandé) : il n'y a rien d'autre à faire.
   choisirOutil(b.murs.length || pose || masquage ? null : 'mur');
@@ -1660,6 +1662,19 @@ function recadrer(){
  * l'éditeur à l'autre pendant la session. Son bouton, dans la barre de l'aperçu, le montre allumé.
  */
 let cadrageAuto = true;
+/**
+ * #459b : les murs de devant dans l'aperçu (son bouton, demandé) : visibles, abaissés, masqués, un
+ * clic passe au suivant. Gardé pendant la session, comme le cadrage automatique.
+ */
+let modeDevantApercu = 'visibles';
+function majBoutonDevant(){
+  const b = $('batimentApercuDevant');
+  if (!b) return;
+  const noms = { visibles: tr('Front walls: visible', 'Murs de devant : visibles'), abaisses: tr('Front walls: lowered', 'Murs de devant : abaissés'), masques: tr('Front walls: hidden', 'Murs de devant : masqués') };
+  b.title = noms[modeDevantApercu];
+  b.setAttribute('aria-label', b.title);
+  b.classList.toggle('actif', modeDevantApercu !== 'visibles');
+}
 function fixerCadrageAuto(v){
   if (cadrageAuto === v) return;
   cadrageAuto = v;
@@ -2467,6 +2482,11 @@ function cablerFenetreApercu(){
     if (E.apercu) E.apercu.reconstruire(E.batiment);
   };
   $('batimentApercuSuivi').onclick = () => fixerCadrageAuto(!cadrageAuto);
+  $('batimentApercuDevant').onclick = () => {
+    modeDevantApercu = MODES_MURS_DEVANT[(MODES_MURS_DEVANT.indexOf(modeDevantApercu) + 1) % MODES_MURS_DEVANT.length];
+    majBoutonDevant();
+    if (E && E.apercu) E.apercu.redessiner();
+  };
   $('batimentApercuPlein').onclick = () => changerAffichage({ mode: affichage.mode === 'plein' ? 'fenetre' : 'plein' });
   $('batimentApercuIcone').onclick = () => changerAffichage({ mode: 'fenetre' });
   barre.addEventListener('dblclick', (e) => {
@@ -2530,8 +2550,12 @@ function ouvrirApercu(conteneur, b){
     if (typeof f === 'string' && f.startsWith('@')) { const c = E && E.pose && E.pose.copies && E.pose.copies.get(f); return c ? cloneSkinned(c) : null; }
     const c = getLoadedModel(f); return c && c.scene ? cloneSkinned(c.scene) : null;
   };
+  // #459b : les murs de devant selon l'angle de l'aperçu (son bouton), comme dans les Cases.
+  const devantCourant = () => (E && modeDevantApercu !== 'visibles')
+    ? { mode: modeDevantApercu, ids: mursDeDevant(E.batiment, { x: Math.sin(angles.lacet), z: Math.cos(angles.lacet) }) } : null;
+  let signatureDevant = 'null';
   const options = () => ({ jusquA: E && E.coupe ? E.niveauId : null, rouge: E ? E.collisionMeuble : null,
-    masques: E && E.masquage ? E.masquage.masques : null });
+    masques: E && E.masquage ? E.masquage.masques : null, devant: devantCourant() });
   let groupe = construireBatiment3D(T, b, mats, options());
   scene.add(groupe);
   const meubles = fichiersDesMeubles(b).filter(f => !f.startsWith('@'));
@@ -2553,6 +2577,16 @@ function ouvrirApercu(conteneur, b){
     camera.position.fromArray(positionCamera3D(centre, distance, angles));
     camera.lookAt(centre[0], centre[1], centre[2]);
     cle.position.copy(camera.position).add(new T.Vector3(distance * 0.5, distance, 0));
+    // #459b : la caméra a tourné au point de changer les murs de devant : le bâtiment est refait (pas
+    // à chaque image, seulement quand la liste change ; sans recadrer, la vue ne doit pas sauter).
+    const sig = JSON.stringify(devantCourant());
+    if (sig !== signatureDevant && E) {
+      signatureDevant = sig;
+      scene.remove(groupe);
+      groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); });
+      groupe = construireBatiment3D(T, E.batiment, mats, options());
+      scene.add(groupe);
+    }
     rendu.render(scene, camera);
   };
   const redessiner = () => { if (!demande) demande = requestAnimationFrame(dessiner); };

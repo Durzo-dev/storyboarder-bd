@@ -9,6 +9,7 @@
  * menuiserie. Les matières sont passées par l'appelant : elles se partagent entre plusieurs
  * bâtiments, et ne se libèrent pas avec eux.
  */
+import { HAUTEUR_MUR_ABAISSE } from './batiment-murs-devant.js';
 import { polygonesDesMurs, morceauxDuMur } from './batiment-geometrie.js';
 import { box3FromObjectSkinAware3D } from './skinned-box-3d.js';
 import { intervalleDe } from './batiment-ouvertures.js';
@@ -195,10 +196,13 @@ function construireArche(T, mur, o, mats){
  * referment sans lui (leurs jonctions sont recalculées) ; un plafond masqué emporte la dalle du
  * dessus de SA pièce ; un sol masqué, la dalle de dessous. Le bâtiment n'est pas touché.
  */
-export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, masques = null, percerLeSol = false } = {}){
+export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, masques = null, percerLeSol = false, devant = null } = {}){
   const groupe = new T.Group();
+  // #459b : les murs de devant (selon la caméra), MASQUÉS (avec ceux du #464) ou ABAISSÉS en muret.
+  const devantMasques = devant && devant.mode === 'masques' ? devant.ids : [];
+  const abaisses = new Set(devant && devant.mode === 'abaisses' ? devant.ids : []);
   const cache = {
-    murs: new Set((masques && masques.murs) || []),
+    murs: new Set([...((masques && masques.murs) || []), ...devantMasques]),
     plafonds: new Set((masques && masques.plafonds) || []),
     sols: new Set((masques && masques.sols) || []),
   };
@@ -319,14 +323,18 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, 
       // leur dessus, au ras du Sol, s'y voyait là où le sous-sol dépasse du rez-de-chaussée. Sous la
       // maison, ils finissent dans la dalle de son plancher.
       if (sansDalleDuDessus(n)) hauteur = Math.min(hauteur, -SOUS_LE_SOL - n.elevation);
+      // #459b : un mur de devant ABAISSÉ est un muret ; ses ouvertures n'y laissent que leur passage.
+      const abaisse = abaisses.has(m.id);
+      if (abaisse) hauteur = Math.min(hauteur, HAUTEUR_MUR_ABAISSE);
       // #454a-3c : le mur tranché à ses ouvertures ; sous et au-dessus de chacune, l'allège et le linteau.
       const siennes = (b.ouvertures || []).filter(o => o.murId === m.id);
       const { pleins, percees } = morceauxDuMur(f, m, siennes.map(o => intervalleDe(o, m)));
       pleins.forEach(q => extruder(q, 0, hauteur));
       siennes.forEach((o, i) => {
         if (!percees[i]) return;
-        extruder(percees[i], 0, o.y);
+        extruder(percees[i], 0, Math.min(o.y, hauteur));
         extruder(percees[i], Math.min(hauteur, o.y + o.hauteur), hauteur);
+        if (abaisse) return;   // ni arche ni menuiserie sur un muret
         if (o.type === 'passage' && o.dessus === 'arche') {
           const arche = construireArche(T, m, o, mats);
           arche.position.y += n.elevation;

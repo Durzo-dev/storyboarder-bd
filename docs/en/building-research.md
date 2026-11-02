@@ -524,7 +524,7 @@ moves on screen.
   "Elements" shows the "Building display" section: "Show up to: The whole building / <level>". Stored
   on the placed Element (`affichage.jusquA`, an ADDED field), so per Panel. The cut rig carries the
   whole building, invisible and out of the raycast layer, to keep its size and place (the render
-  centres the rig's box). Left: #459b (front walls hidden, later).
+  centres the rig's box). **#459b DONE** (2 November 2026): "Front walls" (Visible / Lowered / Hidden), a setting per placed building and per Panel (`affichage.mursDevant`, an ADDED field) and a button in the editor preview. A wall is "in front" when its outer face looks at the camera within 45° and it lies on the camera side of its level's centre; recomputed at each render (`mursDeDevant`, part of the rig signature). Lowered: a 50 cm stub, no joinery.
 - **#464 DONE** (27 October 2026): hide a wall, a ceiling, a floor of a placed building, per Panel.
   In "Building display", "Choose what is hidden" opens the editor in HIDING mode (Selection only,
   nothing of the building can be changed): clicking a wall hides / shows it (dashed on the plan,

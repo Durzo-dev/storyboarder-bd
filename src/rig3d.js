@@ -9,6 +9,7 @@
  * THREE is available as a global (loaded via <script> in index.html).
  */
 
+import { mursDevantRetenus } from './batiment-murs-devant.js';
 import {
   ANIMAL_TYPES, BUILD_WALL_THICKNESS_RATIO_3D, CHILD_DESIGN_SIZE_3D, FIXED_COLOR, PERSONA_3D_H, PERSONA_3D_W, POSE_3D, GROUND_COLOR_DEFAULT_3D, GROUND_TYPE_DEFS, teinteDuSol3D, GROUND_PLANE_SIZE_3D, GROUND_PLANE_SEGMENTS_3D, GROUND_MODULATION_REPEAT_3D,
   GROUND_MODULATION_TAILLE_3D, GROUND_PLAQUE_CELLULE_PX_3D, GROUND_PLAQUE_OCTAVES_3D, repeatMacro3D,
@@ -4317,7 +4318,8 @@ let _materiauxBatiment3D = null;
 function signatureDuBatimentRendu3D(b, o = null){
   // #459a : la coupe de SA Case en fait partie (changer de niveau montré refait le rig).
   // #464 : ses masques aussi.
-  return signatureDuBatiment(b) + '|' + modelCacheSignature(fichiersDesMeubles(b)) + '|' + (niveauDeCoupe(o) || '') + '|' + JSON.stringify(masquesDe(o));
+  // #459b : et ses murs de devant (la liste change avec la caméra : le rig n'est refait qu'alors).
+  return signatureDuBatiment(b) + '|' + modelCacheSignature(fichiersDesMeubles(b)) + '|' + (niveauDeCoupe(o) || '') + '|' + JSON.stringify(masquesDe(o)) + '|' + JSON.stringify(mursDevantRetenus(o));
 }
 
 /** Libère les géométries d'un rig (un bâtiment en porte des centaines) ; ses matières restent. */
@@ -4337,15 +4339,17 @@ export function buildPropRig3D(objType, colorHex, o){
     }
     const b = (o && o.batiment) || { niveaux: [], murs: [] };
     const jusquA = niveauDeCoupe(o), masques = masquesDe(o);
+    // #459b : les murs de devant, calculés selon la caméra de SA Case (scene3d.js) avant ce rig.
+    const devant = mursDevantRetenus(o);
     // #454g : un bâtiment placé PERCE le Sol sur l'emprise de ses sous-sols.
-    const groupe = construireBatiment3D(THREE, b, _materiauxBatiment3D, { jusquA, masques, percerLeSol: true });
+    const groupe = construireBatiment3D(THREE, b, _materiauxBatiment3D, { jusquA, masques, percerLeSol: true, devant });
     // #459a : COUPÉ, il garde la place et la taille du bâtiment entier. Le rendu centre la BOÎTE du
     // rig et la met à la hauteur réelle : une boîte rétrécie par la coupe le grandirait et le
     // déplacerait. Le bâtiment entier est donc joint, INVISIBLE et hors de la couche des rayons
     // (sélection) : Box3.setFromObject le compte, le rendu et la sélection ne le voient pas. Ses
     // géométries sont libérées avec le rig.
     // #464 : masquer un mur extérieur ou un plafond rétrécit aussi la boîte : même remède.
-    if (jusquA || masques) {
+    if (jusquA || masques || devant) {
       const gabarit = construireBatiment3D(THREE, b, _materiauxBatiment3D);
       gabarit.visible = false;
       gabarit.traverse(n => { n.layers.set(31); n.castShadow = false; n.receiveShadow = false; });

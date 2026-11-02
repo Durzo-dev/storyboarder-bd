@@ -121,7 +121,7 @@ describe('montrer jusqu\'à un niveau (#459a)', () => {
     const gabarit = coupe.children.find(c => c.userData.gabarit);
     assert.ok(gabarit && gabarit.visible === false);
     assert.equal(gabarit.layers.test(new T.Layers()), false, 'les rayons de la sélection ne le voient pas');
-    assert.match(r.batimentSig, /\|n0\|null$/, 'la coupe fait partie de la signature du rig');
+    assert.match(r.batimentSig, /\|n0\|null\|null$/, 'la coupe fait partie de la signature du rig (puis masques, murs de devant)');
   });
 });
 
@@ -137,7 +137,7 @@ test('#459a, retours : la liste ne se refait pas sous la souris, et le menu remo
   const { readFileSync } = await import('node:fs');
   const sb = readFileSync(new URL('../src/sidebar.js', import.meta.url), 'utf8');
   assert.match(sb, /if \(document\.activeElement !== choix\) \{\n\s*if \(choix\.dataset\.cle !== cle\)/, 'refaite seulement si elle a changé, et jamais ouverte');
-  assert.match(sb, /document\.activeElement !== document\.getElementById\('sideBatimentCoupe'\)\) sideBatimentSection\.style\.display = 'none'/);
+  assert.match(sb, /document\.activeElement !== document\.getElementById\('sideBatimentCoupe'\)\n\s*&& document\.activeElement !== document\.getElementById\('sideBatimentDevant'\)\) sideBatimentSection\.style\.display = 'none'/);
   assert.match(sb, /const nouveau = _batimentPrecedent !== el\.id;/);
   assert.match(sb, /sideBatimentSection\.scrollIntoView\(\{ block: 'nearest', behavior: 'smooth' \}\)/);
 });

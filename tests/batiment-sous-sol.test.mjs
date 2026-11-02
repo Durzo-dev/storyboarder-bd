@@ -122,7 +122,7 @@ describe('le sous-sol dans le bâtiment', () => {
 test('câblage : le Sol ne se dessine pas où le pochoir est marqué ; le bâtiment se pose par sa partie hors Sol', () => {
   const rig = readFileSync(new URL('../src/rig3d.js', import.meta.url), 'utf8');
   assert.match(rig, /stencilRef: MARQUE_SOL_PERCE, stencilFunc: THREE\.NotEqualStencilFunc/);
-  assert.match(rig, /\{ jusquA, masques, percerLeSol: true \}/);
+  assert.match(rig, /\{ jusquA, masques, percerLeSol: true, devant \}/);
   const sc = readFileSync(new URL('../src/scene3d.js', import.meta.url), 'utf8');
   assert.match(sc, /o\.objType === 'batiment' \? boiteDuBatimentHorsSol3D/);
   assert.match(sc, /const box = boiteDuBatimentHorsSol3D\(fg\);/);
