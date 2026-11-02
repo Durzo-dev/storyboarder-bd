@@ -177,7 +177,7 @@ import {
   scheduleDrawCurrentPage, flushDrawCurrentPage, exportPage, exportVolume, exportPages,
   cadreDeRecouvrement3D, ancrageApresGlissement3D, reglagesQueueVersLePoint3D,
 } from './draw.js';
-import { setI18nCallbacks, applyI18n } from './i18n.js';
+import { setI18nCallbacks, applyI18n, setTrailingText } from './i18n.js';
 import {
   menuGaucheOuvert, memoriserMenuGauche, sectionDroitePliee, memoriserSectionDroite,
   groupeManuelOuvert, memoriserGroupeManuel,
@@ -4203,6 +4203,9 @@ canvas.addEventListener('contextmenu', (e) => {
   document.getElementById('ctxCreerBatiment').style.display = (isSceneCanvas || (_surCase && _img.ajouter3D)) ? '' : 'none';
   // #462a : « Modifier le terrain », dans une Scène seulement (demandé).
   document.getElementById('ctxModifierTerrain').style.display = isSceneCanvas ? '' : 'none';
+  // Signalé : dans une Scène, l'entrée disait « Vider la case ».
+  setTrailingText(document.querySelector('#ctxClearPanel'), isSceneCanvas ? 'Clear scene' : 'Clear panel',
+    isSceneCanvas ? 'Vider la scène' : 'Vider la case', S.appLang);
   ctxLoadSceneTrigger.style.display = (isSceneCanvas || !_img.ajouter3D) ? 'none' : '';
   document.getElementById('ctxBringForward').style.display = isSceneCanvas ? 'none' : '';
   document.getElementById('ctxSendBackward').style.display = isSceneCanvas ? 'none' : '';
@@ -5723,8 +5726,10 @@ document.getElementById('ctxClearPanel').onclick = async () => {
   // ligne, « Vider la Case » répondrait « déjà vide » à une Case qui affiche un dessin plein écran,
   // ce qui est le contraire de ce qu'on voit.
   const _image = imageDeLaCase3D(panel);
+  // Dans une Scène, on parle de la Scène (signalé : le menu disait « Vider la case »).
+  const _scene = isLockedScenePanel(panel);
   if (count === 0 && !_image) {
-    await alertAction(tr('This panel is already empty.', 'Cette Case est déjà vide.')); return;
+    await alertAction(_scene ? tr('This scene is already empty.', 'Cette Scène est déjà vide.') : tr('This panel is already empty.', 'Cette Case est déjà vide.')); return;
   }
   // ⚠️ ON NE DEMANDE QUE SI L'ON DÉTRUIT. Vider une Case qui ne porte QU'UNE IMAGE ne détruit rien :
   // le fichier reste dans le dossier partagé, on ne fait que détacher (décision 4). Poser une
@@ -5742,8 +5747,10 @@ document.getElementById('ctxClearPanel').onclick = async () => {
   // Cases ne sont pas liées ». Le code que j'avais écrit était inatteignable, et son test ne
   // passait qu'en posant à la main un `homePanelId` que l'application ne pose jamais — la faute
   // de #370, « les fixtures mesuraient des noms que l'application ne voit jamais ».
-  if (count > 0 && !await confirmAction(
-    tr(`Empty this panel? Its ${count} element(s) will be permanently removed.`,
+  if (count > 0 && !await confirmAction(_scene
+    ? tr(`Empty this scene? Its ${count} element(s) will be permanently removed.`,
+      `Vider cette Scène ? Ses ${count} élément(s) seront définitivement supprimés.`)
+    : tr(`Empty this panel? Its ${count} element(s) will be permanently removed.`,
       `Vider cette Case ? Ses ${count} élément(s) seront définitivement supprimés.`), undefined, { masquable: 'vider-case' })) return;
   snapshot();
   // DÉTACHER, PAS EFFACER : deux Cases peuvent porter la même image, et l'une n'a pas à décider pour

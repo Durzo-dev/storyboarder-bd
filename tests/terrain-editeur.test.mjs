@@ -104,3 +104,11 @@ test('la page de la Scène porte ses dimensions et son style (comme currentPage)
   const ui = lire('terrain-editeur-ui.js');
   assert.match(ui, /const page = donnees && \{ w: scene\.w, h: scene\.h, scale: scene\.scale, format: scene\.format, style3d: scene\.style3d,/);
 });
+
+// Signalé : au clic droit dans une Scène, le menu disait « Vider la case ».
+test('dans une Scène, « Vider la scène » (et ses messages parlent de la Scène)', () => {
+  const ev = lire('events.js');
+  assert.match(ev, /isSceneCanvas \? 'Vider la scène' : 'Vider la case', S\.appLang\);/);
+  assert.match(ev, /'Cette Scène est déjà vide\.'/);
+  assert.match(ev, /`Vider cette Scène \? Ses \$\{count\} élément\(s\) seront définitivement supprimés\.`/);
+});
