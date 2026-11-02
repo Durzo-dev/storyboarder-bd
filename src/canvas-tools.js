@@ -53,6 +53,8 @@ const TRACÉ_NAMES = {
   route: 'Route', chemin: 'Chemin de terre', muret: 'Muret',
   cloture: 'Clôture', haie: 'Haie végétale', barriere: 'Barrière de route',
 };
+/** Le nom donné à un Tracé neuf (aussi par l'éditeur de terrain, #462b). */
+export const nomDuTrace = (type) => (type === 'terrain' ? 'Terrain' : TRACÉ_NAMES[type] || 'Tracé');
 
 /** Activates the Tracé tool of the given type on `panel`. Any tracé in progress is dropped. */
 export function startTraceTool(panel, type){

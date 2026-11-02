@@ -386,6 +386,18 @@
           </div>
           <div class="batiment-editeur-apercu" id="terrainApercu"><canvas id="terrainApercuCanvas"></canvas></div>
         </div>
+        <!-- #462b : les OUTILS, en bas au centre comme dans l'éditeur de bâtiment. -->
+        <div class="batiment-outils" id="terrainOutils">
+          <button type="button" class="batiment-outil terrain-outil" id="terrainOutilSelection" data-terrain="selection" title="Sélection (V)">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M5 3l6 17 2.5-7.5L21 10Z"/></svg>
+          </button>
+          <button type="button" class="batiment-outil terrain-outil" id="terrainOutilZone" data-terrain="zone" title="Zone de terrain (Z)">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="m4 7 8-4 8 5-2 11-12 1z" stroke-dasharray="3 3"/></svg>
+          </button>
+          <button type="button" class="batiment-outil terrain-outil" id="terrainOutilTrace" data-terrain="trace" title="Tracés (T)">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M5 21 9 3M19 21 15 3"/><path d="M12 6v2M12 12v2M12 18v2"/></svg>
+          </button>
+        </div>
       </div>
       <aside class="batiment-editeur-panneau" id="terrainPanneau">
         <div class="menu-header">
@@ -396,6 +408,17 @@
         <section class="side-section" id="terrainSecCommandes">
           <h2 id="terrainSectionAide">Commandes</h2>
           <p id="terrainAide" class="commandes-aide"></p>
+        </section>
+        <!-- #462b : le Tracé à poser (outil Tracés) ; la Zone ou le Tracé choisi (outil Sélection). -->
+        <section class="side-section" id="terrainSecTrace" hidden>
+          <h2 id="terrainSectionTrace">Tracé à poser</h2>
+          <div id="terrainSortesTrace" class="terrain-sortes"></div>
+        </section>
+        <section class="side-section" id="terrainSecChoisi" hidden>
+          <h2 id="terrainSectionChoisi">Sélection</h2>
+          <p id="terrainChoisiNom" class="terrain-scene-nom"></p>
+          <button id="terrainReglerBtn" type="button" class="full-btn">Régler</button>
+          <button id="terrainSupprimerBtn" type="button" class="full-btn delete-btn">Supprimer</button>
         </section>
         <!-- La Scène éditée et ce qu'elle contient (lecture seule ; un clic désigne sur le plan). -->
         <section class="side-section" id="terrainSecScene">

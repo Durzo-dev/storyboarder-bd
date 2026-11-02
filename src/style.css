@@ -3049,3 +3049,9 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 #terrainPanneau .side-section > h2::after{ content:'▾'; margin-left:auto; font-size:var(--texte-micro); color:var(--ink-soft); transition:transform .18s ease; }
 #terrainPanneau .side-section.collapsed > h2::after{ transform:rotate(-90deg); }
 #terrainPanneau .side-section.collapsed > *:not(h2){ display:none !important; }
+.terrain-sortes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.terrain-sortes .nav-btn { width: 100%; margin: 0; }
+.terrain-sortes .nav-btn.actif { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+#terrainSecChoisi .full-btn { width: 100%; margin: 0 0 8px; }
+/* Les outils de l'éditeur de terrain : leur icône ne capte pas le clic (le bouton le reçoit). */
+.terrain-outil svg { pointer-events: none; }

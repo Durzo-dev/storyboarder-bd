@@ -73,8 +73,10 @@ test('la caméra de l\'aperçu : tourner (tangage borné), déplacer sur le Sol,
 
 test('les commandes disent ce qu\'on peut faire, et que les Éléments ne se modifient pas ici', () => {
   const t = commandesDuTerrain((en, fr) => fr).join('\n');
-  assert.match(t, /il ne se modifie pas ici/);
-  assert.match(t, /Échap ou Quitter : retour à la Scène\./);
+  assert.match(t, /Les Éléments ne sont que désignés ici\./);
+  assert.match(t, /Suppr : le supprimer/);
+  assert.match(commandesDuTerrain((en, fr) => fr, 'zone').join('\n'), /Glisser : tracer une Zone de terrain/);
+  assert.match(commandesDuTerrain((en, fr) => fr, 'trace').join('\n'), /double-clic, Entrée ou clic droit : terminer/);
 });
 
 test('câblage : bouton à droite de l\'Éditeur de bâtiment, inerte sans Scène ; choix de la Scène ; clic droit en Scène seulement', () => {
@@ -111,4 +113,50 @@ test('dans une Scène, « Vider la scène » (et ses messages parlent de la Scè
   assert.match(ev, /isSceneCanvas \? 'Vider la scène' : 'Vider la case', S\.appLang\);/);
   assert.match(ev, /'Cette Scène est déjà vide\.'/);
   assert.match(ev, /`Vider cette Scène \? Ses \$\{count\} élément\(s\) seront définitivement supprimés\.`/);
+});
+
+// ── #462b-1 : tracer et retoucher les Zones et les Tracés dans l'éditeur ─────────────────────
+test('une Zone entre deux coins (dans l\'ordre tl, tr, br, bl) ; trop petite, rien', () => {
+  const z = P.zoneEntre({ x: 4, z: 3 }, { x: 0, z: 0 });
+  assert.deepEqual(z.corners, [{ x: 0, z: 0 }, { x: 4, z: 0 }, { x: 4, z: 3 }, { x: 0, z: 3 }]);
+  assert.deepEqual([z.cx, z.cz, z.w, z.h, z.rotY], [2, 1.5, 4, 3, 0]);
+  assert.equal(P.zoneEntre({ x: 0, z: 0 }, { x: 0.2, z: 5 }), null);
+});
+
+test('un Tracé par ses points, sa largeur selon le genre ; déplacer copie et décale tout', () => {
+  assert.equal(P.traceDePoints('route', [{ x: 0, z: 0 }]), null);
+  assert.equal(P.traceDePoints('route', [{ x: 0, z: 0 }, { x: 5, z: 0 }]).width, 5);
+  assert.equal(P.traceDePoints('chemin', [{ x: 0, z: 0 }, { x: 5, z: 0 }]).width, 1.5);
+  const z = P.zoneEntre({ x: 0, z: 0 }, { x: 2, z: 2 });
+  const d = P.deplacerLeMonde(z, 1, -1);
+  assert.deepEqual([d.cx, d.cz], [2, 0]);
+  assert.deepEqual(d.corners[0], { x: 1, z: -1 });
+  assert.deepEqual(z.corners[0], { x: 0, z: 0 }, 'l\'original ne bouge pas');
+  const t = P.deplacerLeMonde({ pts: [{ x: 0, z: 0 }, { x: 1, z: 0 }], width: 3 }, 2, 2);
+  assert.deepEqual(t.pts, [{ x: 2, z: 2 }, { x: 3, z: 2 }]);
+  assert.equal(t.width, 3);
+});
+
+test('sous le point : un Élément d\'abord, puis un Tracé (sa largeur), puis une Zone, puis un bâtiment', () => {
+  const formes = [
+    { type: 'zone', id: 'z', pts: [{ x: 0, z: 0 }, { x: 10, z: 0 }, { x: 10, z: 10 }, { x: 0, z: 10 }] },
+    { type: 'trace', id: 't', pts: [{ x: 0, z: 5 }, { x: 10, z: 5 }], largeur: 2 },
+    { type: 'batiment', id: 'b', polys: [[{ x: 20, z: 0 }, { x: 30, z: 0 }, { x: 30, z: 10 }, { x: 20, z: 10 }]] },
+    { type: 'element', id: 'e', x: 5, z: 5.5 },
+  ];
+  assert.equal(P.sousLePoint(formes, { x: 5, z: 5.4 }, 0.3).id, 'e');
+  assert.equal(P.sousLePoint(formes, { x: 2, z: 5.9 }, 0.3).id, 't');
+  assert.equal(P.sousLePoint(formes, { x: 2, z: 8 }, 0.3).id, 'z');
+  assert.equal(P.sousLePoint(formes, { x: 25, z: 5 }, 0.3).id, 'b');
+  assert.equal(P.sousLePoint(formes, { x: 50, z: 50 }, 0.3), null);
+});
+
+test('câblage : Tracer et Zone ne sont plus au clic droit d\'une Scène ; la page redessinée rafraîchit l\'éditeur', () => {
+  const ev = lire('events.js');
+  assert.match(ev, /document\.getElementById\('ctxTracerTrigger'\)\.style\.display = 'none';/);
+  assert.match(ev, /document\.getElementById\('ctxZoneTrigger'\)\.style\.display   = 'none';/);
+  assert.match(ev, /const updateSidePanelEtTerrain = \(\) => \{ updateSidePanel\(\); rafraichirEditeurDeTerrain\(\); \};/);
+  assert.match(ev, /regler: \(obj\) => \{ if \(obj\.tracéType === 'terrain'\) openTerrainModal\(obj\); else openTracéModal\(obj\); \},/);
+  const html = lire('index.html');
+  for (const id of ['terrainOutilSelection', 'terrainOutilZone', 'terrainOutilTrace', 'terrainSecTrace', 'terrainSecChoisi']) assert.match(html, new RegExp(`id="${id}"`));
 });

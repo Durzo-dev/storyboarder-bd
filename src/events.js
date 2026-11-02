@@ -138,7 +138,7 @@ import {
 } from './batiment-editeur-ui.js';
 import {
   initEditeurDeTerrain, setTerrainEditeurCallbacks, ouvrirEditeurDeTerrain, fermerEditeurDeTerrain, editeurDeTerrainOuvert,
-  ouvrirChoixDeScene, fermerChoixDeScene, majBoutonEditeurDeTerrain,
+  ouvrirChoixDeScene, fermerChoixDeScene, majBoutonEditeurDeTerrain, rafraichirEditeurDeTerrain,
 } from './terrain-editeur-ui.js';
 import { batimentDesPieces } from './batiment.js';
 import { creerElementBatiment, appliquerBatiment, estUnBatimentPlace } from './batiment-element.js';
@@ -4170,10 +4170,11 @@ canvas.addEventListener('contextmenu', (e) => {
   // one Element in the Panel").
   // Pas d'entrée « Caméra » sur la toile d'une Scène : elle n'a plus de mode Caméra (demandé).
   ctxToggleCamera.style.display = (hit.type === 'panel' && !isLockedScenePanel(hit) && elementsInPanel(hit, page).length > 0) ? '' : 'none';
-  // "Trace" + "Zone": only visible on a Scene canvas in top-down view.
+  // « Tracer » et « Zone » NE SONT PLUS ICI (#462b, décidé) : les Zones et les Tracés se font dans
+  // l'Éditeur de terrain (« Modifier le terrain »), déjà en vue de dessus.
   const _isTopDown = isSceneTopDownView(hit);
-  document.getElementById('ctxTracerTrigger').style.display = _isTopDown ? '' : 'none';
-  document.getElementById('ctxZoneTrigger').style.display   = _isTopDown ? '' : 'none';
+  document.getElementById('ctxTracerTrigger').style.display = 'none';
+  document.getElementById('ctxZoneTrigger').style.display   = 'none';
   document.getElementById('ctxMesure').style.display        = _isTopDown ? '' : 'none';
   // A Scene's locked canvas (cf. isLockedScenePanel) has neither a Page behind it (so nothing to
   // "Load a Scene" into, and no other Panel to Bring Forward/Send Backward relative to), per user
@@ -6112,6 +6113,11 @@ initEditeurDeTerrain();
 setTerrainEditeurCallbacks({
   avantOuverture: () => { if (isPersonaEditorOpen()) hidePersonaEditor(); if (lecteurOuvert()) fermerLecteur(); },
   apresFermeture: () => renderAll(),
+  // #462b : les Zones et Tracés se règlent dans leurs fenêtres habituelles, sur la Scène ouverte.
+  ouvrirLaScene: (id) => { openScene(id); renderAll(); },
+  instantane: () => snapshot(),
+  regler: (obj) => { if (obj.tracéType === 'terrain') openTerrainModal(obj); else openTracéModal(obj); },
+  apresModification: () => drawCurrentPage(),
 });
 enregistrerFermeture('terrainSceneModal', fermerChoixDeScene);
 const terrainSceneModal = document.getElementById('terrainSceneModal');
@@ -8702,7 +8708,9 @@ setI18nCallbacks(updateSidePanel, renderTree);
 // Wire up draw.js callbacks (canvas, ctx, render helpers, avoids circular imports draw→app)
 // #462a : la liste des Scènes redessinée, le bouton de l'Éditeur de terrain suit (inerte sans Scène).
 const renderSceneListEtTerrain = () => { renderSceneList(); majBoutonEditeurDeTerrain(); };
-setDrawCallbacks({ canvas, ctx, applyZoom, updateSidePanel, renderTree, renderSceneList: renderSceneListEtTerrain, renderImageList, updateContextualControls, fitZoomToWrap });
+// #462b : la page redessinée (annulation, fenêtre de réglage), l'Éditeur de terrain ouvert suit.
+const updateSidePanelEtTerrain = () => { updateSidePanel(); rafraichirEditeurDeTerrain(); };
+setDrawCallbacks({ canvas, ctx, applyZoom, updateSidePanel: updateSidePanelEtTerrain, renderTree, renderSceneList: renderSceneListEtTerrain, renderImageList, updateContextualControls, fitZoomToWrap });
 // Wire up sidebar.js callbacks (snapshot + modal openers, avoids circular imports
 // sidebar→app; these modals will themselves be extracted into src/modals.js at Step B.13).
 setSidebarCallbacks({ snapshot, openPersonaModal, openObjectModal, openRoomModal, openBuildingModal, openTerrainModal, openTracéModal, restoreSectionCollapseStates, openBatimentMenu });
