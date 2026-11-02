@@ -1983,6 +1983,8 @@ async function supprimerLaSelection3D(){
     const pageData = currentPageData();
     if (!pageData) return;
     const deleted = pageData.objects.find(o => o.id === S.selectedId);
+    // #462b (décidé) : une Zone ou un Tracé ne se supprime que dans l'Éditeur de terrain.
+    if (deleted && deleted.type === 'tracé') return;
     // La Case d'une Planche importée ne se supprime pas : rien ne s'y modifie (demandé).
     if (estCaseImportee(deleted)) return;
     // If the deleted Element belongs to a Panel (Persona, Object, Wall/Opening, Bubble...), we
@@ -2918,18 +2920,7 @@ canvas.addEventListener('mousedown', (e) => {
   // Terrain Zone selected in a 3D Scene: resizing via the bbox's handles.
   // computeTracéWorld3D reprojects the new bbox → new world corners/dimensions → the 3D mesh
   // resizes correctly. tracéUpdateScreenPts then updates the screen bbox in return.
-  if (sel && sel.type === 'tracé' && sel.tracéType === 'terrain') {
-    const _tPanel = page.objects.find(p => p.id === sel.panelId && p.type === 'panel');
-    if (_tPanel && isLockedScenePanel(_tPanel)) {
-      const hName = hitHandle(sel, x, y);
-      if (hName) {
-        snapshot();
-        S.dragMode = 'terrainResize'; S.dragHandle = hName; S.dragStart = { x, y };
-        S.dragOrig = { x: sel.x, y: sel.y, w: sel.w, h: sel.h, type: sel.type };
-        return;
-      }
-    }
-  }
+  // #462b (décidé) : une Zone ne se redimensionne plus ici, mais dans l'Éditeur de terrain.
   // Room resize handles (corner of the real 2D bbox).
   if (S.selectedRoomId) {
     const _pPanel = page.objects.find(p => p.type === 'panel' && p.id === S.selectedId);
@@ -3131,6 +3122,14 @@ canvas.addEventListener('mousedown', (e) => {
       S.selectedId = hit.id; S.selectedRoomId = null; S.selectedBuildingKey = null;
       drawCurrentPage();
     });
+    return;
+  }
+  // #462b (décidé) : une Zone ou un Tracé se choisit sur la Scène, mais ne s'y déplace plus : il se
+  // retouche dans l'Éditeur de terrain.
+  if (hit && hit.type === 'tracé') {
+    exitCameraModeOnDeselect(hit.id, page);
+    S.selectedId = hit.id; S.selectedRoomId = null; S.selectedBuildingKey = null;
+    drawCurrentPage();
     return;
   }
   if (hit) {
@@ -4010,11 +4009,7 @@ canvas.addEventListener('mousemove', (e) => {
     const hName = hitHandle(sel, x, y);
     if (hName) { canvas.style.cursor = CURSOR_MAP[hName]; return; }
   }
-  // Selected Terrain Zone: resize cursor on the handles.
-  if (sel && sel.type === 'tracé' && sel.tracéType === 'terrain') {
-    const hName = hitHandle(sel, x, y);
-    if (hName) { canvas.style.cursor = CURSOR_MAP[hName]; return; }
-  }
+  // (#462b : plus de poignées de Zone ici ; elle se retouche dans l'Éditeur de terrain.)
   // Une Planche importée ne se manipule que d'un bloc : la main dit qu'on peut la cadrer.
   if (estPlancheImportee(page)) { canvas.style.cursor = curseurEdition({ x, y }) || 'grab'; return; }
   const hit = hitTestPanelOrBubble(page, x, y);
@@ -6187,6 +6182,26 @@ function editerBatimentPlace(o){
     renderAll();
   } } });
 }
+// #462b : le clic droit sur un Élément Terrain (Zone, Tracé) de la liste : « Modifier » seulement, qui
+// ouvre l'Éditeur de terrain sur lui. Dans une Case, son terrain vient d'une Scène chargée : il se
+// modifie dans la Scène (l'entrée est grisée, et le dit). Sans événement (double-clic) : modifie.
+let _ctxTerrain = null;
+function openTerrainMenu(e, cible){
+  hideContextMenu();
+  const enScene = cible && cible.panel && isLockedScenePanel(cible.panel) && S.editingSceneId;
+  if (!e) { if (enScene) ouvrirEditeurDeTerrain(S.editingSceneId, { choisi: cible.element.id }); return; }
+  _ctxTerrain = cible;
+  const b = document.getElementById('ctxModifierTerrainElement');
+  b.disabled = !enScene;
+  b.title = enScene ? '' : tr('The terrain of a panel is edited in its Scene, then the Scene is loaded again.',
+    "Le terrain d'une Case se modifie dans sa Scène, puis la Scène se recharge dans la Case.");
+  placerMenu3D(document.getElementById('terrainElementMenu'), e.clientX, e.clientY);
+}
+document.getElementById('ctxModifierTerrainElement').onclick = () => {
+  hideContextMenu();
+  const c = _ctxTerrain; _ctxTerrain = null;
+  if (c && S.editingSceneId && isLockedScenePanel(c.panel)) ouvrirEditeurDeTerrain(S.editingSceneId, { choisi: c.element.id });
+};
 // Le clic droit sur un Bâtiment ou une Pièce du menu de droite (sidebar.js) : « Modifier » ouvre
 // l'éditeur sur une COPIE de ses murs (batimentDesPieces) ; la Scène n'est pas touchée (#454f).
 let _ctxBatiment = null;
@@ -8713,7 +8728,7 @@ const updateSidePanelEtTerrain = () => { updateSidePanel(); rafraichirEditeurDeT
 setDrawCallbacks({ canvas, ctx, applyZoom, updateSidePanel: updateSidePanelEtTerrain, renderTree, renderSceneList: renderSceneListEtTerrain, renderImageList, updateContextualControls, fitZoomToWrap });
 // Wire up sidebar.js callbacks (snapshot + modal openers, avoids circular imports
 // sidebar→app; these modals will themselves be extracted into src/modals.js at Step B.13).
-setSidebarCallbacks({ snapshot, openPersonaModal, openObjectModal, openRoomModal, openBuildingModal, openTerrainModal, openTracéModal, restoreSectionCollapseStates, openBatimentMenu });
+setSidebarCallbacks({ snapshot, openPersonaModal, openObjectModal, openRoomModal, openBuildingModal, restoreSectionCollapseStates, openBatimentMenu, openTerrainMenu });
 // Wire up scene3d.js's UI render callbacks (avoids the circular import scene3d→app)
 setScene3DCallbacks(drawCurrentPage, refreshCameraSliders, renderSideCameraGizmo);
 

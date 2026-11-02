@@ -171,3 +171,18 @@ test('l\'aperçu tourne et se déplace aux vitesses communes (comme l\'éditeur 
   assert.ok(Math.abs(d.x - -100 * 0.001 * 40 * vitesseDeplacement3D()) < 1e-9);
   assert.ok(Math.abs(zoomerCameraApercu(cam, 100).dist - 40 * facteurDeZoom3D(100)) < 1e-9);
 });
+
+// ── #462b-2 : la sous-catégorie « Terrain », et ce qui ne se modifie plus que dans l'éditeur ────
+test('câblage : sous-catégories Terrain et Non visible repliables ; clic droit « Modifier » ; plus de retouche sur la Scène', () => {
+  const sb = lire('sidebar.js');
+  assert.match(sb, /sousCategorie\('sous-categorie:terrain', tr\(`Terrain \(\$\{panelTracés\.length\}\)`/);
+  assert.match(sb, /sousCategorie\('sous-categorie:non-visible',/);
+  assert.match(sb, /if \(_openTerrainMenu\) _openTerrainMenu\(e, \{ element: t, panel \}\);/);
+  const ev = lire('events.js');
+  assert.match(ev, /if \(c && S\.editingSceneId && isLockedScenePanel\(c\.panel\)\) ouvrirEditeurDeTerrain\(S\.editingSceneId, \{ choisi: c\.element\.id \}\);/);
+  assert.match(ev, /b\.disabled = !enScene;/);
+  assert.match(ev, /if \(deleted && deleted\.type === 'tracé'\) return;/);
+  assert.match(ev, /if \(hit && hit\.type === 'tracé'\) \{\n\s*exitCameraModeOnDeselect\(hit\.id, page\);\n\s*S\.selectedId = hit\.id;[^\n]*\n\s*drawCurrentPage\(\);\n\s*return;/);
+  assert.doesNotMatch(ev, /S\.dragMode = 'terrainResize'/);
+  assert.match(lire('index.html'), /<div class="context-menu hidden" id="terrainElementMenu">/);
+});

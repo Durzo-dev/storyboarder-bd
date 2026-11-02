@@ -60,10 +60,11 @@ let _openPersonaModal = null;
 let _openObjectModal = null;
 let _openRoomModal = null;
 let _openBuildingModal = null;
-let _openTerrainModal = null;
-let _openTracéModal = null;
 // #454a : le clic droit sur un Bâtiment ou une Pièce, « Modifier » (cf. batiment-editeur-ui.js).
 let _openBatimentMenu = null;
+// #462b : le clic droit sur un Élément Terrain (« Modifier », l'Éditeur de terrain) ; sans événement,
+// il modifie directement (double-clic).
+let _openTerrainMenu = null;
 // FIX (pre-existing bug, regression from extraction B.12): restoreSectionCollapseStates() (persistence
 // of the right-hand panel's sections' collapsed/expanded state) lived in app.js/events.js, which tried
 // to hook it at the end of updateSidePanel() by REASSIGNING the imported `updateSidePanel` binding
@@ -73,15 +74,14 @@ let _openBatimentMenu = null;
 // like the modal openers above, and called directly from updateSidePanel (cf. further down).
 let _restoreSectionCollapseStates = null;
 
-export function setSidebarCallbacks({ snapshot, openPersonaModal, openObjectModal, openRoomModal, openBuildingModal, openTerrainModal, openTracéModal, restoreSectionCollapseStates, openBatimentMenu }) {
+export function setSidebarCallbacks({ snapshot, openPersonaModal, openObjectModal, openRoomModal, openBuildingModal, restoreSectionCollapseStates, openBatimentMenu, openTerrainMenu }) {
   _openBatimentMenu = openBatimentMenu;
+  _openTerrainMenu = openTerrainMenu || null;
   _snapshot = snapshot;
   _openPersonaModal = openPersonaModal;
   _openObjectModal = openObjectModal;
   _openRoomModal = openRoomModal;
   _openBuildingModal = openBuildingModal;
-  _openTerrainModal = openTerrainModal;
-  _openTracéModal = openTracéModal;
   _restoreSectionCollapseStates = restoreSectionCollapseStates;
 }
 
@@ -452,6 +452,32 @@ function basculerGroupe(cle){
   const replie = !groupeReplie(globalThis.localStorage, cle);
   memoriserGroupe(globalThis.localStorage, cle, replie);
   return replie;
+}
+
+/**
+ * #462b : une SOUS-CATÉGORIE repliable de la liste des Éléments (Terrain, Non visible) : un titre avec
+ * son nombre et ▾ / ▸, puis le bloc. L'état replié est retenu (section-memory, comme les Pièces).
+ */
+function sousCategorie(cle, titreTexte, lignes, classes){
+  const replie = groupeReplie(globalThis.localStorage, cle);
+  const titre = document.createElement('div');
+  titre.className = classes.titre + ' side-sous-categorie-titre';
+  titre.textContent = titreTexte;
+  const bascule = document.createElement('span');
+  bascule.className = 'side-sous-categorie-bascule';
+  bascule.textContent = replie ? '▸' : '▾';
+  titre.appendChild(bascule);
+  const bloc = document.createElement('div');
+  bloc.className = classes.bloc + (replie ? ' collapsed' : '');
+  lignes.forEach(l => bloc.appendChild(l));
+  titre.addEventListener('mousedown', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    const r = basculerGroupe(cle);
+    bloc.classList.toggle('collapsed', r);
+    bascule.textContent = r ? '▸' : '▾';
+  });
+  sidePersonas.appendChild(titre);
+  sidePersonas.appendChild(bloc);
 }
 
 // Un seul avertissement par session pour une projection impossible (cf. renderSidePersonas).
@@ -926,10 +952,12 @@ export function renderSidePersonas(panel, page, horsChampFn = elementNonVisible3
   }
 
   // Tracés (Roads, Dirt paths, Terrain Zones) associated with this panel.
+  // #462b (décidé) : ils se font et se modifient dans l'Éditeur de terrain ; ici, une sous-catégorie
+  // « Terrain » repliable, dans une Scène comme dans une Case.
   if (panelTracés.length > 0) {
-    // Visual separator between 3D Elements and 2D Tracés.
     separer();
-    panelTracés.forEach(t => sidePersonas.appendChild(renderTracéSideRow(t, panel, page)));
+    sousCategorie('sous-categorie:terrain', tr(`Terrain (${panelTracés.length})`, `Terrain (${panelTracés.length})`),
+      panelTracés.map(t => renderTracéSideRow(t, panel, page)), { titre: 'side-terrain-titre', bloc: 'side-terrain' });
   }
 
   // ⚠️ TOUT EN BAS, APRÈS LES TRACÉS, demandé après un premier essai où ce bloc s'intercalait
@@ -937,16 +965,11 @@ export function renderSidePersonas(panel, page, horsChampFn = elementNonVisible3
   // voit, sans quoi la sous-section coupe la liste en deux au lieu de la conclure.
   if (horsChamp.length > 0) {
     separer();
-    const titre = document.createElement('div');
-    titre.className = 'side-hors-champ-titre';
     // Le NOMBRE est dans le titre : sans lui, il faudrait compter les lignes pour savoir combien
     // d'Éléments ont quitté le cadre, c'est la première question qu'on se pose en le lisant.
-    titre.textContent = tr(`Not visible (${horsChamp.length})`, `Non visible (${horsChamp.length})`);
-    sidePersonas.appendChild(titre);
-    const bloc = document.createElement('div');
-    bloc.className = 'side-hors-champ';
-    horsChamp.forEach(p => bloc.appendChild(renderSideElementRow(p, panel, page)));
-    sidePersonas.appendChild(bloc);
+    // #462b (demandé) : repliable, comme « Terrain ». Déplié par défaut : on voit qu'ils existent.
+    sousCategorie('sous-categorie:non-visible', tr(`Not visible (${horsChamp.length})`, `Non visible (${horsChamp.length})`),
+      horsChamp.map(p => renderSideElementRow(p, panel, page)), { titre: 'side-hors-champ-titre', bloc: 'side-hors-champ' });
   }
 }
 
@@ -969,10 +992,11 @@ export function renderTracéSideRow(t, panel, page){
     const now = Date.now();
     const isDblClick = S.sideElementLastClickId === t.id && (now - S.sideElementLastClickTime) < 450;
     if (isDblClick) {
+      // #462b : un Élément Terrain se modifie dans l'Éditeur de terrain (double-clic = « Modifier »).
       S.sideElementLastClickId = null; S.sideElementLastClickTime = 0;
       S.selectedId = t.id; S.selectedRoomId = null;
       drawCurrentPage();
-      if (t.tracéType === 'terrain') _openTerrainModal(t); else _openTracéModal(t);
+      if (_openTerrainMenu && isLockedScenePanel(panel)) _openTerrainMenu(null, { element: t, panel });
     } else if (S.selectedId === t.id) {
       S.selectedId = panel.id; S.selectedRoomId = null;
       S.sideElementLastClickId = null; S.sideElementLastClickTime = 0;
@@ -983,7 +1007,8 @@ export function renderTracéSideRow(t, panel, page){
       drawCurrentPage();
     }
   });
-  row.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); });
+  // #462b (demandé) : le clic droit n'offre que « Modifier », qui ouvre l'Éditeur de terrain sur lui.
+  row.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); if (_openTerrainMenu) _openTerrainMenu(e, { element: t, panel }); });
   return row;
 }
 

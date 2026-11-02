@@ -298,6 +298,7 @@ export const I18N_TRAILING = [
   //    Ajoutées après constat que 49 boutons sur 123 restaient en français en mode anglais.
   ['#ctxCreerBatiment', 'Create a building', 'Créer un bâtiment'],
   ['#ctxModifierTerrain', 'Edit the terrain', 'Modifier le terrain'],
+  ['#ctxModifierTerrainElement', 'Edit', 'Modifier'],
   ['#sideBatimentMasquerBtn', 'Choose what is hidden', 'Choisir ce qui est masqué'],
   ['#sideBatimentReafficherBtn', 'Show everything again', 'Tout réafficher'],
   ['#sideBatimentTitle', 'Building display', 'Affichage du bâtiment'],

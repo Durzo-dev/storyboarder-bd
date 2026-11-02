@@ -3055,3 +3055,9 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 #terrainSecChoisi .full-btn { width: 100%; margin: 0 0 8px; }
 /* Les outils de l'éditeur de terrain : leur icône ne capte pas le clic (le bouton le reçoit). */
 .terrain-outil svg { pointer-events: none; }
+/* #462b : les sous-catégories repliables de la liste des Éléments (Terrain, Non visible). */
+.side-sous-categorie-titre{ display:flex; align-items:center; cursor:pointer; user-select:none; }
+.side-sous-categorie-bascule{ margin-left:auto; padding:0 2px; }
+.side-terrain-titre{ font-size:var(--texte-micro); font-weight:600; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; margin:2px 2px 0; opacity:.75; }
+.side-terrain{ display:flex; flex-direction:column; gap:6px; }
+.side-terrain.collapsed, .side-hors-champ.collapsed{ display:none; }

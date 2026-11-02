@@ -146,7 +146,8 @@ describe('le câblage', () => {
   test('les groupes de la liste des Éléments ne vivent plus dans un objet oublié au lancement', () => {
     const barre = source('sidebar.js');
     assert.doesNotMatch(barre, /sideGroupCollapsed\[/);
-    assert.equal((barre.match(/basculerGroupe\(/g) || []).length, 3);
-    assert.equal((barre.match(/groupeReplie\(globalThis\.localStorage/g) || []).length, 3);
+    // 3 : Pièce et Bâtiment ; + 1 : les sous-catégories repliables (Terrain, Non visible, #462b).
+    assert.equal((barre.match(/basculerGroupe\(/g) || []).length, 4);
+    assert.equal((barre.match(/groupeReplie\(globalThis\.localStorage/g) || []).length, 4);
   });
 });
