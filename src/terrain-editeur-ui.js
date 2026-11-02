@@ -11,6 +11,12 @@
  * #462b : les Zones et les Tracés se font ICI (outils Zone et Tracés ; Sélection pour les choisir, les
  * déplacer, les régler dans leur fenêtre habituelle, les supprimer), en mètres, sur le plan.
  * À venir : le relief (#462c), l'eau (#462d).
+ *
+ * ⚠️ RIEN N'EST APPLIQUÉ À LA SCÈNE AVANT « VALIDER » (demandé, 2 novembre 2026). L'éditeur travaille sur
+ * la Scène elle-même (l'aperçu et les fenêtres de réglage en ont besoin), mais il garde son ÉTAT DE
+ * DÉPART (le relief et les Zones et Tracés du canevas) : « Quitter » sans valider le remet, « Valider »
+ * en fait UNE annulation de l'application (Ctrl+Z après coup ramène la Scène d'avant). Pendant
+ * l'édition, l'annulation est celle de l'éditeur (son historique), et la sauvegarde automatique attend.
  */
 import { S, tr, newId } from './state.js';
 import { contenuDuPlan, cadrageDuPlan, versLePlan, zoomerLePlan, pasDeLaGrille, versLeMonde,
@@ -85,7 +91,7 @@ function outilsDuPlan(panel){
 /** Ouvre l'éditeur sur la Scène `sceneId` ; `choisi` : l'id d'un Élément à désigner. */
 export function ouvrirEditeurDeTerrain(sceneId, { choisi = null } = {}){
   if (!(S.scenes || []).some(s => s.id === sceneId)) return false;
-  if (T) fermerEditeurDeTerrain();
+  if (T) fermerSansDemander();
   _rappels.avantOuverture();
   // La Scène devient la page courante : les fenêtres de réglage (Tracé, Zone) et l'annulation y travaillent.
   if (S.editingSceneId !== sceneId) _rappels.ouvrirLaScene(sceneId);
@@ -94,9 +100,13 @@ export function ouvrirEditeurDeTerrain(sceneId, { choisi = null } = {}){
     // Zone en cours, la Zone ou le Tracé qu'on fait glisser ; la signature du dernier aperçu rendu.
     outil: 'selection', sorteTrace: 'route', chaine: null, fantome: null, rectangle: null, glisser: null, sigApercu: null,
     // #462c : le pinceau du relief (réglages gardés pendant la session), le coup en cours, le survol.
-    pinceau: { ...T_PINCEAU }, coup: null, survol: null };
+    pinceau: { ...T_PINCEAU }, coup: null, survol: null,
+    // L'état de départ (remis si l'on quitte sans valider), l'historique de l'éditeur.
+    origine: null, historique: [], refaire: [] };
   const sc = laScene();
   if (!sc) { T = null; return false; }
+  T.origine = etatDuTerrain(sc);
+  S.terrainEnEdition = true;
   // L'aperçu part de la caméra de la Scène.
   const p = sc.panel;
   const centre = getCamOrbitWorld(p, panelCamBasis3D(p));
@@ -114,15 +124,92 @@ export function ouvrirEditeurDeTerrain(sceneId, { choisi = null } = {}){
   return true;
 }
 
-/** Ferme l'éditeur (rien n'y est encore modifiable : rien à demander). */
-export function fermerEditeurDeTerrain(){
-  if (!T) return true;
+// ── L'état du terrain : ce que l'éditeur modifie, et peut remettre ─────────────────────────
+
+/** Le relief et les Zones et Tracés du canevas de la Scène, copiés. */
+function etatDuTerrain(sc){
+  const traces = sc.page.objects.filter(o => o.type === 'tracé' && o.panelId === sc.panel.id);
+  return JSON.parse(JSON.stringify({ relief: sc.panel.relief || null, traces }));
+}
+/** Remet un état : le relief, et les Zones et Tracés (à la place des premiers, dans l'ordre). */
+function remettreLeTerrain(sc, etat){
+  const copie = JSON.parse(JSON.stringify(etat));
+  if (copie.relief) sc.panel.relief = copie.relief; else delete sc.panel.relief;
+  const objets = sc.page.objects;
+  let ou = objets.findIndex(o => o.type === 'tracé' && o.panelId === sc.panel.id);
+  for (let i = objets.length - 1; i >= 0; i--) if (objets[i].type === 'tracé' && objets[i].panelId === sc.panel.id) objets.splice(i, 1);
+  if (ou < 0 || ou > objets.length) ou = objets.length;
+  objets.splice(ou, 0, ...copie.traces);
+  for (const o of copie.traces) tracéUpdateScreenPts(o, sc.panel, sc.page);
+}
+/** L'éditeur a-t-il changé quelque chose depuis son ouverture ? */
+function terrainModifie(){
+  const sc = T && laScene();
+  return !!sc && JSON.stringify(etatDuTerrain(sc)) !== JSON.stringify(T.origine);
+}
+/** Avant chaque modification : l'état courant va dans l'historique de l'éditeur (Ctrl+Z). */
+function retenirPourAnnuler(){
+  const sc = T && laScene();
+  if (!sc) return;
+  T.historique.push(etatDuTerrain(sc));
+  if (T.historique.length > 100) T.historique.shift();
+  T.refaire = [];
+}
+/** Une modification faite AILLEURS pendant l'édition (une fenêtre de réglage) : l'éditeur la retient. */
+export function noterModificationDuTerrain(){ if (T) retenirPourAnnuler(); }
+function defaire(sens){
+  const sc = T && laScene();
+  const pile = sens > 0 ? T.refaire : T.historique, autre = sens > 0 ? T.historique : T.refaire;
+  if (!sc || !pile.length) return;
+  autre.push(etatDuTerrain(sc));
+  remettreLeTerrain(sc, pile.pop());
+  apresModification(null);
+}
+
+/**
+ * « Valider » : les modifications restent sur la Scène, et UNE annulation de l'application les
+ * précède (l'état de départ remis le temps de l'instantané). L'éditeur se ferme.
+ */
+export function validerLeTerrain(){
+  const sc = T && laScene();
+  if (!sc) return;
+  const brouillon = etatDuTerrain(sc), origine = T.origine;
+  fermerSansDemander();
+  if (JSON.stringify(brouillon) === JSON.stringify(origine)) return;
+  remettreLeTerrain(sc, origine);
+  _rappels.instantane();
+  remettreLeTerrain(sc, brouillon);
+  _rappels.apresModification();
+}
+
+/** Ferme sans rien demander ; ce qui n'est pas validé est retiré de la Scène. */
+function fermerSansDemander(){
+  if (!T) return;
+  const sc = laScene();
+  if (sc && terrainModifie()) remettreLeTerrain(sc, T.origine);
   if (T.demande) cancelAnimationFrame(T.demande);
   T = null;
+  S.terrainEnEdition = false;
   $('terrainEditeur').classList.add('hidden');
   window.removeEventListener('keydown', clavier, true);
   window.removeEventListener('resize', redessiner);
   _rappels.apresFermeture();
+}
+
+/**
+ * Quitte l'éditeur ; s'il y a des modifications non validées, demande d'abord (masquable). Rend une
+ * promesse : vrai si l'éditeur est fermé.
+ */
+export async function fermerEditeurDeTerrain(){
+  if (!T) return true;
+  if (terrainModifie()) {
+    const ok = await _rappels.confirmer(
+      tr('Leave the terrain editor without validating? Its changes will be lost.',
+        "Quitter l'éditeur de terrain sans valider ? Ses modifications seront perdues."),
+      tr('Terrain editor', 'Éditeur de terrain'), { ok: tr('Leave', 'Quitter'), masquable: 'fermer-editeur-terrain' });
+    if (!ok) return false;
+  }
+  fermerSansDemander();
   return true;
 }
 
@@ -142,8 +229,16 @@ function clavier(e){
     return;
   }
   if (e.key === 'Enter' && T.chaine) { stop(); finirLaLigne(); return; }
+  // L'annulation de l'ÉDITEUR (rien n'est encore sur la Scène) : Ctrl+Z, Ctrl+Y ou Ctrl+Maj+Z.
+  if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+    const k = e.key.toLowerCase();
+    if (k === 'z' && !e.shiftKey) { stop(); defaire(-1); return; }
+    if (k === 'y' || (k === 'z' && e.shiftKey)) { stop(); defaire(1); return; }
+  }
   if ((e.key === 'Delete' || e.key === 'Backspace') && terrainChoisi()) { stop(); supprimerLeChoisi(); return; }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
+  // H (l'Éditeur de bâtiment) : quitter celui-ci d'abord, en demandant s'il y a des modifications.
+  if (e.key.toLowerCase() === 'h') { stop(); fermerEditeurDeTerrain().then(ok => { if (ok) $('openBatimentEditorBtn').click(); }); return; }
   const outil = { v: 'selection', z: 'zone', t: 'trace', r: 'relief' }[e.key.toLowerCase()];
   if (outil) { stop(); choisirOutil(T.outil === outil ? 'selection' : outil); }
 }
@@ -196,7 +291,7 @@ function apresModification(obj){
 function poser(sorte, world){
   const sc = laScene();
   if (!sc || !world) return;
-  _rappels.instantane();
+  retenirPourAnnuler();
   const def = TRACÉ_DEFAULTS[sorte] || {};
   const obj = sorte === 'terrain'
     ? { id: newId(), type: 'tracé', tracéType: 'terrain', name: nomDuTrace('terrain'), panelId: sc.panel.id, terrainType: 'herbe', label: '', world }
@@ -217,7 +312,7 @@ function finirLaLigne(){
 function supprimerLeChoisi(){
   const sc = laScene(), obj = terrainChoisi();
   if (!sc || !obj) return;
-  _rappels.instantane();
+  retenirPourAnnuler();
   const i = sc.page.objects.indexOf(obj);
   if (i >= 0) sc.page.objects.splice(i, 1);
   T.choisi = null;
@@ -234,7 +329,7 @@ async function retirerLeRelief(){
     tr('Remove the relief', 'Retirer le relief'), { masquable: 'retirer-relief' });
   const sc2 = ok && T && laScene();
   if (!sc2) return;
-  _rappels.instantane();
+  retenirPourAnnuler();
   delete sc2.panel.relief;
   apresModification(null);
 }
@@ -265,6 +360,7 @@ export function commandesDuTerrain(trad = tr, outil = 'selection'){
   }
   l.push(trad('V selection · Z zone · T paths · R relief.', 'V sélection · Z zone · T tracés · R relief.'));
   l.push(trad('Wheel: zoom · right drag: move the view.', 'Molette : zoomer · glisser droit : déplacer la vue.'));
+  l.push(trad('Ctrl+Z / Ctrl+Y: undo, redo. Nothing reaches the Scene before "Validate".', 'Ctrl+Z / Ctrl+Y : annuler, rétablir. Rien ne va sur la Scène avant « Valider ».'));
   l.push(trad('Esc: cancel, then leave the tool, then back to the Scene.', "Échap : annuler, puis quitter l'outil, puis revenir à la Scène."));
   return l;
 }
@@ -310,6 +406,7 @@ function majContenu(){
     if (document.activeElement !== $('terrainReliefTaille')) $('terrainReliefTaille').value = String(T.pinceau.rayon);
     if (document.activeElement !== $('terrainReliefForce')) $('terrainReliefForce').value = String(T.pinceau.force);
   }
+  $('terrainValiderBtn').disabled = !terrainModifie();
   // La Zone ou le Tracé choisi.
   const obj = terrainChoisi();
   $('terrainSecChoisi').hidden = !obj;
@@ -572,6 +669,7 @@ export function initEditeurDeTerrain(){
     });
   });
   $('terrainQuitterBtn').onclick = () => fermerEditeurDeTerrain();
+  $('terrainValiderBtn').onclick = () => validerLeTerrain();
   $('terrainEditeurFermerX').onclick = () => fermerEditeurDeTerrain();
   $('terrainRecadrerBtn').onclick = () => recadrer();
   for (const [id, outil] of OUTILS) {
@@ -612,7 +710,7 @@ export function initEditeurDeTerrain(){
     if (T.outil === 'relief') {
       const sc = laScene();
       if (!sc) return;
-      _rappels.instantane();
+      retenirPourAnnuler();
       // « Aplanir » vise la hauteur sous le premier clic, pour tout le coup.
       T.coup = { cible: hauteurDuRelief(sc.panel.relief, m.x, m.z), dernier: null };
       peindre(m);
@@ -655,7 +753,7 @@ export function initEditeurDeTerrain(){
     else if (T.glisser) {
       const obj = terrainChoisi();
       if (!obj) { T.glisser = null; return; }
-      if (!T.glisser.bouge) { _rappels.instantane(); T.glisser.bouge = true; }
+      if (!T.glisser.bouge) { retenirPourAnnuler(); T.glisser.bouge = true; }
       obj.world = deplacerLeMonde(T.glisser.origine, m.x - T.glisser.depart.x, m.z - T.glisser.depart.z);
       apresModification(obj);
     }

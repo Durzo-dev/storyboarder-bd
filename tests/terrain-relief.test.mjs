@@ -60,7 +60,7 @@ test('l\'outil Relief : un glisser peint le relief du canevas de la Scène, un i
   S.scenes = [{ id: 's1', name: 'Scène 1', w: 480, h: 360, pages: [{ objects: [panel] }] }];
   S.editingSceneId = 's1';
   let instantanes = 0, apres = 0;
-  U.setTerrainEditeurCallbacks({ instantane: () => { instantanes++; }, ouvrirLaScene: () => {}, apresModification: () => { apres++; } });
+  U.setTerrainEditeurCallbacks({ instantane: () => { instantanes++; }, ouvrirLaScene: () => {}, apresModification: () => { apres++; }, confirmer: async () => true });
   U.initEditeurDeTerrain();
   U.ouvrirEditeurDeTerrain('s1');
   const plan = document.getElementById('terrainPlan');
@@ -72,9 +72,11 @@ test('l\'outil Relief : un glisser peint le relief du canevas de la Scène, un i
   jouer('pointerup', { clientX: 440, clientY: 300 });
   assert.ok(R.reliefValide(panel.relief), 'le relief est posé sur le canevas de la Scène');
   assert.ok(R.hauteurDuRelief(panel.relief, 0, 0) > 0);
-  assert.equal(instantanes, 1, 'un seul instantané pour tout le coup');
-  assert.equal(apres, 1, 'la Scène redessinée au relâcher seulement');
-  U.fermerEditeurDeTerrain();
+  assert.equal(instantanes, 0, 'rien sur la Scène avant « Valider »');
+  assert.equal(apres, 1, 'redessiné au relâcher seulement');
+  document.getElementById('terrainValiderBtn').onclick();
+  assert.equal(instantanes, 1, 'une annulation de l\'application, à la validation');
+  assert.ok(R.hauteurDuRelief(panel.relief, 0, 0) > 0, 'validé : le relief reste');
 });
 
 test('câblage du rendu : le relief dans la signature de la Case, posé avec la matière du Sol, le Sol percé dessous', () => {
@@ -94,7 +96,7 @@ test('les boutons de mode survivent au rafraîchissement, et choisissent ; le re
   const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
   S.scenes = [{ id: 's1', name: 'Scène 1', w: 480, h: 360, pages: [{ objects: [panel] }] }];
   S.editingSceneId = 's1';
-  U.setTerrainEditeurCallbacks({ instantane: () => {}, ouvrirLaScene: () => {}, apresModification: () => {} });
+  U.setTerrainEditeurCallbacks({ instantane: () => {}, ouvrirLaScene: () => {}, apresModification: () => {}, confirmer: async () => true });
   U.initEditeurDeTerrain();
   U.ouvrirEditeurDeTerrain('s1');
   document.getElementById('terrainOutilRelief').onclick();
@@ -109,7 +111,7 @@ test('les boutons de mode survivent au rafraîchissement, et choisissent ; le re
   jouer('pointerdown', { button: 0, clientX: 400, clientY: 300 });
   jouer('pointerup', { clientX: 400, clientY: 300 });
   assert.ok(R.hauteurDuRelief(panel.relief, 0, 0) < 0, 'le pinceau creuse');
-  U.fermerEditeurDeTerrain();
+  document.getElementById('terrainValiderBtn').onclick();
   const sc = lire('scene3d.js');
   assert.match(sc, /const maillage = new THREE\.Mesh\(geo, groundMesh3D\.material\);\n\s*maillage\.renderOrder = -2000;/);
 });
@@ -136,7 +138,8 @@ test('« Retirer tout le relief » : demandé, puis la Scène redevient plate ; 
   await btn.onclick();
   assert.equal(panel.relief, undefined);
   assert.deepEqual(demandes, ['retirer-relief', 'retirer-relief']);
-  assert.equal(instantanes, 1);
   assert.equal(btn.disabled, true, 'plus rien à retirer');
-  U.fermerEditeurDeTerrain();
+  document.getElementById('terrainValiderBtn').onclick();
+  assert.equal(instantanes, 1);
+  assert.equal(panel.relief, undefined, 'validé : plat');
 });

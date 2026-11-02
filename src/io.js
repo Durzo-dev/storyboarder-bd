@@ -812,6 +812,8 @@ export function startAutosave(){
   if (!S.autosaveIntervalMs) return; // 0 = autosave disabled (cf. Settings modal).
   S.autosaveIntervalId = setInterval(() => {
     if (!S.projectDirty) return;
+    // #462 : pas pendant l'Éditeur de terrain, dont les modifications ne sont pas encore validées.
+    if (S.terrainEnEdition) return;
     if (S.projectFilePath) writeProjectToPath(S.projectFilePath);
     else if (S.projectFileHandle) writeProjectToHandle(S.projectFileHandle);
   }, S.autosaveIntervalMs);

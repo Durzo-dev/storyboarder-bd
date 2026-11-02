@@ -54,6 +54,7 @@ export const I18N_TEXT = [
   ['#terrainApercuPlein', null, null, 'title', 'Full-screen preview', 'Aperçu en plein écran'],
   ['#terrainRecadrerBtn', 'Reframe', 'Recadrer'],
   ['#terrainQuitterBtn', 'Quit', 'Quitter'],
+  ['#terrainValiderBtn', 'Validate', 'Valider'],
   ['#terrainOutilSelection', null, null, 'title', 'Selection (V)', 'Sélection (V)'],
   ['#terrainOutilZone', null, null, 'title', 'Terrain zone (Z)', 'Zone de terrain (Z)'],
   ['#terrainOutilTrace', null, null, 'title', 'Paths (T)', 'Tracés (T)'],

@@ -138,7 +138,7 @@ import {
 } from './batiment-editeur-ui.js';
 import {
   initEditeurDeTerrain, setTerrainEditeurCallbacks, ouvrirEditeurDeTerrain, fermerEditeurDeTerrain, editeurDeTerrainOuvert,
-  ouvrirChoixDeScene, fermerChoixDeScene, majBoutonEditeurDeTerrain, rafraichirEditeurDeTerrain,
+  ouvrirChoixDeScene, fermerChoixDeScene, majBoutonEditeurDeTerrain, rafraichirEditeurDeTerrain, noterModificationDuTerrain,
 } from './terrain-editeur-ui.js';
 import { batimentDesPieces } from './batiment.js';
 import { creerElementBatiment, appliquerBatiment, estUnBatimentPlace } from './batiment-element.js';
@@ -530,6 +530,9 @@ function assignNextPanelNumber(page, panelObj){
 // UNDO / HISTORY
 // ════════════════════════════════════════════════════════════
 function snapshot(){
+  // #462 : pendant l'Éditeur de terrain, rien n'est encore sur la Scène (« Valider ») : une fenêtre de
+  // réglage qui modifie une Zone ou un Tracé note l'état dans l'historique de l'ÉDITEUR, pas ici.
+  if (editeurDeTerrainOuvert()) { noterModificationDuTerrain(); return; }
   S.undoStack.push(JSON.stringify({ tomes: S.tomes, formats: S.formats, currentTomeIndex: S.currentTomeIndex, currentPageIndex: S.currentPageIndex, scenes: S.scenes, editingSceneId: S.editingSceneId }));
   if (S.undoStack.length > MAX_UNDO) S.undoStack.shift();
   const btn = document.getElementById('undoBtn');
@@ -6127,11 +6130,15 @@ document.getElementById('ctxModifierTerrain').onclick = () => {
   hideContextMenu();
   if (S.editingSceneId) ouvrirEditeurDeTerrain(S.editingSceneId);
 };
-// Ce qui, dans le menu de gauche et le bandeau, mène ailleurs le ferme (rien n'y est à enregistrer).
+// Ce qui, dans le menu de gauche et le bandeau, mène ailleurs le ferme (en demandant, s'il y a des
+// modifications non validées).
 document.addEventListener('click', (e) => {
   if (!editeurDeTerrainOuvert()) return;
   const cible = e.target && e.target.closest && e.target.closest('.page-row, #sceneList, #addVolumeBtn, #addSceneBtn, .add-page-btn, #openPoseEditorBtn, #openBatimentEditorBtn, #projectNameHeader, #ctxReadVolume, #ctxReadChapter');
-  if (cible) fermerEditeurDeTerrain();
+  if (!cible) return;
+  // Des modifications non validées : le clic est retenu le temps de demander, puis rejoué.
+  e.preventDefault(); e.stopImmediatePropagation();
+  fermerEditeurDeTerrain().then(ferme => { if (ferme && typeof cible.click === 'function') cible.click(); });
 }, true);
 // Le bouton BASCULE (demandé) : il ouvre l'éditeur, et le referme si on reclique dessus.
 document.getElementById('openBatimentEditorBtn').onclick = () => {

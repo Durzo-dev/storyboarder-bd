@@ -186,3 +186,12 @@ test('câblage : sous-catégories Terrain et Non visible repliables ; clic droit
   assert.doesNotMatch(ev, /S\.dragMode = 'terrainResize'/);
   assert.match(lire('index.html'), /<div class="context-menu hidden" id="terrainElementMenu">/);
 });
+
+// Demandé : les modifications de l'Éditeur de terrain ne vont sur la Scène qu'à « Valider ».
+test('câblage : l\'annulation de l\'application attend « Valider », la sauvegarde automatique aussi', () => {
+  const ev = lire('events.js');
+  assert.match(ev, /function snapshot\(\)\{\n(?:\s*\/\/[^\n]*\n)*\s*if \(editeurDeTerrainOuvert\(\)\) \{ noterModificationDuTerrain\(\); return; \}/);
+  assert.match(ev, /fermerEditeurDeTerrain\(\)\.then\(ferme => \{ if \(ferme && typeof cible\.click === 'function'\) cible\.click\(\); \}\);/);
+  assert.match(lire('io.js'), /if \(S\.terrainEnEdition\) return;/);
+  assert.match(lire('index.html'), /<button id="terrainValiderBtn" type="button" class="full-btn" disabled>Valider<\/button>/);
+});
