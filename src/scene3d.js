@@ -2579,7 +2579,12 @@ function draperSurLeRelief3D(groupe, r){
     m.geometry.applyMatrix4(m.matrix);
     m.position.set(0, 0, 0); m.rotation.set(0, 0, 0); m.scale.set(1, 1, 1); m.updateMatrix();
     const pos = m.geometry.attributes.position;
-    for (let i = 0; i < pos.count; i++) pos.setY(i, pos.getY(i) + hauteurDuRelief(r, pos.getX(i), pos.getZ(i)));
+    // Un léger surplus (2 cm) là où le relief n'est pas nul : entre ses sommets, un Tracé coupe les
+    // triangles du relief en biais et s'en écarterait d'un rien, de quoi se faire mordre.
+    for (let i = 0; i < pos.count; i++) {
+      const dh = hauteurDuRelief(r, pos.getX(i), pos.getZ(i));
+      pos.setY(i, pos.getY(i) + dh + (dh ? 0.02 : 0));
+    }
     pos.needsUpdate = true;
     m.geometry.computeVertexNormals();
     m.geometry.computeBoundingSphere(); m.geometry.computeBoundingBox();
@@ -3210,7 +3215,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       }
       const group = new THREE.Group();
       // #462c-2 : sur un relief, la ligne est redécoupée tous les mètres pour l'épouser.
-      const w = (!reliefPlat(_relief) && o.world && Array.isArray(o.world.pts)) ? { ...o.world, pts: densifierLaLigne(o.world.pts, 1) } : o.world;
+      const w = (!reliefPlat(_relief) && o.world && Array.isArray(o.world.pts)) ? { ...o.world, pts: densifierLaLigne(o.world.pts, 0.5) } : o.world;
       // ── Shared Traversant/opening holes (low wall / hedge / barrier) ─────────────
       // Computed once, passed to every buildTracéWallGeometry3D call
       // of the current type. buildTracéWallGeometry3D clips yMin/yMax to each
@@ -3246,7 +3251,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
                              Math.max(0.5, w.h * (tDef.repeat || 60) / 100));
         tMapClone.needsUpdate = true;
         // #462c-2 : sur un relief, la Zone est découpée au mètre pour s'y draper.
-        const _decoupe = (d) => (reliefPlat(_relief) ? 1 : Math.max(1, Math.min(200, Math.ceil(d))));
+        const _decoupe = (d) => (reliefPlat(_relief) ? 1 : Math.max(1, Math.min(400, Math.ceil(d * 2))));
         const geo = new THREE.PlaneGeometry(w.w, w.h, _decoupe(w.w), _decoupe(w.h));
         const mat = new THREE.MeshStandardMaterial({
           map: tMapClone, color: new THREE.Color(0xffffff),

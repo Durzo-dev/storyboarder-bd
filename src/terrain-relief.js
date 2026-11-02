@@ -36,7 +36,12 @@ export function hauteurDuRelief(r, x, z){
   const i = Math.min(r.nx - 2, Math.floor(fx)), j = Math.min(r.nz - 2, Math.floor(fz));
   const tx = fx - i, tz = fz - j;
   const h = (a, b) => r.h[b * r.nx + a] || 0;
-  return (h(i, j) * (1 - tx) + h(i + 1, j) * tx) * (1 - tz) + (h(i, j + 1) * (1 - tx) + h(i + 1, j + 1) * tx) * tz;
+  // ⚠️ PAR TRIANGLE, COMME LE MAILLAGE (signalé : une route drapée disparaissait par endroits dans le
+  // relief). Chaque case est coupée en deux triangles par sa diagonale (i+1, j)–(i, j+1) (scene3d.js,
+  // construireRelief3D) ; une interpolation bilinéaire s'en écarte au milieu de la case, et ce qui
+  // était posé « dessus » passait dessous.
+  if (tx + tz <= 1) return h(i, j) + (h(i + 1, j) - h(i, j)) * tx + (h(i, j + 1) - h(i, j)) * tz;
+  return h(i + 1, j + 1) + (h(i, j + 1) - h(i + 1, j + 1)) * (1 - tx) + (h(i + 1, j) - h(i + 1, j + 1)) * (1 - tz);
 }
 
 /**

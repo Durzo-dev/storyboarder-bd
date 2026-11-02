@@ -208,3 +208,12 @@ test('le relief reçoit les ombres sans en projeter, comme le Sol', () => {
 test('le masque du relief perce le Sol sans test de profondeur', () => {
   assert.match(lire('scene3d.js'), /_masqueRelief3D = new THREE\.MeshBasicMaterial\(\{ colorWrite: false, depthWrite: false, depthTest: false,/);
 });
+
+// Signalé : une route drapée disparaissait par endroits dans le relief (l'interpolation bilinéaire
+// s'écartait des triangles du maillage).
+test('la hauteur suit les triangles du maillage (diagonale (i+1, j)–(i, j+1))', () => {
+  const r = { pas: 1, x0: 0, z0: 0, nx: 2, nz: 2, h: [0, 0, 0, 1], v: 1 };
+  assert.equal(R.hauteurDuRelief(r, 0.5, 0.5), 0, 'sur la diagonale : le triangle bas, plat');
+  assert.ok(Math.abs(R.hauteurDuRelief(r, 0.75, 0.75) - 0.5) < 1e-9);
+  assert.ok(Math.abs(R.hauteurDuRelief(r, 0.25, 0.25)) < 1e-9);
+});
