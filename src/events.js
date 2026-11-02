@@ -154,7 +154,7 @@ import {
   setScene3DCallbacks, panelAutoDepthPivot3D, panelCamBasis3D, panelDepthToDistance3D,
   panelDragRayOnPlane, clampPanelDepth3D, clampWorldYAboveGround, computeTracéWorld3D,
   ensureElementUnits3D, ensureElementWorldPos3D, ensureNewElementVisibleInPanel3D, findOwningPanel,
-  getCamOrbitWorld, getElementProjectedHalfExtents3D, groundMagnetEligible, panelPixelToGroundXZ3D,
+  getCamOrbitWorld, getElementProjectedHalfExtents3D, getElementProjectedBox3D, groundMagnetEligible, panelPixelToGroundXZ3D,
   projectElementCenterToCanvas3D, setElementWorldPos3D, smoothTracéPath3D, tracéPointAtFrac3D,
   wallOpeningWorldPosOnTracé3D, startCamSmoothing, storeElementWorldCoords, useObjectBoxFormat3D,
   distanceCameraPourPremierElement3D, estPremierElement3DdeLaCase,
@@ -2564,9 +2564,11 @@ canvas.addEventListener('mousedown', (e) => {
       // ⚠️ LA BOÎTE VUE, PAS o.x / o.y (signalé : le geste déplaçait la caméra) : la boîte 2D brute
       // n'est plus où l'Élément s'affiche dès que la caméra a bougé. La même que le glisser gauche
       // et le cadre de sélection : son centre et ses demi-côtés projetés par la vraie caméra.
-      const _cR = _caseR ? projectElementCenterToCanvas3D(_elR, _caseR, _pgR) : null;
+      const _b3R = _caseR ? getElementProjectedBox3D(_elR, _caseR, _pgR) : null;
+      const _cR = _caseR && !_b3R ? projectElementCenterToCanvas3D(_elR, _caseR, _pgR) : null;
       const _eR = _cR ? getElementProjectedHalfExtents3D(_elR, _caseR, _pgR) : null;
-      const _boite = (_cR && _eR) ? { x: _cR.x - _eR.halfW - 8, y: _cR.y - _eR.halfH - 8, w: 2 * _eR.halfW + 16, h: 2 * _eR.halfH + 16 }
+      const _boite = _b3R ? { x: _b3R.x0 - 8, y: _b3R.y0 - 8, w: _b3R.x1 - _b3R.x0 + 16, h: _b3R.y1 - _b3R.y0 + 16 }
+        : (_cR && _eR) ? { x: _cR.x - _eR.halfW - 8, y: _cR.y - _eR.halfH - 8, w: 2 * _eR.halfW + 16, h: 2 * _eR.halfH + 16 }
         : (_elR ? { x: _elR.x, y: _elR.y, w: _elR.w, h: _elR.h } : null);
       if (_caseR && _boite && _ex >= _boite.x && _ex <= _boite.x + _boite.w && _ey >= _boite.y && _ey <= _boite.y + _boite.h) {
         const b = panelCamBasis3D(_caseR);
@@ -3071,9 +3073,13 @@ canvas.addEventListener('mousedown', (e) => {
       // position invalid after a camera rotation), cf. projectElementCenterToCanvas3D /
       // getElementProjectedHalfExtents3D, already used by drawSelection for the same reason.
       let _hitEl = false;
-      const _projC = projectElementCenterToCanvas3D(sel, ownerPanel, page);
+      // La boîte 3D dessinée (getElementProjectedBox3D), le rectangle qui la contient ; sinon l'ancienne.
+      const _boite3D = getElementProjectedBox3D(sel, ownerPanel, page);
+      const _projC = _boite3D ? null : projectElementCenterToCanvas3D(sel, ownerPanel, page);
       const _projE = _projC ? getElementProjectedHalfExtents3D(sel, ownerPanel, page) : null;
-      if (_projC && _projE) {
+      if (_boite3D) {
+        _hitEl = x >= _boite3D.x0 - 8 && x <= _boite3D.x1 + 8 && y >= _boite3D.y0 - 8 && y <= _boite3D.y1 + 8;
+      } else if (_projC && _projE) {
         const _margin = 8; // generous margin to compensate for projection imprecisions
         _hitEl = x >= _projC.x - _projE.halfW - _margin && x <= _projC.x + _projE.halfW + _margin &&
                  y >= _projC.y - _projE.halfH - _margin && y <= _projC.y + _projE.halfH + _margin;

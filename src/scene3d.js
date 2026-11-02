@@ -980,6 +980,73 @@ export function elementHorsChamp3D(o, panel, page){
 // (o.w/o.h, later decoded by ensureElementUnits3D to give the real size at render time), but must
 // NOT be used to draw the selection frame, or it would change size during a move/scroll while the
 // displayed 3D Model itself doesn't change, per user report.
+/**
+ * LA BOÎTE DE SÉLECTION EN 3D (demandé, 2 novembre 2026 : « elle ne suit pas les contours »). Les huit
+ * coins de la boîte de l'Élément TEL QU'IL EST DESSINÉ (son rig, placé par le dernier rendu de sa
+ * Case), projetés par la caméra de la Case, en pixels de la Planche, et le rectangle qui les contient
+ * (`x0, y0, x1, y1`, pour les clics). Orientée comme l'Élément (sa rotation comprise) ; un modèle
+ * importé articulé garde la boîte de son placement (alignée sur le monde, la seule mesurée sur sa
+ * pose). Un bâtiment, sa partie hors Sol. null sans rig, ou si un coin passe derrière la caméra.
+ * Coins : 0-3 le dessous, 4-7 le dessus, dans le même ordre (cf. ARETES_BOITE_3D).
+ */
+const _boitesLocales3D = new WeakMap();
+export function getElementProjectedBox3D(o, panel, page){
+  if (typeof THREE === 'undefined' || !o || !panel || !page) return null;
+  if (o.type !== 'perso' && o.type !== 'objet3d') return null;
+  // Les murs et ce qui s'y accroche gardent leur cadre (leur rig de rendu est à part, cf. Fix 8).
+  if (WALL_TYPES.includes(o.objType) || o.magnetWallId) return null;
+  const entry = o.type === 'perso' ? personaRigCache3D.get(o.id) : objectRigCache3D.get(o.id);
+  const fg = entry && entry.figureGroup;
+  if (!fg) return null;
+  const place = entry.placeDansLaCase3D;
+  if (!place || place.panelId !== panel.id) return null;
+  ensurePersonaScene3D();
+  if (!personaCamera3D) return null;
+  const avant = { p: fg.position.clone(), r: fg.rotation.clone(), s: fg.scale.clone() };
+  const modele = o.objType === 'modele';
+  let box;
+  if (o.objType === 'batiment') {
+    // Mémorisée par rig : un bâtiment a beaucoup de sommets, et son rig est refait quand il change.
+    const cle = fg.children.map(c => c.uuid).join(',');
+    const m = _boitesLocales3D.get(fg);
+    if (m && m.cle === cle) box = m.box.clone();
+  }
+  if (!box) {
+    // Sans position ni échelle ; sans rotation non plus, sauf pour un modèle importé (sa boîte posée).
+    fg.position.set(0, 0, 0); fg.scale.set(1, 1, 1);
+    if (modele) fg.rotation.copy(place.r); else fg.rotation.set(0, 0, 0);
+    fg.updateMatrixWorld(true);
+    box = modele ? box3FromObjectSkinAwareCached3D(fg)
+      : o.objType === 'batiment' ? boiteDuBatimentHorsSol3D(fg)
+      : box3FromObjectSkinAware3D(fg);
+    box = box.clone();
+    fg.position.copy(avant.p); fg.rotation.copy(avant.r); fg.scale.copy(avant.s);
+    fg.updateMatrixWorld(true);
+    if (o.objType === 'batiment' && !box.isEmpty()) _boitesLocales3D.set(fg, { cle: fg.children.map(c => c.uuid).join(','), box: box.clone() });
+  }
+  if (box.isEmpty()) return null;
+  // Un peu d'air autour, comme l'ancien cadre (+3 px) : 2 % de la diagonale.
+  box.expandByScalar(box.getSize(new THREE.Vector3()).length() * 0.02);
+  // Depuis la place dans la Case. Le modèle importé : sa boîte est déjà tournée, seules l'échelle et
+  // la position s'y appliquent.
+  const versMonde = new THREE.Matrix4().compose(place.p,
+    modele ? new THREE.Quaternion() : new THREE.Quaternion().setFromEuler(place.r), place.s);
+  framePanelCamera3D(personaCamera3D, panel, page);
+  personaCamera3D.updateMatrixWorld(true);
+  const panelCx = panel.x + panel.w / 2, panelCy = panel.y + panel.h / 2;
+  const coins = [];
+  for (const [x, y, z] of [[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1], [0, 1, 1]]) {
+    const v = new THREE.Vector3(x ? box.max.x : box.min.x, y ? box.max.y : box.min.y, z ? box.max.z : box.min.z).applyMatrix4(versMonde);
+    if (v.clone().applyMatrix4(personaCamera3D.matrixWorldInverse).z >= -personaCamera3D.near) return null;
+    v.project(personaCamera3D);
+    coins.push({ x: panelCx + v.x * (page.w / 2), y: panelCy - v.y * (page.h / 2) });
+  }
+  const xs = coins.map(c => c.x), ys = coins.map(c => c.y);
+  return { coins, x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+}
+/** Les douze arêtes de la boîte : le dessous, le dessus, les montants (indices dans `coins`). */
+export const ARETES_BOITE_3D = Object.freeze([[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]]);
+
 export function getElementProjectedHalfExtents3D(o, panel, page){
   if (typeof THREE === 'undefined') return null;
   ensurePersonaScene3D();
@@ -2737,6 +2804,9 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       entry.figureGroup.updateMatrixWorld(true);
     }
     entry.figureGroup.visible = !(o.hidden3d);
+    // La place DANS SA CASE, retenue pour la boîte de sélection 3D (getElementProjectedBox3D) : le
+    // même rig sert aussi aux vignettes, qui le déplacent.
+    entry.placeDansLaCase3D = { panelId: panel.id, p: entry.figureGroup.position.clone(), r: entry.figureGroup.rotation.clone(), s: entry.figureGroup.scale.clone() };
     if (estUneLumiere3D(o)) {
       _posLumieres3D.set(o.id, { x: wx, y: wy, z });
       // ⚠️ MASQUER LA SPHÈRE N'ÉTEINT PAS LA LUMIÈRE, et c'est tout l'intérêt du réglage : on veut

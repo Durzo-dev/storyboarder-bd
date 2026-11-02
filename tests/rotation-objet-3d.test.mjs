@@ -44,7 +44,7 @@ test('câblage : clic droit maintenu SUR l\'Élément choisi, avant le recadrage
   const iRot = ev.indexOf("S.dragMode = 'objetRotation'");
   assert.ok(iRot > 0 && iRot < ev.indexOf("S.dragMode = 'imageAnchor'") && iRot < ev.indexOf("S.dragMode = 'panelCamPan'; S.dragStart = { x: _tx, y: _ty };"));
   // Signalé : la boîte VUE (projetée par la vraie caméra), pas o.x / o.y, sinon la caméra bougeait.
-  assert.match(ev, /const _cR = _caseR \? projectElementCenterToCanvas3D\(_elR, _caseR, _pgR\) : null;/);
+  assert.match(ev, /const _cR = _caseR && !_b3R \? projectElementCenterToCanvas3D\(_elR, _caseR, _pgR\) : null;/);
   assert.match(ev, /_ex >= _boite\.x && _ex <= _boite\.x \+ _boite\.w && _ey >= _boite\.y && _ey <= _boite\.y \+ _boite\.h/);
   assert.match(ev, /_o\.rotY = angleDeRotation3D\(S\.dragOrig\.session, \{ x, y \}, \{ ctrl: e\.ctrlKey, alt: e\.altKey, maj: e\.shiftKey \}\);/);
   assert.match(ev, /_o\.rotY = quartDeTour3D\(_o\.rotY\);/);

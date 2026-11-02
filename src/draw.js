@@ -42,7 +42,7 @@ import {
   findOwningPanel, elementNonVisible3D, mesurerToutesLesCases3D, groundMagnetEligible, applyGroundMagnetY,
   tracéUpdateScreenPts, worldToPageXY,
   drawPanelScene3D, drawObject3D,
-  projectElementCenterToCanvas3D, getElementProjectedHalfExtents3D,
+  projectElementCenterToCanvas3D, getElementProjectedHalfExtents3D, getElementProjectedBox3D, ARETES_BOITE_3D,
   elaguerCacheDeCases3D, noterPlancheAffichee3D,
   commencerFrameLimitee3D, resteDesRendus3D, terminerFrameLimitee3D,
   getRoomScreenBBoxFrom2DProjections, getBuildingJunctionCorners, getWallChildProjectedQuad3D,
@@ -2597,6 +2597,12 @@ export function drawSelection(c, o, page){
     const wall = page.objects.find(w => w.id === o.magnetWallId);
     if (wall && WALL_TYPES.includes(wall.objType)) quad = getWallChildProjectedQuad3D(o, wall, page);
   }
+  // Un Personnage ou un Objet 3D (bâtiment compris) : sa boîte 3D, projetée (getElementProjectedBox3D).
+  let boite3D = null;
+  if (!quad && page && (o.type === 'perso' || o.type === 'objet3d')) {
+    const owner = findOwningPanel(o, page);
+    if (owner) boite3D = getElementProjectedBox3D(o, owner, page);
+  }
   if (quad) {
     const cx = (quad.tl.x + quad.tr.x + quad.br.x + quad.bl.x) / 4;
     const cy = (quad.tl.y + quad.tr.y + quad.br.y + quad.bl.y) / 4;
@@ -2619,6 +2625,16 @@ export function drawSelection(c, o, page){
       c.fillRect(p.x - 5, p.y - 5, 10, 10);
       c.strokeRect(p.x - 5, p.y - 5, 10, 10);
     });
+  } else if (boite3D) {
+    // LA BOÎTE EN 3D (demandé) : ses douze arêtes en pointillés, un carré à chaque coin. Les carrés ne
+    // redimensionnent rien (un Élément 3D se règle dans son menu) : ils marquent la sélection.
+    c.strokeStyle = SIGNAL_SELECTION; c.lineWidth = 1.5; c.setLineDash([4, 3]);
+    c.beginPath();
+    for (const [i, j] of ARETES_BOITE_3D) { c.moveTo(boite3D.coins[i].x, boite3D.coins[i].y); c.lineTo(boite3D.coins[j].x, boite3D.coins[j].y); }
+    c.stroke();
+    c.setLineDash([]);
+    c.fillStyle = SIGNAL_SELECTION; c.strokeStyle = SIGNAL_SELECTION_LISERE; c.lineWidth = 1;
+    boite3D.coins.forEach(p => { c.fillRect(p.x - 4, p.y - 4, 8, 8); c.strokeRect(p.x - 4, p.y - 4, 8, 8); });
   } else {
     const half = { x: o.w / 2, y: o.h / 2 };
     let cx = o.x + half.x, cy = o.y + half.y;
