@@ -229,13 +229,20 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, 
     m.position.y = y;
     groupe.add(m);
   };
+  // Le Sol n'est percé que quand on doit VOIR le sous-sol : le bâtiment coupé à un sous-sol, ou un sol
+  // masqué (#464). Sinon le Sol est entier, et couvre le dessus des sous-sols hors du rez-de-chaussée.
+  const voirLeSousSol = (coupe && tries[limite].elevation < -1e-9) || cache.sols.size > 0;
   const col = collecteur(T);
   visibles.forEach(n => {
     const dessous = niveauDessous(b, n.id);
     // Les vides (des cours) n'ont ni sol ni plafond, et leurs murs y regardent l'extérieur (la façade).
     const vides = new Set((b.pieces || []).filter(p => p.niveauId === n.id && p.vide).map(p => p.id));
     const formesDuNiveau = new Map([...formesDesPieces(b, n.id)].filter(([id]) => !vides.has(id)));
-    const tremiesPlancher = dessous ? tremiesDe(dessous.id) : [];
+    // Signalé : dans une Case, le Sol couvre les sous-sols tant qu'on ne demande pas à les voir ; la
+    // trémie d'un escalier MONTANT d'un sous-sol trouait alors le plancher du rez-de-chaussée sur le
+    // Sol (l'herbe). Le Sol entier, ce plancher reste plein ; coupé à un sous-sol, il se perce.
+    const plancherSurSolEntier = percerLeSol && !voirLeSousSol && dessous && dessous.elevation < -1e-9 && n.elevation > -1e-9;
+    const tremiesPlancher = dessous && !plancherSurSolEntier ? tremiesDe(dessous.id) : [];
     const tremiesPlafond = tremiesDe(n.id);
     const forme2D = (f, tremies = []) => {
       const forme = new T.Shape(f.points.map(p => new T.Vector2(p.x, -p.z)));
@@ -355,9 +362,7 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, 
   // un MASQUE invisible qui marque le tampon de pochoir ; le Sol (rig3d.js) ne se dessine pas là où
   // il est marqué. Dessiné avant le Sol (renderOrder), sans couleur ni profondeur, ni ombre, ni
   // sélection : on voit le sous-sol par le trou, et rien d'autre ne change.
-  // Le Sol n'est percé que quand on doit VOIR le sous-sol : le bâtiment coupé à un sous-sol, ou un sol
-  // masqué (#464). Sinon le Sol est entier, et couvre le dessus des sous-sols hors du rez-de-chaussée.
-  const voirLeSousSol = (coupe && tries[limite].elevation < -1e-9) || cache.sols.size > 0;
+  // (voirLeSousSol, plus haut.)
   if (percerLeSol && voirLeSousSol) {
     const emprise = empriseDesSousSols(b);
     if (emprise.length) {

@@ -190,3 +190,25 @@ test('« Créer un bâtiment » dans une Case (qui prend la 3D) et dans une Scè
   const ui = readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8');
   assert.match(ui, /E\.destination\.dansUneCase \? tr\('Place in the panel', 'Placer dans la Case'\)/);
 });
+
+// Signalé : un escalier qui MONTE d'un sous-sol trouait le plancher du rez-de-chaussée, et la Case
+// montrait le Sol (l'herbe) dans ce trou. Le Sol entier, ce plancher reste plein ; coupé au
+// sous-sol (on veut le voir), et dans l'éditeur (pas de Sol), la trémie reste ouverte.
+test('la trémie d\'un escalier de sous-sol : plancher plein sur le Sol entier, ouverte coupé au sous-sol', async () => {
+  const { normaliserEscalier, tremieDeLEscalier } = await import('../src/batiment-escaliers.js');
+  const T = globalThis.THREE;
+  const b = creerBatiment('M', fr);
+  ajouterRectangle(b, 'n0', { x: 0, z: 0 }, { x: 8, z: 6 }, 0.2);
+  actualiserPieces(b, 'n0', fr);
+  N.dupliquerNiveau(b, 'n0', fr, { dessous: true });
+  const sid = N.niveauxTries(b)[0].id;
+  actualiserPieces(b, sid, fr);
+  b.escaliers = [{ ...normaliserEscalier({ depart: { x: 2, z: 1 }, angle: 0, niveauId: sid }), id: 'e1' }];
+  const t = tremieDeLEscalier(b, b.escaliers[0]);
+  const cx = t.reduce((s, p) => s + p.x, 0) / t.length, cz = t.reduce((s, p) => s + p.z, 0) / t.length;
+  const touche = (o) => { const g = construireBatiment3D(T, b, materiauxBatiment3D(T), o); g.updateMatrixWorld(true);
+    const h = new T.Raycaster(new T.Vector3(cx, 1, cz), new T.Vector3(0, -1, 0)).intersectObject(g, true); return h.length ? h[0].point.y : null; };
+  assert.ok(Math.abs(touche({ percerLeSol: true }) - 0.005) < 1e-6, 'le plancher du rez-de-chaussée');
+  assert.ok(touche({ percerLeSol: true, jusquA: sid }) < -0.5, 'coupé au sous-sol : on voit l\'escalier');
+  assert.ok(touche({}) < -0.5, 'dans l\'éditeur : la trémie');
+});
