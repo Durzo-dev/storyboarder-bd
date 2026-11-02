@@ -3403,6 +3403,9 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         if (group.children.length === 0) return; // empty geometry
       }
       draperSurLeRelief3D(group, _relief);
+      // #462c : un dessin à plat (route, chemin, Zone) reste un dessin au sol même drapé sur une
+      // colline : il ne projette pas d'ombre (marquerProjectionDOmbre3D lit cette marque).
+      if (o.tracéType === 'route' || o.tracéType === 'chemin' || o.tracéType === 'terrain') group.traverse(m => { m.userData.dessinAuSol = true; });
       personaScene3D.add(group);
       entry = { group, sigKey };
       tracéMeshCache3D.set(o.id, entry);

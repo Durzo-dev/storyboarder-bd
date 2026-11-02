@@ -217,3 +217,25 @@ test('la hauteur suit les triangles du maillage (diagonale (i+1, j)–(i, j+1))'
   assert.ok(Math.abs(R.hauteurDuRelief(r, 0.75, 0.75) - 0.5) < 1e-9);
   assert.ok(Math.abs(R.hauteurDuRelief(r, 0.25, 0.25)) < 1e-9);
 });
+
+// Signalé : le sol du relief restait sombre et strié, et la lumière d'une source posée s'y arrêtait net.
+// Le marquage des ombres rendait le relief projetant (il le jugeait « dressé » à sa hauteur).
+test('le marquage des ombres laisse le relief et les dessins drapés sans projection', async () => {
+  const RIG = await import('../src/rig3d.js');
+  const T3 = globalThis.THREE;
+  RIG.ensurePersonaScene3D();
+  const haut = (m) => { m.position.y = 5; m.updateMatrixWorld(true); return m; };
+  const relief = haut(new T3.Mesh(new T3.BoxGeometry(1, 1, 1), new T3.MeshStandardMaterial()));
+  relief.userData.relief = true;
+  const chemin = haut(new T3.Mesh(new T3.BoxGeometry(1, 1, 1), new T3.MeshStandardMaterial()));
+  chemin.userData.dessinAuSol = true;
+  const arbre = haut(new T3.Mesh(new T3.BoxGeometry(1, 1, 1), new T3.MeshStandardMaterial()));
+  RIG.personaScene3D.add(relief, chemin, arbre);
+  RIG.marquerProjectionDOmbre3D();
+  assert.equal(relief.castShadow, false);
+  assert.equal(chemin.castShadow, false);
+  assert.equal(relief.receiveShadow, true);
+  assert.equal(arbre.castShadow, true, 'un objet dressé projette toujours');
+  RIG.personaScene3D.remove(relief, chemin, arbre);
+  assert.match(lire('scene3d.js'), /group\.traverse\(m => \{ m\.userData\.dessinAuSol = true; \}\);/);
+});

@@ -1675,6 +1675,11 @@ export function marquerProjectionDOmbre3D(){
     const mats = Array.isArray(ch.material) ? ch.material : [ch.material];
     const recoitLaLumiere = mats.some(m => m && m.isMaterial && !m.isMeshBasicMaterial);
     ch.receiveShadow = recoitLaLumiere;
+    // ⚠️ #462c : LE RELIEF ET CE QUI S'Y DRAPE À PLAT NE PROJETTENT PAS (signalé : sol assombri, strié,
+    // une lumière qui s'arrêtait net). Le test « au sol » ci-dessous lit la HAUTEUR : sur une colline, un
+    // chemin ou le relief lui-même passaient pour des objets dressés et s'ombraient eux-mêmes (l'acné
+    // d'ombre), y compris sous les lumières posées. Ils se reconnaissent à leur marque, pas à leur hauteur.
+    if (ch.userData && (ch.userData.relief || ch.userData.dessinAuSol)) { ch.castShadow = false; if (recoitLaLumiere) marques++; return; }
     // ⚠️ LE POINT LE PLUS HAUT DANS LE MONDE, pas la position de l'objet : un ruban est posé à
     // l'origine de son groupe, et c'est sa géométrie transformée qui dit où il est réellement.
     // La boîte est réutilisée d'un maillage à l'autre — un parcours de scène par rendu ombré n'a
