@@ -82,7 +82,7 @@ test('l\'outil Relief : un glisser peint le relief du canevas de la Scène, un i
 test('câblage du rendu : le relief dans la signature de la Case, posé avec la matière du Sol, le Sol percé dessous', () => {
   const sc = lire('scene3d.js');
   assert.match(sc, /relief: signatureDuRelief\(panel\.relief\),/);
-  assert.match(sc, /poserRelief3D\(panel, !!groundMesh3D && !_camBelowGround\);/);
+  assert.match(sc, /poserRelief3D\(panel, !!groundMesh3D && !_camBelowGround, _relief\);/);
   assert.match(sc, /stencilWrite: true, stencilRef: MARQUE_SOL_PERCE, stencilFunc: THREE\.AlwaysStencilFunc,/);
   assert.match(sc, /uv\[k \* 2\] = 0\.5 \+ \(x - gx\) \/ taille; uv\[k \* 2 \+ 1\] = 0\.5 - \(z - gz\) \/ taille;/);
   assert.match(sc, /libererReliefs3D\(\);/);
@@ -150,4 +150,49 @@ test('l\'aperçu suit le coup de pinceau ; la grille 3D se met à jour sur place
   assert.doesNotMatch(ui, /if \(T\.coup\) return;/);
   const sc = lire('scene3d.js');
   assert.match(sc, /if \(e && e\.sig !== sig && e\.dims === dims\) \{/);
+});
+
+// ── #462c-2 : ce qui est posé suit le relief ──────────────────────────────────────────────────
+test('une ligne redécoupée au mètre garde ses points ; aplanir sous une emprise prend la base', () => {
+  const l = R.densifierLaLigne([{ x: 0, z: 0 }, { x: 5, z: 0 }], 1);
+  assert.equal(l.length, 6);
+  assert.deepEqual(l[0], { x: 0, z: 0 }); assert.deepEqual(l[5], { x: 5, z: 0 });
+  let r = null;
+  for (let k = 0; k < 6; k++) r = R.peindreLeRelief(r, { x: 0, z: 0 }, { mode: 'monter', rayon: 8, force: 1 });
+  const base = 0.5;
+  const a = R.aplanirSousLesEmprises(r, [{ polys: [[{ x: -1, z: -1 }, { x: 1, z: -1 }, { x: 1, z: 1 }, { x: -1, z: 1 }]], base }]);
+  assert.equal(R.hauteurDuRelief(a, 0, 0), base);
+  assert.equal(R.hauteurDuRelief(a, 1, 0.5), base, 'le bord de l\'emprise');
+  assert.equal(R.hauteurDuRelief(a, 5, 0), R.hauteurDuRelief(r, 5, 0), 'loin : inchangé');
+  assert.notEqual(r, a);
+  assert.equal(R.aplanirSousLesEmprises(r, []), r);
+});
+
+test('rendu : un Élément monte de la hauteur du relief sous lui ; une route s\'y drape', async () => {
+  const SC = await import('../src/scene3d.js');
+  const RIG = await import('../src/rig3d.js');
+  const panel = { id: 'pr', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: 0.6, camDist: 30, pts: [] };
+  let r = null;
+  for (let k = 0; k < 8; k++) r = R.peindreLeRelief(r, { x: 0, z: 0 }, { mode: 'monter', rayon: 10, force: 1 });
+  const route = { id: 'rr', type: 'tracé', tracéType: 'route', panelId: 'pr', world: { pts: [{ x: -8, z: 0 }, { x: 8, z: 0 }], width: 3 } };
+  const page = { w: 480, h: 360, objects: [panel, route] };
+  const hauteurRoute = () => { let y = -Infinity; RIG.personaScene3D.updateMatrixWorld(true);
+    RIG.personaScene3D.traverse(o => { if (o.isMesh && o.parent && o.parent.visible && o.material && o.geometry && !o.userData.relief) {
+      o.geometry.computeBoundingBox(); const b = o.geometry.boundingBox;
+      if (!(b.min.x >= -9 && b.max.x <= 9 && b.max.y - b.min.y < 20)) return;   // la route seule (ni Sol, ni ciel)
+      const p = o.geometry.attributes.position; if (!p) return; for (let i = 0; i < p.count; i++) if (Math.abs(p.getX(i)) < 0.6) y = Math.max(y, p.getY(i)); } }); return y; };
+  const plat = -3 + 0.007;   // la route à plat : le Sol (GROUND_Y_DEFAULT_3D), et son léger décalage
+  panel.relief = r;
+  SC.rendreSceneVueLibre3D(panel, page, { rotX: 0.6, rotY: 0, dist: 30, x: 0, y: 0, z: 0 }, 0.5);
+  const drape = hauteurRoute();
+  assert.ok(Math.abs(drape - plat - R.hauteurDuRelief(r, 0, 0)) < 0.3, `la route au sommet : ${plat} → ${drape}`);
+  const sc = lire('scene3d.js');
+  assert.match(sc, /wy \+= hauteurDuRelief\(_relief, wx, z\);/);
+  assert.match(sc, /draperSurLeRelief3D\(group, _relief\);/);
+});
+
+test('une Scène chargée dans une Case apporte son relief, décalé comme son contenu', () => {
+  const sc = lire('scenes.js');
+  assert.match(sc, /panel\.relief = JSON\.parse\(JSON\.stringify\(scenePanel\.relief\)\);\n\s*panel\.relief\.x0 -= worldBboxCx;/);
+  assert.match(sc, /\} else delete panel\.relief;/);
 });

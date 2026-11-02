@@ -328,6 +328,12 @@ export async function loadSceneIntoPanel(scene, panel){
     }
     pageData.objects.push(copy);
   });
+  // #462c-2 : la Case reçoit le RELIEF de la Scène, décalé comme son contenu (en X seulement, sans
+  // échelle : le monde garde ses mètres). Sans relief, la Case redevient plate.
+  if (scenePanel && scenePanel.relief && Array.isArray(scenePanel.relief.h)) {
+    panel.relief = JSON.parse(JSON.stringify(scenePanel.relief));
+    panel.relief.x0 -= worldBboxCx;
+  } else delete panel.relief;
   S.selectedId = panel.id; S.selectedRoomId = null;
   // Reset the target Panel's camera: a previously tilted (camRotX ≠ 0) or zoomed
   // (camDist ≠ PANEL_CAM_DEFAULT_DIST_3D) camera could make the Ground dominant and make Elements

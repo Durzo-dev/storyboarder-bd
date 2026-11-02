@@ -14,7 +14,9 @@
 import { mursDevantMasques, mursDeDevant, versLaCameraDansLeBatiment, retenirMursDevant } from './batiment-murs-devant.js';
 import { estUnBatimentPlace } from './batiment-element.js';
 import { MARQUE_SOL_PERCE } from './batiment-3d.js';
-import { reliefPlat, signatureDuRelief } from './terrain-relief.js';
+import { reliefPlat, signatureDuRelief, hauteurDuRelief, densifierLaLigne, aplanirSousLesEmprises } from './terrain-relief.js';
+import { niveauxTries } from './batiment-niveaux.js';
+import { formesDesPieces } from './batiment-pieces.js';
 import { sondeDebut, sondeFin, sondeCompter, sondeActive, sondeValeur } from './perf-probe.js';
 import { materiauDeTrace3D, grainDeTracePret3D, libererMateriauDeTrace3D } from './trace-textures-3d.js';
 import { poserCiel3D, retirerCiel3D, abaissementDeLHorizon3D } from './sky-3d.js';
@@ -2504,9 +2506,8 @@ function construireRelief3D(r){
   groupe.add(maillage, masque);
   return groupe;
 }
-function poserRelief3D(panel, visible){
+function poserRelief3D(panel, visible, r){
   _reliefs3D.forEach(e => { e.groupe.visible = false; });
-  const r = panel && panel.relief;
   if (!visible || reliefPlat(r)) return;
   const sig = signatureDuRelief(r);
   let e = _reliefs3D.get(panel.id);
@@ -2529,6 +2530,52 @@ function poserRelief3D(panel, visible){
   }
   // La matière est celle du Sol, réglée pour CETTE Case par applyGroundType : rien à recopier.
   e.groupe.visible = true;
+}
+/**
+ * #462c-2 : le relief tel qu'il est RENDU : celui du canevas, aplani sous chaque bâtiment placé à la
+ * hauteur du relief en son centre (décidé : le terrain s'aplanit sous un bâtiment), ou null sans relief.
+ */
+function reliefEffectif3D(panel, page){
+  const r = panel && panel.relief;
+  if (reliefPlat(r)) return null;
+  const emprises = [];
+  for (const o of panelOwnedElements3D(panel, page)) {
+    if (!estUnBatimentPlace(o) || !o.batiment || !o.batiment.niveaux) continue;
+    try {
+      const tries = niveauxTries(o.batiment);
+      const rdc = tries.find(n => n.elevation > -1e-9) || tries[0];
+      if (!rdc) continue;
+      const polys = [...formesDesPieces(o.batiment, rdc.id).values()].map(f => f.points.map(p => {
+        const w = pointDuBatimentPlace3D(o, panel, { x: p.x, y: 0, z: p.z });
+        return { x: w.x, z: w.z };
+      }));
+      if (polys.length) emprises.push({ polys, base: hauteurDuRelief(r, o.wxFloor ?? 0, o.wzFloor ?? 0) });
+    } catch (e) { /* un bâtiment illisible n'aplanit rien */ }
+  }
+  return aplanirSousLesEmprises(r, emprises);
+}
+/**
+ * #462c-2 : un groupe de Tracé (route, chemin, Zone, muret…) DRAPÉ sur le relief : chaque sommet monte
+ * de la hauteur du relief sous lui (un mur garde sa hauteur : sa base et son sommet ont les mêmes x, z).
+ * Les transformations des maillages sont d'abord appliquées à leur géométrie (copiée si partagée).
+ */
+function draperSurLeRelief3D(groupe, r){
+  if (reliefPlat(r)) return;
+  const vues = new Set();
+  groupe.updateMatrixWorld(true);
+  groupe.traverse(m => {
+    if (!m.isMesh || !m.geometry || !m.geometry.attributes.position) return;
+    if (vues.has(m.geometry)) m.geometry = m.geometry.clone();
+    vues.add(m.geometry);
+    m.updateMatrix();
+    m.geometry.applyMatrix4(m.matrix);
+    m.position.set(0, 0, 0); m.rotation.set(0, 0, 0); m.scale.set(1, 1, 1); m.updateMatrix();
+    const pos = m.geometry.attributes.position;
+    for (let i = 0; i < pos.count; i++) pos.setY(i, pos.getY(i) + hauteurDuRelief(r, pos.getX(i), pos.getZ(i)));
+    pos.needsUpdate = true;
+    m.geometry.computeVertexNormals();
+    m.geometry.computeBoundingSphere(); m.geometry.computeBoundingBox();
+  });
 }
 /** Libère les reliefs (changement de Projet). */
 function libererReliefs3D(){
@@ -2717,8 +2764,10 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
     groundMesh3D.visible = !_camBelowGround;
     if (!_camBelowGround) applyGroundType(panel, _eclairage.ciel); // matière + rugosité ; plus de déplacement depuis #435b
   }
-  // #462c : le RELIEF de la Scène, avec la matière du Sol qu'on vient de poser.
-  poserRelief3D(panel, !!groundMesh3D && !_camBelowGround);
+  // #462c : le RELIEF de la Scène, aplani sous ses bâtiments (#462c-2), avec la matière du Sol qu'on
+  // vient de poser. Ce qui est posé sur le Sol le suit (Éléments, Tracés, Zones : voir plus bas).
+  const _relief = reliefEffectif3D(panel, page);
+  poserRelief3D(panel, !!groundMesh3D && !_camBelowGround, _relief);
   // Centers a rig's TRUE bounding box (not its local origin) on (targetX, targetY, targetZ),
   // with an ALWAYS uniform scale. Needed because many rigs (e.g. Plants/furniture) have their
   // local origin anchored on their BASE rather than on their box's center (inherited from the old
@@ -2858,7 +2907,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       wx = _tracéPos.x;
       // Kept for the callers that read the Element's nominal centre (selection box, depth ordering);
       // the rig itself is posed by placeTracéOpeningRig3D below, not by placeRigCentered3D.
-      wy = _tracéPos.y + unitsH / 2;
+      wy = _tracéPos.y + unitsH / 2 + hauteurDuRelief(_relief, _tracéPos.x, _tracéPos.z);   // #462c-2 : le mur est drapé
       z  = _tracéPos.z + idx * 0.0001;
     } else {
       // wxFloor always defined for perso/objet3d (migration + creation + loadSceneIntoPanel).
@@ -2877,6 +2926,9 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       // the old stacking by display order (an Element further in the array = rendered
       // on top) instead of an indeterminate/unstable result in case of a perfect depth tie.
       z  = ((o.wzFloor !== undefined) ? o.wzFloor : getElementDepth(o)) + idx * 0.0001;
+      // #462c-2 : ce qui est posé suit le relief (un bâtiment, la hauteur en son centre : le relief y
+      // est aplani à cette hauteur).
+      wy += hauteurDuRelief(_relief, wx, z);
     }
     // For Personas: use the standing height measured once at rig creation
     // (entry.deboutNaturalH) as a fixed reference, to prevent lying-down (lieFlat)
@@ -3138,7 +3190,8 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
           .map(c => ({ f: c.wallAlongFrac, y: c.wallYFrac, w: c.w, h: c.h }))
       : null;
     // #437 : l'arrivée du grain refait la Trace, qui passe de l'aplat à sa texture.
-    const sigKey = JSON.stringify({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, wh: o.wallHeight, wt: o.wallThickness, world: o.world, holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) });
+    const sigKey = JSON.stringify({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, wh: o.wallHeight, wt: o.wallThickness, world: o.world, holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),
+      relief: signatureDuRelief(_relief) });   // #462c-2 : drapé sur le relief
     let entry = tracéMeshCache3D.get(o.id);
     if (!entry || entry.sigKey !== sigKey) {
       sondeCompter('Trace reconstruite');
@@ -3148,7 +3201,8 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         personaScene3D.remove(entry.group);
       }
       const group = new THREE.Group();
-      const w = o.world;
+      // #462c-2 : sur un relief, la ligne est redécoupée tous les mètres pour l'épouser.
+      const w = (!reliefPlat(_relief) && o.world && Array.isArray(o.world.pts)) ? { ...o.world, pts: densifierLaLigne(o.world.pts, 1) } : o.world;
       // ── Shared Traversant/opening holes (low wall / hedge / barrier) ─────────────
       // Computed once, passed to every buildTracéWallGeometry3D call
       // of the current type. buildTracéWallGeometry3D clips yMin/yMax to each
@@ -3183,7 +3237,9 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         tMapClone.repeat.set(Math.max(0.5, w.w * (tDef.repeat || 60) / 100),
                              Math.max(0.5, w.h * (tDef.repeat || 60) / 100));
         tMapClone.needsUpdate = true;
-        const geo = new THREE.PlaneGeometry(w.w, w.h);
+        // #462c-2 : sur un relief, la Zone est découpée au mètre pour s'y draper.
+        const _decoupe = (d) => (reliefPlat(_relief) ? 1 : Math.max(1, Math.min(200, Math.ceil(d))));
+        const geo = new THREE.PlaneGeometry(w.w, w.h, _decoupe(w.w), _decoupe(w.h));
         const mat = new THREE.MeshStandardMaterial({
           map: tMapClone, color: new THREE.Color(0xffffff),
           roughness: tDef.roughness || 0.9, metalness: tDef.metalness || 0,
@@ -3333,6 +3389,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         }
         if (group.children.length === 0) return; // empty geometry
       }
+      draperSurLeRelief3D(group, _relief);
       personaScene3D.add(group);
       entry = { group, sigKey };
       tracéMeshCache3D.set(o.id, entry);

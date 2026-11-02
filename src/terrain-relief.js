@@ -121,3 +121,55 @@ export function signatureDuRelief(r){
 export function reliefPlat(r){
   return !reliefValide(r) || r.h.every(v => !v);
 }
+
+/**
+ * #462c-2 : une ligne (Tracé) redécoupée tous les `pas` mètres au plus, pour qu'elle épouse le relief
+ * (deux points éloignés traverseraient les creux et les bosses). Les points d'origine sont gardés.
+ */
+export function densifierLaLigne(pts, pas = 1){
+  if (!Array.isArray(pts) || pts.length < 2 || !(pas > 0)) return pts;
+  const res = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i], n = Math.min(400, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / pas));
+    for (let k = 1; k < n; k++) res.push({ x: a.x + (b.x - a.x) * k / n, z: a.z + (b.z - a.z) * k / n });
+    res.push(b);
+  }
+  return res;
+}
+
+/**
+ * #462c-2 : le relief APLANI sous les bâtiments (décidé) : chaque point de la grille dans une emprise
+ * (ou à moins de `marge` mètres de son bord) prend la hauteur `base` de ce bâtiment. `emprises` :
+ * [{ polys: [[{x, z}…]…], base }]. Rend un relief neuf, ou le même s'il n'y a rien à aplanir. PUR.
+ */
+export function aplanirSousLesEmprises(r, emprises, marge = 0.6){
+  if (!reliefValide(r) || !emprises || !emprises.length) return r;
+  const h = r.h.slice();
+  const dedans = (p, q) => {
+    let d = false;
+    for (let i = 0, j = q.length - 1; i < q.length; j = i++) {
+      if ((q[i].z > p.z) !== (q[j].z > p.z) && p.x < (q[j].x - q[i].x) * (p.z - q[i].z) / (q[j].z - q[i].z) + q[i].x) d = !d;
+    }
+    return d;
+  };
+  const pres = (p, q) => {
+    for (let i = 0, j = q.length - 1; i < q.length; j = i++) {
+      const a = q[j], b = q[i], dx = b.x - a.x, dz = b.z - a.z, l2 = dx * dx + dz * dz;
+      const t = l2 > 0 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / l2)) : 0;
+      if (Math.hypot(p.x - (a.x + t * dx), p.z - (a.z + t * dz)) <= marge) return true;
+    }
+    return false;
+  };
+  for (const { polys, base } of emprises) {
+    const pts = polys.flat();
+    if (!pts.length || !fini(base)) continue;
+    const xs = pts.map(p => p.x), zs = pts.map(p => p.z);
+    const i0 = Math.max(0, Math.floor((Math.min(...xs) - marge - r.x0) / r.pas)), i1 = Math.min(r.nx - 1, Math.ceil((Math.max(...xs) + marge - r.x0) / r.pas));
+    const j0 = Math.max(0, Math.floor((Math.min(...zs) - marge - r.z0) / r.pas)), j1 = Math.min(r.nz - 1, Math.ceil((Math.max(...zs) + marge - r.z0) / r.pas));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const p = { x: r.x0 + i * r.pas, z: r.z0 + j * r.pas };
+      if (polys.some(q => dedans(p, q) || pres(p, q))) h[j * r.nx + i] = base;
+    }
+  }
+  return { ...r, h };
+}
