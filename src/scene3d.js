@@ -2494,7 +2494,12 @@ function construireRelief3D(r){
   maillage.receiveShadow = true; maillage.castShadow = false;
   maillage.userData.relief = true;
   if (!_masqueRelief3D) {
-    _masqueRelief3D = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: THREE.DoubleSide,
+    // ⚠️ SANS TEST DE PROFONDEUR (signalé : des anneaux sur le relief, plus nets en zoomant). Testé, le
+    // masque (à 1 cm du Sol) luttait avec le relief là où celui-ci est presque plat : le pochoir n'était
+    // posé qu'à moitié, le Sol plat se dessinait par endroits À TRAVERS le relief, et leurs profondeurs
+    // presque égales se disputaient les pixels (des anneaux de moiré). Le Sol étant plan, la projection
+    // du rectangle à sa hauteur EST exactement celle du Sol sur l'emprise : rien à tester.
+    _masqueRelief3D = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, depthTest: false, side: THREE.DoubleSide,
       stencilWrite: true, stencilRef: MARQUE_SOL_PERCE, stencilFunc: THREE.AlwaysStencilFunc,
       stencilZPass: THREE.ReplaceStencilOp, stencilFail: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp });
   }

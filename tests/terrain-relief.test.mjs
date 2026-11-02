@@ -202,3 +202,9 @@ test('une Scène chargée dans une Case apporte son relief, décalé comme son c
 test('le relief reçoit les ombres sans en projeter, comme le Sol', () => {
   assert.match(lire('scene3d.js'), /maillage\.receiveShadow = true; maillage\.castShadow = false;/);
 });
+
+// Signalé : des anneaux de moiré sur le relief en zoomant (le masque, testé en profondeur, luttait
+// avec le relief presque plat, et le Sol plat se dessinait au travers).
+test('le masque du relief perce le Sol sans test de profondeur', () => {
+  assert.match(lire('scene3d.js'), /_masqueRelief3D = new THREE\.MeshBasicMaterial\(\{ colorWrite: false, depthWrite: false, depthTest: false,/);
+});
