@@ -136,6 +136,10 @@ import {
   initEditeurDeBatiment, setBatimentEditeurCallbacks, ouvrirEditeurDeBatiment, fermerEditeurDeBatiment,
   editeurDeBatimentOuvert, nomsDesPiecesDuNiveau, renommerPieceDeLEditeur, supprimerPieceDeLEditeur,
 } from './batiment-editeur-ui.js';
+import {
+  initEditeurDeTerrain, setTerrainEditeurCallbacks, ouvrirEditeurDeTerrain, fermerEditeurDeTerrain, editeurDeTerrainOuvert,
+  ouvrirChoixDeScene, fermerChoixDeScene, majBoutonEditeurDeTerrain,
+} from './terrain-editeur-ui.js';
 import { batimentDesPieces } from './batiment.js';
 import { creerElementBatiment, appliquerBatiment, estUnBatimentPlace } from './batiment-element.js';
 import {
@@ -4197,6 +4201,8 @@ canvas.addEventListener('contextmenu', (e) => {
   document.getElementById('ctxImportModel').style.display = (_surCase && _img.ajouter3D) ? '' : 'none';
   // #454a : « Créer un bâtiment », dans une Scène, et dans une Case (demandé ensuite) qui prend la 3D.
   document.getElementById('ctxCreerBatiment').style.display = (isSceneCanvas || (_surCase && _img.ajouter3D)) ? '' : 'none';
+  // #462a : « Modifier le terrain », dans une Scène seulement (demandé).
+  document.getElementById('ctxModifierTerrain').style.display = isSceneCanvas ? '' : 'none';
   ctxLoadSceneTrigger.style.display = (isSceneCanvas || !_img.ajouter3D) ? 'none' : '';
   document.getElementById('ctxBringForward').style.display = isSceneCanvas ? 'none' : '';
   document.getElementById('ctxSendBackward').style.display = isSceneCanvas ? 'none' : '';
@@ -6091,9 +6097,33 @@ setBatimentEditeurCallbacks({
   // Le clic droit sur une pièce de la liste : renommer ou supprimer (#454b).
   menuPiece: (e, id) => { _ctxPiece = id; hideContextMenu(); placerMenu3D(document.getElementById('batimentPieceMenu'), e.clientX, e.clientY); },
   // Un seul écran au centre : l'Éditeur de modèle et le Lecteur se ferment.
+  avantOuverture: () => { if (isPersonaEditorOpen()) hidePersonaEditor(); if (lecteurOuvert()) fermerLecteur(); if (editeurDeTerrainOuvert()) fermerEditeurDeTerrain(); },
+  apresFermeture: () => renderAll(),
+});
+// #462a : l'Éditeur de terrain. Un seul écran au centre, comme les autres.
+initEditeurDeTerrain();
+setTerrainEditeurCallbacks({
   avantOuverture: () => { if (isPersonaEditorOpen()) hidePersonaEditor(); if (lecteurOuvert()) fermerLecteur(); },
   apresFermeture: () => renderAll(),
 });
+enregistrerFermeture('terrainSceneModal', fermerChoixDeScene);
+const terrainSceneModal = document.getElementById('terrainSceneModal');
+terrainSceneModal.addEventListener('mousedown', (e) => { if (e.target === terrainSceneModal) fermerChoixDeScene(); });
+// Son bouton : il demande la Scène (inerte sans Scène), et referme l'éditeur si on reclique dessus.
+document.getElementById('openTerrainEditorBtn').onclick = () => {
+  if (editeurDeTerrainOuvert()) fermerEditeurDeTerrain(); else ouvrirChoixDeScene();
+};
+// « Modifier le terrain », au clic droit dans une Scène : l'éditeur s'ouvre sur elle.
+document.getElementById('ctxModifierTerrain').onclick = () => {
+  hideContextMenu();
+  if (S.editingSceneId) ouvrirEditeurDeTerrain(S.editingSceneId);
+};
+// Ce qui, dans le menu de gauche et le bandeau, mène ailleurs le ferme (rien n'y est à enregistrer).
+document.addEventListener('click', (e) => {
+  if (!editeurDeTerrainOuvert()) return;
+  const cible = e.target && e.target.closest && e.target.closest('.page-row, #sceneList, #addVolumeBtn, #addSceneBtn, .add-page-btn, #openPoseEditorBtn, #openBatimentEditorBtn, #projectNameHeader, #ctxReadVolume, #ctxReadChapter');
+  if (cible) fermerEditeurDeTerrain();
+}, true);
 // Le bouton BASCULE (demandé) : il ouvre l'éditeur, et le referme si on reclique dessus.
 document.getElementById('openBatimentEditorBtn').onclick = () => {
   if (editeurDeBatimentOuvert()) fermerEditeurDeBatiment(); else ouvrirEditeurDeBatiment();
@@ -6101,7 +6131,7 @@ document.getElementById('openBatimentEditorBtn').onclick = () => {
 // LE BANDEAU DIT CE QUI EST OUVERT (demandé) : le bouton d'un écran ou d'une bibliothèque ouverte
 // s'allume. Observé sur la classe `hidden` de chacun, plutôt que posé à chaque ouverture : les
 // chemins d'ouverture sont nombreux (bouton, touche, fiche, navigation), l'état affiché est un seul.
-[['personaEditorOverlay', 'openPoseEditorBtn'], ['batimentEditeur', 'openBatimentEditorBtn'],
+[['personaEditorOverlay', 'openPoseEditorBtn'], ['batimentEditeur', 'openBatimentEditorBtn'], ['terrainEditeur', 'openTerrainEditorBtn'],
   ['storeModal', 'storeOuvrirBtn'], ['texturesModal', 'texturesOuvrirBtn'], ['policesModal', 'policesOuvrirBtn']].forEach(([ecran, bouton]) => {
   const el = document.getElementById(ecran), btn = document.getElementById(bouton);
   if (!el || !btn) return;
@@ -6164,7 +6194,7 @@ document.getElementById('ctxModifierBatiment').onclick = () => {
 // Un bâtiment modifié et pas enregistré : le clic est retenu le temps de demander, puis rejoué.
 document.addEventListener('click', (e) => {
   if (!editeurDeBatimentOuvert()) return;
-  const cible = e.target && e.target.closest && e.target.closest('.page-row, #sceneList, #addVolumeBtn, #addSceneBtn, .add-page-btn, #openPoseEditorBtn, #projectNameHeader, #ctxReadVolume, #ctxReadChapter');
+  const cible = e.target && e.target.closest && e.target.closest('.page-row, #sceneList, #addVolumeBtn, #addSceneBtn, .add-page-btn, #openPoseEditorBtn, #openTerrainEditorBtn, #projectNameHeader, #ctxReadVolume, #ctxReadChapter');
   if (!cible) return;
   e.preventDefault(); e.stopImmediatePropagation();
   fermerEditeurDeBatiment().then(ferme => { if (ferme && typeof cible.click === 'function') cible.click(); });
@@ -8663,7 +8693,9 @@ setIOCallbacks(renderAll, applyRenameVolume, applyRenameScene, closeSettingsModa
 // updateSidePanel and renderTree are defined well before this point.
 setI18nCallbacks(updateSidePanel, renderTree);
 // Wire up draw.js callbacks (canvas, ctx, render helpers, avoids circular imports draw→app)
-setDrawCallbacks({ canvas, ctx, applyZoom, updateSidePanel, renderTree, renderSceneList, renderImageList, updateContextualControls, fitZoomToWrap });
+// #462a : la liste des Scènes redessinée, le bouton de l'Éditeur de terrain suit (inerte sans Scène).
+const renderSceneListEtTerrain = () => { renderSceneList(); majBoutonEditeurDeTerrain(); };
+setDrawCallbacks({ canvas, ctx, applyZoom, updateSidePanel, renderTree, renderSceneList: renderSceneListEtTerrain, renderImageList, updateContextualControls, fitZoomToWrap });
 // Wire up sidebar.js callbacks (snapshot + modal openers, avoids circular imports
 // sidebar→app; these modals will themselves be extracted into src/modals.js at Step B.13).
 setSidebarCallbacks({ snapshot, openPersonaModal, openObjectModal, openRoomModal, openBuildingModal, openTerrainModal, openTracéModal, restoreSectionCollapseStates, openBatimentMenu });

@@ -29,6 +29,7 @@ export const ICONES = {
   deplacer: '<path d="M12 3v18M3 12h18"/><path d="m9 6 3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/>',
   tracer: '<path d="M5 21 9 3M19 21 15 3"/><path d="M12 6v2M12 12v2M12 18v2"/>',
   zone: '<path d="m4 7 8-4 8 5-2 11-12 1z" stroke-dasharray="3 3"/>',
+  terrain: '<path d="M2 20 9 8l4 6 3-4 6 10z"/>',   // #462a : l'Éditeur de terrain
   mesure: '<path d="M3 16 16 3l5 5L8 21z"/><path d="m7 12 2 2M10 9l2 2M13 6l2 2"/>',
   camera: '<rect x="3" y="7" width="12" height="10" rx="2"/><path d="m15 11 6-3v8l-6-3"/>',
   avancer: '<path d="M12 19V5M6 11l6-6 6 6"/>',

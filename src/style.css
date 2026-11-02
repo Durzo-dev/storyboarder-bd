@@ -3033,3 +3033,19 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 #lecteurAide{ height:calc(1.45em * 8); }              /* 7 lignes, toujours */
 #sidePageEditionHint.commandes-aide{ height:calc(1.45em * 6); }   /* 5 lignes, toujours */
 
+
+/* #462a : L'ÉDITEUR DE TERRAIN (src/terrain-editeur-ui.js) reprend la mise en page de celui de
+   bâtiment (classes batiment-editeur-*). Ce qui lui est propre : */
+.terrain-scene-nom { margin: 0 0 8px; font-size: var(--texte-courant); font-weight: 600; color: var(--ink); }
+.terrain-ligne { cursor: pointer; }
+.terrain-ligne.actif { border-color: var(--accent); color: var(--accent); }
+#terrainPanneau > .nav-btn { margin: 0 0 8px; width: 100%; }
+#terrainPanneau > #terrainRecadrerBtn { margin-top: auto; }
+.terrain-scene-liste { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; margin: 4px 0 12px; }
+.terrain-scene-liste .nav-btn { width: 100%; text-align: left; }
+#openTerrainEditorBtn:disabled { opacity: .4; cursor: default; }
+/* Ses sections se replient comme celles de l'éditeur de bâtiment (cf. plus haut). */
+#terrainPanneau .side-section > h2{ cursor:pointer; user-select:none; display:flex; }
+#terrainPanneau .side-section > h2::after{ content:'▾'; margin-left:auto; font-size:var(--texte-micro); color:var(--ink-soft); transition:transform .18s ease; }
+#terrainPanneau .side-section.collapsed > h2::after{ transform:rotate(-90deg); }
+#terrainPanneau .side-section.collapsed > *:not(h2){ display:none !important; }

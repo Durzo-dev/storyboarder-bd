@@ -2440,6 +2440,37 @@ function mesurerHauteurDebout3D(entry, boxFn){
   return (Number.isFinite(size.y) && size.y > 0) ? size.y : undefined;
 }
 
+/**
+ * #462a : la Scène rendue SOUS UNE AUTRE CAMÉRA, pour l'aperçu 3D de l'éditeur de terrain. Le rendu
+ * de Case est le seul qui sait dessiner tout ce qu'une Scène contient (Sol, ciel, lumières, ombres,
+ * Éléments, bâtiments, Tracés) : on le réutilise plutôt que d'en écrire un second. Le temps du
+ * rendu, le canevas de la Scène prend la caméra `cam` ({ rotX, rotY, dist, x, y, z } : tangage, lacet,
+ * distance, centre d'orbite) en orbite libre, sans sélection ; tout est remis ensuite, et l'image en
+ * cache de la Case, devenue celle de l'aperçu, sera refaite à son prochain dessin (sa signature
+ * diffère). Rend le canevas de l'image (aux proportions de la page) ou null.
+ */
+const CHAMPS_CAMERA_APERCU_3D = ['camRotX', 'camRotY', 'camDist', 'camWx', 'camWy', 'camWz', 'camRotXTarget', 'camRotYTarget',
+  'camDistTarget', 'camWxTarget', 'camWyTarget', 'camWzTarget', 'camOrbitTargetId', 'cameraMode', '_camAnimating'];
+export function rendreSceneVueLibre3D(panel, page, cam, scale = 0.5){
+  if (typeof THREE === 'undefined' || !panel || !page || !cam) return null;
+  const avant = CHAMPS_CAMERA_APERCU_3D.map(k => [k, Object.prototype.hasOwnProperty.call(panel, k), panel[k]]);
+  const sel = S.selectedId, selPiece = S.selectedRoomId;
+  Object.assign(panel, {
+    camRotX: cam.rotX, camRotY: cam.rotY, camDist: cam.dist, camWx: cam.x, camWy: cam.y, camWz: cam.z,
+    camRotXTarget: cam.rotX, camRotYTarget: cam.rotY, camDistTarget: cam.dist, camWxTarget: cam.x, camWyTarget: cam.y, camWzTarget: cam.z,
+    camOrbitTargetId: null, cameraMode: false, _camAnimating: false,
+  });
+  S.selectedId = null; S.selectedRoomId = null;
+  try {
+    const sig = computePanelSceneSignature3D(panel, page, page.style3d) + '||apercu-terrain:' + scale;
+    const r = renderPanelSceneUncached3D(panel, page, page.style3d, scale, sig);
+    return r && r.canvas ? r.canvas : null;
+  } finally {
+    for (const [k, avait, v] of avant) { if (avait) panel[k] = v; else delete panel[k]; }
+    S.selectedId = sel; S.selectedRoomId = selPiece;
+  }
+}
+
 function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
   // #438 : des jalons successifs, pour savoir OÙ passent les 90 ms qu'une Case lourde coûte hors
   // WebGL (mesuré : 100 ms par rendu complet, dont 10 de WebGL). Inertes sonde éteinte.

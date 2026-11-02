@@ -314,6 +314,10 @@ export const HELP_MANUAL_EN = [
     'Click to place it: it is selected and the Selection tool is taken. Drag from the foot to orient it (by 15°); right-click turns it by 90°, the wheel changes its type (Ctrl + wheel zooms). It links the current level to the one above and pierces its floor, shown dashed on the upper level. It is refused (in red) with no level above, or if it would cross a wall.',
     'It snaps to nearby walls when placed or dragged (Alt: free). With Selection, click a staircase to adjust it in the menu, drag it to move it, R to turn it by 90°, Del to delete it. A change that does not fit moves it within its room, keeping the walls it touched if it can, then letting go of one, then two; if nothing fits in the room, the button is greyed.',
   ]},
+  { id: 'terrain', title: 'Terrain editor', paragraphs: [
+    'The terrain editor works on a Scene: open it with the mountain button at the top (it asks which Scene; greyed out without one) or with "Edit the terrain" when right-clicking a Scene.',
+    'The top view of the Scene fills it (wheel: zoom, right button held: move the view), with a 3D preview over it (left drag: turn, right drag: move, wheel: zoom). Every Element of the Scene shows, but none can be changed or moved here. Esc or "Quit" goes back to the Scene.',
+  ]},
 ];
 
 export const HELP_MANUAL_FR = [
@@ -577,6 +581,10 @@ export const HELP_MANUAL_FR = [
     "Outil Escalier (S) : droit, en L ou en U, avec sa largeur, le côté où il tourne, des marches pleines (contremarches) ou ouvertes, et une rampe d'un côté, des deux ou aucune. Les marches se calculent d'après la hauteur à franchir (environ 17 cm de haut, 24 à 30 cm de profondeur).",
     "Un clic le pose : il est choisi et l'outil Sélection est pris. Tirer depuis le pied l'oriente (par 15°) ; le clic droit le tourne de 90°, la molette change son type (Ctrl + molette zoome). Il relie le niveau courant à celui du dessus et perce son plancher, dessiné en pointillés à l'étage. Il est refusé (en rouge) sans niveau au-dessus, ou s'il traverserait un mur.",
     "Il s'aimante aux murs proches quand on le pose ou le tire (Alt : libre). Avec Sélection, un clic sur un escalier le retouche dans le menu ; le tirer le déplace, R le tourne de 90°, Suppr le supprime. Une retouche qui ne tient pas le déplace dans sa pièce, en gardant les murs qu'il touchait si possible, puis en en lâchant un, puis deux ; si rien ne tient dans la pièce, le bouton est grisé.",
+  ]},
+  { id: 'terrain', title: 'Éditeur de terrain', paragraphs: [
+    "L'éditeur de terrain travaille sur une Scène : il s'ouvre par le bouton à la montagne en haut (il demande laquelle ; grisé sans Scène), ou par « Modifier le terrain » au clic droit dans une Scène.",
+    "La vue de dessus de la Scène l'occupe (molette : zoomer, clic droit maintenu : déplacer la vue), avec un aperçu 3D par-dessus (glisser gauche : tourner, droit : déplacer, molette : zoomer). Les Éléments de la Scène s'y voient tous, mais aucun ne s'y modifie ni ne s'y déplace. Échap ou « Quitter » ramène à la Scène.",
   ]},
 ];
 

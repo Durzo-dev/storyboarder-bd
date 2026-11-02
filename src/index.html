@@ -27,6 +27,14 @@
       <path d="M10 20v-6h4v6"/>
     </svg>
   </button>
+  <!-- #462a : l'Éditeur de terrain, à droite de l'Éditeur de bâtiment (demandé). Inerte sans Scène :
+       il ne s'ouvre que sur une Scène, choisie dans une fenêtre (terrainSceneModal). -->
+  <button class="help-round-btn" type="button" id="openTerrainEditorBtn" title="Éditeur de terrain">
+    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 20 9 8l4 6 3-4 6 10z"/>
+      <path d="M2 20h20"/>
+    </svg>
+  </button>
   <button class="help-round-btn" type="button" id="openPoseEditorBtn" title="Éditeur de modèle (E)">
     <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="4.5" r="2"/>
@@ -360,6 +368,43 @@
         <button id="batimentEnregistrerBtn" type="button" class="full-btn">Enregistrer dans la bibliothèque</button>
         <button id="batimentRecadrerBtn" type="button" class="nav-btn">Recadrer</button>
         <button id="batimentQuitterBtn" type="button" class="nav-btn">Quitter</button>
+      </aside>
+    </div>
+  </div>
+
+  <!-- #462a : L'ÉDITEUR DE TERRAIN (src/terrain-editeur-ui.js), sur le modèle de celui de bâtiment
+       (mêmes classes de mise en page) : la vue de dessus de la Scène, l'aperçu 3D par-dessus, le
+       menu au bord. Les Éléments de la Scène y sont visibles, ni modifiables ni déplaçables. -->
+  <div id="terrainEditeur" class="batiment-editeur terrain-editeur hidden">
+    <div class="batiment-editeur-body">
+      <div class="batiment-editeur-scene" id="terrainScene">
+        <div class="batiment-editeur-plan"><canvas id="terrainPlan"></canvas></div>
+        <div class="batiment-apercu-fenetre" id="terrainApercuFenetre" data-mode="fenetre" data-coin="hd">
+          <div class="batiment-apercu-barre" id="terrainApercuBarre">
+            <span id="terrainApercuTitre">Aperçu 3D</span>
+            <button type="button" class="batiment-apercu-btn" id="terrainApercuPlein" title="Aperçu en plein écran">&#x2922;</button>
+          </div>
+          <div class="batiment-editeur-apercu" id="terrainApercu"><canvas id="terrainApercuCanvas"></canvas></div>
+        </div>
+      </div>
+      <aside class="batiment-editeur-panneau" id="terrainPanneau">
+        <div class="menu-header">
+          <span></span>
+          <span class="menu-title" id="terrainEditeurTitre">Éditeur de terrain</span>
+          <button id="terrainEditeurFermerX" class="menu-close-btn" type="button" title="Fermer l'éditeur (Échap)">&times;</button>
+        </div>
+        <section class="side-section" id="terrainSecCommandes">
+          <h2 id="terrainSectionAide">Commandes</h2>
+          <p id="terrainAide" class="commandes-aide"></p>
+        </section>
+        <!-- La Scène éditée et ce qu'elle contient (lecture seule ; un clic désigne sur le plan). -->
+        <section class="side-section" id="terrainSecScene">
+          <h2 id="terrainSectionScene">Scène</h2>
+          <p id="terrainSceneNom" class="terrain-scene-nom"></p>
+          <div id="terrainContenu" class="batiment-liste"></div>
+        </section>
+        <button id="terrainRecadrerBtn" type="button" class="nav-btn">Recadrer</button>
+        <button id="terrainQuitterBtn" type="button" class="nav-btn">Quitter</button>
       </aside>
     </div>
   </div>
@@ -1086,6 +1131,9 @@
             <button type="button" class="help-group" data-help="batiments_escaliers">
               <span class="help-group-title">Escaliers</span><span class="help-group-compte"></span>
             </button>
+            <button type="button" class="help-group" data-help="terrain">
+              <span class="help-group-title">Éditeur de terrain</span><span class="help-group-compte"></span>
+            </button>
           </div>
         </div>
       </div>
@@ -1105,6 +1153,8 @@
   <!-- #454a : dans une Scène seulement, au-dessus d'« Importer un modèle » (demandé). -->
   <button id="ctxCreerBatiment"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-6h4v6"/></svg></span> Créer un bâtiment</button>
   <button id="ctxImportModel"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 7v10l8 4 8-4V7z"/><path d="m4 7 8 4 8-4M12 11v10"/></svg></span> Importer un modèle</button>
+  <!-- #462a : dans une Scène seulement, sous « Importer un modèle » (demandé). -->
+  <button id="ctxModifierTerrain"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20 9 8l4 6 3-4 6 10z"/></svg></span> Modifier le terrain</button>
   <!-- Insérer / Retirer : exclusives, jamais visibles ensemble (cf. openPanelContextMenu). Une Case
        porte une image OU de la 3D, jamais les deux — cf. docs/en/panel-images.md. -->
   <button id="ctxInsertImage"><span class="ctx-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg></span> Insérer une image</button>
@@ -1463,6 +1513,17 @@
 </div>
 
 <!-- Sous-modale "Renommer le projet" (cf. #projectModalRename) -->
+<!-- #462a : le bouton de l'Éditeur de terrain demande d'abord la Scène (il ne s'ouvre que sur une Scène). -->
+<div class="modal-overlay hidden" id="terrainSceneModal">
+  <div class="modal-box">
+    <h3 id="terrainSceneModalTitre">Modifier le terrain de quelle scène ?</h3>
+    <div id="terrainSceneListe" class="terrain-scene-liste"></div>
+    <div class="modal-actions">
+      <button class="nav-btn" id="terrainSceneAnnuler" type="button">Annuler</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay hidden" id="renameProjectModal">
   <div class="modal-box">
     <h3>Renommer le projet</h3>

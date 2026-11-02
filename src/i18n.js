@@ -44,6 +44,16 @@ export const I18N_TEXT = [
   // #454a : l'Éditeur de bâtiment (src/batiment-editeur-ui.js).
   ['#openBatimentEditorBtn', null, null, 'title', 'Building editor (H)', 'Éditeur de bâtiment (H)'],
   ['#batimentEditeurFermerX', null, null, 'title', 'Close the editor (Esc)', "Fermer l'éditeur (Échap)"],
+  // #462a : l'Éditeur de terrain.
+  ['#openTerrainEditorBtn', null, null, 'title', 'Terrain editor', 'Éditeur de terrain'],
+  ['#terrainEditeurFermerX', null, null, 'title', 'Close the editor (Esc)', "Fermer l'éditeur (Échap)"],
+  ['#terrainEditeurTitre', 'Terrain editor', 'Éditeur de terrain'],
+  ['#terrainSectionAide', 'Controls', 'Commandes'],
+  ['#terrainSectionScene', 'Scene', 'Scène'],
+  ['#terrainApercuTitre', '3D preview', 'Aperçu 3D'],
+  ['#terrainApercuPlein', null, null, 'title', 'Full-screen preview', 'Aperçu en plein écran'],
+  ['#terrainRecadrerBtn', 'Reframe', 'Recadrer'],
+  ['#terrainQuitterBtn', 'Quit', 'Quitter'],
   ['#batimentEditeurTitre', 'Building editor', 'Éditeur de bâtiment'],
   ['#batimentSectionNom', 'Building', 'Bâtiment'],
   ['#batimentSectionNiveaux', 'Levels', 'Niveaux'],
@@ -280,6 +290,7 @@ export const I18N_TRAILING = [
   //    entrées vivent ici et non dans I18N_TEXT : `textContent` effacerait l'icône avec le texte.
   //    Ajoutées après constat que 49 boutons sur 123 restaient en français en mode anglais.
   ['#ctxCreerBatiment', 'Create a building', 'Créer un bâtiment'],
+  ['#ctxModifierTerrain', 'Edit the terrain', 'Modifier le terrain'],
   ['#sideBatimentMasquerBtn', 'Choose what is hidden', 'Choisir ce qui est masqué'],
   ['#sideBatimentReafficherBtn', 'Show everything again', 'Tout réafficher'],
   ['#sideBatimentTitle', 'Building display', 'Affichage du bâtiment'],
@@ -577,6 +588,8 @@ export const I18N_MODALS = [
   ['#deleteProjectCancel', 'Cancel', 'Annuler'],
   ['#deleteProjectConfirm', 'Delete', 'Supprimer'],
   ['#renameProjectModal h3', 'Rename project', 'Renommer le projet'],
+  ['#terrainSceneModalTitre', 'Edit the terrain of which scene?', 'Modifier le terrain de quelle scène ?'],
+  ['#terrainSceneAnnuler', 'Cancel', 'Annuler'],
   ['#renameProjectCancel', 'Cancel', 'Annuler'],
   ['#renameProjectConfirm', 'Rename', 'Renommer'],
   ['#renameEntityCancel', 'Cancel', 'Annuler'],
