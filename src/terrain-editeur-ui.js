@@ -254,6 +254,28 @@ export function commandesDuTerrain(trad = tr, outil = 'selection'){
   return l;
 }
 
+/**
+ * Une rangée de boutons de choix (genre de Tracé, mode du pinceau). ⚠️ CONSTRUITE UNE FOIS, PUIS
+ * SEULEMENT RECOLORÉE (signalé : cliquer « Creuser » ne faisait rien). majContenu repasse à chaque
+ * dessin de la page ; refaire les boutons remplaçait celui qu'on pressait entre l'appui et le
+ * relâcher, et le clic n'arrivait jamais (le défaut du #459a).
+ */
+function boutonsDeChoix(conteneur, valeurs, nom, actuel, choisir){
+  const cle = valeurs.map(nom).join('|');
+  if (conteneur.dataset.cle !== cle) {
+    conteneur.replaceChildren(...valeurs.map(v => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'nav-btn';
+      b.dataset.valeur = v;
+      b.textContent = nom(v);
+      b.onclick = () => choisir(v);
+      return b;
+    }));
+    conteneur.dataset.cle = cle;
+  }
+  for (const b of conteneur.children || []) b.classList.toggle('actif', b.dataset.valeur === actuel);
+}
+
 function majContenu(){
   const sc = laScene();
   if (!sc) return;
@@ -263,47 +285,43 @@ function majContenu(){
   // Le Tracé à poser (outil Tracés).
   $('terrainSecTrace').hidden = T.outil !== 'trace';
   if (T.outil === 'trace') {
-    $('terrainSortesTrace').replaceChildren(...SORTES_DE_TRACE.map(sorte => {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'nav-btn' + (sorte === T.sorteTrace ? ' actif' : '');
-      b.textContent = nomDeSorte(sorte);
-      b.onclick = () => { T.sorteTrace = sorte; majContenu(); };
-      return b;
-    }));
+    boutonsDeChoix($('terrainSortesTrace'), SORTES_DE_TRACE, nomDeSorte, T.sorteTrace, (sorte) => { T.sorteTrace = sorte; majContenu(); });
   }
   // Le pinceau du relief (outil Relief).
   $('terrainSecRelief').hidden = T.outil !== 'relief';
   if (T.outil === 'relief') {
-    $('terrainModesRelief').replaceChildren(...MODES_DU_PINCEAU.map(mode => {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'nav-btn' + (mode === T.pinceau.mode ? ' actif' : '');
-      b.textContent = nomDeMode(mode);
-      b.onclick = () => { T.pinceau.mode = T_PINCEAU.mode = mode; majContenu(); };
-      return b;
-    }));
-    $('terrainReliefTaille').value = String(T.pinceau.rayon);
-    $('terrainReliefForce').value = String(T.pinceau.force);
+    boutonsDeChoix($('terrainModesRelief'), MODES_DU_PINCEAU, nomDeMode, T.pinceau.mode, (mode) => { T.pinceau.mode = T_PINCEAU.mode = mode; majContenu(); });
+    if (document.activeElement !== $('terrainReliefTaille')) $('terrainReliefTaille').value = String(T.pinceau.rayon);
+    if (document.activeElement !== $('terrainReliefForce')) $('terrainReliefForce').value = String(T.pinceau.force);
   }
   // La Zone ou le Tracé choisi.
   const obj = terrainChoisi();
   $('terrainSecChoisi').hidden = !obj;
   if (obj) $('terrainChoisiNom').textContent = obj.name || nomDeSorte(obj.tracéType);
+  // La liste des Éléments : refaite seulement si elle a changé (même raison que boutonsDeChoix).
   const liste = $('terrainContenu');
   const nommes = T.formes.filter(f => f.type === 'element' || f.type === 'batiment');
-  const lignes = nommes.map(f => {
-    const l = document.createElement('div');
-    l.className = 'batiment-ligne terrain-ligne' + (f.id === T.choisi ? ' actif' : '');
-    l.textContent = f.nom || (f.type === 'batiment' ? tr('Building', 'Bâtiment') : tr('Element', 'Élément'));
-    l.onclick = () => { T.choisi = T.choisi === f.id ? null : f.id; majContenu(); redessiner(); };
-    return l;
-  });
-  if (!lignes.length) {
-    const v = document.createElement('p');
-    v.className = 'empty-hint';
-    v.textContent = tr('No Element in this Scene.', 'Aucun Élément dans cette Scène.');
-    lignes.push(v);
+  const nomDe = (f) => f.nom || (f.type === 'batiment' ? tr('Building', 'Bâtiment') : tr('Element', 'Élément'));
+  const cle = JSON.stringify(nommes.map(f => [f.id, nomDe(f)]));
+  if (liste.dataset.cle !== cle) {
+    const lignes = nommes.map(f => {
+      const l = document.createElement('div');
+      l.className = 'batiment-ligne terrain-ligne';
+      l.dataset.valeur = f.id;
+      l.textContent = nomDe(f);
+      l.onclick = () => { T.choisi = T.choisi === f.id ? null : f.id; majContenu(); redessiner(); };
+      return l;
+    });
+    if (!lignes.length) {
+      const v = document.createElement('p');
+      v.className = 'empty-hint';
+      v.textContent = tr('No Element in this Scene.', 'Aucun Élément dans cette Scène.');
+      lignes.push(v);
+    }
+    liste.replaceChildren(...lignes);
+    liste.dataset.cle = cle;
   }
-  liste.replaceChildren(...lignes);
+  for (const l of liste.children || []) if (l.dataset && l.dataset.valeur) l.classList.toggle('actif', l.dataset.valeur === T.choisi);
 }
 
 // ── La vue de dessus ──────────────────────────────────────────────────────────────────────────

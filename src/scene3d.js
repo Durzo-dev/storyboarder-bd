@@ -2454,13 +2454,15 @@ function mesurerHauteurDebout3D(entry, boxFn){
  */
 /**
  * #462c, LE RELIEF EN 3D. Une grille de sommets à la hauteur du relief (terrain-relief.js), au niveau du
- * Sol, avec la MATIÈRE du Sol de la Case (sa texture, ses coordonnées alignées sur celles du grand plan :
- * pas de couture). Sur son emprise, le Sol plat ne se dessine pas : un masque invisible y marque le
+ * Sol, avec LA MATIÈRE MÊME du Sol (signalé : une copie changeait la couleur, sans le pavage ni les
+ * réglages du Sol ; seules les ombres doivent différer), et ses coordonnées alignées sur celles du
+ * grand plan : pas de couture. Elle est dessinée AVANT le masque (renderOrder), sans quoi le pochoir
+ * que teste cette matière la cacherait. Sur son emprise, le Sol plat ne se dessine pas : un masque invisible y marque le
  * pochoir, comme le Sol percé des sous-sols (#454g). Une grille par canevas, refaite quand son relief
  * change (sa signature) ; les autres sont masquées le temps du rendu.
  */
 const _reliefs3D = new Map();
-let _matiereRelief3D = null, _masqueRelief3D = null;
+let _masqueRelief3D = null;
 function construireRelief3D(r){
   const y0 = groundMesh3D.position.y, taille = GROUND_PLANE_SIZE_3D;
   const gx = groundMesh3D.position.x, gz = groundMesh3D.position.z;
@@ -2482,8 +2484,8 @@ function construireRelief3D(r){
   geo.setAttribute('uv2', geo.attributes.uv);
   geo.setIndex(idx);
   geo.computeVertexNormals();
-  if (!_matiereRelief3D) _matiereRelief3D = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide });
-  const maillage = new THREE.Mesh(geo, _matiereRelief3D);
+  const maillage = new THREE.Mesh(geo, groundMesh3D.material);
+  maillage.renderOrder = -2000;
   maillage.receiveShadow = true; maillage.castShadow = true;
   maillage.userData.relief = true;
   if (!_masqueRelief3D) {
@@ -2514,12 +2516,7 @@ function poserRelief3D(panel, visible){
     personaScene3D.add(e.groupe);
     _reliefs3D.set(panel.id, e);
   }
-  // La matière suit celle du Sol de CETTE Case (applyGroundType vient de la poser).
-  const gm = groundMesh3D.material, m = _matiereRelief3D;
-  let sale = false;
-  for (const k of ['map', 'aoMap']) if (m[k] !== gm[k]) { m[k] = gm[k]; sale = true; }
-  for (const k of ['aoMapIntensity', 'roughness', 'metalness']) if (m[k] !== gm[k]) { m[k] = gm[k]; sale = true; }
-  if (sale) m.needsUpdate = true;
+  // La matière est celle du Sol, réglée pour CETTE Case par applyGroundType : rien à recopier.
   e.groupe.visible = true;
 }
 /** Libère les reliefs (changement de Projet). */

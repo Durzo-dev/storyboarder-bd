@@ -85,3 +85,31 @@ test('câblage du rendu : le relief dans la signature de la Case, posé avec la 
   assert.match(sc, /uv\[k \* 2\] = 0\.5 \+ \(x - gx\) \/ taille; uv\[k \* 2 \+ 1\] = 0\.5 - \(z - gz\) \/ taille;/);
   assert.match(sc, /libererReliefs3D\(\);/);
 });
+
+// Signalé : « Creuser », « Aplanir », « Adoucir » ne faisaient rien (les boutons, refaits à chaque dessin
+// de la page, étaient remplacés entre l'appui et le relâcher) ; et le relief changeait la couleur du Sol.
+test('les boutons de mode survivent au rafraîchissement, et choisissent ; le relief prend la matière même du Sol', () => {
+  globalThis.requestAnimationFrame = (f) => { f(); return 0; };
+  globalThis.getComputedStyle = () => ({ getPropertyValue: () => '' });
+  const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
+  S.scenes = [{ id: 's1', name: 'Scène 1', w: 480, h: 360, pages: [{ objects: [panel] }] }];
+  S.editingSceneId = 's1';
+  U.setTerrainEditeurCallbacks({ instantane: () => {}, ouvrirLaScene: () => {}, apresModification: () => {} });
+  U.initEditeurDeTerrain();
+  U.ouvrirEditeurDeTerrain('s1');
+  document.getElementById('terrainOutilRelief').onclick();
+  const conteneur = document.getElementById('terrainModesRelief');
+  const creuser = conteneur.children.find(b => b.dataset.valeur === 'creuser');
+  U.rafraichirEditeurDeTerrain();   // un dessin de la page entre l'appui et le relâcher
+  assert.ok(conteneur.children.includes(creuser), 'le bouton a été remplacé');
+  creuser.onclick();
+  assert.ok(creuser.classList.contains('actif'));
+  const plan = document.getElementById('terrainPlan');
+  const jouer = (type, ev) => (plan._ecouteurs[type] || []).forEach(f => f({ preventDefault(){}, stopPropagation(){}, pointerId: 1, detail: 1, ...ev, type }));
+  jouer('pointerdown', { button: 0, clientX: 400, clientY: 300 });
+  jouer('pointerup', { clientX: 400, clientY: 300 });
+  assert.ok(R.hauteurDuRelief(panel.relief, 0, 0) < 0, 'le pinceau creuse');
+  U.fermerEditeurDeTerrain();
+  const sc = lire('scene3d.js');
+  assert.match(sc, /const maillage = new THREE\.Mesh\(geo, groundMesh3D\.material\);\n\s*maillage\.renderOrder = -2000;/);
+});
