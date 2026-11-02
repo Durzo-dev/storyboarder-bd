@@ -196,3 +196,9 @@ test('une Scène chargée dans une Case apporte son relief, décalé comme son c
   assert.match(sc, /panel\.relief = JSON\.parse\(JSON\.stringify\(scenePanel\.relief\)\);\n\s*panel\.relief\.x0 -= worldBboxCx;/);
   assert.match(sc, /\} else delete panel\.relief;/);
 });
+
+// Signalé (deux fois) : le sol changeait de couleur sur le relief. La seconde cause : il se projetait
+// une ombre à lui-même (acné d'ombre).
+test('le relief reçoit les ombres sans en projeter, comme le Sol', () => {
+  assert.match(lire('scene3d.js'), /maillage\.receiveShadow = true; maillage\.castShadow = false;/);
+});

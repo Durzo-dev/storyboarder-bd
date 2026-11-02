@@ -2488,7 +2488,10 @@ function construireRelief3D(r){
   geo.computeVertexNormals();
   const maillage = new THREE.Mesh(geo, groundMesh3D.material);
   maillage.renderOrder = -2000;
-  maillage.receiveShadow = true; maillage.castShadow = true;
+  // ⚠️ IL REÇOIT, IL NE PROJETTE PAS, COMME LE SOL (signalé : le relief assombrissait le sol et le
+  // striait). Projetant, il s'ombrait LUI-MÊME : l'acné d'ombre, ces stries sur toute son emprise, même
+  // à plat. Les pentes se lisent par leur éclairage ; les Éléments y posent toujours leur ombre.
+  maillage.receiveShadow = true; maillage.castShadow = false;
   maillage.userData.relief = true;
   if (!_masqueRelief3D) {
     _masqueRelief3D = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: THREE.DoubleSide,
