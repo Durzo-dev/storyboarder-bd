@@ -3266,7 +3266,8 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         group.add(terrMesh);
       } else if (o.tracéType === 'muret') {
         // ── Low Wall: vertical concrete ribbon (configurable height) ───────────────
-        const muret = buildMuretGroup3D(o, _tmHoles);
+        // #462c-2 : la ligne redécoupée (w), sans quoi le muret ne suit pas le relief entre ses points.
+        const muret = buildMuretGroup3D(w === o.world ? o : { ...o, world: w }, _tmHoles);
         if (!muret) return;
         muret.children.slice().forEach(ch => group.add(ch));
 

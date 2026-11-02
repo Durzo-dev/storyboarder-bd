@@ -239,3 +239,21 @@ test('le marquage des ombres laisse le relief et les dessins drapés sans projec
   RIG.personaScene3D.remove(relief, chemin, arbre);
   assert.match(lire('scene3d.js'), /group\.traverse\(m => \{ m\.userData\.dessinAuSol = true; \}\);/);
 });
+
+// Signalé : sur un relief, un muret droit se détachait du sol (il était construit sur ses seuls points
+// d'origine, pas sur la ligne redécoupée).
+test('le muret est construit sur la ligne redécoupée : il suit le relief', async () => {
+  const SC = await import('../src/scene3d.js');
+  const RIG = await import('../src/rig3d.js');
+  const panel = { id: 'pm', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: 0.6, camDist: 30, pts: [] };
+  let r = null;
+  for (let k = 0; k < 8; k++) r = R.peindreLeRelief(r, { x: 0, z: 0 }, { mode: 'monter', rayon: 6, force: 1 });
+  panel.relief = r;
+  const muret = { id: 'mm', type: 'tracé', tracéType: 'muret', panelId: 'pm', world: { pts: [{ x: -10, z: 0 }, { x: 10, z: 0 }], width: 0.2 } };
+  SC.rendreSceneVueLibre3D(panel, { w: 480, h: 360, objects: [panel, muret] }, { rotX: 0.6, rotY: 0, dist: 30, x: 0, y: 0, z: 0 }, 0.5);
+  let basAuCentre = Infinity;
+  RIG.personaScene3D.traverse(o => { if (!o.isMesh || !o.geometry || o.userData.relief) return;
+    o.geometry.computeBoundingBox(); const b = o.geometry.boundingBox; if (!(b.min.x >= -11 && b.max.x <= 11 && b.max.y < 20)) return;
+    const p = o.geometry.attributes.position; for (let i = 0; i < p.count; i++) if (Math.abs(p.getX(i)) < 0.3) basAuCentre = Math.min(basAuCentre, p.getY(i)); });
+  assert.ok(basAuCentre > -3 + R.hauteurDuRelief(r, 0, 0) - 0.2 && basAuCentre < 50, `le pied du muret au sommet : ${basAuCentre}`);
+});
