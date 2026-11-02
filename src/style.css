@@ -3061,3 +3061,5 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 .side-terrain-titre{ font-size:var(--texte-micro); font-weight:600; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; margin:2px 2px 0; opacity:.75; }
 .side-terrain{ display:flex; flex-direction:column; gap:6px; }
 .side-terrain.collapsed, .side-hors-champ.collapsed{ display:none; }
+.terrain-curseur-libelle{ display:block; margin:10px 0 2px; font-size:var(--texte-libelle); color:var(--ink-soft); }
+#terrainSecRelief input[type="range"]{ width:100%; }

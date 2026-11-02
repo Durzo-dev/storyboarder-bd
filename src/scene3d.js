@@ -13,6 +13,8 @@
  */
 import { mursDevantMasques, mursDeDevant, versLaCameraDansLeBatiment, retenirMursDevant } from './batiment-murs-devant.js';
 import { estUnBatimentPlace } from './batiment-element.js';
+import { MARQUE_SOL_PERCE } from './batiment-3d.js';
+import { reliefPlat, signatureDuRelief } from './terrain-relief.js';
 import { sondeDebut, sondeFin, sondeCompter, sondeActive, sondeValeur } from './perf-probe.js';
 import { materiauDeTrace3D, grainDeTracePret3D, libererMateriauDeTrace3D } from './trace-textures-3d.js';
 import { poserCiel3D, retirerCiel3D, abaissementDeLHorizon3D } from './sky-3d.js';
@@ -2184,6 +2186,7 @@ function computePanelSceneSignature3D(panel, page, styleKey){
     camWx: panel.camWx, camWy: panel.camWy, camWz: panel.camWz,
     pageW: page.w, pageH: page.h,
     groundType: panel.groundType || 'herbe',
+    relief: signatureDuRelief(panel.relief),   // #462c
     groundColor: panel.groundColor || null,
     // Phase 12: cameraMode in the signature so activation/deactivation invalidates the cache.
     cameraMode: panel.cameraMode || false,
@@ -2449,6 +2452,82 @@ function mesurerHauteurDebout3D(entry, boxFn){
  * cache de la Case, devenue celle de l'aperçu, sera refaite à son prochain dessin (sa signature
  * diffère). Rend le canevas de l'image (aux proportions de la page) ou null.
  */
+/**
+ * #462c, LE RELIEF EN 3D. Une grille de sommets à la hauteur du relief (terrain-relief.js), au niveau du
+ * Sol, avec la MATIÈRE du Sol de la Case (sa texture, ses coordonnées alignées sur celles du grand plan :
+ * pas de couture). Sur son emprise, le Sol plat ne se dessine pas : un masque invisible y marque le
+ * pochoir, comme le Sol percé des sous-sols (#454g). Une grille par canevas, refaite quand son relief
+ * change (sa signature) ; les autres sont masquées le temps du rendu.
+ */
+const _reliefs3D = new Map();
+let _matiereRelief3D = null, _masqueRelief3D = null;
+function construireRelief3D(r){
+  const y0 = groundMesh3D.position.y, taille = GROUND_PLANE_SIZE_3D;
+  const gx = groundMesh3D.position.x, gz = groundMesh3D.position.z;
+  const n = r.nx * r.nz, pos = new Float32Array(n * 3), uv = new Float32Array(n * 2);
+  for (let j = 0; j < r.nz; j++) for (let i = 0; i < r.nx; i++) {
+    const k = j * r.nx + i, x = r.x0 + i * r.pas, z = r.z0 + j * r.pas;
+    pos[k * 3] = x; pos[k * 3 + 1] = y0 + (r.h[k] || 0); pos[k * 3 + 2] = z;
+    // Les coordonnées de texture du grand plan du Sol (PlaneGeometry couché) : la texture continue.
+    uv[k * 2] = 0.5 + (x - gx) / taille; uv[k * 2 + 1] = 0.5 - (z - gz) / taille;
+  }
+  const idx = [];
+  for (let j = 0; j < r.nz - 1; j++) for (let i = 0; i < r.nx - 1; i++) {
+    const a = j * r.nx + i, b = a + 1, c = a + r.nx, d = c + 1;
+    idx.push(a, c, b, b, c, d);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  geo.setAttribute('uv2', geo.attributes.uv);
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  if (!_matiereRelief3D) _matiereRelief3D = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+  const maillage = new THREE.Mesh(geo, _matiereRelief3D);
+  maillage.receiveShadow = true; maillage.castShadow = true;
+  maillage.userData.relief = true;
+  if (!_masqueRelief3D) {
+    _masqueRelief3D = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: THREE.DoubleSide,
+      stencilWrite: true, stencilRef: MARQUE_SOL_PERCE, stencilFunc: THREE.AlwaysStencilFunc,
+      stencilZPass: THREE.ReplaceStencilOp, stencilFail: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp });
+  }
+  const l = (r.nx - 1) * r.pas, p = (r.nz - 1) * r.pas;
+  const masque = new THREE.Mesh(new THREE.PlaneGeometry(l, p), _masqueRelief3D);
+  masque.rotation.x = -Math.PI / 2;
+  masque.position.set(r.x0 + l / 2, y0 + 0.01, r.z0 + p / 2);
+  masque.renderOrder = -1000;
+  masque.castShadow = false; masque.receiveShadow = false;
+  masque.raycast = () => {};
+  const groupe = new THREE.Group();
+  groupe.add(maillage, masque);
+  return groupe;
+}
+function poserRelief3D(panel, visible){
+  _reliefs3D.forEach(e => { e.groupe.visible = false; });
+  const r = panel && panel.relief;
+  if (!visible || reliefPlat(r)) return;
+  const sig = signatureDuRelief(r);
+  let e = _reliefs3D.get(panel.id);
+  if (!e || e.sig !== sig) {
+    if (e) { personaScene3D.remove(e.groupe); e.groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); }); }
+    e = { sig, groupe: construireRelief3D(r) };
+    personaScene3D.add(e.groupe);
+    _reliefs3D.set(panel.id, e);
+  }
+  // La matière suit celle du Sol de CETTE Case (applyGroundType vient de la poser).
+  const gm = groundMesh3D.material, m = _matiereRelief3D;
+  let sale = false;
+  for (const k of ['map', 'aoMap']) if (m[k] !== gm[k]) { m[k] = gm[k]; sale = true; }
+  for (const k of ['aoMapIntensity', 'roughness', 'metalness']) if (m[k] !== gm[k]) { m[k] = gm[k]; sale = true; }
+  if (sale) m.needsUpdate = true;
+  e.groupe.visible = true;
+}
+/** Libère les reliefs (changement de Projet). */
+function libererReliefs3D(){
+  _reliefs3D.forEach(e => { if (personaScene3D) personaScene3D.remove(e.groupe); e.groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); }); });
+  _reliefs3D.clear();
+}
+
 const CHAMPS_CAMERA_APERCU_3D = ['camRotX', 'camRotY', 'camDist', 'camWx', 'camWy', 'camWz', 'camRotXTarget', 'camRotYTarget',
   'camDistTarget', 'camWxTarget', 'camWyTarget', 'camWzTarget', 'camOrbitTargetId', 'cameraMode', '_camAnimating'];
 export function rendreSceneVueLibre3D(panel, page, cam, scale = 0.5){
@@ -2630,6 +2709,8 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
     groundMesh3D.visible = !_camBelowGround;
     if (!_camBelowGround) applyGroundType(panel, _eclairage.ciel); // matière + rugosité ; plus de déplacement depuis #435b
   }
+  // #462c : le RELIEF de la Scène, avec la matière du Sol qu'on vient de poser.
+  poserRelief3D(panel, !!groundMesh3D && !_camBelowGround);
   // Centers a rig's TRUE bounding box (not its local origin) on (targetX, targetY, targetZ),
   // with an ALWAYS uniform scale. Needed because many rigs (e.g. Plants/furniture) have their
   // local origin anchored on their BASE rather than on their box's center (inherited from the old
@@ -4041,6 +4122,7 @@ export function drawObject3D(c, o, styleKey, page){
 //  wallJunctionMeshCache3D)
 // as well as rig3d.js's caches and singletons, all already imported above.
 export function disposeAllRigs3D(){
+  libererReliefs3D();   // #462c
   // Les modèles importés d'abord : leurs géométries sont PARTAGÉES par tous les clones posés dans
   // les Cases, donc elles ne se libèrent qu'ici, à la source, et une seule fois.
   clearModelCache();

@@ -18,6 +18,7 @@ import { contenuDuPlan, cadrageDuPlan, versLePlan, zoomerLePlan, pasDeLaGrille, 
 import { rendreSceneVueLibre3D, ensureElementWorldPos3D, pointDuBatimentPlace3D, panelCamBasis3D, getCamOrbitWorld,
   tracéUpdateScreenPts } from './scene3d.js';
 import { nomDuTrace } from './canvas-tools.js';
+import { hauteurDuRelief, peindreLeRelief, reliefValide, signatureDuRelief, MODES_DU_PINCEAU } from './terrain-relief.js';
 import { TRACÉ_DEFAULTS } from './constants.js';
 import { getElementDepth, vitesseRotation3D, vitesseDeplacement3D, facteurDeZoom3D, deltaMolette3D } from './utils.js';
 import { niveauxTries } from './batiment-niveaux.js';
@@ -37,6 +38,8 @@ export function setTerrainEditeurCallbacks(r){ _rappels = { ..._rappels, ...r };
 
 /** L'éditeur ouvert : { sceneId, vue, cam, formes, choisi, geste, demande }, ou null. */
 let T = null;
+/** Les réglages du pinceau du relief, gardés d'une ouverture à l'autre. */
+const T_PINCEAU = { mode: 'monter', rayon: 4, force: 0.5 };
 export function editeurDeTerrainOuvert(){ return !!T; }
 
 /** La Scène éditée, sa page et son canevas (null si elle a disparu). */
@@ -89,7 +92,9 @@ export function ouvrirEditeurDeTerrain(sceneId, { choisi = null } = {}){
   T = { sceneId, vue: null, cam: null, formes: [], choisi, geste: null, demande: 0,
     // #462b : l'outil, le Tracé à poser, la ligne en cours (et le point sous la souris), le rectangle de
     // Zone en cours, la Zone ou le Tracé qu'on fait glisser ; la signature du dernier aperçu rendu.
-    outil: 'selection', sorteTrace: 'route', chaine: null, fantome: null, rectangle: null, glisser: null, sigApercu: null };
+    outil: 'selection', sorteTrace: 'route', chaine: null, fantome: null, rectangle: null, glisser: null, sigApercu: null,
+    // #462c : le pinceau du relief (réglages gardés pendant la session), le coup en cours, le survol.
+    pinceau: { ...T_PINCEAU }, coup: null, survol: null };
   const sc = laScene();
   if (!sc) { T = null; return false; }
   // L'aperçu part de la caméra de la Scène.
@@ -139,13 +144,25 @@ function clavier(e){
   if (e.key === 'Enter' && T.chaine) { stop(); finirLaLigne(); return; }
   if ((e.key === 'Delete' || e.key === 'Backspace') && terrainChoisi()) { stop(); supprimerLeChoisi(); return; }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
-  const outil = { v: 'selection', z: 'zone', t: 'trace' }[e.key.toLowerCase()];
+  const outil = { v: 'selection', z: 'zone', t: 'trace', r: 'relief' }[e.key.toLowerCase()];
   if (outil) { stop(); choisirOutil(T.outil === outil ? 'selection' : outil); }
 }
 
 // ── Les outils (#462b) ────────────────────────────────────────────────────────────────────────
 
 const SORTES_DE_TRACE = ['route', 'chemin', 'muret', 'cloture', 'haie', 'barriere'];
+const OUTILS = [['terrainOutilSelection', 'selection'], ['terrainOutilZone', 'zone'], ['terrainOutilTrace', 'trace'], ['terrainOutilRelief', 'relief']];
+function nomDeMode(m){
+  return ({ monter: tr('Raise', 'Monter'), creuser: tr('Dig', 'Creuser'), aplanir: tr('Flatten', 'Aplanir'), adoucir: tr('Smooth', 'Adoucir') })[m] || m;
+}
+
+/** Un passage du pinceau du relief en `m` (mètres) : le relief du canevas de la Scène change. */
+function peindre(m){
+  const sc = laScene();
+  if (!sc || !T.coup) return;
+  sc.panel.relief = peindreLeRelief(sc.panel.relief, m, { ...T.pinceau, cible: T.coup.cible });
+  T.coup.dernier = m;
+}
 function nomDeSorte(sorte){
   return ({ route: tr('Road', 'Route'), chemin: tr('Dirt path', 'Chemin'), muret: tr('Low wall', 'Muret'),
     cloture: tr('Fence', 'Clôture'), haie: tr('Hedge', 'Haie'), barriere: tr('Barrier', 'Barrière') })[sorte] || sorte;
@@ -154,7 +171,7 @@ function nomDeSorte(sorte){
 function choisirOutil(outil){
   if (!T) return;
   T.outil = outil; T.chaine = null; T.rectangle = null; T.fantome = null;
-  for (const [id, o] of [['terrainOutilSelection', 'selection'], ['terrainOutilZone', 'zone'], ['terrainOutilTrace', 'trace']]) $(id).classList.toggle('actif', o === outil);
+  for (const [id, o] of OUTILS) $(id).classList.toggle('actif', o === outil);
   $('terrainPlan').classList.toggle('outil-mur', outil !== 'selection');
   majContenu();
   redessiner();
@@ -221,6 +238,9 @@ export function commandesDuTerrain(trad = tr, outil = 'selection'){
   const l = [];
   if (outil === 'zone') {
     l.push(trad('Drag: draw a terrain zone (a rectangle).', 'Glisser : tracer une Zone de terrain (un rectangle).'));
+  } else if (outil === 'relief') {
+    l.push(trad('Drag: paint the relief (raise, dig, flatten to the height under the first click, smooth).', "Glisser : peindre le relief (monter, creuser, aplanir à la hauteur du premier clic, adoucir)."));
+    l.push(trad('Size and strength in "Relief".', 'Taille et force dans « Relief ».'));
   } else if (outil === 'trace') {
     l.push(trad('Click: one point per bend; double-click, Enter or right-click: finish.', 'Clic : un point par virage ; double-clic, Entrée ou clic droit : terminer.'));
     l.push(trad('The kind is chosen in "Path to draw".', 'Le genre se choisit dans « Tracé à poser ».'));
@@ -228,7 +248,7 @@ export function commandesDuTerrain(trad = tr, outil = 'selection'){
     l.push(trad('Click a zone or path: select it; drag: move it; Del: delete it.', 'Clic sur une Zone ou un Tracé : le choisir ; glisser : le déplacer ; Suppr : le supprimer.'));
     l.push(trad('Double-click: its settings. Elements are only pointed out here.', 'Double-clic : ses réglages. Les Éléments ne sont que désignés ici.'));
   }
-  l.push(trad('V selection · Z zone · T paths.', 'V sélection · Z zone · T tracés.'));
+  l.push(trad('V selection · Z zone · T paths · R relief.', 'V sélection · Z zone · T tracés · R relief.'));
   l.push(trad('Wheel: zoom · right drag: move the view.', 'Molette : zoomer · glisser droit : déplacer la vue.'));
   l.push(trad('Esc: cancel, then leave the tool, then back to the Scene.', "Échap : annuler, puis quitter l'outil, puis revenir à la Scène."));
   return l;
@@ -250,6 +270,19 @@ function majContenu(){
       b.onclick = () => { T.sorteTrace = sorte; majContenu(); };
       return b;
     }));
+  }
+  // Le pinceau du relief (outil Relief).
+  $('terrainSecRelief').hidden = T.outil !== 'relief';
+  if (T.outil === 'relief') {
+    $('terrainModesRelief').replaceChildren(...MODES_DU_PINCEAU.map(mode => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'nav-btn' + (mode === T.pinceau.mode ? ' actif' : '');
+      b.textContent = nomDeMode(mode);
+      b.onclick = () => { T.pinceau.mode = T_PINCEAU.mode = mode; majContenu(); };
+      return b;
+    }));
+    $('terrainReliefTaille').value = String(T.pinceau.rayon);
+    $('terrainReliefForce').value = String(T.pinceau.force);
   }
   // La Zone ou le Tracé choisi.
   const obj = terrainChoisi();
@@ -316,6 +349,22 @@ function dessinerPlan(){
   g.moveTo(Math.round(o.x) + 0.5, 0); g.lineTo(Math.round(o.x) + 0.5, h);
   g.moveTo(0, Math.round(o.y) + 0.5); g.lineTo(l, Math.round(o.y) + 0.5);
   g.stroke();
+  // #462c : le relief, case par case (brun au-dessus du Sol, bleu en dessous ; plus soutenu plus c'est
+  // haut ou profond), avant le reste.
+  const sc = laScene();
+  const r = sc && sc.panel.relief;
+  if (reliefValide(r)) {
+    const cote = r.pas * vue.ppm;
+    for (let j = 0; j < r.nz; j++) for (let i = 0; i < r.nx; i++) {
+      const hv = r.h[j * r.nx + i];
+      if (!hv || Math.abs(hv) < 0.02) continue;
+      const p = e({ x: r.x0 + i * r.pas, z: r.z0 + j * r.pas });
+      if (p.x < -cote || p.y < -cote || p.x > l + cote || p.y > h + cote) continue;
+      const a = Math.min(0.75, 0.12 + Math.abs(hv) * 0.12);
+      g.fillStyle = hv > 0 ? `rgba(176, 120, 64, ${a})` : `rgba(64, 120, 200, ${a})`;
+      g.fillRect(p.x - cote / 2, p.y - cote / 2, cote + 0.5, cote + 0.5);
+    }
+  }
   const encre = couleur('--ink', '#e8e8ea'), accent = couleur('--accent', '#e07a3c');
   const chemin = (pts, ferme) => { g.beginPath(); pts.forEach((p, i) => { const s = e(p); if (i) g.lineTo(s.x, s.y); else g.moveTo(s.x, s.y); }); if (ferme) g.closePath(); };
   for (const f of T.formes) {
@@ -360,6 +409,16 @@ function dessinerEnCours(g, e){
     g.setLineDash([]);
     T.chaine.forEach(p => { const s = e(p); g.fillRect(s.x - 3, s.y - 3, 6, 6); });
   }
+  // Le pinceau du relief sous la souris : son cercle, et la hauteur du relief à cet endroit.
+  if (T.outil === 'relief' && T.survol) {
+    const c = e(T.survol), sc = laScene();
+    g.setLineDash([4, 4]); g.lineWidth = 1.5;
+    g.beginPath(); g.arc(c.x, c.y, T.pinceau.rayon * T.vue.ppm, 0, Math.PI * 2); g.stroke();
+    g.setLineDash([]);
+    const hv = sc ? hauteurDuRelief(sc.panel.relief, T.survol.x, T.survol.z) : 0;
+    g.font = '11px Inter, sans-serif';
+    g.fillText(`${hv >= 0 ? '+' : ''}${hv.toFixed(2).replace('.', ',')} m`, c.x + 10, c.y - 10);
+  }
   if (T.rectangle) {
     const a = e(T.rectangle.a), b = e(T.rectangle.b);
     g.globalAlpha = 0.18; g.fillRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
@@ -388,7 +447,8 @@ function dessinerApercu(){
   const scale = Math.max(c.width / sc.page.w, c.height / sc.page.h);
   // Rendu seulement si la caméra, la taille ou la Scène ont changé : un rendu de Scène coûte cher, et
   // l'éditeur se redessine souvent (survol, tracé en cours).
-  const sig = JSON.stringify([T.cam, c.width, c.height, sc.page.objects.map(o => [o.id, o.world, o.color, o.terrainType, o.terrainColor,
+  if (T.coup) return;   // pendant un coup de pinceau, le plan seul ; l'aperçu suit au relâcher
+  const sig = JSON.stringify([T.cam, c.width, c.height, signatureDuRelief(sc.panel.relief), sc.page.objects.map(o => [o.id, o.world, o.color, o.terrainType, o.terrainColor,
     o.wallHeight, o.wallThickness, o.marquage, o.traceTexture, o.wxFloor, o.wzFloor, o.rotY, o.hidden3d])]);
   if (sig === T.sigApercu) return;
   T.sigApercu = sig;
@@ -480,9 +540,11 @@ export function initEditeurDeTerrain(){
   $('terrainQuitterBtn').onclick = () => fermerEditeurDeTerrain();
   $('terrainEditeurFermerX').onclick = () => fermerEditeurDeTerrain();
   $('terrainRecadrerBtn').onclick = () => recadrer();
-  for (const [id, outil] of [['terrainOutilSelection', 'selection'], ['terrainOutilZone', 'zone'], ['terrainOutilTrace', 'trace']]) {
+  for (const [id, outil] of OUTILS) {
     $(id).onclick = () => { if (T) choisirOutil(T.outil === outil && outil !== 'selection' ? 'selection' : outil); };
   }
+  $('terrainReliefTaille').oninput = () => { if (T) { T.pinceau.rayon = T_PINCEAU.rayon = Number($('terrainReliefTaille').value) || 4; redessiner(); } };
+  $('terrainReliefForce').oninput = () => { if (T) T.pinceau.force = T_PINCEAU.force = Number($('terrainReliefForce').value) || 0.5; };
   $('terrainReglerBtn').onclick = () => { const o = terrainChoisi(); if (o) _rappels.regler(o); };
   $('terrainSupprimerBtn').onclick = () => supprimerLeChoisi();
   $('terrainSceneAnnuler').onclick = () => fermerChoixDeScene();
@@ -512,6 +574,17 @@ export function initEditeurDeTerrain(){
     const { l, h } = taillePlan();
     const m = versLeMonde(T.vue, s, l, h);
     if (T.outil === 'zone') { T.rectangle = { a: m, b: m }; plan.setPointerCapture && plan.setPointerCapture(e.pointerId); return; }
+    if (T.outil === 'relief') {
+      const sc = laScene();
+      if (!sc) return;
+      _rappels.instantane();
+      // « Aplanir » vise la hauteur sous le premier clic, pour tout le coup.
+      T.coup = { cible: hauteurDuRelief(sc.panel.relief, m.x, m.z), dernier: null };
+      peindre(m);
+      plan.setPointerCapture && plan.setPointerCapture(e.pointerId);
+      redessiner();
+      return;
+    }
     if (T.outil === 'trace') {
       // Un double-clic termine (son second clic n'ajoute pas de point).
       if (e.detail >= 2 && T.chaine) { finirLaLigne(); return; }
@@ -537,6 +610,12 @@ export function initEditeurDeTerrain(){
       T.geste.x = e.clientX; T.geste.y = e.clientY;
       redessiner();
     } else if (T.rectangle) { T.rectangle.b = m; redessiner(); }
+    else if (T.outil === 'relief') {
+      T.survol = m;
+      // Un passage tous les quarts de rayon : le trait est régulier, quelle que soit la vitesse.
+      if (T.coup && (!T.coup.dernier || Math.hypot(m.x - T.coup.dernier.x, m.z - T.coup.dernier.z) >= T.pinceau.rayon / 4)) peindre(m);
+      redessiner();
+    }
     else if (T.chaine) { T.fantome = m; redessiner(); }
     else if (T.glisser) {
       const obj = terrainChoisi();
@@ -549,6 +628,7 @@ export function initEditeurDeTerrain(){
   const finGestePlan = (e) => {
     if (!T) return;
     if (T.geste && T.geste.sorte === 'plan') T.geste = null;
+    if (T.coup) { T.coup = null; apresModification(null); }
     if (T.rectangle && e && e.type === 'pointerup') {
       const { a, b } = T.rectangle; T.rectangle = null;
       poser('terrain', zoneEntre(a, b));
@@ -558,6 +638,7 @@ export function initEditeurDeTerrain(){
     T.glisser = null;
   };
   plan.addEventListener('pointerup', finGestePlan);
+  plan.addEventListener('pointerleave', () => { if (T && T.survol && !T.coup) { T.survol = null; redessiner(); } });
   plan.addEventListener('pointercancel', finGestePlan);
 
   // L'aperçu 3D : glisser gauche = tourner, droit = déplacer, molette = zoomer.
