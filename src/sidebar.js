@@ -11,7 +11,7 @@
  * getRoomConnectedComponents.
  */
 
-import { modeMursDevant, fixerMursDevant } from './batiment-murs-devant.js';
+import { mursDevantMasques, fixerMursDevantMasques } from './batiment-murs-devant.js';
 import { commandesDuMenu3D } from './commandes-3d.js';
 import { modeSelonLaCamera3D } from './rotation-objet-3d.js';
 import { policeADessiner, variantesDeLaPolice, policesImportees, nomsDesUsagesDeLaPolice } from './polices-utilisateur.js';
@@ -1190,22 +1190,12 @@ function majSectionAffichageBatiment(el){
     choix.blur();
     drawCurrentPage();
   };
-  // #459b : les murs de devant (selon la caméra) : visibles, abaissés ou masqués. Même prudence que
-  // « Montrer jusqu'à » : la liste n'est pas touchée pendant qu'elle est ouverte.
-  document.getElementById('sideBatimentDevantLabel').textContent = tr('Front walls', 'Murs de devant');
+  // #459b : masquer les murs de devant (selon la caméra de la Case), pour cadrer dans le bâtiment.
   const devant = document.getElementById('sideBatimentDevant');
-  if (document.activeElement !== devant) {
-    const opts = [['visibles', tr('Visible', 'Visibles')], ['abaisses', tr('Lowered (as low walls)', 'Abaissés (en muret)')], ['masques', tr('Hidden', 'Masqués')]];
-    const cleD = JSON.stringify(opts);
-    if (devant.dataset.cle !== cleD) {
-      devant.replaceChildren(...opts.map(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; return o; }));
-      devant.dataset.cle = cleD;
-    }
-    if (devant.value !== modeMursDevant(el)) devant.value = modeMursDevant(el);
-  }
+  if (devant.checked !== mursDevantMasques(el)) devant.checked = mursDevantMasques(el);
   devant.onchange = () => {
     _snapshot();
-    fixerMursDevant(el, devant.value);
+    fixerMursDevantMasques(el, devant.checked);
     devant.blur();
     drawCurrentPage();
   };
@@ -1251,8 +1241,7 @@ function updateSidePanelImpl(){
   // Cachée d'emblée, remontrée plus bas si l'Élément choisi est un bâtiment placé (sans oublier
   // lequel elle montrait : la remonter vers elle ne se fait qu'au CHANGEMENT de bâtiment).
   // Pas pendant que sa liste est ouverte : la cacher, même un instant, la refermerait.
-  if (sideBatimentSection && document.activeElement !== document.getElementById('sideBatimentCoupe')
-    && document.activeElement !== document.getElementById('sideBatimentDevant')) sideBatimentSection.style.display = 'none';
+  if (sideBatimentSection && document.activeElement !== document.getElementById('sideBatimentCoupe')) sideBatimentSection.style.display = 'none';
   _batimentPrecedent = _batimentDeLaSection; _batimentDeLaSection = null;
   // Le cadrage d'une Planche importée n'appartient qu'au menu Planche, qui la remontre plus bas.
   sidePageCadrageSection.style.display = 'none';

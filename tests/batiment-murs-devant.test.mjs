@@ -1,5 +1,5 @@
 /**
- * #459b : les murs de devant (entre la caméra et l'intérieur), abaissés ou masqués selon la caméra.
+ * #459b : les murs de devant (entre la caméra et l'intérieur), masqués selon la caméra (le mode abaissé retiré).
  */
 import './helpers/dom-stub.mjs';
 import { test } from 'node:test';
@@ -36,16 +36,19 @@ test('la direction monde ramenée dans le repère du bâtiment tourné', () => {
   assert.ok(Math.abs(v.x) < 1e-9 && Math.abs(v.z - 1) < 1e-9, JSON.stringify(v));
 });
 
-test('le réglage : visibles par défaut (rien d\'enregistré), abaissés ou masqués', () => {
+test('le réglage : visibles par défaut (rien d\'enregistré), ou masqués ; « abaisses » (1.15.3) compte pour masqués', () => {
   const o = {};
-  assert.equal(D.modeMursDevant(o), 'visibles');
-  D.fixerMursDevant(o, 'abaisses');
-  assert.deepEqual(o.affichage, { mursDevant: 'abaisses' });
-  D.fixerMursDevant(o, 'visibles');
+  assert.equal(D.mursDevantMasques(o), false);
+  D.fixerMursDevantMasques(o, true);
+  assert.deepEqual(o.affichage, { mursDevant: 'masques' });
+  assert.equal(D.mursDevantMasques(o), true);
+  D.fixerMursDevantMasques(o, false);
   assert.equal(o.affichage, undefined);
+  assert.equal(D.mursDevantMasques({ affichage: { mursDevant: 'abaisses' } }), true);
+  assert.equal('HAUTEUR_MUR_ABAISSE' in D, false);
 });
 
-test('le rendu : abaissé, le mur sud ne monte qu\'à 50 cm ; masqué, il disparaît', () => {
+test('le rendu : masqué, le mur sud disparaît', () => {
   const T = globalThis.THREE;
   const b = maison();
   const sud = murEn(b, 4);
@@ -55,15 +58,15 @@ test('le rendu : abaissé, le mur sud ne monte qu\'à 50 cm ; masqué, il dispar
     const r = new T.Raycaster(new T.Vector3(3, 50, 4.07), new T.Vector3(0, -1, 0));
     const h = r.intersectObject(g, true); return h.length ? h[0].point.y : -Infinity; };
   assert.ok(hautSud(construireBatiment3D(T, b, materiauxBatiment3D(T))) > 2);
-  assert.ok(Math.abs(hautSud(construireBatiment3D(T, b, materiauxBatiment3D(T), { devant: { mode: 'abaisses', ids: [sud] } })) - D.HAUTEUR_MUR_ABAISSE) < 1e-6);
-  assert.ok(hautSud(construireBatiment3D(T, b, materiauxBatiment3D(T), { devant: { mode: 'masques', ids: [sud] } })) < 0.5);
+  assert.equal(hautSud(construireBatiment3D(T, b, materiauxBatiment3D(T), { devant: [sud] })), -Infinity);
 });
 
 test('câblage : calculé par Case selon sa caméra, dans la signature du rig ; réglage et bouton de l\'aperçu', () => {
   const lire = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
-  assert.match(lire('scene3d.js'), /retenirMursDevant\(o, \{ mode, ids: mursDeDevant\(o\.batiment, versLaCameraDansLeBatiment\(\{ x: bk\.x, z: bk\.z \}, o\.rotY \|\| 0\)\) \}\);/);
+  assert.match(lire('scene3d.js'), /retenirMursDevant\(o, mursDeDevant\(o\.batiment, versLaCameraDansLeBatiment\(\{ x: bk\.x, z: bk\.z \}, o\.rotY \|\| 0\)\)\);/);
   assert.match(lire('rig3d.js'), /JSON\.stringify\(mursDevantRetenus\(o\)\)/);
-  assert.match(lire('index.html'), /id="sideBatimentDevant"/);
+  assert.match(lire('index.html'), /<input type="checkbox" id="sideBatimentDevant"> Masquer les murs de devant/);
+  assert.match(lire('batiment-editeur-ui.js'), /devantMasqueApercu = !devantMasqueApercu;/);
   assert.match(lire('index.html'), /id="batimentApercuDevant"/);
   assert.match(lire('batiment-editeur-ui.js'), /if \(sig !== signatureDevant && E\) \{/);
 });

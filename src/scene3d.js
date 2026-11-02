@@ -11,7 +11,7 @@
  * Callbacks injected by app.js (setScene3DCallbacks) to avoid circular imports:
  * drawCurrentPage, refreshCameraSliders, renderSideCameraGizmo.
  */
-import { modeMursDevant, mursDeDevant, versLaCameraDansLeBatiment, retenirMursDevant } from './batiment-murs-devant.js';
+import { mursDevantMasques, mursDeDevant, versLaCameraDansLeBatiment, retenirMursDevant } from './batiment-murs-devant.js';
 import { estUnBatimentPlace } from './batiment-element.js';
 import { sondeDebut, sondeFin, sondeCompter, sondeActive, sondeValeur } from './perf-probe.js';
 import { materiauDeTrace3D, grainDeTracePret3D, libererMateriauDeTrace3D } from './trace-textures-3d.js';
@@ -2632,11 +2632,10 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       // #459b : un bâtiment placé efface ses murs de devant selon la caméra de CETTE Case ; le calcul
       // est retenu pour la signature du rig, qui n'est refait que quand la liste change.
       if (estUnBatimentPlace(o)) {
-        const mode = modeMursDevant(o);
-        if (mode === 'visibles') retenirMursDevant(o, null);
+        if (!mursDevantMasques(o)) retenirMursDevant(o, null);
         else {
           const bk = panelCamBasis3D(panel).backward;
-          retenirMursDevant(o, { mode, ids: mursDeDevant(o.batiment, versLaCameraDansLeBatiment({ x: bk.x, z: bk.z }, o.rotY || 0)) });
+          retenirMursDevant(o, mursDeDevant(o.batiment, versLaCameraDansLeBatiment({ x: bk.x, z: bk.z }, o.rotY || 0)));
         }
       }
       entry = ensureObjectRigEntry3D(o);

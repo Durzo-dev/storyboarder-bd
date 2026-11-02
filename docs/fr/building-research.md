@@ -553,7 +553,7 @@ place : rien ne bouge à l'écran.
   dans « Éléments » montre la section « Affichage du bâtiment » : « Montrer jusqu'à : Tout le
   bâtiment / <niveau> ». Enregistré sur l'Élément placé (`affichage.jusquA`, champ AJOUTÉ), donc par
   Case. Le rig coupé embarque le bâtiment entier, invisible et hors des rayons, pour garder sa taille
-  et sa place (le rendu centre la boîte du rig). **#459b FAIT** (2 novembre 2026) : « Murs de devant » (Visibles / Abaissés / Masqués), réglage par bâtiment placé et par Case (`affichage.mursDevant`, champ AJOUTÉ) et bouton de l'aperçu de l'éditeur. Un mur est « devant » si sa face extérieure regarde la caméra à moins de 45° et qu'il est du côté caméra du centre de son niveau ; recalculé à chaque rendu (`mursDeDevant`, dans la signature du rig). Abaissé : muret de 50 cm, sans menuiserie.
+  et sa place (le rendu centre la boîte du rig). **#459b FAIT** (2 novembre 2026) : « Masquer les murs de devant », pour cadrer une Case DANS un bâtiment : case à cocher par bâtiment placé et par Case (`affichage.mursDevant = 'masques'`, champ AJOUTÉ) et bouton de l'aperçu de l'éditeur. Un mur est « devant » si sa face extérieure regarde la caméra à moins de 45° et qu'il est du côté caméra du centre de son niveau ; recalculé à chaque rendu (`mursDeDevant`, dans la signature du rig). Le rendu « abaissé en muret de 50 cm », d'abord proposé, a été retiré (sans usage).
 - **#464 FAIT** (27 octobre 2026) : masquer un mur, un plafond, un sol d'un bâtiment placé, par
   Case. Dans « Affichage du bâtiment », « Choisir ce qui est masqué » ouvre l'éditeur en MASQUAGE
   (Sélection seule, rien du bâtiment ne se modifie) : clic sur un mur = masqué / réaffiché (en

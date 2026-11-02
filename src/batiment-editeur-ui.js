@@ -17,7 +17,7 @@
  * gestes et le cadrage) : il ne touche pas à la scène partagée des Cases (cf. rendreApercu3D), il
  * dessine à la demande et libère tout à la fermeture.
  */
-import { mursDeDevant, MODES_MURS_DEVANT } from './batiment-murs-devant.js';
+import { mursDeDevant } from './batiment-murs-devant.js';
 import { deltaMolette3D, facteurDeZoom3D, degresParPixelObjet3D } from './utils.js';
 import { tr } from './state.js';
 import { creerBatiment, nomAfficheDuFichier, DEFAUTS_BATIMENT, TYPES_D_OUVERTURE } from './batiment.js';
@@ -1663,17 +1663,16 @@ function recadrer(){
  */
 let cadrageAuto = true;
 /**
- * #459b : les murs de devant dans l'aperçu (son bouton, demandé) : visibles, abaissés, masqués, un
- * clic passe au suivant. Gardé pendant la session, comme le cadrage automatique.
+ * #459b : masquer les murs de devant dans l'aperçu (son bouton, un interrupteur). Gardé pendant la
+ * session, comme le cadrage automatique.
  */
-let modeDevantApercu = 'visibles';
+let devantMasqueApercu = false;
 function majBoutonDevant(){
   const b = $('batimentApercuDevant');
   if (!b) return;
-  const noms = { visibles: tr('Front walls: visible', 'Murs de devant : visibles'), abaisses: tr('Front walls: lowered', 'Murs de devant : abaissés'), masques: tr('Front walls: hidden', 'Murs de devant : masqués') };
-  b.title = noms[modeDevantApercu];
+  b.title = tr('Hide front walls', 'Masquer les murs de devant');
   b.setAttribute('aria-label', b.title);
-  b.classList.toggle('actif', modeDevantApercu !== 'visibles');
+  b.classList.toggle('actif', devantMasqueApercu);
 }
 function fixerCadrageAuto(v){
   if (cadrageAuto === v) return;
@@ -2483,7 +2482,7 @@ function cablerFenetreApercu(){
   };
   $('batimentApercuSuivi').onclick = () => fixerCadrageAuto(!cadrageAuto);
   $('batimentApercuDevant').onclick = () => {
-    modeDevantApercu = MODES_MURS_DEVANT[(MODES_MURS_DEVANT.indexOf(modeDevantApercu) + 1) % MODES_MURS_DEVANT.length];
+    devantMasqueApercu = !devantMasqueApercu;
     majBoutonDevant();
     if (E && E.apercu) E.apercu.redessiner();
   };
@@ -2551,8 +2550,8 @@ function ouvrirApercu(conteneur, b){
     const c = getLoadedModel(f); return c && c.scene ? cloneSkinned(c.scene) : null;
   };
   // #459b : les murs de devant selon l'angle de l'aperçu (son bouton), comme dans les Cases.
-  const devantCourant = () => (E && modeDevantApercu !== 'visibles')
-    ? { mode: modeDevantApercu, ids: mursDeDevant(E.batiment, { x: Math.sin(angles.lacet), z: Math.cos(angles.lacet) }) } : null;
+  const devantCourant = () => (E && devantMasqueApercu)
+    ? mursDeDevant(E.batiment, { x: Math.sin(angles.lacet), z: Math.cos(angles.lacet) }) : null;
   let signatureDevant = 'null';
   const options = () => ({ jusquA: E && E.coupe ? E.niveauId : null, rouge: E ? E.collisionMeuble : null,
     masques: E && E.masquage ? E.masquage.masques : null, devant: devantCourant() });
