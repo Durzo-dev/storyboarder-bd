@@ -95,5 +95,5 @@ test('le rendu : la rivière coule sous la berge, le lac à son niveau ; ni l\'u
   assert.ok(Math.abs(yLac - (-3 - 0.8)) < 1e-6, `lac : ${yLac}`);
   RIG.marquerProjectionDOmbre3D();
   assert.ok(eaux.every(m => m.castShadow === false));
-  assert.match(lire('scene3d.js'), /const r = creuserLesRivieres\(panel && panel\.relief, rivieres\);/);
+  assert.match(lire('scene3d.js'), /const r = creuserLesRivieres\(releverLesZones\(panel && panel\.relief, zones\), rivieres\);/);
 });

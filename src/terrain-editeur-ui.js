@@ -442,7 +442,8 @@ function reglagesDeZone(obj){
       couleur._lire = () => teinteDuSol3D(def, zone.terrainColor) || def.swatch;
       elements.push(libelle(tr('Colour', 'Couleur')), couleur);
     }
-    elements.push(...champ('label', tr('Displayed label', 'Étiquette affichée'), tr('Optional', 'Optionnel')));
+    // (L'« étiquette affichée » de la fenêtre n'est pas reprise : elle ne s'affiche que sur les anciennes
+    // Cases sans 3D, jamais dans une Scène. Le champ reste dans le fichier.)
     boite.replaceChildren(...elements);
   }
   if (!zone) return;
@@ -465,9 +466,14 @@ function reglagesDuChoisi(obj){
          lire: () => (obj.world && obj.world.width) || 4, ecrire: (v) => { obj.world = { ...obj.world, width: v }; } },
        { cle: 'profondeur', nom: tr('Depth (m)', 'Profondeur (m)'), min: 0.3, max: 5, pas: 0.1,
          lire: () => obj.profondeur || PROFONDEUR_RIVIERE, ecrire: (v) => { obj.profondeur = v; } }]
-    : (obj.tracéType === 'terrain' && obj.terrainType === 'eau')
-      ? [{ cle: 'niveau', nom: tr('Water level (m)', "Niveau de l'eau (m)"), min: -5, max: 1, pas: 0.05,
-           lire: () => (Number.isFinite(obj.niveauEau) ? obj.niveauEau : NIVEAU_EAU_PAR_DEFAUT), ecrire: (v) => { obj.niveauEau = v; } }]
+    : obj.tracéType === 'terrain'
+      ? [
+        // Demandé : la Zone relève ou creuse le terrain sous elle.
+        { cle: 'hauteur', nom: tr('Ground height (m)', 'Hauteur du sol (m)'), min: -10, max: 10, pas: 0.1,
+          lire: () => (Number.isFinite(obj.hauteurZone) ? obj.hauteurZone : 0), ecrire: (v) => { if (v) obj.hauteurZone = v; else delete obj.hauteurZone; } },
+        ...(obj.terrainType === 'eau' ? [{ cle: 'niveau', nom: tr('Water level (m)', "Niveau de l'eau (m)"), min: -10, max: 10, pas: 0.05,
+          lire: () => (Number.isFinite(obj.niveauEau) ? obj.niveauEau : NIVEAU_EAU_PAR_DEFAUT), ecrire: (v) => { obj.niveauEau = v; } }] : []),
+      ]
       : [];
   const cle = obj ? obj.id + ':' + defs.map(d => d.cle).join(',') : '';
   if (boite.dataset.cle !== cle) {
@@ -737,7 +743,9 @@ function dessinerApercu(){
   // Pendant un coup de pinceau aussi (demandé : l'aperçu suit le geste) ; les images se regroupent
   // d'elles-mêmes (une par image d'écran au plus, cf. redessiner), et la grille 3D se met à jour sur place.
   const sig = JSON.stringify([T.cam, c.width, c.height, signatureDuRelief(sc.panel.relief), sc.page.objects.map(o => [o.id, o.world, o.color, o.terrainType, o.terrainColor,
-    o.wallHeight, o.wallThickness, o.marquage, o.traceTexture, o.wxFloor, o.wzFloor, o.rotY, o.hidden3d])]);
+    o.wallHeight, o.wallThickness, o.marquage, o.traceTexture, o.wxFloor, o.wzFloor, o.rotY, o.hidden3d,
+    // Signalé : le niveau de l'eau ne se voyait qu'en bougeant l'aperçu (absent de cette signature).
+    o.niveauEau, o.profondeur, o.hauteurZone])]);
   if (sig === T.sigApercu) return;
   T.sigApercu = sig;
   const img = rendreSceneVueLibre3D(sc.panel, sc.page, T.cam, scale);

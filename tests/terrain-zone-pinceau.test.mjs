@@ -120,3 +120,26 @@ test('outil Zone : clic droit = rectangle ↔ pinceau ; une Zone se règle dans 
   assert.notEqual(forme(), f0);
   document.getElementById('terrainValiderBtn').onclick();
 });
+
+// Demandé : une Zone relève ou creuse le terrain sous elle ; le niveau de l'eau se voit tout de suite
+// dans l'aperçu ; l'étiquette (sans effet dans une Scène) n'est plus proposée.
+test('la hauteur d\'une Zone relève ou creuse le relief rendu ; l\'aperçu suit niveau et hauteur ; plus d\'étiquette', async () => {
+  const R = await import('../src/terrain-relief.js');
+  const carre = (p) => Math.abs(p.x) <= 2 && Math.abs(p.z) <= 2;
+  const r = R.releverLesZones(null, [{ x0: -2, z0: -2, x1: 2, z1: 2, dedans: carre, delta: -1.5 }]);
+  assert.ok(Math.abs(R.hauteurDuRelief(r, 0, 0) + 1.5) < 1e-9);
+  assert.equal(R.hauteurDuRelief(r, 6, 0), 0);
+  assert.equal(R.releverLesZones(null, [{ x0: 0, z0: 0, x1: 1, z1: 1, dedans: carre, delta: 0 }]), null);
+  const SC = await import('../src/scene3d.js');
+  const RIG = await import('../src/rig3d.js');
+  const panel = { id: 'ph', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: 0.6, camDist: 30, pts: [] };
+  const zone = { id: 'zh', type: 'tracé', tracéType: 'terrain', terrainType: 'herbe', panelId: 'ph', hauteurZone: 2,
+    world: { cx: 0, cz: 0, w: 6, h: 6, rotY: 0, corners: [{ x: -3, z: -3 }, { x: 3, z: -3 }, { x: 3, z: 3 }, { x: -3, z: 3 }] } };
+  SC.rendreSceneVueLibre3D(panel, { w: 480, h: 360, objects: [panel, zone] }, { rotX: 0.6, rotY: 0, dist: 30, x: 0, y: 0, z: 0 }, 0.5);
+  let haut = -Infinity;
+  RIG.personaScene3D.traverseVisible(o => { if (o.userData && o.userData.relief) { o.geometry.computeBoundingBox(); haut = Math.max(haut, o.geometry.boundingBox.max.y); } });
+  assert.ok(Math.abs(haut - (-3 + 2)) < 1e-6, `le relief monte sous la Zone : ${haut}`);
+  const ui = lire('terrain-editeur-ui.js');
+  assert.match(ui, /o\.niveauEau, o\.profondeur, o\.hauteurZone\]\)\]\);/);
+  assert.doesNotMatch(ui, /champ\('label'/);
+});

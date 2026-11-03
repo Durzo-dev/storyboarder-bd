@@ -236,3 +236,25 @@ export function creuserLesRivieres(r, rivieres){
   }
   return { ...g, h };
 }
+
+/**
+ * Demandé (3 novembre 2026) : une Zone RELÈVE ou CREUSE le terrain sous elle (`hauteurZone`, mètres).
+ * `zones` = [{ x0, z0, x1, z1, dedans(p) → bool, delta }] : chaque point de la grille dans la Zone
+ * monte de `delta` (la grille est créée ou agrandie au besoin ; le pas d'un mètre fait la pente du
+ * bord). PUR (le prédicat `dedans` est fourni par l'appelant).
+ */
+export function releverLesZones(r, zones){
+  const liste = (zones || []).filter(z => z && fini(z.delta) && z.delta !== 0 && typeof z.dedans === 'function');
+  if (!liste.length) return r;
+  let g = r;
+  for (const z of liste) g = etendreLeRelief(g, z.x0, z.z0, z.x1, z.z1);
+  const h = g.h.slice();
+  for (const z of liste) {
+    const i0 = Math.max(1, Math.floor((z.x0 - g.x0) / g.pas)), i1 = Math.min(g.nx - 2, Math.ceil((z.x1 - g.x0) / g.pas));
+    const j0 = Math.max(1, Math.floor((z.z0 - g.z0) / g.pas)), j1 = Math.min(g.nz - 2, Math.ceil((z.z1 - g.z0) / g.pas));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      if (z.dedans({ x: g.x0 + i * g.pas, z: g.z0 + j * g.pas })) h[j * g.nx + i] += z.delta;
+    }
+  }
+  return { ...g, h };
+}
