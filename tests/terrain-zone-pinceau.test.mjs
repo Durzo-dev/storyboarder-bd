@@ -219,12 +219,35 @@ test('la pente d\'une Zone : un plan incliné autour de son centre, orienté par
   U.initEditeurDeTerrain();
   U.ouvrirEditeurDeTerrain('s1', { choisi: 'z1' });
   U.rafraichirEditeurDeTerrain();
-  const curseurs = document.getElementById('terrainChoisiReglages').children.filter(c => c.type === 'range');
-  assert.deepEqual(curseurs.map(c => c.dataset.cle), ['hauteur', 'pente', 'sens']);
+  const enfants = document.getElementById('terrainChoisiReglages').children;
+  const curseurs = enfants.filter(c => c.type === 'range');
+  assert.deepEqual(curseurs.map(c => c.dataset.cle), ['hauteur', 'pente']);
   curseurs[1].value = '15'; curseurs[1].oninput();
-  curseurs[2].value = '90'; curseurs[2].oninput();
   assert.equal(zone.penteZone, 15);
+  // Demandé : le sens se choisit dans un CADRAN (clic en bas du disque : ça monte vers le bas du plan).
+  const cadran = enfants.find(c => c.className === 'terrain-cadran');
+  assert.ok(cadran, 'le cadran');
+  cadran.getBoundingClientRect = () => ({ left: 0, top: 0, width: 76, height: 76 });
+  (cadran._ecouteurs.pointerdown || []).forEach(f => f({ clientX: 38, clientY: 76, pointerId: 1 }));
+  (cadran._ecouteurs.pointerup || []).forEach(f => f({}));
   assert.equal(zone.sensPente, 90);
+  // Zone tournée d'un quart : le cadran montre la direction SUR LE PLAN (sens + rotation).
+  zone.world = { ...zone.world, rotY: Math.PI / 2 };
+  U.rafraichirEditeurDeTerrain();
+  assert.match(cadran.children[0].style.transform, /rotate\(180deg\)/);
   document.getElementById('terrainValiderBtn').onclick();
   assert.match(lire('scene3d.js'), /deltaEn: \(p\) => hauteurDeLaZone\(reglage, p\),/);
+});
+
+// Demandé : des bords DOUX pour une Zone relevée ou en pente.
+test('autour d\'une Zone relevée, le terrain rejoint le sol en douceur', async () => {
+  const R = await import('../src/terrain-relief.js');
+  const carre = (p) => Math.abs(p.x) <= 2 && Math.abs(p.z) <= 2;
+  const proche = (p) => ({ x: Math.max(-2, Math.min(2, p.x)), z: Math.max(-2, Math.min(2, p.z)) });
+  const r = R.releverLesZones(null, [{ x0: -2, z0: -2, x1: 2, z1: 2, dedans: carre, delta: 3, fondu: 4, plusProche: proche }]);
+  const h = [2, 3, 4, 5, 6, 7].map(x => R.hauteurDuRelief(r, x, 0));
+  assert.equal(h[0], 3, 'le bord de la Zone');
+  assert.ok(h[1] < 3 && h[1] > h[2] && h[2] > h[3] && h[3] > 0, `décroît : ${h}`);
+  assert.equal(h[4], 0, 'au-delà de la bande : le sol');
+  assert.ok(Z.caseLaPlusProche(Z.peindreLeMasque(null, { x: 0, z: 0 }, 1), { x: 3, z: 0.1 }, 3), 'la case peinte la plus proche');
 });

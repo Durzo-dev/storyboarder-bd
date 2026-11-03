@@ -17,7 +17,7 @@ import { MARQUE_SOL_PERCE } from './batiment-3d.js';
 import { reliefPlat, signatureDuRelief, hauteurDuRelief, densifierLaLigne, aplanirSousLesEmprises,
   creuserLesRivieres, releverLesZones, profilFranchissant, hauteurDeLaZone, PROFONDEUR_RIVIERE, EAU_SOUS_LA_BERGE, NIVEAU_EAU_PAR_DEFAUT } from './terrain-relief.js';
 import { installerEau3D } from './ground-water-3d.js';
-import { casesDuMasque, dansLeMasque } from './terrain-zone-pinceau.js';
+import { casesDuMasque, dansLeMasque, caseLaPlusProche } from './terrain-zone-pinceau.js';
 import { niveauxTries } from './batiment-niveaux.js';
 import { formesDesPieces } from './batiment-pieces.js';
 import { sondeDebut, sondeFin, sondeCompter, sondeActive, sondeValeur } from './perf-probe.js';
@@ -2552,6 +2552,16 @@ function reliefEffectif3D(panel, page){
     && o.world && Array.isArray(o.world.pts) && o.world.pts.length >= 2)
     .map(o => ({ pts: o.world.pts, largeur: o.world.width || 4, profondeur: o.profondeur || PROFONDEUR_RIVIERE }));
   // Demandé : une Zone relève ou creuse le terrain sous elle (hauteurZone), avant les rivières.
+  const pointLePlusProcheDuPoly = (p, q) => {
+    let best = null, d0 = Infinity;
+    for (let i = 0, j = q.length - 1; i < q.length; j = i++) {
+      const a = q[j], b = q[i], dx = b.x - a.x, dz = b.z - a.z, l2 = dx * dx + dz * dz;
+      const t = l2 > 0 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / l2)) : 0;
+      const x = a.x + t * dx, z = a.z + t * dz, d = Math.hypot(p.x - x, p.z - z);
+      if (d < d0) { d0 = d; best = { x, z }; }
+    }
+    return best;
+  };
   const dansLePoly = (p, q) => {
     let d = false;
     for (let i = 0, j = q.length - 1; i < q.length; j = i++) {
@@ -2567,9 +2577,13 @@ function reliefEffectif3D(panel, page){
       // Une hauteur, et peut-être une PENTE (demandé) : la hauteur varie alors le long de son sens.
       const reglage = { hauteur: o.hauteurZone || 0, penteDeg: o.penteZone || 0, sensDeg: o.sensPente || 0,
         rotY: o.world.masque ? 0 : (o.world.rotY || 0), cx: o.world.cx, cz: o.world.cz };
-      return { x0: Math.min(...xs), z0: Math.min(...zs), x1: Math.max(...xs), z1: Math.max(...zs),
+      // Demandé : des bords DOUX, sur une bande qui grandit avec le dénivelé (1,5 à 15 m).
+      const d = (p) => Math.abs(hauteurDeLaZone(reglage, p));
+      const fondu = Math.max(1.5, Math.min(15, 1.5 * Math.max(...c.map(d))));
+      return { x0: Math.min(...xs), z0: Math.min(...zs), x1: Math.max(...xs), z1: Math.max(...zs), fondu,
         deltaEn: (p) => hauteurDeLaZone(reglage, p),
-        dedans: o.world.masque ? (p) => dansLeMasque(o.world.masque, p) : (p) => dansLePoly(p, c) };
+        dedans: o.world.masque ? (p) => dansLeMasque(o.world.masque, p) : (p) => dansLePoly(p, c),
+        plusProche: o.world.masque ? (p, portee) => caseLaPlusProche(o.world.masque, p, portee) : (p) => pointLePlusProcheDuPoly(p, c) };
     });
   const r = creuserLesRivieres(releverLesZones(panel && panel.relief, zones), rivieres);
   if (reliefPlat(r)) return null;

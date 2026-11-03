@@ -111,3 +111,20 @@ export function tournerLeMasque(m, angle, centre){
   }
   return resserrer({ pas, x0: X0, z0: Z0, nx, nz, plein });
 }
+
+/** La case peinte la plus proche de `p` (son centre), à moins de `portee` mètres, ou null. */
+export function caseLaPlusProche(m, p, portee){
+  if (!masqueValide(m) || !p) return null;
+  const n = Math.ceil(portee / m.pas) + 1;
+  const ci = Math.floor((p.x - m.x0) / m.pas), cj = Math.floor((p.z - m.z0) / m.pas);
+  let meilleur = null, d0 = Infinity;
+  for (let j = cj - n; j <= cj + n; j++) for (let i = ci - n; i <= ci + n; i++) {
+    if (!pleine(m, i, j)) continue;
+    // Le point de la case le plus proche (et non son centre) : la bande commence au bord peint.
+    const x = Math.max(m.x0 + i * m.pas, Math.min(p.x, m.x0 + (i + 1) * m.pas));
+    const z = Math.max(m.z0 + j * m.pas, Math.min(p.z, m.z0 + (j + 1) * m.pas));
+    const d = Math.hypot(p.x - x, p.z - z);
+    if (d < d0) { d0 = d; meilleur = { x, z }; }
+  }
+  return d0 <= portee ? meilleur : null;
+}

@@ -260,14 +260,24 @@ export function releverLesZones(r, zones){
     && (typeof z.deltaEn === 'function' || (fini(z.delta) && z.delta !== 0)));
   if (!liste.length) return r;
   let g = r;
-  for (const z of liste) g = etendreLeRelief(g, z.x0, z.z0, z.x1, z.z1);
+  for (const z of liste) { const f = z.plusProche ? (z.fondu || 0) : 0; g = etendreLeRelief(g, z.x0 - f, z.z0 - f, z.x1 + f, z.z1 + f); }
   const h = g.h.slice();
   for (const z of liste) {
-    const i0 = Math.max(1, Math.floor((z.x0 - g.x0) / g.pas)), i1 = Math.min(g.nx - 2, Math.ceil((z.x1 - g.x0) / g.pas));
-    const j0 = Math.max(1, Math.floor((z.z0 - g.z0) / g.pas)), j1 = Math.min(g.nz - 2, Math.ceil((z.z1 - g.z0) / g.pas));
+    // Demandé : des BORDS DOUX. Autour de la Zone, sur une bande de `fondu` mètres, la hauteur rejoint
+    // le terrain en douceur (celle du point de la Zone le plus proche, atténuée) ; sans `plusProche`,
+    // le bord reste net (une pente d'un pas de grille).
+    const f = z.plusProche ? (z.fondu || 0) : 0;
+    const i0 = Math.max(1, Math.floor((z.x0 - f - g.x0) / g.pas)), i1 = Math.min(g.nx - 2, Math.ceil((z.x1 + f - g.x0) / g.pas));
+    const j0 = Math.max(1, Math.floor((z.z0 - f - g.z0) / g.pas)), j1 = Math.min(g.nz - 2, Math.ceil((z.z1 + f - g.z0) / g.pas));
+    const delta = (p) => (z.deltaEn ? z.deltaEn(p) : z.delta);
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
       const p = { x: g.x0 + i * g.pas, z: g.z0 + j * g.pas };
-      if (z.dedans(p)) h[j * g.nx + i] += z.deltaEn ? z.deltaEn(p) : z.delta;
+      if (z.dedans(p)) { h[j * g.nx + i] += delta(p); continue; }
+      if (!f) continue;
+      const q = z.plusProche(p, f);
+      if (!q) continue;
+      const t = 1 - Math.hypot(p.x - q.x, p.z - q.z) / f;
+      if (t > 0) h[j * g.nx + i] += delta(q) * t * t * (3 - 2 * t);   // smoothstep
     }
   }
   return { ...g, h };

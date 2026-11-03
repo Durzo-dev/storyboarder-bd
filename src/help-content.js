@@ -320,7 +320,7 @@ export const HELP_MANUAL_EN = [
     'Nothing reaches the Scene before "Validate" (Ctrl+Z and Ctrl+Y undo and redo inside the editor); "Quit" or Esc without validating asks first, then drops the changes.',
     'Terrain zones and paths are made here only. Zone tool (Z; right-click switches): a rectangle, or a Brush (drag to paint; a selected painted zone grows, Shift erases). Paths tool (T): pick the kind (road, path, low wall, fence, hedge, barrier), click one point per bend, double-click, Enter or right-click to finish.',
     'Selection tool (V): click a zone or path to select it, drag to move it, right-click to turn a zone a quarter (held: it follows the mouse), Del to delete it; a path is set up by a double-click or "Settings".',
-    'A zone is set up right under "Selection": name, texture, colour; ground height (it raises or digs the ground under it); slope and its direction (an inclined plane around its centre, turning with the zone).',
+    'A zone is set up right under "Selection": name, texture, colour; ground height (it raises or digs the ground under it); slope and, on a dial, the direction it rises to (an inclined plane around its centre, turning with the zone). Its edges blend into the ground.',
   ]},
   { id: 'terrain_relief', title: 'Relief and water', paragraphs: [
     'Relief tool (R): drag to paint the ground (held still, it keeps working): Raise, Dig, Flatten (to the height under the first click) or Smooth, with a size and a strength (wheel: size, right-click: next mode, Ctrl + wheel: zoom). The circle shows the brush and the height under it; brown is above the ground, blue below.',
@@ -599,7 +599,7 @@ export const HELP_MANUAL_FR = [
     "Rien ne va sur la Scène avant « Valider » (Ctrl+Z et Ctrl+Y annulent et rétablissent dans l'éditeur) ; « Quitter » ou Échap sans valider demande d'abord, puis abandonne les modifications.",
     "Les Zones et les Tracés se font ici seulement. Outil Zone (Z ; le clic droit alterne) : un Rectangle, ou le Pinceau (glisser pour peindre ; une Zone peinte choisie s'agrandit, Maj gomme). Outil Tracés (T) : choisir le genre (route, chemin, muret, clôture, haie, barrière), un clic par virage, double-clic, Entrée ou clic droit pour terminer.",
     "Outil Sélection (V) : clic sur une Zone ou un Tracé pour le choisir, glisser pour le déplacer, clic droit pour tourner une Zone d'un quart (maintenu : elle suit la souris), Suppr pour le supprimer  ; un Tracé se règle par un double-clic ou « Régler ».",
-    "Une Zone se règle dans « Sélection » même : nom, texture, couleur ; hauteur du sol (elle relève ou creuse le terrain sous elle) ; pente et sens (un plan incliné autour de son centre, qui tourne avec elle).",
+    "Une Zone se règle dans « Sélection » même : nom, texture, couleur ; hauteur du sol (elle relève ou creuse le terrain sous elle) ; pente et, sur un cadran, la direction où ça monte (un plan incliné autour de son centre, qui tourne avec elle). Ses bords rejoignent le sol en douceur.",
   ]},
   { id: 'terrain_relief', title: 'Relief et eau', paragraphs: [
     "Outil Relief (R) : glisser pour peindre le sol (maintenu sur place, il continue) : Monter, Creuser, Aplanir (à la hauteur du premier clic) ou Adoucir, avec une taille et une force (molette : taille, clic droit : mode suivant, Ctrl + molette : zoom). Le cercle montre le pinceau et la hauteur dessous ; le brun est au-dessus du Sol, le bleu en dessous.",

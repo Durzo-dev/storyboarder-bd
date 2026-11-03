@@ -498,8 +498,11 @@ function reglagesDuChoisi(obj){
         // qui tourne avec la Zone.
         { cle: 'pente', nom: tr('Slope (°)', 'Pente (°)'), min: -45, max: 45, pas: 1,
           lire: () => (Number.isFinite(obj.penteZone) ? obj.penteZone : 0), ecrire: (v) => { if (v) obj.penteZone = v; else delete obj.penteZone; } },
-        { cle: 'sens', nom: tr('Slope direction (°)', 'Sens de la pente (°)'), min: 0, max: 345, pas: 15,
-          lire: () => (Number.isFinite(obj.sensPente) ? obj.sensPente : 0), ecrire: (v) => { if (v) obj.sensPente = v; else delete obj.sensPente; } },
+        // Demandé : un CADRAN (le curseur n'était pas intuitif). L'aiguille montre vers où ça monte, sur le
+        // plan (la rotation de la Zone comprise) ; un clic ou un glisser dans le cadran l'oriente.
+        { cle: 'sens', cadran: true, nom: tr('Uphill towards', 'Monte vers'),
+          lire: () => normaliserDeg((Number.isFinite(obj.sensPente) ? obj.sensPente : 0) + degresDeRotation(obj)),
+          ecrire: (v) => { const s = normaliserDeg(v - degresDeRotation(obj)); if (s) obj.sensPente = s; else delete obj.sensPente; } },
         ...(obj.terrainType === 'eau' ? [{ cle: 'niveau', nom: tr('Water level (m)', "Niveau de l'eau (m)"), min: -10, max: 10, pas: 0.05,
           lire: () => (Number.isFinite(obj.niveauEau) ? obj.niveauEau : NIVEAU_EAU_PAR_DEFAUT), ecrire: (v) => { obj.niveauEau = v; } }] : []),
       ]
@@ -511,6 +514,7 @@ function reglagesDuChoisi(obj){
   const actuel = (c) => (boite._defs || []).find(x => x.cle === c);
   if (boite.dataset.cle !== cle) {
     boite.replaceChildren(...defs.flatMap(d => {
+      if (d.cadran) return cadranDeSens(d, actuel);
       const l = document.createElement('label');
       l.className = 'terrain-curseur-libelle';
       const valeur = document.createElement('span');
@@ -536,9 +540,56 @@ function reglagesDuChoisi(obj){
   }
   for (const c of boite.children || []) {
     if (!c._lire || document.activeElement === c) continue;
+    if (c._afficher) { c._afficher(c._lire()); continue; }
     c.value = String(c._lire());
     c._valeur.textContent = String(c._lire()).replace('.', ',');
   }
+}
+
+const normaliserDeg = (d) => ((Math.round(d) % 360) + 360) % 360;
+/** La rotation d'une Zone rectangulaire, en degrés (une Zone peinte n'en a pas : son sens la suit). */
+const degresDeRotation = (o) => (o && o.world && !o.world.masque ? (o.world.rotY || 0) * 180 / Math.PI : 0);
+
+/**
+ * Le CADRAN du sens de la pente : un disque et son aiguille. Un clic ou un glisser dedans pointe la
+ * direction qui monte (par pas de 5°, le centre du plan comme repère : 0° à droite, 90° en bas).
+ * Le premier mouvement retient l'état pour Ctrl+Z.
+ */
+function cadranDeSens(d, actuel){
+  const l = document.createElement('label');
+  l.className = 'terrain-curseur-libelle';
+  const valeur = document.createElement('span');
+  l.textContent = d.nom + ' ';
+  l.appendChild(valeur);
+  const cadran = document.createElement('div');
+  cadran.className = 'terrain-cadran';
+  cadran.dataset.cle = d.cle;
+  cadran.title = tr('Click or drag: the direction going up', 'Clic ou glisser : la direction qui monte');
+  const aiguille = document.createElement('div');
+  aiguille.className = 'terrain-cadran-aiguille';
+  cadran.appendChild(aiguille);
+  cadran._afficher = (deg) => { aiguille.style.transform = `rotate(${deg}deg)`; valeur.textContent = `${deg}°`; };
+  cadran._lire = () => { const a = actuel(d.cle); return a ? a.lire() : 0; };
+  let retenu = false, actif = false;
+  const pointer = (e) => {
+    const r = cadran.getBoundingClientRect();
+    if (!r.width) return null;
+    return normaliserDeg(Math.round(Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180 / Math.PI / 5) * 5);
+  };
+  const orienter = (e) => {
+    const deg = pointer(e), a = actuel(d.cle);
+    if (deg === null || !a) return;
+    if (!retenu) { retenirPourAnnuler(); retenu = true; }
+    a.ecrire(deg);
+    cadran._afficher(deg);
+    apresModification(terrainChoisi());
+  };
+  cadran.addEventListener('pointerdown', (e) => { actif = true; retenu = false; cadran.setPointerCapture && cadran.setPointerCapture(e.pointerId); orienter(e); });
+  cadran.addEventListener('pointermove', (e) => { if (actif) orienter(e); });
+  const fin = () => { actif = false; retenu = false; };
+  cadran.addEventListener('pointerup', fin);
+  cadran.addEventListener('pointercancel', fin);
+  return [l, cadran];
 }
 
 /**
