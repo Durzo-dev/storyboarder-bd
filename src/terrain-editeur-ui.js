@@ -20,7 +20,7 @@
  */
 import { S, tr, newId } from './state.js';
 import { contenuDuPlan, cadrageDuPlan, versLePlan, zoomerLePlan, pasDeLaGrille, versLeMonde,
-  zoneEntre, traceDePoints, deplacerLeMonde, sousLePoint } from './terrain-plan.js';
+  zoneEntre, traceDePoints, deplacerLeMonde, sousLePoint, tournerLaZone } from './terrain-plan.js';
 import { rendreSceneVueLibre3D, ensureElementWorldPos3D, pointDuBatimentPlace3D, panelCamBasis3D, getCamOrbitWorld,
   tracéUpdateScreenPts } from './scene3d.js';
 import { nomDuTrace } from './canvas-tools.js';
@@ -560,7 +560,9 @@ function majContenu(){
   $('terrainSecZone').hidden = T.outil !== 'zone';
   if (T.outil === 'zone') {
     boutonsDeChoix($('terrainSortesZone'), SORTES_DE_ZONE, nomDeSorte, T.sorteZone, (z) => { T.sorteZone = z; majContenu(); redessiner(); });
-    $('terrainZoneTailleLabel').hidden = $('terrainZoneTaille').hidden = T.sorteZone !== 'pinceau';
+    // ⚠️ PAR LE STYLE, PAS PAR `hidden` (signalé : « Taille du pinceau » restait en Rectangle) : la classe du
+    // libellé pose un `display`, qui l'emporte sur l'attribut.
+    $('terrainZoneTailleLabel').style.display = $('terrainZoneTaille').style.display = T.sorteZone === 'pinceau' ? '' : 'none';
     if (document.activeElement !== $('terrainZoneTaille')) $('terrainZoneTaille').value = String(T.pinceauZone);
   }
   // La liste des Éléments : refaite seulement si elle a changé (même raison que boutonsDeChoix).
@@ -807,17 +809,42 @@ export function majBoutonEditeurDeTerrain(){
 export function fermerChoixDeScene(){ $('terrainSceneModal').classList.add('hidden'); }
 
 /** La fenêtre qui demande la Scène ; une seule ligne par Scène, un clic l'ouvre. */
+/** Un nom ramené à sa forme cherchable : sans casse ni accents. */
+const pourChercher = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+/**
+ * La fenêtre qui demande la Scène ; une ligne par Scène, un clic l'ouvre. Demandé : une hauteur bornée,
+ * la liste défile au-delà ; et, QUAND ELLE DÉFILE, un champ de recherche en tête, hors de la zone qui
+ * défile (il reste en place).
+ */
 export function ouvrirChoixDeScene(){
   const scenes = S.scenes || [];
   if (!scenes.length) return;
-  $('terrainSceneListe').replaceChildren(...scenes.map(s => {
+  const liste = $('terrainSceneListe'), recherche = $('terrainSceneRecherche');
+  liste.replaceChildren(...scenes.map(s => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'nav-btn terrain-scene-choix';
     b.textContent = s.name || tr('Scene', 'Scène');
+    b.dataset.cherche = pourChercher(s.name);
     b.onclick = () => { fermerChoixDeScene(); ouvrirEditeurDeTerrain(s.id); };
     return b;
   }));
+  recherche.value = '';
+  recherche.placeholder = tr('Search a scene…', 'Chercher une scène…');
+  recherche.oninput = () => {
+    const q = pourChercher(recherche.value);
+    for (const b of liste.children || []) b.style.display = !q || b.dataset.cherche.includes(q) ? '' : 'none';
+  };
   $('terrainSceneModal').classList.remove('hidden');
+  // Le champ n'apparaît que si la liste défile (mesuré une fois affichée ; sans mise en page, au-delà
+  // de huit Scènes).
+  recherche.style.display = 'none';
+  const mesurer = () => {
+    const defile = liste.scrollHeight ? liste.scrollHeight > liste.clientHeight + 1 : scenes.length > 8;
+    recherche.style.display = defile ? '' : 'none';
+    if (defile && recherche.focus) recherche.focus();
+  };
+  (globalThis.requestAnimationFrame || ((f) => setTimeout(f, 0)))(mesurer);
 }
 
 // ── Câblage ───────────────────────────────────────────────────────────────────────────────────
@@ -880,6 +907,18 @@ export function initEditeurDeTerrain(){
     const r = plan.getBoundingClientRect();
     const s = { x: e.clientX - r.left, y: e.clientY - r.top };
     if (e.button === 2 && T.chaine) return;   // le clic droit termine la ligne (contextmenu)
+    // Demandé : outil Sélection, clic droit SUR la Zone choisie : un quart de tour ; maintenu, elle tourne
+    // en suivant la souris (autour de son centre).
+    if (e.button === 2 && T.outil === 'selection') {
+      const obj = terrainChoisi(), f = sousLePlan(s);
+      if (obj && obj.tracéType === 'terrain' && obj.world && f && f.id === obj.id) {
+        const { l, h } = taillePlan(), m = versLeMonde(T.vue, s, l, h);
+        T.tourner = { id: obj.id, origine: JSON.parse(JSON.stringify(obj.world)), centre: { x: obj.world.cx, z: obj.world.cz },
+          a0: Math.atan2(m.z - obj.world.cz, m.x - obj.world.cx), x0: e.clientX, y0: e.clientY, bouge: false };
+        plan.setPointerCapture && plan.setPointerCapture(e.pointerId);
+        return;
+      }
+    }
     if (e.button === 2 || e.button === 1) { T.geste = { sorte: 'plan', x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, bouton: e.button }; plan.setPointerCapture && plan.setPointerCapture(e.pointerId); return; }
     if (e.button !== 0) return;
     const { l, h } = taillePlan();
@@ -929,6 +968,17 @@ export function initEditeurDeTerrain(){
     if (!T || !T.vue) return;
     const r = plan.getBoundingClientRect(), { l, h } = taillePlan();
     const m = versLeMonde(T.vue, { x: e.clientX - r.left, y: e.clientY - r.top }, l, h);
+    if (T.tourner) {
+      const obj = terrainChoisi();
+      if (!obj || obj.id !== T.tourner.id) { T.tourner = null; return; }
+      if (!T.tourner.bouge && Math.hypot(e.clientX - T.tourner.x0, e.clientY - T.tourner.y0) < 4) return;
+      if (!T.tourner.bouge) { retenirPourAnnuler(); T.tourner.bouge = true; }
+      const sc = laScene();
+      obj.world = tournerLaZone(T.tourner.origine, Math.atan2(m.z - T.tourner.centre.z, m.x - T.tourner.centre.x) - T.tourner.a0);
+      if (sc) tracéUpdateScreenPts(obj, sc.panel, sc.page);
+      majContenu(); redessiner();
+      return;
+    }
     if (T.geste && T.geste.sorte === 'plan') {
       T.vue = { ...T.vue, cx: T.vue.cx - (e.clientX - T.geste.x) / T.vue.ppm, cz: T.vue.cz - (e.clientY - T.geste.y) / T.vue.ppm };
       T.geste.x = e.clientX; T.geste.y = e.clientY;
@@ -956,6 +1006,16 @@ export function initEditeurDeTerrain(){
   });
   const finGestePlan = (e) => {
     if (!T) return;
+    if (T.tourner) {
+      const t = T.tourner; T.tourner = null;
+      const obj = terrainChoisi();
+      if (obj && obj.id === t.id && e && e.type === 'pointerup') {
+        // Sans bouger : un quart de tour.
+        if (!t.bouge) { retenirPourAnnuler(); obj.world = tournerLaZone(t.origine, Math.PI / 2); }
+        apresModification(obj);
+      }
+      return;
+    }
     if (T.geste && T.geste.sorte === 'plan') {
       // Demandé : avec l'outil Relief, un clic droit SANS bouger passe au mode suivant (glissé, il déplace la vue).
       const g0 = T.geste; T.geste = null;

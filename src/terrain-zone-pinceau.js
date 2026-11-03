@@ -87,3 +87,27 @@ export function mondeDuMasque(m){
   return { cx: (x0 + x1) / 2, cz: (z0 + z1) / 2, w, h, rotY: 0,
     corners: [{ x: x0, z: z0 }, { x: x1, z: z0 }, { x: x1, z: z1 }, { x: x0, z: z1 }], masque: m };
 }
+
+/**
+ * Le masque TOURNÉ de `angle` (radians, même sens que la rotation d'une Zone rectangulaire) autour de
+ * `centre` : rééchantillonné case par case (le résultat reste aligné sur les axes). À appeler depuis
+ * le masque d'ORIGINE d'un geste, pour ne pas accumuler les arrondis. Null s'il ne reste rien.
+ */
+export function tournerLeMasque(m, angle, centre){
+  if (!masqueValide(m) || !fini(angle)) return m;
+  const c = Math.cos(angle), s = Math.sin(angle);
+  const tourne = (x, z) => ({ x: centre.x + (x - centre.x) * c - (z - centre.z) * s, z: centre.z + (x - centre.x) * s + (z - centre.z) * c });
+  const x1 = m.x0 + m.nx * m.pas, z1 = m.z0 + m.nz * m.pas;
+  const coins = [tourne(m.x0, m.z0), tourne(x1, m.z0), tourne(x1, z1), tourne(m.x0, z1)];
+  const pas = m.pas;
+  const X0 = Math.floor(Math.min(...coins.map(p => p.x)) / pas) * pas, Z0 = Math.floor(Math.min(...coins.map(p => p.z)) / pas) * pas;
+  const nx = Math.min(COTE_MAX, Math.ceil((Math.max(...coins.map(p => p.x)) - X0) / pas));
+  const nz = Math.min(COTE_MAX, Math.ceil((Math.max(...coins.map(p => p.z)) - Z0) / pas));
+  let plein = '';
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+    // La case d'arrivée lit la case de départ qui lui correspond (rotation inverse).
+    const px = X0 + (i + 0.5) * pas - centre.x, pz = Z0 + (j + 0.5) * pas - centre.z;
+    plein += dansLeMasque(m, { x: centre.x + px * c + pz * s, z: centre.z - px * s + pz * c }) ? '1' : '0';
+  }
+  return resserrer({ pas, x0: X0, z0: Z0, nx, nz, plein });
+}

@@ -3041,7 +3041,8 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 .terrain-ligne.actif { border-color: var(--accent); color: var(--accent); }
 #terrainPanneau > .nav-btn { margin: 0 0 8px; width: 100%; }
 #terrainPanneau > #terrainValiderBtn { margin: auto 0 8px; width: 100%; }
-.terrain-scene-liste { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; margin: 4px 0 12px; }
+.terrain-scene-liste { display: flex; flex-direction: column; gap: 6px; max-height: min(50vh, 420px); overflow-y: auto; margin: 4px 0 12px; }
+.terrain-scene-recherche { width: 100%; margin: 4px 0 8px; }
 .terrain-scene-liste .nav-btn { width: 100%; text-align: left; }
 #openTerrainEditorBtn:disabled { opacity: .4; cursor: default; }
 /* Ses sections se replient comme celles de l'éditeur de bâtiment (cf. plus haut). */

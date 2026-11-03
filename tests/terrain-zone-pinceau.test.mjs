@@ -143,3 +143,53 @@ test('la hauteur d\'une Zone relève ou creuse le relief rendu ; l\'aperçu suit
   assert.match(ui, /o\.niveauEau, o\.profondeur, o\.hauteurZone\]\)\]\);/);
   assert.doesNotMatch(ui, /champ\('label'/);
 });
+
+// Demandé : clic droit sur la Zone choisie = un quart de tour ; maintenu = elle suit la souris.
+test('tourner une Zone : les coins d\'un rectangle (et son rotY), le masque d\'une Zone peinte', async () => {
+  const P = await import('../src/terrain-plan.js');
+  const w = { cx: 0, cz: 0, w: 4, h: 2, rotY: 0, corners: [{ x: -2, z: -1 }, { x: 2, z: -1 }, { x: 2, z: 1 }, { x: -2, z: 1 }] };
+  const q = P.tournerLaZone(w, Math.PI / 2);
+  assert.ok(Math.abs(q.rotY - Math.PI / 2) < 1e-9);
+  assert.ok(Math.abs(q.corners[0].x - 1) < 1e-9 && Math.abs(q.corners[0].z + 2) < 1e-9, JSON.stringify(q.corners[0]));
+  // Une bande peinte le long de x devient une bande le long de z.
+  let m = null;
+  for (let x = -3; x <= 3; x += 0.5) m = Z.peindreLeMasque(m, { x, z: 0 }, 0.5);
+  const wm = Z.mondeDuMasque(m);
+  const t = P.tournerLaZone(wm, Math.PI / 2);
+  assert.ok(t.h > t.w, `la bande tourne : ${t.w} × ${t.h}`);
+  assert.ok(Z.dansLeMasque(t.masque, { x: wm.cx + 0.1, z: wm.cz + 2.5 }));
+  assert.ok(!Z.dansLeMasque(t.masque, { x: wm.cx + 2.5, z: wm.cz + 0.1 }));
+});
+
+test('l\'éditeur : clic droit sur la Zone choisie la tourne d\'un quart ; « Taille du pinceau » cachée en Rectangle ; recherche des Scènes', () => {
+  globalThis.requestAnimationFrame = (f) => { f(); return 0; };
+  globalThis.getComputedStyle = () => ({ getPropertyValue: () => '' });
+  const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
+  const zone = { id: 'z1', type: 'tracé', tracéType: 'terrain', terrainType: 'herbe', panelId: 'p',
+    world: { cx: 0, cz: 0, w: 8, h: 2, rotY: 0, corners: [{ x: -4, z: -1 }, { x: 4, z: -1 }, { x: 4, z: 1 }, { x: -4, z: 1 }] } };
+  S.scenes = [{ id: 's1', name: 'Scène 1', w: 480, h: 360, pages: [{ objects: [panel, zone] }] }];
+  S.editingSceneId = 's1';
+  U.setTerrainEditeurCallbacks({ instantane: () => {}, ouvrirLaScene: () => {}, apresModification: () => {}, confirmer: async () => true });
+  U.initEditeurDeTerrain();
+  U.ouvrirEditeurDeTerrain('s1', { choisi: 'z1' });
+  const plan = document.getElementById('terrainPlan');
+  const jouer = (type, ev) => (plan._ecouteurs[type] || []).forEach(f => f({ preventDefault(){}, stopPropagation(){}, pointerId: 1, detail: 1, ...ev, type }));
+  jouer('pointerdown', { button: 2, clientX: 400, clientY: 300 });
+  jouer('pointerup', { clientX: 400, clientY: 300 });
+  assert.ok(Math.abs(zone.world.rotY - Math.PI / 2) < 1e-9, 'un quart de tour');
+  document.getElementById('terrainOutilZone').onclick();
+  document.getElementById('terrainSortesZone').children.find(b => b.dataset.valeur === 'rectangle').onclick();
+  assert.equal(document.getElementById('terrainZoneTaille').style.display, 'none');
+  document.getElementById('terrainSortesZone').children.find(b => b.dataset.valeur === 'pinceau').onclick();
+  assert.equal(document.getElementById('terrainZoneTaille').style.display, '');
+  document.getElementById('terrainValiderBtn').onclick();
+  // Le choix de la Scène : au-delà de huit (sans mise en page), la recherche ; elle filtre sans accents.
+  S.scenes = Array.from({ length: 12 }, (_, i) => ({ id: 'x' + i, name: i === 5 ? 'Église' : 'Rue ' + i, w: 480, h: 360, pages: [{ objects: [] }] }));
+  U.ouvrirChoixDeScene();
+  const recherche = document.getElementById('terrainSceneRecherche');
+  assert.equal(recherche.style.display, '');
+  recherche.value = 'egl'; recherche.oninput();
+  const visibles = document.getElementById('terrainSceneListe').children.filter(b => b.style.display !== 'none');
+  assert.deepEqual(visibles.map(b => b.textContent), ['Église']);
+  U.fermerChoixDeScene();
+});

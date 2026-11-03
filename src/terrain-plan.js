@@ -11,7 +11,7 @@
  * Décidé avec Valentin (2 novembre 2026) : l'éditeur ne s'ouvre que sur une Scène ; les Éléments y
  * sont visibles, ni modifiables ni déplaçables ; les Zones et Tracés ne se feront plus que là (#462b).
  */
-import { dansLeMasque } from './terrain-zone-pinceau.js';
+import { dansLeMasque, tournerLeMasque, mondeDuMasque } from './terrain-zone-pinceau.js';
 
 /** Les Tracés qui sont des MURETS (une hauteur) ; les autres sont des lignes (une largeur). */
 export const TRACES_MURETS = Object.freeze(['muret', 'cloture', 'haie', 'barriere']);
@@ -180,4 +180,18 @@ export function sousLePoint(formes, m, tol){
     if (zones[i].masque ? dansLeMasque(zones[i].masque, m) : dansLePolygone(m, zones[i].pts)) return zones[i];
   }
   return formes.find(f => f.type === 'batiment' && f.polys.some(q => dansLePolygone(m, q))) || null;
+}
+
+/**
+ * Demandé : le `world` d'une Zone TOURNÉE de `angle` (radians) autour de son centre. Rectangle : ses
+ * coins tournent et `rotY` suit (le rendu 3D tourne la nappe d'autant). Zone peinte : son masque est
+ * rééchantillonné. PUR ; à appeler depuis le `world` d'origine d'un geste.
+ */
+export function tournerLaZone(w, angle){
+  if (!w || !fini(angle)) return w;
+  const centre = { x: w.cx, z: w.cz };
+  if (w.masque) return mondeDuMasque(tournerLeMasque(w.masque, angle, centre)) || w;
+  const c = Math.cos(angle), s = Math.sin(angle);
+  return { ...w, rotY: (w.rotY || 0) + angle,
+    corners: (w.corners || []).map(p => ({ x: centre.x + (p.x - centre.x) * c - (p.z - centre.z) * s, z: centre.z + (p.x - centre.x) * s + (p.z - centre.z) * c })) };
 }
