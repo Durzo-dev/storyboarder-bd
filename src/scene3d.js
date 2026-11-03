@@ -15,7 +15,7 @@ import { mursDevantMasques, mursDeDevant, versLaCameraDansLeBatiment, retenirMur
 import { estUnBatimentPlace } from './batiment-element.js';
 import { MARQUE_SOL_PERCE } from './batiment-3d.js';
 import { reliefPlat, signatureDuRelief, hauteurDuRelief, densifierLaLigne, aplanirSousLesEmprises,
-  creuserLesRivieres, releverLesZones, PROFONDEUR_RIVIERE, EAU_SOUS_LA_BERGE, NIVEAU_EAU_PAR_DEFAUT } from './terrain-relief.js';
+  creuserLesRivieres, releverLesZones, profilFranchissant, PROFONDEUR_RIVIERE, EAU_SOUS_LA_BERGE, NIVEAU_EAU_PAR_DEFAUT } from './terrain-relief.js';
 import { installerEau3D } from './ground-water-3d.js';
 import { casesDuMasque, dansLeMasque } from './terrain-zone-pinceau.js';
 import { niveauxTries } from './batiment-niveaux.js';
@@ -2589,8 +2589,9 @@ function reliefEffectif3D(panel, page){
  * de la hauteur du relief sous lui (un mur garde sa hauteur : sa base et son sommet ont les mêmes x, z).
  * Les transformations des maillages sont d'abord appliquées à leur géométrie (copiée si partagée).
  */
-function draperSurLeRelief3D(groupe, r){
+function draperSurLeRelief3D(groupe, r, hauteurEn = null){
   if (reliefPlat(r)) return;
+  const h = hauteurEn || ((x, z) => hauteurDuRelief(r, x, z));
   const vues = new Set();
   groupe.updateMatrixWorld(true);
   groupe.traverse(m => {
@@ -2604,7 +2605,7 @@ function draperSurLeRelief3D(groupe, r){
     // Un léger surplus (2 cm) là où le relief n'est pas nul : entre ses sommets, un Tracé coupe les
     // triangles du relief en biais et s'en écarterait d'un rien, de quoi se faire mordre.
     for (let i = 0; i < pos.count; i++) {
-      const dh = hauteurDuRelief(r, pos.getX(i), pos.getZ(i));
+      const dh = h(pos.getX(i), pos.getZ(i));
       pos.setY(i, pos.getY(i) + dh + (dh ? 0.02 : 0));
     }
     pos.needsUpdate = true;
@@ -3493,6 +3494,8 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       // #462d : l'eau ne se drape pas sur le relief rendu : une nappe reste plate, une rivière suit le
       // relief d'AVANT son lit (sinon elle coulerait au fond, sous la berge).
       if (o.tracéType === 'riviere') { draperSurLeRelief3D(group, panel.relief); group.position.y = -EAU_SOUS_LA_BERGE; }
+      // Une route ou un chemin franchit les creux au lieu de s'y enfoncer (demandé) : son profil est rempli.
+      else if (o.tracéType === 'route' || o.tracéType === 'chemin') draperSurLeRelief3D(group, _relief, reliefPlat(_relief) ? null : profilFranchissant(_relief, w.pts));
       else if (!(o.tracéType === 'terrain' && o.terrainType === 'eau')) draperSurLeRelief3D(group, _relief);
       // #462c : un dessin à plat (route, chemin, Zone) reste un dessin au sol même drapé sur une
       // colline : il ne projette pas d'ombre (marquerProjectionDOmbre3D lit cette marque).

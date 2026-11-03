@@ -284,3 +284,24 @@ test('le pinceau maintenu sur place continue d\'agir, et s\'arrête au relâcher
   assert.equal(R.hauteurDuRelief(panel.relief, 0, 0), h1, 'relâché : plus rien');
   document.getElementById('terrainValiderBtn').onclick();
 });
+
+// Demandé : une route qui traverse un creux ne s'y enfonce pas, elle le franchit.
+test('le profil franchissant : un creux est franchi, une bosse suivie, une descente descend', () => {
+  const ligne = R.densifierLaLigne([{ x: -10, z: 0 }, { x: 10, z: 0 }], 0.5);
+  let creux = null;
+  for (let k = 0; k < 3; k++) creux = R.peindreLeRelief(creux, { x: 0, z: 0 }, { mode: 'creuser', rayon: 3, force: 1 });
+  const f = R.profilFranchissant(creux, ligne);
+  assert.ok(R.hauteurDuRelief(creux, 0, 0) < -1);
+  assert.ok(Math.abs(f(0, 0)) < 1e-9, 'le creux est franchi à hauteur des bords');
+  assert.ok(Math.abs(f(0, 1.2)) < 1e-9, 'sur toute la largeur de la route');
+  let bosse = null;
+  for (let k = 0; k < 3; k++) bosse = R.peindreLeRelief(bosse, { x: 0, z: 0 }, { mode: 'monter', rayon: 3, force: 1 });
+  const g = R.profilFranchissant(bosse, ligne);
+  assert.ok(Math.abs(g(0, 0) - R.hauteurDuRelief(bosse, 0, 0)) < 1e-9, 'la bosse est suivie');
+  // Une pente qui ne remonte pas : on la descend.
+  const pente = { pas: 1, x0: -11, z0: -1, nx: 23, nz: 3, h: [], v: 1 };
+  for (let j = 0; j < 3; j++) for (let i = 0; i < 23; i++) pente.h.push(-(i) * 0.1);
+  const p = R.profilFranchissant(pente, ligne);
+  assert.ok(p(9, 0) < p(-9, 0) - 1, 'la descente reste une descente');
+  assert.match(lire('scene3d.js'), /profilFranchissant\(_relief, w\.pts\)/);
+});

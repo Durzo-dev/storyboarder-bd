@@ -324,7 +324,7 @@ export const HELP_MANUAL_EN = [
   { id: 'terrain_relief', title: 'Relief and water', paragraphs: [
     'Relief tool (R): drag to paint the ground (held still, it keeps working): Raise, Dig, Flatten (to the height under the first click) or Smooth, with a size and a strength (wheel: size, right-click: next mode, Ctrl + wheel: zoom). The circle shows the brush and the height under it; brown is above the ground, blue below.',
     '"Remove all the relief" makes the Scene flat again.',
-    'What stands on the ground follows the relief: Elements, paths, low walls, zones. Under a building, the ground is flattened at the height of its centre. A Scene loaded into a panel brings its relief.',
+    'What stands on the ground follows the relief: Elements, paths, low walls, zones; a road or path crosses a hollow instead of sinking into it. Under a building, the ground is flattened at the height of its centre. A Scene loaded into a panel brings its relief.',
     'Water: the River path (Paths tool) digs its bed and fills it, with its width and depth under "Selection". A zone with the Water texture (under "Selection") is a flat sheet at its level: whatever is dug below it is under water.',
     'In the Elements list, zones and paths sit in the "Terrain" group (it folds, like "Not visible"); right-click: "Edit" opens the terrain editor on them. They can no longer be moved or deleted on the Scene itself.',
   ]},
@@ -602,7 +602,7 @@ export const HELP_MANUAL_FR = [
   { id: 'terrain_relief', title: 'Relief et eau', paragraphs: [
     "Outil Relief (R) : glisser pour peindre le sol (maintenu sur place, il continue) : Monter, Creuser, Aplanir (à la hauteur du premier clic) ou Adoucir, avec une taille et une force (molette : taille, clic droit : mode suivant, Ctrl + molette : zoom). Le cercle montre le pinceau et la hauteur dessous ; le brun est au-dessus du Sol, le bleu en dessous.",
     "« Retirer tout le relief » rend la Scène plate.",
-    "Ce qui est posé suit le relief : Éléments, Tracés, murets, Zones. Sous un bâtiment, le sol est aplani à la hauteur de son centre. Une Scène chargée dans une Case apporte son relief.",
+    "Ce qui est posé suit le relief : Éléments, Tracés, murets, Zones ; une route ou un chemin franchit un creux au lieu de s'y enfoncer. Sous un bâtiment, le sol est aplani à la hauteur de son centre. Une Scène chargée dans une Case apporte son relief.",
     "L'eau : le Tracé Rivière (outil Tracés) creuse son lit et s'y remplit, avec sa largeur et sa profondeur dans « Sélection ». Une Zone à la texture Eau (dans « Sélection ») est une nappe plate à son niveau : ce qui est creusé plus bas est sous l'eau.",
     "Dans la liste des Éléments, Zones et Tracés sont rangés dans « Terrain » (repliable, comme « Non visible ») ; clic droit : « Modifier » ouvre l'éditeur de terrain sur eux. Ils ne se déplacent ni ne se suppriment plus sur la Scène elle-même.",
   ]},

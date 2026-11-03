@@ -258,3 +258,31 @@ export function releverLesZones(r, zones){
   }
   return { ...g, h };
 }
+
+/**
+ * Demandé (3 novembre 2026) : une route ou un chemin qui traverse un CREUX ne s'y enfonce pas, il le
+ * franchit. Le profil d'une ligne (ses points redécoupés) est « rempli » comme de l'eau : chaque point
+ * monte au moins jusqu'au plus bas des deux plus hauts qui l'encadrent (avant et après lui). Une ligne
+ * qui descend sans remonter descend toujours ; une bosse se suit toujours. Rend une fonction (x, z) →
+ * hauteur, qui lit le profil au point de la ligne le plus proche. PUR.
+ */
+export function profilFranchissant(r, pts){
+  if (!Array.isArray(pts) || pts.length < 2) return (x, z) => hauteurDuRelief(r, x, z);
+  const h = pts.map(p => hauteurDuRelief(r, p.x, p.z));
+  const avant = [], apres = [];
+  let m = -Infinity;
+  for (let i = 0; i < h.length; i++) { m = Math.max(m, h[i]); avant[i] = m; }
+  m = -Infinity;
+  for (let i = h.length - 1; i >= 0; i--) { m = Math.max(m, h[i]); apres[i] = m; }
+  const f = h.map((v, i) => Math.max(v, Math.min(avant[i], apres[i])));
+  return (x, z) => {
+    let meilleur = Infinity, valeur = f[0];
+    for (let i = 0; i + 1 < pts.length; i++) {
+      const a = pts[i], b = pts[i + 1], dx = b.x - a.x, dz = b.z - a.z, l2 = dx * dx + dz * dz;
+      const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / l2)) : 0;
+      const d = Math.hypot(x - (a.x + t * dx), z - (a.z + t * dz));
+      if (d < meilleur) { meilleur = d; valeur = f[i] + (f[i + 1] - f[i]) * t; }
+    }
+    return valeur;
+  };
+}
