@@ -1152,7 +1152,11 @@ export function initEditeurDeTerrain(){
     if (T.coupZone) { const id = T.coupZone.id; T.coupZone = null; const sc = laScene(); apresModification(sc && id ? sc.page.objects.find(o => o.id === id) : null); }
     if (T.rectangle && e && e.type === 'pointerup') {
       const { a, b } = T.rectangle; T.rectangle = null;
-      poser('terrain', zoneEntre(a, b));
+      const zone = zoneEntre(a, b);
+      poser('terrain', zone);
+      // Demandé : la Zone tracée reste choisie et l'outil repasse sur Sélection (la déplacer, la tourner,
+      // la régler tout de suite ; Z pour en tracer une autre).
+      if (zone) choisirOutil('selection');
       redessiner();
     }
     T.rectangle = null;

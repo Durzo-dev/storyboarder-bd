@@ -251,3 +251,25 @@ test('autour d\'une Zone relevée, le terrain rejoint le sol en douceur', async 
   assert.equal(h[4], 0, 'au-delà de la bande : le sol');
   assert.ok(Z.caseLaPlusProche(Z.peindreLeMasque(null, { x: 0, z: 0 }, 1), { x: 3, z: 0.1 }, 3), 'la case peinte la plus proche');
 });
+
+// Demandé : une Zone rectangulaire tracée reste choisie, et l'outil repasse sur Sélection.
+test('après un rectangle : la Zone est choisie, l\'outil est Sélection', () => {
+  globalThis.requestAnimationFrame = (f) => { f(); return 0; };
+  globalThis.getComputedStyle = () => ({ getPropertyValue: () => '' });
+  const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
+  S.scenes = [{ id: 's1', name: 'Scène 1', w: 480, h: 360, pages: [{ objects: [panel] }] }];
+  S.editingSceneId = 's1';
+  U.setTerrainEditeurCallbacks({ instantane: () => {}, ouvrirLaScene: () => {}, apresModification: () => {}, confirmer: async () => true });
+  U.initEditeurDeTerrain();
+  U.ouvrirEditeurDeTerrain('s1');
+  const plan = document.getElementById('terrainPlan');
+  const jouer = (type, ev) => (plan._ecouteurs[type] || []).forEach(f => f({ preventDefault(){}, stopPropagation(){}, pointerId: 1, detail: 1, ...ev, type }));
+  document.getElementById('terrainOutilZone').onclick();
+  document.getElementById('terrainSortesZone').children.find(b => b.dataset.valeur === 'rectangle').onclick();
+  jouer('pointerdown', { button: 0, clientX: 400, clientY: 300 });
+  jouer('pointermove', { clientX: 480, clientY: 360 });
+  jouer('pointerup', { clientX: 480, clientY: 360 });
+  assert.ok(document.getElementById('terrainOutilSelection').classList.contains('actif'), 'outil Sélection');
+  assert.equal(document.getElementById('terrainSecChoisi').hidden, false, 'la Zone est choisie');
+  document.getElementById('terrainValiderBtn').onclick();
+});
