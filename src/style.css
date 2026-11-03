@@ -3065,3 +3065,4 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 #terrainSecRelief input[type="range"]{ width:100%; }
 #terrainReliefRetirerBtn{ width:100%; margin-top:14px; }
 #terrainChoisiReglages input[type="range"]{ width:100%; margin-bottom:6px; }
+#terrainSecZone input[type="range"]{ width:100%; }

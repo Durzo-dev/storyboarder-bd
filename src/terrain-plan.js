@@ -11,6 +11,7 @@
  * Décidé avec Valentin (2 novembre 2026) : l'éditeur ne s'ouvre que sur une Scène ; les Éléments y
  * sont visibles, ni modifiables ni déplaçables ; les Zones et Tracés ne se feront plus que là (#462b).
  */
+import { dansLeMasque } from './terrain-zone-pinceau.js';
 
 /** Les Tracés qui sont des MURETS (une hauteur) ; les autres sont des lignes (une largeur). */
 export const TRACES_MURETS = Object.freeze(['muret', 'cloture', 'haie', 'barriere']);
@@ -34,7 +35,7 @@ export function contenuDuPlan(page, panel, outils = {}){
       const w = o.world || {};
       if (o.tracéType === 'terrain') {
         if (Array.isArray(w.corners) && w.corners.length >= 3 && w.corners.every(pointFini)) {
-          zones.push({ type: 'zone', id: o.id, nom: o.name || '', pts: w.corners.map(c => ({ x: c.x, z: c.z })), eau: o.terrainType === 'eau', couleur: o.terrainType === 'eau' ? '#2E6E9E' : (o.color || null) });
+          zones.push({ type: 'zone', id: o.id, nom: o.name || '', pts: w.corners.map(c => ({ x: c.x, z: c.z })), masque: w.masque || null, eau: o.terrainType === 'eau', couleur: o.terrainType === 'eau' ? '#2E6E9E' : (o.color || null) });
         }
       } else if (Array.isArray(w.pts) && w.pts.length >= 2 && w.pts.every(pointFini)) {
         traces.push({ type: 'trace', id: o.id, nom: o.name || '', sorte: o.tracéType, pts: w.pts.map(c => ({ x: c.x, z: c.z })),
@@ -136,6 +137,7 @@ export function deplacerLeMonde(w, dx, dz){
   const n = { ...w };
   if (Array.isArray(w.corners)) n.corners = w.corners.map(bouge);
   if (Array.isArray(w.pts)) n.pts = w.pts.map(bouge);
+  if (w.masque) n.masque = { ...w.masque, x0: w.masque.x0 + dx, z0: w.masque.z0 + dz };   // une Zone peinte
   if (fini(w.cx)) n.cx = w.cx + dx;
   if (fini(w.cz)) n.cz = w.cz + dz;
   return n;
@@ -174,6 +176,8 @@ export function sousLePoint(formes, m, tol){
     if (distanceALaLigne(m, traces[i].pts) <= Math.max(tol, traces[i].largeur / 2)) return traces[i];
   }
   const zones = formes.filter(f => f.type === 'zone');
-  for (let i = zones.length - 1; i >= 0; i--) if (dansLePolygone(m, zones[i].pts)) return zones[i];
+  for (let i = zones.length - 1; i >= 0; i--) {
+    if (zones[i].masque ? dansLeMasque(zones[i].masque, m) : dansLePolygone(m, zones[i].pts)) return zones[i];
+  }
   return formes.find(f => f.type === 'batiment' && f.polys.some(q => dansLePolygone(m, q))) || null;
 }

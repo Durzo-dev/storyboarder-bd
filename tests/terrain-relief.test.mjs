@@ -18,7 +18,9 @@ test('sans relief, tout est à 0 ; monter élève le centre, pas le bord ; la gr
   let r = R.peindreLeRelief(null, { x: 0, z: 0 }, { mode: 'monter', rayon: 4, force: 1 });
   assert.ok(R.reliefValide(r));
   assert.ok(R.hauteurDuRelief(r, 0, 0) > 0.2);
-  assert.equal(R.hauteurDuRelief(r, 3.9, 0) < 0.01, true, 'presque rien au bord du pinceau');
+  assert.equal(R.hauteurDuRelief(r, 3.9, 0) < 0.05 * R.hauteurDuRelief(r, 0, 0), true, 'presque rien au bord du pinceau');
+  // Demandé : une force maximale bien plus grande (1,5 m par passage au centre, 0,25 m avant).
+  assert.ok(Math.abs(R.hauteurDuRelief(r, 0, 0) - 1.5) < 1e-9);
   assert.equal(R.hauteurDuRelief(r, 50, 50), 0, 'hors de la grille');
   // Le bord de la grille reste à 0 : raccord au Sol plat.
   for (let i = 0; i < r.nx; i++) { assert.equal(r.h[i], 0); assert.equal(r.h[(r.nz - 1) * r.nx + i], 0); }
@@ -173,7 +175,7 @@ test('rendu : un Élément monte de la hauteur du relief sous lui ; une route s\
   const RIG = await import('../src/rig3d.js');
   const panel = { id: 'pr', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: 0.6, camDist: 30, pts: [] };
   let r = null;
-  for (let k = 0; k < 8; k++) r = R.peindreLeRelief(r, { x: 0, z: 0 }, { mode: 'monter', rayon: 10, force: 1 });
+  for (let k = 0; k < 8; k++) r = R.peindreLeRelief(r, { x: 0, z: 0 }, { mode: 'monter', rayon: 10, force: 1 / 6 });
   const route = { id: 'rr', type: 'tracé', tracéType: 'route', panelId: 'pr', world: { pts: [{ x: -8, z: 0 }, { x: 8, z: 0 }], width: 3 } };
   const page = { w: 480, h: 360, objects: [panel, route] };
   const hauteurRoute = () => { let y = -Infinity; RIG.personaScene3D.updateMatrixWorld(true);
@@ -247,7 +249,7 @@ test('le muret est construit sur la ligne redécoupée : il suit le relief', asy
   const RIG = await import('../src/rig3d.js');
   const panel = { id: 'pm', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: 0.6, camDist: 30, pts: [] };
   let r = null;
-  for (let k = 0; k < 8; k++) r = R.peindreLeRelief(r, { x: 0, z: 0 }, { mode: 'monter', rayon: 6, force: 1 });
+  for (let k = 0; k < 8; k++) r = R.peindreLeRelief(r, { x: 0, z: 0 }, { mode: 'monter', rayon: 6, force: 1 / 6 });
   panel.relief = r;
   const muret = { id: 'mm', type: 'tracé', tracéType: 'muret', panelId: 'pm', world: { pts: [{ x: -10, z: 0 }, { x: 10, z: 0 }], width: 0.2 } };
   SC.rendreSceneVueLibre3D(panel, { w: 480, h: 360, objects: [panel, muret] }, { rotX: 0.6, rotY: 0, dist: 30, x: 0, y: 0, z: 0 }, 0.5);

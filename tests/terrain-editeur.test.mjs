@@ -75,7 +75,7 @@ test('les commandes disent ce qu\'on peut faire, et que les Éléments ne se mod
   const t = commandesDuTerrain((en, fr) => fr).join('\n');
   assert.match(t, /Les Éléments ne sont que désignés ici\./);
   assert.match(t, /Suppr : le supprimer/);
-  assert.match(commandesDuTerrain((en, fr) => fr, 'zone').join('\n'), /Glisser : tracer une Zone de terrain/);
+  assert.match(commandesDuTerrain((en, fr) => fr, 'zone').join('\n'), /Rectangle : glisser pour tracer une Zone\. Pinceau : glisser pour en peindre une/);
   assert.match(commandesDuTerrain((en, fr) => fr, 'trace').join('\n'), /double-clic, Entrée ou clic droit : terminer/);
 });
 

@@ -66,6 +66,7 @@ export const I18N_TEXT = [
   ['#terrainSectionTrace', 'Path to draw', 'Tracé à poser'],
   ['#terrainSectionChoisi', 'Selection', 'Sélection'],
   ['#terrainSectionZone', 'Zone to draw', 'Zone à poser'],
+  ['#terrainZoneTailleLabel', 'Brush size', 'Taille du pinceau'],
   ['#terrainReglerBtn', 'Settings', 'Régler'],
   ['#terrainSupprimerBtn', 'Delete', 'Supprimer'],
   ['#batimentEditeurTitre', 'Building editor', 'Éditeur de bâtiment'],

@@ -17,6 +17,7 @@ import { MARQUE_SOL_PERCE } from './batiment-3d.js';
 import { reliefPlat, signatureDuRelief, hauteurDuRelief, densifierLaLigne, aplanirSousLesEmprises,
   creuserLesRivieres, PROFONDEUR_RIVIERE, EAU_SOUS_LA_BERGE, NIVEAU_EAU_PAR_DEFAUT } from './terrain-relief.js';
 import { installerEau3D } from './ground-water-3d.js';
+import { casesDuMasque } from './terrain-zone-pinceau.js';
 import { niveauxTries } from './batiment-niveaux.js';
 import { formesDesPieces } from './batiment-pieces.js';
 import { sondeDebut, sondeFin, sondeCompter, sondeActive, sondeValeur } from './perf-probe.js';
@@ -2612,6 +2613,29 @@ function matiereEau3D(ciel){
   if (ciel != null) _uniformesEauDesTraces3D.uEauCiel.value.set(ciel);
   return _matiereEau3D;
 }
+/**
+ * La géométrie d'une Zone PEINTE (terrain-zone-pinceau.js) : deux triangles par case, à la hauteur `y`,
+ * en coordonnées du monde ; ses coordonnées de texture sont celles du rectangle englobant (0 à 1),
+ * comme une PlaneGeometry de la même taille couchée de la même façon.
+ */
+function geometrieDuMasque3D(w, y){
+  const cases = casesDuMasque(w.masque);
+  const pos = new Float32Array(cases.length * 18), uv = new Float32Array(cases.length * 12);
+  const x0 = w.cx - w.w / 2, z0 = w.cz - w.h / 2;
+  const U = (x) => (x - x0) / w.w, V = (z) => 1 - (z - z0) / w.h;
+  cases.forEach((c, k) => {
+    const sommets = [[c.x0, c.z0], [c.x0, c.z1], [c.x1, c.z0], [c.x1, c.z0], [c.x0, c.z1], [c.x1, c.z1]];
+    sommets.forEach(([x, z], n) => {
+      pos.set([x, y, z], k * 18 + n * 3);
+      uv.set([U(x), V(z)], k * 12 + n * 2);
+    });
+  });
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  geo.computeVertexNormals();
+  return geo;
+}
 /** Libère les reliefs (changement de Projet). */
 function libererReliefs3D(){
   _reliefs3D.forEach(e => { if (personaScene3D) personaScene3D.remove(e.groupe); e.groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); }); });
@@ -3264,10 +3288,14 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         // #462d : une Zone d'EAU (lac, mer) : une nappe PLATE à son niveau (par rapport au Sol), jamais
         // drapée. Ce qui est plus bas que ce niveau (le relief creusé) est sous l'eau ; plus haut, la
         // nappe passe dessous et ne se voit pas.
-        const nappe = new THREE.Mesh(new THREE.PlaneGeometry(w.w, w.h), matiereEau3D(_eclairage.ciel));
-        nappe.rotation.x = -Math.PI / 2;
-        nappe.rotation.z = -(w.rotY || 0);
-        nappe.position.set(w.cx, GROUND_Y_DEFAULT_3D + (Number.isFinite(o.niveauEau) ? o.niveauEau : NIVEAU_EAU_PAR_DEFAUT), w.cz);
+        const _niveau = GROUND_Y_DEFAULT_3D + (Number.isFinite(o.niveauEau) ? o.niveauEau : NIVEAU_EAU_PAR_DEFAUT);
+        const nappe = w.masque ? new THREE.Mesh(geometrieDuMasque3D(w, _niveau), matiereEau3D(_eclairage.ciel))
+          : new THREE.Mesh(new THREE.PlaneGeometry(w.w, w.h), matiereEau3D(_eclairage.ciel));
+        if (!w.masque) {
+          nappe.rotation.x = -Math.PI / 2;
+          nappe.rotation.z = -(w.rotY || 0);
+          nappe.position.set(w.cx, _niveau, w.cz);
+        }
         nappe.userData.dessinAuSol = true;
         group.add(nappe);
       } else if (o.tracéType === 'riviere') {
@@ -3299,10 +3327,14 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
           side: THREE.DoubleSide,
           polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
         });
-        const terrMesh = new THREE.Mesh(geo, mat);
-        terrMesh.rotation.x = -Math.PI / 2;
-        terrMesh.rotation.z = -(w.rotY || 0); // camera orientation frozen at creation
-        terrMesh.position.set(w.cx, GROUND_Y_DEFAULT_3D + 0.005, w.cz);
+        // Une Zone PEINTE (au pinceau) : ses cases, posées dans le monde, avec les coordonnées de texture
+        // du rectangle qui l'englobe (la même texture qu'une Zone rectangulaire de cette taille).
+        const terrMesh = new THREE.Mesh(w.masque ? (geo.dispose(), geometrieDuMasque3D(w, GROUND_Y_DEFAULT_3D + 0.005)) : geo, mat);
+        if (!w.masque) {
+          terrMesh.rotation.x = -Math.PI / 2;
+          terrMesh.rotation.z = -(w.rotY || 0); // camera orientation frozen at creation
+          terrMesh.position.set(w.cx, GROUND_Y_DEFAULT_3D + 0.005, w.cz);
+        }
         group.add(terrMesh);
       } else if (o.tracéType === 'muret') {
         // ── Low Wall: vertical concrete ribbon (configurable height) ───────────────

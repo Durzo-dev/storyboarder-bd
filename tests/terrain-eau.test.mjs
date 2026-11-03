@@ -33,7 +33,7 @@ test('une rivière creuse une Scène plate (le relief est créé), sans toucher 
   assert.equal(R.creuserLesRivieres(colline, []), colline);
 });
 
-test('l\'éditeur pose une rivière (Tracés) et une Zone d\'eau (Zone), réglables', () => {
+test('l\'éditeur pose une rivière (Tracés) ; une Zone à la texture Eau a son niveau ; réglables', () => {
   globalThis.requestAnimationFrame = (f) => { f(); return 0; };
   globalThis.getComputedStyle = () => ({ getPropertyValue: () => '' });
   const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
@@ -61,15 +61,15 @@ test('l\'éditeur pose une rivière (Tracés) et une Zone d\'eau (Zone), réglab
   assert.deepEqual(curseurs.map(c => c.dataset.cle), ['largeur', 'profondeur']);
   curseurs[1].value = '2.5'; curseurs[1].oninput();
   assert.equal(riv.profondeur, 2.5);
-  // La Zone d'eau.
+  // La Zone d'eau : une Zone (rectangle), dont on choisit la texture Eau (« Régler » ; simulé ici).
   document.getElementById('terrainOutilZone').onclick();
-  document.getElementById('terrainSortesZone').children.find(b => b.dataset.valeur === 'eau').onclick();
   jouer('pointerdown', { button: 0, ...px(-3, 3) });
   jouer('pointermove', px(3, 6));
   jouer('pointerup', px(3, 6));
-  const lac = objets.find(o => o.tracéType === 'terrain' && o.terrainType === 'eau');
+  const lac = objets.find(o => o.tracéType === 'terrain');
   assert.ok(lac);
-  assert.equal(lac.niveauEau, R.NIVEAU_EAU_PAR_DEFAUT);
+  lac.terrainType = 'eau';
+  U.rafraichirEditeurDeTerrain();
   const niveau = document.getElementById('terrainChoisiReglages').children.find(c => c.dataset && c.dataset.cle === 'niveau');
   niveau.value = '-1'; niveau.oninput();
   assert.equal(lac.niveauEau, -1);

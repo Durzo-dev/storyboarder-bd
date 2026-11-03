@@ -24,6 +24,7 @@ import { contenuDuPlan, cadrageDuPlan, versLePlan, zoomerLePlan, pasDeLaGrille, 
 import { rendreSceneVueLibre3D, ensureElementWorldPos3D, pointDuBatimentPlace3D, panelCamBasis3D, getCamOrbitWorld,
   tracéUpdateScreenPts } from './scene3d.js';
 import { nomDuTrace } from './canvas-tools.js';
+import { peindreLeMasque, mondeDuMasque, casesDuMasque, PAS_DE_ZONE } from './terrain-zone-pinceau.js';
 import { hauteurDuRelief, peindreLeRelief, reliefValide, reliefPlat, signatureDuRelief, MODES_DU_PINCEAU,
   PROFONDEUR_RIVIERE, NIVEAU_EAU_PAR_DEFAUT } from './terrain-relief.js';
 import { TRACÉ_DEFAULTS } from './constants.js';
@@ -45,8 +46,9 @@ export function setTerrainEditeurCallbacks(r){ _rappels = { ..._rappels, ...r };
 
 /** L'éditeur ouvert : { sceneId, vue, cam, formes, choisi, geste, demande }, ou null. */
 let T = null;
-/** Les réglages du pinceau du relief, gardés d'une ouverture à l'autre. */
+/** Les réglages du pinceau du relief, gardés d'une ouverture à l'autre ; et celui des Zones peintes. */
 const T_PINCEAU = { mode: 'monter', rayon: 4, force: 0.5 };
+const T_PINCEAU_ZONE = { rayon: 2 };
 export function editeurDeTerrainOuvert(){ return !!T; }
 
 /** La Scène éditée, sa page et son canevas (null si elle a disparu). */
@@ -99,7 +101,7 @@ export function ouvrirEditeurDeTerrain(sceneId, { choisi = null } = {}){
   T = { sceneId, vue: null, cam: null, formes: [], choisi, geste: null, demande: 0,
     // #462b : l'outil, le Tracé à poser, la ligne en cours (et le point sous la souris), le rectangle de
     // Zone en cours, la Zone ou le Tracé qu'on fait glisser ; la signature du dernier aperçu rendu.
-    outil: 'selection', sorteTrace: 'route', sorteZone: 'terrain', chaine: null, fantome: null, rectangle: null, glisser: null, sigApercu: null,
+    outil: 'selection', sorteTrace: 'route', sorteZone: 'rectangle', pinceauZone: T_PINCEAU_ZONE.rayon, coupZone: null, chaine: null, fantome: null, rectangle: null, glisser: null, sigApercu: null,
     // #462c : le pinceau du relief (réglages gardés pendant la session), le coup en cours, le survol.
     pinceau: { ...T_PINCEAU }, coup: null, survol: null,
     // L'état de départ (remis si l'on quitte sans valider), l'historique de l'éditeur.
@@ -247,7 +249,8 @@ function clavier(e){
 // ── Les outils (#462b) ────────────────────────────────────────────────────────────────────────
 
 const SORTES_DE_TRACE = ['route', 'chemin', 'riviere', 'muret', 'cloture', 'haie', 'barriere'];
-const SORTES_DE_ZONE = ['terrain', 'eau'];
+// Une Zone se trace en rectangle ou au pinceau (demandé) ; l'eau est une texture de Zone (« Régler »).
+const SORTES_DE_ZONE = ['rectangle', 'pinceau'];
 const OUTILS = [['terrainOutilSelection', 'selection'], ['terrainOutilZone', 'zone'], ['terrainOutilTrace', 'trace'], ['terrainOutilRelief', 'relief']];
 function nomDeMode(m){
   return ({ monter: tr('Raise', 'Monter'), creuser: tr('Dig', 'Creuser'), aplanir: tr('Flatten', 'Aplanir'), adoucir: tr('Smooth', 'Adoucir') })[m] || m;
@@ -263,7 +266,7 @@ function peindre(m){
 function nomDeSorte(sorte){
   return ({ route: tr('Road', 'Route'), chemin: tr('Dirt path', 'Chemin'), muret: tr('Low wall', 'Muret'),
     cloture: tr('Fence', 'Clôture'), haie: tr('Hedge', 'Haie'), barriere: tr('Barrier', 'Barrière'), riviere: tr('River', 'Rivière'),
-    terrain: tr('Terrain', 'Terrain'), eau: tr('Water (lake, sea)', 'Eau (lac, mer)') })[sorte] || sorte;
+    rectangle: tr('Rectangle', 'Rectangle'), pinceau: tr('Brush', 'Pinceau') })[sorte] || sorte;
 }
 
 function choisirOutil(outil){
@@ -296,17 +299,40 @@ function poser(sorte, world){
   if (!sc || !world) return;
   retenirPourAnnuler();
   const def = TRACÉ_DEFAULTS[sorte] || {};
-  const obj = sorte === 'terrain' || sorte === 'eau'
-    ? { id: newId(), type: 'tracé', tracéType: 'terrain', name: sorte === 'eau' ? tr('Water', 'Eau') : nomDuTrace('terrain'), panelId: sc.panel.id,
-      terrainType: sorte === 'eau' ? 'eau' : 'herbe', label: '', world }
+  const obj = sorte === 'terrain'
+    ? { id: newId(), type: 'tracé', tracéType: 'terrain', name: nomDuTrace('terrain'), panelId: sc.panel.id, terrainType: 'herbe', label: '', world }
     : { id: newId(), type: 'tracé', tracéType: sorte, name: nomDuTrace(sorte), panelId: sc.panel.id, color: def.color, width: def.width, world };
-  // #462d : un lac à son niveau ; une rivière avec sa profondeur.
-  if (sorte === 'eau') obj.niveauEau = NIVEAU_EAU_PAR_DEFAUT;
+  // #462d : une rivière avec sa profondeur.
   if (sorte === 'riviere') obj.profondeur = PROFONDEUR_RIVIERE;
   if (def.wallHeight !== undefined) obj.wallHeight = def.wallHeight;
   sc.page.objects.push(obj);
   T.choisi = obj.id;
   apresModification(obj);
+}
+
+/**
+ * Un passage du pinceau de Zone en `m` : la Zone du coup (neuve au premier passage, ou la Zone peinte
+ * choisie) s'agrandit, ou se gomme (Maj). Gommée entièrement, elle disparaît.
+ */
+function peindreLaZone(m){
+  const sc = laScene();
+  if (!sc || !T.coupZone) return;
+  let obj = T.coupZone.id ? sc.page.objects.find(o => o.id === T.coupZone.id) : null;
+  const avant = obj && obj.world && obj.world.masque;
+  const masque = peindreLeMasque(avant || null, m, T.pinceauZone, T.coupZone.effacer);
+  T.coupZone.dernier = m;
+  if (!masque) {
+    if (obj) { sc.page.objects.splice(sc.page.objects.indexOf(obj), 1); T.choisi = null; T.coupZone.id = null; }
+    return;
+  }
+  if (!obj) {
+    obj = { id: newId(), type: 'tracé', tracéType: 'terrain', name: nomDuTrace('terrain'), panelId: sc.panel.id, terrainType: 'herbe', label: '', world: null };
+    sc.page.objects.push(obj);
+    T.coupZone.id = obj.id; T.choisi = obj.id;
+  }
+  obj.world = mondeDuMasque(masque);
+  tracéUpdateScreenPts(obj, sc.panel, sc.page);
+  majContenu();
 }
 
 function finirLaLigne(){
@@ -354,10 +380,12 @@ export function rafraichirEditeurDeTerrain(){
 export function commandesDuTerrain(trad = tr, outil = 'selection'){
   const l = [];
   if (outil === 'zone') {
-    l.push(trad('Drag: draw a terrain zone (a rectangle).', 'Glisser : tracer une Zone de terrain (un rectangle).'));
+    l.push(trad('Rectangle: drag to draw a zone. Brush: drag to paint one (a selected painted zone grows; Shift: erase).',
+      'Rectangle : glisser pour tracer une Zone. Pinceau : glisser pour en peindre une (une Zone peinte choisie s\'agrandit ; Maj : gommer).'));
+    l.push(trad('Brush: wheel = size, Ctrl + wheel = zoom. Water: the Water texture in "Settings".', 'Pinceau : molette = taille, Ctrl + molette = zoom. L\'eau : la texture Eau dans « Régler ».'));
   } else if (outil === 'relief') {
     l.push(trad('Drag: paint the relief (raise, dig, flatten to the height under the first click, smooth).', "Glisser : peindre le relief (monter, creuser, aplanir à la hauteur du premier clic, adoucir)."));
-    l.push(trad('Size and strength in "Relief".', 'Taille et force dans « Relief ».'));
+    l.push(trad('Wheel: size · right-click: next mode · Ctrl + wheel: zoom.', 'Molette : taille · clic droit : mode suivant · Ctrl + molette : zoom.'));
   } else if (outil === 'trace') {
     l.push(trad('Click: one point per bend; double-click, Enter or right-click: finish.', 'Clic : un point par virage ; double-clic, Entrée ou clic droit : terminer.'));
     l.push(trad('The kind is chosen in "Path to draw".', 'Le genre se choisit dans « Tracé à poser ».'));
@@ -468,7 +496,11 @@ function majContenu(){
   reglagesDuChoisi(obj);
   // La Zone à poser (outil Zone).
   $('terrainSecZone').hidden = T.outil !== 'zone';
-  if (T.outil === 'zone') boutonsDeChoix($('terrainSortesZone'), SORTES_DE_ZONE, nomDeSorte, T.sorteZone, (z) => { T.sorteZone = z; majContenu(); });
+  if (T.outil === 'zone') {
+    boutonsDeChoix($('terrainSortesZone'), SORTES_DE_ZONE, nomDeSorte, T.sorteZone, (z) => { T.sorteZone = z; majContenu(); redessiner(); });
+    $('terrainZoneTailleLabel').hidden = $('terrainZoneTaille').hidden = T.sorteZone !== 'pinceau';
+    if (document.activeElement !== $('terrainZoneTaille')) $('terrainZoneTaille').value = String(T.pinceauZone);
+  }
   // La liste des Éléments : refaite seulement si elle a changé (même raison que boutonsDeChoix).
   const liste = $('terrainContenu');
   const nommes = T.formes.filter(f => f.type === 'element' || f.type === 'batiment');
@@ -558,7 +590,13 @@ function dessinerPlan(){
   const chemin = (pts, ferme) => { g.beginPath(); pts.forEach((p, i) => { const s = e(p); if (i) g.lineTo(s.x, s.y); else g.moveTo(s.x, s.y); }); if (ferme) g.closePath(); };
   for (const f of T.formes) {
     const choisi = f.id === T.choisi;
-    if (f.type === 'zone') {
+    if (f.type === 'zone' && f.masque) {
+      // Une Zone peinte : ses cases (et, choisie, son contour à l'accent).
+      g.fillStyle = choisi ? accent : (f.couleur || encre); g.globalAlpha = choisi ? 0.55 : 0.45;
+      const cote = f.masque.pas * vue.ppm + 0.5;
+      for (const k of casesDuMasque(f.masque)) { const p = e({ x: k.x0, z: k.z0 }); g.fillRect(p.x, p.y, cote, cote); }
+      g.globalAlpha = 1;
+    } else if (f.type === 'zone') {
       chemin(f.pts, true);
       g.globalAlpha = 0.45; g.fillStyle = f.couleur || encre; g.fill();
       g.globalAlpha = 1; g.strokeStyle = choisi ? accent : (f.couleur || encre); g.lineWidth = choisi ? 3 : 1; g.stroke();
@@ -599,14 +637,18 @@ function dessinerEnCours(g, e){
     T.chaine.forEach(p => { const s = e(p); g.fillRect(s.x - 3, s.y - 3, 6, 6); });
   }
   // Le pinceau du relief sous la souris : son cercle, et la hauteur du relief à cet endroit.
-  if (T.outil === 'relief' && T.survol) {
+  const pinceauDeZone = T.outil === 'zone' && T.sorteZone === 'pinceau';
+  if ((T.outil === 'relief' || pinceauDeZone) && T.survol) {
     const c = e(T.survol), sc = laScene();
     g.setLineDash([4, 4]); g.lineWidth = 1.5;
-    g.beginPath(); g.arc(c.x, c.y, T.pinceau.rayon * T.vue.ppm, 0, Math.PI * 2); g.stroke();
+    g.beginPath(); g.arc(c.x, c.y, (pinceauDeZone ? T.pinceauZone : T.pinceau.rayon) * T.vue.ppm, 0, Math.PI * 2); g.stroke();
     g.setLineDash([]);
-    const hv = sc ? hauteurDuRelief(sc.panel.relief, T.survol.x, T.survol.z) : 0;
     g.font = '11px Inter, sans-serif';
-    g.fillText(`${hv >= 0 ? '+' : ''}${hv.toFixed(2).replace('.', ',')} m`, c.x + 10, c.y - 10);
+    if (pinceauDeZone) g.fillText(`${String(T.pinceauZone).replace('.', ',')} m`, c.x + 10, c.y - 10);
+    else {
+      const hv = sc ? hauteurDuRelief(sc.panel.relief, T.survol.x, T.survol.z) : 0;
+      g.fillText(`${nomDeMode(T.pinceau.mode)} · ${hv >= 0 ? '+' : ''}${hv.toFixed(2).replace('.', ',')} m`, c.x + 10, c.y - 10);
+    }
   }
   if (T.rectangle) {
     const a = e(T.rectangle.a), b = e(T.rectangle.b);
@@ -735,6 +777,7 @@ export function initEditeurDeTerrain(){
     $(id).onclick = () => { if (T) choisirOutil(T.outil === outil && outil !== 'selection' ? 'selection' : outil); };
   }
   $('terrainReliefTaille').oninput = () => { if (T) { T.pinceau.rayon = T_PINCEAU.rayon = Number($('terrainReliefTaille').value) || 4; redessiner(); } };
+  $('terrainZoneTaille').oninput = () => { if (T) { T.pinceauZone = T_PINCEAU_ZONE.rayon = Number($('terrainZoneTaille').value) || 2; redessiner(); } };
   $('terrainReliefForce').oninput = () => { if (T) T.pinceau.force = T_PINCEAU.force = Number($('terrainReliefForce').value) || 0.5; };
   $('terrainReliefRetirerBtn').onclick = () => retirerLeRelief();
   $('terrainReglerBtn').onclick = () => { const o = terrainChoisi(); if (o) _rappels.regler(o); };
@@ -751,6 +794,18 @@ export function initEditeurDeTerrain(){
   plan.addEventListener('wheel', (e) => {
     if (!T || !T.vue) return;
     e.preventDefault();
+    // Demandé : avec un pinceau (relief, Zone peinte), la molette règle sa TAILLE ; Ctrl + molette zoome.
+    if (!e.ctrlKey && !e.metaKey) {
+      const sens = e.deltaY < 0 ? 1 : -1;
+      if (T.outil === 'relief') {
+        T.pinceau.rayon = T_PINCEAU.rayon = Math.max(1, Math.min(30, T.pinceau.rayon + sens));
+        majContenu(); redessiner(); return;
+      }
+      if (T.outil === 'zone' && T.sorteZone === 'pinceau') {
+        T.pinceauZone = T_PINCEAU_ZONE.rayon = Math.max(0.5, Math.min(20, T.pinceauZone + sens * 0.5));
+        majContenu(); redessiner(); return;
+      }
+    }
     const r = plan.getBoundingClientRect(), { l, h } = taillePlan();
     T.vue = zoomerLePlan(T.vue, { x: e.clientX - r.left, y: e.clientY - r.top }, l, h, e.deltaY > 0 ? 1 / 1.15 : 1.15);
     redessiner();
@@ -761,10 +816,22 @@ export function initEditeurDeTerrain(){
     const r = plan.getBoundingClientRect();
     const s = { x: e.clientX - r.left, y: e.clientY - r.top };
     if (e.button === 2 && T.chaine) return;   // le clic droit termine la ligne (contextmenu)
-    if (e.button === 2 || e.button === 1) { T.geste = { sorte: 'plan', x: e.clientX, y: e.clientY }; plan.setPointerCapture && plan.setPointerCapture(e.pointerId); return; }
+    if (e.button === 2 || e.button === 1) { T.geste = { sorte: 'plan', x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, bouton: e.button }; plan.setPointerCapture && plan.setPointerCapture(e.pointerId); return; }
     if (e.button !== 0) return;
     const { l, h } = taillePlan();
     const m = versLeMonde(T.vue, s, l, h);
+    if (T.outil === 'zone' && T.sorteZone === 'pinceau') {
+      // Une Zone peinte choisie s'agrandit (ou se gomme, Maj) ; sinon, une Zone neuve.
+      const sc = laScene();
+      const choisie = sc && T.choisi ? sc.page.objects.find(o => o.id === T.choisi && o.tracéType === 'terrain' && o.world && o.world.masque) : null;
+      if (e.shiftKey && !choisie) return;
+      retenirPourAnnuler();
+      T.coupZone = { id: choisie ? choisie.id : null, effacer: !!e.shiftKey, dernier: null };
+      peindreLaZone(m);
+      plan.setPointerCapture && plan.setPointerCapture(e.pointerId);
+      redessiner();
+      return;
+    }
     if (T.outil === 'zone') { T.rectangle = { a: m, b: m }; plan.setPointerCapture && plan.setPointerCapture(e.pointerId); return; }
     if (T.outil === 'relief') {
       const sc = laScene();
@@ -802,6 +869,11 @@ export function initEditeurDeTerrain(){
       T.geste.x = e.clientX; T.geste.y = e.clientY;
       redessiner();
     } else if (T.rectangle) { T.rectangle.b = m; redessiner(); }
+    else if (T.outil === 'zone' && T.sorteZone === 'pinceau') {
+      T.survol = m;
+      if (T.coupZone && (!T.coupZone.dernier || Math.hypot(m.x - T.coupZone.dernier.x, m.z - T.coupZone.dernier.z) >= Math.max(PAS_DE_ZONE, T.pinceauZone / 3))) peindreLaZone(m);
+      redessiner();
+    }
     else if (T.outil === 'relief') {
       T.survol = m;
       // Un passage tous les quarts de rayon : le trait est régulier, quelle que soit la vitesse.
@@ -819,11 +891,19 @@ export function initEditeurDeTerrain(){
   });
   const finGestePlan = (e) => {
     if (!T) return;
-    if (T.geste && T.geste.sorte === 'plan') T.geste = null;
+    if (T.geste && T.geste.sorte === 'plan') {
+      // Demandé : avec l'outil Relief, un clic droit SANS bouger passe au mode suivant (glissé, il déplace la vue).
+      const g0 = T.geste; T.geste = null;
+      if (g0.bouton === 2 && T.outil === 'relief' && e && e.type === 'pointerup' && Math.hypot(e.clientX - g0.x0, e.clientY - g0.y0) < 4) {
+        T.pinceau.mode = T_PINCEAU.mode = MODES_DU_PINCEAU[(MODES_DU_PINCEAU.indexOf(T.pinceau.mode) + 1) % MODES_DU_PINCEAU.length];
+        majContenu(); redessiner();
+      }
+    }
     if (T.coup) { T.coup = null; apresModification(null); }
+    if (T.coupZone) { const id = T.coupZone.id; T.coupZone = null; const sc = laScene(); apresModification(sc && id ? sc.page.objects.find(o => o.id === id) : null); }
     if (T.rectangle && e && e.type === 'pointerup') {
       const { a, b } = T.rectangle; T.rectangle = null;
-      poser(T.sorteZone, zoneEntre(a, b));
+      poser('terrain', zoneEntre(a, b));
       redessiner();
     }
     T.rectangle = null;

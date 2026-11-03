@@ -18,7 +18,7 @@ export const HAUTEUR_MIN = -20, HAUTEUR_MAX = 30;
 /** Les modes du pinceau. */
 export const MODES_DU_PINCEAU = Object.freeze(['monter', 'creuser', 'aplanir', 'adoucir']);
 /** Ce qu'un passage du pinceau ajoute au plus (mètres), à pleine force, au centre. */
-const PAS_DE_PINCEAU = 0.25;
+const PAS_DE_PINCEAU = 1.5;   // demandé : une force maximale bien plus grande (0,25 m avant)
 
 const fini = (v) => typeof v === 'number' && Number.isFinite(v);
 

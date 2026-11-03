@@ -395,7 +395,7 @@
             <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="m4 7 8-4 8 5-2 11-12 1z" stroke-dasharray="3 3"/></svg>
           </button>
           <button type="button" class="batiment-outil terrain-outil" id="terrainOutilRelief" data-terrain="relief" title="Relief (R)">
-            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M2 20 9 8l4 6 3-4 6 10z"/><path d="M2 20h20"/></svg>
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M2 20c3-7 9-7 12 0"/><path d="M2 20h20"/><path d="M18 13V4M15 7l3-3 3 3"/></svg>
           </button>
           <button type="button" class="batiment-outil terrain-outil" id="terrainOutilTrace" data-terrain="trace" title="Tracés (T)">
             <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M5 21 9 3M19 21 15 3"/><path d="M12 6v2M12 12v2M12 18v2"/></svg>
@@ -432,6 +432,8 @@
         <section class="side-section" id="terrainSecZone" hidden>
           <h2 id="terrainSectionZone">Zone à poser</h2>
           <div id="terrainSortesZone" class="terrain-sortes"></div>
+          <label for="terrainZoneTaille" id="terrainZoneTailleLabel" class="terrain-curseur-libelle">Taille du pinceau</label>
+          <input type="range" id="terrainZoneTaille" min="0.5" max="20" step="0.5" value="2">
         </section>
         <section class="side-section" id="terrainSecChoisi" hidden>
           <h2 id="terrainSectionChoisi">Sélection</h2>
