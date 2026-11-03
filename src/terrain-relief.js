@@ -255,7 +255,9 @@ export function creuserLesRivieres(r, rivieres){
  * bord). PUR (le prédicat `dedans` est fourni par l'appelant).
  */
 export function releverLesZones(r, zones){
-  const liste = (zones || []).filter(z => z && fini(z.delta) && z.delta !== 0 && typeof z.dedans === 'function');
+  // `delta` est un nombre (une hauteur), ou `deltaEn(p)` une fonction (une PENTE, cf. hauteurDeLaZone).
+  const liste = (zones || []).filter(z => z && typeof z.dedans === 'function'
+    && (typeof z.deltaEn === 'function' || (fini(z.delta) && z.delta !== 0)));
   if (!liste.length) return r;
   let g = r;
   for (const z of liste) g = etendreLeRelief(g, z.x0, z.z0, z.x1, z.z1);
@@ -264,7 +266,8 @@ export function releverLesZones(r, zones){
     const i0 = Math.max(1, Math.floor((z.x0 - g.x0) / g.pas)), i1 = Math.min(g.nx - 2, Math.ceil((z.x1 - g.x0) / g.pas));
     const j0 = Math.max(1, Math.floor((z.z0 - g.z0) / g.pas)), j1 = Math.min(g.nz - 2, Math.ceil((z.z1 - g.z0) / g.pas));
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
-      if (z.dedans({ x: g.x0 + i * g.pas, z: g.z0 + j * g.pas })) h[j * g.nx + i] += z.delta;
+      const p = { x: g.x0 + i * g.pas, z: g.z0 + j * g.pas };
+      if (z.dedans(p)) h[j * g.nx + i] += z.deltaEn ? z.deltaEn(p) : z.delta;
     }
   }
   return { ...g, h };
@@ -322,4 +325,15 @@ export function profilFranchissant(r, pts){
     if (etat.d === Infinity) essayer(x, z, tous, etat);
     return etat.v;
   };
+}
+
+/**
+ * Demandé (3 novembre 2026) : la PENTE d'une Zone. Sa hauteur en un point : `hauteur` (au centre), plus
+ * la pente `penteDeg` (degrés) le long du sens `sensDeg` (degrés : 0 vers la droite du plan, 90 vers le
+ * bas), tourné avec la Zone (`rotY`). Le centre garde sa hauteur ; un côté monte, l'autre descend. PUR.
+ */
+export function hauteurDeLaZone({ hauteur = 0, penteDeg = 0, sensDeg = 0, rotY = 0, cx = 0, cz = 0 }, p){
+  if (!penteDeg) return hauteur;
+  const a = sensDeg * Math.PI / 180 + rotY;
+  return hauteur + Math.tan(penteDeg * Math.PI / 180) * ((p.x - cx) * Math.cos(a) + (p.z - cz) * Math.sin(a));
 }

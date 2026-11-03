@@ -15,7 +15,7 @@ import { mursDevantMasques, mursDeDevant, versLaCameraDansLeBatiment, retenirMur
 import { estUnBatimentPlace } from './batiment-element.js';
 import { MARQUE_SOL_PERCE } from './batiment-3d.js';
 import { reliefPlat, signatureDuRelief, hauteurDuRelief, densifierLaLigne, aplanirSousLesEmprises,
-  creuserLesRivieres, releverLesZones, profilFranchissant, PROFONDEUR_RIVIERE, EAU_SOUS_LA_BERGE, NIVEAU_EAU_PAR_DEFAUT } from './terrain-relief.js';
+  creuserLesRivieres, releverLesZones, profilFranchissant, hauteurDeLaZone, PROFONDEUR_RIVIERE, EAU_SOUS_LA_BERGE, NIVEAU_EAU_PAR_DEFAUT } from './terrain-relief.js';
 import { installerEau3D } from './ground-water-3d.js';
 import { casesDuMasque, dansLeMasque } from './terrain-zone-pinceau.js';
 import { niveauxTries } from './batiment-niveaux.js';
@@ -2560,10 +2560,15 @@ function reliefEffectif3D(panel, page){
     return d;
   };
   const zones = ((page && page.objects) || []).filter(o => o.type === 'tracé' && o.panelId === panel.id && o.tracéType === 'terrain'
-    && Number.isFinite(o.hauteurZone) && o.hauteurZone !== 0 && o.world && Array.isArray(o.world.corners))
+    && ((Number.isFinite(o.hauteurZone) && o.hauteurZone !== 0) || (Number.isFinite(o.penteZone) && o.penteZone !== 0))
+    && o.world && Array.isArray(o.world.corners))
     .map(o => {
       const c = o.world.corners, xs = c.map(p => p.x), zs = c.map(p => p.z);
-      return { x0: Math.min(...xs), z0: Math.min(...zs), x1: Math.max(...xs), z1: Math.max(...zs), delta: o.hauteurZone,
+      // Une hauteur, et peut-être une PENTE (demandé) : la hauteur varie alors le long de son sens.
+      const reglage = { hauteur: o.hauteurZone || 0, penteDeg: o.penteZone || 0, sensDeg: o.sensPente || 0,
+        rotY: o.world.masque ? 0 : (o.world.rotY || 0), cx: o.world.cx, cz: o.world.cz };
+      return { x0: Math.min(...xs), z0: Math.min(...zs), x1: Math.max(...xs), z1: Math.max(...zs),
+        deltaEn: (p) => hauteurDeLaZone(reglage, p),
         dedans: o.world.masque ? (p) => dansLeMasque(o.world.masque, p) : (p) => dansLePoly(p, c) };
     });
   const r = creuserLesRivieres(releverLesZones(panel && panel.relief, zones), rivieres);
@@ -3269,7 +3274,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       : null;
     // #437 : l'arrivée du grain refait la Trace, qui passe de l'aplat à sa texture.
     const sigKey = JSON.stringify({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, wh: o.wallHeight, wt: o.wallThickness, world: o.world, holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),
-      relief: signatureDuRelief(_relief), eau: [o.niveauEau, o.profondeur, o.hauteurZone] });   // #462c-2 : drapé sur le relief ; #462d : l'eau
+      relief: signatureDuRelief(_relief), eau: [o.niveauEau, o.profondeur, o.hauteurZone, o.penteZone, o.sensPente] });   // #462c-2 : drapé sur le relief ; #462d : l'eau
     let entry = tracéMeshCache3D.get(o.id);
     // Pendant un coup de pinceau du relief, les Tracés gardent leur maillage (le relief change à chaque
     // image ; les redraper toutes coûtait plus que le reste du rendu) : ils suivent au relâcher.

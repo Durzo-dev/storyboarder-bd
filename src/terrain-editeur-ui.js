@@ -344,6 +344,18 @@ function peindreLaZone(m){
   majContenu();
 }
 
+/**
+ * Tourne une Zone depuis l'état de début du geste. Une Zone peinte est rééchantillonnée et garde
+ * `rotY = 0` : le sens de sa PENTE tourne donc avec elle à part (un rectangle, lui, le porte par rotY).
+ */
+function tournerLObjet(obj, geste, angle){
+  obj.world = tournerLaZone(geste.origine, angle);
+  if (geste.origine.masque && (obj.penteZone || geste.sens)) {
+    const s = ((geste.sens + angle * 180 / Math.PI) % 360 + 360) % 360;
+    if (s) obj.sensPente = s; else delete obj.sensPente;
+  }
+}
+
 function finirLaLigne(){
   if (!T || !T.chaine) return;
   const pts = T.chaine; T.chaine = null; T.fantome = null;
@@ -420,7 +432,9 @@ function reglagesDeZone(obj){
   const zone = obj && obj.tracéType === 'terrain' ? obj : null;
   const type = zone ? (zone.terrainType || 'herbe') : '';
   const cle = zone ? zone.id + ':' + type : '';
-  const modifier = (faire) => { retenirPourAnnuler(); faire(); apresModification(zone); };
+  // La Zone DU MOMENT (un Ctrl+Z la remplace par une copie de même identifiant).
+  const courante = () => { const o = terrainChoisi(); return o && o.tracéType === 'terrain' ? o : null; };
+  const modifier = (faire) => { const z = courante(); if (!z) return; retenirPourAnnuler(); faire(z); apresModification(z); };
   if (boite.dataset.cle !== cle) {
     boite.dataset.cle = cle;
     if (!zone) { boite.replaceChildren(); return; }
@@ -429,13 +443,13 @@ function reglagesDeZone(obj){
     const champ = (cleChamp, texte, indice) => {
       const c = document.createElement('input');
       c.type = 'text'; c.className = 'modal-input'; c.placeholder = indice; c.dataset.cle = cleChamp;
-      c.onchange = () => modifier(() => { zone[cleChamp] = c.value; });
+      c.onchange = () => modifier((z) => { z[cleChamp] = c.value; });
       return [libelle(texte), c];
     };
     const carre = carreDeTexture({
       valeur: type, usage: 'sol', titre: tr('Choose the terrain texture', 'Choisir la texture du terrain'),
       teinte: teinteDuSol3D(def, zone.terrainColor),
-      appliquer: (id) => modifier(() => { zone.terrainType = id; delete zone.terrainColor; }),
+      appliquer: (id) => modifier((z) => { z.terrainType = id; delete z.terrainColor; }),
     });
     const elements = [...champ('name', tr('Name', 'Nom'), tr('E.g. Meadow', 'Ex. Prairie')), libelle(tr('Texture', 'Texture')), carre];
     if (!def.eau) {
@@ -443,11 +457,12 @@ function reglagesDeZone(obj){
       couleur.type = 'color'; couleur.className = 'terrain-couleur'; couleur.dataset.cle = 'terrainColor';
       let retenu = false;
       couleur.oninput = () => {
+        const z = courante(); if (!z) return;
         if (!retenu) { retenirPourAnnuler(); retenu = true; }
-        zone.terrainColor = couleur.value; apresModification(zone);
+        z.terrainColor = couleur.value; apresModification(z);
       };
       couleur.onchange = () => { retenu = false; };
-      couleur._lire = () => teinteDuSol3D(def, zone.terrainColor) || def.swatch;
+      couleur._lire = () => { const z = courante(); return teinteDuSol3D(def, z && z.terrainColor) || def.swatch; };
       elements.push(libelle(tr('Colour', 'Couleur')), couleur);
     }
     // (L'« étiquette affichée » de la fenêtre n'est pas reprise : elle ne s'affiche que sur les anciennes
@@ -479,11 +494,21 @@ function reglagesDuChoisi(obj){
         // Demandé : la Zone relève ou creuse le terrain sous elle.
         { cle: 'hauteur', nom: tr('Ground height (m)', 'Hauteur du sol (m)'), min: -10, max: 10, pas: 0.1,
           lire: () => (Number.isFinite(obj.hauteurZone) ? obj.hauteurZone : 0), ecrire: (v) => { if (v) obj.hauteurZone = v; else delete obj.hauteurZone; } },
+        // Demandé : une PENTE (le centre garde sa hauteur ; un côté monte, l'autre descend), et son sens,
+        // qui tourne avec la Zone.
+        { cle: 'pente', nom: tr('Slope (°)', 'Pente (°)'), min: -45, max: 45, pas: 1,
+          lire: () => (Number.isFinite(obj.penteZone) ? obj.penteZone : 0), ecrire: (v) => { if (v) obj.penteZone = v; else delete obj.penteZone; } },
+        { cle: 'sens', nom: tr('Slope direction (°)', 'Sens de la pente (°)'), min: 0, max: 345, pas: 15,
+          lire: () => (Number.isFinite(obj.sensPente) ? obj.sensPente : 0), ecrire: (v) => { if (v) obj.sensPente = v; else delete obj.sensPente; } },
         ...(obj.terrainType === 'eau' ? [{ cle: 'niveau', nom: tr('Water level (m)', "Niveau de l'eau (m)"), min: -10, max: 10, pas: 0.05,
           lire: () => (Number.isFinite(obj.niveauEau) ? obj.niveauEau : NIVEAU_EAU_PAR_DEFAUT), ecrire: (v) => { obj.niveauEau = v; } }] : []),
       ]
       : [];
   const cle = obj ? obj.id + ':' + defs.map(d => d.cle).join(',') : '';
+  // ⚠️ LES RÉGLAGES DU MOMENT, PAS CEUX DE LA CONSTRUCTION : un Ctrl+Z remplace l'objet (une copie de
+  // même identifiant), et des curseurs liés à l'ancien écriraient dans le vide.
+  boite._defs = defs;
+  const actuel = (c) => (boite._defs || []).find(x => x.cle === c);
   if (boite.dataset.cle !== cle) {
     boite.replaceChildren(...defs.flatMap(d => {
       const l = document.createElement('label');
@@ -496,13 +521,15 @@ function reglagesDuChoisi(obj){
       c.dataset.cle = d.cle;
       let retenu = false;
       c.oninput = () => {
+        const a = actuel(d.cle);
+        if (!a) return;
         if (!retenu) { retenirPourAnnuler(); retenu = true; }
-        d.ecrire(Number(c.value));
+        a.ecrire(Number(c.value));
         valeur.textContent = String(Number(c.value)).replace('.', ',');
-        apresModification(obj);
+        apresModification(terrainChoisi());
       };
       c.onchange = () => { retenu = false; };
-      c._lire = d.lire; c._valeur = valeur;
+      c._lire = () => { const a = actuel(d.cle); return a ? a.lire() : d.lire(); }; c._valeur = valeur;
       return [l, c];
     }));
     boite.dataset.cle = cle;
@@ -776,7 +803,7 @@ function dessinerApercu(){
   const sig = JSON.stringify([T.cam, c.width, c.height, signatureDuRelief(sc.panel.relief), sc.page.objects.map(o => [o.id, o.world, o.color, o.terrainType, o.terrainColor,
     o.wallHeight, o.wallThickness, o.marquage, o.traceTexture, o.wxFloor, o.wzFloor, o.rotY, o.hidden3d,
     // Signalé : le niveau de l'eau ne se voyait qu'en bougeant l'aperçu (absent de cette signature).
-    o.niveauEau, o.profondeur, o.hauteurZone])]);
+    o.niveauEau, o.profondeur, o.hauteurZone, o.penteZone, o.sensPente])]);
   if (sig === T.sigApercu) return;
   // Pendant un coup de pinceau, une image d'aperçu tous les 120 ms au plus (le plan, lui, suit à chaque
   // image) : un rendu de Scène complet par image d'écran faisait ramer le geste.
@@ -950,7 +977,7 @@ export function initEditeurDeTerrain(){
       const obj = terrainChoisi(), f = sousLePlan(s);
       if (obj && obj.tracéType === 'terrain' && obj.world && f && f.id === obj.id) {
         const { l, h } = taillePlan(), m = versLeMonde(T.vue, s, l, h);
-        T.tourner = { id: obj.id, origine: JSON.parse(JSON.stringify(obj.world)), centre: { x: obj.world.cx, z: obj.world.cz },
+        T.tourner = { id: obj.id, origine: JSON.parse(JSON.stringify(obj.world)), sens: obj.sensPente || 0, centre: { x: obj.world.cx, z: obj.world.cz },
           a0: Math.atan2(m.z - obj.world.cz, m.x - obj.world.cx), x0: e.clientX, y0: e.clientY, bouge: false };
         plan.setPointerCapture && plan.setPointerCapture(e.pointerId);
         return;
@@ -1013,7 +1040,7 @@ export function initEditeurDeTerrain(){
       if (!T.tourner.bouge && Math.hypot(e.clientX - T.tourner.x0, e.clientY - T.tourner.y0) < 4) return;
       if (!T.tourner.bouge) { retenirPourAnnuler(); T.tourner.bouge = true; }
       const sc = laScene();
-      obj.world = tournerLaZone(T.tourner.origine, Math.atan2(m.z - T.tourner.centre.z, m.x - T.tourner.centre.x) - T.tourner.a0);
+      tournerLObjet(obj, T.tourner, Math.atan2(m.z - T.tourner.centre.z, m.x - T.tourner.centre.x) - T.tourner.a0);
       if (sc) tracéUpdateScreenPts(obj, sc.panel, sc.page);
       majContenu(); redessiner();
       return;
@@ -1051,7 +1078,7 @@ export function initEditeurDeTerrain(){
       const obj = terrainChoisi();
       if (obj && obj.id === t.id && e && e.type === 'pointerup') {
         // Sans bouger : un quart de tour.
-        if (!t.bouge) { retenirPourAnnuler(); obj.world = tournerLaZone(t.origine, Math.PI / 2); }
+        if (!t.bouge) { retenirPourAnnuler(); tournerLObjet(obj, t, Math.PI / 2); }
         apresModification(obj);
       }
       return;

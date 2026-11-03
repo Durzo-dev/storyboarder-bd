@@ -140,7 +140,7 @@ test('la hauteur d\'une Zone relève ou creuse le relief rendu ; l\'aperçu suit
   RIG.personaScene3D.traverseVisible(o => { if (o.userData && o.userData.relief) { o.geometry.computeBoundingBox(); haut = Math.max(haut, o.geometry.boundingBox.max.y); } });
   assert.ok(Math.abs(haut - (-3 + 2)) < 1e-6, `le relief monte sous la Zone : ${haut}`);
   const ui = lire('terrain-editeur-ui.js');
-  assert.match(ui, /o\.niveauEau, o\.profondeur, o\.hauteurZone\]\)\]\);/);
+  assert.match(ui, /o\.niveauEau, o\.profondeur, o\.hauteurZone, o\.penteZone, o\.sensPente\]\)\]\);/);
   assert.doesNotMatch(ui, /champ\('label'/);
 });
 
@@ -192,4 +192,39 @@ test('l\'éditeur : clic droit sur la Zone choisie la tourne d\'un quart ; « Ta
   const visibles = document.getElementById('terrainSceneListe').children.filter(b => b.style.display !== 'none');
   assert.deepEqual(visibles.map(b => b.textContent), ['Église']);
   U.fermerChoixDeScene();
+});
+
+// Demandé : faire des pentes ; retenu : la PENTE d'une Zone (degrés) et son sens, dans « Sélection ».
+test('la pente d\'une Zone : un plan incliné autour de son centre, orienté par le sens et la rotation', async () => {
+  const R = await import('../src/terrain-relief.js');
+  const z = { hauteur: 1, penteDeg: 45, sensDeg: 0, rotY: 0, cx: 0, cz: 0 };
+  assert.equal(R.hauteurDeLaZone(z, { x: 0, z: 5 }), 1, 'le centre (et l\'axe perpendiculaire) garde sa hauteur');
+  assert.ok(Math.abs(R.hauteurDeLaZone(z, { x: 2, z: 0 }) - 3) < 1e-9, 'à 45°, +2 m vers la droite');
+  assert.ok(Math.abs(R.hauteurDeLaZone({ ...z, sensDeg: 90 }, { x: 0, z: 2 }) - 3) < 1e-9, 'sens 90° : vers le bas du plan');
+  assert.ok(Math.abs(R.hauteurDeLaZone({ ...z, rotY: Math.PI / 2 }, { x: 0, z: 2 }) - 3) < 1e-9, 'la Zone tournée tourne sa pente');
+  assert.equal(R.hauteurDeLaZone({ hauteur: 2 }, { x: 9, z: 9 }), 2, 'sans pente : la hauteur');
+  // Le relief rendu : un rectangle de 6 m en pente de 20° vers la droite.
+  const carre = (p) => Math.abs(p.x) <= 3 && Math.abs(p.z) <= 3;
+  const r = R.releverLesZones(null, [{ x0: -3, z0: -3, x1: 3, z1: 3, dedans: carre, deltaEn: (p) => R.hauteurDeLaZone({ penteDeg: 20, cx: 0, cz: 0 }, p) }]);
+  assert.ok(R.hauteurDuRelief(r, 2, 0) > 0.5 && R.hauteurDuRelief(r, -2, 0) < -0.5);
+  // L'éditeur : les curseurs Pente et Sens dans « Sélection ».
+  globalThis.requestAnimationFrame = (f) => { f(); return 0; };
+  globalThis.getComputedStyle = () => ({ getPropertyValue: () => '' });
+  const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
+  const zone = { id: 'z1', type: 'tracé', tracéType: 'terrain', terrainType: 'herbe', panelId: 'p',
+    world: { cx: 0, cz: 0, w: 6, h: 6, rotY: 0, corners: [{ x: -3, z: -3 }, { x: 3, z: -3 }, { x: 3, z: 3 }, { x: -3, z: 3 }] } };
+  S.scenes = [{ id: 's1', name: 'Scène 1', w: 480, h: 360, pages: [{ objects: [panel, zone] }] }];
+  S.editingSceneId = 's1';
+  U.setTerrainEditeurCallbacks({ instantane: () => {}, ouvrirLaScene: () => {}, apresModification: () => {}, confirmer: async () => true });
+  U.initEditeurDeTerrain();
+  U.ouvrirEditeurDeTerrain('s1', { choisi: 'z1' });
+  U.rafraichirEditeurDeTerrain();
+  const curseurs = document.getElementById('terrainChoisiReglages').children.filter(c => c.type === 'range');
+  assert.deepEqual(curseurs.map(c => c.dataset.cle), ['hauteur', 'pente', 'sens']);
+  curseurs[1].value = '15'; curseurs[1].oninput();
+  curseurs[2].value = '90'; curseurs[2].oninput();
+  assert.equal(zone.penteZone, 15);
+  assert.equal(zone.sensPente, 90);
+  document.getElementById('terrainValiderBtn').onclick();
+  assert.match(lire('scene3d.js'), /deltaEn: \(p\) => hauteurDeLaZone\(reglage, p\),/);
 });
