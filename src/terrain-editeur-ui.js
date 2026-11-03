@@ -31,13 +31,15 @@ import { TRACÉ_DEFAULTS } from './constants.js';
 import { getElementDepth, vitesseRotation3D, vitesseDeplacement3D, facteurDeZoom3D, deltaMolette3D } from './utils.js';
 import { niveauxTries } from './batiment-niveaux.js';
 import { formesDesPieces } from './batiment-pieces.js';
-import { PANEL_CAM_DEFAULT_DIST_3D, WALL_PX_PER_UNIT_3D, GROUND_TYPE_DEFS, teinteDuSol3D } from './constants.js';
+import { PANEL_CAM_DEFAULT_DIST_3D, WALL_PX_PER_UNIT_3D, GROUND_TYPE_DEFS, teinteDuSol3D, largeurDeTrace3D } from './constants.js';
+import { USAGE_DU_TRACE } from './textures-utilisateur.js';
+import { tracéWallHeight3D, tracéWallThickness3D, TRACÉS_A_EPAISSEUR } from './scene3d.js';
 import { carreDeTexture } from './textures-store-ui.js';
 import { sectionDroitePliee, memoriserSectionDroite } from './section-memory.js';
 
 const $ = (id) => document.getElementById(id);
 let _rappels = { avantOuverture: () => {}, apresFermeture: () => {}, ouvrirLaScene: () => {}, instantane: () => {}, confirmer: async () => true,
-  regler: () => {}, apresModification: () => {} };
+  apresModification: () => {} };
 /**
  * Les rappels de l'application (events.js) : fermer les autres écrans du centre, redessiner après ;
  * ouvrir la Scène (les fenêtres de réglage travaillent sur la page courante) ; l'instantané d'annulation
@@ -429,16 +431,16 @@ export function commandesDuTerrain(trad = tr, outil = 'selection'){
  */
 function reglagesDeZone(obj){
   const boite = $('terrainChoisiZone');
-  const zone = obj && obj.tracéType === 'terrain' ? obj : null;
-  const type = zone ? (zone.terrainType || 'herbe') : '';
+  const zone = obj && obj.type === 'tracé' ? obj : null;
+  const estZone = !!zone && zone.tracéType === 'terrain';
+  const type = zone ? (estZone ? (zone.terrainType || 'herbe') : zone.tracéType) : '';
   const cle = zone ? zone.id + ':' + type : '';
-  // La Zone DU MOMENT (un Ctrl+Z la remplace par une copie de même identifiant).
-  const courante = () => { const o = terrainChoisi(); return o && o.tracéType === 'terrain' ? o : null; };
+  // L'objet DU MOMENT (un Ctrl+Z le remplace par une copie de même identifiant).
+  const courante = () => { const o = terrainChoisi(); return o && o.id === (zone && zone.id) ? o : null; };
   const modifier = (faire) => { const z = courante(); if (!z) return; retenirPourAnnuler(); faire(z); apresModification(z); };
   if (boite.dataset.cle !== cle) {
     boite.dataset.cle = cle;
     if (!zone) { boite.replaceChildren(); return; }
-    const def = GROUND_TYPE_DEFS.find(d => d.id === type) || GROUND_TYPE_DEFS[0];
     const libelle = (texte) => { const l = document.createElement('label'); l.className = 'terrain-curseur-libelle'; l.textContent = texte; return l; };
     const champ = (cleChamp, texte, indice) => {
       const c = document.createElement('input');
@@ -446,35 +448,62 @@ function reglagesDeZone(obj){
       c.onchange = () => modifier((z) => { z[cleChamp] = c.value; });
       return [libelle(texte), c];
     };
-    const carre = carreDeTexture({
-      valeur: type, usage: 'sol', titre: tr('Choose the terrain texture', 'Choisir la texture du terrain'),
-      teinte: teinteDuSol3D(def, zone.terrainColor),
-      appliquer: (id) => modifier((z) => { z.terrainType = id; delete z.terrainColor; }),
-    });
-    const elements = [...champ('name', tr('Name', 'Nom'), tr('E.g. Meadow', 'Ex. Prairie')), libelle(tr('Texture', 'Texture')), carre];
-    if (!def.eau) {
+    const couleurDe = (lire, ecrire) => {
       const couleur = document.createElement('input');
-      couleur.type = 'color'; couleur.className = 'terrain-couleur'; couleur.dataset.cle = 'terrainColor';
+      couleur.type = 'color'; couleur.className = 'terrain-couleur'; couleur.dataset.cle = 'couleur';
       let retenu = false;
       couleur.oninput = () => {
         const z = courante(); if (!z) return;
         if (!retenu) { retenirPourAnnuler(); retenu = true; }
-        z.terrainColor = couleur.value; apresModification(z);
+        ecrire(z, couleur.value); apresModification(z);
       };
       couleur.onchange = () => { retenu = false; };
-      couleur._lire = () => { const z = courante(); return teinteDuSol3D(def, z && z.terrainColor) || def.swatch; };
-      elements.push(libelle(tr('Colour', 'Couleur')), couleur);
+      couleur._lire = () => lire(courante());
+      return [libelle(tr('Colour', 'Couleur')), couleur];
+    };
+    const elements = [...champ('name', tr('Name', 'Nom'), estZone ? tr('E.g. Meadow', 'Ex. Prairie') : nomDeSorte(type))];
+    if (estZone) {
+      const def = GROUND_TYPE_DEFS.find(d => d.id === type) || GROUND_TYPE_DEFS[0];
+      elements.push(libelle(tr('Texture', 'Texture')), carreDeTexture({
+        valeur: type, usage: 'sol', titre: tr('Choose the terrain texture', 'Choisir la texture du terrain'),
+        teinte: teinteDuSol3D(def, zone.terrainColor),
+        appliquer: (id) => modifier((z) => { z.terrainType = id; delete z.terrainColor; }),
+      }));
+      if (!def.eau) elements.push(...couleurDe((z) => teinteDuSol3D(def, z && z.terrainColor) || def.swatch, (z, v) => { z.terrainColor = v; }));
+      // (L'« étiquette affichée » n'est pas reprise : elle ne s'affiche jamais dans une Scène.)
+    } else if (type !== 'riviere') {
+      // Demandé : un TRACÉ se règle ici aussi (plus de fenêtre) : texture, couleur, marquage.
+      const defaut = (TRACÉ_DEFAULTS[type] || {}).color || '#888888';
+      if (USAGE_DU_TRACE[type]) {
+        elements.push(libelle(tr('Texture', 'Texture')), carreDeTexture({
+          valeur: zone.traceTexture || null, usage: USAGE_DU_TRACE[type], titre: tr('Choose the texture', 'Choisir la texture'),
+          teinte: zone.color && zone.color.toLowerCase() !== defaut.toLowerCase() ? zone.color : null,
+          appliquer: (id) => modifier((z) => { if (id) z.traceTexture = id; else delete z.traceTexture; }),
+        }));
+      }
+      elements.push(...couleurDe((z) => (z && z.color) || defaut, (z, v) => { z.color = v; }));
+      if (type === 'route') {
+        const l = document.createElement('label');
+        l.className = 'terrain-case-a-cocher';
+        const c = document.createElement('input');
+        c.type = 'checkbox'; c.dataset.cle = 'marquage';
+        c.onchange = () => modifier((z) => { if (c.checked) delete z.marquage; else z.marquage = false; });
+        c._lire = () => { const z = courante(); return !z || z.marquage !== false; };
+        l.appendChild(c);
+        l.appendChild(document.createTextNode(' ' + tr('Road markings', 'Marquage au sol')));
+        elements.push(l);
+      }
     }
-    // (L'« étiquette affichée » de la fenêtre n'est pas reprise : elle ne s'affiche que sur les anciennes
-    // Cases sans 3D, jamais dans une Scène. Le champ reste dans le fichier.)
     boite.replaceChildren(...elements);
   }
   if (!zone) return;
-  for (const c of boite.children || []) {
-    if (!c.dataset || !c.dataset.cle || document.activeElement === c) continue;
-    if (c.dataset.cle === 'terrainColor') c.value = c._lire();
+  const relire = (c) => {
+    if (!c.dataset || !c.dataset.cle || document.activeElement === c) return;
+    if (c.type === 'checkbox') c.checked = c._lire();
+    else if (c._lire) c.value = c._lire();
     else c.value = zone[c.dataset.cle] || '';
-  }
+  };
+  for (const c of boite.children || []) { relire(c); for (const k of c.children || []) relire(k); }
 }
 
 /**
@@ -484,7 +513,19 @@ function reglagesDeZone(obj){
  */
 function reglagesDuChoisi(obj){
   const boite = $('terrainChoisiReglages');
-  const defs = !obj ? [] : obj.tracéType === 'riviere'
+  const murets = ['muret', 'cloture', 'haie', 'barriere'];
+  const defs = !obj ? [] : (obj.tracéType === 'route' || obj.tracéType === 'chemin')
+    // Demandé : la largeur d'une route ou d'un chemin ici (le trait du plan garde sa proportion).
+    ? [{ cle: 'largeur', nom: tr('Width (m)', 'Largeur (m)'), min: 0.5, max: 30, pas: 0.5,
+         lire: () => (obj.world && obj.world.width) || 1,
+         ecrire: (v) => { const l = largeurDeTrace3D(obj, v); if (l) { obj.world = { ...obj.world, width: l.world }; obj.width = l.width; } } }]
+    : murets.includes(obj.tracéType)
+      // La hauteur d'un muret, d'une clôture, d'une haie, d'une barrière ; l'épaisseur d'un muret, d'une haie.
+      ? [{ cle: 'hauteurMur', nom: tr('Height (m)', 'Hauteur (m)'), min: 0.2, max: 5, pas: 0.05,
+           lire: () => tracéWallHeight3D(obj), ecrire: (v) => { obj.wallHeight = v; } },
+         ...(TRACÉS_A_EPAISSEUR.includes(obj.tracéType) ? [{ cle: 'epaisseur', nom: tr('Thickness (cm)', 'Épaisseur (cm)'), min: 2, max: 200, pas: 1,
+           lire: () => Math.round(tracéWallThickness3D(obj) * 100), ecrire: (v) => { obj.wallThickness = v / 100; } }] : [])]
+    : obj.tracéType === 'riviere'
     ? [{ cle: 'largeur', nom: tr('Width (m)', 'Largeur (m)'), min: 1, max: 30, pas: 0.5,
          lire: () => (obj.world && obj.world.width) || 4, ecrire: (v) => { obj.world = { ...obj.world, width: v }; } },
        { cle: 'profondeur', nom: tr('Depth (m)', 'Profondeur (m)'), min: 0.3, max: 5, pas: 0.1,
@@ -636,12 +677,16 @@ function majContenu(){
   $('terrainValiderBtn').disabled = !terrainModifie();
   // La Zone ou le Tracé choisi.
   const obj = terrainChoisi();
-  $('terrainSecChoisi').hidden = !obj;
-  if (obj) $('terrainChoisiNom').textContent = obj.name || nomDeSorte(obj.tracéType);
+  // Demandé : la section porte le NOM de ce qui est choisi ; tout s'y règle (plus de bouton « Régler »).
+  // Un Élément (ou un bâtiment) désigné y est nommé aussi, mais ne se modifie pas ici.
+  const forme = T.choisi ? T.formes.find(f => f.id === T.choisi) : null;
+  $('terrainSecChoisi').hidden = !obj && !forme;
+  if (obj) $('terrainSectionChoisi').textContent = obj.name || (obj.tracéType === 'terrain' ? tr('Zone', 'Zone') : nomDeSorte(obj.tracéType));
+  else if (forme) $('terrainSectionChoisi').textContent = forme.nom || (forme.type === 'batiment' ? tr('Building', 'Bâtiment') : tr('Element', 'Élément'));
+  $('terrainChoisiElement').hidden = !!obj || !forme;
+  $('terrainSupprimerBtn').hidden = !obj;
   reglagesDeZone(obj);
   reglagesDuChoisi(obj);
-  // « Régler » ne sert plus qu'aux Tracés : une Zone se règle dans la section même.
-  $('terrainReglerBtn').hidden = !obj || obj.tracéType === 'terrain';
   // La Zone à poser (outil Zone).
   $('terrainSecZone').hidden = T.outil !== 'zone';
   if (T.outil === 'zone') {
@@ -986,7 +1031,6 @@ export function initEditeurDeTerrain(){
   $('terrainZoneTaille').oninput = () => { if (T) { T.pinceauZone = T_PINCEAU_ZONE.rayon = Number($('terrainZoneTaille').value) || 2; redessiner(); } };
   $('terrainReliefForce').oninput = () => { if (T) T.pinceau.force = T_PINCEAU.force = Number($('terrainReliefForce').value) || 0.5; };
   $('terrainReliefRetirerBtn').onclick = () => retirerLeRelief();
-  $('terrainReglerBtn').onclick = () => { const o = terrainChoisi(); if (o) _rappels.regler(o); };
   $('terrainSupprimerBtn').onclick = () => supprimerLeChoisi();
   $('terrainSceneAnnuler').onclick = () => fermerChoixDeScene();
   $('terrainApercuPlein').onclick = () => {
@@ -1074,8 +1118,6 @@ export function initEditeurDeTerrain(){
     const f = sousLePlan(s);
     T.choisi = f ? f.id : null;
     const obj = terrainChoisi();
-    // Le double-clic ouvre la fenêtre d'un Tracé ; une Zone, elle, se règle dans « Sélection ».
-    if (obj && e.detail >= 2 && obj.tracéType !== 'terrain') { _rappels.regler(obj); return; }
     // Une Zone ou un Tracé choisi se fait glisser (l'instantané au premier mouvement).
     if (obj && obj.world) { T.glisser = { id: obj.id, depart: m, origine: JSON.parse(JSON.stringify(obj.world)), bouge: false }; plan.setPointerCapture && plan.setPointerCapture(e.pointerId); }
     majContenu(); redessiner();

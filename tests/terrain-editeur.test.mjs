@@ -156,7 +156,9 @@ test('câblage : Tracer et Zone ne sont plus au clic droit d\'une Scène ; la pa
   assert.match(ev, /document\.getElementById\('ctxTracerTrigger'\)\.style\.display = 'none';/);
   assert.match(ev, /document\.getElementById\('ctxZoneTrigger'\)\.style\.display   = 'none';/);
   assert.match(ev, /const updateSidePanelEtTerrain = \(\) => \{ updateSidePanel\(\); rafraichirEditeurDeTerrain\(\); \};/);
-  assert.match(ev, /regler: \(obj\) => \{ if \(obj\.tracéType === 'terrain'\) openTerrainModal\(obj\); else openTracéModal\(obj\); \},/);
+  // Demandé : plus de fenêtre dans l'éditeur (tout se règle dans « Sélection ») ; la fenêtre ne sert plus qu'aux Zones et Tracés d'une Case.
+  assert.doesNotMatch(lire('terrain-editeur-ui.js'), /_rappels\.regler/);
+  assert.match(ev, /else if \(cible && cible\.element\) \{ if \(cible\.element\.tracéType === 'terrain'\) openTerrainModal\(cible\.element\); else openTracéModal\(cible\.element\); \}/);
   const html = lire('index.html');
   for (const id of ['terrainOutilSelection', 'terrainOutilZone', 'terrainOutilTrace', 'terrainSecTrace', 'terrainSecChoisi']) assert.match(html, new RegExp(`id="${id}"`));
 });

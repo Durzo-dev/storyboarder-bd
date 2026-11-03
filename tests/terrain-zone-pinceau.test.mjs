@@ -109,8 +109,8 @@ test('outil Zone : clic droit = rectangle ↔ pinceau ; une Zone se règle dans 
   assert.equal(nom.value, 'Pré');
   nom.value = 'Prairie'; nom.onchange();
   assert.equal(zone.name, 'Prairie');
-  assert.ok(reglages.some(c => c.dataset && c.dataset.cle === 'terrainColor'), 'la couleur');
-  assert.equal(document.getElementById('terrainReglerBtn').hidden, true, 'plus de fenêtre pour une Zone');
+  assert.ok(reglages.some(c => c.dataset && c.dataset.cle === 'couleur'), 'la couleur');
+  assert.equal(document.getElementById('terrainSectionChoisi').textContent, 'Prairie', 'la section porte son nom');
   // Clic droit sans bouger, outil Zone : la forme change.
   document.getElementById('terrainOutilZone').onclick();
   const forme = () => document.getElementById('terrainSortesZone').children.find(b => b.classList.contains('actif')).dataset.valeur;
@@ -272,4 +272,44 @@ test('après un rectangle : la Zone est choisie, l\'outil est Sélection', () =>
   assert.ok(document.getElementById('terrainOutilSelection').classList.contains('actif'), 'outil Sélection');
   assert.equal(document.getElementById('terrainSecChoisi').hidden, false, 'la Zone est choisie');
   document.getElementById('terrainValiderBtn').onclick();
+});
+
+// Demandé : la section porte le nom de ce qui est choisi, et tout s'y règle (plus de « Régler »).
+test('un Tracé choisi se règle dans « Sélection » : largeur, hauteur, épaisseur, couleur, marquage', () => {
+  globalThis.requestAnimationFrame = (f) => { f(); return 0; };
+  globalThis.getComputedStyle = () => ({ getPropertyValue: () => '' });
+  const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
+  const route = { id: 'r1', type: 'tracé', tracéType: 'route', name: 'Grand-rue', panelId: 'p', color: '#888888', width: 10, world: { pts: [{ x: -5, z: 0 }, { x: 5, z: 0 }], width: 5 } };
+  const muret = { id: 'm1', type: 'tracé', tracéType: 'muret', panelId: 'p', world: { pts: [{ x: -5, z: 4 }, { x: 5, z: 4 }], width: 0.2 } };
+  const perso = { id: 'e1', type: 'perso', name: 'Alice', wxFloor: 0, wzFloor: -4 };
+  S.scenes = [{ id: 's1', name: 'Scène 1', w: 480, h: 360, pages: [{ objects: [panel, route, muret, perso] }] }];
+  S.editingSceneId = 's1';
+  U.setTerrainEditeurCallbacks({ instantane: () => {}, ouvrirLaScene: () => {}, apresModification: () => {}, confirmer: async () => true });
+  U.initEditeurDeTerrain();
+  U.ouvrirEditeurDeTerrain('s1', { choisi: 'r1' });
+  U.rafraichirEditeurDeTerrain();
+  assert.equal(document.getElementById('terrainSectionChoisi').textContent, 'Grand-rue');
+  const curseur = (cle) => document.getElementById('terrainChoisiReglages').children.find(c => c.dataset && c.dataset.cle === cle);
+  const l = curseur('largeur'); l.value = '8'; l.oninput();
+  assert.equal(route.world.width, 8);
+  assert.equal(route.width, 16, 'le trait du plan garde sa proportion');
+  const marquage = document.getElementById('terrainChoisiZone').children.find(c => c.className === 'terrain-case-a-cocher').children[0];
+  marquage.checked = false; marquage.onchange();
+  assert.equal(route.marquage, false);
+  // Le muret : hauteur et épaisseur.
+  U.ouvrirEditeurDeTerrain('s1', { choisi: 'm1' });
+  U.rafraichirEditeurDeTerrain();
+  const h = curseur('hauteurMur'); h.value = '2'; h.oninput();
+  const ep = curseur('epaisseur'); ep.value = '40'; ep.oninput();
+  // (Rouvrir l'éditeur a remis l'état de départ : les objets sont des copies, on les relit.)
+  const m = S.scenes[0].pages[0].objects.find(o => o.id === 'm1');
+  assert.equal(m.wallHeight, 2);
+  assert.equal(m.wallThickness, 0.4);
+  // Un Élément désigné : nommé, mais rien à régler ni à supprimer.
+  U.ouvrirEditeurDeTerrain('s1', { choisi: 'e1' });
+  U.rafraichirEditeurDeTerrain();
+  assert.equal(document.getElementById('terrainSectionChoisi').textContent, 'Alice');
+  assert.equal(document.getElementById('terrainChoisiElement').hidden, false);
+  assert.equal(document.getElementById('terrainSupprimerBtn').hidden, true);
+  U.fermerEditeurDeTerrain();
 });

@@ -6115,7 +6115,6 @@ setTerrainEditeurCallbacks({
   ouvrirLaScene: (id) => { openScene(id); renderAll(); },
   confirmer: (message, titre, options) => confirmAction(message, titre, options),
   instantane: () => snapshot(),
-  regler: (obj) => { if (obj.tracéType === 'terrain') openTerrainModal(obj); else openTracéModal(obj); },
   apresModification: () => drawCurrentPage(),
 });
 enregistrerFermeture('terrainSceneModal', fermerChoixDeScene);
@@ -6197,7 +6196,13 @@ let _ctxTerrain = null;
 function openTerrainMenu(e, cible){
   hideContextMenu();
   const enScene = cible && cible.panel && isLockedScenePanel(cible.panel) && S.editingSceneId;
-  if (!e) { if (enScene) ouvrirEditeurDeTerrain(S.editingSceneId, { choisi: cible.element.id }); return; }
+  // Le double-clic : dans une Scène, l'Éditeur de terrain ; dans une Case (une Zone ou un Tracé d'avant,
+  // propre à la Case), sa fenêtre de réglages, seul moyen de le retoucher là.
+  if (!e) {
+    if (enScene) ouvrirEditeurDeTerrain(S.editingSceneId, { choisi: cible.element.id });
+    else if (cible && cible.element) { if (cible.element.tracéType === 'terrain') openTerrainModal(cible.element); else openTracéModal(cible.element); }
+    return;
+  }
   _ctxTerrain = cible;
   const b = document.getElementById('ctxModifierTerrainElement');
   b.disabled = !enScene;

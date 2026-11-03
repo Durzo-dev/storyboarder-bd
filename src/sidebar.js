@@ -996,7 +996,7 @@ export function renderTracéSideRow(t, panel, page){
       S.sideElementLastClickId = null; S.sideElementLastClickTime = 0;
       S.selectedId = t.id; S.selectedRoomId = null;
       drawCurrentPage();
-      if (_openTerrainMenu && isLockedScenePanel(panel)) _openTerrainMenu(null, { element: t, panel });
+      if (_openTerrainMenu) _openTerrainMenu(null, { element: t, panel });
     } else if (S.selectedId === t.id) {
       S.selectedId = panel.id; S.selectedRoomId = null;
       S.sideElementLastClickId = null; S.sideElementLastClickTime = 0;
