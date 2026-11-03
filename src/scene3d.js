@@ -2652,6 +2652,9 @@ function geometrieDuMasque3D(w, y){
   geo.computeVertexNormals();
   return geo;
 }
+/** Fige les Tracés le temps d'un coup de pinceau du relief (l'Éditeur de terrain l'allume et l'éteint). */
+let _tracesFiges3D = false;
+export function figerLesTraces3D(oui){ _tracesFiges3D = !!oui; }
 /** Libère les reliefs (changement de Projet). */
 function libererReliefs3D(){
   _reliefs3D.forEach(e => { if (personaScene3D) personaScene3D.remove(e.groupe); e.groupe.traverse(n => { if (n.geometry) n.geometry.dispose(); }); });
@@ -3268,7 +3271,9 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
     const sigKey = JSON.stringify({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, wh: o.wallHeight, wt: o.wallThickness, world: o.world, holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),
       relief: signatureDuRelief(_relief), eau: [o.niveauEau, o.profondeur, o.hauteurZone] });   // #462c-2 : drapé sur le relief ; #462d : l'eau
     let entry = tracéMeshCache3D.get(o.id);
-    if (!entry || entry.sigKey !== sigKey) {
+    // Pendant un coup de pinceau du relief, les Tracés gardent leur maillage (le relief change à chaque
+    // image ; les redraper toutes coûtait plus que le reste du rendu) : ils suivent au relâcher.
+    if (entry && _tracesFiges3D) { /* gardé tel quel */ } else if (!entry || entry.sigKey !== sigKey) {
       sondeCompter('Trace reconstruite');
       // Release the old group if present.
       if (entry) {

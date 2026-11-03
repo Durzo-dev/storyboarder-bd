@@ -86,8 +86,9 @@ export function attenuation(d, rayon){
 export function peindreLeRelief(r, centre, { mode = 'monter', rayon = 4, force = 0.5, cible = 0 } = {}){
   if (!centre || !fini(centre.x) || !fini(centre.z) || !(rayon > 0)) return r;
   const g = etendreLeRelief(r, centre.x - rayon, centre.z - rayon, centre.x + rayon, centre.z + rayon);
+  // Une seule copie : sans agrandissement, l'ancien tableau sert de « avant » (il n'est pas modifié).
   const res = g === r ? { ...r, h: r.h.slice() } : g;
-  const avant = res.h.slice();
+  const avant = g === r ? r.h : res.h.slice();
   const i0 = Math.max(1, Math.floor((centre.x - rayon - res.x0) / res.pas)), i1 = Math.min(res.nx - 2, Math.ceil((centre.x + rayon - res.x0) / res.pas));
   const j0 = Math.max(1, Math.floor((centre.z - rayon - res.z0) / res.pas)), j1 = Math.min(res.nz - 2, Math.ceil((centre.z + rayon - res.z0) / res.pas));
   const k = Math.max(0, Math.min(1, force));
@@ -115,8 +116,18 @@ export function peindreLeRelief(r, centre, { mode = 'monter', rayon = 4, force =
  * de contrôle de ses hauteurs. Pas `v` seul : une annulation suivie d'un autre coup de pinceau
  * redonnerait le même `v` pour d'autres hauteurs.
  */
+const _signatures = new WeakMap();
 export function signatureDuRelief(r){
   if (!reliefValide(r)) return '';
+  // Mémorisée par relief : un relief n'est jamais modifié sur place (peindreLeRelief en rend un neuf),
+  // et la signature est demandée plusieurs fois par image (aperçu, Case, Tracés).
+  const deja = _signatures.get(r);
+  if (deja !== undefined) return deja;
+  const sig = calculerLaSignature(r);
+  _signatures.set(r, sig);
+  return sig;
+}
+function calculerLaSignature(r){
   let s = 0;
   for (let i = 0; i < r.h.length; i++) s = (Math.imul(s, 31) + Math.round((r.h[i] || 0) * 1000)) | 0;
   return `${r.pas}|${r.x0}|${r.z0}|${r.nx}|${r.nz}|${s}`;
@@ -275,14 +286,40 @@ export function profilFranchissant(r, pts){
   m = -Infinity;
   for (let i = h.length - 1; i >= 0; i--) { m = Math.max(m, h[i]); apres[i] = m; }
   const f = h.map((v, i) => Math.max(v, Math.min(avant[i], apres[i])));
-  return (x, z) => {
-    let meilleur = Infinity, valeur = f[0];
-    for (let i = 0; i + 1 < pts.length; i++) {
+  // Les segments rangés par cases de `CASE` mètres : un sommet ne cherche son segment le plus proche que
+  // dans les cases voisines (chercher dans tous coûtait des dizaines de millisecondes par route).
+  const CASE = 2, seaux = new Map(), cle = (i, j) => i * 100003 + j;
+  for (let i = 0; i + 1 < pts.length; i++) {
+    const a = pts[i], b = pts[i + 1];
+    for (let ci = Math.floor(Math.min(a.x, b.x) / CASE); ci <= Math.floor(Math.max(a.x, b.x) / CASE); ci++) {
+      for (let cj = Math.floor(Math.min(a.z, b.z) / CASE); cj <= Math.floor(Math.max(a.z, b.z) / CASE); cj++) {
+        const k = cle(ci, cj); if (!seaux.has(k)) seaux.set(k, []); seaux.get(k).push(i);
+      }
+    }
+  }
+  const essayer = (x, z, indices, etat) => {
+    for (const i of indices) {
       const a = pts[i], b = pts[i + 1], dx = b.x - a.x, dz = b.z - a.z, l2 = dx * dx + dz * dz;
       const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / l2)) : 0;
       const d = Math.hypot(x - (a.x + t * dx), z - (a.z + t * dz));
-      if (d < meilleur) { meilleur = d; valeur = f[i] + (f[i + 1] - f[i]) * t; }
+      if (d < etat.d) { etat.d = d; etat.v = f[i] + (f[i + 1] - f[i]) * t; }
     }
-    return valeur;
+  };
+  const tous = pts.slice(0, -1).map((_, i) => i);
+  return (x, z) => {
+    const etat = { d: Infinity, v: f[0] };
+    const ci = Math.floor(x / CASE), cj = Math.floor(z / CASE);
+    // Des anneaux de cases de plus en plus larges, jusqu'à trouver un segment (puis un anneau de plus,
+    // pour ne pas manquer un plus proche juste derrière la frontière).
+    for (let r = 0, trouve = -1; r <= 20; r++) {
+      for (let di = -r; di <= r; di++) for (let dj = -r; dj <= r; dj++) {
+        if (Math.max(Math.abs(di), Math.abs(dj)) !== r) continue;
+        const l = seaux.get(cle(ci + di, cj + dj)); if (l) essayer(x, z, l, etat);
+      }
+      if (etat.d < Infinity && trouve < 0) trouve = r;
+      if (trouve >= 0 && r >= trouve + 1) return etat.v;
+    }
+    if (etat.d === Infinity) essayer(x, z, tous, etat);
+    return etat.v;
   };
 }

@@ -305,3 +305,26 @@ test('le profil franchissant : un creux est franchi, une bosse suivie, une desce
   assert.ok(p(9, 0) < p(-9, 0) - 1, 'la descente reste une descente');
   assert.match(lire('scene3d.js'), /profilFranchissant\(_relief, w\.pts\)/);
 });
+
+// Signalé : le pinceau maintenu ramait. Mesuré : un rendu de l'aperçu redrapait tous les Tracés à
+// chaque passage (665 ms par image sur 15 Tracés). Ils sont figés pendant le coup, l'aperçu est bridé.
+test('pendant un coup de pinceau : Tracés figés, aperçu bridé, calque du plan mémorisé ; signature mémorisée', async () => {
+  const SC = await import('../src/scene3d.js');
+  const panel = { id: 'pf', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: 0.6, camDist: 30, pts: [] };
+  const objs = [panel];
+  for (let k = 0; k < 6; k++) objs.push({ id: 'tf' + k, type: 'tracé', tracéType: 'route', panelId: 'pf', world: { pts: [{ x: -40, z: k * 6 - 15 }, { x: 40, z: k * 6 - 12 }], width: 4 } });
+  const page = { w: 480, h: 360, objects: objs };
+  let r = R.peindreLeRelief(null, { x: 0, z: 0 }, { rayon: 30, force: 0.3 });
+  const cam = { rotX: 0.6, rotY: 0, dist: 60, x: 0, y: 0, z: 0 };
+  panel.relief = r; SC.rendreSceneVueLibre3D(panel, page, cam, 0.5);
+  SC.figerLesTraces3D(true);
+  const t = globalThis.performance.now();
+  for (let i = 0; i < 5; i++) { r = R.peindreLeRelief(r, { x: i, z: 0 }, { rayon: 8, force: 0.3 }); panel.relief = r; SC.rendreSceneVueLibre3D(panel, page, cam, 0.5); }
+  SC.figerLesTraces3D(false);
+  assert.ok((globalThis.performance.now() - t) / 5 < 40, 'une image d\'aperçu reste légère pendant le coup');
+  assert.equal(R.signatureDuRelief(r), R.signatureDuRelief(r));
+  const ui = lire('terrain-editeur-ui.js');
+  assert.match(ui, /figerLesTraces3D\(true\);/);
+  assert.match(ui, /if \(T\.coup && T\.dernierApercu && maintenant - T\.dernierApercu < INTERVALLE_APERCU_EN_COUP_MS\)/);
+  assert.match(ui, /function calqueDuRelief\(r\)\{\n  if \(_calque\.r === r && _calque\.toile\) return _calque\.toile;/);
+});

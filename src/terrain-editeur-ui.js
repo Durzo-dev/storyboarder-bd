@@ -21,7 +21,7 @@
 import { S, tr, newId } from './state.js';
 import { contenuDuPlan, cadrageDuPlan, versLePlan, zoomerLePlan, pasDeLaGrille, versLeMonde,
   zoneEntre, traceDePoints, deplacerLeMonde, sousLePoint, tournerLaZone } from './terrain-plan.js';
-import { rendreSceneVueLibre3D, ensureElementWorldPos3D, pointDuBatimentPlace3D, panelCamBasis3D, getCamOrbitWorld,
+import { rendreSceneVueLibre3D, figerLesTraces3D, ensureElementWorldPos3D, pointDuBatimentPlace3D, panelCamBasis3D, getCamOrbitWorld,
   tracéUpdateScreenPts } from './scene3d.js';
 import { nomDuTrace } from './canvas-tools.js';
 import { peindreLeMasque, mondeDuMasque, casesDuMasque, PAS_DE_ZONE } from './terrain-zone-pinceau.js';
@@ -193,6 +193,7 @@ function fermerSansDemander(){
   const sc = laScene();
   if (sc && terrainModifie()) remettreLeTerrain(sc, T.origine);
   if (T.demande) cancelAnimationFrame(T.demande);
+  if (T.apercuDiffere) clearTimeout(T.apercuDiffere);
   T = null;
   S.terrainEnEdition = false;
   $('terrainEditeur').classList.add('hidden');
@@ -269,6 +270,7 @@ function peindre(m, facteur = 1){
 const CADENCE_DU_PINCEAU_MS = 100, FORCE_SUR_PLACE = 0.25;
 function arreterLeCoup(){
   if (T && T.coup && T.coup.minuteur) clearInterval(T.coup.minuteur);
+  figerLesTraces3D(false);
 }
 function nomDeSorte(sorte){
   return ({ route: tr('Road', 'Route'), chemin: tr('Dirt path', 'Chemin'), muret: tr('Low wall', 'Muret'),
@@ -645,15 +647,14 @@ function dessinerPlan(){
   const sc = laScene();
   const r = sc && sc.panel.relief;
   if (reliefValide(r)) {
-    const cote = r.pas * vue.ppm;
-    for (let j = 0; j < r.nz; j++) for (let i = 0; i < r.nx; i++) {
-      const hv = r.h[j * r.nx + i];
-      if (!hv || Math.abs(hv) < 0.02) continue;
-      const p = e({ x: r.x0 + i * r.pas, z: r.z0 + j * r.pas });
-      if (p.x < -cote || p.y < -cote || p.x > l + cote || p.y > h + cote) continue;
-      const a = Math.min(0.75, 0.12 + Math.abs(hv) * 0.12);
-      g.fillStyle = hv > 0 ? `rgba(176, 120, 64, ${a})` : `rgba(64, 120, 200, ${a})`;
-      g.fillRect(p.x - cote / 2, p.y - cote / 2, cote + 0.5, cote + 0.5);
+    // UNE image d'un pixel par point de la grille, posée à l'échelle (et non une case dessinée par point :
+    // des milliers d'appels par image faisaient ramer le pinceau). Refaite seulement quand le relief change.
+    const calque = calqueDuRelief(r);
+    if (calque) {
+      const p = e({ x: r.x0 - r.pas / 2, z: r.z0 - r.pas / 2 });
+      g.save(); g.imageSmoothingEnabled = false;
+      g.drawImage(calque, p.x, p.y, r.nx * r.pas * vue.ppm, r.nz * r.pas * vue.ppm);
+      g.restore();
     }
   }
   const encre = couleur('--ink', '#e8e8ea'), accent = couleur('--accent', '#e07a3c');
@@ -693,6 +694,27 @@ function dessinerPlan(){
     }
   }
   dessinerEnCours(g, e);
+}
+
+/** Le calque du relief sur le plan (brun au-dessus du Sol, bleu en dessous), mémorisé par relief. */
+let _calque = { r: null, toile: null };
+function calqueDuRelief(r){
+  if (_calque.r === r && _calque.toile) return _calque.toile;
+  const toile = document.createElement('canvas');
+  toile.width = r.nx; toile.height = r.nz;
+  const g = toile.getContext && toile.getContext('2d');
+  if (!g || !g.createImageData) return null;
+  const img = g.createImageData(r.nx, r.nz);
+  if (!img || !img.data) return null;
+  for (let k = 0; k < r.h.length; k++) {
+    const hv = r.h[k];
+    if (!hv || Math.abs(hv) < 0.02) continue;
+    const a = Math.min(0.75, 0.12 + Math.abs(hv) * 0.12);
+    img.data.set(hv > 0 ? [176, 120, 64, Math.round(a * 255)] : [64, 120, 200, Math.round(a * 255)], k * 4);
+  }
+  g.putImageData(img, 0, 0);
+  _calque = { r, toile };
+  return toile;
 }
 
 /** Ce qui est en cours de tracé : la ligne (jusqu'à la souris), le rectangle de Zone. */
@@ -736,6 +758,7 @@ function sousLePlan(s){
 
 // ── L'aperçu 3D ───────────────────────────────────────────────────────────────────────────────
 
+const INTERVALLE_APERCU_EN_COUP_MS = 120;
 function dessinerApercu(){
   const sc = laScene();
   const c = $('terrainApercuCanvas');
@@ -755,6 +778,14 @@ function dessinerApercu(){
     // Signalé : le niveau de l'eau ne se voyait qu'en bougeant l'aperçu (absent de cette signature).
     o.niveauEau, o.profondeur, o.hauteurZone])]);
   if (sig === T.sigApercu) return;
+  // Pendant un coup de pinceau, une image d'aperçu tous les 120 ms au plus (le plan, lui, suit à chaque
+  // image) : un rendu de Scène complet par image d'écran faisait ramer le geste.
+  const maintenant = Date.now();
+  if (T.coup && T.dernierApercu && maintenant - T.dernierApercu < INTERVALLE_APERCU_EN_COUP_MS) {
+    if (!T.apercuDiffere) T.apercuDiffere = setTimeout(() => { if (T) { T.apercuDiffere = 0; redessiner(); } }, INTERVALLE_APERCU_EN_COUP_MS);
+    return;
+  }
+  T.dernierApercu = maintenant;
   T.sigApercu = sig;
   const img = rendreSceneVueLibre3D(sc.panel, sc.page, T.cam, scale);
   const g = c.getContext('2d');
@@ -949,6 +980,7 @@ export function initEditeurDeTerrain(){
       // « Aplanir » vise la hauteur sous le premier clic, pour tout le coup.
       T.coup = { cible: hauteurDuRelief(sc.panel.relief, m.x, m.z), dernier: null, ici: m };
       peindre(m);
+      figerLesTraces3D(true);   // les Tracés suivront au relâcher (le rendu de l'aperçu reste léger)
       T.coup.minuteur = setInterval(() => { if (T && T.coup && T.coup.ici) { peindre(T.coup.ici, FORCE_SUR_PLACE); redessiner(); } }, CADENCE_DU_PINCEAU_MS);
       plan.setPointerCapture && plan.setPointerCapture(e.pointerId);
       redessiner();
@@ -1037,7 +1069,8 @@ export function initEditeurDeTerrain(){
         majContenu(); redessiner();
       }
     }
-    if (T.coup) { arreterLeCoup(); T.coup = null; apresModification(null); }
+    // Au relâcher, l'aperçu est refait (les Tracés, figés pendant le coup, s'y drapent enfin).
+    if (T.coup) { arreterLeCoup(); T.coup = null; T.sigApercu = null; apresModification(null); }
     if (T.coupZone) { const id = T.coupZone.id; T.coupZone = null; const sc = laScene(); apresModification(sc && id ? sc.page.objects.find(o => o.id === id) : null); }
     if (T.rectangle && e && e.type === 'pointerup') {
       const { a, b } = T.rectangle; T.rectangle = null;
