@@ -3066,3 +3066,6 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 #terrainReliefRetirerBtn{ width:100%; margin-top:14px; }
 #terrainChoisiReglages input[type="range"]{ width:100%; margin-bottom:6px; }
 #terrainSecZone input[type="range"]{ width:100%; }
+#terrainChoisiZone .modal-input{ width:100%; margin:0; }
+#terrainChoisiZone .terrain-couleur{ width:100%; height:32px; padding:2px; cursor:pointer; }
+#terrainChoisiZone .texture-carre-zone, #terrainChoisiZone > div{ margin-top:4px; }

@@ -85,3 +85,38 @@ test('l\'outil Relief a son icône, distincte de celle de l\'Éditeur de terrain
   assert.notEqual(chemins(svg('terrainOutilRelief')), chemins(svg('openTerrainEditorBtn')));
   assert.match(lire('scene3d.js'), /geometrieDuMasque3D\(w, GROUND_Y_DEFAULT_3D \+ 0\.005\)/);
 });
+
+// Demandé : clic droit avec l'outil Zone = rectangle ↔ pinceau ; les réglages d'une Zone dans
+// « Sélection » ; signalé : une Zone à la texture Eau ne se voyait pas (nappe sous le Sol).
+test('outil Zone : clic droit = rectangle ↔ pinceau ; une Zone se règle dans « Sélection » ; l\'eau au-dessus du Sol', async () => {
+  const R = await import('../src/terrain-relief.js');
+  assert.ok(R.NIVEAU_EAU_PAR_DEFAUT > 0, 'la nappe par défaut est juste au-dessus du Sol plat');
+  globalThis.requestAnimationFrame = (f) => { f(); return 0; };
+  globalThis.getComputedStyle = () => ({ getPropertyValue: () => '' });
+  const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
+  const zone = { id: 'z1', type: 'tracé', tracéType: 'terrain', terrainType: 'herbe', name: 'Pré', panelId: 'p',
+    world: { cx: 0, cz: 0, w: 4, h: 4, rotY: 0, corners: [{ x: -2, z: -2 }, { x: 2, z: -2 }, { x: 2, z: 2 }, { x: -2, z: 2 }] } };
+  S.scenes = [{ id: 's1', name: 'Scène 1', w: 480, h: 360, pages: [{ objects: [panel, zone] }] }];
+  S.editingSceneId = 's1';
+  U.setTerrainEditeurCallbacks({ instantane: () => {}, ouvrirLaScene: () => {}, apresModification: () => {}, confirmer: async () => true });
+  U.initEditeurDeTerrain();
+  U.ouvrirEditeurDeTerrain('s1', { choisi: 'z1' });
+  const plan = document.getElementById('terrainPlan');
+  const jouer = (type, ev) => (plan._ecouteurs[type] || []).forEach(f => f({ preventDefault(){}, stopPropagation(){}, pointerId: 1, detail: 1, ...ev, type }));
+  U.rafraichirEditeurDeTerrain();
+  const reglages = document.getElementById('terrainChoisiZone').children;
+  const nom = reglages.find(c => c.dataset && c.dataset.cle === 'name');
+  assert.equal(nom.value, 'Pré');
+  nom.value = 'Prairie'; nom.onchange();
+  assert.equal(zone.name, 'Prairie');
+  assert.ok(reglages.some(c => c.dataset && c.dataset.cle === 'terrainColor'), 'la couleur');
+  assert.equal(document.getElementById('terrainReglerBtn').hidden, true, 'plus de fenêtre pour une Zone');
+  // Clic droit sans bouger, outil Zone : la forme change.
+  document.getElementById('terrainOutilZone').onclick();
+  const forme = () => document.getElementById('terrainSortesZone').children.find(b => b.classList.contains('actif')).dataset.valeur;
+  const f0 = forme();
+  jouer('pointerdown', { button: 2, clientX: 300, clientY: 300 });
+  jouer('pointerup', { clientX: 300, clientY: 300 });
+  assert.notEqual(forme(), f0);
+  document.getElementById('terrainValiderBtn').onclick();
+});

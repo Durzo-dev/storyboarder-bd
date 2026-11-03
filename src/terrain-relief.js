@@ -185,7 +185,9 @@ export function aplanirSousLesEmprises(r, emprises, marge = 0.6){
 export const PROFONDEUR_RIVIERE = 1.2;
 export const EAU_SOUS_LA_BERGE = 0.35;
 /** Le niveau d'un lac ou d'une mer, par défaut (mètres, par rapport au Sol). */
-export const NIVEAU_EAU_PAR_DEFAUT = -0.3;
+// Juste AU-DESSUS du Sol (signalé : une Zone passée à la texture Eau ne se voyait pas, sa nappe à
+// −0,3 m passant sous le Sol plat). Creusée plus bas, l'eau remplit ; plus haut, le sol la cache.
+export const NIVEAU_EAU_PAR_DEFAUT = 0.02;
 /** La pente des berges, au-delà du lit (mètres). */
 const BERGE = 1.5;
 

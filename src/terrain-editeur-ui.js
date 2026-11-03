@@ -31,7 +31,8 @@ import { TRACÉ_DEFAULTS } from './constants.js';
 import { getElementDepth, vitesseRotation3D, vitesseDeplacement3D, facteurDeZoom3D, deltaMolette3D } from './utils.js';
 import { niveauxTries } from './batiment-niveaux.js';
 import { formesDesPieces } from './batiment-pieces.js';
-import { PANEL_CAM_DEFAULT_DIST_3D, WALL_PX_PER_UNIT_3D } from './constants.js';
+import { PANEL_CAM_DEFAULT_DIST_3D, WALL_PX_PER_UNIT_3D, GROUND_TYPE_DEFS, teinteDuSol3D } from './constants.js';
+import { carreDeTexture } from './textures-store-ui.js';
 import { sectionDroitePliee, memoriserSectionDroite } from './section-memory.js';
 
 const $ = (id) => document.getElementById(id);
@@ -382,7 +383,8 @@ export function commandesDuTerrain(trad = tr, outil = 'selection'){
   if (outil === 'zone') {
     l.push(trad('Rectangle: drag to draw a zone. Brush: drag to paint one (a selected painted zone grows; Shift: erase).',
       'Rectangle : glisser pour tracer une Zone. Pinceau : glisser pour en peindre une (une Zone peinte choisie s\'agrandit ; Maj : gommer).'));
-    l.push(trad('Brush: wheel = size, Ctrl + wheel = zoom. Water: the Water texture in "Settings".', 'Pinceau : molette = taille, Ctrl + molette = zoom. L\'eau : la texture Eau dans « Régler ».'));
+    l.push(trad('Right-click: rectangle ↔ brush. Brush: wheel = size, Ctrl + wheel = zoom. Water: the Water texture under "Selection".',
+      'Clic droit : rectangle ↔ pinceau. Pinceau : molette = taille, Ctrl + molette = zoom. L\'eau : la texture Eau dans « Sélection ».'));
   } else if (outil === 'relief') {
     l.push(trad('Drag: paint the relief (raise, dig, flatten to the height under the first click, smooth).', "Glisser : peindre le relief (monter, creuser, aplanir à la hauteur du premier clic, adoucir)."));
     l.push(trad('Wheel: size · right-click: next mode · Ctrl + wheel: zoom.', 'Molette : taille · clic droit : mode suivant · Ctrl + molette : zoom.'));
@@ -398,6 +400,57 @@ export function commandesDuTerrain(trad = tr, outil = 'selection'){
   l.push(trad('Ctrl+Z / Ctrl+Y: undo, redo. Nothing reaches the Scene before "Validate".', 'Ctrl+Z / Ctrl+Y : annuler, rétablir. Rien ne va sur la Scène avant « Valider ».'));
   l.push(trad('Esc: cancel, then leave the tool, then back to the Scene.', "Échap : annuler, puis quitter l'outil, puis revenir à la Scène."));
   return l;
+}
+
+/**
+ * Demandé : les réglages d'une ZONE DE TERRAIN dans la section « Sélection » (ceux de sa fenêtre) : son
+ * nom, sa texture (le carré qui ouvre les textures du Sol), sa couleur (sauf l'Eau), son étiquette.
+ * Construits une fois par Zone et par texture (même raison que boutonsDeChoix), relus ensuite.
+ */
+function reglagesDeZone(obj){
+  const boite = $('terrainChoisiZone');
+  const zone = obj && obj.tracéType === 'terrain' ? obj : null;
+  const type = zone ? (zone.terrainType || 'herbe') : '';
+  const cle = zone ? zone.id + ':' + type : '';
+  const modifier = (faire) => { retenirPourAnnuler(); faire(); apresModification(zone); };
+  if (boite.dataset.cle !== cle) {
+    boite.dataset.cle = cle;
+    if (!zone) { boite.replaceChildren(); return; }
+    const def = GROUND_TYPE_DEFS.find(d => d.id === type) || GROUND_TYPE_DEFS[0];
+    const libelle = (texte) => { const l = document.createElement('label'); l.className = 'terrain-curseur-libelle'; l.textContent = texte; return l; };
+    const champ = (cleChamp, texte, indice) => {
+      const c = document.createElement('input');
+      c.type = 'text'; c.className = 'modal-input'; c.placeholder = indice; c.dataset.cle = cleChamp;
+      c.onchange = () => modifier(() => { zone[cleChamp] = c.value; });
+      return [libelle(texte), c];
+    };
+    const carre = carreDeTexture({
+      valeur: type, usage: 'sol', titre: tr('Choose the terrain texture', 'Choisir la texture du terrain'),
+      teinte: teinteDuSol3D(def, zone.terrainColor),
+      appliquer: (id) => modifier(() => { zone.terrainType = id; delete zone.terrainColor; }),
+    });
+    const elements = [...champ('name', tr('Name', 'Nom'), tr('E.g. Meadow', 'Ex. Prairie')), libelle(tr('Texture', 'Texture')), carre];
+    if (!def.eau) {
+      const couleur = document.createElement('input');
+      couleur.type = 'color'; couleur.className = 'terrain-couleur'; couleur.dataset.cle = 'terrainColor';
+      let retenu = false;
+      couleur.oninput = () => {
+        if (!retenu) { retenirPourAnnuler(); retenu = true; }
+        zone.terrainColor = couleur.value; apresModification(zone);
+      };
+      couleur.onchange = () => { retenu = false; };
+      couleur._lire = () => teinteDuSol3D(def, zone.terrainColor) || def.swatch;
+      elements.push(libelle(tr('Colour', 'Couleur')), couleur);
+    }
+    elements.push(...champ('label', tr('Displayed label', 'Étiquette affichée'), tr('Optional', 'Optionnel')));
+    boite.replaceChildren(...elements);
+  }
+  if (!zone) return;
+  for (const c of boite.children || []) {
+    if (!c.dataset || !c.dataset.cle || document.activeElement === c) continue;
+    if (c.dataset.cle === 'terrainColor') c.value = c._lire();
+    else c.value = zone[c.dataset.cle] || '';
+  }
 }
 
 /**
@@ -493,7 +546,10 @@ function majContenu(){
   const obj = terrainChoisi();
   $('terrainSecChoisi').hidden = !obj;
   if (obj) $('terrainChoisiNom').textContent = obj.name || nomDeSorte(obj.tracéType);
+  reglagesDeZone(obj);
   reglagesDuChoisi(obj);
+  // « Régler » ne sert plus qu'aux Tracés : une Zone se règle dans la section même.
+  $('terrainReglerBtn').hidden = !obj || obj.tracéType === 'terrain';
   // La Zone à poser (outil Zone).
   $('terrainSecZone').hidden = T.outil !== 'zone';
   if (T.outil === 'zone') {
@@ -854,7 +910,8 @@ export function initEditeurDeTerrain(){
     const f = sousLePlan(s);
     T.choisi = f ? f.id : null;
     const obj = terrainChoisi();
-    if (obj && e.detail >= 2) { _rappels.regler(obj); return; }
+    // Le double-clic ouvre la fenêtre d'un Tracé ; une Zone, elle, se règle dans « Sélection ».
+    if (obj && e.detail >= 2 && obj.tracéType !== 'terrain') { _rappels.regler(obj); return; }
     // Une Zone ou un Tracé choisi se fait glisser (l'instantané au premier mouvement).
     if (obj && obj.world) { T.glisser = { id: obj.id, depart: m, origine: JSON.parse(JSON.stringify(obj.world)), bouge: false }; plan.setPointerCapture && plan.setPointerCapture(e.pointerId); }
     majContenu(); redessiner();
@@ -894,8 +951,13 @@ export function initEditeurDeTerrain(){
     if (T.geste && T.geste.sorte === 'plan') {
       // Demandé : avec l'outil Relief, un clic droit SANS bouger passe au mode suivant (glissé, il déplace la vue).
       const g0 = T.geste; T.geste = null;
-      if (g0.bouton === 2 && T.outil === 'relief' && e && e.type === 'pointerup' && Math.hypot(e.clientX - g0.x0, e.clientY - g0.y0) < 4) {
+      const clicSansBouger = g0.bouton === 2 && e && e.type === 'pointerup' && Math.hypot(e.clientX - g0.x0, e.clientY - g0.y0) < 4;
+      if (clicSansBouger && T.outil === 'relief') {
         T.pinceau.mode = T_PINCEAU.mode = MODES_DU_PINCEAU[(MODES_DU_PINCEAU.indexOf(T.pinceau.mode) + 1) % MODES_DU_PINCEAU.length];
+        majContenu(); redessiner();
+      } else if (clicSansBouger && T.outil === 'zone') {
+        // Demandé : avec l'outil Zone, le clic droit passe du Rectangle au Pinceau, et inversement.
+        T.sorteZone = SORTES_DE_ZONE[(SORTES_DE_ZONE.indexOf(T.sorteZone) + 1) % SORTES_DE_ZONE.length];
         majContenu(); redessiner();
       }
     }
