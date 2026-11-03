@@ -322,7 +322,7 @@ export const HELP_MANUAL_EN = [
     'Selection tool (V): click a zone or path to select it, drag to move it, right-click to turn a zone a quarter (held: it follows the mouse), Del to delete it; a zone is set up right under "Selection" (name, texture, colour, ground height: it raises or digs the ground under it); a path, by a double-click or "Settings".',
   ]},
   { id: 'terrain_relief', title: 'Relief and water', paragraphs: [
-    'Relief tool (R): drag to paint the ground: Raise, Dig, Flatten (to the height under the first click) or Smooth, with a size and a strength (wheel: size, right-click: next mode, Ctrl + wheel: zoom). The circle shows the brush and the height under it; brown is above the ground, blue below.',
+    'Relief tool (R): drag to paint the ground (held still, it keeps working): Raise, Dig, Flatten (to the height under the first click) or Smooth, with a size and a strength (wheel: size, right-click: next mode, Ctrl + wheel: zoom). The circle shows the brush and the height under it; brown is above the ground, blue below.',
     '"Remove all the relief" makes the Scene flat again.',
     'What stands on the ground follows the relief: Elements, paths, low walls, zones. Under a building, the ground is flattened at the height of its centre. A Scene loaded into a panel brings its relief.',
     'Water: the River path (Paths tool) digs its bed and fills it, with its width and depth under "Selection". A zone with the Water texture (under "Selection") is a flat sheet at its level: whatever is dug below it is under water.',
@@ -600,7 +600,7 @@ export const HELP_MANUAL_FR = [
     "Outil Sélection (V) : clic sur une Zone ou un Tracé pour le choisir, glisser pour le déplacer, clic droit pour tourner une Zone d'un quart (maintenu : elle suit la souris), Suppr pour le supprimer ; une Zone se règle dans « Sélection » même (nom, texture, couleur, hauteur du sol : elle relève ou creuse le terrain sous elle) ; un Tracé, par un double-clic ou « Régler ».",
   ]},
   { id: 'terrain_relief', title: 'Relief et eau', paragraphs: [
-    "Outil Relief (R) : glisser pour peindre le sol : Monter, Creuser, Aplanir (à la hauteur du premier clic) ou Adoucir, avec une taille et une force (molette : taille, clic droit : mode suivant, Ctrl + molette : zoom). Le cercle montre le pinceau et la hauteur dessous ; le brun est au-dessus du Sol, le bleu en dessous.",
+    "Outil Relief (R) : glisser pour peindre le sol (maintenu sur place, il continue) : Monter, Creuser, Aplanir (à la hauteur du premier clic) ou Adoucir, avec une taille et une force (molette : taille, clic droit : mode suivant, Ctrl + molette : zoom). Le cercle montre le pinceau et la hauteur dessous ; le brun est au-dessus du Sol, le bleu en dessous.",
     "« Retirer tout le relief » rend la Scène plate.",
     "Ce qui est posé suit le relief : Éléments, Tracés, murets, Zones. Sous un bâtiment, le sol est aplani à la hauteur de son centre. Une Scène chargée dans une Case apporte son relief.",
     "L'eau : le Tracé Rivière (outil Tracés) creuse son lit et s'y remplit, avec sa largeur et sa profondeur dans « Sélection ». Une Zone à la texture Eau (dans « Sélection ») est une nappe plate à son niveau : ce qui est creusé plus bas est sous l'eau.",

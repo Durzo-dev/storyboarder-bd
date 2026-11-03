@@ -259,3 +259,28 @@ test('le muret est construit sur la ligne redécoupée : il suit le relief', asy
     const p = o.geometry.attributes.position; for (let i = 0; i < p.count; i++) if (Math.abs(p.getX(i)) < 0.3) basAuCentre = Math.min(basAuCentre, p.getY(i)); });
   assert.ok(basAuCentre > -3 + R.hauteurDuRelief(r, 0, 0) - 0.2 && basAuCentre < 50, `le pied du muret au sommet : ${basAuCentre}`);
 });
+
+// Demandé : rester cliqué au même endroit accentue le relief (sans bouger).
+test('le pinceau maintenu sur place continue d\'agir, et s\'arrête au relâcher', async () => {
+  globalThis.requestAnimationFrame = (f) => { f(); return 0; };
+  globalThis.getComputedStyle = () => ({ getPropertyValue: () => '' });
+  const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
+  S.scenes = [{ id: 's1', name: 'Scène 1', w: 480, h: 360, pages: [{ objects: [panel] }] }];
+  S.editingSceneId = 's1';
+  U.setTerrainEditeurCallbacks({ instantane: () => {}, ouvrirLaScene: () => {}, apresModification: () => {}, confirmer: async () => true });
+  U.initEditeurDeTerrain();
+  U.ouvrirEditeurDeTerrain('s1');
+  document.getElementById('terrainOutilRelief').onclick();
+  document.getElementById('terrainModesRelief').children.find(b => b.dataset.valeur === 'monter').onclick();
+  const plan = document.getElementById('terrainPlan');
+  const jouer = (type, ev) => (plan._ecouteurs[type] || []).forEach(f => f({ preventDefault(){}, stopPropagation(){}, pointerId: 1, detail: 1, ...ev, type }));
+  jouer('pointerdown', { button: 0, clientX: 400, clientY: 300 });
+  const h0 = R.hauteurDuRelief(panel.relief, 0, 0);
+  await new Promise(r => setTimeout(r, 350));
+  const h1 = R.hauteurDuRelief(panel.relief, 0, 0);
+  assert.ok(h1 > h0, `maintenu : ${h0} → ${h1}`);
+  jouer('pointerup', { clientX: 400, clientY: 300 });
+  await new Promise(r => setTimeout(r, 250));
+  assert.equal(R.hauteurDuRelief(panel.relief, 0, 0), h1, 'relâché : plus rien');
+  document.getElementById('terrainValiderBtn').onclick();
+});

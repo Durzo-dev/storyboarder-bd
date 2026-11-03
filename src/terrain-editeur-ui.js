@@ -189,6 +189,7 @@ export function validerLeTerrain(){
 /** Ferme sans rien demander ; ce qui n'est pas validé est retiré de la Scène. */
 function fermerSansDemander(){
   if (!T) return;
+  arreterLeCoup();
   const sc = laScene();
   if (sc && terrainModifie()) remettreLeTerrain(sc, T.origine);
   if (T.demande) cancelAnimationFrame(T.demande);
@@ -258,11 +259,16 @@ function nomDeMode(m){
 }
 
 /** Un passage du pinceau du relief en `m` (mètres) : le relief du canevas de la Scène change. */
-function peindre(m){
+function peindre(m, facteur = 1){
   const sc = laScene();
   if (!sc || !T.coup) return;
-  sc.panel.relief = peindreLeRelief(sc.panel.relief, m, { ...T.pinceau, cible: T.coup.cible });
-  T.coup.dernier = m;
+  sc.panel.relief = peindreLeRelief(sc.panel.relief, m, { ...T.pinceau, force: T.pinceau.force * facteur, cible: T.coup.cible });
+  T.coup.dernier = m; T.coup.ici = m;
+}
+/** Demandé : le pinceau MAINTENU sur place continue d'agir, un passage léger tous les dixièmes de seconde. */
+const CADENCE_DU_PINCEAU_MS = 100, FORCE_SUR_PLACE = 0.25;
+function arreterLeCoup(){
+  if (T && T.coup && T.coup.minuteur) clearInterval(T.coup.minuteur);
 }
 function nomDeSorte(sorte){
   return ({ route: tr('Road', 'Route'), chemin: tr('Dirt path', 'Chemin'), muret: tr('Low wall', 'Muret'),
@@ -941,8 +947,9 @@ export function initEditeurDeTerrain(){
       if (!sc) return;
       retenirPourAnnuler();
       // « Aplanir » vise la hauteur sous le premier clic, pour tout le coup.
-      T.coup = { cible: hauteurDuRelief(sc.panel.relief, m.x, m.z), dernier: null };
+      T.coup = { cible: hauteurDuRelief(sc.panel.relief, m.x, m.z), dernier: null, ici: m };
       peindre(m);
+      T.coup.minuteur = setInterval(() => { if (T && T.coup && T.coup.ici) { peindre(T.coup.ici, FORCE_SUR_PLACE); redessiner(); } }, CADENCE_DU_PINCEAU_MS);
       plan.setPointerCapture && plan.setPointerCapture(e.pointerId);
       redessiner();
       return;
@@ -992,6 +999,7 @@ export function initEditeurDeTerrain(){
     else if (T.outil === 'relief') {
       T.survol = m;
       // Un passage tous les quarts de rayon : le trait est régulier, quelle que soit la vitesse.
+      if (T.coup) T.coup.ici = m;
       if (T.coup && (!T.coup.dernier || Math.hypot(m.x - T.coup.dernier.x, m.z - T.coup.dernier.z) >= T.pinceau.rayon / 4)) peindre(m);
       redessiner();
     }
@@ -1029,7 +1037,7 @@ export function initEditeurDeTerrain(){
         majContenu(); redessiner();
       }
     }
-    if (T.coup) { T.coup = null; apresModification(null); }
+    if (T.coup) { arreterLeCoup(); T.coup = null; apresModification(null); }
     if (T.coupZone) { const id = T.coupZone.id; T.coupZone = null; const sc = laScene(); apresModification(sc && id ? sc.page.objects.find(o => o.id === id) : null); }
     if (T.rectangle && e && e.type === 'pointerup') {
       const { a, b } = T.rectangle; T.rectangle = null;
