@@ -84,7 +84,7 @@ export const I18N_TEXT = [
   ['#batimentSectionOuverture', 'Opening to place', 'Ouverture à poser'],
   ['#batimentOuvertureSupprimer', 'Delete the opening', "Supprimer l'ouverture"],
   ['#batimentAjouterElement', 'Add an element', 'Ajouter un élément'],
-  ['#batimentImporterPlan', 'Import a plan', 'Importer un plan'],
+  ['#batimentImporterPlan', null, null, 'title', 'Import a plan (photo or scan)', 'Importer un plan (photo ou scan)'],
   ['#batimentPieceSupprimer', 'Delete the room', 'Supprimer la pièce'],
   ['#batimentCourSupprimer', 'Delete the courtyard', 'Supprimer la cour'],
   ['#tracéThicknessLabel', 'Thickness (cm)', 'Épaisseur (cm)'],

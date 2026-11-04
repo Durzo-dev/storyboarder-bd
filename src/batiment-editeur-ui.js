@@ -1448,7 +1448,7 @@ function choisirOutil(outil){
   // Aucun outil, c'est la SÉLECTION (demandé : l'outil par défaut).
   E.outil = outil || 'selection'; E.chaine = null; E.survol = null;
   if (E.outil !== 'selection') E.selection = null;
-  document.querySelectorAll('.batiment-outil').forEach(b => b.classList.toggle('actif', b.dataset.outil === E.outil));
+  document.querySelectorAll('.batiment-outil[data-outil]').forEach(b => b.classList.toggle('actif', b.dataset.outil === E.outil));
   $('batimentPlan').classList.toggle('outil-mur', E.outil === 'mur' || E.outil === 'ouverture' || E.outil === 'escalier');
   E.fantomeEscalier = null;
   remplirPanneau();
@@ -3017,7 +3017,8 @@ export function initEditeurDeBatiment(){
     E.batiment.nom = nom; 
     majBoutonsDeSortie();
   });
-  document.querySelectorAll('.batiment-outil').forEach(b => { b.onclick = () => basculerOutil(b.dataset.outil); });
+  // Les OUTILS seulement (data-outil) : le bouton d'import, à côté, est une action (#456e).
+  document.querySelectorAll('.batiment-outil[data-outil]').forEach(b => { b.onclick = () => basculerOutil(b.dataset.outil); });
   // #454c : l'escalier choisi.
   $('batimentEscalierTourner').onclick = () => {
     const x = escalierSelectionne(); if (!x) return;

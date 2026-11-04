@@ -3128,4 +3128,5 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 .plan-import-echelle input{ flex:1 1 90px; }
 .plan-import-echelle select{ flex:1 1 140px; }
 .plan-import-alertes{ margin:8px 0 0; font-size:var(--texte-libelle); color:var(--danger); min-height:1.2em; }
-.batiment-importer-plan{ width:100%; margin-top:8px; }
+/* Le bouton d'import est une action parmi les outils : caché, comme eux, pendant une pose ou un masquage. */
+.batiment-editeur.pose .batiment-outil-action, .batiment-editeur.masquage .batiment-outil-action{ display:none; }

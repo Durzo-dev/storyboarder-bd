@@ -249,6 +249,13 @@
              batiment-editeur-ui.js, construireColonneDesNiveaux). -->
         <div class="batiment-niveaux-plan" id="batimentNiveauxPlan"></div>
         <div class="batiment-outils" id="batimentOutils">
+          <!-- #456e : une ACTION, pas un outil (pas de data-outil) : un plan d'architecte (photo ou scan)
+               devient les murs et ouvertures du niveau courant. À gauche des outils (demandé). -->
+          <button type="button" class="batiment-outil batiment-outil-action" id="batimentImporterPlan" title="Importer un plan (photo ou scan)">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+              <path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8Z"/><path d="M14 3v5h5"/><path d="M8 13h8M12 13v5M8 18h8"/>
+            </svg>
+          </button>
           <button type="button" class="batiment-outil" id="batimentOutilMur" data-outil="mur" title="Tracer des murs (M)">
             <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
               <rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 12h18M9 5v7M15 12v7"/>
@@ -307,8 +314,6 @@
         <section class="side-section" id="batimentSecNiveaux">
           <h2 id="batimentSectionNiveaux">Niveaux</h2>
           <div id="batimentNiveaux" class="batiment-liste"></div>
-          <!-- #456e : un plan d'architecte (photo ou scan) devient les murs et ouvertures de CE niveau. -->
-          <button type="button" class="nav-btn batiment-importer-plan" id="batimentImporterPlan">Importer un plan</button>
         </section>
         <!-- #458 : le TOIT du niveau courant (type, pente, débord, sens, bordure, revêtement), construit
              par batiment-editeur-ui.js (remplirToit). -->
