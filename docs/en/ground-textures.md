@@ -20,6 +20,16 @@ than first-person ones: that is a matter of viewing distance, not of quality.
 surface next to a blurry one is noticed immediately, whereas a whole environment at 128 px/m reads
 perfectly well. That is the most useful practical consequence of this note.
 
+## Survey of 4 November 2026 (#435i): the inconsistency is solved
+
+The thirteen photographed materials are baked at 1024² and laid on the same 4 m tile (`repeat`
+3000): **256 px/m for all of them**, twice the 128 target considered below. The factor-of-eight gap
+in the next table no longer exists. Real-size patterns, measured on the grains: tiles as diamonds
+with **94 cm** sides (62 cm originally), floorboards **25 cm** by 2 m, gravel 6 to 10 cm; concrete
+has no pattern. Eight grains are greyscale but saved as RGB: as greyscale, 11.2 MB would become 7.2 MB.
+
+The table below is the state BEFORE, kept to trace the reasoning.
+
 ## What our registry declares, in px/m
 
 One world unit is one metre: a character is 1.75 units for 1.75 m. Measured on `GROUND_TYPE_DEFS`

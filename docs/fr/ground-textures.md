@@ -22,6 +22,17 @@ une question de qualité, mais de distance d'observation.
 une surface nette à côté d'une surface floue se remarque immédiatement, alors qu'un décor entier à
 128 px/m se lit très bien. C'est la conséquence pratique la plus utile de cette note.
 
+## Relevé du 4 novembre 2026 (#435i) : l'incohérence est résolue
+
+Les treize matières photographiées sont cuites en 1024² et posées sur la même tuile de 4 m
+(`repeat` 3000) : **256 px/m pour toutes**, le double de la cible de 128 envisagée plus bas. L'écart
+d'un facteur huit du tableau suivant n'existe plus. Les motifs à taille réelle, mesurés sur les
+grains : carrelage en losanges de **94 cm** de côté (62 cm à l'origine), lames de plancher de
+**25 cm** sur 2 m, gravier de 6 à 10 cm ; le béton n'a pas de motif. Huit grains sont en niveaux de
+gris mais enregistrés en RVB : en niveaux de gris, 11,2 Mo passeraient à 7,2 Mo.
+
+Le tableau ci-dessous est l'état D'AVANT, gardé pour la trace du raisonnement.
+
 ## Ce que notre registre annonce, en px/m
 
 Une unité monde vaut un mètre : un personnage fait 1,75 unité pour 1,75 m. Relevé sur
