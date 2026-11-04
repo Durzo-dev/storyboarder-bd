@@ -551,3 +551,11 @@ test('l\'aperçu du Tracé à poser : un Tracé provisoire pendant la ligne, ret
   assert.equal(objets.filter(o => o.tracéType === 'route').length, 1, 'la vraie route posée');
   document.getElementById('terrainValiderBtn').onclick();
 });
+
+// Signalé : pas d'aperçu sur le plan pour un muret, une clôture, une haie, une barrière (quelques
+// centimètres de large : moins de 3 px, cachés sous le trait pointillé).
+test('l\'aperçu d\'un Tracé fin reste visible sur le plan (6 px au moins, trait pointillé fin)', () => {
+  const ui = lire('terrain-editeur-ui.js');
+  assert.match(ui, /const lpx = Math\.max\(6, largeur \* T\.vue\.ppm\);/);
+  assert.match(ui, /g\.lineWidth = 1;   \/\/ fin : l'aperçu du Tracé, dessous, doit rester visible/);
+});

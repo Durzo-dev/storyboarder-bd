@@ -1110,7 +1110,9 @@ function dessinerEnCours(g, e){
   // premier point (un disque de sa largeur), puis la ligne en cours jusqu'à la souris.
   if (T.outil === 'trace' && (T.chaine || T.fantome)) {
     const { largeur, couleur } = aspectDuGenre(T.sorteTrace);
-    const lpx = Math.max(2, largeur * T.vue.ppm);
+    // Au moins 6 px (signalé : un muret, une clôture, une haie, une barrière, de quelques centimètres,
+    // ne se voyaient pas sous le trait pointillé) ; au-delà, la largeur réelle.
+    const lpx = Math.max(6, largeur * T.vue.ppm);
     g.save(); g.setLineDash([]); g.globalAlpha = 0.75; g.strokeStyle = g.fillStyle = couleur;
     if (T.chaine && T.chaine.length) {
       const pts = T.fantome ? [...T.chaine, T.fantome] : T.chaine;
@@ -1124,6 +1126,7 @@ function dessinerEnCours(g, e){
   }
   if (T.chaine && T.chaine.length) {
     const pts = T.fantome ? [...T.chaine, T.fantome] : T.chaine;
+    g.lineWidth = 1;   // fin : l'aperçu du Tracé, dessous, doit rester visible
     g.beginPath(); pts.forEach((p, i) => { const s = e(p); if (i) g.lineTo(s.x, s.y); else g.moveTo(s.x, s.y); }); g.stroke();
     g.setLineDash([]);
     T.chaine.forEach(p => { const s = e(p); g.fillRect(s.x - 3, s.y - 3, 6, 6); });
