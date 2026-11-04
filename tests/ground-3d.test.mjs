@@ -641,11 +641,15 @@ describe('Sol : une matière photographiée doit pouvoir être VUE', () => {
     // Le défaut signalé : à repeat 9600, dix texels tombaient dans un pixel d'écran. Le détail
     // était donc plus fin que la grille d'affichage, et le mipmap ne pouvait que le moyenner.
     // Ce n'était pas un filtrage raté, c'était une demande impossible.
-    const floues = GROUND_TYPE_DEFS.filter(d => d.grain)
+    // #435i : une matière à motif de TAILLE RÉELLE (le carrelage) est exemptée, et c'est écrit dans
+    // son entrée : la taille de la dalle prime ; son motif reste visible, seul son grain se moyenne.
+    const soumises = GROUND_TYPE_DEFS.filter(d => d.grain && !d.motifTailleReelle);
+    assert.deepEqual(GROUND_TYPE_DEFS.filter(d => d.motifTailleReelle).map(d => d.id), ['carrelage']);
+    const floues = soumises
       .map(d => ({ id: d.id, tx: texelsParPixel3D(COTE_GRAIN, d.repeat, GROUND_PLANE_SIZE_3D, WALL_PX_PER_UNIT_3D) }))
       .filter(x => x.tx > TEXELS_PAR_PIXEL_MAX_3D);
     // Et par le critère complet, pour que ce soit LUI qui gouverne et non une copie du seuil.
-    assert.ok(GROUND_TYPE_DEFS.filter(d => d.grain).every(d =>
+    assert.ok(soumises.every(d =>
       netteteAcceptable3D(COTE_GRAIN, d.repeat, GROUND_PLANE_SIZE_3D, WALL_PX_PER_UNIT_3D)));
     assert.deepEqual(floues.map(x => x.id), [],
       'matières photographiées trop répétées pour être vues : '
@@ -1480,4 +1484,13 @@ describe('Sol : qui est de l’eau', () => {
     const scene = readFileSync(join(RACINE, 'src', 'scene3d.js'), 'utf8');
     assert.ok(scene.includes('applyGroundType(panel, _eclairage.ciel)'));
   });
+});
+
+// #435i (décidé le 4 novembre 2026) : le carreau du carrelage ramené à 60 cm (il faisait 94 cm sur la
+// tuile commune de 4 m). Le grain le dessine en losanges de 240 px de côté sur 1024.
+test('le carrelage a des carreaux de 60 cm', async () => {
+  const { GROUND_TYPE_DEFS, GROUND_PLANE_SIZE_3D } = await import('../src/constants.js');
+  const d = GROUND_TYPE_DEFS.find(x => x.id === 'carrelage');
+  const cote = (GROUND_PLANE_SIZE_3D / d.repeat) * 240 / 1024;
+  assert.ok(Math.abs(cote - 0.6) < 0.01, `carreau de ${cote.toFixed(3)} m`);
 });

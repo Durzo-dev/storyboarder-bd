@@ -27,7 +27,7 @@ une surface nette à côté d'une surface floue se remarque immédiatement, alor
 Les treize matières photographiées sont cuites en 1024² et posées sur la même tuile de 4 m
 (`repeat` 3000) : **256 px/m pour toutes**, le double de la cible de 128 envisagée plus bas. L'écart
 d'un facteur huit du tableau suivant n'existe plus. Les motifs à taille réelle, mesurés sur les
-grains : carrelage en losanges de **94 cm** de côté (62 cm à l'origine), lames de plancher de
+grains : carrelage en losanges de **94 cm** de côté (62 cm à l'origine), ramené ensuite à **60 cm** (`repeat` 4700, seule exception à la tuile commune, notée `motifTailleReelle`), lames de plancher de
 **25 cm** sur 2 m, gravier de 6 à 10 cm ; le béton n'a pas de motif. Huit grains sont en niveaux de
 gris mais enregistrés en RVB : en niveaux de gris, 11,2 Mo passeraient à 7,2 Mo.
 

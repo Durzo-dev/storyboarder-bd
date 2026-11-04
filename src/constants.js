@@ -1153,7 +1153,12 @@ export const GROUND_TYPE_DEFS = [
   { id: 'béton',     label: 'Béton', labelEn: 'Concrete', swatch: '#969696', roughness: 0.9,  metalness: 0,    repeat: 3000 , plaques: 0.12 , grain: 'beton' , pavage: true },
   { id: 'neige',     label: 'Neige', labelEn: 'Snow', swatch: '#E8EFFA', roughness: 0.98, metalness: 0,    repeat: 3000 , plaques: 0.18 , grain: 'neige' , pavage: true },
   { id: 'eau',       label: 'Eau', labelEn: 'Water', swatch: '#1A6090', roughness: 0.15, metalness: 0,    repeat: 3000 , plaques: 0.1 , eau: true },
-  { id: 'carrelage', label: 'Carrelage', labelEn: 'Tiles', swatch: '#D8D8D8', roughness: 0.3,  metalness: 0.05, repeat: 3000 , plaques: 0.05 , grain: 'carrelage.couleur' },
+  // #435i (décidé le 4 novembre 2026) : une EXCEPTION à la tuile commune de 4 m. À 3000, les carreaux
+  // (en losanges, 240 px de côté sur 1024) faisaient 94 cm ; à 4700, la tuile fait 2,55 m et le
+  // carreau 60 cm, une taille de dalle courante. La netteté (400 px/m) n'a pas à décider de la dalle :
+  // `motifTailleReelle` l'exempte du plafond de texels par pixel (le carreau, 24 px à l'échelle de
+  // référence, reste bien visible ; seul le grain de la céramique est moyenné).
+  { id: 'carrelage', label: 'Carrelage', labelEn: 'Tiles', swatch: '#D8D8D8', roughness: 0.3,  metalness: 0.05, repeat: 4700 , plaques: 0.05 , grain: 'carrelage.couleur', motifTailleReelle: true },
   { id: 'plancher',  label: 'Plancher bois', labelEn: 'Wood floor', swatch: '#8B5E3C', roughness: 0.85, metalness: 0,    repeat: 3000 , plaques: 0.06 , grain: 'plancher' },
   { id: 'marbre',    label: 'Marbre', labelEn: 'Marble', swatch: '#F0EBE0', roughness: 0.18, metalness: 0.12, repeat: 3000 , plaques: 0.04 , grain: 'marbre.couleur' },
   { id: 'moquette',  label: 'Moquette', labelEn: 'Carpet', swatch: '#9E8E7E', roughness: 0.99, metalness: 0,    repeat: 3000 , plaques: 0.08 , grain: 'moquette' , pavage: true },

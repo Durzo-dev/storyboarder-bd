@@ -25,7 +25,7 @@ perfectly well. That is the most useful practical consequence of this note.
 The thirteen photographed materials are baked at 1024² and laid on the same 4 m tile (`repeat`
 3000): **256 px/m for all of them**, twice the 128 target considered below. The factor-of-eight gap
 in the next table no longer exists. Real-size patterns, measured on the grains: tiles as diamonds
-with **94 cm** sides (62 cm originally), floorboards **25 cm** by 2 m, gravel 6 to 10 cm; concrete
+with **94 cm** sides (62 cm originally), then brought to **60 cm** (`repeat` 4700, the only exception to the common tile, marked `motifTailleReelle`), floorboards **25 cm** by 2 m, gravel 6 to 10 cm; concrete
 has no pattern. Eight grains are greyscale but saved as RGB: as greyscale, 11.2 MB would become 7.2 MB.
 
 The table below is the state BEFORE, kept to trace the reasoning.
