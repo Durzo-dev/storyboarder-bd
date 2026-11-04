@@ -371,6 +371,40 @@ test('le menu d\'une Zone choisie remplace celui de la Scène ; Échap y revient
   assert.equal(U.editeurDeTerrainOuvert(), true, 'sans quitter l\'éditeur');
   const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
   assert.match(css, /#terrainPanneau > #terrainSecScene, #terrainPanneau\.mode-choisi > #terrainSecChoisi\{ flex:0 1 auto; min-height:0; overflow-y:auto; \}/);
-  assert.match(css, /#terrainPanneau > #terrainValiderBtn\{ margin-top:auto; \}/);
+  assert.match(css, /#terrainPanneau > \.terrain-pied\{ flex:0 0 auto; margin-top:auto; position:sticky;/);
+  U.fermerEditeurDeTerrain();
+});
+
+// Demandé : choisir un Élément sur le plan le montre dans la liste (son groupe s'ouvre, la liste défile).
+test('un Élément choisi sur le plan est montré dans la liste : groupe déplié, recherche effacée, défilé', () => {
+  globalThis.requestAnimationFrame = (f) => { f(); return 0; };
+  globalThis.getComputedStyle = () => ({ getPropertyValue: () => '' });
+  const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
+  const objets = [panel];
+  for (let i = 0; i < 12; i++) objets.push({ id: 'e' + i, type: 'perso', name: 'Perso ' + i, wxFloor: i * 2 - 11, wzFloor: 0 });
+  S.scenes = [{ id: 's1', name: 'Cimetière', w: 480, h: 360, pages: [{ objects: objets }] }];
+  S.editingSceneId = 's1';
+  U.setTerrainEditeurCallbacks({ instantane: () => {}, ouvrirLaScene: () => {}, apresModification: () => {}, confirmer: async () => true });
+  U.initEditeurDeTerrain();
+  U.ouvrirEditeurDeTerrain('s1');
+  U.rafraichirEditeurDeTerrain();
+  const liste = document.getElementById('terrainContenu');
+  const bloc = () => liste.children.find(c => c.dataset && c.dataset.groupe === 'elements' && c.className !== 'terrain-groupe-titre');
+  const titre = liste.children.find(c => c.className === 'terrain-groupe-titre');
+  if (!bloc().classList.contains('collapsed')) titre.onclick();   // replié
+  const recherche = document.getElementById('terrainContenuRecherche');
+  recherche.value = 'zzz'; recherche.oninput();                     // et filtré
+  let defile = null;
+  const ligne = bloc().children.find(l => l.dataset.valeur === 'e5');
+  ligne.scrollIntoView = (o) => { defile = o; };
+  const plan = document.getElementById('terrainPlan');
+  const jouer = (type, ev) => (plan._ecouteurs[type] || []).forEach(f => f({ preventDefault(){}, stopPropagation(){}, pointerId: 1, detail: 1, ...ev, type }));
+  // Le plan est cadré sur les Éléments (x de −11 à 11 m : 27,6 px/m) ; e5 est à x = −1 m.
+  const P = { x: 400 - 1 * (800 * 0.76 / 22), y: 300 };
+  jouer('pointerdown', { button: 0, clientX: P.x, clientY: P.y });
+  jouer('pointerup', { clientX: P.x, clientY: P.y });
+  assert.ok(!bloc().classList.contains('collapsed'), 'le groupe s\'est ouvert');
+  assert.equal(recherche.value, '', 'la recherche qui le cachait est effacée');
+  assert.deepEqual(defile, { block: 'nearest' }, 'la liste défile jusqu\'à lui');
   U.fermerEditeurDeTerrain();
 });

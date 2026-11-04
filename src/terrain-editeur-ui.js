@@ -709,6 +709,31 @@ function majContenu(){
  * que montrer, cacher et souligner.
  */
 const SEUIL_DE_RECHERCHE = 10;
+
+/**
+ * Demandé : ce qu'on choisit sur le plan se MONTRE dans la liste : son groupe s'ouvre s'il était
+ * replié, une recherche qui le cacherait est effacée, et la liste défile jusqu'à lui.
+ */
+function montrerDansLaListe(id){
+  majListeDeLaScene();
+  const liste = $('terrainContenu');
+  const blocs = (liste.children || []).filter(b => b.dataset && b.dataset.groupe && b.className !== 'terrain-groupe-titre');
+  for (const bloc of blocs) {
+    const ligne = (bloc.children || []).find(l => l.dataset && l.dataset.valeur === id);
+    if (!ligne) continue;
+    if (ligne.style.display === 'none') { $('terrainContenuRecherche').value = ''; majListeDeLaScene(); }
+    if (bloc.classList.contains('collapsed')) {
+      bloc.classList.remove('collapsed');
+      const titre = (liste.children || []).find(t => t.className === 'terrain-groupe-titre' && t.dataset.groupe === bloc.dataset.groupe);
+      const bascule = titre && (titre.children || [])[0];
+      if (bascule) bascule.textContent = '▾';
+      try { memoriserGroupe(localStorage, 'terrain-liste:' + bloc.dataset.groupe, false); } catch (e) { /* sans mémoire */ }
+    }
+    if (ligne.scrollIntoView) ligne.scrollIntoView({ block: 'nearest' });
+    return true;
+  }
+  return false;
+}
 const GROUPES_DE_LA_LISTE = [
   { cle: 'elements', types: ['element'], nom: () => tr('Elements', 'Éléments') },
   { cle: 'batiments', types: ['batiment'], nom: () => tr('Buildings', 'Bâtiments') },
@@ -1184,6 +1209,7 @@ export function initEditeurDeTerrain(){
     }
     const f = sousLePlan(s);
     T.choisi = f ? f.id : null;
+    if (f) montrerDansLaListe(f.id);
     const obj = terrainChoisi();
     // Une Zone ou un Tracé choisi se fait glisser (l'instantané au premier mouvement).
     if (obj && obj.world) { T.glisser = { id: obj.id, depart: m, origine: JSON.parse(JSON.stringify(obj.world)), bouge: false }; plan.setPointerCapture && plan.setPointerCapture(e.pointerId); }

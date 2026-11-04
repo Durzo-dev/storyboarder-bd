@@ -451,9 +451,12 @@
           <div id="terrainContenu" class="batiment-liste"></div>
         </section>
         <!-- Rien n'est appliqué à la Scène avant « Valider » (demandé). -->
-        <button id="terrainValiderBtn" type="button" class="full-btn" disabled>Valider</button>
-        <button id="terrainRecadrerBtn" type="button" class="nav-btn">Recadrer</button>
-        <button id="terrainQuitterBtn" type="button" class="nav-btn">Quitter</button>
+        <!-- Les trois boutons, groupés et COLLÉS EN BAS (sticky) : visibles même si le menu déborde. -->
+        <div class="terrain-pied" id="terrainPied">
+          <button id="terrainValiderBtn" type="button" class="full-btn" disabled>Valider</button>
+          <button id="terrainRecadrerBtn" type="button" class="nav-btn">Recadrer</button>
+          <button id="terrainQuitterBtn" type="button" class="nav-btn">Quitter</button>
+        </div>
       </aside>
     </div>
   </div>
