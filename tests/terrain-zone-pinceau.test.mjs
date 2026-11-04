@@ -408,3 +408,12 @@ test('un Élément choisi sur le plan est montré dans la liste : groupe dépli�
   assert.deepEqual(defile, { block: 'nearest' }, 'la liste défile jusqu\'à lui');
   U.fermerEditeurDeTerrain();
 });
+
+// Signalé : choisir un Élément ne le montrait pas dans la liste (le vrai DOM rend une HTMLCollection,
+// sans filter ni find ; le DOM simulé, un tableau). Garde : pas d'appel de méthode de tableau direct
+// sur `children` dans l'éditeur de terrain.
+test('l\'éditeur de terrain ne traite jamais `children` comme un tableau', () => {
+  const ui = lire('terrain-editeur-ui.js');
+  assert.doesNotMatch(ui, /(?<!Array\.from)\(\w+\.children \|\| \[\]\)\.(filter|find|map|some|every|forEach)\(/);
+  assert.doesNotMatch(ui, /\.children\.(filter|find|map|some|every|forEach)\(/);
+});

@@ -717,14 +717,16 @@ const SEUIL_DE_RECHERCHE = 10;
 function montrerDansLaListe(id){
   majListeDeLaScene();
   const liste = $('terrainContenu');
-  const blocs = (liste.children || []).filter(b => b.dataset && b.dataset.groupe && b.className !== 'terrain-groupe-titre');
+  // ⚠️ Array.from : `children` est une HTMLCollection, SANS filter ni find (signalé : rien ne se passait ;
+  // le DOM simulé des tests rend un tableau, et ne l'avait pas vu).
+  const blocs = Array.from(liste.children || []).filter(b => b.dataset && b.dataset.groupe && b.className !== 'terrain-groupe-titre');
   for (const bloc of blocs) {
-    const ligne = (bloc.children || []).find(l => l.dataset && l.dataset.valeur === id);
+    const ligne = Array.from(bloc.children || []).find(l => l.dataset && l.dataset.valeur === id);
     if (!ligne) continue;
     if (ligne.style.display === 'none') { $('terrainContenuRecherche').value = ''; majListeDeLaScene(); }
     if (bloc.classList.contains('collapsed')) {
       bloc.classList.remove('collapsed');
-      const titre = (liste.children || []).find(t => t.className === 'terrain-groupe-titre' && t.dataset.groupe === bloc.dataset.groupe);
+      const titre = Array.from(liste.children || []).find(t => t.className === 'terrain-groupe-titre' && t.dataset.groupe === bloc.dataset.groupe);
       const bascule = titre && (titre.children || [])[0];
       if (bascule) bascule.textContent = '▾';
       try { memoriserGroupe(localStorage, 'terrain-liste:' + bloc.dataset.groupe, false); } catch (e) { /* sans mémoire */ }
