@@ -32,6 +32,7 @@
 import { creerBatiment, BORNES_BATIMENT } from './batiment.js';
 import { ajouterMur } from './batiment-trace.js';
 import { actualiserPieces } from './batiment-pieces.js';
+import { ajouterOuverture, reglagesParDefaut } from './batiment-ouvertures.js';
 
 const DEG = Math.PI / 180;
 
@@ -268,7 +269,10 @@ export function vectoriserLesMurs(murs, w, h){
   const angle = directionDominante(murs, w, h);
   const { r, W, H, versImage } = redresser(murs, w, h, angle);
   const { murs: droits, pris } = mursDroits(r, W, H);
-  const biais = mursEnBiais(r, W, H, pris);
+  // Un « mur en biais » bien plus mince que les murs droits est un reste : le congé qu'a laissé la
+  // fermeture là où un arc de porte touche un mur, par exemple.
+  const epaisseurType = droits.length ? mediane(droits.map(s => s.epaisseur)) : 0;
+  const biais = mursEnBiais(r, W, H, pris).filter(s => s.epaisseur >= 0.5 * epaisseurType);
   const dansLImage = (s) => ({ a: versImage(s.a.x, s.a.y), b: versImage(s.b.x, s.b.y), epaisseur: s.epaisseur });
   return { angle, segments: joindre([...droits, ...biais].map(dansLImage)) };
 }
@@ -276,8 +280,11 @@ export function vectoriserLesMurs(murs, w, h){
 /**
  * Un BÂTIMENT de l'éditeur à partir des segments : `metresParPixel` donne l'échelle (l'image de
  * travail, pas l'originale). Le bâtiment est centré sur l'origine ; les épaisseurs sont ramenées
- * dans les bornes de l'éditeur ; les pièces sont déduites comme après un tracé. Rend
- * `{ batiment, refuses }` : `refuses`, les segments que l'éditeur a refusés (trop courts, croisés).
+ * dans les bornes de l'éditeur ; les pièces sont déduites comme après un tracé. Un segment peut
+ * porter des `ouvertures` (#456c, `ouverturesDuPlan`) : `{ s0, s1, type, sens?, charniere?,
+ * battants? }`, en pixels depuis a ; elles sont posées avec les réglages par défaut de leur type,
+ * à leur largeur. Rend `{ batiment, refuses, ouverturesRefusees }` : ce que l'éditeur a refusé
+ * (mur trop court ou croisé ; ouverture qui ne tient pas).
  */
 export function batimentDuPlan(segments, { metresParPixel, nom, traduire } = {}){
   const b = creerBatiment(nom, traduire), niveauId = b.niveaux[0].id;
@@ -289,11 +296,18 @@ export function batimentDuPlan(segments, { metresParPixel, nom, traduire } = {})
   const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
   const enMetres = (p) => ({ x: (p.x - cx) * metresParPixel, z: (p.y - cy) * metresParPixel });
   const [eMin, eMax] = BORNES_BATIMENT.epaisseur;
-  let refuses = 0;
+  let refuses = 0, ouverturesRefusees = 0;
   for (const s of segments) {
     const e = Math.min(eMax, Math.max(eMin, Math.round(s.epaisseur * metresParPixel * 100) / 100));
-    if (ajouterMur(b, niveauId, enMetres(s.a), enMetres(s.b), e).erreur) refuses++;
+    const { mur } = ajouterMur(b, niveauId, enMetres(s.a), enMetres(s.b), e);
+    if (!mur) { refuses++; ouverturesRefusees += (s.ouvertures || []).length; continue; }
+    const L = Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y);
+    for (const o of s.ouvertures || []) {
+      const r = { ...reglagesParDefaut(o.type), largeur: Math.round((o.s1 - o.s0) * metresParPixel * 100) / 100 };
+      for (const k of ['sens', 'charniere', 'battants']) if (o[k] !== undefined) r[k] = o[k];
+      if (ajouterOuverture(b, mur.id, (o.s0 + o.s1) / 2 / L, r).erreur) ouverturesRefusees++;
+    }
   }
   actualiserPieces(b, niveauId, traduire);
-  return { batiment: b, refuses };
+  return { batiment: b, refuses, ouverturesRefusees };
 }

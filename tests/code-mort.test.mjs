@@ -326,6 +326,8 @@ const EN_ATTENTE = {
   // les appellera.
   vectoriserLesMurs: '#456e — appelée par l\'écran d\'import d\'un plan',
   batimentDuPlan: '#456e — appelée par l\'écran d\'import d\'un plan',
+  // #456c — les ouvertures du plan (trous, arcs, traits fins), même figure et même échéance.
+  ouverturesDuPlan: '#456e — appelée par l\'écran d\'import d\'un plan',
 };
 
 function exportsSansAppelant(){
@@ -427,8 +429,9 @@ describe('Aucun export de src/ ne reste sans appelant', () => {
     // chacune avec son numéro de tâche pour échéance (cf. leur entrée plus haut). Redescendu à 15 en
     // #454a-2, qui en branche deux, puis à 12 en #454a-4b, qui branche les trois dernières.
     // Remonté à 13 en #456a : `detecterLesMurs`, EN AVANCE sur l'écran d'import (#456e) ; à 15 en
-    // #456b, pour la même raison : `vectoriserLesMurs` et `batimentDuPlan`.
-    assert.equal(Object.keys(EN_ATTENTE).length, 15,
+    // #456b, pour la même raison : `vectoriserLesMurs` et `batimentDuPlan` ; à 16 en #456c :
+    // `ouverturesDuPlan`.
+    assert.equal(Object.keys(EN_ATTENTE).length, 16,
       'une décision de plus a été REPORTÉE au lieu d\'être prise');
   });
 });

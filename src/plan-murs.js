@@ -19,8 +19,9 @@
  *   3. une FERMETURE (dilater puis éroder) fait une masse des hachures serrées ;
  *   4. une OUVERTURE (éroder puis dilater) efface tout trait plus fin qu'un mur : texte, cotes,
  *      arcs de portes, mobilier. Le rayon se déduit de l'épaisseur des traits FINS du plan ;
- *   5. on garde la plus grande masse, et celles dont le centre tombe dans sa boîte : les poteaux et
- *      les murs isolés restent, l'échelle graphique et le cartouche, posés à côté, partent.
+ *   5. on garde la plus grande masse, et celles dont le centre tombe dans sa boîte, qui grandit de
+ *      chaque masse gardée (les portes coupent un bâtiment en morceaux) : les poteaux et les murs
+ *      isolés restent, l'échelle graphique et le cartouche, posés à côté, partent.
  *
  * Les morphologies passent par la TRANSFORMÉE DE DISTANCE euclidienne exacte (Felzenszwalb et
  * Huttenlocher), en temps linéaire : dilater de r, c'est garder ce qui est à moins de r de l'encre.
@@ -243,11 +244,22 @@ export function detecterLesMurs(rgba, w, h, options = {}){
   const { etiquette, infos } = masses(ouvert, W, H);
   const murs = new Uint8Array(n);
   if (infos.length) {
+    // La boîte GRANDIT : les portes coupent un bâtiment en plusieurs masses, et une masse gardée
+    // peut faire entrer la suivante. Jusqu'à ce que plus rien n'entre.
     const grande = infos.reduce((a, b) => (b.aire > a.aire ? b : a));
-    const garde = new Set(infos.filter(m => {
-      const cx = (m.x0 + m.x1) / 2, cy = (m.y0 + m.y1) / 2;
-      return cx >= grande.x0 && cx <= grande.x1 && cy >= grande.y0 && cy <= grande.y1;
-    }).map(m => m.id));
+    const boite = { x0: grande.x0, y0: grande.y0, x1: grande.x1, y1: grande.y1 };
+    const garde = new Set([grande.id]);
+    for (let ajout = true; ajout;) {
+      ajout = false;
+      for (const m of infos) {
+        if (garde.has(m.id)) continue;
+        const cx = (m.x0 + m.x1) / 2, cy = (m.y0 + m.y1) / 2;
+        if (cx < boite.x0 || cx > boite.x1 || cy < boite.y0 || cy > boite.y1) continue;
+        garde.add(m.id); ajout = true;
+        boite.x0 = Math.min(boite.x0, m.x0); boite.y0 = Math.min(boite.y0, m.y0);
+        boite.x1 = Math.max(boite.x1, m.x1); boite.y1 = Math.max(boite.y1, m.y1);
+      }
+    }
     for (let p = 0; p < n; p++) if (garde.has(etiquette[p])) murs[p] = 1;
   }
   return {
