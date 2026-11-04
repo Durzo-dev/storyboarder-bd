@@ -3116,3 +3116,16 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 #terrainTraceReglages input[type="range"]{ width:100%; margin-bottom:6px; }
 #terrainTraceReglages .modal-input{ width:100%; margin:0; }
 #terrainTraceReglages .terrain-couleur{ width:100%; height:32px; padding:2px; cursor:pointer; }
+
+/* #456e — « Importer un plan » : le plan à gauche (il prend la place), l'échelle à droite. */
+.modal-box.plan-import-boite{ width:min(1180px, 94vw); height:min(820px, 90vh); display:flex; flex-direction:column; overflow:hidden; }
+.plan-import-corps{ flex:1 1 auto; min-height:0; display:flex; gap:16px; }
+.plan-import-vue{ flex:1 1 auto; min-width:0; height:100%; background:var(--paper-dark); border:1px solid var(--line); border-radius:var(--rayon-moyen); cursor:crosshair; }
+.plan-import-cote{ flex:0 0 260px; overflow-y:auto; }
+.plan-import-cote h4{ margin:12px 0 4px; }
+.plan-import-echelle{ display:flex; gap:8px; }
+.modal-box .plan-import-echelle .modal-input{ margin:0; min-width:0; }
+.plan-import-echelle input{ flex:1 1 90px; }
+.plan-import-echelle select{ flex:1 1 140px; }
+.plan-import-alertes{ margin:8px 0 0; font-size:var(--texte-libelle); color:var(--danger); min-height:1.2em; }
+.batiment-importer-plan{ width:100%; margin-top:8px; }

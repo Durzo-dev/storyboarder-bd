@@ -307,6 +307,8 @@
         <section class="side-section" id="batimentSecNiveaux">
           <h2 id="batimentSectionNiveaux">Niveaux</h2>
           <div id="batimentNiveaux" class="batiment-liste"></div>
+          <!-- #456e : un plan d'architecte (photo ou scan) devient les murs et ouvertures de CE niveau. -->
+          <button type="button" class="nav-btn batiment-importer-plan" id="batimentImporterPlan">Importer un plan</button>
         </section>
         <!-- #458 : le TOIT du niveau courant (type, pente, débord, sens, bordure, revêtement), construit
              par batiment-editeur-ui.js (remplirToit). -->
@@ -1580,6 +1582,32 @@
 
 <!-- Sous-modale "Renommer le projet" (cf. #projectModalRename) -->
 <!-- #462a : le bouton de l'Éditeur de terrain demande d'abord la Scène (il ne s'ouvre que sur une Scène). -->
+<!-- #456e : « Importer un plan » (src/plan-import-ui.js). Le plan, le calque de ce qui a été trouvé,
+     et l'échelle : la seule chose demandée, pré-remplie. -->
+<div class="modal-overlay hidden" id="planImportModal">
+  <div class="modal-box plan-import-boite">
+    <h3 id="planImportTitre">Importer un plan</h3>
+    <div class="plan-import-corps">
+      <canvas id="planImportCanvas" class="plan-import-vue"></canvas>
+      <div class="plan-import-cote">
+        <p id="planImportResume" class="commandes-aide"></p>
+        <h4 id="planImportEchelleTitre">Échelle</h4>
+        <p id="planImportEchelleAide" class="commandes-aide"></p>
+        <div class="plan-import-echelle">
+          <input type="number" id="planImportLongueur" class="modal-input" min="0" step="any">
+          <select id="planImportUnite" class="modal-input"></select>
+        </div>
+        <p id="planImportAlertes" class="plan-import-alertes"></p>
+        <p id="planImportCorrection" class="commandes-aide">Le plan devient les murs du niveau courant ; corrigez-les ensuite avec les outils de l'éditeur (Ctrl+Z défait l'import).</p>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="nav-btn" id="planImportAnnuler" type="button">Annuler</button>
+      <button class="full-btn" id="planImportConstruire" type="button">Construire</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay hidden" id="terrainSceneModal">
   <div class="modal-box">
     <h3 id="terrainSceneModalTitre">Modifier le terrain de quelle scène ?</h3>

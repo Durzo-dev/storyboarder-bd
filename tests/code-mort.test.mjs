@@ -316,23 +316,9 @@ const EN_ATTENTE = {
   vagues3D: '#435m : modèle JS du GLSL de l’eau, éprouvé par les tests',
   // #436c : même nature, le modèle de `cielDirection`, la déformation du ciel vers le bord du Sol.
   elevationDuCiel3D: '#436c : modèle JS du GLSL du ciel, éprouvé par les tests',
-  // #456a — LES MURS D'UN PLAN PHOTOGRAPHIÉ : LA DÉCISION AVANT SON ÉCRAN. Même figure que #403a et
-  // les suivantes : lire une image et en tirer les murs se teste sous Node (tests/plan-murs.test.mjs,
-  // sur des plans synthétiques) ; ouvrir un fichier, montrer la détection et la corriger, non.
-  // `COTE_DE_TRAVAIL` n'est pas ici : le module l'appelle lui-même.
-  detecterLesMurs: '#456e — appelée par l\'écran d\'import d\'un plan',
-  // #456b — même figure, l'étape suivante : des pixels de mur aux segments, puis au bâtiment de
-  // l'éditeur. Testé de bout en bout sous Node (tests/plan-vecteurs.test.mjs) ; c'est l'écran qui
-  // les appellera.
-  vectoriserLesMurs: '#456e — appelée par l\'écran d\'import d\'un plan',
-  batimentDuPlan: '#456e — appelée par l\'écran d\'import d\'un plan',
-  // #456c — les ouvertures du plan (trous, arcs, traits fins), même figure et même échéance.
-  ouverturesDuPlan: '#456e — appelée par l\'écran d\'import d\'un plan',
-  // #456d — l'échelle : estimée, saisie en deux points, contrôlée. Même figure, même échéance.
-  estimerLEchelle: '#456e — appelée par l\'écran d\'import d\'un plan',
-  echelleDeuxPoints: '#456e — appelée par l\'écran d\'import d\'un plan',
-  longueurEntre: '#456e — appelée par l\'écran d\'import d\'un plan',
-  controlerLEchelle: '#456e — appelée par l\'écran d\'import d\'un plan',
+  // #456a à #456d — LES QUATRE ÉTAPES DU PLAN (murs, segments, ouvertures, échelle) sont arrivées
+  // avant leur écran, et leur dette est SOLDÉE : #456e (plan-import-ui.js) les appelle toutes les
+  // huit. Aucune entrée ne reste ici.
 };
 
 function exportsSansAppelant(){
@@ -433,11 +419,9 @@ describe('Aucun export de src/ ne reste sans appelant', () => {
     // Remonté à 17 en #454a-1 : cinq fonctions du rangement des bâtiments, EN AVANCE sur l'éditeur,
     // chacune avec son numéro de tâche pour échéance (cf. leur entrée plus haut). Redescendu à 15 en
     // #454a-2, qui en branche deux, puis à 12 en #454a-4b, qui branche les trois dernières.
-    // Remonté à 13 en #456a : `detecterLesMurs`, EN AVANCE sur l'écran d'import (#456e) ; à 15 en
-    // #456b, pour la même raison : `vectoriserLesMurs` et `batimentDuPlan` ; à 16 en #456c :
-    // `ouverturesDuPlan` ; à 20 en #456d : les quatre fonctions de l'échelle. Les huit tombent
-    // ensemble en #456e, l'écran qui les appelle.
-    assert.equal(Object.keys(EN_ATTENTE).length, 20,
+    // Remonté à 13, 15, 16 puis 20 de #456a à #456d (les étapes du plan, en avance sur leur
+    // écran), redescendu à 12 en #456e, qui les branche toutes.
+    assert.equal(Object.keys(EN_ATTENTE).length, 12,
       'une décision de plus a été REPORTÉE au lieu d\'être prise');
   });
 });
