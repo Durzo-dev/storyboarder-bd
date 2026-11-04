@@ -346,3 +346,30 @@ test('la liste de la Scène : son nom en titre, des groupes repliables, une rech
   assert.deepEqual(blocs[0].children.filter(l => l.style.display !== 'none').map(l => l.textContent), ['Église']);
   U.fermerEditeurDeTerrain();
 });
+
+// Demandé : deux menus. Base : Commandes, liste de la Scène, boutons. Une Zone ou un Tracé choisi :
+// Commandes et sa section ; Échap revient au menu de base. Commandes et boutons toujours visibles.
+test('le menu d\'une Zone choisie remplace celui de la Scène ; Échap y revient ; la liste défile', () => {
+  globalThis.requestAnimationFrame = (f) => { f(); return 0; };
+  globalThis.getComputedStyle = () => ({ getPropertyValue: () => '' });
+  const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
+  const zone = { id: 'z1', type: 'tracé', tracéType: 'terrain', name: 'Prairie', panelId: 'p',
+    world: { cx: 0, cz: 0, w: 4, h: 4, rotY: 0, corners: [{ x: -2, z: -2 }, { x: 2, z: -2 }, { x: 2, z: 2 }, { x: -2, z: 2 }] } };
+  S.scenes = [{ id: 's1', name: 'Scène 1', w: 480, h: 360, pages: [{ objects: [panel, zone] }] }];
+  S.editingSceneId = 's1';
+  U.setTerrainEditeurCallbacks({ instantane: () => {}, ouvrirLaScene: () => {}, apresModification: () => {}, confirmer: async () => true });
+  U.initEditeurDeTerrain();
+  U.ouvrirEditeurDeTerrain('s1', { choisi: 'z1' });
+  U.rafraichirEditeurDeTerrain();
+  const panneau = document.getElementById('terrainPanneau');
+  assert.ok(panneau.classList.contains('mode-choisi'), 'le menu de la Zone');
+  assert.match(document.getElementById('terrainAide').textContent, /retour au menu de la Scène|back to the scene menu/);
+  const qs = document.querySelector; document.querySelector = () => null;
+  (window._ecouteurs.keydown || []).forEach(f => f({ key: 'Escape', target: {}, preventDefault(){}, stopPropagation(){} }));
+  document.querySelector = qs;
+  assert.ok(!panneau.classList.contains('mode-choisi'), 'Échap : le menu de base');
+  assert.equal(U.editeurDeTerrainOuvert(), true, 'sans quitter l\'éditeur');
+  const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
+  assert.match(css, /#terrainPanneau > #terrainSecScene, #terrainPanneau\.mode-choisi > #terrainSecChoisi\{ flex:1 1 auto; min-height:0; overflow-y:auto; \}/);
+  U.fermerEditeurDeTerrain();
+});

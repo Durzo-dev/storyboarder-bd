@@ -231,6 +231,7 @@ function clavier(e){
     stop();
     // Échap défait d'abord ce qui est en cours, puis l'outil, puis quitte (comme l'éditeur de bâtiment).
     if (T.chaine || T.rectangle) { T.chaine = null; T.rectangle = null; redessiner(); }
+    else if (terrainChoisi()) { T.choisi = null; majContenu(); redessiner(); }   // retour au menu de base
     else if (T.outil !== 'selection') choisirOutil('selection');
     else fermerEditeurDeTerrain();
     return;
@@ -399,7 +400,7 @@ export function rafraichirEditeurDeTerrain(){
 // ── Le menu ───────────────────────────────────────────────────────────────────────────────────
 
 /** Les commandes, selon l'outil (une action par ligne). */
-export function commandesDuTerrain(trad = tr, outil = 'selection'){
+export function commandesDuTerrain(trad = tr, outil = 'selection', choisi = false){
   const l = [];
   if (outil === 'zone') {
     l.push(trad('Rectangle: drag to draw a zone. Brush: drag to paint one (a selected painted zone grows; Shift: erase).',
@@ -416,6 +417,7 @@ export function commandesDuTerrain(trad = tr, outil = 'selection'){
     l.push(trad('Click a zone or path: select it; drag: move it; Del: delete it.', 'Clic sur une Zone ou un Tracé : le choisir ; glisser : le déplacer ; Suppr : le supprimer.'));
     l.push(trad('Double-click: its settings. Elements are only pointed out here.', 'Double-clic : ses réglages. Les Éléments ne sont que désignés ici.'));
   }
+  if (choisi) l.push(trad('Esc or a click on empty ground: back to the scene menu.', 'Échap ou un clic dans le vide : retour au menu de la Scène.'));
   l.push(trad('V selection · Z zone · T paths · R relief.', 'V sélection · Z zone · T tracés · R relief.'));
   l.push(trad('Wheel: zoom · right drag: move the view.', 'Molette : zoomer · glisser droit : déplacer la vue.'));
   l.push(trad('Ctrl+Z / Ctrl+Y: undo, redo. Nothing reaches the Scene before "Validate".', 'Ctrl+Z / Ctrl+Y : annuler, rétablir. Rien ne va sur la Scène avant « Valider ».'));
@@ -659,7 +661,7 @@ function majContenu(){
   if (!sc) return;
   T.formes = contenuDuPlan(sc.page, sc.panel, outilsDuPlan(sc.panel));
   if (T.choisi && !T.formes.some(f => f.id === T.choisi)) T.choisi = null;   // annulé, supprimé
-  $('terrainAide').textContent = commandesDuTerrain(tr, T.outil).join('\n');
+  $('terrainAide').textContent = commandesDuTerrain(tr, T.outil, !!terrainChoisi()).join('\n');
   // Le Tracé à poser (outil Tracés).
   $('terrainSecTrace').hidden = T.outil !== 'trace';
   if (T.outil === 'trace') {
@@ -679,7 +681,12 @@ function majContenu(){
   // Demandé : la section porte le NOM de ce qui est choisi ; tout s'y règle (plus de bouton « Régler »).
   // Un Élément (ou un bâtiment) désigné n'a rien à régler ici : pas de section (demandé), il est
   // seulement souligné sur le plan et dans la liste.
-  $('terrainSecChoisi').hidden = !obj;
+  // Demandé : une Zone ou un Tracé choisi a SON menu (Commandes et sa section), à la place du menu de base.
+  // Avec l'outil Sélection seulement : un autre outil garde le menu de base et ses réglages (le pinceau de
+  // Zone qui agrandit la Zone choisie, par exemple).
+  const menuDeLObjet = !!obj && T.outil === 'selection';
+  $('terrainSecChoisi').hidden = !menuDeLObjet;
+  $('terrainPanneau').classList.toggle('mode-choisi', menuDeLObjet);
   if (obj) $('terrainSectionChoisi').textContent = obj.name || (obj.tracéType === 'terrain' ? tr('Zone', 'Zone') : nomDeSorte(obj.tracéType));
   reglagesDeZone(obj);
   reglagesDuChoisi(obj);
