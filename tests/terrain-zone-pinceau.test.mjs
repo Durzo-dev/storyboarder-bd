@@ -370,6 +370,7 @@ test('le menu d\'une Zone choisie remplace celui de la Scène ; Échap y revient
   assert.ok(!panneau.classList.contains('mode-choisi'), 'Échap : le menu de base');
   assert.equal(U.editeurDeTerrainOuvert(), true, 'sans quitter l\'éditeur');
   const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
-  assert.match(css, /#terrainPanneau > #terrainSecScene, #terrainPanneau\.mode-choisi > #terrainSecChoisi\{ flex:1 1 auto; min-height:0; overflow-y:auto; \}/);
+  assert.match(css, /#terrainPanneau > #terrainSecScene, #terrainPanneau\.mode-choisi > #terrainSecChoisi\{ flex:0 1 auto; min-height:0; overflow-y:auto; \}/);
+  assert.match(css, /#terrainPanneau > #terrainValiderBtn\{ margin-top:auto; \}/);
   U.fermerEditeurDeTerrain();
 });

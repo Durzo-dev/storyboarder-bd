@@ -3104,11 +3104,13 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
    prend la place qui reste, et défile au besoin. */
 #terrainPanneau{ overflow:hidden; }
 #terrainPanneau > .side-section{ flex:0 0 auto; }
-#terrainPanneau > #terrainSecScene, #terrainPanneau.mode-choisi > #terrainSecChoisi{ flex:1 1 auto; min-height:0; overflow-y:auto; }
+/* Au plus la place qui reste (elle rétrécit et défile), mais pas plus que son contenu (demandé). */
+#terrainPanneau > #terrainSecScene, #terrainPanneau.mode-choisi > #terrainSecChoisi{ flex:0 1 auto; min-height:0; overflow-y:auto; }
 #terrainPanneau.mode-choisi > #terrainSecScene, #terrainPanneau.mode-choisi > #terrainSecTrace,
 #terrainPanneau.mode-choisi > #terrainSecZone, #terrainPanneau.mode-choisi > #terrainSecRelief{ display:none !important; }
 #terrainPanneau > #terrainValiderBtn, #terrainPanneau > #terrainRecadrerBtn, #terrainPanneau > #terrainQuitterBtn{ flex:0 0 auto; }
-#terrainPanneau > #terrainValiderBtn{ margin-top:12px; }
+/* Les boutons restent EN BAS, quelle que soit la hauteur de la section au-dessus. */
+#terrainPanneau > #terrainValiderBtn{ margin-top:auto; }
 
 /* ── La page du système de design (préfixe ds-), posée SUR la feuille de l'application ── */
 html, body{ height:auto !important; overflow:auto !important; }

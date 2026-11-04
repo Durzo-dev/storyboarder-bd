@@ -415,7 +415,7 @@ export function commandesDuTerrain(trad = tr, outil = 'selection', choisi = fals
     l.push(trad('The kind is chosen in "Path to draw".', 'Le genre se choisit dans « Tracé à poser ».'));
   } else {
     l.push(trad('Click a zone or path: select it; drag: move it; Del: delete it.', 'Clic sur une Zone ou un Tracé : le choisir ; glisser : le déplacer ; Suppr : le supprimer.'));
-    l.push(trad('Double-click: its settings. Elements are only pointed out here.', 'Double-clic : ses réglages. Les Éléments ne sont que désignés ici.'));
+    l.push(trad('Elements are only pointed out here.', 'Les Éléments ne sont que désignés ici.'));
   }
   if (choisi) l.push(trad('Esc or a click on empty ground: back to the scene menu.', 'Échap ou un clic dans le vide : retour au menu de la Scène.'));
   l.push(trad('V selection · Z zone · T paths · R relief.', 'V sélection · Z zone · T tracés · R relief.'));
