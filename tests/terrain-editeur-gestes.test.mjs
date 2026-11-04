@@ -42,9 +42,8 @@ test('tracer une Zone, une route ; choisir, déplacer, supprimer ; un instantan�
 
   // La route : outil Tracés, deux clics puis Entrée (le clavier est sur window).
   document.getElementById('terrainOutilTrace').onclick();
-  jouer(plan, 'pointerdown', { button: 0, ...px(-5, 6) });
-  jouer(plan, 'pointerdown', { button: 0, ...px(5, 6) });
-  jouer(plan, 'dblclick', {});
+  for (const pt of [px(-5, 6), px(5, 6)]) { jouer(plan, 'pointerdown', { button: 0, ...pt }); jouer(plan, 'pointerup', pt); }
+  jouer(plan, 'contextmenu', {});   // le clic droit termine
   const route = objets.find(o => o.tracéType === 'route');
   assert.ok(route, 'la route est posée');
   assert.equal(route.world.pts.length, 2);

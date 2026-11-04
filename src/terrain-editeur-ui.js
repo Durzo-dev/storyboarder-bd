@@ -210,6 +210,7 @@ export function validerLeTerrain(){
 function fermerSansDemander(){
   if (!T) return;
   arreterLeCoup();
+  annulerLAppui();
   const sc = laScene();
   if (sc && terrainModifie()) remettreLeTerrain(sc, T.origine);
   if (T.demande) cancelAnimationFrame(T.demande);
@@ -450,7 +451,8 @@ function reglagesDuTraceAPoser(){
     };
     if (AVEC_LARGEUR.includes(sorte)) elements.push(...curseur('largeur', tr('Width (m)', 'Largeur (m)'), 0.5, 30, 0.5, () => largeurDuGenre(sorte), (x) => { r.largeur = x; }));
     if (MURETS.includes(sorte)) elements.push(...curseur('hauteur', tr('Height (m)', 'Hauteur (m)'), 0.2, 5, 0.05, () => r.hauteur || def.wallHeight || 0.5, (x) => { r.hauteur = x; }));
-    if (TRACÉS_A_EPAISSEUR.includes(sorte)) elements.push(...curseur('epaisseur', tr('Thickness (cm)', 'Épaisseur (cm)'), 2, 200, 1,
+    // L'« épaisseur » d'un muret ou d'une haie est sa LARGEUR (la même mesure que celle d'une route) : nommée ainsi.
+    if (TRACÉS_A_EPAISSEUR.includes(sorte)) elements.push(...curseur('epaisseur', tr('Width (cm)', 'Largeur (cm)'), 2, 200, 1,
       () => Math.round((r.epaisseur || tracéWallThickness3D({ tracéType: sorte, wallHeight: r.hauteur || def.wallHeight })) * 100), (x) => { r.epaisseur = x / 100; }));
     if (sorte === 'riviere') elements.push(...curseur('profondeur', tr('Depth (m)', 'Profondeur (m)'), 0.3, 5, 0.1, () => r.profondeur || PROFONDEUR_RIVIERE, (x) => { r.profondeur = x; }));
     boite.replaceChildren(...elements);
@@ -461,6 +463,21 @@ function reglagesDuTraceAPoser(){
     else { c.value = String(c._lire()); if (c._valeur) c._valeur.textContent = String(c._lire()).replace('.', ','); }
   };
   for (const c of boite.children || []) { relire(c); for (const k of c.children || []) relire(k); }
+}
+
+/** L'appui long qui termine un Tracé (demandé à la place du double-clic). */
+const APPUI_LONG_MS = 450;
+function annulerLAppui(){
+  if (!T || !T.appui) return;
+  clearTimeout(T.appui.minuteur); clearInterval(T.appui.horloge);
+  T.appui = null;
+}
+/** Un point de plus à la ligne en cours (pas deux au même endroit : 5 cm). */
+function ajouterUnPoint(m){
+  const c = T.chaine || [];
+  const dernier = c[c.length - 1];
+  if (dernier && Math.hypot(dernier.x - m.x, dernier.z - m.z) < 0.05) return;
+  T.chaine = [...c, m];
 }
 
 function finirLaLigne(){
@@ -516,8 +533,8 @@ export function commandesDuTerrain(trad = tr, outil = 'selection', choisi = fals
     l.push(trad('Drag: paint the relief (raise, dig, flatten to the height under the first click, smooth).', "Glisser : peindre le relief (monter, creuser, aplanir à la hauteur du premier clic, adoucir)."));
     l.push(trad('Wheel: size · right-click: next mode · Ctrl + wheel: zoom.', 'Molette : taille · clic droit : mode suivant · Ctrl + molette : zoom.'));
   } else if (outil === 'trace') {
-    l.push(trad('Click: one point per bend; double-click, Enter or right-click: finish.', 'Clic : un point par virage ; double-clic, Entrée ou clic droit : terminer.'));
-    l.push(trad('Right-click: next kind · wheel: width (road, path, river) · Ctrl + wheel: zoom.', 'Clic droit : genre suivant · molette : largeur (route, chemin, rivière) · Ctrl + molette : zoom.'));
+    l.push(trad('Click: one point per bend; hold the click (last point), Enter or right-click: finish.', 'Clic : un point par virage ; clic maintenu (dernier point), Entrée ou clic droit : terminer.'));
+    l.push(trad('Right-click: next kind · wheel: width (or height) · Ctrl + wheel: zoom.', 'Clic droit : genre suivant · molette : largeur (ou hauteur) · Ctrl + molette : zoom.'));
     l.push(trad('Its texture, colour and sizes are set below, before drawing.', 'Sa texture, sa couleur et ses tailles se règlent dessous, avant de poser.'));
   } else {
     l.push(trad('Click a zone or path: select it; drag: move it; Del: delete it.', 'Clic sur une Zone ou un Tracé : le choisir ; glisser : le déplacer ; Suppr : le supprimer.'));
@@ -630,7 +647,7 @@ function reglagesDuChoisi(obj){
       // La hauteur d'un muret, d'une clôture, d'une haie, d'une barrière ; l'épaisseur d'un muret, d'une haie.
       ? [{ cle: 'hauteurMur', nom: tr('Height (m)', 'Hauteur (m)'), min: 0.2, max: 5, pas: 0.05,
            lire: () => tracéWallHeight3D(obj), ecrire: (v) => { obj.wallHeight = v; } },
-         ...(TRACÉS_A_EPAISSEUR.includes(obj.tracéType) ? [{ cle: 'epaisseur', nom: tr('Thickness (cm)', 'Épaisseur (cm)'), min: 2, max: 200, pas: 1,
+         ...(TRACÉS_A_EPAISSEUR.includes(obj.tracéType) ? [{ cle: 'epaisseur', nom: tr('Width (cm)', 'Largeur (cm)'), min: 2, max: 200, pas: 1,
            lire: () => Math.round(tracéWallThickness3D(obj) * 100), ecrire: (v) => { obj.wallThickness = v / 100; } }] : [])]
     : obj.tracéType === 'riviere'
     ? [{ cle: 'largeur', nom: tr('Width (m)', 'Largeur (m)'), min: 1, max: 30, pas: 0.5,
@@ -1049,6 +1066,13 @@ function dessinerEnCours(g, e){
   const accent = couleur('--accent', '#e07a3c');
   g.save();
   g.strokeStyle = accent; g.fillStyle = accent; g.lineWidth = 2; g.setLineDash([6, 4]);
+  // L'appui long en cours : un anneau qui se remplit (au bout, la ligne se termine).
+  if (T.appui && T.appui.minuteur) {
+    const p = e(T.appui.m), f = Math.min(1, (Date.now() - T.appui.t0) / APPUI_LONG_MS);
+    g.setLineDash([]); g.lineWidth = 3;
+    g.beginPath(); g.arc(p.x, p.y, 12, -Math.PI / 2, -Math.PI / 2 + f * Math.PI * 2); g.stroke();
+    g.setLineDash([6, 4]); g.lineWidth = 2;
+  }
   if (T.chaine && T.chaine.length) {
     const pts = T.fantome ? [...T.chaine, T.fantome] : T.chaine;
     g.beginPath(); pts.forEach((p, i) => { const s = e(p); if (i) g.lineTo(s.x, s.y); else g.moveTo(s.x, s.y); }); g.stroke();
@@ -1259,10 +1283,16 @@ export function initEditeurDeTerrain(){
         majContenu(); redessiner(); return;
       }
       // Demandé : outil Tracés, la molette élargit le Tracé à poser (route, chemin, rivière).
-      if (T.outil === 'trace' && AVEC_LARGEUR.includes(T.sorteTrace)) {
-        const r = reglagesDuGenre(T.sorteTrace);
-        r.largeur = Math.max(0.5, Math.min(30, largeurDuGenre(T.sorteTrace) + sens * 0.5));
-        majContenu(); redessiner(); return;
+      // Demandé : outil Tracés, la molette règle la LARGEUR (route, chemin, rivière ; muret, haie : leur
+      // largeur en cm), à défaut la HAUTEUR (clôture, barrière) ; sans rien de tel seulement, le zoom.
+      if (T.outil === 'trace') {
+        const s0 = T.sorteTrace, r = reglagesDuGenre(s0), def = TRACÉ_DEFAULTS[s0] || {};
+        if (AVEC_LARGEUR.includes(s0)) r.largeur = Math.max(0.5, Math.min(30, largeurDuGenre(s0) + sens * 0.5));
+        else if (TRACÉS_A_EPAISSEUR.includes(s0)) {
+          const actuelle = r.epaisseur || tracéWallThickness3D({ tracéType: s0, wallHeight: r.hauteur || def.wallHeight });
+          r.epaisseur = Math.max(0.02, Math.min(2, Math.round((actuelle + sens * 0.02) * 100) / 100));
+        } else if (MURETS.includes(s0)) r.hauteur = Math.max(0.2, Math.min(5, Math.round(((r.hauteur || def.wallHeight || 0.5) + sens * 0.05) * 100) / 100));
+        if (AVEC_LARGEUR.includes(s0) || MURETS.includes(s0)) { majContenu(); redessiner(); return; }
       }
       if (T.outil === 'zone' && T.sorteZone === 'pinceau') {
         T.pinceauZone = T_PINCEAU_ZONE.rayon = Math.max(0.5, Math.min(20, T.pinceauZone + sens * 0.5));
@@ -1322,9 +1352,13 @@ export function initEditeurDeTerrain(){
       return;
     }
     if (T.outil === 'trace') {
-      // Un double-clic termine (son second clic n'ajoute pas de point).
-      if (e.detail >= 2 && T.chaine) { finirLaLigne(); return; }
-      T.chaine = [...(T.chaine || []), m];
+      // Demandé : plus de double-clic (il ajoutait un petit segment). Le point se pose AU RELÂCHER ;
+      // MAINTENU sur place, le clic pose le dernier point et termine la ligne.
+      annulerLAppui();
+      T.appui = { m, x: e.clientX, y: e.clientY, t0: Date.now(),
+        minuteur: setTimeout(() => { if (T && T.appui) { const a = T.appui; annulerLAppui(); ajouterUnPoint(a.m); finirLaLigne(); } }, APPUI_LONG_MS),
+        horloge: setInterval(() => { if (T && T.appui) redessiner(); }, 40) };
+      plan.setPointerCapture && plan.setPointerCapture(e.pointerId);
       redessiner();
       return;
     }
@@ -1336,7 +1370,6 @@ export function initEditeurDeTerrain(){
     if (obj && obj.world) { T.glisser = { id: obj.id, depart: m, origine: JSON.parse(JSON.stringify(obj.world)), bouge: false }; plan.setPointerCapture && plan.setPointerCapture(e.pointerId); }
     majContenu(); redessiner();
   });
-  plan.addEventListener('dblclick', (e) => { if (T && T.outil === 'trace') { e.preventDefault(); finirLaLigne(); } });
   plan.addEventListener('pointermove', (e) => {
     if (!T || !T.vue) return;
     const r = plan.getBoundingClientRect(), { l, h } = taillePlan();
@@ -1369,6 +1402,11 @@ export function initEditeurDeTerrain(){
       if (T.coup && (!T.coup.dernier || Math.hypot(m.x - T.coup.dernier.x, m.z - T.coup.dernier.z) >= T.pinceau.rayon / 4)) peindre(m);
       redessiner();
     }
+    else if (T.appui) {
+      // Bouger pendant l'appui : ce n'est plus un appui long (le point se posera au relâcher, là).
+      if (Math.hypot(e.clientX - T.appui.x, e.clientY - T.appui.y) > 4) { const a = T.appui; clearTimeout(a.minuteur); clearInterval(a.horloge); a.minuteur = a.horloge = 0; a.bouge = true; }
+      T.appui.m = m; T.fantome = m; redessiner();
+    }
     else if (T.chaine) { T.fantome = m; redessiner(); }
     else if (T.glisser) {
       const obj = terrainChoisi();
@@ -1380,6 +1418,8 @@ export function initEditeurDeTerrain(){
   });
   const finGestePlan = (e) => {
     if (!T) return;
+    // Un appui court de l'outil Tracés : un point, au relâcher.
+    if (T.appui) { const a = T.appui; annulerLAppui(); if (e && e.type === 'pointerup') { ajouterUnPoint(a.m); redessiner(); } return; }
     if (T.tourner) {
       const t = T.tourner; T.tourner = null;
       const obj = terrainChoisi();

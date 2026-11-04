@@ -49,9 +49,8 @@ test('l\'éditeur pose une rivière (Tracés) ; une Zone à la texture Eau a son
   // La rivière.
   document.getElementById('terrainOutilTrace').onclick();
   document.getElementById('terrainSortesTrace').children.find(b => b.dataset.valeur === 'riviere').onclick();
-  jouer('pointerdown', { button: 0, ...px(-5, 0) });
-  jouer('pointerdown', { button: 0, ...px(5, 0) });
-  jouer('dblclick', {});
+  for (const pt of [px(-5, 0), px(5, 0)]) { jouer('pointerdown', { button: 0, ...pt }); jouer('pointerup', pt); }
+  jouer('contextmenu', {});   // le clic droit termine
   const riv = objets.find(o => o.tracéType === 'riviere');
   assert.ok(riv);
   assert.equal(riv.world.width, 4);

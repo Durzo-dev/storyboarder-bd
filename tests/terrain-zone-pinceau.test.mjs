@@ -472,9 +472,8 @@ test('outil Tracés : réglages du genre avant de poser ; clic droit = genre sui
   jouer('wheel', { deltaY: -100, clientX: 400, clientY: 300 });
   jouer('wheel', { deltaY: -100, clientX: 400, clientY: 300 });
   assert.equal(Number(reglage('largeur').value), Math.min(30, l0 + 1));
-  jouer('pointerdown', { button: 0, clientX: 300, clientY: 300 });
-  jouer('pointerdown', { button: 0, clientX: 500, clientY: 300 });
-  jouer('dblclick', {});
+  for (const x of [300, 500]) { jouer('pointerdown', { button: 0, clientX: x, clientY: 300 }); jouer('pointerup', { clientX: x, clientY: 300 }); }
+  jouer('contextmenu', {});
   const route = S.scenes[0].pages[0].objects.find(o => o.tracéType === 'route');
   assert.equal(route.color, '#ff0000');
   assert.equal(route.marquage, false);
@@ -485,5 +484,41 @@ test('outil Tracés : réglages du genre avant de poser ; clic droit = genre sui
   jouer('pointerdown', { button: 2, clientX: 300, clientY: 300 });
   jouer('pointerup', { clientX: 300, clientY: 300 });
   assert.match(document.getElementById('terrainSectionTraceReglages').textContent, /^(Chemin|Dirt path)$/);
+  document.getElementById('terrainValiderBtn').onclick();
+});
+
+// Demandé : plus de double-clic pour finir un Tracé (il ajoutait un petit segment) : le clic MAINTENU
+// pose le dernier point et termine ; la molette règle la largeur, à défaut la hauteur, sinon le zoom.
+test('Tracé : clic maintenu = dernier point et fin ; molette = largeur, sinon hauteur ; « Largeur (cm) » d\'un muret', async () => {
+  globalThis.requestAnimationFrame = (f) => { f(); return 0; };
+  globalThis.getComputedStyle = () => ({ getPropertyValue: () => '' });
+  const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
+  S.scenes = [{ id: 's1', name: 'Scène 1', w: 480, h: 360, pages: [{ objects: [panel] }] }];
+  S.editingSceneId = 's1';
+  U.setTerrainEditeurCallbacks({ instantane: () => {}, ouvrirLaScene: () => {}, apresModification: () => {}, confirmer: async () => true });
+  U.initEditeurDeTerrain();
+  U.ouvrirEditeurDeTerrain('s1');
+  const plan = document.getElementById('terrainPlan');
+  const jouer = (type, ev) => (plan._ecouteurs[type] || []).forEach(f => f({ preventDefault(){}, stopPropagation(){}, pointerId: 1, detail: 1, ...ev, type }));
+  document.getElementById('terrainOutilTrace').onclick();
+  document.getElementById('terrainSortesTrace').children.find(b => b.dataset.valeur === 'chemin').onclick();
+  jouer('pointerdown', { button: 0, clientX: 300, clientY: 300 }); jouer('pointerup', { clientX: 300, clientY: 300 });
+  jouer('pointerdown', { button: 0, clientX: 500, clientY: 300 });
+  await new Promise(r => setTimeout(r, 520));   // maintenu : la ligne se termine sans relâcher
+  jouer('pointerup', { clientX: 500, clientY: 300 });
+  const chemins = S.scenes[0].pages[0].objects.filter(o => o.tracéType === 'chemin');
+  assert.equal(chemins.length, 1);
+  assert.equal(chemins[0].world.pts.length, 2, 'pas de petit segment en plus');
+  // Molette : un muret règle sa largeur (cm), une clôture sa hauteur.
+  const reglage = (cle) => { for (const c of document.getElementById('terrainTraceReglages').children) if (c.dataset && c.dataset.cle === cle) return c; return null; };
+  document.getElementById('terrainSortesTrace').children.find(b => b.dataset.valeur === 'muret').onclick();
+  const e0 = Number(reglage('epaisseur').value);
+  jouer('wheel', { deltaY: -100, clientX: 400, clientY: 300 });
+  assert.equal(Number(reglage('epaisseur').value), e0 + 2);
+  document.getElementById('terrainSortesTrace').children.find(b => b.dataset.valeur === 'cloture').onclick();
+  const h0 = Number(reglage('hauteur').value);
+  jouer('wheel', { deltaY: -100, clientX: 400, clientY: 300 });
+  assert.ok(Math.abs(Number(reglage('hauteur').value) - (h0 + 0.05)) < 1e-9);
+  assert.match(lire('terrain-editeur-ui.js'), /tr\('Width \(cm\)', 'Largeur \(cm\)'\)/);
   document.getElementById('terrainValiderBtn').onclick();
 });

@@ -76,7 +76,7 @@ test('les commandes disent ce qu\'on peut faire, et que les Éléments ne se mod
   assert.match(t, /Les Éléments ne sont que désignés ici\./);
   assert.match(t, /Suppr : le supprimer/);
   assert.match(commandesDuTerrain((en, fr) => fr, 'zone').join('\n'), /Rectangle : glisser pour tracer une Zone\. Pinceau : glisser pour en peindre une/);
-  assert.match(commandesDuTerrain((en, fr) => fr, 'trace').join('\n'), /double-clic, Entrée ou clic droit : terminer/);
+  assert.match(commandesDuTerrain((en, fr) => fr, 'trace').join('\n'), /clic maintenu \(dernier point\), Entrée ou clic droit : terminer/);
 });
 
 test('câblage : bouton à droite de l\'Éditeur de bâtiment, inerte sans Scène ; choix de la Scène ; clic droit en Scène seulement', () => {
