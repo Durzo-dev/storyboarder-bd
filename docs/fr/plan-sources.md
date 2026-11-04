@@ -307,7 +307,7 @@ sont difficiles, faute de métrique commune et de jeux de données publics.
 |---|---|---|
 | Le mur coupé est l'élément le plus lourd : trait épais, plein noir, carmin ou rose, hachures | toutes | Chercher la **masse d'encre épaisse**, avec une transformée de distance (épaisseur locale), et non une couleur fixe |
 | Le fond n'est pas blanc : papier jauni, parchemin, photo mal éclairée | anciennes, photos | Estimer la couleur du papier (la plus fréquente), et mesurer l'« encre » comme un écart à cette couleur ; seuil adaptatif local |
-| Murs lavés de couleur (carmin, rose, gris) sans trait noir | XVIIe-XIXe | Une **pipette** « couleur des murs » en option, qui force la détection sur cette teinte |
+| Murs lavés de couleur (carmin, rose, gris) sans trait noir | XVIIe-XIXe | Détecter **automatiquement** une teinte de murs : une couleur saturée (carmin, rose) qui forme des masses épaisses compte comme de l'encre. La pipette n'est qu'un dernier recours |
 | Hachures (traits fins serrés) au lieu d'un plein | XIXe-XXe, CAO | Une fermeture morphologique pour faire une masse des hachures avant de mesurer l'épaisseur |
 | Ombre portée en bas à droite des murs, ou trait renforcé côté ombre | XVIIIe-XIXe, Beaux-Arts | Ignorer une bande plus claire collée au mur ; ne pas prendre l'épaisseur d'un seul bord pour celle du mur |
 | Fenêtre = interruption du mur avec des traits fins ; baie = vide | toutes depuis le XVe | Une **ouverture** est un trou entre deux bouts de mur alignés ; son contenu décide de sa nature |
@@ -315,7 +315,7 @@ sont difficiles, faute de métrique commune et de jeux de données publics.
 | Murs épais avec embrasures en biais | châteaux, manoirs | Ne pas exiger des ouvertures à bords parallèles |
 | Traits pas droits, symboles non normalisés | anciens (VERSPERA) | Une tolérance ; aligner sur les **angles dominants** (histogramme d'orientation) |
 | Texte, cotes, mobilier, cartouche, légende, échelle, nord, arbres | toutes | Ne garder que la **plus grande masse de murs connexe** ; le reste est ignoré, ou proposé à l'utilisateur |
-| Plusieurs époques ou états sur un plan (existant noir, projet jaune) | XVIIe, HABS, plans de travaux | Plus tard : choisir la teinte retenue, avec la même pipette |
+| Plusieurs époques ou états sur un plan (existant noir, projet jaune) | XVIIe, HABS, plans de travaux | Plus tard : choisir la teinte retenue, en dernier recours |
 | Photo prise en biais | photos | Redresser par les **quatre coins**, comme les planches importées |
 
 **L'échelle, par ordre de fiabilité.**
@@ -341,10 +341,11 @@ C'est le même schéma que les planches importées
 ([planche-importee.md](planche-importee.md)) : une **détection approximative**, puis une
 **correction directe**, avec les mêmes gestes. Un plan correspond à **un niveau** (#454).
 
-1. **Importer** une image (photo ou scan). Le PDF est à décider : la première page rendue en image
-   suffirait. **Redresser** par les quatre coins si la photo est de biais.
-2. **Normaliser** : estimer la couleur du papier et calculer l'« encre ». Une pipette « couleur des
-   murs » reste optionnelle.
+1. **Importer** une image (tous les formats d'image courants) ou un **PDF**, dont la page est
+   rendue en image. **Redresser** par les quatre coins si la photo est de biais.
+2. **Normaliser** : estimer la couleur du papier et calculer l'« encre », y compris une teinte de
+   murs colorée trouvée **automatiquement**. Aucune action n'est demandée à l'utilisateur à cette
+   étape.
 3. **Trouver les murs** :
    - seuillage adaptatif ;
    - fermeture des hachures ;
@@ -384,14 +385,15 @@ reste chez sa source. Le domaine public est à vérifier image par image.
 | Contemporain, CAO | FloorPlanCAD (environ 15 600 plans, 30 catégories) ; CVC-FP (122 plans) ; MLSTRUCT-FP (954 plans) | Hachures, traits fins, grands immeubles |
 | Plans de Valentin | ses propres plans | Le cas réel |
 
-## Questions à trancher avec Valentin
+## Décisions de Valentin (4 novembre 2026)
 
-1. **Les unités** de la saisie d'échelle : la liste ci-dessus convient-elle ?
-2. **Le PDF** : faut-il l'accepter en entrée dès la première version, en rendant la page en image ?
-3. **La pipette « couleur des murs »** : dès la première version, ou seulement si la détection
-   échoue sur les plans lavés ?
-4. **Le corpus** : Valentin a-t-il des plans précis (le manoir ou le château de son histoire) à
-   mettre en tête des tests ?
+1. **Les unités** de la saisie d'échelle : la liste ci-dessus convient.
+2. **Les formats** : tous les formats d'image courants, et le PDF, dès la première version.
+3. **Le plus automatique possible.** Toute action ajoutée pour l'utilisateur se fait **en dernier
+   recours**. Les murs colorés sont donc détectés sans pipette ; la pipette ne vient, si elle vient,
+   qu'à la correction, quand la détection a échoué. Seule l'échelle reste demandée d'office
+   (pré-remplie par l'estimation), faute de pouvoir la lire de façon sûre sur une photo.
+4. **Le corpus** : celui de ce document, sans plan particulier en tête.
 
 ## Sources
 

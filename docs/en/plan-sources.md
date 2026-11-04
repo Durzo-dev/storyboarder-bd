@@ -292,7 +292,7 @@ shared metric and of public datasets.
 |---|---|---|
 | The cut wall is the heaviest element: thick line, solid black, carmine or pink, hatching | all | Look for **thick ink mass**, with a distance transform (local thickness), not a fixed colour |
 | The background is not white: yellowed paper, parchment, badly lit photo | old, photos | Estimate the paper colour (the most frequent one), and measure "ink" as distance from it; local adaptive threshold |
-| Walls washed in colour (carmine, pink, grey) with no black line | 17th–19th c. | An optional "wall colour" **eyedropper** that forces detection on that hue |
+| Walls washed in colour (carmine, pink, grey) with no black line | 17th–19th c. | Detect a wall hue **automatically**: a saturated colour (carmine, pink) forming thick masses counts as ink. The eyedropper is a last resort only |
 | Hatching (tight thin lines) instead of a solid fill | 19th–20th c., CAD | A morphological closing turns hatching into a mass before measuring thickness |
 | Cast shadow below-right of walls, or line reinforced on the shadow side | 18th–19th c., Beaux-Arts | Ignore a lighter band stuck to a wall; do not take one edge's thickness for the wall's |
 | Window = break in the wall with thin lines; opening = gap | all since the 15th c. | An **opening** is a gap between two aligned wall pieces; its content decides its kind |
@@ -300,7 +300,7 @@ shared metric and of public datasets.
 | Thick walls with splayed embrasures | castles, manors | Do not require openings with parallel sides |
 | Lines not straight, symbols not standardised | old (VERSPERA) | Tolerance; snap to **dominant angles** (orientation histogram) |
 | Text, dimensions, furniture, title block, legend, scale, north arrow, trees | all | Keep only the **largest connected wall mass**; ignore the rest, or offer it to the user |
-| Several periods or states on one plan (existing in black, planned in yellow) | 17th c., HABS, works plans | Later: choose which hue to keep, with the same eyedropper |
+| Several periods or states on one plan (existing in black, planned in yellow) | 17th c., HABS, works plans | Later: choose which hue to keep, as a last resort |
 | Photo taken at an angle | photos | Straighten by the **four corners**, like imported pages |
 
 **Scale, by reliability.**
@@ -326,10 +326,9 @@ It is the same pattern as imported pages ([planche-importee.md](planche-importee
 detection**, then **direct correction**, with the same gestures. One plan corresponds to **one
 level** (#454).
 
-1. **Import** an image (photo or scan). PDF is to be decided: the first page rendered as an image
-   would do. **Straighten** by the four corners if the photo is at an angle.
-2. **Normalise**: estimate the paper colour and compute "ink". A "wall colour" eyedropper stays
-   optional.
+1. **Import** an image (any common image format) or a **PDF**, its page rendered as an image. **Straighten** by the four corners if the photo is at an angle.
+2. **Normalise**: estimate the paper colour and compute "ink", including a coloured wall hue found
+   **automatically**. Nothing is asked of the user at this step.
 3. **Find the walls**:
    - adaptive thresholding;
    - closing over hatching;
@@ -365,14 +364,15 @@ source. Public-domain status is to be checked image by image.
 | Contemporary, CAD | FloorPlanCAD (about 15,600 plans, 30 categories); CVC-FP (122 plans); MLSTRUCT-FP (954 plans) | Hatching, thin lines, large buildings |
 | Valentin's plans | his own plans | The real case |
 
-## Questions for Valentin
+## Valentin's decisions (4 November 2026)
 
-1. **Units** for the scale entry: does the list above suit?
-2. **PDF**: should it be accepted as input from the first version, rendering the page as an image?
-3. **The "wall colour" eyedropper**: from the first version, or only if detection fails on washed
-   plans?
-4. **The corpus**: does Valentin have specific plans (the manor or castle of his story) to put at the
-   head of the tests?
+1. **Units** for the scale entry: the list above suits.
+2. **Formats**: every common image format, and PDF, from the first version.
+3. **As automatic as possible.** Any extra action for the user comes **as a last resort**. Coloured
+   walls are therefore detected without an eyedropper; the eyedropper comes, if at all, only during
+   correction, when detection has failed. Only the scale is always asked for (pre-filled with the
+   estimate), since it cannot be read reliably from a photo.
+4. **Corpus**: the one in this document, with no particular plan in mind.
 
 ## Sources
 
