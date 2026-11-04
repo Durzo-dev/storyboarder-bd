@@ -45,6 +45,7 @@ down.
 | [archetype-poses.md](archetype-poses.md) | Archetype poses: the three vocabularies, what was measured, what was disproved, decisions taken (tasks #375 to #402). |
 | [terrain-editor.md](terrain-editor.md) | The terrain editor: what lives where, added data (relief, painted Zones, slopes, water, rivers), the decisions that matter (task #462). |
 | [building-research.md](building-research.md) | Building construction in games (The Sims, inZOI, Valheim, Tiny Glade…) and architecture software (Sweet Home 3D, Revit, Archicad…): what we keep, recommendations, data model for levels (task #455). |
+| [plan-sources.md](plan-sources.md) | Reading an architect's plan: sources from the Middle Ages to CAD, conventions by period (toises, carmine wash, poché, ISO 7519, HABS), units, scale, test corpus and proposed flow (task #456). |
 | [formats.md](formats.md) | Volume formats: owned by the Project, created, renamed, deleted when unused; mm and px; the added field. |
 | [planche-importee.md](planche-importee.md) | Imported pages: a page image, its Panels detected then checked, the framing of the whole, what is locked, the added fields. |
 | [panel-images.md](panel-images.md) | An image in a panel instead of a 3D scene: settled decisions, what the code already provides, what is left to measure (tasks #403a to #403d). |

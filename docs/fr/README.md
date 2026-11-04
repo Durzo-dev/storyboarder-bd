@@ -45,6 +45,7 @@ régression difficile à retrouver.
 | [archetype-poses.md](archetype-poses.md) | Poses par archétype : les trois vocabulaires, ce qui a été mesuré, ce qui a été infirmé, décisions prises (tâches #375 à #402). |
 | [terrain-editor.md](terrain-editor.md) | L'Éditeur de terrain : où vit quoi, les données ajoutées (relief, Zones peintes, pentes, eau, rivières), les décisions qui comptent (tâche #462). |
 | [building-research.md](building-research.md) | La construction de bâtiments dans les jeux (Les Sims, inZOI, Valheim, Tiny Glade…) et les logiciels d'architecture (Sweet Home 3D, Revit, Archicad…) : ce qu'on en retient, recommandations, modèle de données des niveaux (tâche #455). |
+| [plan-sources.md](plan-sources.md) | Lire un plan d'architecte : sources du Moyen Âge à la CAO, conventions par époque (toises, lavis carmin, poché, ISO 7519, HABS), unités, échelle, corpus de test et déroulé proposé (tâche #456). |
 | [formats.md](formats.md) | Les formats des Tomes : propres au Projet, créés, renommés, supprimés s'ils sont inutilisés ; les mm et les px ; le champ ajouté. |
 | [planche-importee.md](planche-importee.md) | Les Planches importées : une image de planche, ses Cases détectées puis vérifiées, le cadrage de l'ensemble, ce qui est verrouillé, les champs ajoutés. |
 | [panel-images.md](panel-images.md) | Une image dans une Case à la place d'une scène 3D : décisions arrêtées, ce que le code fournit déjà, ce qui reste à mesurer (tâches #403a à #403d). |
