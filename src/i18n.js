@@ -67,7 +67,6 @@ export const I18N_TEXT = [
   ['#terrainSectionChoisi', 'Selection', 'Sélection'],
   ['#terrainSectionZone', 'Zone to draw', 'Zone à poser'],
   ['#terrainZoneTailleLabel', 'Brush size', 'Taille du pinceau'],
-  ['#terrainChoisiElement', 'An element shows here, but is changed in the scene.', 'Un élément se voit ici, mais se modifie dans la scène.'],
   ['#terrainSupprimerBtn', 'Delete', 'Supprimer'],
   ['#batimentEditeurTitre', 'Building editor', 'Éditeur de bâtiment'],
   ['#batimentSectionNom', 'Building', 'Bâtiment'],

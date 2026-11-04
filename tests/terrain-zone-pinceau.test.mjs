@@ -305,11 +305,9 @@ test('un Tracé choisi se règle dans « Sélection » : largeur, hauteur, épai
   const m = S.scenes[0].pages[0].objects.find(o => o.id === 'm1');
   assert.equal(m.wallHeight, 2);
   assert.equal(m.wallThickness, 0.4);
-  // Un Élément désigné : nommé, mais rien à régler ni à supprimer.
+  // Demandé : un Élément désigné n'a pas de section (rien à y régler).
   U.ouvrirEditeurDeTerrain('s1', { choisi: 'e1' });
   U.rafraichirEditeurDeTerrain();
-  assert.equal(document.getElementById('terrainSectionChoisi').textContent, 'Alice');
-  assert.equal(document.getElementById('terrainChoisiElement').hidden, false);
-  assert.equal(document.getElementById('terrainSupprimerBtn').hidden, true);
+  assert.equal(document.getElementById('terrainSecChoisi').hidden, true);
   U.fermerEditeurDeTerrain();
 });

@@ -678,13 +678,10 @@ function majContenu(){
   // La Zone ou le Tracé choisi.
   const obj = terrainChoisi();
   // Demandé : la section porte le NOM de ce qui est choisi ; tout s'y règle (plus de bouton « Régler »).
-  // Un Élément (ou un bâtiment) désigné y est nommé aussi, mais ne se modifie pas ici.
-  const forme = T.choisi ? T.formes.find(f => f.id === T.choisi) : null;
-  $('terrainSecChoisi').hidden = !obj && !forme;
+  // Un Élément (ou un bâtiment) désigné n'a rien à régler ici : pas de section (demandé), il est
+  // seulement souligné sur le plan et dans la liste.
+  $('terrainSecChoisi').hidden = !obj;
   if (obj) $('terrainSectionChoisi').textContent = obj.name || (obj.tracéType === 'terrain' ? tr('Zone', 'Zone') : nomDeSorte(obj.tracéType));
-  else if (forme) $('terrainSectionChoisi').textContent = forme.nom || (forme.type === 'batiment' ? tr('Building', 'Bâtiment') : tr('Element', 'Élément'));
-  $('terrainChoisiElement').hidden = !!obj || !forme;
-  $('terrainSupprimerBtn').hidden = !obj;
   reglagesDeZone(obj);
   reglagesDuChoisi(obj);
   // La Zone à poser (outil Zone).
