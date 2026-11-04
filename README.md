@@ -4,7 +4,7 @@
 
 > 🇫🇷 [Version française](README.fr.md)
 
-**Version 1.15.49**
+**Version 1.16.0**
 
 **Comic book storyboarding application**: a desktop tool to create, organize and visualize comic book pages with real-time 3D scene rendering.
 
@@ -38,6 +38,12 @@ Previous versions and release notes: [all releases](https://github.com/Durzo-dev
 - 🖱️ **The same 3D gestures everywhere**: left drag to turn, right drag to move, one zoom; turn a character or an object with the right button held on it; a Controls section lists them
 - 👤 **Ready-made elements**: characters with poses and emotions, animals, furniture, vehicles, vegetation, buildings, roads and walls, photographed grounds you can tint
 - ☀️ **Light**: Day, Night or Custom mode with a computed sky, placed light sources, cast shadows
+
+### Terrain editor
+- ⛰️ **Shape the ground of a scene** from above, with a 3D preview: nothing reaches the scene before you validate
+- 🖌️ **Relief**: raise, dig, flatten or smooth with a brush; what stands on it follows, roads cross hollows, the ground is flattened under buildings
+- 🟩 **Zones** as rectangles or painted, with their texture (water makes lakes and seas), height and slope
+- 🛣️ **Paths**: roads, dirt paths, rivers that dig their bed, low walls, fences, hedges, barriers, each set up before drawing
 
 ### Building editor
 - 🏠 **Build from above**: snapping walls, detected rooms, doors, windows, bay windows and passages, straight, L- or U-shaped stairs, several levels and basements (the Ground is pierced over them)

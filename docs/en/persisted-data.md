@@ -99,7 +99,7 @@ The strings used to recognise the nature of an object are as frozen as the field
 ```
 type      : 'perso' | 'objet3d' | 'panel' | 'tracé' | 'terrain' | 'bulle'
 objType   : 'mur' | 'mur_coin' | 'dalle' | 'fenetre_ouverte' | 'porte_ouverte' | 'modele' | 'batiment' | …
-tracéType : 'muret' | 'cloture' | 'haie' | 'barriere' | 'route' | 'chemin' | 'terrain'
+tracéType : 'muret' | 'cloture' | 'haie' | 'barriere' | 'route' | 'chemin' | 'terrain' | 'riviere'   (#462d)
 wallSide  : 'avant' | 'arriere'
 door/window state : 'gauche' | 'droite' | 'fermee'
 ```

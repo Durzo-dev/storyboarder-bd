@@ -43,6 +43,7 @@ régression difficile à retrouver.
 | [creature-rigs.md](creature-rigs.md) | Rigs non humanoïdes : corpus, défauts mesurés, hypothèses démenties, archétypes, plan (tâches #358 à #377). |
 | [archetype-roles.md](archetype-roles.md) | Rôles de chaînes : ce qu'une pose peut viser, listes par archétype, décisions arrêtées (tâches #378 et #375). |
 | [archetype-poses.md](archetype-poses.md) | Poses par archétype : les trois vocabulaires, ce qui a été mesuré, ce qui a été infirmé, décisions prises (tâches #375 à #402). |
+| [terrain-editor.md](terrain-editor.md) | L'Éditeur de terrain : où vit quoi, les données ajoutées (relief, Zones peintes, pentes, eau, rivières), les décisions qui comptent (tâche #462). |
 | [building-research.md](building-research.md) | La construction de bâtiments dans les jeux (Les Sims, inZOI, Valheim, Tiny Glade…) et les logiciels d'architecture (Sweet Home 3D, Revit, Archicad…) : ce qu'on en retient, recommandations, modèle de données des niveaux (tâche #455). |
 | [formats.md](formats.md) | Les formats des Tomes : propres au Projet, créés, renommés, supprimés s'ils sont inutilisés ; les mm et les px ; le champ ajouté. |
 | [planche-importee.md](planche-importee.md) | Les Planches importées : une image de planche, ses Cases détectées puis vérifiées, le cadrage de l'ensemble, ce qui est verrouillé, les champs ajoutés. |

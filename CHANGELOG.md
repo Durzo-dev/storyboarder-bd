@@ -13,6 +13,63 @@ version coûterait plus qu'il ne rapporte.
 
 ---
 
+## v1.16.0
+
+**L'Éditeur de terrain.** Le sol d'une Scène se façonne désormais dans son propre éditeur, comme les
+bâtiments : relief, Zones, Tracés et eau, en vue de dessus avec un aperçu 3D, et rien n'arrive sur la
+Scène avant « Valider ».
+
+### Ce qui change pour vous
+
+**L'Éditeur de terrain.** Un bouton à la montagne dans le bandeau (une fenêtre demande la Scène, avec
+une recherche quand la liste est longue ; grisé sans Scène), ou « Modifier le terrain » au clic droit
+d'une Scène. La vue de dessus de la Scène, un aperçu 3D par-dessus, et un menu qui change selon ce
+qu'on fait : celui de la Scène (sa liste rangée en Éléments, Bâtiments, Zones, Tracés, repliables,
+avec une recherche), celui de chaque outil, celui de l'objet choisi. Commandes en tête, Valider,
+Recadrer et Quitter en bas, toujours visibles. Ctrl+Z et Ctrl+Y y annulent et rétablissent ; quitter
+sans valider demande, puis rend la Scène telle qu'elle était.
+
+**Le relief (R).** Un pinceau pour monter, creuser, aplanir ou adoucir le sol (molette : taille ; clic
+droit : mode suivant ; maintenu sur place, il continue). Ce qui est posé suit : Personnages, Objets,
+murets, Zones ; une route ou un chemin franchit un creux au lieu de s'y enfoncer ; le sol s'aplanit
+sous un bâtiment. Une Scène chargée dans une Case apporte son relief. « Retirer tout le relief ».
+
+**Les Zones (Z).** En rectangle ou au pinceau (clic droit pour passer de l'un à l'autre ; Maj gomme).
+Une Zone se règle dans son menu : texture (l'Eau en fait un lac ou une mer, avec son niveau), couleur,
+hauteur du sol (elle relève ou creuse le terrain, bords doux), pente et sens de la pente sur un cadran.
+Clic droit sur la Zone choisie : un quart de tour ; maintenu, elle suit la souris.
+
+**Les Tracés (T).** Route, chemin, rivière (qui creuse son lit et se remplit d'eau), muret, clôture,
+haie, barrière : chaque genre se règle avant de poser (texture, couleur, largeur, hauteur, marquage,
+profondeur) ; clic droit : genre suivant ; molette : largeur, sinon hauteur. Un aperçu montre le Tracé
+tel qu'il sera, sur le plan et en 3D. Clic maintenu : le dernier point, et la ligne est finie.
+
+**Dans les Scènes.** Les Zones et les Tracés ne se font plus qu'à l'Éditeur de terrain ; la liste des
+Éléments les range dans « Terrain » (et « Non visible »), deux sous-catégories repliables ; clic droit
+« Modifier » ouvre l'éditeur sur eux. « Vider la scène » au clic droit d'une Scène.
+
+**Sélection en 3D.** Un Personnage, un Objet ou un bâtiment choisi est entouré de sa boîte 3D, orientée
+comme lui, au lieu d'un rectangle approximatif.
+
+**Bâtiments.** Une Case peut masquer les murs de devant d'un bâtiment (ceux face à la caméra), aussi
+dans l'aperçu de l'éditeur ; après « Choisir ce qui est masqué », le bâtiment reste choisi ; la trémie
+d'un escalier de sous-sol ne troue plus le plancher tant que le Sol est entier.
+
+**Divers.** La section Commandes a une hauteur fixe par menu (le menu ne saute plus au choix d'un
+Élément) ; la croix des champs de recherche prend les couleurs de l'interface.
+
+### Sous le capot
+
+- `terrain-editeur-ui.js`, `terrain-plan.js` (le plan, en mètres), `terrain-relief.js` (la grille de
+  hauteurs, le pinceau, les rivières, les pentes, le profil franchissant), `terrain-zone-pinceau.js`
+  (les Zones peintes, en cases de 50 cm).
+- Le relief est rendu à la matière même du Sol, le Sol plat percé dessous par le pochoir des
+  sous-sols ; ni lui ni les dessins drapés ne projettent d'ombre (le marquage des ombres les reconnaît
+  à une marque, plus à leur hauteur).
+- `rendreSceneVueLibre3D` : la Scène sous une caméra libre (l'aperçu de l'éditeur) ; les Tracés figés
+  pendant un coup de pinceau (665 → 2 ms par image mesurés).
+- `package.json` : le champ `license` renvoie au fichier LICENSE.
+
 ## v1.15.0
 
 **Les mêmes gestes 3D partout, des sous-sols, et des Bulles habillées par le store.** On tourne

@@ -4,7 +4,7 @@
 
 > 🇬🇧 [English version](README.md)
 
-**Version 1.15.49**
+**Version 1.16.0**
 
 **Application de découpage de Bandes Dessinées** : outil de storyboard pour créer, organiser et visualiser des planches de BD avec rendu 3D des scènes.
 
@@ -38,6 +38,12 @@ Versions précédentes et notes de version : [toutes les releases](https://githu
 - 🖱️ **Les mêmes gestes 3D partout** : glisser gauche pour tourner, droit pour déplacer, un seul zoom ; un Personnage ou un Objet se tourne au clic droit maintenu sur lui ; une section Commandes les rappelle
 - 👤 **Éléments prêts à l'emploi** : Personnages avec poses et émotions, Animaux, mobilier, véhicules, végétation, bâtiments, routes et murets, sols photographiés teintables
 - ☀️ **Lumière** : mode Jour, Nuit ou Personnalisé avec ciel calculé, sources de lumière posées, ombres portées
+
+### Éditeur de terrain
+- ⛰️ **Façonner le sol d'une Scène** en vue de dessus, avec un aperçu 3D : rien n'arrive sur la Scène avant « Valider »
+- 🖌️ **Relief** : monter, creuser, aplanir ou adoucir au pinceau ; ce qui est posé suit, les routes franchissent les creux, le sol s'aplanit sous les bâtiments
+- 🟩 **Zones** en rectangle ou peintes, avec leur texture (l'eau fait les lacs et les mers), leur hauteur et leur pente
+- 🛣️ **Tracés** : routes, chemins, rivières qui creusent leur lit, murets, clôtures, haies, barrières, réglés avant de poser
 
 ### Éditeur de bâtiment
 - 🏠 **Construire en vue de dessus** : murs aimantés, pièces détectées, portes, fenêtres, baies et passages, escaliers droits, en L ou en U, plusieurs niveaux et des sous-sols (le Sol est percé au-dessus)

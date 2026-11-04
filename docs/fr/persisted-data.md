@@ -89,7 +89,7 @@ Les chaînes qui servent à reconnaître la nature d'un objet sont aussi figées
 ```
 type      : 'perso' | 'objet3d' | 'panel' | 'tracé' | 'terrain' | 'bulle'
 objType   : 'mur' | 'mur_coin' | 'dalle' | 'fenetre_ouverte' | 'porte_ouverte' | 'modele' | 'batiment' | …
-tracéType : 'muret' | 'cloture' | 'haie' | 'barriere' | 'route' | 'chemin' | 'terrain'
+tracéType : 'muret' | 'cloture' | 'haie' | 'barriere' | 'route' | 'chemin' | 'terrain' | 'riviere'   (#462d)
 wallSide  : 'avant' | 'arriere'
 état porte/fenêtre : 'gauche' | 'droite' | 'fermee'
 ```

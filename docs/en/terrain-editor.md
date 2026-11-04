@@ -1,0 +1,44 @@
+# The terrain editor (#462)
+
+*[Version française](../fr/terrain-editor.md)*
+
+Shaping the ground of a Scene: relief, Zones, Paths, water. Decided with Valentin on 2–4 November
+2026; shipped in 1.16.0.
+
+## What lives where
+
+| File | Role |
+|---|---|
+| `src/terrain-editeur-ui.js` | The editor: opening (a Scene only), tools, menus, plan, 3D preview, validation. |
+| `src/terrain-plan.js` | PURE. The plan in metres (zones, paths, buildings, elements), framing, hit-testing, moving and turning a Zone. |
+| `src/terrain-relief.js` | PURE. The height grid, the brush, rivers, raised or sloped Zones, the "bridging" profile of roads. |
+| `src/terrain-zone-pinceau.js` | PURE. Painted Zones: a mask of 50 cm cells. |
+| `src/scene3d.js` | Rendering: `reliefEffectif3D`, `poserRelief3D`, `draperSurLeRelief3D`, water, `rendreSceneVueLibre3D`. |
+
+## Added data (ADDED fields: an old file reads as it is)
+
+- **`panel.relief`** (the Scene canvas, and a Panel that loads it): `{ pas, x0, z0, nx, nz, h, v }`,
+  heights in metres every metre, row by row in z. Absent: flat Ground.
+- **`terrain` path** (Zone): `world.masque` `{ pas, x0, z0, nx, nz, plein }` for a painted Zone (the
+  bounding rectangle stays in `world`); `hauteurZone`, `penteZone` (degrees), `sensPente` (degrees);
+  `niveauEau` when `terrainType === 'eau'`.
+- **`riviere` path**: `world.pts`, `world.width`, `profondeur`.
+
+## The decisions that matter
+
+- **Nothing is applied before "Validate".** The editor works on the Scene (the preview and the
+  settings need it) but keeps its starting state; leaving without validating restores it; validating
+  makes ONE application undo step. While editing, `snapshot()` feeds the editor's own history, and
+  autosave waits.
+- **Rendered relief = painted relief, raised by Zones, dug by rivers, flattened under buildings**
+  (`reliefEffectif3D`), recomputed at each render. It uses the Ground's VERY material (a copy changed
+  the colour); the flat Ground is pierced under it by a stencil mask WITHOUT depth test (with it, the
+  mask fought the near-flat relief: moiré).
+- **Relief and draped drawings never cast shadows**: `marquerProjectionDOmbre3D` recognises them by
+  `userData.relief` / `userData.dessinAuSol`, not by their height (otherwise shadow acne).
+- **A point's height follows the mesh triangles** (diagonal (i+1, j)–(i, j+1)), not a bilinear
+  interpolation: otherwise what stands on it goes under it.
+- **Performance**: during a brush stroke, Paths are frozen (`figerLesTraces3D`) and the preview is
+  capped at 8 frames/s: 665 → 2 ms per frame measured.
+- **Menu buttons and lists are built once and only updated**: the menu is refreshed at every draw,
+  and a button replaced between press and release loses the click (the #459a defect, back twice here).
