@@ -687,6 +687,8 @@ function majContenu(){
   const menuDeLObjet = !!obj && T.outil === 'selection';
   $('terrainSecChoisi').hidden = !menuDeLObjet;
   $('terrainPanneau').classList.toggle('mode-choisi', menuDeLObjet);
+  // Demandé : chaque OUTIL a aussi son menu (Commandes et la section de l'outil), sans la liste.
+  $('terrainPanneau').classList.toggle('mode-outil', T.outil !== 'selection');
   if (obj) $('terrainSectionChoisi').textContent = obj.name || (obj.tracéType === 'terrain' ? tr('Zone', 'Zone') : nomDeSorte(obj.tracéType));
   reglagesDeZone(obj);
   reglagesDuChoisi(obj);

@@ -3108,3 +3108,7 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 #terrainPanneau > .terrain-pied{ flex:0 0 auto; margin-top:auto; position:sticky; bottom:-14px; padding:12px 0 14px;
   background:var(--paper-dark); display:flex; flex-direction:column; gap:8px; }
 #terrainPanneau > .terrain-pied > button{ width:100%; margin:0; }
+/* Demandé : chaque outil (Zone, Tracés, Relief) a SON menu : Commandes et la section de l'outil. */
+#terrainPanneau.mode-outil > #terrainSecScene, #terrainPanneau.mode-outil > #terrainSecChoisi{ display:none !important; }
+#terrainPanneau.mode-outil > #terrainSecTrace, #terrainPanneau.mode-outil > #terrainSecZone, #terrainPanneau.mode-outil > #terrainSecRelief{
+  flex:0 1 auto; min-height:0; overflow-y:auto; }

@@ -417,3 +417,26 @@ test('l\'éditeur de terrain ne traite jamais `children` comme un tableau', () =
   assert.doesNotMatch(ui, /(?<!Array\.from)\(\w+\.children \|\| \[\]\)\.(filter|find|map|some|every|forEach)\(/);
   assert.doesNotMatch(ui, /\.children\.(filter|find|map|some|every|forEach)\(/);
 });
+
+// Demandé : chaque outil a son menu (Commandes et sa section, sans la liste de la Scène).
+test('un outil choisi a son menu ; l\'outil Sélection rend le menu de la Scène', () => {
+  globalThis.requestAnimationFrame = (f) => { f(); return 0; };
+  globalThis.getComputedStyle = () => ({ getPropertyValue: () => '' });
+  const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
+  S.scenes = [{ id: 's1', name: 'Scène 1', w: 480, h: 360, pages: [{ objects: [panel] }] }];
+  S.editingSceneId = 's1';
+  U.setTerrainEditeurCallbacks({ instantane: () => {}, ouvrirLaScene: () => {}, apresModification: () => {}, confirmer: async () => true });
+  U.initEditeurDeTerrain();
+  U.ouvrirEditeurDeTerrain('s1');
+  const panneau = document.getElementById('terrainPanneau');
+  for (const [id, section] of [['terrainOutilZone', 'terrainSecZone'], ['terrainOutilTrace', 'terrainSecTrace'], ['terrainOutilRelief', 'terrainSecRelief']]) {
+    document.getElementById(id).onclick();
+    assert.ok(panneau.classList.contains('mode-outil'), id);
+    assert.equal(document.getElementById(section).hidden, false, section);
+  }
+  document.getElementById('terrainOutilSelection').onclick();
+  assert.ok(!panneau.classList.contains('mode-outil'));
+  const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
+  assert.match(css, /#terrainPanneau\.mode-outil > #terrainSecScene, #terrainPanneau\.mode-outil > #terrainSecChoisi\{ display:none !important; \}/);
+  U.fermerEditeurDeTerrain();
+});
