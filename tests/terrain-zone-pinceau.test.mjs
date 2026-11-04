@@ -522,3 +522,32 @@ test('Tracé : clic maintenu = dernier point et fin ; molette = largeur, sinon h
   assert.match(lire('terrain-editeur-ui.js'), /tr\('Width \(cm\)', 'Largeur \(cm\)'\)/);
   document.getElementById('terrainValiderBtn').onclick();
 });
+
+// Demandé : un aperçu du Tracé à poser (largeur, couleur, texture) : sur le plan, et un Tracé provisoire
+// dans la Scène pour l'aperçu 3D, qui n'entre ni dans « Valider » ni dans la liste, et disparaît à la fin.
+test('l\'aperçu du Tracé à poser : un Tracé provisoire pendant la ligne, retiré à la fin, hors de l\'état', () => {
+  globalThis.requestAnimationFrame = (f) => { f(); return 0; };
+  globalThis.getComputedStyle = () => ({ getPropertyValue: () => '' });
+  const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
+  S.scenes = [{ id: 's1', name: 'Scène 1', w: 480, h: 360, pages: [{ objects: [panel] }] }];
+  S.editingSceneId = 's1';
+  U.setTerrainEditeurCallbacks({ instantane: () => {}, ouvrirLaScene: () => {}, apresModification: () => {}, confirmer: async () => true });
+  U.initEditeurDeTerrain();
+  U.ouvrirEditeurDeTerrain('s1');
+  const plan = document.getElementById('terrainPlan');
+  const jouer = (type, ev) => (plan._ecouteurs[type] || []).forEach(f => f({ preventDefault(){}, stopPropagation(){}, pointerId: 1, detail: 1, ...ev, type }));
+  const objets = S.scenes[0].pages[0].objects;
+  document.getElementById('terrainOutilTrace').onclick();
+  document.getElementById('terrainSortesTrace').children.find(b => b.dataset.valeur === 'route').onclick();
+  jouer('pointerdown', { button: 0, clientX: 300, clientY: 300 }); jouer('pointerup', { clientX: 300, clientY: 300 });
+  jouer('pointermove', { clientX: 450, clientY: 300 });
+  const apercu = objets.find(o => o.id === '__apercu-trace__');
+  assert.ok(apercu, 'le Tracé provisoire');
+  assert.equal(apercu.tracéType, 'route');
+  assert.equal(document.getElementById('terrainValiderBtn').disabled, true, 'il ne compte pas comme une modification');
+  jouer('pointerdown', { button: 0, clientX: 450, clientY: 300 }); jouer('pointerup', { clientX: 450, clientY: 300 });
+  jouer('contextmenu', {});
+  assert.ok(!objets.some(o => o.id === '__apercu-trace__'), 'retiré à la fin');
+  assert.equal(objets.filter(o => o.tracéType === 'route').length, 1, 'la vraie route posée');
+  document.getElementById('terrainValiderBtn').onclick();
+});

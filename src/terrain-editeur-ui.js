@@ -152,7 +152,7 @@ function ajusterLePanneau(){
 
 /** Le relief et les Zones et Tracés du canevas de la Scène, copiés. */
 function etatDuTerrain(sc){
-  const traces = sc.page.objects.filter(o => o.type === 'tracé' && o.panelId === sc.panel.id);
+  const traces = sc.page.objects.filter(o => o.type === 'tracé' && o.panelId === sc.panel.id && o.id !== ID_APERCU_TRACE);
   return JSON.parse(JSON.stringify({ relief: sc.panel.relief || null, traces }));
 }
 /** Remet un état : le relief, et les Zones et Tracés (à la place des premiers, dans l'ordre). */
@@ -211,6 +211,7 @@ function fermerSansDemander(){
   if (!T) return;
   arreterLeCoup();
   annulerLAppui();
+  T.chaine = null; majApercuDuTrace();
   const sc = laScene();
   if (sc && terrainModifie()) remettreLeTerrain(sc, T.origine);
   if (T.demande) cancelAnimationFrame(T.demande);
@@ -251,7 +252,7 @@ function clavier(e){
   if (e.key === 'Escape') {
     stop();
     // Échap défait d'abord ce qui est en cours, puis l'outil, puis quitte (comme l'éditeur de bâtiment).
-    if (T.chaine || T.rectangle) { T.chaine = null; T.rectangle = null; redessiner(); }
+    if (T.chaine || T.rectangle) { T.chaine = null; T.rectangle = null; majApercuDuTrace(); redessiner(); }
     else if (terrainChoisi()) { T.choisi = null; majContenu(); redessiner(); }   // retour au menu de base
     else if (T.outil !== 'selection') choisirOutil('selection');
     else fermerEditeurDeTerrain();
@@ -304,6 +305,7 @@ function nomDeSorte(sorte){
 function choisirOutil(outil){
   if (!T) return;
   T.outil = outil; T.chaine = null; T.rectangle = null; T.fantome = null;
+  majApercuDuTrace();
   for (const [id, o] of OUTILS) $(id).classList.toggle('actif', o === outil);
   $('terrainPlan').classList.toggle('outil-mur', outil !== 'selection');
   majContenu();
@@ -478,11 +480,42 @@ function ajouterUnPoint(m){
   const dernier = c[c.length - 1];
   if (dernier && Math.hypot(dernier.x - m.x, dernier.z - m.z) < 0.05) return;
   T.chaine = [...c, m];
+  majApercuDuTrace();
+}
+
+/**
+ * Demandé : l'APERÇU DU TRACÉ À POSER, sur le plan (sa largeur, sa couleur) et dans l'aperçu 3D (sa
+ * texture, son relief) : un Tracé provisoire, à l'identifiant réservé, tenu à jour pendant le tracé et
+ * retiré à la fin. Il n'entre ni dans l'état de l'éditeur (Valider, Ctrl+Z) ni dans la liste.
+ */
+const ID_APERCU_TRACE = '__apercu-trace__';
+function aspectDuGenre(sorte){
+  const r = reglagesDuGenre(sorte), def = TRACÉ_DEFAULTS[sorte] || {};
+  const largeur = AVEC_LARGEUR.includes(sorte) ? largeurDuGenre(sorte)
+    : MURETS.includes(sorte) ? (r.epaisseur || tracéWallThickness3D({ tracéType: sorte, wallHeight: r.hauteur || def.wallHeight })) : 0.2;
+  const couleur = sorte === 'riviere' ? '#2E6E9E' : (r.couleur || def.color || '#888888');
+  return { largeur, couleur };
+}
+function majApercuDuTrace(){
+  const sc = T && laScene();
+  if (!sc) return;
+  const objets = sc.page.objects, i = objets.findIndex(o => o.id === ID_APERCU_TRACE);
+  if (i >= 0) objets.splice(i, 1);
+  const pts = T.outil === 'trace' && T.chaine ? (T.fantome ? [...T.chaine, T.fantome] : T.chaine) : null;
+  const world = pts && traceDePoints(T.sorteTrace, pts);
+  if (!world) return;
+  const def = TRACÉ_DEFAULTS[T.sorteTrace] || {};
+  const o = { id: ID_APERCU_TRACE, type: 'tracé', tracéType: T.sorteTrace, name: '', panelId: sc.panel.id, color: def.color, width: def.width, world };
+  if (def.wallHeight !== undefined) o.wallHeight = def.wallHeight;
+  if (T.sorteTrace === 'riviere') o.profondeur = PROFONDEUR_RIVIERE;
+  appliquerReglagesDuGenre(o, T.sorteTrace);
+  objets.push(o);
 }
 
 function finirLaLigne(){
   if (!T || !T.chaine) return;
   const pts = T.chaine; T.chaine = null; T.fantome = null;
+  majApercuDuTrace();   // l'aperçu provisoire est retiré
   poser(T.sorteTrace, traceDePoints(T.sorteTrace, pts));
   redessiner();
 }
@@ -782,7 +815,7 @@ function boutonsDeChoix(conteneur, valeurs, nom, actuel, choisir){
 function majContenu(){
   const sc = laScene();
   if (!sc) return;
-  T.formes = contenuDuPlan(sc.page, sc.panel, outilsDuPlan(sc.panel));
+  T.formes = contenuDuPlan(sc.page, sc.panel, outilsDuPlan(sc.panel)).filter(f => f.id !== ID_APERCU_TRACE);
   if (T.choisi && !T.formes.some(f => f.id === T.choisi)) T.choisi = null;   // annulé, supprimé
   $('terrainAide').textContent = commandesDuTerrain(tr, T.outil, !!terrainChoisi()).join('\n');
   // Le Tracé à poser (outil Tracés).
@@ -1073,6 +1106,22 @@ function dessinerEnCours(g, e){
     g.beginPath(); g.arc(p.x, p.y, 12, -Math.PI / 2, -Math.PI / 2 + f * Math.PI * 2); g.stroke();
     g.setLineDash([6, 4]); g.lineWidth = 2;
   }
+  // Demandé : l'APERÇU du Tracé à poser, à sa largeur réelle et à sa couleur : sous la souris avant le
+  // premier point (un disque de sa largeur), puis la ligne en cours jusqu'à la souris.
+  if (T.outil === 'trace' && (T.chaine || T.fantome)) {
+    const { largeur, couleur } = aspectDuGenre(T.sorteTrace);
+    const lpx = Math.max(2, largeur * T.vue.ppm);
+    g.save(); g.setLineDash([]); g.globalAlpha = 0.75; g.strokeStyle = g.fillStyle = couleur;
+    if (T.chaine && T.chaine.length) {
+      const pts = T.fantome ? [...T.chaine, T.fantome] : T.chaine;
+      g.lineWidth = lpx; g.lineCap = 'round'; g.lineJoin = 'round';
+      g.beginPath(); pts.forEach((p, i) => { const s = e(p); if (i) g.lineTo(s.x, s.y); else g.moveTo(s.x, s.y); }); g.stroke();
+    } else {
+      const s = e(T.fantome);
+      g.beginPath(); g.arc(s.x, s.y, lpx / 2, 0, Math.PI * 2); g.fill();
+    }
+    g.restore();
+  }
   if (T.chaine && T.chaine.length) {
     const pts = T.fantome ? [...T.chaine, T.fantome] : T.chaine;
     g.beginPath(); pts.forEach((p, i) => { const s = e(p); if (i) g.lineTo(s.x, s.y); else g.moveTo(s.x, s.y); }); g.stroke();
@@ -1132,7 +1181,7 @@ function dessinerApercu(){
   // Pendant un coup de pinceau, une image d'aperçu tous les 120 ms au plus (le plan, lui, suit à chaque
   // image) : un rendu de Scène complet par image d'écran faisait ramer le geste.
   const maintenant = Date.now();
-  if (T.coup && T.dernierApercu && maintenant - T.dernierApercu < INTERVALLE_APERCU_EN_COUP_MS) {
+  if ((T.coup || T.chaine) && T.dernierApercu && maintenant - T.dernierApercu < INTERVALLE_APERCU_EN_COUP_MS) {
     if (!T.apercuDiffere) T.apercuDiffere = setTimeout(() => { if (T) { T.apercuDiffere = 0; redessiner(); } }, INTERVALLE_APERCU_EN_COUP_MS);
     return;
   }
@@ -1407,7 +1456,8 @@ export function initEditeurDeTerrain(){
       if (Math.hypot(e.clientX - T.appui.x, e.clientY - T.appui.y) > 4) { const a = T.appui; clearTimeout(a.minuteur); clearInterval(a.horloge); a.minuteur = a.horloge = 0; a.bouge = true; }
       T.appui.m = m; T.fantome = m; redessiner();
     }
-    else if (T.chaine) { T.fantome = m; redessiner(); }
+    else if (T.chaine) { T.fantome = m; majApercuDuTrace(); redessiner(); }
+    else if (T.outil === 'trace') { T.fantome = m; redessiner(); }
     else if (T.glisser) {
       const obj = terrainChoisi();
       if (!obj) { T.glisser = null; return; }

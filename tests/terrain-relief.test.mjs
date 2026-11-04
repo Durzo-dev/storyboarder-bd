@@ -325,6 +325,6 @@ test('pendant un coup de pinceau : Tracés figés, aperçu bridé, calque du pla
   assert.equal(R.signatureDuRelief(r), R.signatureDuRelief(r));
   const ui = lire('terrain-editeur-ui.js');
   assert.match(ui, /figerLesTraces3D\(true\);/);
-  assert.match(ui, /if \(T\.coup && T\.dernierApercu && maintenant - T\.dernierApercu < INTERVALLE_APERCU_EN_COUP_MS\)/);
+  assert.match(ui, /if \(\(T\.coup \|\| T\.chaine\) && T\.dernierApercu && maintenant - T\.dernierApercu < INTERVALLE_APERCU_EN_COUP_MS\)/);
   assert.match(ui, /function calqueDuRelief\(r\)\{\n  if \(_calque\.r === r && _calque\.toile\) return _calque\.toile;/);
 });
