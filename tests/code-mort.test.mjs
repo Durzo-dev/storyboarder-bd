@@ -316,6 +316,11 @@ const EN_ATTENTE = {
   vagues3D: '#435m : modèle JS du GLSL de l’eau, éprouvé par les tests',
   // #436c : même nature, le modèle de `cielDirection`, la déformation du ciel vers le bord du Sol.
   elevationDuCiel3D: '#436c : modèle JS du GLSL du ciel, éprouvé par les tests',
+  // #456a — LES MURS D'UN PLAN PHOTOGRAPHIÉ : LA DÉCISION AVANT SON ÉCRAN. Même figure que #403a et
+  // les suivantes : lire une image et en tirer les murs se teste sous Node (tests/plan-murs.test.mjs,
+  // sur des plans synthétiques) ; ouvrir un fichier, montrer la détection et la corriger, non.
+  // `COTE_DE_TRAVAIL` n'est pas ici : le module l'appelle lui-même.
+  detecterLesMurs: '#456e — appelée par l\'écran d\'import d\'un plan',
 };
 
 function exportsSansAppelant(){
@@ -416,7 +421,8 @@ describe('Aucun export de src/ ne reste sans appelant', () => {
     // Remonté à 17 en #454a-1 : cinq fonctions du rangement des bâtiments, EN AVANCE sur l'éditeur,
     // chacune avec son numéro de tâche pour échéance (cf. leur entrée plus haut). Redescendu à 15 en
     // #454a-2, qui en branche deux, puis à 12 en #454a-4b, qui branche les trois dernières.
-    assert.equal(Object.keys(EN_ATTENTE).length, 12,
+    // Remonté à 13 en #456a : `detecterLesMurs`, EN AVANCE sur l'écran d'import (#456e).
+    assert.equal(Object.keys(EN_ATTENTE).length, 13,
       'une décision de plus a été REPORTÉE au lieu d\'être prise');
   });
 });
