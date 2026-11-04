@@ -32,8 +32,15 @@ const norme = (v) => Math.hypot(v.x, v.y);
 const unitaire = (s) => { const d = sous(s.b, s.a), L = norme(d); return { x: d.x / L, y: d.y / L }; };
 const longueurDe = (s) => norme(sous(s.b, s.a));
 
-/** Le plus large trou accepté, en épaisseurs de mur. */
-const TROU_MAX = 12;
+/**
+ * Le plus large trou accepté, en épaisseurs TYPIQUES des murs du plan (la médiane), et non du mur
+ * concerné : sur un vrai plan, des fragments minces étiraient la limite au point de relier des murs
+ * sans rapport par de faux trous (plan de test n° 1). Une porte de 0,9 m dans des murs de 20 cm fait
+ * 4,5 épaisseurs.
+ */
+const TROU_MAX = 6;
+let _epaisseurType = 0;
+const trouMax = (t) => TROU_MAX * (_epaisseurType || t);
 
 /** Le segment retourné (a et b échangés), ses ouvertures avec lui. */
 function retourner(s){
@@ -65,7 +72,7 @@ function fusionnerUnTrou(segs){
     if (Math.abs(us.x * uo.y - us.y * uo.x) > Math.sin(3 * DEG)) continue;
     const P = s[A.bout], Q = o[B.bout], PQ = sous(Q, P), g = norme(PQ);
     const t = Math.max(s.epaisseur, o.epaisseur);
-    if (g < 2 || g > TROU_MAX * t) continue;
+    if (g < 2 || g > trouMax(t)) continue;
     // Sur le même axe : l'écart perpendiculaire est petit devant l'épaisseur.
     if (Math.abs(PQ.x * us.y - PQ.y * us.x) > t / 2) continue;
     // Et face à face : Q est au-delà de P en sortant de s, et inversement.
@@ -104,7 +111,7 @@ function prolongerVersUnMur(segs){
       const Lc = longueurDe(c);
       if (t < -c.epaisseur / 2 || t > Lc + c.epaisseur / 2) return;
       const g = d - c.epaisseur / 2;
-      if (g < 2 || g > TROU_MAX * s.epaisseur) return;
+      if (g < 2 || g > trouMax(s.epaisseur)) return;
       if (!meilleur || d < meilleur.d) meilleur = { j, d, g, X: { x: P.x + sortie.x * d, y: P.y + sortie.y * d }, t, Lc };
     });
     if (!meilleur) continue;
@@ -227,6 +234,8 @@ function fenetresComblees(s, lire){
  */
 export function ouverturesDuPlan(segments, encre, w, h){
   const segs = segments.map(s => ({ a: { ...s.a }, b: { ...s.b }, epaisseur: s.epaisseur, ouv: [] }));
+  const ep = segs.map(s => s.epaisseur).sort((x, y) => x - y);
+  _epaisseurType = ep.length ? ep[ep.length >> 1] : 0;
   while (fusionnerUnTrou(segs)) { /* jusqu'au dernier trou */ }
   prolongerVersUnMur(segs);
   const lire = lecteur(encre, w, h);

@@ -9,26 +9,32 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  *
  * À toutes les époques, le mur COUPÉ est ce qu'il y a de plus LOURD sur un plan : un trait épais, un
- * remplissage noir (poché), un lavis carmin ou rose (XVIIe-XIXe siècles), un gris, des hachures. On
- * ne cherche donc pas une couleur, on cherche une MASSE D'ENCRE ÉPAISSE :
+ * remplissage noir (poché), un lavis carmin ou rose (XVIIe-XIXe siècles), un gris, des hachures, ou,
+ * sur la plupart des plans de CAO, DEUX TRAITS FINS PARALLÈLES. Ce qui les réunit tous : un mur est
+ * une BANDE LONGUE ET DROITE, orientée selon les directions du plan.
  *
  *   1. le PAPIER est estimé localement (un plan photographié est mal éclairé, un parchemin jauni) ;
  *   2. l'ENCRE est l'écart de chaque pixel à son papier, en couleur et pas seulement en luminosité :
  *      un mur rose sur papier crème est de l'encre, SANS pipette (décision de Valentin : le plus
  *      automatique possible, une action de l'utilisateur seulement en dernier recours) ;
- *   3. une FERMETURE (dilater puis éroder) fait une masse des hachures serrées ;
- *   4. une OUVERTURE (éroder puis dilater) efface tout trait plus fin qu'un mur : texte, cotes,
- *      arcs de portes, mobilier. Le rayon se déduit de l'épaisseur des traits FINS du plan ;
- *   5. on garde la plus grande masse, et celles dont le centre tombe dans sa boîte, qui grandit de
- *      chaque masse gardée (les portes coupent un bâtiment en morceaux) : les poteaux et les murs
- *      isolés restent, l'échelle graphique et le cartouche, posés à côté, partent.
+ *   3. les DIRECTIONS du plan sont lues sur l'orientation des bords : la dominante, et les
+ *      secondaires (une façade en biais) ;
+ *   4. pour chacune, dans le repère tourné : COMBLER dans l'épaisseur les vides courts (le double
+ *      trait, le contour hachuré deviennent pleins), ÉCARTER ce qui reste mince (une cote seule),
+ *      puis GARDER ce qui est long le long de la direction (le texte, aux lettres séparées, et le
+ *      mobilier court tombent). Les réglages suivent la feuille, la minceur suit les traits fins ;
+ *   5. on garde la plus grande masse, et celles qui touchent sa boîte, qui grandit de chaque masse
+ *      gardée (les portes coupent un bâtiment en morceaux) : l'échelle graphique, les cotes et le
+ *      cartouche, posés plus loin, partent.
  *
- * Les morphologies passent par la TRANSFORMÉE DE DISTANCE euclidienne exacte (Felzenszwalb et
- * Huttenlocher), en temps linéaire : dilater de r, c'est garder ce qui est à moins de r de l'encre.
+ * ⚠️ CETTE MÉTHODE REMPLACE UNE PREMIÈRE, essayée par Valentin sur trois vrais plans le 4 novembre
+ * 2026 (plans-test/, hors du dépôt) : une fermeture puis une ouverture ISOTROPES, qui gardaient
+ * « ce qui est épais ». Elles effaçaient les murs en double trait (traits fins) et gardaient le
+ * texte, les arbres, le mobilier dessiné serré.
  *
- * ⚠️ L'ENCRE D'ORIGINE EST RENDUE AVEC LES MURS. La fermeture remplit aussi les deux ou trois traits
+ * ⚠️ L'ENCRE D'ORIGINE EST RENDUE AVEC LES MURS. Le comblement remplit aussi les deux ou trois traits
  * fins d'une fenêtre dessinée dans l'épaisseur d'un mur : c'est voulu (le mur reste continu), et
- * c'est l'encre d'origine, rendue à part, qui permettra à #456c d'y retrouver la fenêtre.
+ * c'est l'encre d'origine, rendue à part, qui permet à #456c d'y retrouver la fenêtre.
  */
 
 /** Le plus grand côté de l'image de travail, en pixels : au-delà, elle est réduite. */
@@ -153,23 +159,7 @@ function distanceCarree(cible, w, h){
 
 const inverse = (m) => { const o = new Uint8Array(m.length); for (let i = 0; i < m.length; i++) o[i] = m[i] ? 0 : 1; return o; };
 
-/** Dilater de r : ce qui est à moins de r de l'encre. */
-function dilater(m, w, h, r){
-  const d = distanceCarree(m, w, h), r2 = r * r, o = new Uint8Array(m.length);
-  for (let i = 0; i < m.length; i++) o[i] = d[i] <= r2 ? 1 : 0;
-  return o;
-}
 
-/** Éroder de r : ce qui est à plus de r du fond. Les bords de l'image comptent comme du fond. */
-function eroder(m, w, h, r){
-  const W = w + 2, H = h + 2, cadre = new Uint8Array(W * H);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) cadre[(y + 1) * W + x + 1] = m[y * w + x] ? 0 : 1;
-  for (let x = 0; x < W; x++) { cadre[x] = 1; cadre[(H - 1) * W + x] = 1; }
-  for (let y = 0; y < H; y++) { cadre[y * W] = 1; cadre[y * W + W - 1] = 1; }
-  const d = distanceCarree(cadre, W, H), r2 = r * r, o = new Uint8Array(w * h);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) o[y * w + x] = d[(y + 1) * W + x + 1] > r2 ? 1 : 0;
-  return o;
-}
 
 /**
  * La demi-épaisseur des traits FINS, en pixels : la valeur la plus fréquente de la distance au fond
@@ -213,6 +203,177 @@ function masses(m, w, h){
   return { etiquette, infos };
 }
 
+/** Le flou en boîte (deux passes de rayon 2) d'un masque : des orientations de bord continues. */
+function flouter(m, w, h){
+  const flou = new Float32Array(w * h), tmp = new Float32Array(w * h), R = 2;
+  for (let i = 0; i < w * h; i++) flou[i] = m[i];
+  for (let passe = 0; passe < 2; passe++) {
+    for (let y = 0; y < h; y++) {
+      let s = 0;
+      for (let x = -R; x <= R; x++) s += flou[y * w + Math.min(w - 1, Math.max(0, x))];
+      for (let x = 0; x < w; x++) {
+        tmp[y * w + x] = s / (2 * R + 1);
+        s += flou[y * w + Math.min(w - 1, x + R + 1)] - flou[y * w + Math.max(0, x - R)];
+      }
+    }
+    for (let x = 0; x < w; x++) {
+      let s = 0;
+      for (let y = -R; y <= R; y++) s += tmp[Math.min(h - 1, Math.max(0, y)) * w + x];
+      for (let y = 0; y < h; y++) {
+        flou[y * w + x] = s / (2 * R + 1);
+        s += tmp[Math.min(h - 1, y + R + 1) * w + x] - tmp[Math.max(0, y - R) * w + x];
+      }
+    }
+  }
+  return flou;
+}
+
+const DEG = Math.PI / 180;
+
+/**
+ * Les DIRECTIONS des murs, en radians dans ]-45°, 45°] (chacune vaut aussi pour sa perpendiculaire) :
+ * la dominante d'abord, lue sur l'orientation des bords (modulo 90°), puis les secondaires, des pics
+ * d'au moins 15 % du premier et à plus de 8° de tout pic retenu (une façade en biais, une aile).
+ */
+export function directionsDuPlan(m, w, h){
+  const flou = flouter(m, w, h), angles = [], poids = [], hist = new Float64Array(90);
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+    const i = y * w + x;
+    const gx = flou[i + 1] - flou[i - 1], gy = flou[i + w] - flou[i - w], g2 = gx * gx + gy * gy;
+    if (g2 < 1e-4) continue;
+    const a = (((Math.atan2(gy, gx) / DEG) % 90) + 90) % 90;
+    angles.push(a); poids.push(g2);
+    hist[Math.floor(a) % 90] += g2;
+  }
+  const lisse = new Float64Array(90);
+  for (let b = 0; b < 90; b++) for (let k = -2; k <= 2; k++) lisse[b] += hist[(b + k + 90) % 90];
+  const ecart = (a, b) => { const d = Math.abs(a - b) % 90; return Math.min(d, 90 - d); };
+  const pics = [];
+  for (let b = 0; b < 90; b++) {
+    if (lisse[b] < lisse[(b + 89) % 90] || lisse[b] < lisse[(b + 1) % 90]) continue;
+    pics.push({ b, v: lisse[b] });
+  }
+  pics.sort((p, q) => q.v - p.v);
+  const retenus = [];
+  for (const p of pics) {
+    if (retenus.length && p.v < 0.15 * retenus[0].v) break;
+    if (retenus.some(r => ecart(r.b, p.b) <= 8)) continue;
+    retenus.push(p);
+    if (retenus.length === 3) break;
+  }
+  // Affinage sur les angles EXACTS proches de chaque pic (moyenne circulaire de période 90°).
+  return retenus.map(({ b }) => {
+    let sx = 0, sy = 0;
+    for (let k = 0; k < angles.length; k++) {
+      if (ecart(angles[k], b + 0.5) > 4) continue;
+      sx += poids[k] * Math.cos(angles[k] * 4 * DEG); sy += poids[k] * Math.sin(angles[k] * 4 * DEG);
+    }
+    let a = Math.atan2(sy, sx) / 4;
+    if (a > Math.PI / 4) a -= Math.PI / 2;
+    if (a <= -Math.PI / 4) a += Math.PI / 2;
+    return Math.abs(a) < 0.3 * DEG ? 0 : a;
+  });
+}
+
+/** Le masque tourné de `angle` dans une grille qui le contient, et le chemin du retour. */
+function tourner(m, w, h, angle){
+  if (!angle) return { r: m, W: w, H: h, retour: (b) => b };
+  const c = Math.cos(angle), s = Math.sin(angle);
+  const W = Math.ceil(Math.abs(w * c) + Math.abs(h * s)), H = Math.ceil(Math.abs(w * s) + Math.abs(h * c));
+  // Grille (i, j) → image (x, y) : rotation de `angle` autour des deux centres.
+  const r = new Uint8Array(W * H);
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    const u = i + 0.5 - W / 2, v = j + 0.5 - H / 2;
+    const x = Math.floor(w / 2 + u * c - v * s), y = Math.floor(h / 2 + u * s + v * c);
+    if (x >= 0 && y >= 0 && x < w && y < h) r[j * W + i] = m[y * w + x];
+  }
+  const retour = (b) => {
+    const o = new Uint8Array(w * h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const dx = x + 0.5 - w / 2, dy = y + 0.5 - h / 2;
+      const i = Math.floor(W / 2 + dx * c + dy * s), j = Math.floor(H / 2 - dx * s + dy * c);
+      if (i >= 0 && j >= 0 && i < W && j < H) o[y * w + x] = b[j * W + i];
+    }
+    return o;
+  };
+  return { r, W, H, retour };
+}
+
+/**
+ * Les BANDES d'une direction, dans le repère tourné (W × H), le long de l'axe x (`horizontal`) ou
+ * de l'axe y. Trois temps, dans CET ordre :
+ *   1. combler dans l'épaisseur les vides de `g` pixels au plus : un double trait, un contour hachuré
+ *      deviennent pleins ;
+ *   2. écarter ce qui reste plus mince que `tmin` : une cote, un trait seul ;
+ *   3. ne garder que les passages d'au moins `L` pixels le long de l'axe : le texte (lettres
+ *      séparées) et le mobilier court tombent.
+ * ⚠️ La minceur AVANT la longueur : un mur est épais TOUT DU LONG. Dans l'ordre inverse, une ligne
+ * de cote longue, épaissie sur quelques pixels par le chiffre posé contre elle, passait pour un mur
+ * (plan de test n° 3). Rend le masque, et la somme et le nombre des épaisseurs gardées.
+ */
+function bandes(r, W, H, g, L, tmin, horizontal){
+  const n = W * H, m = Uint8Array.from(r);
+  // (a, b) : a le long de la bande, b dans son épaisseur.
+  const nA = horizontal ? W : H, nB = horizontal ? H : W;
+  const idx = horizontal ? (a, b) => b * W + a : (a, b) => a * W + b;
+  for (let a = 0; a < nA; a++) {
+    let dernier = -1;
+    for (let b = 0; b < nB; b++) {
+      if (!r[idx(a, b)]) continue;
+      if (dernier >= 0 && b - dernier > 1 && b - dernier - 1 <= g) for (let k = dernier + 1; k < b; k++) m[idx(a, k)] = 1;
+      dernier = b;
+    }
+  }
+  const epais = new Uint8Array(n);
+  for (let a = 0; a < nA; a++) {
+    let b = 0;
+    while (b < nB) {
+      if (!m[idx(a, b)]) { b++; continue; }
+      let e = b; while (e < nB && m[idx(a, e)]) e++;
+      if (e - b >= tmin) for (let k = b; k < e; k++) epais[idx(a, k)] = 1;
+      b = e;
+    }
+  }
+  const out = new Uint8Array(n);
+  for (let b = 0; b < nB; b++) {
+    let a = 0;
+    while (a < nA) {
+      if (!epais[idx(a, b)]) { a++; continue; }
+      let e = a; while (e < nA && epais[idx(e, b)]) e++;
+      if (e - a >= L) for (let k = a; k < e; k++) out[idx(k, b)] = 1;
+      a = e;
+    }
+  }
+  let somme = 0, nombre = 0;
+  for (let a = 0; a < nA; a++) {
+    let b = 0;
+    while (b < nB) {
+      if (!out[idx(a, b)]) { b++; continue; }
+      let e = b; while (e < nB && out[idx(a, e)]) e++;
+      somme += e - b; nombre++; b = e;
+    }
+  }
+  return { masque: out, somme, nombre };
+}
+
+/** Les murs de toutes les directions, avec les réglages (g, L, tmin) ; et l'épaisseur moyenne trouvée. */
+function mursParBandes(encre, W, H, directions, g, L, tmin){
+  const murs = new Uint8Array(W * H);
+  let somme = 0, nombre = 0;
+  for (const angle of directions) {
+    const { r, W: W2, H: H2, retour } = tourner(encre, W, H, angle);
+    const union = new Uint8Array(W2 * H2);
+    for (const horizontal of [true, false]) {
+      const b = bandes(r, W2, H2, g, L, tmin, horizontal);
+      for (let i = 0; i < union.length; i++) union[i] |= b.masque[i];
+      somme += b.somme; nombre += b.nombre;
+    }
+    const dansLImage = retour(union);
+    for (let i = 0; i < murs.length; i++) murs[i] |= dansLImage[i];
+  }
+  return { murs, epaisseur: nombre ? somme / nombre : 0 };
+}
+
 /**
  * Les MURS d'un plan. `rgba` : les pixels (comme un ImageData), `w` × `h`.
  * Options : `rayonFermeture`, `rayonOuverture` (pixels de l'image de travail) pour forcer ce qui est
@@ -232,20 +393,23 @@ export function detecterLesMurs(rgba, w, h, options = {}){
   const encre = new Uint8Array(n);
   for (let p = 0; p < n; p++) encre[p] = valeurs[p] >= seuil ? 1 : 0;
 
-  const t = demiEpaisseurFine(encre, W, H);
-  const rayonFermeture = options.rayonFermeture ?? Math.max(2, Math.round(2.5 * t));
-  const rayonOuverture = options.rayonOuverture ?? 2 * t + 1;
-
-  const ferme = eroder(dilater(encre, W, H, rayonFermeture), W, H, rayonFermeture);
-  const coeur = eroder(ferme, W, H, rayonOuverture);
-  const ouvert = dilater(coeur, W, H, rayonOuverture);
-  for (let p = 0; p < n; p++) ouvert[p] &= ferme[p];
+  // Les réglages, proportionnés à la FEUILLE plutôt qu'à une épaisseur mesurée : une première version
+  // mesurait l'épaisseur des murs pour s'y régler, et les paquets de lignes de cote parallèles,
+  // comblés, la gonflaient au point d'effacer les cloisons (plan de test n° 3). Ce qu'on comble et
+  // la longueur exigée suivent la feuille ; la minceur refusée suit les traits FINS : une cote seule
+  // (un trait) part, une cloison en double trait (deux traits et leur vide) reste.
+  const D = Math.max(W, H), directions = directionsDuPlan(encre, W, H), t = demiEpaisseurFine(encre, W, H);
+  const comble = options.comble ?? Math.max(4, Math.round(0.015 * D));
+  const longueur = options.longueur ?? Math.max(10, Math.round(0.03 * D));
+  const minceur = options.minceur ?? 2 * t + 2;
+  const { murs: ouvert, epaisseur: T } = mursParBandes(encre, W, H, directions, comble, longueur, minceur);
 
   const { etiquette, infos } = masses(ouvert, W, H);
   const murs = new Uint8Array(n);
   if (infos.length) {
     // La boîte GRANDIT : les portes coupent un bâtiment en plusieurs masses, et une masse gardée
-    // peut faire entrer la suivante. Jusqu'à ce que plus rien n'entre.
+    // peut faire entrer la suivante. Jusqu'à ce que plus rien n'entre. (Exiger que son CENTRE y
+    // tombe écartait la moitié d'un plan de test : une aile entière n'a pas son centre dedans.)
     const grande = infos.reduce((a, b) => (b.aire > a.aire ? b : a));
     const boite = { x0: grande.x0, y0: grande.y0, x1: grande.x1, y1: grande.y1 };
     const garde = new Set([grande.id]);
@@ -253,8 +417,9 @@ export function detecterLesMurs(rgba, w, h, options = {}){
       ajout = false;
       for (const m of infos) {
         if (garde.has(m.id)) continue;
-        const cx = (m.x0 + m.x1) / 2, cy = (m.y0 + m.y1) / 2;
-        if (cx < boite.x0 || cx > boite.x1 || cy < boite.y0 || cy > boite.y1) continue;
+        // Elle entre si elle TOUCHE la boîte, à la distance de comblement près : une aile séparée du
+        // reste par une porte touche ; les cotes et le cartouche, posés plus loin, non.
+        if (m.x1 < boite.x0 - comble || m.x0 > boite.x1 + comble || m.y1 < boite.y0 - comble || m.y0 > boite.y1 + comble) continue;
         garde.add(m.id); ajout = true;
         boite.x0 = Math.min(boite.x0, m.x0); boite.y0 = Math.min(boite.y0, m.y0);
         boite.x1 = Math.max(boite.x1, m.x1); boite.y1 = Math.max(boite.y1, m.y1);
@@ -264,6 +429,6 @@ export function detecterLesMurs(rgba, w, h, options = {}){
   }
   return {
     largeur: W, hauteur: H, facteur, murs, encre, papier: global.map(Math.round),
-    demiEpaisseurFine: t, rayonOuverture, rayonFermeture, seuil,
+    directions, epaisseurDesMurs: T, seuil,
   };
 }

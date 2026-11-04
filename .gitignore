@@ -80,3 +80,4 @@ cuisson.txt
 # Documentation interne gardée hors du dépôt public (#442) : ce qui touche à la sécurité des
 # mises à jour et n'a pas à être lu par tout le monde. Sauvegardée à part par l'utilisateur.
 docs-privees/
+plans-test/

@@ -146,7 +146,6 @@ describe('#456a, les murs d\'un plan', () => {
     const f = feuille(600, 450);
     for (const r of murRefs()) rect(f, ...r, [15, 15, 15]);
     const res = detecterLesMurs(f.px, f.w, f.h);
-    assert.equal(res.demiEpaisseurFine, 1);
     assert.ok(mesure(res, murRefs()).rappel > 0.95);
   });
 

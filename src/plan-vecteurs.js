@@ -33,63 +33,9 @@ import { creerBatiment, BORNES_BATIMENT } from './batiment.js';
 import { ajouterMur } from './batiment-trace.js';
 import { actualiserPieces } from './batiment-pieces.js';
 import { ajouterOuverture, reglagesParDefaut } from './batiment-ouvertures.js';
+import { directionsDuPlan } from './plan-murs.js';
 
 const DEG = Math.PI / 180;
-
-/** La direction dominante des bords du masque, en radians, dans ]-45°, 45°]. */
-function directionDominante(m, w, h){
-  // Un flou en boîte (deux passes de rayon 2) rend aux bords d'un masque binaire des orientations
-  // continues ; sans lui, le gradient ne connaît que les multiples de 45°.
-  const flou = new Float32Array(w * h), tmp = new Float32Array(w * h), R = 2;
-  for (let i = 0; i < w * h; i++) flou[i] = m[i];
-  for (let passe = 0; passe < 2; passe++) {
-    for (let y = 0; y < h; y++) {
-      let s = 0;
-      for (let x = -R; x <= R; x++) s += flou[y * w + Math.min(w - 1, Math.max(0, x))];
-      for (let x = 0; x < w; x++) {
-        tmp[y * w + x] = s / (2 * R + 1);
-        s += flou[y * w + Math.min(w - 1, x + R + 1)] - flou[y * w + Math.max(0, x - R)];
-      }
-    }
-    for (let x = 0; x < w; x++) {
-      let s = 0;
-      for (let y = -R; y <= R; y++) s += tmp[Math.min(h - 1, Math.max(0, y)) * w + x];
-      for (let y = 0; y < h; y++) {
-        flou[y * w + x] = s / (2 * R + 1);
-        s += tmp[Math.min(h - 1, y + R + 1) * w + x] - tmp[Math.max(0, y - R) * w + x];
-      }
-    }
-  }
-  // Les bords : leur orientation modulo 90° (degrés), et leur poids.
-  const angles = [], poids = [], hist = new Float64Array(90);
-  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
-    const i = y * w + x;
-    const gx = flou[i + 1] - flou[i - 1], gy = flou[i + w] - flou[i - w], g2 = gx * gx + gy * gy;
-    if (g2 < 1e-4) continue;
-    const a = (((Math.atan2(gy, gx) / DEG) % 90) + 90) % 90;
-    angles.push(a); poids.push(g2);
-    hist[Math.floor(a) % 90] += g2;
-  }
-  let meilleur = 0, score = -1;
-  for (let b = 0; b < 90; b++) {
-    let s = 0;
-    for (let k = -2; k <= 2; k++) s += hist[(b + k + 90) % 90];
-    if (s > score) { score = s; meilleur = b; }
-  }
-  // Affinage sur les angles EXACTS proches du pic (moyenne circulaire de période 90°) : le centre
-  // des cases de l'histogramme décalerait d'un demi-degré un plan parfaitement droit.
-  let sx = 0, sy = 0;
-  for (let k = 0; k < angles.length; k++) {
-    let d = angles[k] - (meilleur + 0.5);
-    d = ((d + 45) % 90 + 90) % 90 - 45;
-    if (Math.abs(d) > 4) continue;
-    sx += poids[k] * Math.cos(angles[k] * 4 * DEG); sy += poids[k] * Math.sin(angles[k] * 4 * DEG);
-  }
-  let angle = Math.atan2(sy, sx) / 4;
-  if (angle > Math.PI / 4) angle -= Math.PI / 2;
-  if (angle <= -Math.PI / 4) angle += Math.PI / 2;
-  return Math.abs(angle) < 0.3 * DEG ? 0 : angle;
-}
 
 /** Le repère redressé : l'échantillonnage du masque tourné de `angle`, et le retour aux pixels. */
 function redresser(m, w, h, angle){
@@ -151,38 +97,64 @@ function massesDe(W, H, garder){
 
 const mediane = (t) => { const s = t.slice().sort((a, b) => a - b); return s[s.length >> 1]; };
 
-/** Les murs parallèles aux axes du repère redressé, et les pixels qu'ils ont pris. */
-function mursDroits(r, W, H){
+/**
+ * Les murs parallèles aux axes du repère redressé, et les pixels qu'ils ont pris.
+ *
+ * ⚠️ UNE MASSE N'EST PAS UN MUR : c'est la BANDE DOMINANTE qui en est un. Deux murs parallèles
+ * reliés par un bloc (un couloir et sa cage d'escalier, plan de test n° 2) font une seule masse, trop
+ * large pour être un mur ; la refuser l'envoyait aux murs en biais, qui en tiraient une énorme
+ * oblique. On prend donc la bande la plus pleine (le pic des positions transverses), on en fait un
+ * mur, et ce qui reste repart en masses à examiner de même.
+ */
+function mursDroits(r, W, H, longueurMin = 0){
   const { hor, ver } = passages(r, W, H);
   const pris = new Uint8Array(W * H), murs = [];
   for (const horizontal of [true, false]) {
     const classe = (p) => r[p] && (horizontal ? hor[p] >= ver[p] : ver[p] > hor[p]);
-    for (const pts of massesDe(W, H, classe)) {
-      let l0 = Infinity, l1 = -Infinity, t0 = Infinity, t1 = -Infinity, somme = 0;
-      const transverses = [];
-      for (const p of pts) {
-        const x = p % W, y = (p - x) / W, l = horizontal ? x : y, t = horizontal ? y : x;
-        if (l < l0) l0 = l; if (l > l1) l1 = l; if (t < t0) t0 = t; if (t > t1) t1 = t;
-        somme += t; transverses.push(horizontal ? ver[p] : hor[p]);
+    const pos = (p) => { const x = p % W, y = (p - x) / W; return horizontal ? { l: x, t: y } : { l: y, t: x }; };
+    const file = massesDe(W, H, classe).map(pts => ({ pts, profondeur: 0 }));
+    while (file.length) {
+      const { pts, profondeur } = file.pop();
+      if (pts.length < 12) continue;
+      // Le profil transverse : combien de pixels à chaque position t.
+      let t0 = Infinity, t1 = -Infinity;
+      for (const p of pts) { const { t } = pos(p); if (t < t0) t0 = t; if (t > t1) t1 = t; }
+      const profil = new Int32Array(t1 - t0 + 1);
+      for (const p of pts) profil[pos(p).t - t0]++;
+      let pic = 0;
+      for (let k = 1; k < profil.length; k++) if (profil[k] > profil[pic]) pic = k;
+      let b0 = pic, b1 = pic;
+      while (b0 > 0 && profil[b0 - 1] >= 0.5 * profil[pic]) b0--;
+      while (b1 < profil.length - 1 && profil[b1 + 1] >= 0.5 * profil[pic]) b1++;
+      const dans = [], reste = [];
+      for (const p of pts) { const k = pos(p).t - t0; (k >= b0 && k <= b1 ? dans : reste).push(p); }
+      let l0 = Infinity, l1 = -Infinity, somme = 0;
+      for (const p of dans) { const { l, t } = pos(p); if (l < l0) l0 = l; if (l > l1) l1 = l; somme += t; }
+      const epaisseur = b1 - b0 + 1, longueur = l1 - l0 + 1;
+      // Une bande PLEINE : un mur en biais vu dans ce repère a un profil large et creux (plan de
+      // test n° 1, la façade à 13,5°) ; il est laissé à la direction qui est la sienne.
+      if (longueur >= 1.5 * epaisseur + 2 && longueur >= longueurMin && epaisseur >= 2 && dans.length >= 0.6 * longueur * epaisseur) {
+        const axe = somme / dans.length + 0.5;
+        murs.push(horizontal
+          ? { a: { x: l0, y: axe }, b: { x: l1 + 1, y: axe }, epaisseur }
+          : { a: { x: axe, y: l0 }, b: { x: axe, y: l1 + 1 }, epaisseur });
+        for (const p of dans) pris[p] = 1;
       }
-      const longueur = l1 - l0 + 1, largeur = t1 - t0 + 1;
-      const epaisseur = Math.min(mediane(transverses), largeur);
-      // Une BANDE : nettement plus longue qu'épaisse, et pas plus large que son épaisseur. Un mur en
-      // biais classé « horizontal » rangée par rangée est large ; le bout d'un mur en biais collé à
-      // un mur droit est court. Les deux partent dans le reste, où la droite ajustée les reprend.
-      if (longueur < 1.5 * epaisseur + 2 || largeur > 1.5 * epaisseur + 2 || epaisseur < 2) continue;
-      const axe = somme / pts.length + 0.5;
-      murs.push(horizontal
-        ? { a: { x: l0, y: axe }, b: { x: l1 + 1, y: axe }, epaisseur }
-        : { a: { x: axe, y: l0 }, b: { x: axe, y: l1 + 1 }, epaisseur });
-      for (const p of pts) pris[p] = 1;
+      if (reste.length >= 12 && profondeur < 6) {
+        const ensemble = new Set(reste);
+        for (const sous of massesDe(W, H, (p) => ensemble.has(p))) file.push({ pts: sous, profondeur: profondeur + 1 });
+      }
     }
   }
   return { murs, pris };
 }
 
-/** Les murs EN BIAIS : ce qui reste, s'il est allongé, ajusté par une droite. */
-function mursEnBiais(r, W, H, pris){
+/**
+ * Les murs EN BIAIS : ce qui reste, s'il est allongé, ajusté par une droite. Il doit être MINCE (pas
+ * plus de deux fois l'épaisseur type des murs droits) et PLEIN (sa boîte orientée remplie au moins
+ * à moitié) : une masse informe n'est pas un mur, quelle que soit la droite qu'on y ajuste.
+ */
+function mursEnBiais(r, W, H, pris, epaisseurType){
   const murs = [];
   for (const pts of massesDe(W, H, (p) => r[p] && !pris[p])) {
     if (pts.length < 20) continue;
@@ -196,6 +168,10 @@ function mursEnBiais(r, W, H, pris){
     for (const p of pts) { const t = (p % W - mx) * ux + (Math.floor(p / W) - my) * uy; if (t < t0) t0 = t; if (t > t1) t1 = t; }
     const longueur = t1 - t0 + 1, epaisseur = pts.length / longueur;
     if (longueur < 3 * epaisseur || epaisseur < 2) continue;
+    if (epaisseurType && epaisseur > 2 * epaisseurType) continue;
+    let n0 = Infinity, n1 = -Infinity;
+    for (const p of pts) { const n = -(p % W - mx) * uy + (Math.floor(p / W) - my) * ux; if (n < n0) n0 = n; if (n > n1) n1 = n; }
+    if (pts.length < 0.5 * longueur * (n1 - n0 + 1)) continue;
     mx += 0.5; my += 0.5;
     murs.push({ a: { x: mx + ux * (t0 - 0.5), y: my + uy * (t0 - 0.5) }, b: { x: mx + ux * (t1 + 0.5), y: my + uy * (t1 + 0.5) }, epaisseur });
   }
@@ -266,15 +242,35 @@ function joindre(segments){
  * b: {x, y}, epaisseur }] }`, en pixels de la même image ; `angle` est la direction dominante.
  */
 export function vectoriserLesMurs(murs, w, h){
-  const angle = directionDominante(murs, w, h);
-  const { r, W, H, versImage } = redresser(murs, w, h, angle);
-  const { murs: droits, pris } = mursDroits(r, W, H);
+  // CHAQUE DIRECTION du plan, la dominante d'abord : la façade en biais du plan de test n° 1,
+  // traitée dans la seule direction dominante, devenait une suite de barres verticales. Ce qu'une
+  // direction a pris sort du masque avant la suivante.
+  const directions = directionsDuPlan(murs, w, h);
+  const angle = directions.length ? directions[0] : 0;
+  const reste = Uint8Array.from(murs), droits = [];
+  // Une direction SECONDAIRE ne porte que de grands pans (une façade, une aile) : y exiger 5 % de la
+  // feuille écarte les bouts de texte et de mobilier qui s'y trouvaient alignés par hasard.
+  for (const [k, a] of (directions.length ? directions : [0]).entries()) {
+    const { r, W, H, versImage } = redresser(reste, w, h, a);
+    const { murs: trouves, pris } = mursDroits(r, W, H, k ? 0.05 * Math.max(w, h) : 0);
+    for (const s of trouves) droits.push({ a: versImage(s.a.x, s.a.y), b: versImage(s.b.x, s.b.y), epaisseur: s.epaisseur });
+    const c = Math.cos(a), sn = Math.sin(a);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      if (!reste[y * w + x]) continue;
+      const dx = x + 0.5 - w / 2, dy = y + 0.5 - h / 2;
+      const i = Math.floor(W / 2 + dx * c + dy * sn), j = Math.floor(H / 2 - dx * sn + dy * c);
+      if (i >= 0 && j >= 0 && i < W && j < H && pris[j * W + i]) reste[y * w + x] = 0;
+    }
+  }
   // Un « mur en biais » bien plus mince que les murs droits est un reste : le congé qu'a laissé la
   // fermeture là où un arc de porte touche un mur, par exemple.
   const epaisseurType = droits.length ? mediane(droits.map(s => s.epaisseur)) : 0;
-  const biais = mursEnBiais(r, W, H, pris).filter(s => s.epaisseur >= 0.5 * epaisseurType);
-  const dansLImage = (s) => ({ a: versImage(s.a.x, s.a.y), b: versImage(s.b.x, s.b.y), epaisseur: s.epaisseur });
-  return { angle, segments: joindre([...droits, ...biais].map(dansLImage)) };
+  // Un mur droit à la fois COURT et MINCE devant les autres est un reste de découpage (le coin d'une
+  // jonction) ; une cloison, mince mais longue, reste.
+  const longueurDe = (s) => Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y);
+  const gardes = droits.filter(s => !(s.epaisseur < 0.5 * epaisseurType && longueurDe(s) < 4 * epaisseurType));
+  const biais = mursEnBiais(reste, w, h, new Uint8Array(w * h), epaisseurType).filter(s => s.epaisseur >= 0.5 * epaisseurType);
+  return { angle, segments: joindre([...gardes, ...biais]) };
 }
 
 /**
