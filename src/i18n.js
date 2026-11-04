@@ -123,6 +123,7 @@ export const I18N_TEXT = [
   ['#policesFermer', null, null, 'title', 'Close (Esc)', 'Fermer (Échap)'],
   ['#helpSearchInput', null, null, 'placeholder', 'Search the manual', 'Rechercher dans le manuel'],
   ['#terrainSceneRecherche', null, null, 'placeholder', 'Search a scene…', 'Chercher une scène…'],
+  ['#terrainContenuRecherche', null, null, 'placeholder', 'Search…', 'Chercher…'],
   ['#policesPhrase', null, null, 'placeholder', 'Sample sentence', "Phrase d'exemple"],
   // #453 : la modale « Formats du projet » (src/formats-ui.js).
   ['#formatsTitre', 'Project formats', 'Formats du projet'],

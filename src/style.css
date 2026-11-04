@@ -3079,3 +3079,8 @@ input[type="color"].selecteur-couleur-actif{ outline:2px solid var(--accent); ou
 .terrain-cadran-aiguille::after{ content:''; position:absolute; right:-2px; top:-4px; border-left:8px solid var(--accent);
   border-top:5px solid transparent; border-bottom:5px solid transparent; }
 .terrain-case-a-cocher{ display:flex; align-items:center; gap:6px; margin:10px 0 4px; font-size:var(--texte-libelle); color:var(--ink-soft); }
+/* La liste de la Scène dans l'Éditeur de terrain : des sous-sections repliables (demandé). */
+.terrain-groupe-titre{ display:flex; align-items:center; margin:10px 2px 4px; cursor:pointer; user-select:none;
+  font-size:var(--texte-micro); font-weight:600; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; }
+.terrain-groupe-bascule{ margin-left:auto; padding:0 2px; }
+.terrain-groupe.collapsed:not(.ouvert-par-recherche){ display:none !important; }

@@ -311,3 +311,38 @@ test('un Tracé choisi se règle dans « Sélection » : largeur, hauteur, épai
   assert.equal(document.getElementById('terrainSecChoisi').hidden, true);
   U.fermerEditeurDeTerrain();
 });
+
+// Demandé : la section de la Scène porte son nom ; sa liste a des sous-sections repliables (Éléments,
+// Bâtiments, Zones, Tracés) ; une recherche en tête au-delà d'un certain nombre de lignes.
+test('la liste de la Scène : son nom en titre, des groupes repliables, une recherche au-delà de 10 lignes', () => {
+  globalThis.requestAnimationFrame = (f) => { f(); return 0; };
+  globalThis.getComputedStyle = () => ({ getPropertyValue: () => '' });
+  const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
+  const objets = [panel];
+  for (let i = 0; i < 9; i++) objets.push({ id: 'e' + i, type: 'perso', name: i === 3 ? 'Église' : 'Perso ' + i, wxFloor: i, wzFloor: 0 });
+  objets.push({ id: 'z1', type: 'tracé', tracéType: 'terrain', name: 'Prairie', panelId: 'p',
+    world: { cx: 0, cz: 0, w: 4, h: 4, rotY: 0, corners: [{ x: -2, z: -2 }, { x: 2, z: -2 }, { x: 2, z: 2 }, { x: -2, z: 2 }] } });
+  objets.push({ id: 'r1', type: 'tracé', tracéType: 'route', name: 'Grand-rue', panelId: 'p', world: { pts: [{ x: -5, z: 0 }, { x: 5, z: 0 }], width: 5 } });
+  S.scenes = [{ id: 's1', name: 'Cimetière', w: 480, h: 360, pages: [{ objects: objets }] }];
+  S.editingSceneId = 's1';
+  U.setTerrainEditeurCallbacks({ instantane: () => {}, ouvrirLaScene: () => {}, apresModification: () => {}, confirmer: async () => true });
+  U.initEditeurDeTerrain();
+  U.ouvrirEditeurDeTerrain('s1');
+  U.rafraichirEditeurDeTerrain();
+  assert.equal(document.getElementById('terrainSectionScene').textContent, 'Cimetière');
+  const liste = document.getElementById('terrainContenu');
+  const titres = liste.children.filter(c => c.className === 'terrain-groupe-titre').map(c => c.dataset.groupe);
+  assert.deepEqual(titres, ['elements', 'zones', 'traces'], 'pas de groupe vide (aucun bâtiment)');
+  // Replier « Éléments ».
+  const titreElements = liste.children.find(c => c.dataset && c.dataset.groupe === 'elements' && c.className === 'terrain-groupe-titre');
+  titreElements.onclick();
+  assert.ok(liste.children.find(c => c.dataset && c.dataset.groupe === 'elements' && c.className !== 'terrain-groupe-titre').classList.contains('collapsed'));
+  // 11 lignes : la recherche ; « egl » ne garde que l'Église, et cache Zones et Tracés.
+  const recherche = document.getElementById('terrainContenuRecherche');
+  assert.equal(recherche.style.display, '');
+  recherche.value = 'egl'; recherche.oninput();
+  const blocs = liste.children.filter(c => c.dataset && c.dataset.groupe && c.className !== 'terrain-groupe-titre');
+  assert.deepEqual(blocs.map(b => b.style.display), ['', 'none', 'none']);
+  assert.deepEqual(blocs[0].children.filter(l => l.style.display !== 'none').map(l => l.textContent), ['Église']);
+  U.fermerEditeurDeTerrain();
+});

@@ -197,3 +197,4 @@ test('câblage : l\'annulation de l\'application attend « Valider », la sauveg
   assert.match(lire('io.js'), /if \(S\.terrainEnEdition\) return;/);
   assert.match(lire('index.html'), /<button id="terrainValiderBtn" type="button" class="full-btn" disabled>Valider<\/button>/);
 });
+

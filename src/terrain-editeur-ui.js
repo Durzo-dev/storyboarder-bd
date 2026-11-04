@@ -35,7 +35,7 @@ import { PANEL_CAM_DEFAULT_DIST_3D, WALL_PX_PER_UNIT_3D, GROUND_TYPE_DEFS, teint
 import { USAGE_DU_TRACE } from './textures-utilisateur.js';
 import { tracéWallHeight3D, tracéWallThickness3D, TRACÉS_A_EPAISSEUR } from './scene3d.js';
 import { carreDeTexture } from './textures-store-ui.js';
-import { sectionDroitePliee, memoriserSectionDroite } from './section-memory.js';
+import { sectionDroitePliee, memoriserSectionDroite, groupeReplie, memoriserGroupe } from './section-memory.js';
 
 const $ = (id) => document.getElementById(id);
 let _rappels = { avantOuverture: () => {}, apresFermeture: () => {}, ouvrirLaScene: () => {}, instantane: () => {}, confirmer: async () => true,
@@ -121,7 +121,6 @@ export function ouvrirEditeurDeTerrain(sceneId, { choisi = null } = {}){
   T.cam = { rotX: Math.min(0.96, Number.isFinite(p.camRotX) ? p.camRotX : 0.6), rotY: p.camRotY || 0,
     dist: p.camDist || PANEL_CAM_DEFAULT_DIST_3D, x: centre.x, y: centre.y, z: centre.z };
   $('terrainEditeur').classList.remove('hidden');
-  $('terrainSceneNom').textContent = sc.scene.name || '';
   choisirOutil('selection');
   recadrer();
   redessiner();
@@ -693,30 +692,94 @@ function majContenu(){
     $('terrainZoneTailleLabel').style.display = $('terrainZoneTaille').style.display = T.sorteZone === 'pinceau' ? '' : 'none';
     if (document.activeElement !== $('terrainZoneTaille')) $('terrainZoneTaille').value = String(T.pinceauZone);
   }
-  // La liste des Éléments : refaite seulement si elle a changé (même raison que boutonsDeChoix).
-  const liste = $('terrainContenu');
-  const nommes = T.formes.filter(f => f.type === 'element' || f.type === 'batiment');
-  const nomDe = (f) => f.nom || (f.type === 'batiment' ? tr('Building', 'Bâtiment') : tr('Element', 'Élément'));
-  const cle = JSON.stringify(nommes.map(f => [f.id, nomDe(f)]));
+  majListeDeLaScene();
+}
+
+/**
+ * La liste de ce que contient la Scène (demandé) : des SOUS-SECTIONS repliables (Éléments, Bâtiments,
+ * Zones, Tracés), et une recherche en tête dès qu'il y a plus de SEUIL_DE_RECHERCHE lignes. Refaite
+ * seulement si son contenu change (même raison que boutonsDeChoix) ; la sélection et le filtre ne font
+ * que montrer, cacher et souligner.
+ */
+const SEUIL_DE_RECHERCHE = 10;
+const GROUPES_DE_LA_LISTE = [
+  { cle: 'elements', types: ['element'], nom: () => tr('Elements', 'Éléments') },
+  { cle: 'batiments', types: ['batiment'], nom: () => tr('Buildings', 'Bâtiments') },
+  { cle: 'zones', types: ['zone'], nom: () => tr('Zones', 'Zones') },
+  { cle: 'traces', types: ['trace'], nom: () => tr('Paths', 'Tracés') },
+];
+const nomDeLaForme = (f) => f.nom || ({ batiment: tr('Building', 'Bâtiment'), zone: tr('Zone', 'Zone'),
+  trace: nomDeSorte(f.sorte) })[f.type] || tr('Element', 'Élément');
+function majListeDeLaScene(){
+  const liste = $('terrainContenu'), recherche = $('terrainContenuRecherche');
+  const sc = laScene();
+  if (sc) $('terrainSectionScene').textContent = sc.scene.name || tr('Scene', 'Scène');
+  const cle = JSON.stringify(T.formes.map(f => [f.id, f.type, nomDeLaForme(f)]));
   if (liste.dataset.cle !== cle) {
-    const lignes = nommes.map(f => {
-      const l = document.createElement('div');
-      l.className = 'batiment-ligne terrain-ligne';
-      l.dataset.valeur = f.id;
-      l.textContent = nomDe(f);
-      l.onclick = () => { T.choisi = T.choisi === f.id ? null : f.id; majContenu(); redessiner(); };
-      return l;
-    });
-    if (!lignes.length) {
+    liste.dataset.cle = cle;
+    const blocs = [];
+    for (const g of GROUPES_DE_LA_LISTE) {
+      const membres = T.formes.filter(f => g.types.includes(f.type));
+      if (!membres.length) continue;
+      const replie = (() => { try { return groupeReplie(localStorage, 'terrain-liste:' + g.cle); } catch (e) { return false; } })();
+      const titre = document.createElement('div');
+      titre.className = 'terrain-groupe-titre';
+      titre.dataset.groupe = g.cle;
+      titre.textContent = `${g.nom()} (${membres.length})`;
+      const bascule = document.createElement('span');
+      bascule.className = 'terrain-groupe-bascule';
+      bascule.textContent = replie ? '▸' : '▾';
+      titre.appendChild(bascule);
+      const bloc = document.createElement('div');
+      bloc.className = 'batiment-liste terrain-groupe' + (replie ? ' collapsed' : '');
+      bloc.dataset.groupe = g.cle;
+      titre.onclick = () => {
+        const r = !bloc.classList.contains('collapsed');
+        bloc.classList.toggle('collapsed', r);
+        bascule.textContent = r ? '▸' : '▾';
+        try { memoriserGroupe(localStorage, 'terrain-liste:' + g.cle, r); } catch (e) { /* sans mémoire */ }
+      };
+      bloc.replaceChildren(...membres.map(f => {
+        const l = document.createElement('div');
+        l.className = 'batiment-ligne terrain-ligne';
+        l.dataset.valeur = f.id;
+        l.dataset.cherche = pourChercher(nomDeLaForme(f));
+        l.textContent = nomDeLaForme(f);
+        l.onclick = () => { T.choisi = T.choisi === f.id ? null : f.id; majContenu(); redessiner(); };
+        return l;
+      }));
+      blocs.push(titre, bloc);
+    }
+    if (!blocs.length) {
       const v = document.createElement('p');
       v.className = 'empty-hint';
-      v.textContent = tr('No Element in this Scene.', 'Aucun Élément dans cette Scène.');
-      lignes.push(v);
+      v.textContent = tr('Nothing in this scene yet.', 'Rien dans cette scène pour l\'instant.');
+      blocs.push(v);
     }
-    liste.replaceChildren(...lignes);
-    liste.dataset.cle = cle;
+    liste.replaceChildren(...blocs);
+    // La recherche, au-delà du seuil : en tête de la section (hors de la liste).
+    recherche.style.display = T.formes.length > SEUIL_DE_RECHERCHE ? '' : 'none';
+    recherche.placeholder = tr('Search…', 'Chercher…');
+    recherche.oninput = () => majListeDeLaScene();
   }
-  for (const l of liste.children || []) if (l.dataset && l.dataset.valeur) l.classList.toggle('actif', l.dataset.valeur === T.choisi);
+  // Le filtre (sans casse ni accents) : une ligne qui ne répond pas est cachée, un groupe vide aussi ;
+  // pendant une recherche, les groupes repliés s'ouvrent pour montrer ce qui répond.
+  const q = recherche.style.display === 'none' ? '' : pourChercher(recherche.value);
+  const enfants = liste.children || [];
+  for (let k = 0; k < enfants.length; k++) {
+    const b = enfants[k];
+    if (!b.dataset || !b.dataset.groupe || b.className === 'terrain-groupe-titre') continue;
+    let visibles = 0;
+    for (const l of b.children || []) {
+      const ok = !q || (l.dataset.cherche || '').includes(q);
+      l.style.display = ok ? '' : 'none';
+      if (ok) visibles++;
+      l.classList.toggle('actif', l.dataset.valeur === T.choisi);
+    }
+    const titre = enfants[k - 1];
+    b.style.display = titre.style.display = visibles ? '' : 'none';
+    if (q) b.classList.toggle('ouvert-par-recherche', true); else b.classList.remove('ouvert-par-recherche');
+  }
 }
 
 // ── La vue de dessus ──────────────────────────────────────────────────────────────────────────
