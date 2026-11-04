@@ -198,3 +198,10 @@ test('câblage : l\'annulation de l\'application attend « Valider », la sauveg
   assert.match(lire('index.html'), /<button id="terrainValiderBtn" type="button" class="full-btn" disabled>Valider<\/button>/);
 });
 
+
+// Signalé : la croix bleue (native) des champs de recherche sortait du système de design.
+test('la croix des champs de recherche prend les jetons du système de design', () => {
+  const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
+  assert.match(css, /input\[type="search"\]::-webkit-search-cancel-button\{\n\s*-webkit-appearance:none;[^}]*background-color:var\(--ink-soft\);/);
+  assert.match(css, /input\[type="search"\]::-webkit-search-cancel-button:hover\{ background-color:var\(--accent\); \}/);
+});
