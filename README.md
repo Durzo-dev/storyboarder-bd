@@ -4,7 +4,7 @@
 
 > 🇫🇷 [Version française](README.fr.md)
 
-**Version 1.16.0**
+**Version 1.16.1**
 
 **Comic book storyboarding application**: a desktop tool to create, organize and visualize comic book pages with real-time 3D scene rendering.
 
@@ -23,56 +23,15 @@ Previous versions and release notes: [all releases](https://github.com/Durzo-dev
 
 ## ✨ Features
 
-### Storyboard
-- 📖 **Volume → Chapter → Page → Panel** organization (optional chapters) with automatic numbering, duplication and drag-and-drop reordering
-- 📝 Per-panel summaries and descriptions
-- 💬 **Speech bubbles**: eight shapes, five tails, textures picked in the texture store (any texture), sixty-five fonts sorted by use plus your own, from a file or an online store, bold and italic, saved styles, and merging two bubbles into one
-- 🖼️ **Panel images** (PNG, JPG, WebP), with adjustable framing and zoom
-- 📥 **Import a page** already drawn: its panels are detected, then corrected right on the page
-- 📐 **Volume formats** of your own per project, in mm or px, renamable
-- 🎨 Page background colour, adjustable panel and bubble borders
-
-### 3D scenes
-- 🎬 **Reusable scenes**: compose a 3D setting once, load it into any panel
-- 🎥 **Free camera** in every panel, and a top-down view for placing elements
-- 🖱️ **The same 3D gestures everywhere**: left drag to turn, right drag to move, one zoom; turn a character or an object with the right button held on it; a Controls section lists them
-- 👤 **Ready-made elements**: characters with poses and emotions, animals, furniture, vehicles, vegetation, buildings, roads and walls, photographed grounds you can tint
-- ☀️ **Light**: Day, Night or Custom mode with a computed sky, placed light sources, cast shadows
-
-### Terrain editor
-- ⛰️ **Shape the ground of a scene** from above, with a 3D preview: nothing reaches the scene before you validate
-- 🖌️ **Relief**: raise, dig, flatten or smooth with a brush; what stands on it follows, roads cross hollows, the ground is flattened under buildings
-- 🟩 **Zones** as rectangles or painted, with their texture (water makes lakes and seas), height and slope
-- 🛣️ **Paths**: roads, dirt paths, rivers that dig their bed, low walls, fences, hedges, barriers, each set up before drawing
-
-### Building editor
-- 🏠 **Build from above**: snapping walls, detected rooms, doors, windows, bay windows and passages, straight, L- or U-shaped stairs, several levels and basements (the Ground is pierced over them)
-- 🧱 **Finishes**: facade, walls, floors and ceilings in textures and colours, room by room
-- 🪑 **Furniture**: your models placed in the rooms, snapped to the walls, orientable
-- 🏡 **Roofs**: automatic per level, flat (parapet, railing), single pitch, gable or hip, even on L, T or U shapes; tiles, barrel tiles or slate; a chimney on top
-- ⛲ **Courtyards**: a room becomes a courtyard open to the sky, which goes up through the floors; a terrace above a room
-- 📍 **In scenes**: the building is placed as a copy; a character or an object is set in a room from its sheet; each panel can cut it at a level or hide walls, ceilings and floors
-
-### Textures
-- 🧩 **Texture store**: Poly Haven and ambientCG, your texture folders, and "My textures" for the ground, roads, low walls and building finishes
-
-### Imported 3D models
-- 📦 **glTF import** (`.glb` / `.gltf`) at real size, into a panel or a scene
-- 🗂️ **Model library**: your models as thumbnails, with search, categories, tags and where each one is used
-- 🔎 **Online models**: search Sketchfab and Poly Haven with a 3D preview; one-click download from Poly Haven, credits added to exports
-- 🦴 **Articulated models**: morphology and bone mapping proposed on import, correctable and reusable
-
-### Model editor
-- 🎯 **Pose any figure** (character, animal or articulated model) by dragging a joint or with exact sliders, picking the figure among your models
-- 📚 **Pose library** shared across every project, filed by archetype
-
-### Project & application
-- 💾 Readable **JSON** projects in **Documents\Storyboarder BD\Projets**, auto-save, undo over 50 actions
-- 📖 **Reader**: read a volume or a chapter straight through, one or two pages, to the right or to the left, in book view (pages that turn), with automatic scrolling or panel by panel, full screen
-- 🖼️ Export pages as **PNG** or **PDF**
-- ⬆️ **Built-in updates**, and **works offline** for up to 14 days
-- 🌗 **Dark and light themes**, increased contrast, four interface sizes, adjustable 3D gesture speeds
-- ❓ **Built-in user manual**, grouped by topic, with keyword search
+- 📖 **Storyboard**: volumes, chapters, pages and panels, with summaries, panel images, imported pages and your own formats
+- 💬 **Speech bubbles**: shapes, tails, textures, sixty-five fonts plus your own, saved styles, merged bubbles
+- 🎬 **3D scenes**: reusable settings with characters, animals, furniture, vehicles, light and shadows, loaded into any panel, with the same 3D gestures everywhere
+- ⛰️ **Terrain editor**: relief, zones, roads, walls and water, shaped from above with a 3D preview
+- 🏠 **Building editor**: walls, rooms, openings, stairs, levels and basements, finishes, furniture, roofs and courtyards
+- 📦 **3D models**: glTF import, a model library, online models (Sketchfab, Poly Haven), articulated models you can pose
+- 🧩 **Textures**: a store (Poly Haven, ambientCG, your folders) for grounds, roads, walls and finishes
+- 📚 **Reader & export**: read a volume like a book, export pages as PNG or PDF
+- 💾 **Application**: readable JSON projects, auto-save, undo, built-in updates, offline use, dark and light themes, built-in manual
 
 ---
 

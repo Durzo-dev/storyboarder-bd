@@ -4,7 +4,7 @@
 
 > 🇬🇧 [English version](README.md)
 
-**Version 1.16.0**
+**Version 1.16.1**
 
 **Application de découpage de Bandes Dessinées** : outil de storyboard pour créer, organiser et visualiser des planches de BD avec rendu 3D des scènes.
 
@@ -23,56 +23,15 @@ Versions précédentes et notes de version : [toutes les releases](https://githu
 
 ## ✨ Fonctionnalités
 
-### Storyboard
-- 📖 Organisation **Tomes → Chapitres → Planches → Cases** (chapitres facultatifs) avec numérotation automatique, duplication et réorganisation par glisser-déposer
-- 📝 Résumés et descriptions par Case
-- 💬 **Bulles de dialogue** : huit formes, cinq pointes, textures choisies dans le store (n'importe laquelle), soixante-cinq polices rangées par usage et les vôtres, depuis un fichier ou un store en ligne, gras et italique, styles enregistrés, et fusion de deux Bulles en une
-- 🖼️ **Images de Case** (PNG, JPG, WebP), au cadrage et au zoom réglables
-- 📥 **Importer une planche** déjà dessinée : ses Cases sont détectées, puis se corrigent sur la Planche
-- 📐 **Formats de Tome** propres au Projet, en mm ou en px, renommables
-- 🎨 Couleur d'arrière-plan par Planche, bordures de Case et de Bulle réglables
-
-### Scènes 3D
-- 🎬 **Scènes réutilisables** : composez un décor 3D une fois, chargez-le dans n'importe quelle Case
-- 🎥 **Caméra libre** dans chaque Case, et vue de dessus pour placer les Éléments
-- 🖱️ **Les mêmes gestes 3D partout** : glisser gauche pour tourner, droit pour déplacer, un seul zoom ; un Personnage ou un Objet se tourne au clic droit maintenu sur lui ; une section Commandes les rappelle
-- 👤 **Éléments prêts à l'emploi** : Personnages avec poses et émotions, Animaux, mobilier, véhicules, végétation, bâtiments, routes et murets, sols photographiés teintables
-- ☀️ **Lumière** : mode Jour, Nuit ou Personnalisé avec ciel calculé, sources de lumière posées, ombres portées
-
-### Éditeur de terrain
-- ⛰️ **Façonner le sol d'une Scène** en vue de dessus, avec un aperçu 3D : rien n'arrive sur la Scène avant « Valider »
-- 🖌️ **Relief** : monter, creuser, aplanir ou adoucir au pinceau ; ce qui est posé suit, les routes franchissent les creux, le sol s'aplanit sous les bâtiments
-- 🟩 **Zones** en rectangle ou peintes, avec leur texture (l'eau fait les lacs et les mers), leur hauteur et leur pente
-- 🛣️ **Tracés** : routes, chemins, rivières qui creusent leur lit, murets, clôtures, haies, barrières, réglés avant de poser
-
-### Éditeur de bâtiment
-- 🏠 **Construire en vue de dessus** : murs aimantés, pièces détectées, portes, fenêtres, baies et passages, escaliers droits, en L ou en U, plusieurs niveaux et des sous-sols (le Sol est percé au-dessus)
-- 🧱 **Revêtements** : façade, murs, sols et plafonds en textures et couleurs, pièce par pièce
-- 🪑 **Mobilier** : vos modèles posés dans les pièces, aimantés aux murs, orientables
-- 🏡 **Toits** : automatiques par niveau, plats (acrotère, garde-corps), à un, deux ou quatre pans, même sur des formes en L, T ou U ; tuiles plates, tuiles canal ou ardoise ; une cheminée dessus
-- ⛲ **Cours** : une pièce devient une cour ouverte au ciel, qui traverse les étages ; une terrasse au-dessus d'une pièce
-- 📍 **Dans les Scènes** : le bâtiment s'y place en copie ; un Personnage ou un Objet s'y pose dans une pièce, depuis sa fiche ; chaque Case peut le couper à un niveau ou en masquer des murs, plafonds et sols
-
-### Textures
-- 🧩 **Store de textures** : Poly Haven et ambientCG, vos dossiers de textures, et « Mes textures » pour le Sol, les routes, les murets et les revêtements de bâtiment
-
-### Modèles 3D importés
-- 📦 **Import glTF** (`.glb` / `.gltf`) à taille réelle, dans une Case ou une Scène
-- 🗂️ **Bibliothèque de modèles** : vos modèles en vignettes, avec recherche, catégories, tags et endroits où chacun sert
-- 🔎 **Modèles en ligne** : recherche dans Sketchfab et Poly Haven avec aperçu 3D ; téléchargement en un clic depuis Poly Haven, crédits ajoutés aux exports
-- 🦴 **Modèles articulés** : morphologie et correspondance des os proposées à l'import, corrigibles et réutilisables
-
-### Éditeur de modèle
-- 🎯 **Poser n'importe quelle figure** (Personnage, Animal ou modèle articulé) au glisser d'une articulation ou au curseur exact, la figure se choisissant parmi vos modèles
-- 📚 **Bibliothèque de poses** partagée par tous vos Projets, rangée par archétype
-
-### Projet & application
-- 💾 Projets **JSON** lisibles dans **Documents\Storyboarder BD\Projets**, sauvegarde automatique, annulation sur 50 actions
-- 📖 **Lecteur** : lire un tome ou un chapitre à la suite, en une ou deux pages, vers la droite ou la gauche, en vue livre (pages qui se tournent), en défilement automatique ou case par case, en plein écran
-- 🖼️ Export des planches en **PNG** ou **PDF**
-- ⬆️ **Mises à jour intégrées**, et **fonctionne hors ligne** jusqu'à 14 jours
-- 🌗 **Thèmes sombre et clair**, contraste renforcé, quatre tailles d'interface, vitesses des gestes 3D réglables
-- ❓ **Manuel d'utilisation intégré**, rangé par thèmes, avec recherche par mots clés
+- 📖 **Storyboard** : Tomes, Chapitres, Planches et Cases, avec résumés, images de Case, planches importées et formats à vous
+- 💬 **Bulles** : formes, pointes, textures, soixante-cinq polices et les vôtres, styles enregistrés, Bulles fusionnées
+- 🎬 **Scènes 3D** : décors réutilisables avec Personnages, Animaux, mobilier, véhicules, lumière et ombres, chargés dans n'importe quelle Case, avec les mêmes gestes 3D partout
+- ⛰️ **Éditeur de terrain** : relief, Zones, routes, murets et eau, façonnés en vue de dessus avec un aperçu 3D
+- 🏠 **Éditeur de bâtiment** : murs, pièces, ouvertures, escaliers, niveaux et sous-sols, revêtements, mobilier, toits et cours
+- 📦 **Modèles 3D** : import glTF, bibliothèque de modèles, modèles en ligne (Sketchfab, Poly Haven), modèles articulés que l'on pose
+- 🧩 **Textures** : un store (Poly Haven, ambientCG, vos dossiers) pour les sols, routes, murets et revêtements
+- 📚 **Lecteur & export** : lire un Tome comme un livre, exporter les Planches en PNG ou PDF
+- 💾 **Application** : Projets JSON lisibles, sauvegarde automatique, annulation, mises à jour intégrées, hors ligne, thèmes sombre et clair, manuel intégré
 
 ---
 
