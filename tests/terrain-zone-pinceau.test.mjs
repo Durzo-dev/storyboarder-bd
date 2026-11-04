@@ -440,3 +440,50 @@ test('un outil choisi a son menu ; l\'outil Sélection rend le menu de la Scène
   assert.match(css, /#terrainPanneau\.mode-outil > #terrainSecScene, #terrainPanneau\.mode-outil > #terrainSecChoisi\{ display:none !important; \}/);
   U.fermerEditeurDeTerrain();
 });
+
+// Demandé : outil Tracés, une section par genre (réglages du prochain Tracé), clic droit = genre suivant,
+// molette = largeur (quand le genre en a une).
+test('outil Tracés : réglages du genre avant de poser ; clic droit = genre suivant ; molette = largeur', () => {
+  globalThis.requestAnimationFrame = (f) => { f(); return 0; };
+  globalThis.getComputedStyle = () => ({ getPropertyValue: () => '' });
+  const panel = { id: 'p', type: 'panel', x: 0, y: 0, w: 480, h: 360, camRotX: Math.PI / 2, pts: [] };
+  S.scenes = [{ id: 's1', name: 'Scène 1', w: 480, h: 360, pages: [{ objects: [panel] }] }];
+  S.editingSceneId = 's1';
+  U.setTerrainEditeurCallbacks({ instantane: () => {}, ouvrirLaScene: () => {}, apresModification: () => {}, confirmer: async () => true });
+  U.initEditeurDeTerrain();
+  U.ouvrirEditeurDeTerrain('s1');
+  const plan = document.getElementById('terrainPlan');
+  const jouer = (type, ev) => (plan._ecouteurs[type] || []).forEach(f => f({ preventDefault(){}, stopPropagation(){}, pointerId: 1, detail: 1, ...ev, type }));
+  document.getElementById('terrainOutilTrace').onclick();
+  document.getElementById('terrainSortesTrace').children.find(b => b.dataset.valeur === 'route').onclick();
+  assert.equal(document.getElementById('terrainSecTraceReglages').hidden, false);
+  assert.match(document.getElementById('terrainSectionTraceReglages').textContent, /^(Route|Road)$/);
+  const reglage = (cle) => {
+    for (const c of document.getElementById('terrainTraceReglages').children) {
+      if (c.dataset && c.dataset.cle === cle) return c;
+      for (const k of c.children || []) if (k.dataset && k.dataset.cle === cle) return k;
+    }
+    return null;
+  };
+  const couleur = reglage('couleur'); couleur.value = '#ff0000'; couleur.oninput();
+  const marquage = reglage('marquage'); marquage.checked = false; marquage.onchange();
+  // Molette : +0,5 m par cran (les réglages durent la session : on part de la valeur du moment).
+  const l0 = Number(reglage('largeur').value);
+  jouer('wheel', { deltaY: -100, clientX: 400, clientY: 300 });
+  jouer('wheel', { deltaY: -100, clientX: 400, clientY: 300 });
+  assert.equal(Number(reglage('largeur').value), Math.min(30, l0 + 1));
+  jouer('pointerdown', { button: 0, clientX: 300, clientY: 300 });
+  jouer('pointerdown', { button: 0, clientX: 500, clientY: 300 });
+  jouer('dblclick', {});
+  const route = S.scenes[0].pages[0].objects.find(o => o.tracéType === 'route');
+  assert.equal(route.color, '#ff0000');
+  assert.equal(route.marquage, false);
+  assert.equal(route.world.width, Math.min(30, l0 + 1));
+  // Clic droit sans bouger (pas de ligne en cours) : le genre suivant.
+  document.getElementById('terrainOutilTrace').onclick();   // l'outil a pu rester ; on le reprend
+  if (!document.getElementById('terrainOutilTrace').classList.contains('actif')) document.getElementById('terrainOutilTrace').onclick();
+  jouer('pointerdown', { button: 2, clientX: 300, clientY: 300 });
+  jouer('pointerup', { clientX: 300, clientY: 300 });
+  assert.match(document.getElementById('terrainSectionTraceReglages').textContent, /^(Chemin|Dirt path)$/);
+  document.getElementById('terrainValiderBtn').onclick();
+});

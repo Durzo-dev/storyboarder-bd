@@ -20,7 +20,7 @@
  */
 import { S, tr, newId } from './state.js';
 import { contenuDuPlan, cadrageDuPlan, versLePlan, zoomerLePlan, pasDeLaGrille, versLeMonde,
-  zoneEntre, traceDePoints, deplacerLeMonde, sousLePoint, tournerLaZone } from './terrain-plan.js';
+  zoneEntre, traceDePoints, deplacerLeMonde, sousLePoint, tournerLaZone, LARGEUR_PAR_DEFAUT_M } from './terrain-plan.js';
 import { rendreSceneVueLibre3D, figerLesTraces3D, ensureElementWorldPos3D, pointDuBatimentPlace3D, panelCamBasis3D, getCamOrbitWorld,
   tracéUpdateScreenPts } from './scene3d.js';
 import { nomDuTrace } from './canvas-tools.js';
@@ -126,7 +126,26 @@ export function ouvrirEditeurDeTerrain(sceneId, { choisi = null } = {}){
   redessiner();
   window.addEventListener('keydown', clavier, true);
   window.addEventListener('resize', redessiner);
+  window.addEventListener('resize', ajusterLePanneau);
+  (globalThis.requestAnimationFrame || ((f) => setTimeout(f, 0)))(ajusterLePanneau);
   return true;
+}
+
+/**
+ * ⚠️ LE MENU TIENT DANS LA FENÊTRE (signalé : Valider, Recadrer, Quitter restaient invisibles). Avec
+ * l'échelle de l'interface (zoom), le menu étiré pouvait déborder sous le bas de l'écran, et ses
+ * boutons « collés en bas » avec lui. Mesuré une fois affiché : s'il dépasse, sa hauteur est ramenée à
+ * la place disponible (divisée par l'échelle, qui la multipliera).
+ */
+function ajusterLePanneau(){
+  const p = $('terrainPanneau');
+  if (!T || !p || !p.getBoundingClientRect) return;
+  p.style.height = '';
+  const r = p.getBoundingClientRect();
+  const dispo = (globalThis.innerHeight || 0) - r.top;
+  if (!(dispo > 0) || r.height <= dispo + 1) return;
+  const echelle = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--echelle-ui')) || 1;
+  p.style.height = (dispo / echelle) + 'px';
 }
 
 // ── L'état du terrain : ce que l'éditeur modifie, et peut remettre ─────────────────────────
@@ -200,6 +219,7 @@ function fermerSansDemander(){
   $('terrainEditeur').classList.add('hidden');
   window.removeEventListener('keydown', clavier, true);
   window.removeEventListener('resize', redessiner);
+  window.removeEventListener('resize', ajusterLePanneau);
   _rappels.apresFermeture();
 }
 
@@ -316,6 +336,8 @@ function poser(sorte, world){
   // #462d : une rivière avec sa profondeur.
   if (sorte === 'riviere') obj.profondeur = PROFONDEUR_RIVIERE;
   if (def.wallHeight !== undefined) obj.wallHeight = def.wallHeight;
+  // Demandé : les réglages du genre, choisis avant de poser (outil Tracés).
+  if (sorte !== 'terrain') appliquerReglagesDuGenre(obj, sorte);
   sc.page.objects.push(obj);
   T.choisi = obj.id;
   apresModification(obj);
@@ -356,6 +378,89 @@ function tournerLObjet(obj, geste, angle){
     const s = ((geste.sens + angle * 180 / Math.PI) % 360 + 360) % 360;
     if (s) obj.sensPente = s; else delete obj.sensPente;
   }
+}
+
+/**
+ * Demandé : LES RÉGLAGES DE CHAQUE GENRE DE TRACÉ, choisis dans l'outil Tracés avant de poser (texture,
+ * couleur, largeur, hauteur, épaisseur, marquage, profondeur). Gardés pendant la session ; le Tracé
+ * posé les prend. Vides : les valeurs par défaut du genre.
+ */
+const T_TRACES = {};
+const AVEC_LARGEUR = ['route', 'chemin', 'riviere'];
+const MURETS = ['muret', 'cloture', 'haie', 'barriere'];
+function reglagesDuGenre(sorte){ return (T_TRACES[sorte] = T_TRACES[sorte] || {}); }
+function largeurDuGenre(sorte){ const r = reglagesDuGenre(sorte); return r.largeur || LARGEUR_PAR_DEFAUT_M[sorte] || 0.2; }
+function appliquerReglagesDuGenre(obj, sorte){
+  const r = reglagesDuGenre(sorte), def = TRACÉ_DEFAULTS[sorte] || {};
+  if (r.couleur) obj.color = r.couleur;
+  if (r.texture) obj.traceTexture = r.texture;
+  if (r.marquage === false) obj.marquage = false;
+  if (r.hauteur) obj.wallHeight = r.hauteur;
+  if (r.epaisseur) obj.wallThickness = r.epaisseur;
+  if (r.profondeur) obj.profondeur = r.profondeur;
+  if (AVEC_LARGEUR.includes(sorte) && obj.world) {
+    const l = largeurDuGenre(sorte);
+    obj.world = { ...obj.world, width: l };
+    // Le trait du plan garde la proportion de celui par défaut.
+    if (def.width && LARGEUR_PAR_DEFAUT_M[sorte]) obj.width = def.width * l / LARGEUR_PAR_DEFAUT_M[sorte];
+  }
+}
+
+/** La section des réglages du genre à poser, construite une fois par genre (et par texture). */
+function reglagesDuTraceAPoser(){
+  const sorte = T.sorteTrace, r = reglagesDuGenre(sorte), def = TRACÉ_DEFAULTS[sorte] || {};
+  const boite = $('terrainTraceReglages');
+  $('terrainSectionTraceReglages').textContent = nomDeSorte(sorte);
+  const cle = sorte + ':' + (r.texture || '');
+  if (boite.dataset.cle !== cle) {
+    boite.dataset.cle = cle;
+    const libelle = (texte) => { const l = document.createElement('label'); l.className = 'terrain-curseur-libelle'; l.textContent = texte; return l; };
+    const elements = [];
+    if (USAGE_DU_TRACE[sorte]) {
+      elements.push(libelle(tr('Texture', 'Texture')), carreDeTexture({
+        valeur: r.texture || null, usage: USAGE_DU_TRACE[sorte], titre: tr('Choose the texture', 'Choisir la texture'),
+        teinte: r.couleur && r.couleur.toLowerCase() !== String(def.color || '').toLowerCase() ? r.couleur : null,
+        appliquer: (id) => { if (id) r.texture = id; else delete r.texture; majContenu(); },
+      }));
+    }
+    if (sorte !== 'riviere') {
+      const c = document.createElement('input');
+      c.type = 'color'; c.className = 'terrain-couleur'; c.dataset.cle = 'couleur';
+      c.oninput = () => { r.couleur = c.value; };
+      c._lire = () => r.couleur || def.color || '#888888';
+      elements.push(libelle(tr('Colour', 'Couleur')), c);
+    }
+    if (sorte === 'route') {
+      const l = document.createElement('label');
+      l.className = 'terrain-case-a-cocher';
+      const c = document.createElement('input');
+      c.type = 'checkbox'; c.dataset.cle = 'marquage';
+      c.onchange = () => { if (c.checked) delete r.marquage; else r.marquage = false; };
+      c._lire = () => r.marquage !== false;
+      l.appendChild(c); l.appendChild(document.createTextNode(' ' + tr('Road markings', 'Marquage au sol')));
+      elements.push(l);
+    }
+    const curseur = (cleC, nom, min, max, pas, lire, ecrire) => {
+      const l = libelle(nom + ' '); const v = document.createElement('span'); l.appendChild(v);
+      const c = document.createElement('input');
+      c.type = 'range'; c.min = String(min); c.max = String(max); c.step = String(pas); c.dataset.cle = cleC;
+      c.oninput = () => { ecrire(Number(c.value)); v.textContent = String(Number(c.value)).replace('.', ','); };
+      c._lire = lire; c._valeur = v;
+      return [l, c];
+    };
+    if (AVEC_LARGEUR.includes(sorte)) elements.push(...curseur('largeur', tr('Width (m)', 'Largeur (m)'), 0.5, 30, 0.5, () => largeurDuGenre(sorte), (x) => { r.largeur = x; }));
+    if (MURETS.includes(sorte)) elements.push(...curseur('hauteur', tr('Height (m)', 'Hauteur (m)'), 0.2, 5, 0.05, () => r.hauteur || def.wallHeight || 0.5, (x) => { r.hauteur = x; }));
+    if (TRACÉS_A_EPAISSEUR.includes(sorte)) elements.push(...curseur('epaisseur', tr('Thickness (cm)', 'Épaisseur (cm)'), 2, 200, 1,
+      () => Math.round((r.epaisseur || tracéWallThickness3D({ tracéType: sorte, wallHeight: r.hauteur || def.wallHeight })) * 100), (x) => { r.epaisseur = x / 100; }));
+    if (sorte === 'riviere') elements.push(...curseur('profondeur', tr('Depth (m)', 'Profondeur (m)'), 0.3, 5, 0.1, () => r.profondeur || PROFONDEUR_RIVIERE, (x) => { r.profondeur = x; }));
+    boite.replaceChildren(...elements);
+  }
+  const relire = (c) => {
+    if (!c._lire || document.activeElement === c) return;
+    if (c.type === 'checkbox') c.checked = c._lire();
+    else { c.value = String(c._lire()); if (c._valeur) c._valeur.textContent = String(c._lire()).replace('.', ','); }
+  };
+  for (const c of boite.children || []) { relire(c); for (const k of c.children || []) relire(k); }
 }
 
 function finirLaLigne(){
@@ -412,7 +517,8 @@ export function commandesDuTerrain(trad = tr, outil = 'selection', choisi = fals
     l.push(trad('Wheel: size · right-click: next mode · Ctrl + wheel: zoom.', 'Molette : taille · clic droit : mode suivant · Ctrl + molette : zoom.'));
   } else if (outil === 'trace') {
     l.push(trad('Click: one point per bend; double-click, Enter or right-click: finish.', 'Clic : un point par virage ; double-clic, Entrée ou clic droit : terminer.'));
-    l.push(trad('The kind is chosen in "Path to draw".', 'Le genre se choisit dans « Tracé à poser ».'));
+    l.push(trad('Right-click: next kind · wheel: width (road, path, river) · Ctrl + wheel: zoom.', 'Clic droit : genre suivant · molette : largeur (route, chemin, rivière) · Ctrl + molette : zoom.'));
+    l.push(trad('Its texture, colour and sizes are set below, before drawing.', 'Sa texture, sa couleur et ses tailles se règlent dessous, avant de poser.'));
   } else {
     l.push(trad('Click a zone or path: select it; drag: move it; Del: delete it.', 'Clic sur une Zone ou un Tracé : le choisir ; glisser : le déplacer ; Suppr : le supprimer.'));
     l.push(trad('Elements are only pointed out here.', 'Les Éléments ne sont que désignés ici.'));
@@ -666,7 +772,9 @@ function majContenu(){
   $('terrainSecTrace').hidden = T.outil !== 'trace';
   if (T.outil === 'trace') {
     boutonsDeChoix($('terrainSortesTrace'), SORTES_DE_TRACE, nomDeSorte, T.sorteTrace, (sorte) => { T.sorteTrace = sorte; majContenu(); });
+    reglagesDuTraceAPoser();
   }
+  $('terrainSecTraceReglages').hidden = T.outil !== 'trace';
   // Le pinceau du relief (outil Relief).
   $('terrainSecRelief').hidden = T.outil !== 'relief';
   if (T.outil === 'relief') {
@@ -1106,8 +1214,11 @@ export function ouvrirChoixDeScene(){
 // ── Câblage ───────────────────────────────────────────────────────────────────────────────────
 
 const MEMOIRE_SECTIONS = 'editeur-terrain';
+let _initFait = false;
 export function initEditeurDeTerrain(){
-  if (!$('terrainEditeur')) return;
+  // Une seule fois : un second appel doublerait chaque écouteur (chaque cran de molette compterait double).
+  if (_initFait || !$('terrainEditeur')) return;
+  _initFait = true;
   document.querySelectorAll('#terrainPanneau .side-section > h2').forEach(h2 => {
     const sec = h2.closest('.side-section');
     try { if (sec.id) sec.classList.toggle('collapsed', sectionDroitePliee(localStorage, MEMOIRE_SECTIONS, sec.id)); } catch (e) { /* sans mémoire */ }
@@ -1145,6 +1256,12 @@ export function initEditeurDeTerrain(){
       const sens = e.deltaY < 0 ? 1 : -1;
       if (T.outil === 'relief') {
         T.pinceau.rayon = T_PINCEAU.rayon = Math.max(1, Math.min(30, T.pinceau.rayon + sens));
+        majContenu(); redessiner(); return;
+      }
+      // Demandé : outil Tracés, la molette élargit le Tracé à poser (route, chemin, rivière).
+      if (T.outil === 'trace' && AVEC_LARGEUR.includes(T.sorteTrace)) {
+        const r = reglagesDuGenre(T.sorteTrace);
+        r.largeur = Math.max(0.5, Math.min(30, largeurDuGenre(T.sorteTrace) + sens * 0.5));
         majContenu(); redessiner(); return;
       }
       if (T.outil === 'zone' && T.sorteZone === 'pinceau') {
@@ -1279,6 +1396,10 @@ export function initEditeurDeTerrain(){
       const clicSansBouger = g0.bouton === 2 && e && e.type === 'pointerup' && Math.hypot(e.clientX - g0.x0, e.clientY - g0.y0) < 4;
       if (clicSansBouger && T.outil === 'relief') {
         T.pinceau.mode = T_PINCEAU.mode = MODES_DU_PINCEAU[(MODES_DU_PINCEAU.indexOf(T.pinceau.mode) + 1) % MODES_DU_PINCEAU.length];
+        majContenu(); redessiner();
+      } else if (clicSansBouger && T.outil === 'trace') {
+        // Demandé : outil Tracés, le clic droit passe au genre suivant (une ligne en cours, elle, se termine).
+        T.sorteTrace = SORTES_DE_TRACE[(SORTES_DE_TRACE.indexOf(T.sorteTrace) + 1) % SORTES_DE_TRACE.length];
         majContenu(); redessiner();
       } else if (clicSansBouger && T.outil === 'zone') {
         // Demandé : avec l'outil Zone, le clic droit passe du Rectangle au Pinceau, et inversement.
