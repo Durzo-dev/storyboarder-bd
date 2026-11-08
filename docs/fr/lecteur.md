@@ -2,7 +2,7 @@
 
 *[English version](../en/lecteur.md)*
 
-Demandé par Valentin en octobre 2026 : lire un Tome ou un Chapitre à la suite, comme un album, sans
+Demandé par Durzo en octobre 2026 : lire un Tome ou un Chapitre à la suite, comme un album, sans
 quitter l'application. Clic droit sur un Tome (« Lire ce tome ») ou un Chapitre (« Lire ce
 chapitre ») ; la lecture commence à la Planche affichée si elle en fait partie.
 

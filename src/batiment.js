@@ -1,6 +1,6 @@
 /**
  * @file batiment.js
- * LE FICHIER DE BÂTIMENT (#454a, décisions de Valentin du 22 octobre 2026, cf.
+ * LE FICHIER DE BÂTIMENT (#454a, décisions de Durzo du 22 octobre 2026, cf.
  * docs/en/building-research.md). Fonctions PURES : créer, relire, nommer, écrire.
  *
  * Un bâtiment se construit dans l'ÉDITEUR DE BÂTIMENTS, pas dans la Scène, et il est un MODÈLE :
@@ -49,7 +49,7 @@ export const DEFAUTS_BATIMENT = { hauteur: 2.8, dalle: 0.2, epaisseur: 0.2 };
 /** Les types de toit (#458). */
 export const TYPES_DE_TOIT = ['plat', 'un-pan', 'deux-pans', 'quatre-pans'];
 /**
- * Les types d'ouverture (#454a-3c, décidé avec Valentin le 23 octobre 2026). Gardés pour plus tard,
+ * Les types d'ouverture (#454a-3c, décidé avec Durzo le 23 octobre 2026). Gardés pour plus tard,
  * dans TACHES.md : porte de garage, vitrine, œil-de-bœuf, bow-window, verrière ; et l'option « haut
  * cintré », les volets.
  */

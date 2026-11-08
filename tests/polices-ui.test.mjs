@@ -28,7 +28,7 @@ describe('les décisions', () => {
   });
 
   describe('#423 : les usages des polices ajoutées, traduits dans ceux de l\'utilisateur', () => {
-    // Le classement réel de Valentin (12 octobre 2026) : ses ids ne suivent plus l'ordre d'origine.
+    // Le classement réel de Durzo (12 octobre 2026) : ses ids ne suivent plus l'ordre d'origine.
     const valentin = {
       usages: [{ id: 'u1', nom: 'Dialogue' }, { id: 'u2', nom: 'Écrit à la main' }, { id: 'u4', nom: 'Cris' },
         { id: 'u5', nom: 'Onomatopées' }, { id: 'u7', nom: 'Robotique' }, { id: 'u8', nom: 'Narration' },
@@ -162,7 +162,7 @@ describe('retours à l\'écran (12 octobre 2026)', () => {
     assert.match(lire('src/style.css'), /\.police-jeu > \.police-info-cle\{ flex:none; \}/);
   });
 
-  test('les usages d\'origine (revus par Valentin le 12 octobre 2026), et le filtre', () => {
+  test('les usages d\'origine (revus par Durzo le 12 octobre 2026), et le filtre', () => {
     const o = U.usagesDOrigine('fr');
     const noms = (police) => o.usagesDesPolices[police].map(id => o.usages.find(u => u.id === id).nom);
     assert.deepEqual(o.usages.map(u => u.nom), ['Dialogue', 'Narration', 'Écrit à la main', 'Cris', 'Onomatopées', 'Robotique', 'Machine à écrire', 'Horreur']);

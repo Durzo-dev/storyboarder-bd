@@ -85,7 +85,7 @@ describe('le plan du démarrage', () => {
       reglages: { projectsDir: ANCIEN + '\\BD' } });
     assert.deepEqual(p.reglages, { projectsDir: NOUVEAU + '\\BD' });
   });
-  test('des réglages ailleurs ne bougent pas (le cas de Valentin)', () => {
+  test('des réglages ailleurs ne bougent pas (le cas de Durzo)', () => {
     const p = planMigration({ ancien: ANCIEN, nouveau: NOUVEAU, ancienContenu: false, nouveauContenu: false,
       reglages: { projectsDir: 'C:\\WebProjects\\Storyboarder\\Projets', lastFilePath: 'C:\\WebProjects\\Storyboarder\\Projets\\a.json' } });
     assert.deepEqual(p.reglages, {});

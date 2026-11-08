@@ -2,7 +2,7 @@
 
 *[Version française](../fr/terrain-editor.md)*
 
-Shaping the ground of a Scene: relief, Zones, Paths, water. Decided with Valentin on 2–4 November
+Shaping the ground of a Scene: relief, Zones, Paths, water. Decided with Durzo on 2–4 November
 2026; shipped in 1.16.0.
 
 ## What lives where

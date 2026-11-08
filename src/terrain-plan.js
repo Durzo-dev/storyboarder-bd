@@ -8,7 +8,7 @@
  * pièces, les autres Éléments par leur place). Ce qui sait placer un Élément dans le monde (scene3d.js)
  * est PASSÉ en paramètre (`outils`) : ce fichier ne dépend pas de THREE et se teste seul.
  *
- * Décidé avec Valentin (2 novembre 2026) : l'éditeur ne s'ouvre que sur une Scène ; les Éléments y
+ * Décidé avec Durzo (2 novembre 2026) : l'éditeur ne s'ouvre que sur une Scène ; les Éléments y
  * sont visibles, ni modifiables ni déplaçables ; les Zones et Tracés ne se feront plus que là (#462b).
  */
 import { dansLeMasque, tournerLeMasque, mondeDuMasque } from './terrain-zone-pinceau.js';

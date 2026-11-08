@@ -1,6 +1,6 @@
 /**
  * @file batiment-bibliotheque.js
- * LES BÂTIMENTS DANS « MES MODÈLES » (#454a-4b, décidé avec Valentin le 23 octobre 2026). Fonctions
+ * LES BÂTIMENTS DANS « MES MODÈLES » (#454a-4b, décidé avec Durzo le 23 octobre 2026). Fonctions
  * PURES : les entrées de la bibliothèque, et la règle d'enregistrement.
  *
  * Un bâtiment est un Modèle pour l'utilisateur : il apparaît dans la même grille, rangé d'office dans

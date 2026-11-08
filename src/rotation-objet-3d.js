@@ -5,7 +5,7 @@
  * l'éditeur de bâtiment. Fonctions PURES.
  *
  * LE GESTE DÉPEND DE LA CAMÉRA, choisi au DÉBUT du geste et gardé jusqu'au relâchement (décidé avec
- * Valentin, comme les articulations : en ligne vu de côté, rotatif vu par la pointe de l'axe) :
+ * Durzo, comme les articulations : en ligne vu de côté, rotatif vu par la pointe de l'axe) :
  *   - caméra DE FACE ou presque (elle plonge de moins de 45°, `PLONGEE_PLATEAU_3D`) : un PLATEAU
  *     TOURNANT, glisser à gauche ou à droite, à 0,5° par pixel ; vers la droite, la face de l'objet
  *     tourne vers la droite. De face, le plan de rotation est vu par la tranche : tourner la souris

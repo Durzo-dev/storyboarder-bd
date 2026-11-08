@@ -659,7 +659,7 @@ describe('Le champ « Modèle » : changer de figure sans perdre la pose', () =>
     openPersonaEditor(o, 'objectModal');
     buildPersonaEditorModelUI();
     assert.equal(section.style.display, '', 'la figure posée doit rester annoncée');
-    // Demandé par Valentin : ouvert depuis la fiche d'un modèle, l'Éditeur ne change pas son modèle,
+    // Demandé par Durzo : ouvert depuis la fiche d'un modèle, l'Éditeur ne change pas son modèle,
     // pas plus que la fiche (qui n'a plus de champ « Modèle »).
     assert.equal(actions.hidden, true, 'devant un modèle importé, on ne change plus de figure');
     closePersonaEditor();

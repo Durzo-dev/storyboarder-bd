@@ -1331,7 +1331,7 @@ const confirmActionCancel = document.getElementById('confirmActionCancel');
 // `options` (#454b) : `ok`, le texte du bouton de confirmation (« Confirmer » par défaut), et
 // `danger`, qui le passe en rouge quand confirmer supprime quelque chose.
 // #434 : `masquable`, la CLÉ d'une confirmation qui offre « Ne plus afficher ce message » (choisies
-// avec Valentin : jamais une suppression de données, ni un vrai choix). Cochée puis confirmée, la clé
+// avec Durzo : jamais une suppression de données, ni un vrai choix). Cochée puis confirmée, la clé
 // est retenue (réglage `messagesMasques`) et la confirmation répond « oui » d'elle-même ensuite ;
 // annulée, rien n'est retenu. « Réafficher les messages masqués » (Configuration) les rend toutes.
 const confirmActionMasquerLigne = document.getElementById('confirmActionMasquerLigne');

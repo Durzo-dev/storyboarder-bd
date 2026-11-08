@@ -2,7 +2,7 @@
 
 *[Version française](../fr/plan-modele.md)*
 
-> **ABANDONED on 8 November 2026 (Valentin's decision).** Tried in the app, the result is still too
+> **ABANDONED on 8 November 2026 (Durzo's decision).** Tried in the app, the result is still too
 > unreliable on real plans: too much manual correction for the import to be worth it. Plan import
 > has therefore been **removed from the code entirely**: the screen, the button, the modules, the
 > model and its dependency. This document and [plan-sources.md](plan-sources.md) keep the record,
@@ -30,7 +30,7 @@ Then re-wire by hand, from that same commit:
 - `initImportDePlan` (`src/events.js`) and `tests/modal-stack.test.mjs`;
 - `npm install onnxruntime-web@1.22.0` and its three files in `build.files`.
 
-The test benches (`plans-test/`, outside git) stay on Valentin's disk.
+The test benches (`plans-test/`, outside git) stay on Durzo's disk.
 
 **Where things stood**:
 - on the bench, the model improved the figures a lot (see "The integration");
@@ -44,12 +44,12 @@ The test benches (`plans-test/`, outside git) stay on Valentin's disk.
 - another model, preferably under a more open licence (see "Other models");
 - or training our own (see the estimate below).
 
-Either way, score it first on the CubiCasa bench (`modele_banc.sh test`), then on Valentin's plans,
+Either way, score it first on the CubiCasa bench (`modele_banc.sh test`), then on Durzo's plans,
 before re-wiring the screen.
 
-> Requested by Valentin on 8 November 2026, after scoring our rules on CubiCasa5K: hand-written rules
+> Requested by Durzo on 8 November 2026, after scoring our rules on CubiCasa5K: hand-written rules
 > had plateaued (doors and windows around 20%). The question: should we use a trained (machine
-> learning) model, at what cost, under which licence? Valentin's constraint: Storyboarder is not
+> learning) model, at what cost, under which licence? Durzo's constraint: Storyboarder is not
 > meant to be sold, but the model must be **easy to unplug and remove** if that changed.
 
 ## In short
@@ -112,7 +112,7 @@ not needed while the existing model is good enough.
 
 ## The integration (#456g, 8 November 2026)
 
-Decided by Valentin: the model is integrated, and our rules remain the **fallback** when it is
+Decided by Durzo: the model is integrated, and our rules remain the **fallback** when it is
 absent.
 
 **The full chain, measured.** The model reads the plan, then our steps take over: vectorisation,
@@ -160,7 +160,7 @@ weights remain in the git history; only a history rewrite would remove them.
 
 **What the licence says, exactly.** NVIDIA's licence (section 3.3) restricts use to
 "non-commercial", which it defines as **"for research or evaluation purposes only"**. That is
-narrower than "not sold". CubiCasa5K (CC BY-NC 4.0) only forbids commercial use. It is for Valentin to
+narrower than "not sold". CubiCasa5K (CC BY-NC 4.0) only forbids commercial use. It is for Durzo to
 judge whether his use of Storyboarder fits. This is not legal advice.
 
 ## Proposed architecture: an unpluggable model
@@ -261,7 +261,7 @@ torchvision ResNet U-Net (BSD), not NVIDIA's SegFormer.
 The main risk: synthetic images that are too "clean" make a model weaker on real scans. We measure
 it, and fix it by dirtying the synthetic images more.
 
-## Decided (Valentin)
+## Decided (Durzo)
 
 - The model is integrated along this architecture (#456g, see "The integration").
 - Then, the same day, plan import is abandoned and removed from the code (see "Outcome, and how to come back to it").

@@ -160,7 +160,7 @@ et un échec de lecture n'empêche pas l'export.
 
 ## Découpage
 
-- **#444-0** Enregistrement de l'application auprès de Sketchfab (à faire par Valentin).
+- **#444-0** Enregistrement de l'application auprès de Sketchfab (à faire par Durzo).
 - **#444a** Le contrat des sources et ce document. Fait.
 - **#444b** Recherche et parcours, sans connexion : la fenêtre du store, la grille, les filtres, la
   fiche avec l'aperçu 3D, la mention Sketchfab, et une simulation hors ligne. Fait : `store.js`

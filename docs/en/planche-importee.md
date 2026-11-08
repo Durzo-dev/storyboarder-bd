@@ -2,7 +2,7 @@
 
 *[Version française](../fr/planche-importee.md)*
 
-> Requested by Valentin on 12 October 2026. The code: `src/planche-importee.js` (the decisions,
+> Requested by Durzo on 12 October 2026. The code: `src/planche-importee.js` (the decisions,
 > tested under Node), `src/import-planche-ui.js` (the check), and the marked branches in `draw.js`,
 > `events.js` and `sidebar.js`.
 
@@ -36,7 +36,7 @@ and move the page there. Declining keeps it, with bands.
 
 ## The detection
 
-Rewritten on 13 October 2026 on fifteen real pages provided by Valentin (manga, Franco-Belgian,
+Rewritten on 13 October 2026 on fifteen real pages provided by Durzo (manga, Franco-Belgian,
 comics, double spreads, screenshots with their frame), kept outside the repository in
 `apercus/planches-test/`. The first version (a cut on full lines of paper only) found a single
 Panel on most of them.
@@ -55,7 +55,7 @@ Panel on most of them.
 Panels (returned as their rectangle), a Panel inset in another, borderless Panels on white paper
 (they break up).
 
-**Bubbles are not detected** (decided with Valentin).
+**Bubbles are not detected** (decided with Durzo).
 
 ## What is persisted
 

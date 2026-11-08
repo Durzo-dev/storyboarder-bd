@@ -4,7 +4,7 @@
 
 > 🇬🇧 [English version](README.md)
 
-**Version 1.16.29**
+**Version 1.16.30**
 
 **Application de découpage de Bandes Dessinées** : outil de storyboard pour créer, organiser et visualiser des planches de BD avec rendu 3D des scènes.
 
@@ -133,4 +133,4 @@ Vous pouvez librement utiliser, modifier et redistribuer ce projet, **à conditi
 
 ## 👤 Auteur
 
-**Valentin**, [@Durzo-dev](https://github.com/Durzo-dev)
+**Durzo**, [@Durzo-dev](https://github.com/Durzo-dev)

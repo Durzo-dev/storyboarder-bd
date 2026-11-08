@@ -2,7 +2,7 @@
 
 *[Version française](../fr/building-research.md)*
 
-> Task #455, requested by Valentin on 13 October 2026: "an exhaustive analysis of architect
+> Task #455, requested by Durzo on 13 October 2026: "an exhaustive analysis of architect
 > software and house-building games (the Sims included), to draw features and recommendations from
 > them". It prepares #454 (floors and basements) and #456 (a building from a photo of a floor plan),
 > and it deliberately comes before #454: levels touch the format saved in Projects (see
@@ -343,7 +343,7 @@ A **building file** stored in the model library, like an imported model, and lis
 In a Scene or a Panel, **placing a building makes an independent copy**: the Element embeds the
 whole building (`batiment: { … }`) and keeps the original file name (`batimentSource`, for
 information). Editing that copy opens the editor on it, without touching the file or other copies. **"Save to the library"** turns an edited copy back
-into a Model, to reuse it elsewhere (confirmed by Valentin on 22 October 2026).
+into a Model, to reuse it elsewhere (confirmed by Durzo on 22 October 2026).
 
 A Scene Element placed **inside** a building (Character, object, model) carries, as ADDED fields:
 `dansBatiment` (the building Element's id), `niveauId` and, optionally, `pieceId`. Its height is
@@ -441,7 +441,7 @@ Buildings already traced in Scenes (wall Elements, `pieceId`, `batimentNames`, `
 remain READ and are **converted** on opening into one-level buildings, in the same place: nothing
 moves on screen.
 
-## Valentin's decisions (22 October 2026)
+## Durzo's decisions (22 October 2026)
 
 1. **Levels**: the usual case is one basement and three floors, but with no limit (tower blocks).
    The interface is designed for about half a dozen levels and stays usable beyond.
@@ -480,7 +480,7 @@ moves on screen.
   (building, floor, room). Done.
 - **#454f** DONE (27 October 2026): the Scene's "Build a building" tool is removed, and with it, on
   right-click, "Add → Walls", "Add → Wall openings" and "Add → Buildings"; building is done ONLY in
-  the editor ("Create a building"). Valentin's decision: walls, openings and rooms already placed in
+  the editor ("Create a building"). Durzo's decision: walls, openings and rooms already placed in
   Projects stay AS THEY ARE (rendered, selectable, editable); a traced room is taken into the editor
   with "Modify" (a copy).
 - **#458** the automatic roof. **#458a DONE** (27 October 2026, `src/batiment-toits.js`): one roof PER

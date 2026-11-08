@@ -1,6 +1,6 @@
 /**
  * @file batiment-cours.js
- * LES COURS d'un bâtiment (#458c, décidé avec Valentin le 27 octobre 2026). Fonctions PURES.
+ * LES COURS d'un bâtiment (#458c, décidé avec Durzo le 27 octobre 2026). Fonctions PURES.
  *
  * Une cour est une pièce devenue un VIDE (`piece.vide`, cf. batiment-pieces.js) : ouverte jusqu'au
  * ciel. Créée à un niveau qui a des étages au-dessus, elle doit donc s'y prolonger : à chaque étage

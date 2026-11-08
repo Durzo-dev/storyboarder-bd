@@ -2,7 +2,7 @@
 
 *[English version](../en/formats.md)*
 
-> Demandé par Valentin le 22 octobre 2026 (#453). Le code : `src/formats.js` (les décisions, testées
+> Demandé par Durzo le 22 octobre 2026 (#453). Le code : `src/formats.js` (les décisions, testées
 > sous Node), `src/formats-ui.js` (la modale), et la liste des formats d'un Tome dans
 > `project-tree.js`.
 

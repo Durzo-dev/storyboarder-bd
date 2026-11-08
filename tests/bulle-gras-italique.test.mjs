@@ -1,7 +1,7 @@
 /**
  * tests/bulle-gras-italique.test.mjs : le gras et l'italique du texte d'une Bulle (#423, demandé).
  * Deux interrupteurs cumulables, toujours actifs ; marqués « simulé » quand la police n'a pas la
- * variante (Bangers, Creepster, polices importées incomplètes), jamais grisés (décidé par Valentin).
+ * variante (Bangers, Creepster, polices importées incomplètes), jamais grisés (décidé par Durzo).
  */
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

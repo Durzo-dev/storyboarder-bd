@@ -2,7 +2,7 @@
 
 *[English version](../en/non-visible.md)*
 
-Tâche #449, demandée par Valentin le 7 octobre 2026. La liste des Éléments d'une Case rangeait en
+Tâche #449, demandée par Durzo le 7 octobre 2026. La liste des Éléments d'une Case rangeait en
 bas, sous « Hors champ », ceux dont la boîte projetée ne touchait pas le cadre. Un Élément dans le
 cadre mais entièrement caché derrière un mur restait dans la liste principale, et les crédits des
 exports (#444f) le créditaient. La sous-section s'appelle désormais « Non visible » et couvre les

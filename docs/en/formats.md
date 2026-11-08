@@ -2,7 +2,7 @@
 
 *[Version française](../fr/formats.md)*
 
-> Requested by Valentin on 22 October 2026 (#453). The code: `src/formats.js` (the decisions, tested
+> Requested by Durzo on 22 October 2026 (#453). The code: `src/formats.js` (the decisions, tested
 > under Node), `src/formats-ui.js` (the modal), and a Volume's format list in `project-tree.js`.
 
 ## The rules

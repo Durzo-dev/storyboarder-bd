@@ -1,6 +1,6 @@
 /**
  * @file batiment-murs-devant.js
- * #459b, LES MURS DE DEVANT (décidé avec Valentin le 2 novembre 2026) : comme les « murs découpés »
+ * #459b, LES MURS DE DEVANT (décidé avec Durzo le 2 novembre 2026) : comme les « murs découpés »
  * des Sims, les murs ENTRE LA CAMÉRA ET L'INTÉRIEUR d'un bâtiment s'effacent seuls, et reviennent quand
  * la caméra tourne : pour cadrer une Case DANS un bâtiment sans que ces murs gênent. Ils sont MASQUÉS
  * (le rendu « abaissé en muret », essayé d'abord, a été retiré : sans usage). Visibles par défaut.

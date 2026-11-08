@@ -80,7 +80,7 @@ const DOSSIER = join(RACINE, 'assets', 'fonts');
  *
  * `italique` : la famille a de VRAIS italiques, téléchargés avec elle (#423, demandé : une police de
  * Bulle doit être complète, normal, gras, italique et gras italique dessinés par son auteur). Les
- * polices de Bulles ont été choisies pour ça, une par usage, avec Valentin le 11 octobre 2026 ;
+ * polices de Bulles ont été choisies pour ça, une par usage, avec Durzo le 11 octobre 2026 ;
  * Bangers et Creepster, sans équivalent complet, n'existent qu'en un style.
  */
 export const FAMILLES = [

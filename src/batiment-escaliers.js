@@ -298,7 +298,7 @@ const dedansFace = (p, face) => dedans(p, face.points) && !(face.trous || []).so
  * rien. Rend `{ changements, deplacement }` (ce qu'il faut appliquer, sa nouvelle position comprise
  * s'il doit bouger, et la distance parcourue) ou `{ erreur }` ('mur', 'sansEtage', 'hors').
  *
- * LES CONTRAINTES, dans cet ordre (demandé par Valentin le 23 octobre 2026) :
+ * LES CONTRAINTES, dans cet ordre (demandé par Durzo le 23 octobre 2026) :
  *   1. un escalier qui est dans une pièce y RESTE : toute place essayée est dans CETTE pièce, et c'est
  *      toute la pièce qui est explorée (pas seulement les environs) ;
  *   2. les murs qu'il touche (ses « aimants »), il les touche encore si c'est possible ; sinon on en

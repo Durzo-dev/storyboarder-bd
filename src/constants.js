@@ -517,12 +517,12 @@ export const BUBBLE_FONT_DEFAULT = 'Comic Neue';
 // on Windows and visually close, rather than falling back to the same generic font for every
 // choice. Once the original font files are added locally to the project, this fallback
 // becomes unnecessary and the real font displays automatically.
-// ⚠️ LES POLICES DES BULLES, UNE PAR USAGE (#423, choisies avec Valentin le 11 octobre 2026). Huit
+// ⚠️ LES POLICES DES BULLES, UNE PAR USAGE (#423, choisies avec Durzo le 11 octobre 2026). Huit
 // sont COMPLÈTES : normal, gras, italique et gras italique dessinés par leur auteur. Bangers et
 // Creepster n'existent qu'en un style, faute d'équivalent libre et complet : leurs variantes seront
 // simulées, et l'application le dira. `gras` / `italique` : 'vrai' ou 'simule'. L'ordre est celui de
 // la liste déroulante. Les fichiers sont dans assets/fonts (tools/fetch-fonts.mjs, même liste).
-// Les USAGES D'ORIGINE (revus par Valentin le 12 octobre 2026) : partagés entre les polices, comme
+// Les USAGES D'ORIGINE (revus par Durzo le 12 octobre 2026) : partagés entre les polices, comme
 // des tags. L'utilisateur les change ensuite dans « Mes polices » (src/polices-utilisateur.js).
 export const USAGES_POLICES = Object.freeze([
   { cle: 'dialogue', fr: 'Dialogue', en: 'Dialogue' },
@@ -536,7 +536,7 @@ export const USAGES_POLICES = Object.freeze([
 ]);
 
 // ⚠️ DEUX SOURCES, UNE TABLE. Les dix premières viennent de Google Fonts (tools/fetch-fonts.mjs,
-// assets/fonts/) ; les suivantes de DaFont (#423, choisies avec Valentin le 12 octobre 2026 :
+// assets/fonts/) ; les suivantes de DaFont (#423, choisies avec Durzo le 12 octobre 2026 :
 // tools/import-dafont.mjs, assets/fonts/dafont/, src/polices-dafont.js qu'il génère). `licence` :
 // une clé de LICENCES_POLICES.
 export const POLICES_GOOGLE = Object.freeze([
@@ -586,7 +586,7 @@ export function policeDeBulle(nom){
 /**
  * Ce qu'une police sait faire en gras et en italique : 'vrai' (dessiné par son auteur) ou 'simule'
  * (le navigateur l'épaissit ou le penche, et l'application le DIT). Il n'y a pas de troisième cas :
- * une variante manquante est SIMULÉE, jamais refusée (décidé par Valentin). Une police inconnue de
+ * une variante manquante est SIMULÉE, jamais refusée (décidé par Durzo). Une police inconnue de
  * la table (importée, #423) : simulée tant qu'on ne sait rien d'elle. PURE.
  */
 export function variantesDePolice(nom){

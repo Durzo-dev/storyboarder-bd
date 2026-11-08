@@ -5,7 +5,7 @@
 
 ## Dix polices intégrées, une par usage
 
-Choisies avec Valentin le 11 octobre 2026, à partir d'une règle : **une police de Bulle est
+Choisies avec Durzo le 11 octobre 2026, à partir d'une règle : **une police de Bulle est
 complète**, c'est-à-dire que le normal, le gras, l'italique et le gras italique sont dessinés par son
 auteur. Les dix polices d'avant n'en comptaient qu'une ; huit sont donc remplacées, et les candidates
 ont été triées pour qu'aucune ne double une autre.
@@ -23,7 +23,7 @@ ont été triées pour qu'aucune ne double une autre.
 | Machine à écrire | Courier Prime | complète |
 | Horreur | Creepster | un seul style |
 
-Les usages d'origine ont été revus par Valentin le 12 octobre 2026 (`USAGES_POLICES` et
+Les usages d'origine ont été revus par Durzo le 12 octobre 2026 (`USAGES_POLICES` et
 `POLICES_BULLES`, `src/constants.js`) ; chacun les change ensuite dans « Mes polices ».
 
 Bangers et Creepster n'ont pas d'équivalent libre et complet : elles restent, et leurs variantes
@@ -41,7 +41,7 @@ tient l'accord avec l'outil, la liste des Bulles et `BUBBLE_FONT_PRELOAD_LIST`.
 
 ## Cinquante-cinq polices venues de DaFont
 
-Ajoutées le 12 octobre 2026, avec Valentin. DaFont n'a pas d'API et son libellé de licence n'est
+Ajoutées le 12 octobre 2026, avec Durzo. DaFont n'a pas d'API et son libellé de licence n'est
 « qu'une indication » : les zips ont été téléchargés à la main dans `apercus/dafont/` (hors dépôt),
 et la licence de **chaque** police lue dans son zip et dans ses métadonnées. N'ont été gardées que
 celles dont la licence écrite permet la redistribution **sans demander l'accord de l'auteur** (CC0,
@@ -71,7 +71,7 @@ l'utilisateur a vidée le reste.
 Deux interrupteurs, **G** et **I**, cumulables, sous la police d'une Bulle. Deux champs ajoutés,
 `bulleGras` et `bulleItalique`.
 
-**Une variante manquante est simulée, jamais refusée** (décidé par Valentin) : le navigateur épaissit
+**Une variante manquante est simulée, jamais refusée** (décidé par Durzo) : le navigateur épaissit
 ou penche la police, et l'application le dit, par un `~` sur l'interrupteur et une infobulle. Une
 première version grisait l'interrupteur ; elle a été écartée, parce qu'une police importée incomplète
 doit rester utilisable.

@@ -7,7 +7,7 @@
  * LE MODÈLE, ET POURQUOI IL NE TOUCHE PAS À `tome.pages`
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  *
- * Décisions de Valentin : les chapitres sont FACULTATIFS, et la numérotation des Planches reste
+ * Décisions de Durzo : les chapitres sont FACULTATIFS, et la numérotation des Planches reste
  * CONTINUE dans le Tome. D'où deux champs ajoutés, rien de renommé (cf. docs/en/persisted-data.md) :
  *
  *   tome.chapitres = [{ id, nom }]   l'ordre des chapitres

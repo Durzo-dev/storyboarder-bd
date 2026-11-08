@@ -90,7 +90,7 @@ const USAGES_BATIMENT_LIVREES = {
 };
 
 /**
- * #458c : LES COUVERTURES DE TOIT LIVRÉES (choisies par Valentin parmi ses textures téléchargées,
+ * #458c : LES COUVERTURES DE TOIT LIVRÉES (choisies par Durzo parmi ses textures téléchargées,
  * grains repris tels qu'ils avaient été cuits). Usage `toit` seulement ; `dimensions` : la taille
  * réelle d'une tuile du grain, en mètres (celle de la texture d'origine).
  */

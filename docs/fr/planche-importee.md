@@ -2,7 +2,7 @@
 
 *[English version](../en/planche-importee.md)*
 
-> Demandé par Valentin le 12 octobre 2026. Le code : `src/planche-importee.js` (les décisions,
+> Demandé par Durzo le 12 octobre 2026. Le code : `src/planche-importee.js` (les décisions,
 > testées sous Node), `src/import-planche-ui.js` (la vérification), et les branches marquées dans
 > `draw.js`, `events.js` et `sidebar.js`.
 
@@ -38,7 +38,7 @@ de créer un nouveau Tome à ce format et d'y placer la planche. Refuser la gard
 
 ## La détection
 
-Réécrite le 13 octobre 2026 sur quinze planches réelles fournies par Valentin (manga, BD
+Réécrite le 13 octobre 2026 sur quinze planches réelles fournies par Durzo (manga, BD
 franco-belge, comics, doubles pages, captures d'écran avec leur cadre), gardées hors dépôt dans
 `apercus/planches-test/`. La première version (une découpe sur les seules lignes de papier pleines)
 ne trouvait qu'une Case sur la plupart d'entre elles.
@@ -57,7 +57,7 @@ ne trouvait qu'une Case sur la plupart d'entre elles.
 Cases posées dessus, des Cases inclinées (rendues par leur rectangle), une Case incrustée dans une
 autre, des Cases sans bordure sur papier blanc (elles s'émiettent).
 
-**Les bulles ne sont pas détectées** (décidé avec Valentin).
+**Les bulles ne sont pas détectées** (décidé avec Durzo).
 
 ## Ce qui est persisté
 

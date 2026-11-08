@@ -4,7 +4,7 @@
  *
  * Un Élément `type: 'objet3d'`, `objType: 'batiment'` (une valeur de discriminant AJOUTÉE, rien de
  * renommé), qui EMBARQUE son bâtiment (`batiment`, la forme de batiment.js) : c'est la COPIE
- * INDÉPENDANTE décidée avec Valentin. Retoucher le fichier de la bibliothèque ne change pas les
+ * INDÉPENDANTE décidée avec Durzo. Retoucher le fichier de la bibliothèque ne change pas les
  * bâtiments déjà placés ; « Modifier » sur un bâtiment placé retouche sa copie, et seulement elle.
  *
  * Il hérite du reste d'un objet 3D ordinaire : la position, la rotation, l'aimantation au Sol, la

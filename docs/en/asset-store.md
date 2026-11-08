@@ -160,7 +160,7 @@ and a failure to read them does not stop the export.
 
 ## Breakdown
 
-- **#444-0** Registering the application with Sketchfab (Valentin's task).
+- **#444-0** Registering the application with Sketchfab (Durzo's task).
 - **#444a** The source contract and this document. Done.
 - **#444b** Search and browsing, no login: the store window, grid, filters, detail view with the 3D
   preview, the Sketchfab credit, and an offline simulation. Done: `store.js` (requests, main

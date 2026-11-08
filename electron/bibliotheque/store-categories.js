@@ -7,7 +7,7 @@
  * aucune catégorie ne fait doublon, et aucune ne renvoie vide sur une source par construction :
  * celles qu'une source n'a pas (Poly Haven n'a pas d'animaux) y renvoient simplement zéro modèle.
  *
- * RÈGLE (Valentin) : rassembler quand c'est possible, sinon AJOUTER la catégorie plutôt que de
+ * RÈGLE (Durzo) : rassembler quand c'est possible, sinon AJOUTER la catégorie plutôt que de
  * l'écarter. « News & Politics » de Sketchfab n'a d'équivalent nulle part : elle a donc la sienne,
  * « Actualité & politique », vide chez Poly Haven.
  *

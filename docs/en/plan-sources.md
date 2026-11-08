@@ -7,7 +7,7 @@
 > to it".
 
 > Task #456, "create a building from a photo of an architect's plan". Before writing the tool,
-> Valentin asked on 4 November 2026 for plan sources "from very old ones (several centuries for some
+> Durzo asked on 4 November 2026 for plan sources "from very old ones (several centuries for some
 > manors or castles) to contemporary ones", and for each period's standards where they exist. This
 > document is the result. It extends the "From plan photo to building" section of
 > [building-research.md](building-research.md).
@@ -98,7 +98,7 @@ Metropolitan Museum, the Royal Academy and CESR Tours.
 
 ### 17th–18th centuries in France: toises, washes and colour codes
 
-This is the period of the châteaux and manors Valentin targets first. Conventions were set by
+This is the period of the châteaux and manors Durzo targets first. Conventions were set by
 **military engineers**, then passed to architects.
 
 **Henri Gautier, *L'art de dessiner proprement les plans…* (1697)** (read in full text):
@@ -366,9 +366,9 @@ source. Public-domain status is to be checked image by image.
 | Cadastre | Paris cadastral plans 1809–1856 (data.gouv.fr); departmental archives | Outline only |
 | Contemporary, listings | CubiCasa5K (Zenodo) | Three styles, SVG annotations |
 | Contemporary, CAD | FloorPlanCAD (about 15,600 plans, 30 categories); CVC-FP (122 plans); MLSTRUCT-FP (954 plans) | Hatching, thin lines, large buildings |
-| Valentin's plans | his own plans | The real case |
+| Durzo's plans | his own plans | The real case |
 
-## Valentin's decisions (4 November 2026)
+## Durzo's decisions (4 November 2026)
 
 1. **Units** for the scale entry: the list above suits.
 2. **Formats**: every common image format, and PDF, from the first version.

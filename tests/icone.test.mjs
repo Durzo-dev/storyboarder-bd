@@ -1,5 +1,5 @@
 /**
- * L'icône de l'application (assets/icone, livrée par Valentin le 27 octobre 2026) : branchée sur
+ * L'icône de l'application (assets/icone, livrée par Durzo le 27 octobre 2026) : branchée sur
  * l'installeur et la fenêtre, et exclue de la licence CC (tous droits réservés).
  */
 import { test } from 'node:test';

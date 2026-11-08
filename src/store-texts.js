@@ -103,7 +103,7 @@ const T = {
     telecharger: 'Télécharger',
     noteTelechargement: (source) => (source === 'sketchfab'
       ? 'Le téléchargement demandera de se connecter à Sketchfab : il arrive dans une prochaine version.'
-      // Rien à dire quand on peut télécharger (retour de Valentin) : le bouton dit déjà tout.
+      // Rien à dire quand on peut télécharger (retour de Durzo) : le bouton dit déjà tout.
       : ''),
     texturesLibelle: 'Qualité des textures',
     optionResolution: (res, p) => `${res} · ${parseInt(res, 10) * 1024} px · ${p}`,

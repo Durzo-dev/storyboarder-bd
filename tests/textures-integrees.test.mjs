@@ -219,7 +219,7 @@ describe('le marquage au sol d\'une route (demandé, coché par défaut)', () =>
   });
 });
 
-// #458c : trois couvertures de toit livrées (choisies par Valentin dans ses textures téléchargées).
+// #458c : trois couvertures de toit livrées (choisies par Durzo dans ses textures téléchargées).
 describe('les couvertures de toit livrées', () => {
   test('trois, pour le toit seulement, avec leur grain, leur provenance et une taille de tuile', () => {
     const toits = I.texturesIntegrees().filter(t => t.toit);

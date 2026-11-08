@@ -5,7 +5,7 @@
 
 ## Ten built-in fonts, one per use
 
-Chosen with Valentin on 11 October 2026, from one rule: **a bubble font is complete**, meaning the
+Chosen with Durzo on 11 October 2026, from one rule: **a bubble font is complete**, meaning the
 regular, bold, italic and bold italic are drawn by its designer. The previous ten counted only one;
 eight are therefore replaced, and the candidates were sorted so that none duplicates another.
 
@@ -22,7 +22,7 @@ eight are therefore replaced, and the candidates were sorted so that none duplic
 | Typewriter | Courier Prime | complete |
 | Horror | Creepster | one style |
 
-The original uses were revised by Valentin on 12 October 2026 (`USAGES_POLICES` and
+The original uses were revised by Durzo on 12 October 2026 (`USAGES_POLICES` and
 `POLICES_BULLES`, `src/constants.js`); everyone changes them afterwards in "My fonts".
 
 Bangers and Creepster have no free and complete equivalent: they stay, and their styles are
@@ -39,7 +39,7 @@ draws it with its replacement (`POLICES_BULLES_RETIREES`). See [persisted-data.m
 
 ## Fifty-five fonts from DaFont
 
-Added on 12 October 2026, with Valentin. DaFont has no API and its licence label is "only an
+Added on 12 October 2026, with Durzo. DaFont has no API and its licence label is "only an
 indication": the zips were downloaded by hand into `apercus/dafont/` (outside the repository), and
 the licence of **each** font was read in its zip and in its metadata. Only those whose written
 licence allows redistribution **without asking the author** were kept (CC0, public domain, SIL OFL
@@ -68,7 +68,7 @@ user emptied stays empty.
 Two toggles, **B** and **I**, combinable, under a bubble's font. Two added fields, `bulleGras` and
 `bulleItalique`.
 
-**A missing style is simulated, never refused** (Valentin's decision): the browser thickens or
+**A missing style is simulated, never refused** (Durzo's decision): the browser thickens or
 slants the font, and the application says so, with a `~` on the toggle and a tooltip. A first
 version greyed the toggle out; it was dropped, because an incomplete imported font must stay usable.
 

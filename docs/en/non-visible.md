@@ -2,7 +2,7 @@
 
 *[Version française](../fr/non-visible.md)*
 
-Task #449, asked for by Valentin on 7 October 2026. The list of a Panel's Elements put at the
+Task #449, asked for by Durzo on 7 October 2026. The list of a Panel's Elements put at the
 bottom, under "Off-frame", those whose projected box did not touch the frame. An Element inside the
 frame but entirely hidden behind a wall stayed in the main list, and the export credits (#444f)
 credited it. The sub-section is now called "Not visible" and covers both cases; the credits rely on

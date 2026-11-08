@@ -1,6 +1,6 @@
 /**
  * @file formats.js
- * Les FORMATS d'un Projet (#453, décidé avec Valentin le 22 octobre 2026). Fonctions PURES : elles
+ * Les FORMATS d'un Projet (#453, décidé avec Durzo le 22 octobre 2026). Fonctions PURES : elles
  * lisent et modifient la liste et les Tomes passés en argument, rien d'autre.
  *
  * ═══════════════════════════════════════════════════════════════════════════════════════════════

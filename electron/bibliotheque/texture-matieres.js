@@ -1,6 +1,6 @@
 /**
  * texture-matieres.js, LES MATIÈRES ET LEURS USAGES du store de textures (#446a, table validée par
- * Valentin le 25 octobre 2026).
+ * Durzo le 25 octobre 2026).
  *
  * Deux niveaux :
  *   - la MATIÈRE est la catégorie qu'on parcourt (comme les 18 catégories communes des modèles).

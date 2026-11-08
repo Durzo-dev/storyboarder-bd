@@ -1,7 +1,7 @@
 /**
  * tests/import-dafont.test.mjs : les polices venues de DaFont (#423), et leurs licences.
  *
- * L'outil lit des zips qui ne sont PAS dans le dépôt (apercus/dafont/, chez Valentin) : on ne peut
+ * L'outil lit des zips qui ne sont PAS dans le dépôt (apercus/dafont/, chez Durzo) : on ne peut
  * pas le relancer ici. On tient donc ses décisions pures, et surtout ce qu'il a ÉCRIT dans le dépôt :
  * chaque police proposée a ses fichiers, sa feuille, et sa licence à côté d'elle.
  */

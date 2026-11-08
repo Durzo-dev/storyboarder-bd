@@ -35,7 +35,7 @@ describe('Les entrées', () => {
     assert.equal(fauteuil.attribution.source, 'polyhaven');
     const chaise = par(e, 'chaise.glb');
     assert.equal(chaise.titre, 'chaise');
-    // Plus de devinette (retour de Valentin) : « chaise » ne suffit pas à dire Mobilier.
+    // Plus de devinette (retour de Durzo) : « chaise » ne suffit pas à dire Mobilier.
     assert.equal(chaise.categorie, NON_CLASSE);
     assert.equal('categorieDevinee' in chaise, false);
     assert.equal(par(e, 'disparu.glb').categorie, NON_CLASSE);
@@ -93,7 +93,7 @@ describe('Articulés ou statiques', () => {
   });
 });
 
-describe('Plus de catégorie devinée (retour de Valentin)', () => {
+describe('Plus de catégorie devinée (retour de Durzo)', () => {
   test('ni le nom du fichier ni ses nœuds ne choisissent une catégorie : Non classé', () => {
     const e = entreesLocales({ fichiers: [{ nom: 'labrador_dog.glb' }, { nom: 'scene.glb' }], metas: { 'scene.glb': { noms: ['Tree_01', 'Leaves'], dimensions: [1, 2, 3] } } });
     assert.ok(e.every(x => x.categorie === NON_CLASSE));

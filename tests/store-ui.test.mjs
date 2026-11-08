@@ -117,7 +117,7 @@ describe('le câblage', () => {
     assert.ok(c.indexOf('sources.rechercheNormalisee(params)') < c.indexOf('module.urlRecherche(recherche)'));
     assert.match(c, /return sources\.pageAffichable\(module\.pageNormalisee\(json\), recherche\);/);
   });
-  test('retours de Valentin (6 octobre 2026) : une seule zone défile, la fiche remplace la liste, une ligne par licence', () => {
+  test('retours de Durzo (6 octobre 2026) : une seule zone défile, la fiche remplace la liste, une ligne par licence', () => {
     const css = lire('src/style.css');
     const html = lire('src/index.html');
     assert.match(css, /\.store-grille\[hidden\], \.store-fiche\[hidden\], \.store-filtres\[hidden\]/);
@@ -129,7 +129,7 @@ describe('le câblage', () => {
     assert.match(css, /\.modal-box \.store-filtres select\{ flex:1 1 180px; max-width:260px; width:auto; margin:0; \}/);
     assert.equal(textesStore('fr').ouvrir, 'Bibliothèque de modèles');
   });
-  test('retours de Valentin (6 octobre 2026, 2e passe)', () => {
+  test('retours de Durzo (6 octobre 2026, 2e passe)', () => {
     const f = UI.slice(UI.indexOf('function ouvrirFiche'));
     // « null » écrit dans la fiche : les enfants conditionnels absents sont retirés.
     // L'aperçu 3D se BASCULE, et revenir à l'image le décharge.
@@ -143,7 +143,7 @@ describe('le câblage', () => {
     assert.ok(!lire('src/index.html').includes('storeChercherBtn'));
     assert.match(UI, /minuterie = setTimeout\(\(\) => chercher\(\), PAUSE_SAISIE_MS\);/);
   });
-  test('retours de Valentin (3e passe) : le bouton Télécharger ne sort plus de la fiche', () => {
+  test('retours de Durzo (3e passe) : le bouton Télécharger ne sort plus de la fiche', () => {
     const css = lire('src/style.css');
     // `.nav-btn` porte width:100% : sans width:auto, « Retour » prenait toute la ligne et poussait
     // « Télécharger » hors de la fiche (barre de défilement horizontale sur la capture).
@@ -151,14 +151,14 @@ describe('le câblage', () => {
     assert.match(css, /\.store-lien-bouton\{[^}]*justify-content:center;/);
     assert.ok(!UI.includes("'← ' + t.fermerFiche"));
   });
-  test('retours de Valentin (4e passe) : la fiche cache la recherche et les filtres, et les rend au retour', () => {
+  test('retours de Durzo (4e passe) : la fiche cache la recherche et les filtres, et les rend au retour', () => {
     const f = UI.slice(UI.indexOf('function ouvrirFiche'), UI.indexOf('function fermerFiche'));
     const r = UI.slice(UI.indexOf('function fermerFiche'));
     assert.match(f, /\$\('storeFormulaire'\)\.hidden = true;/);
     assert.match(r, /\$\('storeFormulaire'\)\.hidden = false;/);
     assert.match(lire('src/style.css'), /\.store-filtres\[hidden\]\{ display:none; \}/);
   });
-  test('retours de Valentin (5e passe) : deux colonnes, boutons du bas toujours visibles', () => {
+  test('retours de Durzo (5e passe) : deux colonnes, boutons du bas toujours visibles', () => {
     const f = UI.slice(UI.indexOf('function ouvrirFiche'), UI.indexOf('function fermerFiche'));
     assert.match(f, /el\('div', \{ classe: 'store-fiche-gauche' \}, \[visuel, boutons\]\)/);
     assert.match(f, /el\('div', \{ classe: 'store-fiche-droite' \}, droite\.filter\(Boolean\)\)/);

@@ -15,7 +15,7 @@ const sources = require('../electron/bibliotheque/store-sources.js');
 
 describe('La liste commune', () => {
   test('chaque catégorie Sketchfab relevée a SA catégorie commune, une seule ; aucune n\'est écartée', () => {
-    // Règle de Valentin : rassembler quand c'est possible, sinon ajouter. News & Politics a la sienne.
+    // Règle de Durzo : rassembler quand c'est possible, sinon ajouter. News & Politics a la sienne.
     const sansEquivalent = sketchfab.CATEGORIES.filter(c => !cats.depuisSketchfab(c.slug)).map(c => c.slug);
     assert.deepEqual(sansEquivalent, []);
     assert.equal(cats.depuisSketchfab('news-politics'), 'actualite');

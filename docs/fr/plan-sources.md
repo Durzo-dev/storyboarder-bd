@@ -6,7 +6,7 @@
 > référence pour y revenir : voir [plan-modele.md](plan-modele.md), « Bilan, et comment y revenir ».
 
 > Tâche #456, « créer un bâtiment à partir d'une photo de plan d'architecte ». Avant d'écrire
-> l'outil, Valentin a demandé, le 4 novembre 2026, de chercher des sources de plans, « des sources
+> l'outil, Durzo a demandé, le 4 novembre 2026, de chercher des sources de plans, « des sources
 > très anciennes (plusieurs siècles pour certains manoirs ou châteaux) à des sources
 > contemporaines », et les normes de chaque période quand il y en a. Ce document en est le
 > résultat ; il complète la section « De la photo de plan au bâtiment » de
@@ -102,7 +102,7 @@ la Morgan Library, au Metropolitan Museum, à la Royal Academy et au CESR de Tou
 
 ### XVIIe-XVIIIe siècles en France : toises, lavis et codes de couleur
 
-C'est la période des châteaux et des manoirs que Valentin vise en premier. Les conventions s'y
+C'est la période des châteaux et des manoirs que Durzo vise en premier. Les conventions s'y
 fixent par les **ingénieurs militaires**, puis passent aux architectes.
 
 **Henri Gautier, *L'art de dessiner proprement les plans…* (1697)** (lu dans le texte) :
@@ -386,9 +386,9 @@ reste chez sa source. Le domaine public est à vérifier image par image.
 | Cadastre | Plans cadastraux de Paris 1809-1856 (data.gouv.fr) ; archives départementales | Contour seul |
 | Contemporain, annonces | CubiCasa5K (Zenodo) | Trois styles, annotations SVG |
 | Contemporain, CAO | FloorPlanCAD (environ 15 600 plans, 30 catégories) ; CVC-FP (122 plans) ; MLSTRUCT-FP (954 plans) | Hachures, traits fins, grands immeubles |
-| Plans de Valentin | ses propres plans | Le cas réel |
+| Plans de Durzo | ses propres plans | Le cas réel |
 
-## Décisions de Valentin (4 novembre 2026)
+## Décisions de Durzo (4 novembre 2026)
 
 1. **Les unités** de la saisie d'échelle : la liste ci-dessus convient.
 2. **Les formats** : tous les formats d'image courants, et le PDF, dès la première version.

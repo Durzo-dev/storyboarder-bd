@@ -468,7 +468,7 @@ describe('Le câblage de l\'import', () => {
       'le sélecteur de Type reste proposé sur un modèle importé');
   });
 
-  test('RÉGRESSION : la fiche n\'a PLUS de champ « Modèle » (retiré à la demande de Valentin)', () => {
+  test('RÉGRESSION : la fiche n\'a PLUS de champ « Modèle » (retiré à la demande de Durzo)', () => {
     // Il y en eut deux (« Fichier », puis « Modèle » sélecteur, #343), fusionnés, puis passés en
     // lecture seule, puis retirés : on ne change pas le modèle d'un Élément, et l'aperçu le montre.
     assert.doesNotMatch(HTML, /objectModelFileField|objectModelFileValue|objectFigureField|objectFigureSelect/);

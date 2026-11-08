@@ -1,5 +1,5 @@
 /**
- * #434 : « Ne plus afficher ce message » sur les confirmations choisies avec Valentin, et
+ * #434 : « Ne plus afficher ce message » sur les confirmations choisies avec Durzo, et
  * « Réafficher les messages masqués » dans la Configuration.
  */
 import { test } from 'node:test';

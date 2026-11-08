@@ -30,7 +30,7 @@ export const SQUELETTES = ['tous', 'articules', 'statiques'];
 export const TRIS_LOCAUX = ['nom', 'recents'];
 
 /*
- * PLUS DE CATÉGORIE DEVINÉE (retour de Valentin). Un modèle importé à la main sans catégorie de
+ * PLUS DE CATÉGORIE DEVINÉE (retour de Durzo). Un modèle importé à la main sans catégorie de
  * source arrive en « Non classé », et l'utilisateur choisit la bonne dans la fiche. La devinette par
  * mots-clés se trompait assez pour qu'on doive la signaler (« devinée ») : mieux vaut un « Non
  * classé » honnête qu'une catégorie fausse présentée comme vraie.
@@ -105,7 +105,7 @@ export function filtrerEntrees(entrees, { texte = '', categorie = null, usage = 
   const voulus = Array.isArray(tags) ? tags : [];
   let liste = (entrees || []).filter(e => {
     if (categorie && e.categorie !== categorie) return false;
-    // Plusieurs tags : le modèle doit les porter TOUS (choix de Valentin, chaque tag resserre).
+    // Plusieurs tags : le modèle doit les porter TOUS (choix de Durzo, chaque tag resserre).
     if (voulus.length && !voulus.every(id => (e.tags || []).includes(id))) return false;
     if (usage === 'scenes' && !e.scenes.length) return false;
     if (usage === 'cases' && !e.cases.length) return false;

@@ -2,7 +2,7 @@
 
 *[English version](../en/terrain-editor.md)*
 
-Façonner le sol d'une Scène : relief, Zones, Tracés, eau. Décidé avec Valentin du 2 au 4 novembre
+Façonner le sol d'une Scène : relief, Zones, Tracés, eau. Décidé avec Durzo du 2 au 4 novembre
 2026 ; livré en 1.16.0.
 
 ## Où vit quoi

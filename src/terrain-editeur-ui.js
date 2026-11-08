@@ -1,6 +1,6 @@
 /**
  * @file terrain-editeur-ui.js
- * #462a, L'ÉDITEUR DE TERRAIN (demandé le 25 octobre, cadré le 2 novembre 2026 avec Valentin).
+ * #462a, L'ÉDITEUR DE TERRAIN (demandé le 25 octobre, cadré le 2 novembre 2026 avec Durzo).
  *
  * Sur le modèle de l'éditeur de bâtiment : la VUE DE DESSUS de la Scène (un plan dessiné d'après les
  * données, terrain-plan.js), l'APERÇU 3D par-dessus (le rendu de la Scène sous une caméra libre,

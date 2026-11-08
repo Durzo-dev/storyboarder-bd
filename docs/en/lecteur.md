@@ -2,7 +2,7 @@
 
 *[Version française](../fr/lecteur.md)*
 
-Asked for by Valentin in October 2026: read a Volume or a Chapter straight through, like an album,
+Asked for by Durzo in October 2026: read a Volume or a Chapter straight through, like an album,
 without leaving the application. Right-click a Volume ("Read this volume") or a Chapter ("Read this
 chapter"); reading starts at the displayed Page if it belongs to it.
 

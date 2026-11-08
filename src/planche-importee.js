@@ -1,7 +1,7 @@
 /**
  * @file planche-importee.js
  * Les PLANCHES IMPORTÉES : une image de planche déjà dessinée, découpée en Cases que l'application
- * reconnaît. Demandé par Valentin le 12 octobre 2026 ; cf. docs/en/planche-importee.md.
+ * reconnaît. Demandé par Durzo le 12 octobre 2026 ; cf. docs/en/planche-importee.md.
  *
  * Ce module DÉCIDE (détection des Cases, cadrage, placement, champs persistés) ; il ne touche ni au
  * DOM ni au disque, et tout y est vérifiable sous Node. L'interface est dans import-planche-ui.js,
@@ -205,7 +205,7 @@ export function placerCasesImportees(page){
  * Les réglages de la détection. La TOLÉRANCE est le seul que l'utilisateur voit (le curseur
  * « Sensibilité » de la vérification) : l'écart de gris en deçà duquel un pixel compte comme du papier.
  *
- * ⚠️ CES SEUILS ONT ÉTÉ RÉGLÉS SUR QUINZE PLANCHES RÉELLES fournies par Valentin le 13 octobre 2026
+ * ⚠️ CES SEUILS ONT ÉTÉ RÉGLÉS SUR QUINZE PLANCHES RÉELLES fournies par Durzo le 13 octobre 2026
  * (manga, BD franco-belge, comics, doubles pages, captures d'écran avec leur cadre), gardées hors
  * dépôt dans `apercus/planches-test/`. C'est peu : la vérification à l'import reste ce qui rend la
  * détection acceptable, une erreur se corrige avant de valider.

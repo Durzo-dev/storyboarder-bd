@@ -4,7 +4,7 @@
  * Ce module ne contient que des décisions PURES (testées sous Node) ; l'écran est dans
  * src/lecteur-ui.js.
  *
- * Les options viennent de la demande de Valentin (une ou deux pages, sens de lecture, page de
+ * Les options viennent de la demande de Durzo (une ou deux pages, sens de lecture, page de
  * départ à gauche ou à droite avec une page blanche au besoin, défilement automatique et sa vitesse)
  * et de ce que font les lecteurs en ligne, retenu avec lui : la vue guidée case par case de
  * Comixology, un bandeau de miniatures, le plein écran avec l'ajustement de la page et la couleur

@@ -4,7 +4,7 @@
 
 > 🇫🇷 [Version française](README.fr.md)
 
-**Version 1.16.29**
+**Version 1.16.30**
 
 **Comic book storyboarding application**: a desktop tool to create, organize and visualize comic book pages with real-time 3D scene rendering.
 
@@ -130,4 +130,4 @@ You are free to use, modify and redistribute this project, provided you:
 
 ## 👤 Author
 
-**Valentin**, [@Durzo-dev](https://github.com/Durzo-dev)
+**Durzo**, [@Durzo-dev](https://github.com/Durzo-dev)

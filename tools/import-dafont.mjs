@@ -3,11 +3,11 @@
  * Intégrer à l'application les polices choisies sur DaFont, avec leurs licences.
  *
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * D'OÙ VIENNENT CES POLICES (#423, choisies avec Valentin le 12 octobre 2026)
+ * D'OÙ VIENNENT CES POLICES (#423, choisies avec Durzo le 12 octobre 2026)
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  *
  * DaFont n'a pas d'API, et son libellé de licence « n'est qu'une indication » (sa propre FAQ). On a
- * donc procédé à la main : une pré-sélection par usage, les zips téléchargés par Valentin dans
+ * donc procédé à la main : une pré-sélection par usage, les zips téléchargés par Durzo dans
  * `apercus/dafont/<slug>/` (dossier ignoré par git), puis la licence de CHAQUE police lue dans son
  * zip et dans ses métadonnées. N'ont été gardées que celles dont la licence ÉCRITE permet la
  * redistribution sans demander l'accord de l'auteur (CC0, domaine public, SIL OFL 1.1, GPL,

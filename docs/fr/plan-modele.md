@@ -2,7 +2,7 @@
 
 *[English version](../en/plan-modele.md)*
 
-> **ABANDONNÉ le 8 novembre 2026 (décision de Valentin).** Essayé dans l'application, le résultat
+> **ABANDONNÉ le 8 novembre 2026 (décision de Durzo).** Essayé dans l'application, le résultat
 > reste trop peu fiable sur de vrais plans : trop de corrections à la main pour que l'import vaille
 > la peine. L'import de plan a donc été **entièrement retiré** du code : l'écran, le bouton, les
 > modules, le modèle et sa dépendance. Ce document et [plan-sources.md](plan-sources.md) en gardent
@@ -32,7 +32,7 @@ Il faut ensuite rebrancher à la main, d'après ce même commit :
 - `initImportDePlan` (`src/events.js`) et `tests/modal-stack.test.mjs` ;
 - `npm install onnxruntime-web@1.22.0` et ses trois fichiers dans `build.files`.
 
-Les bancs d'essai (`plans-test/`, hors git) restent sur le disque de Valentin.
+Les bancs d'essai (`plans-test/`, hors git) restent sur le disque de Durzo.
 
 **Où on en était** :
 - sur le banc, le modèle a beaucoup amélioré les chiffres (voir « L'intégration ») ;
@@ -47,12 +47,12 @@ Les bancs d'essai (`plans-test/`, hors git) restent sur le disque de Valentin.
 - ou l'entraînement de notre propre modèle (voir l'estimation plus bas).
 
 Dans tous les cas, on le note d'abord sur le banc CubiCasa (`modele_banc.sh test`), puis sur les
-plans de Valentin, avant de rebrancher l'écran.
+plans de Durzo, avant de rebrancher l'écran.
 
-> Demandée par Valentin le 8 novembre 2026, après la notation de nos règles sur CubiCasa5K : les
+> Demandée par Durzo le 8 novembre 2026, après la notation de nos règles sur CubiCasa5K : les
 > règles écrites à la main plafonnaient (portes et fenêtres autour de 20 %). Question posée :
 > faut-il un modèle appris (apprentissage automatique), à quel prix, sous quelle licence ? Contrainte
-> de Valentin : Storyboarder n'est pas fait pour être vendu, mais le modèle doit pouvoir être
+> de Durzo : Storyboarder n'est pas fait pour être vendu, mais le modèle doit pouvoir être
 > **débranché et retiré facilement** si cela changeait.
 
 ## En bref
@@ -118,7 +118,7 @@ PyTorch, et il est hors réseau. Ce n'est pas nécessaire tant que le modèle ex
 
 ## L'intégration (#456g, 8 novembre 2026)
 
-Décidée par Valentin : le modèle est intégré, et nos règles restent **en secours** quand il est absent.
+Décidée par Durzo : le modèle est intégré, et nos règles restent **en secours** quand il est absent.
 
 **La chaîne complète, mesurée.** Le modèle lit le plan, puis nos étapes prennent le relais :
 vectorisation, raccords, ouvertures, pièces de l'éditeur. Les 60 plans de la partie test de
@@ -169,7 +169,7 @@ retirerait.
 **Ce que dit la licence, exactement.** Celle de NVIDIA (section 3.3) limite l'usage au
 « non commercial », qu'elle définit comme **« à des fins de recherche ou d'évaluation seulement »**.
 C'est plus étroit que « non vendu ». CubiCasa5K (CC BY-NC 4.0) n'interdit, lui, que l'usage
-commercial. À Valentin de juger si son usage de Storyboarder entre dans ce cadre. Ce n'est pas un
+commercial. À Durzo de juger si son usage de Storyboarder entre dans ce cadre. Ce n'est pas un
 avis juridique.
 
 ## L'architecture proposée : un modèle débranchable
@@ -273,7 +273,7 @@ par exemple un U-Net sur ResNet de torchvision (BSD), et non SegFormer de NVIDIA
 Le risque principal : des images de synthèse trop « propres » font un modèle moins bon sur les vrais
 scans. On le mesure, et on le corrige en salissant davantage les images de synthèse.
 
-## Ce qui a été décidé (Valentin)
+## Ce qui a été décidé (Durzo)
 
 - Le modèle est intégré selon cette architecture (#456g, voir « L'intégration »).
 - Puis, le même jour, l'import de plan est abandonné et retiré du code (voir « Bilan, et comment y revenir »).

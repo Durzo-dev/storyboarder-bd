@@ -2,7 +2,7 @@
 
 *[English version](../en/building-research.md)*
 
-> Tâche #455, demandée par Valentin le 13 octobre 2026 : « une analyse exhaustive des logiciels
+> Tâche #455, demandée par Durzo le 13 octobre 2026 : « une analyse exhaustive des logiciels
 > d'architecte et des jeux de construction de maisons (dont les Sims), pour en tirer des features
 > et des recommandations ». Elle prépare #454 (étages et sous-sols) et #456 (bâtiment à partir
 > d'une photo de plan), et elle précède délibérément #454 : les niveaux touchent au format
@@ -360,7 +360,7 @@ Dans une Scène ou une Case, **placer un bâtiment en fait une copie indépendan
 embarque le bâtiment entier (`batiment: { … }`) et garde le nom du fichier d'origine
 (`batimentSource`, pour information). Retoucher cette copie ouvre l'éditeur sur elle, sans toucher
 au fichier ni aux autres copies. **« Enregistrer dans la bibliothèque »** refait d'une copie retouchée
-un Modèle, pour la réutiliser ailleurs (confirmé par Valentin le 22 octobre 2026).
+un Modèle, pour la réutiliser ailleurs (confirmé par Durzo le 22 octobre 2026).
 
 Un Élément de la Scène posé **dans** un bâtiment (Personnage, objet, modèle) porte, en champs
 AJOUTÉS : `dansBatiment` (l'id de l'Élément bâtiment), `niveauId` et, facultatif, `pieceId`. Sa
@@ -463,7 +463,7 @@ Les bâtiments déjà tracés dans les Scènes (murs Éléments, `pieceId`, `bat
 `batimentRotY`) restent LUS et sont **convertis** à l'ouverture en bâtiments d'un niveau, à la même
 place : rien ne bouge à l'écran.
 
-## Les décisions de Valentin (22 octobre 2026)
+## Les décisions de Durzo (22 octobre 2026)
 
 1. **Les niveaux** : le cas courant est un sous-sol et trois étages, mais sans limite (immeubles).
    L'interface est pensée pour une demi-douzaine de niveaux et reste utilisable au-delà.
@@ -505,7 +505,7 @@ place : rien ne bouge à l'écran.
   fiche (bâtiment, étage, pièce). Fait.
 - **#454f** FAIT (27 octobre 2026) : l'outil « Construire un bâtiment » de la Scène est retiré, et avec
   lui, au clic droit, « Ajouter → Murs », « Ajouter → Parois » et « Ajouter → Bâtiments » ; la
-  construction se fait UNIQUEMENT dans l'éditeur (« Créer un bâtiment »). Décision de Valentin : les
+  construction se fait UNIQUEMENT dans l'éditeur (« Créer un bâtiment »). Décision de Durzo : les
   murs, parois et pièces déjà posés dans les Projets restent TELS QUELS (rendus, sélectionnables,
   modifiables) ; une pièce tracée se reprend dans l'éditeur par « Modifier » (une copie).
 - **#458** le toit automatique. **#458a FAIT** (27 octobre 2026, `src/batiment-toits.js`) : un toit PAR

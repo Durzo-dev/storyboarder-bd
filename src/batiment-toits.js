@@ -1,6 +1,6 @@
 /**
  * @file batiment-toits.js
- * LES TOITS d'un bâtiment (#458, décidé avec Valentin le 27 octobre 2026). Fonctions PURES : la
+ * LES TOITS d'un bâtiment (#458, décidé avec Durzo le 27 octobre 2026). Fonctions PURES : la
  * géométrie (des points, des hauteurs), sans three ; le rendu est dans batiment-3d.js.
  *
  * UN TOIT PAR NIVEAU (`niveau.toit`, champ AJOUTÉ, absent = plat comme avant) : il couvre les pièces
@@ -79,7 +79,7 @@ export function aireSignee(pts){
 }
 
 /**
- * Une cour (un vide) a-t-elle un SOL (#458c, décidé avec Valentin) ? Au-dessus d'une PIÈCE, oui :
+ * Une cour (un vide) a-t-elle un SOL (#458c, décidé avec Durzo) ? Au-dessus d'une PIÈCE, oui :
  * c'est une terrasse (sa dalle, sans plafond ni toit). Au-dessus d'une autre cour, ou au
  * rez-de-chaussée, non : le puits continue (jusqu'au Sol de la Scène). PURE.
  */

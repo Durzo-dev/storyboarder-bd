@@ -25,7 +25,7 @@ const NOMS_SOURCES = { sketchfab: 'Sketchfab', polyhaven: 'Poly Haven' };
  * Les fichiers de modèles importés posés sur une Page ET VISIBLES, sans doublon (casse comprise),
  * triés.
  *
- * VISIBLES (retour de Valentin) : une Case qui a reçu une grande Scène n'en montre souvent qu'une
+ * VISIBLES (retour de Durzo) : une Case qui a reçu une grande Scène n'en montre souvent qu'une
  * fraction, et créditer ce qui reste hors du cadre ou caché n'a pas de sens. `visible(o)` est fourni par
  * l'appelant, qui a la caméra de la Case (draw.js, `elementNonVisible3D`, #449) ; ici on reste pur. Par
  * défaut, tout compte.
