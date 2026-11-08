@@ -474,11 +474,14 @@ export function detecterLesMurs(rgba, w, h, options = {}){
   // murs restent. Mesuré : le bon seuil tombe sur la médiane, aux bureaux (122), à la maison (106) et
   // sur sa photo floue (79). La règle d'avant, 0,8 × Otsu, ne suivait pas la NETTETÉ : sur une photo,
   // aux traits plus pâles, elle effaçait les cloisons (plan n° 16, 2 pièces au lieu de 9).
-  const seuilLu = options.seuilLu ?? (style === 'poche' ? null : Math.max(seuil, centile(valeurs, seuil, 0.5)));
+  // RÉGLÉ SUR CUBICASA5K (60 plans annotés, banc `cubicasa_banc.sh`) : 0,85 × la médiane, et un
+  // comblement de 1 % de la feuille (essayés : 0,7 / 0,85 / 1 et 0,7 % / 1 % / 1,5 % / 2 %). Murs F1
+  // 0,665 → 0,685, portes retrouvées 26 % → 31 %, pièces fermées 73 % → 81 %.
+  const seuilLu = options.seuilLu ?? (style === 'poche' ? null : Math.max(seuil, Math.round((options.facteurLu ?? 0.85) * centile(valeurs, seuil, 0.5))));
   let lue = foncee;
   if (seuilLu != null) { lue = new Uint8Array(n); for (let p = 0; p < n; p++) lue[p] = valeurs[p] >= seuilLu ? 1 : 0; }
   const directions = directionsDuPlan(lue, W, H), t = demiEpaisseurFine(lue, W, H);
-  const comble = options.comble ?? (style === 'poche' ? Math.max(2, Math.round(0.002 * D)) : Math.max(4, Math.round(0.015 * D)));
+  const comble = options.comble ?? (style === 'poche' ? Math.max(2, Math.round(0.002 * D)) : Math.max(4, Math.round((options.partComble ?? 0.01) * D)));
   const longueur = options.longueur ?? Math.max(10, Math.round(0.03 * D));
   const minceur = options.minceur ?? 2 * t + 2;
   const { murs: ouvert, epaisseur: T } = mursParBandes(lue, W, H, directions, comble, longueur, minceur);
