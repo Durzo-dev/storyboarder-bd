@@ -144,7 +144,7 @@ function seuilDOtsu(valeurs, seuil){
 export const PART_POCHE = 0.15;
 
 /** Le STYLE du plan ('poche' ou 'trait'), et son encre foncée (masque). */
-function styleDuPlan(valeurs, seuil, W, H){
+function styleDuPlan(valeurs, seuil, W, H, rgb){
   // Le seuil de l'encre foncée est plafonné à la MOITIÉ DE L'ENCRE LA PLUS NOIRE (son 95e centile) :
   // quand toute l'encre est foncée (rien que des murs noirs), Otsu coupe À L'INTÉRIEUR des murs, entre
   // ceux du côté clair et ceux du côté sombre d'une photo mal éclairée, et en perd la moitié.
@@ -158,6 +158,17 @@ function styleDuPlan(valeurs, seuil, W, H){
   let n = 0;
   for (let p = 0; p < foncee.length; p++) if (valeurs[p] > coupe) { foncee[p] = 1; n++; }
   if (!n) return { style: 'trait', foncee, otsu };
+  // ⚠️ L'ENCRE FONCÉE D'UN PLAN GRIS NE GARDE QUE SON GRIS. Un meuble coloré (lit bleu, armoire
+  // magenta d'une annonce, plan n° 5) est loin du papier par sa COULEUR, et passait pour un mur. Si
+  // l'encre foncée est au moins à moitié peu saturée (murs noirs ou gris ; 57 % sur le plan n° 5, aux
+  // grands aplats de couleur), ses pixels saturés partent ; si
+  // elle est surtout colorée (un lavis rose ancien), elle reste entière.
+  if (rgb) {
+    const sat = (p) => { const r = rgb[p * 3], g = rgb[p * 3 + 1], b = rgb[p * 3 + 2]; return Math.max(r, g, b) - Math.min(r, g, b); };
+    let gris = 0;
+    for (let p = 0; p < foncee.length; p++) if (foncee[p] && sat(p) < 50) gris++;
+    if (gris >= 0.5 * n) for (let p = 0; p < foncee.length; p++) if (foncee[p] && sat(p) >= 50) { foncee[p] = 0; n--; }
+  }
   const d = distanceCarree(inverse(foncee), W, H);
   let epaisse = 0;
   for (let p = 0; p < foncee.length; p++) if (foncee[p] && d[p] >= 9) epaisse++;
@@ -447,7 +458,7 @@ export function detecterLesMurs(rgba, w, h, options = {}){
   // effaçait les traits gris d'un JPEG (plans n° 1 et 3). Le critère, mesuré sur les trois plans :
   // la part de l'encre foncée qui forme des masses de 5 px et plus (33 % contre moins de 1 %).
   const D = Math.max(W, H);
-  const { style, foncee, otsu } = styleDuPlan(valeurs, seuil, W, H);
+  const { style, foncee, otsu } = styleDuPlan(valeurs, seuil, W, H, rgb);
   // Au trait, l'encre LUE commence aux quatre cinquièmes du seuil d'Otsu : les lignes de cote, plus
   // grises que les traits des murs, tombent (plan n° 1 : leurs paquets comblés faisaient des murs),
   // et les traits des murs restent (plans n° 1 et 3, mesuré de 60 à 120).
