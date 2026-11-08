@@ -40,6 +40,8 @@ const longueurDe = (s) => norme(sous(s.b, s.a));
  * pleins de fragments ; remonté à 12 une fois la détection nettoyée, pour les baies des façades.)
  */
 const TROU_MAX = 12;
+/** Jusqu'à trois fois plus large, quand le trou porte du vitrage (une baie, une façade vitrée). */
+const VITRAGE_MAX = 3;
 let _epaisseurType = 0;
 const trouMax = (t) => TROU_MAX * (_epaisseurType || t);
 
@@ -63,7 +65,7 @@ function boutsLibres(segs){
 }
 
 /** Fusionne deux segments alignés séparés par un trou (le meilleur couple), ou rend faux. */
-function fusionnerUnTrou(segs){
+function fusionnerUnTrou(segs, lire = null){
   const libres = boutsLibres(segs);
   let meilleur = null;
   for (const A of libres) for (const B of libres) {
@@ -73,9 +75,12 @@ function fusionnerUnTrou(segs){
     if (Math.abs(us.x * uo.y - us.y * uo.x) > Math.sin(3 * DEG)) continue;
     const P = s[A.bout], Q = o[B.bout], PQ = sous(Q, P), g = norme(PQ);
     const t = Math.max(s.epaisseur, o.epaisseur);
-    if (g < 2 || g > trouMax(t)) continue;
+    if (g < 2 || g > VITRAGE_MAX * trouMax(t)) continue;
     // Sur le même axe : l'écart perpendiculaire est petit devant l'épaisseur.
     if (Math.abs(PQ.x * us.y - PQ.y * us.x) > t / 2) continue;
+    // ⚠️ Au-delà de la limite ordinaire, le trou n'est accepté que s'il porte du VITRAGE : une baie,
+    // une façade vitrée (plan n° 4, des baies de 5 m entre de petits trumeaux que la détection perd).
+    if (g > trouMax(t) && !(lire && Math.max(0, ...rangees({ a: P, b: Q, epaisseur: t }, 0, g, lire)) >= 0.5)) continue;
     // Et face à face : Q est au-delà de P en sortant de s, et inversement.
     const sortieS = A.bout === 'b' ? us : { x: -us.x, y: -us.y };
     const sortieO = B.bout === 'b' ? uo : { x: -uo.x, y: -uo.y };
@@ -142,6 +147,56 @@ function prolongerVersUnMur(segs){
     morceaux.push({ a: depart, b: c.b, epaisseur: c.epaisseur, ouv: c.ouv.filter(o => o.s0 >= t0).map(o => ({ s0: o.s0 - t0, s1: o.s1 - t0 })) });
     segs.splice(j, 1, ...morceaux);
   }
+}
+
+/** Un segment coupé aux points `points` (sur son axe), ses ouvertures réparties sur les morceaux. */
+function couperAux(c, points){
+  const u = unitaire(c);
+  const tri = points.map(X => ({ X, t: (X.x - c.a.x) * u.x + (X.y - c.a.y) * u.y })).sort((p, q) => p.t - q.t);
+  const morceaux = [];
+  let depart = c.a, t0 = 0;
+  for (const { X, t } of tri) {
+    morceaux.push({ a: depart, b: X, epaisseur: c.epaisseur, ouv: c.ouv.filter(o => o.s0 >= t0 && o.s1 <= t).map(o => ({ s0: o.s0 - t0, s1: o.s1 - t0 })) });
+    depart = X; t0 = t;
+  }
+  morceaux.push({ a: depart, b: c.b, epaisseur: c.epaisseur, ouv: c.ouv.filter(o => o.s0 >= t0).map(o => ({ s0: o.s0 - t0, s1: o.s1 - t0 })) });
+  return morceaux.filter(m => longueurDe(m) >= 1);
+}
+
+/**
+ * LA SOUDURE FINALE : les étapes précédentes déplacent des bouts APRÈS la fusion des sommets, et des
+ * murs qui se touchent à l'œil restaient à un pixel l'un de l'autre (plan n° 4) : pour l'éditeur, ils
+ * ne se touchent pas, et les pièces restent ouvertes. Les bouts à moins de `tol` se confondent ; un
+ * bout seul qui tombe, à `tol` près, sur le milieu d'un autre mur le coupe (jonction en T).
+ */
+function souder(segs, tol){
+  const bouts = [];
+  segs.forEach(s => { bouts.push({ s, k: 'a' }, { s, k: 'b' }); });
+  // 1. Les bouts proches se confondent (au premier venu).
+  const reperes = [];
+  for (const b of bouts) {
+    const p = b.s[b.k], r = reperes.find(q => norme(sous(p, q)) < tol);
+    if (r) b.s[b.k] = r; else reperes.push(p);
+  }
+  // 2. Un bout que personne ne partage, posé sur le milieu d'un autre mur, le coupe.
+  const coupes = new Map();
+  for (const b of bouts) {
+    const p = b.s[b.k];
+    if (bouts.some(o => o !== b && o.s[o.k] === p)) continue;
+    for (const c of segs) {
+      if (c === b.s) continue;
+      const u = unitaire(c), t = (p.x - c.a.x) * u.x + (p.y - c.a.y) * u.y, L = longueurDe(c);
+      if (t <= tol || t >= L - tol) continue;
+      const n = Math.abs(-(p.x - c.a.x) * u.y + (p.y - c.a.y) * u.x);
+      if (n > Math.max(tol, c.epaisseur / 2)) continue;
+      const X = { x: c.a.x + u.x * t, y: c.a.y + u.y * t };
+      b.s[b.k] = X;
+      if (!coupes.has(c)) coupes.set(c, []);
+      coupes.get(c).push(X);
+      break;
+    }
+  }
+  return segs.flatMap(c => (coupes.has(c) ? couperAux(c, coupes.get(c)) : [c]));
 }
 
 /** Une lecture de l'encre : `encre(x, y)` vaut 1 sur un pixel d'encre, 0 ailleurs et hors image. */
@@ -271,9 +326,11 @@ export function ouverturesDuPlan(segments, encre, w, h, murs = null){
   const segs = segments.filter(s => longueurDe(s) >= 1).map(s => ({ a: { ...s.a }, b: { ...s.b }, epaisseur: s.epaisseur, ouv: [] }));
   const ep = segs.map(s => s.epaisseur).sort((x, y) => x - y);
   _epaisseurType = ep.length ? ep[ep.length >> 1] : 0;
-  while (fusionnerUnTrou(segs)) { /* jusqu'au dernier trou */ }
-  prolongerVersUnMur(segs);
   const lire = lecteur(encre, w, h), lireMasque = murs ? lecteur(murs, w, h) : null;
+  while (fusionnerUnTrou(segs, lire)) { /* jusqu'au dernier trou */ }
+  prolongerVersUnMur(segs);
+  const soudes = souder(segs, Math.max(2, 0.5 * _epaisseurType));
+  segs.length = 0; segs.push(...soudes);
   return segs.filter(s => longueurDe(s) >= 1 && Number.isFinite(s.a.x + s.a.y + s.b.x + s.b.y)).map(s => {
     const ouvertures = s.ouv.map(o => ({ ...o, ...natureDe(s, o, lire) }));
     ouvertures.push(...fenetresComblees(s, lire, lireMasque));
