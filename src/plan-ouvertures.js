@@ -315,9 +315,78 @@ function fenetresComblees(s, lire, lireMasque){
   while (t < L) {
     if (remplissage[t] >= 0.6 * base || s.ouv.some(o => t >= o.s0 - 1 && t <= o.s1 + 1)) { t++; continue; }
     let f = t; while (f < L && remplissage[f] < 0.6 * base) f++;
-    // Au moins une épaisseur de long, et un trait continu (le châssis, le vitrage) dans l'encre.
-    if (f - t >= Math.max(3, e) && Math.max(0, ...rangees(s, t - 1, f + 1, lire)) >= 0.7) res.push({ s0: t, s1: f, type: 'fenetre' });
+    // Au moins une épaisseur de long. Un tronçon creux avec l'ARC d'un battant est une PORTE dont le
+    // cadre et le seuil (des traits dans l'axe du mur) ont été comblés comme du mur (CubiCasa5K : les
+    // portes étaient presque toutes ratées ainsi) ; sinon, un trait continu (châssis, vitrage) en
+    // fait une fenêtre.
+    if (f - t >= Math.max(3, e)) {
+      const nature = natureDe(s, { s0: t, s1: f }, lire);
+      if (nature.type === 'porte') res.push({ s0: t, s1: f, ...nature });
+      else if (Math.max(0, ...rangees(s, t - 1, f + 1, lire)) >= 0.7) res.push({ s0: t, s1: f, type: 'fenetre' });
+    }
     t = f;
+  }
+  return res;
+}
+
+/**
+ * LES PORTES PAR LEUR ARC, sans attendre un trou dans le mur : le long du mur, de chaque côté et dans
+ * les deux sens, on cherche un quart de cercle dessiné, centré sur une face du mur (la charnière) et
+ * vide à mi-rayon. Son rayon est la largeur de la porte. (CubiCasa5K : le cadre et le seuil d'une
+ * porte, des traits dans l'axe du mur, sont comblés comme du mur ; il n'y a donc souvent aucun trou à
+ * classer, et 92 % des portes étaient ratées.)
+ */
+function portesParArcs(s, lire, deja, disques){
+  const u = unitaire(s), n = { x: -u.y, y: u.x }, e = s.epaisseur / 2, L = longueurDe(s);
+  const eT = _epaisseurType || s.epaisseur;
+  const rMin = Math.max(10, 2 * eT), rMax = Math.max(rMin + 1, 12 * eT);
+  const anneau = (H, d, c, R, r0, r1, phi0, phi1) => {
+    let touches = 0, k = 0;
+    for (let phi = phi0; phi <= phi1; phi += 5, k++) {
+      const v = { x: Math.cos(phi * DEG) * d.x + Math.sin(phi * DEG) * c.x, y: Math.cos(phi * DEG) * d.y + Math.sin(phi * DEG) * c.y };
+      for (let rho = R + r0; rho <= R + r1; rho += 0.75) if (lire(H.x + v.x * rho, H.y + v.y * rho)) { touches++; break; }
+    }
+    return touches / k;
+  };
+  const candidats = [];
+  for (let t = 0; t <= L; t += 2) for (const sens of [1, -1]) for (const dir of [1, -1]) {
+    const H = { x: s.a.x + u.x * t + n.x * sens * e, y: s.a.y + u.y * t + n.y * sens * e };
+    const d = { x: u.x * dir, y: u.y * dir }, c = { x: n.x * sens, y: n.y * sens };
+    for (let R = rMin; R <= rMax; R *= 1.08) {
+      const fin = t + dir * R;
+      if (fin < -2 || fin > L + 2) continue;
+      const arc = anneau(H, d, c, R, -2, 2, 15, 75);
+      if (arc < 0.8) continue;
+      // Une COURBE FINE ISOLÉE : rien à mi-rayon, rien juste dedans, rien juste dehors. Sans cela, le
+      // carrelage, les hachures et le mobilier denses offraient partout un « arc » couvert (2 674
+      // portes trouvées pour 568 vraies).
+      if (anneau(H, d, c, 0, 0.3 * R, 0.55 * R, 30, 60) > 0.25) continue;
+      if (anneau(H, d, c, 0, 0.62 * R, 0.85 * R, 25, 65) > 0.25) continue;
+      if (anneau(H, d, c, 0, 1.15 * R, 1.3 * R, 25, 65) > 0.25) continue;
+      // Une courbe DÉJÀ EXPLIQUÉE par une porte trouvée ne fait pas une seconde porte (l'arc d'une
+      // porte, vu depuis le mur d'à côté) : si la moitié de ses points tombe SUR le cercle de
+      // celle-ci, c'est la même courbe. (Exclure tout le quart de disque était trop large : de
+      // fausses portes à grand rayon masquaient de vraies.)
+      const memeCourbe = (q) => {
+        let sur = 0;
+        for (let phi = 15; phi <= 75; phi += 10) {
+          const v = { x: Math.cos(phi * DEG) * d.x + Math.sin(phi * DEG) * c.x, y: Math.cos(phi * DEG) * d.y + Math.sin(phi * DEG) * c.y };
+          if (Math.abs(Math.hypot(H.x + v.x * R - q.H.x, H.y + v.y * R - q.H.y) - q.R) < 3) sur++;
+        }
+        return sur >= 4;
+      };
+      if (disques.some(memeCourbe)) continue;
+      candidats.push({ score: arc, s0: Math.min(t, fin), s1: Math.max(t, fin), sens, charniere: dir === 1 ? 'debut' : 'fin', H, R });
+    }
+  }
+  // Les meilleurs d'abord, sans chevauchement entre eux ni avec les ouvertures déjà trouvées.
+  candidats.sort((p, q) => q.score - p.score || (q.s1 - q.s0) - (p.s1 - p.s0));
+  const res = [];
+  for (const c of candidats) {
+    const chevauche = (o) => c.s0 < o.s1 - 1 && o.s0 < c.s1 - 1;
+    if (res.some(chevauche) || deja.some(chevauche)) continue;
+    res.push({ s0: Math.max(0, c.s0), s1: Math.min(L, c.s1), type: 'porte', sens: c.sens, charniere: c.charniere, battants: 1 });
+    disques.push({ H: c.H, R: c.R });
   }
   return res;
 }
@@ -337,9 +406,24 @@ export function ouverturesDuPlan(segments, encre, w, h, murs = null){
   prolongerVersUnMur(segs);
   const soudes = souder(segs, Math.max(2, 0.5 * _epaisseurType));
   segs.length = 0; segs.push(...soudes);
-  return segs.filter(s => longueurDe(s) >= 1 && Number.isFinite(s.a.x + s.a.y + s.b.x + s.b.y)).map(s => {
+  // Deux temps : les ouvertures des trous et des tronçons creux, puis les portes par leur arc, qui
+  // savent quels arcs les premières ont déjà expliqués (leurs quarts de disque).
+  const valides = segs.filter(s => longueurDe(s) >= 1 && Number.isFinite(s.a.x + s.a.y + s.b.x + s.b.y));
+  const disques = [];
+  const premiers = valides.map(s => {
     const ouvertures = s.ouv.map(o => ({ ...o, ...natureDe(s, o, lire) }));
     ouvertures.push(...fenetresComblees(s, lire, lireMasque));
+    const u = unitaire(s), n = { x: -u.y, y: u.x };
+    for (const o of ouvertures) {
+      if (o.type !== 'porte') continue;
+      const t = o.charniere === 'fin' ? o.s1 : o.s0, k = (o.sens || 1) * s.epaisseur / 2;
+      disques.push({ H: { x: s.a.x + u.x * t + n.x * k, y: s.a.y + u.y * t + n.y * k }, R: o.s1 - o.s0 });
+    }
+    return ouvertures;
+  });
+  return valides.map((s, i) => {
+    const ouvertures = premiers[i];
+    ouvertures.push(...portesParArcs(s, lire, ouvertures, disques));
     ouvertures.sort((p, q) => p.s0 - q.s0);
     return { a: s.a, b: s.b, epaisseur: s.epaisseur, ouvertures };
   });
