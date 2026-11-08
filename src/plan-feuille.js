@@ -31,7 +31,7 @@ const lum = (r, g, b) => 0.299 * r + 0.587 * g + 0.114 * b;
 function reduite(rgba, w, h){
   const f = Math.max(1, Math.ceil(Math.max(w, h) / COTE_ANALYSE));
   const W = Math.floor(w / f), H = Math.floor(h / f);
-  const L = new Float32Array(W * H), S = new Float32Array(W * H);
+  const L = new Float32Array(W * H), S = new Float32Array(W * H), C = new Float32Array(W * H * 3);
   for (let Y = 0; Y < H; Y++) for (let X = 0; X < W; X++) {
     let r = 0, g = 0, b = 0;
     for (let y = Y * f; y < Y * f + f; y++) for (let x = X * f; x < X * f + f; x++) {
@@ -39,8 +39,9 @@ function reduite(rgba, w, h){
     }
     const n = f * f; r /= n; g /= n; b /= n;
     L[Y * W + X] = lum(r, g, b); S[Y * W + X] = Math.max(r, g, b) - Math.min(r, g, b);
+    C[(Y * W + X) * 3] = r; C[(Y * W + X) * 3 + 1] = g; C[(Y * W + X) * 3 + 2] = b;
   }
-  return { L, S, W, H, f };
+  return { L, S, C, W, H, f };
 }
 
 /** Le seuil d'Otsu d'un tableau de valeurs 0..255. */
@@ -66,7 +67,7 @@ function otsu(v){
  * à redresser (un scan, une capture : pas de fond ; ou rien qui ressemble à une feuille).
  */
 export function trouverLaFeuille(rgba, w, h){
-  const { L, S, W, H, f } = reduite(rgba, w, h);
+  const { L, S, C, W, H, f } = reduite(rgba, w, h);
   const seuil = otsu(L);
   const papier = new Uint8Array(W * H);
   for (let i = 0; i < W * H; i++) papier[i] = L[i] > seuil && S[i] < 60 ? 1 : 0;
@@ -75,10 +76,18 @@ export function trouverLaFeuille(rgba, w, h){
   for (let x = 0; x < W; x++) { bord += 2; surBord += papier[x] + papier[(H - 1) * W + x]; }
   for (let y = 1; y < H - 1; y++) { bord += 2; surBord += papier[y * W] + papier[y * W + W - 1]; }
   if (surBord / bord > 0.6) return null;
-  // Le fond : ce qu'on atteint depuis le bord sans traverser de papier. Le reste est la feuille,
-  // les traits du plan compris.
+  // Le fond : ce qu'on atteint depuis le bord en restant dans la COULEUR DU BORD (la table). Le reste
+  // est la feuille, les traits du plan compris. (« Tout ce qui n'est pas papier » passait par les murs
+  // gris d'un plan qui touchent le bord de la feuille, et rognait la feuille.)
+  const bordR = [], bordG = [], bordB = [];
+  const noter = (i) => { bordR.push(C[i * 3]); bordG.push(C[i * 3 + 1]); bordB.push(C[i * 3 + 2]); };
+  for (let x = 0; x < W; x++) { noter(x); noter((H - 1) * W + x); }
+  for (let y = 0; y < H; y++) { noter(y * W); noter(y * W + W - 1); }
+  const med = (t) => t.sort((a, b) => a - b)[t.length >> 1];
+  const cr = med(bordR), cg = med(bordG), cb = med(bordB);
+  const commeLeBord = (i) => Math.hypot(C[i * 3] - cr, C[i * 3 + 1] - cg, C[i * 3 + 2] - cb) < 45;
   const fond = new Uint8Array(W * H), pile = [];
-  const pousser = (i) => { if (!fond[i] && !papier[i]) { fond[i] = 1; pile.push(i); } };
+  const pousser = (i) => { if (!fond[i] && !papier[i] && commeLeBord(i)) { fond[i] = 1; pile.push(i); } };
   for (let x = 0; x < W; x++) { pousser(x); pousser((H - 1) * W + x); }
   for (let y = 0; y < H; y++) { pousser(y * W); pousser(y * W + W - 1); }
   while (pile.length) {
