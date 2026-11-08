@@ -4,6 +4,12 @@
 (https://github.com/ajayfjfj/floorplan-studio, project code MIT). Five classes per pixel: background,
 room, wall, door, window. Used only by `src/plan-modele.js`.
 
+**Version**: taken on 8 November 2026, when **v0.1.0** (released 1 November 2026) was the project's only
+release. SHA-256: `e13fa4d27760d1832fef9579deaf41775036019ac83761094d6350e0f1098d32`. The file is pinned
+here and never updated automatically. To adopt a new release: replace the file, then re-score it with
+`plans-test/banc/modele_banc.sh test` (JS=1) against the figures in `docs/en/plan-modele.md`, and keep it
+only if it does better.
+
 ## Licences of the weights — NON-COMMERCIAL / NON COMMERCIALES
 
 - Trained on **CubiCasa5K** — Copyright 2019, CubiCasa5K authors, licensed under Creative Commons
