@@ -98,6 +98,79 @@ aujourd'hui. Le retirer, c'est supprimer un dossier et une dépendance.
    L'application retombe d'elle-même sur les règles. La marche à suivre sera écrite dans la
    documentation, avec le rappel des licences.
 
+## Comparatif détaillé, par style de plan (complété le 8 novembre 2026)
+
+**Plans modernes, mesurés** : 60 plans de la partie test de CubiCasa5K. Pour les portes et les
+fenêtres, le premier chiffre est la part retrouvée, le second la part juste.
+
+| Style | Murs (F1) | Portes | Fenêtres |
+|---|---|---|---|
+| Plans d'architecte, 41 plans | règles 0,55 · **modèle 0,78** | règles 21 % / 22 % · **modèle 78 % / 72 %** | règles 14 % / 12 % · **modèle 70 % / 78 %** |
+| CAO noir et blanc, 11 plans | règles 0,80 · **modèle 0,88** | règles 32 % / 25 % · **modèle 89 % / 76 %** | règles 51 % / 28 % · **modèle 91 % / 87 %** |
+| Annonces en couleur, 8 plans | règles 0,70 · **modèle 0,81** | règles 26 % / 30 % · **modèle 82 % / 73 %** | règles 19 % / 27 % · **modèle 75 % / 66 %** |
+
+**Plans anciens et dessinés à la main, jugés à l'œil** (il n'existe pas d'annotations).
+
+| Plan | Murs | Portes et fenêtres |
+|---|---|---|
+| Tanlay (poché noir) | règles : une partie ; **modèle : presque tous** | modèle : quelques fenêtres |
+| Pau (lavis) | les deux corrects, le modèle plus propre | peu, des deux côtés |
+| Pierrefonds (Viollet-le-Duc) | les deux corrects, tours comprises | peu, des deux côtés |
+| Versailles colorié | les deux peinent sous les aplats | faible des deux côtés |
+| Appartement de 1875 (contrôle) | règles : correct ; **modèle : très bon** | **modèle : fenêtres et portes justes** |
+| Clagny, lavis (contrôle) | règles : presque rien ; **modèle : la plupart** | faible |
+| Maison en U, à la main | règles : un fragment ; **modèle : la plupart** | modèle : quelques-unes |
+| Griswold, à la main (contrôle) | règles : fragments ; **modèle : bon** | **modèle : la plupart** |
+
+Défaut récurrent du modèle : il prend les **cours** et l'extérieur proche pour des pièces. C'est
+sans effet sur les murs, et notre propre déduction des pièces (par les murs) n'en dépend pas.
+
+## Autres modèles, et leurs licences (complété le 8 novembre 2026)
+
+Aucun modèle de plans n'est à la fois **plus permissif** et **utilisable** :
+- presque tous sont entraînés sur CubiCasa5K, donc non commerciaux par leurs poids, quelle que soit
+  la licence de leur code : [floorplan-detection](https://github.com/xmarva/floorplan-detection),
+  FloorPlanAnalyzer, DeepFloorplan ;
+- le [modèle Roboflow de l'IIIT Bangalore](https://universe.roboflow.com/iiitbangalore/floor-plan-segmentation-dtr4r)
+  est sous MIT, mais n'a appris que sur 148 images : trop peu ;
+- les détecteurs généraux sous Apache 2.0 (RF-DETR) ne connaissent pas les plans : il faudrait les
+  entraîner.
+
+Floorplan Studio reste le meilleur choix disponible.
+
+## Entraîner notre propre modèle : estimation (complété le 8 novembre 2026)
+
+**Les données libres existent, mais en VECTEURS, pas en images** :
+- **MSD**, *Modified Swiss Dwellings* : 5 300 plans suisses, CC BY 4.0 ([4TU](https://data.4tu.nl/export/cff/datasets/e1d89cb5-6872-48fc-be63-aadd687ee6f9), [article](https://arxiv.org/abs/2407.10121v3)) ;
+- **ResPlan** : 17 000 plans d'annonces sud-asiatiques, données CC BY 4.0 et code MIT ([dépôt](https://github.com/m-agour/ResPlan)) ;
+- quelques **petits jeux d'images réelles** sous CC BY 4.0 sur Roboflow Universe, de quelques
+  centaines d'images (à vérifier un par un).
+
+La méthode serait donc de **dessiner nous-mêmes les images** à partir de ces plans vectoriels, dans
+tous les styles que l'on veut reconnaître :
+- poché noir, double trait, hachures, lavis rose ;
+- mobilier, cotes et texte en bruit ;
+- photo de biais, scan jauni.
+
+Les annotations sont alors parfaites par construction. On complète avec les petits jeux réels, et on
+mesure sur notre banc (CubiCasa test, plus nos plans). La base de départ doit elle aussi être libre :
+par exemple un U-Net sur ResNet de torchvision (BSD), et non SegFormer de NVIDIA.
+
+**Le temps** :
+
+| Étape | De mon côté | De ton côté |
+|---|---|---|
+| Récupérer et comprendre MSD et ResPlan | 1 à 2 h | télécharger (quelques Go) |
+| Le « dessinateur » de plans synthétiques, en plusieurs styles | 4 à 8 h | — |
+| L'entraînement | préparer le script | **une carte graphique** : la tienne si tu en as une, sinon Google Colab gratuit ; 3 à 6 h de calcul par essai, 2 ou 3 essais |
+| Mesurer, corriger, recommencer | 2 à 4 h | — |
+| Export ONNX et intégration | comme pour le modèle existant | — |
+
+**Au total, compter 3 à 5 séances de travail**, plus 10 à 20 h de calcul sur une carte graphique.
+
+Le risque principal : des images de synthèse trop « propres » font un modèle moins bon sur les vrais
+scans. On le mesure, et on le corrige en salissant davantage les images de synthèse.
+
 ## Ce qui reste à décider (Valentin)
 
 - Intégrer le modèle selon cette architecture ? Le premier pas serait de **mesurer la chaîne

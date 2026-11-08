@@ -92,6 +92,78 @@ Removing it means deleting one folder and one dependency.
    The app falls back to the rules by itself. The procedure will be written down in the docs,
    together with the licence reminder.
 
+## Detailed comparison, by plan style (added 8 November 2026)
+
+**Modern plans, measured**: 60 plans from CubiCasa5K's test split. For doors and windows, the first
+figure is the share found, the second the share correct.
+
+| Style | Walls (F1) | Doors | Windows |
+|---|---|---|---|
+| Architect plans, 41 plans | rules 0.55 · **model 0.78** | rules 21% / 22% · **model 78% / 72%** | rules 14% / 12% · **model 70% / 78%** |
+| Black-and-white CAD, 11 plans | rules 0.80 · **model 0.88** | rules 32% / 25% · **model 89% / 76%** | rules 51% / 28% · **model 91% / 87%** |
+| Colour listings, 8 plans | rules 0.70 · **model 0.81** | rules 26% / 30% · **model 82% / 73%** | rules 19% / 27% · **model 75% / 66%** |
+
+**Old and hand-drawn plans, judged by eye** (no annotations exist).
+
+| Plan | Walls | Doors and windows |
+|---|---|---|
+| Tanlay (black poché) | rules: some; **model: nearly all** | model: a few windows |
+| Pau (wash) | both fair, the model cleaner | few, on both sides |
+| Pierrefonds (Viollet-le-Duc) | both fair, towers included | few, on both sides |
+| Coloured Versailles | both struggle under the colour fills | weak on both sides |
+| 1875 apartment (control) | rules: fair; **model: very good** | **model: windows and doors right** |
+| Clagny, wash (control) | rules: almost nothing; **model: most** | weak |
+| U-shaped house, by hand | rules: a fragment; **model: most** | model: some |
+| Griswold, by hand (control) | rules: fragments; **model: good** | **model: most** |
+
+The model's recurring flaw: it takes **courtyards** and the nearby outside for rooms. That does not
+affect walls, and our own room deduction (from the walls) does not depend on it.
+
+## Other models, and their licences (added 8 November 2026)
+
+No floor-plan model is both **more permissive** and **usable**:
+- nearly all are trained on CubiCasa5K, so their weights are non-commercial whatever their code
+  licence: [floorplan-detection](https://github.com/xmarva/floorplan-detection), FloorPlanAnalyzer,
+  DeepFloorplan;
+- the [IIIT Bangalore Roboflow model](https://universe.roboflow.com/iiitbangalore/floor-plan-segmentation-dtr4r)
+  is MIT, but learned from only 148 images: too few;
+- general Apache 2.0 detectors (RF-DETR) know nothing about plans: they would need training.
+
+Floorplan Studio remains the best available choice.
+
+## Training our own model: estimate (added 8 November 2026)
+
+**Free data exists, but as VECTORS, not images**:
+- **MSD**, *Modified Swiss Dwellings*: 5,300 Swiss plans, CC BY 4.0 ([4TU](https://data.4tu.nl/export/cff/datasets/e1d89cb5-6872-48fc-be63-aadd687ee6f9), [paper](https://arxiv.org/abs/2407.10121v3));
+- **ResPlan**: 17,000 South Asian listing plans, data CC BY 4.0 and code MIT ([repository](https://github.com/m-agour/ResPlan));
+- a few **small real-image sets** under CC BY 4.0 on Roboflow Universe, a few hundred images each
+  (to check one by one).
+
+The method would therefore be to **draw the images ourselves** from these vector plans, in every
+style we want to recognise:
+- black poché, double line, hatching, pink wash;
+- furniture, dimensions and text as noise;
+- skewed photo, yellowed scan.
+
+The annotations are then perfect by construction. We add the small real sets, and measure on our
+bench (CubiCasa test, plus our plans). The starting network must be free too: for example a
+torchvision ResNet U-Net (BSD), not NVIDIA's SegFormer.
+
+**Time**:
+
+| Step | On my side | On your side |
+|---|---|---|
+| Get and understand MSD and ResPlan | 1 to 2 h | download (a few GB) |
+| The synthetic plan "drawer", in several styles | 4 to 8 h | — |
+| Training | prepare the script | **a GPU**: yours if you have one, otherwise free Google Colab; 3 to 6 h of compute per run, 2 or 3 runs |
+| Measure, fix, repeat | 2 to 4 h | — |
+| ONNX export and integration | as for the existing model | — |
+
+**In total, count 3 to 5 work sessions**, plus 10 to 20 h of GPU compute.
+
+The main risk: synthetic images that are too "clean" make a model weaker on real scans. We measure
+it, and fix it by dirtying the synthetic images more.
+
 ## Left to decide (Valentin)
 
 - Integrate the model along this architecture? The first step would be to **measure the full
