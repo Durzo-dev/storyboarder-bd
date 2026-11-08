@@ -124,8 +124,11 @@ function mursDroits(r, W, H, longueurMin = 0){
       let pic = 0;
       for (let k = 1; k < profil.length; k++) if (profil[k] > profil[pic]) pic = k;
       let b0 = pic, b1 = pic;
-      while (b0 > 0 && profil[b0 - 1] >= 0.5 * profil[pic]) b0--;
-      while (b1 < profil.length - 1 && profil[b1 + 1] >= 0.5 * profil[pic]) b1++;
+      // 30 % du pic, et non la moitié : une façade dont les fenêtres ne gardent que le châssis (un
+      // trait sur la face intérieure, plan n° 3) n'est pleine que sur la moitié de sa longueur ; à 50 %,
+      // le mur devenait ce seul trait, et les morceaux hachurés partaient à côté.
+      while (b0 > 0 && profil[b0 - 1] >= 0.3 * profil[pic]) b0--;
+      while (b1 < profil.length - 1 && profil[b1 + 1] >= 0.3 * profil[pic]) b1++;
       const dans = [], reste = [];
       for (const p of pts) { const k = pos(p).t - t0; (k >= b0 && k <= b1 ? dans : reste).push(p); }
       let l0 = Infinity, l1 = -Infinity, somme = 0;
@@ -133,7 +136,7 @@ function mursDroits(r, W, H, longueurMin = 0){
       const epaisseur = b1 - b0 + 1, longueur = l1 - l0 + 1;
       // Une bande PLEINE : un mur en biais vu dans ce repère a un profil large et creux (plan de
       // test n° 1, la façade à 13,5°) ; il est laissé à la direction qui est la sienne.
-      if (longueur >= 1.5 * epaisseur + 2 && longueur >= longueurMin && epaisseur >= 2 && dans.length >= 0.6 * longueur * epaisseur) {
+      if (longueur >= 1.5 * epaisseur + 2 && longueur >= longueurMin && epaisseur >= 2 && dans.length >= 0.5 * longueur * epaisseur) {
         const axe = somme / dans.length + 0.5;
         murs.push(horizontal
           ? { a: { x: l0, y: axe }, b: { x: l1 + 1, y: axe }, epaisseur }
@@ -238,6 +241,27 @@ function joindre(segments){
 }
 
 /**
+ * Sans les DOUBLONS : un mur mince parallèle à un mur au moins deux fois plus épais, collé à sa bande
+ * ou dedans, et couvert par lui sur 70 % de sa longueur. C'est un trait de la même façade (sa face
+ * extérieure, continue devant les fenêtres, plan n° 3) qu'il ne faut pas compter deux fois : il
+ * portait de fausses ouvertures.
+ */
+function sansDoublons(segments){
+  const L = (s) => Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y);
+  return segments.filter(s => !segments.some(t => {
+    if (t === s || t.epaisseur < 2 * s.epaisseur) return false;
+    const Lt = L(t), ux = (t.b.x - t.a.x) / Lt, uy = (t.b.y - t.a.y) / Lt;
+    const Ls = L(s), vx = (s.b.x - s.a.x) / Ls, vy = (s.b.y - s.a.y) / Ls;
+    if (Math.abs(ux * vy - uy * vx) > Math.sin(3 * Math.PI / 180)) return false;
+    const n = (p) => -(p.x - t.a.x) * uy + (p.y - t.a.y) * ux, l = (p) => (p.x - t.a.x) * ux + (p.y - t.a.y) * uy;
+    const marge = t.epaisseur / 2 + s.epaisseur / 2 + 2;
+    if (Math.abs(n(s.a)) > marge || Math.abs(n(s.b)) > marge) return false;
+    const l0 = Math.max(0, Math.min(l(s.a), l(s.b))), l1 = Math.min(Lt, Math.max(l(s.a), l(s.b)));
+    return l1 - l0 >= 0.7 * Ls;
+  }));
+}
+
+/**
  * Les murs du masque `murs` (w × h, 1 = mur) en SEGMENTS : `{ angle, segments: [{ a: {x, y},
  * b: {x, y}, epaisseur }] }`, en pixels de la même image ; `angle` est la direction dominante.
  */
@@ -270,7 +294,7 @@ export function vectoriserLesMurs(murs, w, h){
   const longueurDe = (s) => Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y);
   const gardes = droits.filter(s => !(s.epaisseur < 0.5 * epaisseurType && longueurDe(s) < 4 * epaisseurType));
   const biais = mursEnBiais(reste, w, h, new Uint8Array(w * h), epaisseurType).filter(s => s.epaisseur >= 0.5 * epaisseurType);
-  return { angle, segments: joindre([...gardes, ...biais]) };
+  return { angle, segments: joindre(sansDoublons([...gardes, ...biais])) };
 }
 
 /**

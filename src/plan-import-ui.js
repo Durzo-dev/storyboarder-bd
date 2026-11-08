@@ -51,7 +51,7 @@ async function lirePixels(data, nom){
 function analyser(pixels){
   const d = detecterLesMurs(pixels.data, pixels.width, pixels.height);
   const { segments } = vectoriserLesMurs(d.murs, d.largeur, d.hauteur);
-  const avecOuvertures = ouverturesDuPlan(segments, d.encre, d.largeur, d.hauteur);
+  const avecOuvertures = ouverturesDuPlan(segments, d.encre, d.largeur, d.hauteur, d.murs);
   return { facteur: d.facteur, segments: avecOuvertures, estimation: estimerLEchelle(avecOuvertures) };
 }
 

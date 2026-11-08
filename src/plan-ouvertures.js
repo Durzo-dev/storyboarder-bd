@@ -183,15 +183,23 @@ function traitsContinus(profil){
 
 /** La part d'un quart de cercle de rayon `r`, autour de la charnière `H`, qui porte de l'encre. */
 function couvertureDArc(H, le, cote, r, lire){
-  let touches = 0, n = 0;
-  // De 20° à 80° : plus près du mur, l'arc se confond avec les appuis et les traits le long du mur.
-  for (let phi = 20; phi <= 80; phi += 5, n++) {
-    const d = { x: Math.cos(phi * DEG) * le.x + Math.sin(phi * DEG) * cote.x, y: Math.cos(phi * DEG) * le.y + Math.sin(phi * DEG) * cote.y };
-    for (let rho = 0.7 * r; rho <= 1.15 * r; rho += 0.5) {
-      if (lire(H.x + d.x * rho, H.y + d.y * rho)) { touches++; break; }
+  const anneau = (rho0, rho1, phi0, phi1) => {
+    let touches = 0, n = 0;
+    for (let phi = phi0; phi <= phi1; phi += 5, n++) {
+      const d = { x: Math.cos(phi * DEG) * le.x + Math.sin(phi * DEG) * cote.x, y: Math.cos(phi * DEG) * le.y + Math.sin(phi * DEG) * cote.y };
+      for (let rho = rho0 * r; rho <= rho1 * r; rho += 0.5) {
+        if (lire(H.x + d.x * rho, H.y + d.y * rho)) { touches++; break; }
+      }
     }
-  }
-  return touches / n;
+    return touches / n;
+  };
+  // De 20° à 80° : plus près du mur, l'arc se confond avec les appuis et les traits le long du mur.
+  const arc = anneau(0.7, 1.15, 20, 80);
+  // ⚠️ L'INTÉRIEUR DU QUART DE CERCLE doit être VIDE : l'arc d'une porte est centré sur sa
+  // charnière ; le demi-cercle pointillé qui dessine le débattement d'une fenêtre à battants (plan
+  // n° 3), centré au milieu de la baie, traverse aussi l'anneau extérieur, mais passe à mi-rayon.
+  const dedans = anneau(0.3, 0.55, 30, 60);
+  return dedans > 0.3 ? 0 : arc;
 }
 
 /** La nature d'une ouverture [s0, s1] du segment `s`. */
@@ -224,25 +232,30 @@ function natureDe(s, o, lire){
 }
 
 /** Les fenêtres comblées d'un mur plein : les tronçons où l'encre se réduit à des rangées continues. */
-function fenetresComblees(s, lire){
+function fenetresComblees(s, lire, lireMasque){
   const u = unitaire(s), n = { x: -u.y, y: u.x }, e = s.epaisseur, L = longueurDe(s);
   if (e < 5) return [];
+  // Le remplissage se lit sur le MASQUE DES MURS quand on l'a : plein sur un mur hachuré ou en double
+  // trait comme sur un poché, il ne garde aux fenêtres que le châssis (plan n° 3). Sur l'encre, un
+  // mur hachuré n'était plein qu'à moitié, et ses fenêtres ne se distinguaient plus.
+  const lecture = lireMasque || lire;
   const remplissage = [];
   for (let t = 0; t < L; t++) {
     let plein = 0, total = 0;
     for (let k = -e / 2 + 0.5; k <= e / 2 - 0.5; k += 1, total++) {
-      if (lire(s.a.x + u.x * t + n.x * k, s.a.y + u.y * t + n.y * k)) plein++;
+      if (lecture(s.a.x + u.x * t + n.x * k, s.a.y + u.y * t + n.y * k)) plein++;
     }
     remplissage.push(plein / total);
   }
   const base = [...remplissage].sort((a, b) => a - b)[remplissage.length >> 1];
-  if (base < 0.8) return [];   // un mur hachuré, ou en double trait : rien à comparer
+  if (base < 0.8) return [];   // rien de plein à quoi comparer
   const res = [];
   let t = 0;
   while (t < L) {
     if (remplissage[t] >= 0.6 * base || s.ouv.some(o => t >= o.s0 - 1 && t <= o.s1 + 1)) { t++; continue; }
     let f = t; while (f < L && remplissage[f] < 0.6 * base) f++;
-    if (f - t >= Math.max(3, e) && Math.max(0, ...rangees(s, t - 1, f + 1, lire)) >= 0.8) res.push({ s0: t, s1: f, type: 'fenetre' });
+    // Au moins une épaisseur de long, et un trait continu (le châssis, le vitrage) dans l'encre.
+    if (f - t >= Math.max(3, e) && Math.max(0, ...rangees(s, t - 1, f + 1, lire)) >= 0.7) res.push({ s0: t, s1: f, type: 'fenetre' });
     t = f;
   }
   return res;
@@ -250,19 +263,20 @@ function fenetresComblees(s, lire){
 
 /**
  * Les ouvertures du plan. `segments` : ceux de `vectoriserLesMurs` ; `encre` : le masque d'encre
- * d'origine de `detecterLesMurs`, de taille w × h. Rend des segments `{ a, b, epaisseur, ouvertures:
+ * d'origine de `detecterLesMurs`, de taille w × h ; `murs` (facultatif) : son masque des murs, où
+ * les fenêtres comblées se lisent le mieux. Rend des segments `{ a, b, epaisseur, ouvertures:
  * [{ s0, s1, type, sens?, charniere?, battants? }] }`, s0 et s1 en pixels depuis a.
  */
-export function ouverturesDuPlan(segments, encre, w, h){
+export function ouverturesDuPlan(segments, encre, w, h, murs = null){
   const segs = segments.filter(s => longueurDe(s) >= 1).map(s => ({ a: { ...s.a }, b: { ...s.b }, epaisseur: s.epaisseur, ouv: [] }));
   const ep = segs.map(s => s.epaisseur).sort((x, y) => x - y);
   _epaisseurType = ep.length ? ep[ep.length >> 1] : 0;
   while (fusionnerUnTrou(segs)) { /* jusqu'au dernier trou */ }
   prolongerVersUnMur(segs);
-  const lire = lecteur(encre, w, h);
+  const lire = lecteur(encre, w, h), lireMasque = murs ? lecteur(murs, w, h) : null;
   return segs.filter(s => longueurDe(s) >= 1 && Number.isFinite(s.a.x + s.a.y + s.b.x + s.b.y)).map(s => {
     const ouvertures = s.ouv.map(o => ({ ...o, ...natureDe(s, o, lire) }));
-    ouvertures.push(...fenetresComblees(s, lire));
+    ouvertures.push(...fenetresComblees(s, lire, lireMasque));
     ouvertures.sort((p, q) => p.s0 - q.s0);
     return { a: s.a, b: s.b, epaisseur: s.epaisseur, ouvertures };
   });
