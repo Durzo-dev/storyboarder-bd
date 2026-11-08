@@ -63,8 +63,60 @@ not needed while the existing model is good enough.
   - the 128 × 128 output over 5 classes is scaled back to the image size.
 - **Known limit**: CubiCasa5K is mostly Finnish plans. Hand drawings, very old scans and very
   different styles are outside its domain. The author says so, and our châteaux confirm it.
-- **Not yet measured**: the full chain "model masks → our vectorised walls → editor rooms". That
-  will be the first integration step.
+- **The full chain**, measured at integration time (see below).
+
+## The integration (#456g, 8 November 2026)
+
+Decided by Valentin: the model is integrated, and our rules remain the **fallback** when it is
+absent.
+
+**The full chain, measured.** The model reads the plan, then our steps take over: vectorisation,
+joins, openings, editor rooms. The 60 plans of CubiCasa5K's test split were scored with
+`plans-test/banc/modele_banc.sh test`, and the preparation and decoding are those of
+`src/plan-modele.js` (`JS=1`).
+
+| Measure | Rules | Model + our chain |
+|---|---|---|
+| Walls, F1 (precision, recall) | 0.617 | **0.875** (0.80, 0.97) |
+| Doors found / correct | 23.5% / 23.5% | **80% / 79%** |
+| Windows found / correct | 19% / 16% | **71% / 84%** |
+| Closed rooms / annotated | — | 82% |
+
+The vectorised walls beat the raw mask (0.805), because they run across the openings.
+
+**Three choices, taken from the bench**:
+- **walls are taken from "wall, door or window" together**. Openings sit inside the wall, so it stays
+  continuous and rooms close. Each door or window mass is then placed on the wall it crosses
+  (`ouverturesDesMasques`, in `src/plan-ouvertures.js`). A door's side and hinge are read from its arc
+  in the ink, when one is drawn;
+- **a door is kept as soon as the model gives it 30%**, even when the wall wins. On test plan no. 2
+  this finds twice as many doors, and CubiCasa loses nothing (at 20%, precision fell to 76%);
+- **a remaining gap is closed only up to 3 wall thicknesses**, against 12 with the rules. Openings
+  are already in the mask, and a wider limit threw "walls" across corridors.
+
+**The runtime**: ONNX Runtime Web 1.22.0 (MIT), WASM, one thread. Several threads would need
+cross-origin isolation, which the window does not have. It runs in the page rather than in a
+*Web Worker*, because a plan is read in under a second while the screen shows "Reading the plan…". A
+*Worker* is still possible if that becomes a problem. The model and runtime load on the first read,
+then stay in memory.
+
+## Unplugging the model
+
+If Storyboarder were ever sold, or if the licence became a concern:
+
+1. delete the `assets/modeles/plans/` folder;
+2. `npm uninstall onnxruntime-web`, then remove its three `node_modules/onnxruntime-web/…` lines from
+   `build.files` in `package.json`;
+3. delete `src/plan-modele.js` and `tests/plan-modele.test.mjs`.
+
+The plan import falls back to the rules by itself. `ouverturesDesMasques` (`src/plan-ouvertures.js`)
+can stay: it only knows masks, whatever produced them, and would serve a model of our own. The
+weights remain in the git history; only a history rewrite would remove them.
+
+**What the licence says, exactly.** NVIDIA's licence (section 3.3) restricts use to
+"non-commercial", which it defines as **"for research or evaluation purposes only"**. That is
+narrower than "not sold". CubiCasa5K (CC BY-NC 4.0) only forbids commercial use. It is for Valentin to
+judge whether his use of Storyboarder fits. This is not legal advice.
 
 ## Proposed architecture: an unpluggable model
 
@@ -164,12 +216,10 @@ torchvision ResNet U-Net (BSD), not NVIDIA's SegFormer.
 The main risk: synthetic images that are too "clean" make a model weaker on real scans. We measure
 it, and fix it by dirtying the synthetic images more.
 
-## Left to decide (Valentin)
+## Decided (Valentin)
 
-- Integrate the model along this architecture? The first step would be to **measure the full
-  chain** on the bench before touching the import screen.
-- Keep our rules as a fallback (model absent), or reserve them for old plans, where the model is
-  weaker?
+- The model is integrated along this architecture (#456g, see "The integration").
+- The rules remain the fallback when the model is absent.
 
 ## Sources
 

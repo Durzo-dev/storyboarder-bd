@@ -67,8 +67,63 @@ PyTorch, et il est hors réseau. Ce n'est pas nécessaire tant que le modèle ex
 - **Limite connue** : CubiCasa5K est surtout fait de plans finlandais. Les plans à la main, les
   scans très anciens et les styles très différents sont hors de son domaine. L'auteur le dit, et
   nos châteaux le confirment.
-- **Pas encore mesuré** : la chaîne complète « masques du modèle → nos murs vectorisés → pièces de
-  l'éditeur ». Ce sera la première étape de l'intégration.
+- **La chaîne complète**, mesurée au moment de l'intégration (voir plus bas).
+
+## L'intégration (#456g, 8 novembre 2026)
+
+Décidée par Valentin : le modèle est intégré, et nos règles restent **en secours** quand il est absent.
+
+**La chaîne complète, mesurée.** Le modèle lit le plan, puis nos étapes prennent le relais :
+vectorisation, raccords, ouvertures, pièces de l'éditeur. Les 60 plans de la partie test de
+CubiCasa5K ont été notés avec `plans-test/banc/modele_banc.sh test`, et la préparation et le décodage
+sont ceux de `src/plan-modele.js` (`JS=1`).
+
+| Mesure | Règles | Modèle + notre chaîne |
+|---|---|---|
+| Murs, F1 (précision, rappel) | 0,617 | **0,875** (0,80, 0,97) |
+| Portes trouvées / justes | 23,5 % / 23,5 % | **80 % / 79 %** |
+| Fenêtres trouvées / justes | 19 % / 16 % | **71 % / 84 %** |
+| Pièces fermées / annotées | — | 82 % |
+
+Les murs vectorisés font mieux que le masque brut (0,805), parce qu'ils passent devant les baies.
+
+**Trois choix, tirés du banc** :
+- **les murs sont pris sur « mur, porte ou fenêtre » réunis**. Les baies sont dans le mur : il reste
+  continu, et les pièces se ferment. Chaque masse de porte ou de fenêtre est ensuite posée sur le mur
+  qu'elle traverse (`ouverturesDesMasques`, dans `src/plan-ouvertures.js`). Le côté et la charnière
+  d'une porte se lisent sur son arc dans l'encre, quand il est dessiné ;
+- **une porte est retenue dès que le modèle lui donne 30 %**, même si le mur l'emporte. Sur le plan
+  de test n° 2, cela trouve deux fois plus de portes, et CubiCasa n'y perd rien (à 20 %, la
+  précision tombait à 76 %) ;
+- **un trou restant n'est refermé que s'il fait au plus 3 épaisseurs de mur**, contre 12 avec les
+  règles. Les baies sont déjà dans le masque, et une limite plus large jetait des « murs » à travers
+  les couloirs.
+
+**Le moteur** : ONNX Runtime Web 1.22.0 (MIT), WASM, un seul fil. Plusieurs fils demanderaient
+l'isolation d'origine, que la fenêtre n'a pas. Il tourne dans la page et non dans un *Web Worker*,
+car un plan se lit en moins d'une seconde, pendant que l'écran affiche « Lecture du plan… ». Un
+*Worker* reste possible si cela gêne. Le modèle et le moteur sont chargés à la première lecture,
+puis gardés en mémoire.
+
+## Débrancher le modèle
+
+Si Storyboarder devait un jour être vendu, ou si la licence posait question :
+
+1. supprimer le dossier `assets/modeles/plans/` ;
+2. `npm uninstall onnxruntime-web`, puis retirer ses trois lignes `node_modules/onnxruntime-web/…`
+   de `build.files` dans `package.json` ;
+3. supprimer `src/plan-modele.js` et `tests/plan-modele.test.mjs`.
+
+L'import de plan revient de lui-même aux règles. `ouverturesDesMasques` (`src/plan-ouvertures.js`)
+peut rester : elle ne connaît que des masques, quels qu'ils soient, et resservirait à un modèle à
+nous. Les poids restent dans l'historique git ; seule une réécriture de l'historique les en
+retirerait.
+
+**Ce que dit la licence, exactement.** Celle de NVIDIA (section 3.3) limite l'usage au
+« non commercial », qu'elle définit comme **« à des fins de recherche ou d'évaluation seulement »**.
+C'est plus étroit que « non vendu ». CubiCasa5K (CC BY-NC 4.0) n'interdit, lui, que l'usage
+commercial. À Valentin de juger si son usage de Storyboarder entre dans ce cadre. Ce n'est pas un
+avis juridique.
 
 ## L'architecture proposée : un modèle débranchable
 
@@ -171,12 +226,10 @@ par exemple un U-Net sur ResNet de torchvision (BSD), et non SegFormer de NVIDIA
 Le risque principal : des images de synthèse trop « propres » font un modèle moins bon sur les vrais
 scans. On le mesure, et on le corrige en salissant davantage les images de synthèse.
 
-## Ce qui reste à décider (Valentin)
+## Ce qui a été décidé (Valentin)
 
-- Intégrer le modèle selon cette architecture ? Le premier pas serait de **mesurer la chaîne
-  complète** sur le banc avant de toucher à l'écran d'import.
-- Garder nos règles en secours (modèle absent), ou les réserver aux plans anciens, où le modèle est
-  plus faible ?
+- Le modèle est intégré selon cette architecture (#456g, voir « L'intégration »).
+- Les règles restent en secours, quand le modèle est absent.
 
 ## Sources
 

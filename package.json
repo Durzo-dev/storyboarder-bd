@@ -1,6 +1,6 @@
 {
   "name": "storyboard-bd",
-  "version": "1.16.26",
+  "version": "1.16.27",
   "engines": {
     "node": ">=22"
   },
@@ -25,6 +25,7 @@
     "obligatoire": "node tools/obligatoire.mjs"
   },
   "dependencies": {
+    "onnxruntime-web": "1.22.0",
     "three": "0.128.0"
   },
   "devDependencies": {
@@ -43,7 +44,10 @@
       "package.json",
       "src/**/*",
       "tools/bake-textures.mjs",
-      "node_modules/three/build/three.min.js"
+      "node_modules/three/build/three.min.js",
+      "node_modules/onnxruntime-web/dist/ort.wasm.min.mjs",
+      "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs",
+      "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm"
     ],
     "win": {
       "icon": "assets/icone/storyboarder-bd.ico",

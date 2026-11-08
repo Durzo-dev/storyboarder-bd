@@ -43,7 +43,13 @@ const TROU_MAX = 12;
 /** Jusqu'à trois fois plus large, quand le trou porte du vitrage (une baie, une façade vitrée). */
 const VITRAGE_MAX = 3;
 let _epaisseurType = 0;
-const trouMax = (t) => TROU_MAX * (_epaisseurType || t);
+/**
+ * Avec une SEGMENTATION (`ouverturesDesMasques`), les baies sont déjà dans le mur : un trou restant
+ * n'est qu'une cassure du masque, de deux ou trois épaisseurs au plus. Lui laisser les 12 des règles
+ * jetait des « murs » à travers les couloirs et les cuisines (plan de test n° 2).
+ */
+let _trouMax = TROU_MAX;
+const trouMax = (t) => _trouMax * (_epaisseurType || t);
 
 /** Le segment retourné (a et b échangés), ses ouvertures avec lui. */
 function retourner(s){
@@ -446,4 +452,105 @@ export function ouverturesDuPlan(segments, encre, w, h, murs = null){
     ouvertures.sort((p, q) => p.s0 - q.s0);
     return { a: s.a, b: s.b, epaisseur: s.epaisseur, ouvertures };
   });
+}
+
+/**
+ * Les masses d'un masque (4-connexité), de `minimum` pixels au moins : leurs pixels, en indices.
+ * (Les portes et les fenêtres d'une SEGMENTATION, cf. `ouverturesDesMasques`.)
+ */
+function massesDe(masque, w, h, minimum){
+  const vu = new Uint8Array(w * h), res = [], pile = [];
+  for (let p0 = 0; p0 < w * h; p0++) {
+    if (!masque[p0] || vu[p0]) continue;
+    const pixels = [];
+    vu[p0] = 1; pile.push(p0);
+    while (pile.length) {
+      const p = pile.pop(), x = p % w;
+      pixels.push(p);
+      for (const q of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) {
+        if (q >= 0 && q < w * h && masque[q] && !vu[q]) { vu[q] = 1; pile.push(q); }
+      }
+    }
+    if (pixels.length >= minimum) res.push(pixels);
+  }
+  return res;
+}
+
+/**
+ * LES OUVERTURES D'UNE SEGMENTATION, quand un modèle entraîné a lu le plan (le greffon,
+ * docs/en/plan-modele.md) : il rend, pixel par pixel, ce qui est mur, porte ou fenêtre. Les murs ont
+ * été vectorisés sur « mur, porte ou fenêtre » réunis : ils sont CONTINUS au droit des baies, et les
+ * pièces se ferment. Les trous restants sont refermés comme pour les règles (mêmes raccords), puis
+ * chaque masse de porte ou de fenêtre est posée sur le mur qu'elle traverse, à la place et à la
+ * largeur qu'elle y couvre. Le côté et la charnière d'une porte se lisent sur son ARC dans l'encre
+ * (comme `natureDe`), quand il est dessiné ; sinon, valeurs par défaut.
+ *
+ * `masques` : `{ portes, fenetres }`, des Uint8Array de w × h (1 sur la classe) ; `encre` : comme
+ * pour `ouverturesDuPlan`. Rend les mêmes segments `{ a, b, epaisseur, ouvertures }`.
+ */
+const TROU_MAX_MASQUES = 3;
+export function ouverturesDesMasques(segments, masques, w, h, encre = null){
+  const segs = segments.filter(s => longueurDe(s) >= 1).map(s => ({ a: { ...s.a }, b: { ...s.b }, epaisseur: s.epaisseur, ouv: [] }));
+  const ep = segs.map(s => s.epaisseur).sort((x, y) => x - y);
+  _epaisseurType = ep.length ? ep[ep.length >> 1] : 0;
+  const lire = encre ? lecteur(encre, w, h) : null;
+  _trouMax = TROU_MAX_MASQUES;
+  try {
+    while (fusionnerUnTrou(segs, null)) { /* jusqu'au dernier trou */ }
+  } finally { _trouMax = TROU_MAX; }
+  prolongerVersUnMur(segs);
+  const soudes = souder(segs, Math.max(2, 0.5 * _epaisseurType)).filter(s => longueurDe(s) >= 1 && Number.isFinite(s.a.x + s.a.y + s.b.x + s.b.y));
+  const res = soudes.map(s => ({ a: s.a, b: s.b, epaisseur: s.epaisseur, ouvertures: [] }));
+  // Une masse plus petite qu'un carré d'une demi-épaisseur de mur est un reste de la segmentation.
+  const minimum = Math.max(6, Math.round(0.25 * _epaisseurType * _epaisseurType));
+  for (const [type, masque] of [['porte', masques.portes], ['fenetre', masques.fenetres]]) {
+    if (!masque) continue;
+    for (const pixels of massesDe(masque, w, h, minimum)) {
+      // Le mur qu'elle traverse : celui où tombe le plus de ses pixels (dans son épaisseur, un peu
+      // élargie : la masse déborde souvent le mur, l'arc d'une porte surtout).
+      let meilleur = null;
+      for (const s of res) {
+        const u = unitaire(s), L = longueurDe(s), marge = Math.max(3, 0.75 * s.epaisseur);
+        const ts = [];
+        for (const p of pixels) {
+          const x = p % w + 0.5 - s.a.x, y = Math.floor(p / w) + 0.5 - s.a.y;
+          const t = x * u.x + y * u.y, k = -x * u.y + y * u.x;
+          if (Math.abs(k) <= marge && t >= -2 && t <= L + 2) ts.push(t);
+        }
+        if (ts.length && (!meilleur || ts.length > meilleur.ts.length)) meilleur = { s, ts, L };
+      }
+      if (!meilleur || meilleur.ts.length < 0.3 * pixels.length) continue;
+      const ts = meilleur.ts.sort((p, q) => p - q);
+      const s0 = Math.max(0, ts[Math.floor(0.02 * (ts.length - 1))]), s1 = Math.min(meilleur.L, ts[Math.ceil(0.98 * (ts.length - 1))]);
+      if (s1 - s0 < Math.max(4, _epaisseurType)) continue;
+      const o = { s0, s1, type };
+      if (type === 'porte') Object.assign(o, { sens: 1, charniere: 'debut', battants: 1 }, lire ? sensDeLaPorte(meilleur.s, o, lire) : {});
+      const deja = meilleur.s.ouvertures;
+      if (deja.some(q => o.s0 < q.s1 - 1 && q.s0 < o.s1 - 1)) continue;
+      deja.push(o);
+    }
+  }
+  for (const s of res) s.ouvertures.sort((p, q) => p.s0 - q.s0);
+  return res;
+}
+
+/** Le côté, la charnière et les battants d'une porte d'après son arc (cf. `natureDe`), ou rien. */
+function sensDeLaPorte(s, o, lire){
+  const u = unitaire(s), n = { x: -u.y, y: u.x }, e = s.epaisseur / 2, g = o.s1 - o.s0;
+  const point = (t, k) => ({ x: s.a.x + u.x * t + n.x * k, y: s.a.y + u.y * t + n.y * k });
+  const moinsU = { x: -u.x, y: -u.y };
+  let meilleur = { score: 0 };
+  for (const sens of [1, -1]) {
+    const cote = { x: n.x * sens, y: n.y * sens };
+    const debut = couvertureDArc(point(o.s0, sens * e), u, cote, g, lire);
+    const fin = couvertureDArc(point(o.s1, sens * e), moinsU, cote, g, lire);
+    const deux = Math.min(couvertureDArc(point(o.s0, sens * e), u, cote, g / 2, lire),
+      couvertureDArc(point(o.s1, sens * e), moinsU, cote, g / 2, lire));
+    for (const c of [
+      { score: debut, sens, charniere: 'debut', battants: 1 },
+      { score: fin, sens, charniere: 'fin', battants: 1 },
+      { score: deux + 0.01, sens, charniere: 'debut', battants: 2 },
+    ]) if (c.score > meilleur.score) meilleur = c;
+  }
+  return meilleur.score >= 0.4 ? { sens: meilleur.sens, charniere: meilleur.charniere, battants: meilleur.battants } : {};
 }

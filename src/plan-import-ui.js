@@ -25,7 +25,7 @@ import { choisirImage } from './image-store.js';
 import { enregistrerFermeture } from './modal-stack.js';
 import { detecterLesMurs } from './plan-murs.js';
 import { vectoriserLesMurs, batimentDuPlan } from './plan-vecteurs.js';
-import { ouverturesDuPlan } from './plan-ouvertures.js';
+import { ouverturesDuPlan, ouverturesDesMasques } from './plan-ouvertures.js';
 import { redresserLaFeuille } from './plan-feuille.js';
 import { UNITES_DE_LONGUEUR, estimerLEchelle, echelleDeuxPoints, longueurEntre, controlerLEchelle } from './plan-echelle.js';
 
@@ -59,12 +59,36 @@ async function lirePixels(data, nom){
   return { bitmap: await createImageBitmap(redressee), pixels: redressee };
 }
 
-/** L'analyse complète : murs, segments, ouvertures, estimation de l'échelle. */
-function analyser(pixels){
+/**
+ * #456g, LE MODÈLE ENTRAÎNÉ, s'il est là : un GREFFON (src/plan-modele.js, docs/en/plan-modele.md),
+ * chargé par import dynamique. Absent (retiré pour cause de licence) ou en échec : null, et les règles
+ * font tout, comme avant.
+ */
+async function masquesDuModele(pixels, W, H){
+  try {
+    const m = await import('./plan-modele.js');
+    return await m.lireLePlan(pixels.data, pixels.width, pixels.height, W, H);
+  } catch { return null; }
+}
+
+/**
+ * L'analyse complète : murs, segments, ouvertures, estimation de l'échelle. Les règles détectent
+ * toujours (l'encre sert aux arcs des portes, la taille de travail à tout) ; avec le modèle, ses murs,
+ * ses portes et ses fenêtres remplacent les leurs (CubiCasa5K, plans jamais vus : murs 0,88 au lieu
+ * de 0,62 ; portes 80 % au lieu de 24 % ; fenêtres 71 % au lieu de 19 %).
+ */
+async function analyser(pixels){
   const d = detecterLesMurs(pixels.data, pixels.width, pixels.height);
-  const { segments } = vectoriserLesMurs(d.murs, d.largeur, d.hauteur);
-  const avecOuvertures = ouverturesDuPlan(segments, d.encre, d.largeur, d.hauteur, d.murs);
-  return { facteur: d.facteur, segments: avecOuvertures, estimation: estimerLEchelle(avecOuvertures) };
+  const masques = await masquesDuModele(pixels, d.largeur, d.hauteur);
+  let avecOuvertures;
+  if (masques) {
+    const { segments } = vectoriserLesMurs(masques.murs, d.largeur, d.hauteur);
+    avecOuvertures = ouverturesDesMasques(segments, masques, d.largeur, d.hauteur, d.encre);
+  } else {
+    const { segments } = vectoriserLesMurs(d.murs, d.largeur, d.hauteur);
+    avecOuvertures = ouverturesDuPlan(segments, d.encre, d.largeur, d.hauteur, d.murs);
+  }
+  return { facteur: d.facteur, segments: avecOuvertures, estimation: estimerLEchelle(avecOuvertures), modele: !!masques };
 }
 
 /** Les points d'échelle par défaut : les bouts du plus long mur, en pixels de l'image d'origine. */
@@ -128,7 +152,8 @@ function majTextes(){
   const n = (t) => ouv.filter(o => o.type === t).length;
   $('planImportResume').textContent = tr(
     `Found: ${segs.length} walls, ${n('porte')} doors, ${n('fenetre')} windows, ${n('passage')} openings.`,
-    `Trouvé : ${segs.length} murs, ${n('porte')} portes, ${n('fenetre')} fenêtres, ${n('passage')} passages.`);
+    `Trouvé : ${segs.length} murs, ${n('porte')} portes, ${n('fenetre')} fenêtres, ${n('passage')} passages.`)
+    + (I.analyse.modele ? tr(' (read by the trained model)', ' (lu par le modèle entraîné)') : '');
   const mpp = echelleCourante();
   const textes = {
     'murs-minces': tr('At this scale the walls are under 4 cm thick: check the length.', 'À cette échelle, les murs font moins de 4 cm : vérifiez la longueur.'),
@@ -197,9 +222,12 @@ export async function ouvrirImportDePlan({ surConstruire, alerter }){
   // L'analyse prend une seconde : laisser d'abord la modale et l'image s'afficher.
   requestAnimationFrame(() => {
     dessiner();
-    setTimeout(() => {
+    setTimeout(async () => {
       if (!I) return;
-      I.analyse = analyser(lu.pixels);
+      const courant = I, analyse = await analyser(lu.pixels);
+      // Fermé, ou un autre plan ouvert, pendant la lecture : ce résultat n'a plus de destinataire.
+      if (I !== courant) return;
+      I.analyse = analyse;
       I.points = pointsParDefaut(I.analyse);
       preRemplir(); majTextes(); dessiner();
     }, 30);
