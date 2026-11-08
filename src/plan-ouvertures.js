@@ -329,6 +329,17 @@ function fenetresComblees(s, lire, lireMasque){
   return res;
 }
 
+/** Le battant d'une porte : un trait de la charnière H, dans la direction c, sur 15 à 90 % de R. */
+function battant(H, c, R, lire){
+  const t = { x: -c.y, y: c.x };   // de quoi tolérer un pixel de part et d'autre du trait
+  let touches = 0, n = 0;
+  for (let k = 0.15; k <= 0.9; k += 0.05, n++) {
+    const x = H.x + c.x * k * R, y = H.y + c.y * k * R;
+    if (lire(x, y) || lire(x + t.x, y + t.y) || lire(x - t.x, y - t.y)) touches++;
+  }
+  return touches / n >= 0.6;
+}
+
 /**
  * LES PORTES PAR LEUR ARC, sans attendre un trou dans le mur : le long du mur, de chaque côté et dans
  * les deux sens, on cherche un quart de cercle dessiné, centré sur une face du mur (la charnière) et
@@ -363,6 +374,11 @@ function portesParArcs(s, lire, deja, disques){
       if (anneau(H, d, c, 0, 0.3 * R, 0.55 * R, 30, 60) > 0.25) continue;
       if (anneau(H, d, c, 0, 0.62 * R, 0.85 * R, 25, 65) > 0.25) continue;
       if (anneau(H, d, c, 0, 1.15 * R, 1.3 * R, 25, 65) > 0.25) continue;
+      // Et son BATTANT, un trait droit de la charnière, perpendiculaire au mur, de la longueur du
+      // rayon : un cercle en pointillés (l'aire de rotation d'un fauteuil roulant, CubiCasa5K) n'en a
+      // pas. Exigé, il faisait perdre plus de vraies portes qu'il n'en écartait de fausses (bien des
+      // plans ne le dessinent pas) : sans battant, l'arc doit être presque complet.
+      if (arc < 0.95 && !battant(H, c, R, lire)) continue;
       // Une courbe DÉJÀ EXPLIQUÉE par une porte trouvée ne fait pas une seconde porte (l'arc d'une
       // porte, vu depuis le mur d'à côté) : si la moitié de ses points tombe SUR le cercle de
       // celle-ci, c'est la même courbe. (Exclure tout le quart de disque était trop large : de
@@ -411,7 +427,10 @@ export function ouverturesDuPlan(segments, encre, w, h, murs = null){
   const valides = segs.filter(s => longueurDe(s) >= 1 && Number.isFinite(s.a.x + s.a.y + s.b.x + s.b.y));
   const disques = [];
   const premiers = valides.map(s => {
-    const ouvertures = s.ouv.map(o => ({ ...o, ...natureDe(s, o, lire) }));
+    // Un trou sans arc ni vitrage (un « passage ») est le plus souvent un RATÉ de la détection, un
+    // bout de mur manqué, et non une baie libre : CubiCasa5K, 9 % de justes. Il est REFERMÉ (le mur
+    // reste continu) ; une vraie baie libre se rouvre à la main dans l'éditeur.
+    const ouvertures = s.ouv.map(o => ({ ...o, ...natureDe(s, o, lire) })).filter(o => o.type !== 'passage');
     ouvertures.push(...fenetresComblees(s, lire, lireMasque));
     const u = unitaire(s), n = { x: -u.y, y: u.x };
     for (const o of ouvertures) {

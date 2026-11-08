@@ -2,8 +2,8 @@
  * tests/plan-ouvertures.test.mjs : #456c, les ouvertures d'un plan. Un plan synthétique au poché
  * noir, avec les conventions relevées dans docs/en/plan-sources.md : une porte (trou + arc d'un quart
  * de cercle), une porte contre un angle, une porte à deux battants, une fenêtre (trois traits fins
- * dans l'épaisseur du mur, que la détection comble), un passage (un trou, rien d'autre). Puis la
- * chaîne entière jusqu'au bâtiment de l'éditeur.
+ * dans l'épaisseur du mur, que la détection comble), un trou sans rien (REFERMÉ : c'est le plus
+ * souvent un raté de la détection, cf. plan-ouvertures.js). Puis la chaîne jusqu'au bâtiment.
  */
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -57,8 +57,8 @@ describe('#456c, les ouvertures', () => {
   const segs = chaine(plan());
   const ouv = toutes(segs);
 
-  test('cinq ouvertures, une par baie dessinée', () => {
-    assert.equal(ouv.length, 5, JSON.stringify(ouv.map(({ o }) => o.type)));
+  test('quatre ouvertures : une par baie dessinée, sauf le trou sans rien, refermé', () => {
+    assert.equal(ouv.length, 4, JSON.stringify(ouv.map(({ o }) => o.type)));
   });
 
   test('la porte de la cloison : sa place, sa largeur, sa charnière et son côté', () => {
@@ -97,10 +97,9 @@ describe('#456c, les ouvertures', () => {
     assert.ok(Math.abs(p.o.s1 - p.o.s0 - 60) <= 6);
   });
 
-  test('le trou sans rien est un passage', () => {
-    const p = ouv.find(x => proche(centre(x), 494, 175));
-    assert.ok(p);
-    assert.equal(p.o.type, 'passage');
+  test('le trou sans rien est refermé : le mur continue, sans ouverture', () => {
+    assert.ok(!ouv.some(x => proche(centre(x), 494, 175)));
+    assert.ok(segs.some(s => Math.abs(s.a.x - 494) < 2 && Math.abs(s.b.x - 494) < 2 && Math.min(s.a.y, s.b.y) < 150 && Math.max(s.a.y, s.b.y) > 200), 'le mur droit passe devant le trou');
   });
 
   test('un mur plein n\'a pas de fenêtre inventée', () => {
@@ -108,13 +107,13 @@ describe('#456c, les ouvertures', () => {
     assert.equal(sans.filter(x => x.o.type === 'fenetre').length, 0);
   });
 
-  test('de bout en bout : le bâtiment a ses deux pièces fermées et ses cinq ouvertures', () => {
+  test('de bout en bout : le bâtiment a ses deux pièces fermées et ses quatre ouvertures', () => {
     const { batiment, refuses, ouverturesRefusees } = batimentDuPlan(segs, { metresParPixel: 0.0225 });
     assert.equal(refuses, 0);
     assert.equal(ouverturesRefusees, 0);
     assert.equal(batiment.pieces.length, 2);
     const types = batiment.ouvertures.map(o => o.type).sort();
-    assert.deepEqual(types, ['fenetre', 'passage', 'porte', 'porte', 'porte']);
+    assert.deepEqual(types, ['fenetre', 'porte', 'porte', 'porte']);
     const porte = batiment.ouvertures.find(o => o.type === 'porte' && o.battants === 1);
     assert.ok(Math.abs(porte.largeur - 0.9) < 0.06, `largeur ${porte.largeur}`);
   });
