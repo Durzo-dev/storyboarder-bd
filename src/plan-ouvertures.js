@@ -36,9 +36,10 @@ const longueurDe = (s) => norme(sous(s.b, s.a));
  * Le plus large trou accepté, en épaisseurs TYPIQUES des murs du plan (la médiane), et non du mur
  * concerné : sur un vrai plan, des fragments minces étiraient la limite au point de relier des murs
  * sans rapport par de faux trous (plan de test n° 1). Une porte de 0,9 m dans des murs de 20 cm fait
- * 4,5 épaisseurs.
+ * 4,5 épaisseurs ; une baie de 2,4 m, 12. (Ramené à 6 quand les murs détectés étaient encore
+ * pleins de fragments ; remonté à 12 une fois la détection nettoyée, pour les baies des façades.)
  */
-const TROU_MAX = 6;
+const TROU_MAX = 12;
 let _epaisseurType = 0;
 const trouMax = (t) => TROU_MAX * (_epaisseurType || t);
 
@@ -103,23 +104,27 @@ function prolongerVersUnMur(segs){
     const s = segs[i], u = unitaire(s), sortie = bout === 'b' ? u : { x: -u.x, y: -u.y }, P = s[bout];
     let meilleur = null;
     segs.forEach((c, j) => {
-      if (j === i) return;
+      if (j === i || longueurDe(c) < 1) return;
       const uc = unitaire(c), det = sortie.x * uc.y - sortie.y * uc.x;
       if (Math.abs(det) < Math.sin(30 * DEG)) return;
       // P + d·sortie = c.a + t·uc
       const w = sous(c.a, P), d = (w.x * uc.y - w.y * uc.x) / det, t = (w.x * sortie.y - w.y * sortie.x) / det;
       const Lc = longueurDe(c);
       if (t < -c.epaisseur / 2 || t > Lc + c.epaisseur / 2) return;
+      // ⚠️ Un bout qui s'arrête DANS l'épaisseur du mur visé, ou juste avant (g < 2), n'est pas une
+      // ouverture mais une JONCTION : il est raccordé à l'axe, sans trou. L'écarter laissait les
+      // cloisons d'un vrai plan à deux pixels de leur mur, et les pièces ouvertes (plan n° 3).
       const g = d - c.epaisseur / 2;
-      if (g < 2 || g > trouMax(s.epaisseur)) return;
+      if (d < -c.epaisseur || d <= 1 - longueurDe(s) || g > trouMax(s.epaisseur)) return;
       if (!meilleur || d < meilleur.d) meilleur = { j, d, g, X: { x: P.x + sortie.x * d, y: P.y + sortie.y * d }, t, Lc };
     });
     if (!meilleur) continue;
     const L = longueurDe(s);
-    if (bout === 'b') { s.ouv.push({ s0: L, s1: L + meilleur.g }); s.b = meilleur.X; }
+    const trou = meilleur.g >= 2;
+    if (bout === 'b') { if (trou) s.ouv.push({ s0: L, s1: L + meilleur.g }); s.b = meilleur.X; }
     else {
       s.ouv = s.ouv.map(o => ({ s0: o.s0 + meilleur.d, s1: o.s1 + meilleur.d }));
-      s.ouv.push({ s0: meilleur.d - meilleur.g, s1: meilleur.d });
+      if (trou) s.ouv.push({ s0: meilleur.d - meilleur.g, s1: meilleur.d });
       s.a = meilleur.X;
     }
     // Tombé au milieu du mur atteint, il le coupe (jonction en T) ; près d'un bout, il le rejoint.
@@ -155,7 +160,9 @@ function rangees(s, s0, s1, lire){
   const u = unitaire(s), n = { x: -u.y, y: u.x }, e = s.epaisseur, res = [];
   const n0 = Math.ceil(s0 + 1), n1 = Math.floor(s1 - 1);
   if (n1 < n0) return res;
-  for (let k = -e / 2 + 0.5; k <= e / 2 - 0.5; k += 1) {
+  // Deux pixels de plus de chaque côté : le châssis et l'appui sont souvent tracés SUR les faces du
+  // mur, à la limite de l'épaisseur détectée (plan n° 3).
+  for (let k = -e / 2 - 1.5; k <= e / 2 + 1.5; k += 1) {
     let encre = 0;
     for (let t = n0; t <= n1; t++) {
       const x = s.a.x + u.x * t + n.x * k, y = s.a.y + u.y * t + n.y * k;
@@ -167,10 +174,18 @@ function rangees(s, s0, s1, lire){
   return res;
 }
 
+/** Le nombre de TRAITS continus du profil (des rangées voisines à 70 % ou plus comptent pour un). */
+function traitsContinus(profil){
+  let n = 0, dedans = false;
+  for (const v of profil) { if (v >= 0.7 && !dedans) n++; dedans = v >= 0.7; }
+  return n;
+}
+
 /** La part d'un quart de cercle de rayon `r`, autour de la charnière `H`, qui porte de l'encre. */
 function couvertureDArc(H, le, cote, r, lire){
   let touches = 0, n = 0;
-  for (let phi = 5; phi <= 85; phi += 5, n++) {
+  // De 20° à 80° : plus près du mur, l'arc se confond avec les appuis et les traits le long du mur.
+  for (let phi = 20; phi <= 80; phi += 5, n++) {
     const d = { x: Math.cos(phi * DEG) * le.x + Math.sin(phi * DEG) * cote.x, y: Math.cos(phi * DEG) * le.y + Math.sin(phi * DEG) * cote.y };
     for (let rho = 0.7 * r; rho <= 1.15 * r; rho += 0.5) {
       if (lire(H.x + d.x * rho, H.y + d.y * rho)) { touches++; break; }
@@ -181,7 +196,12 @@ function couvertureDArc(H, le, cote, r, lire){
 
 /** La nature d'une ouverture [s0, s1] du segment `s`. */
 function natureDe(s, o, lire){
-  if (Math.max(0, ...rangees(s, o.s0, o.s1, lire)) >= 0.8) return { type: 'fenetre' };
+  // LE VITRAGE D'ABORD, compté en TRAITS : une fenêtre en a deux ou trois dans l'épaisseur du mur,
+  // le seuil d'une porte un seul. L'arc ne départage pas : les fenêtres à battants du plan n° 3 ont
+  // le leur (en pointillés, dehors). Puis l'arc (porte), puis un trait seul (fenêtre), puis rien
+  // (passage).
+  const traits = traitsContinus(rangees(s, o.s0, o.s1, lire));
+  if (traits >= 2) return { type: 'fenetre' };
   const u = unitaire(s), n = { x: -u.y, y: u.x }, e = s.epaisseur / 2, g = o.s1 - o.s0;
   const point = (t, k) => ({ x: s.a.x + u.x * t + n.x * k, y: s.a.y + u.y * t + n.y * k });
   const moinsU = { x: -u.x, y: -u.y };
@@ -199,6 +219,7 @@ function natureDe(s, o, lire){
     ]) if (c.score > meilleur.score) meilleur = c;
   }
   if (meilleur.score >= 0.6) return { type: 'porte', sens: meilleur.sens, charniere: meilleur.charniere, battants: meilleur.battants };
+  if (traits === 1) return { type: 'fenetre' };
   return { type: 'passage' };
 }
 
@@ -233,13 +254,13 @@ function fenetresComblees(s, lire){
  * [{ s0, s1, type, sens?, charniere?, battants? }] }`, s0 et s1 en pixels depuis a.
  */
 export function ouverturesDuPlan(segments, encre, w, h){
-  const segs = segments.map(s => ({ a: { ...s.a }, b: { ...s.b }, epaisseur: s.epaisseur, ouv: [] }));
+  const segs = segments.filter(s => longueurDe(s) >= 1).map(s => ({ a: { ...s.a }, b: { ...s.b }, epaisseur: s.epaisseur, ouv: [] }));
   const ep = segs.map(s => s.epaisseur).sort((x, y) => x - y);
   _epaisseurType = ep.length ? ep[ep.length >> 1] : 0;
   while (fusionnerUnTrou(segs)) { /* jusqu'au dernier trou */ }
   prolongerVersUnMur(segs);
   const lire = lecteur(encre, w, h);
-  return segs.map(s => {
+  return segs.filter(s => longueurDe(s) >= 1 && Number.isFinite(s.a.x + s.a.y + s.b.x + s.b.y)).map(s => {
     const ouvertures = s.ouv.map(o => ({ ...o, ...natureDe(s, o, lire) }));
     ouvertures.push(...fenetresComblees(s, lire));
     ouvertures.sort((p, q) => p.s0 - q.s0);

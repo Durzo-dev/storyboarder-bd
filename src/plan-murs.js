@@ -123,6 +123,47 @@ function seuilDEncre(encre){
   return Math.max(30, 4 * mediane + 10);
 }
 
+/** Le seuil d'Otsu des valeurs d'encre au-dessus de `seuil` : ce qui sépare l'encre claire de la foncée. */
+function seuilDOtsu(valeurs, seuil){
+  const hist = new Float64Array(256);
+  let total = 0, somme = 0;
+  for (let p = 0; p < valeurs.length; p++) { const v = valeurs[p]; if (v >= seuil) { hist[v]++; total++; somme += v; } }
+  if (!total) return seuil;
+  let wB = 0, sB = 0, meilleur = seuil, max = -1;
+  for (let v = 0; v < 256; v++) {
+    wB += hist[v]; if (!wB) continue;
+    const wF = total - wB; if (!wF) break;
+    sB += v * hist[v];
+    const mB = sB / wB, mF = (somme - sB) / wF, entre = wB * wF * (mB - mF) * (mB - mF);
+    if (entre > max) { max = entre; meilleur = v; }
+  }
+  return Math.max(seuil, meilleur);
+}
+
+/** Le part d'encre foncée en masses épaisses au-delà de laquelle un plan est dit POCHÉ. */
+export const PART_POCHE = 0.15;
+
+/** Le STYLE du plan ('poche' ou 'trait'), et son encre foncée (masque). */
+function styleDuPlan(valeurs, seuil, W, H){
+  // Le seuil de l'encre foncée est plafonné à la MOITIÉ DE L'ENCRE LA PLUS NOIRE (son 95e centile) :
+  // quand toute l'encre est foncée (rien que des murs noirs), Otsu coupe À L'INTÉRIEUR des murs, entre
+  // ceux du côté clair et ceux du côté sombre d'une photo mal éclairée, et en perd la moitié.
+  const otsu = seuilDOtsu(valeurs, seuil), foncee = new Uint8Array(W * H);
+  const hist = new Uint32Array(256);
+  let total = 0;
+  for (let p = 0; p < valeurs.length; p++) if (valeurs[p] >= seuil) { hist[valeurs[p]]++; total++; }
+  let cumul = 0, p95 = 255;
+  for (; p95 > 0; p95--) { cumul += hist[p95]; if (cumul >= 0.05 * total) break; }
+  const coupe = Math.min(otsu, Math.max(seuil, 0.5 * p95));
+  let n = 0;
+  for (let p = 0; p < foncee.length; p++) if (valeurs[p] > coupe) { foncee[p] = 1; n++; }
+  if (!n) return { style: 'trait', foncee, otsu };
+  const d = distanceCarree(inverse(foncee), W, H);
+  let epaisse = 0;
+  for (let p = 0; p < foncee.length; p++) if (foncee[p] && d[p] >= 9) epaisse++;
+  return { style: epaisse / n >= PART_POCHE ? 'poche' : 'trait', foncee, otsu };
+}
+
 /** Transformée de distance 1D au carré (Felzenszwalb et Huttenlocher), en place dans `d`. */
 function edt1D(f, d, v, z, n){
   let k = 0; v[0] = 0; z[0] = -Infinity; z[1] = Infinity;
@@ -398,11 +439,26 @@ export function detecterLesMurs(rgba, w, h, options = {}){
   // comblés, la gonflaient au point d'effacer les cloisons (plan de test n° 3). Ce qu'on comble et
   // la longueur exigée suivent la feuille ; la minceur refusée suit les traits FINS : une cote seule
   // (un trait) part, une cloison en double trait (deux traits et leur vide) reste.
-  const D = Math.max(W, H), directions = directionsDuPlan(encre, W, H), t = demiEpaisseurFine(encre, W, H);
-  const comble = options.comble ?? Math.max(4, Math.round(0.015 * D));
+  //
+  // LE STYLE DU PLAN décide de l'encre et du comblement. Un plan POCHÉ (murs en masses foncées)
+  // se lit sur son encre FONCÉE seule, presque sans combler : comblée, la grille gris clair d'un sol
+  // carrelé et les meubles gris devenaient des murs (plan de test n° 2). Un plan AU TRAIT (double
+  // trait, contours hachurés) a besoin de toute son encre et du comblement : l'encre foncée seule y
+  // effaçait les traits gris d'un JPEG (plans n° 1 et 3). Le critère, mesuré sur les trois plans :
+  // la part de l'encre foncée qui forme des masses de 5 px et plus (33 % contre moins de 1 %).
+  const D = Math.max(W, H);
+  const { style, foncee, otsu } = styleDuPlan(valeurs, seuil, W, H);
+  // Au trait, l'encre LUE commence aux quatre cinquièmes du seuil d'Otsu : les lignes de cote, plus
+  // grises que les traits des murs, tombent (plan n° 1 : leurs paquets comblés faisaient des murs),
+  // et les traits des murs restent (plans n° 1 et 3, mesuré de 60 à 120).
+  const seuilLu = options.seuilLu ?? (style === 'poche' ? null : Math.max(seuil, Math.round(0.8 * otsu)));
+  let lue = foncee;
+  if (seuilLu != null) { lue = new Uint8Array(n); for (let p = 0; p < n; p++) lue[p] = valeurs[p] >= seuilLu ? 1 : 0; }
+  const directions = directionsDuPlan(lue, W, H), t = demiEpaisseurFine(lue, W, H);
+  const comble = options.comble ?? (style === 'poche' ? Math.max(2, Math.round(0.002 * D)) : Math.max(4, Math.round(0.015 * D)));
   const longueur = options.longueur ?? Math.max(10, Math.round(0.03 * D));
   const minceur = options.minceur ?? 2 * t + 2;
-  const { murs: ouvert, epaisseur: T } = mursParBandes(encre, W, H, directions, comble, longueur, minceur);
+  const { murs: ouvert, epaisseur: T } = mursParBandes(lue, W, H, directions, comble, longueur, minceur);
 
   const { etiquette, infos } = masses(ouvert, W, H);
   const murs = new Uint8Array(n);
@@ -429,6 +485,6 @@ export function detecterLesMurs(rgba, w, h, options = {}){
   }
   return {
     largeur: W, hauteur: H, facteur, murs, encre, papier: global.map(Math.round),
-    directions, epaisseurDesMurs: T, seuil,
+    directions, epaisseurDesMurs: T, seuil, style,
   };
 }
