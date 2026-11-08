@@ -178,6 +178,12 @@ function souder(segs, tol){
     const p = b.s[b.k], r = reperes.find(q => norme(sous(p, q)) < tol);
     if (r) b.s[b.k] = r; else reperes.push(p);
   }
+  // ⚠️ Un segment court dont les deux bouts se sont confondus est tombé à longueur nulle : il part
+  // ICI. Laissé, son orientation (NaN) se propageait au bout d'un vrai mur qu'il « accueillait », et
+  // ce mur disparaissait (la cloison des chambres du haut de l'immeuble, signalée par Valentin).
+  const vivants = new Set(segs.filter(c => longueurDe(c) >= 1));
+  for (let k = bouts.length - 1; k >= 0; k--) if (!vivants.has(bouts[k].s)) bouts.splice(k, 1);
+  segs = segs.filter(c => vivants.has(c));
   // 2. Un bout que personne ne partage, posé sur le milieu d'un autre mur, le coupe.
   const coupes = new Map();
   for (const b of bouts) {
