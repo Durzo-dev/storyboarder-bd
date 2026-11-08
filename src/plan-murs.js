@@ -123,6 +123,16 @@ function seuilDEncre(encre){
   return Math.max(30, 4 * mediane + 10);
 }
 
+/** Le centile `q` (0 à 1) des valeurs d'encre au-dessus de `seuil`. */
+function centile(valeurs, seuil, q){
+  const hist = new Uint32Array(256);
+  let total = 0;
+  for (let p = 0; p < valeurs.length; p++) if (valeurs[p] >= seuil) { hist[valeurs[p]]++; total++; }
+  let cumul = 0;
+  for (let v = 0; v < 256; v++) { cumul += hist[v]; if (cumul >= q * total) return v; }
+  return 255;
+}
+
 /** Le seuil d'Otsu des valeurs d'encre au-dessus de `seuil` : ce qui sépare l'encre claire de la foncée. */
 function seuilDOtsu(valeurs, seuil){
   const hist = new Float64Array(256);
@@ -458,11 +468,13 @@ export function detecterLesMurs(rgba, w, h, options = {}){
   // effaçait les traits gris d'un JPEG (plans n° 1 et 3). Le critère, mesuré sur les trois plans :
   // la part de l'encre foncée qui forme des masses de 5 px et plus (33 % contre moins de 1 %).
   const D = Math.max(W, H);
-  const { style, foncee, otsu } = styleDuPlan(valeurs, seuil, W, H, rgb);
-  // Au trait, l'encre LUE commence aux quatre cinquièmes du seuil d'Otsu : les lignes de cote, plus
-  // grises que les traits des murs, tombent (plan n° 1 : leurs paquets comblés faisaient des murs),
-  // et les traits des murs restent (plans n° 1 et 3, mesuré de 60 à 120).
-  const seuilLu = options.seuilLu ?? (style === 'poche' ? null : Math.max(seuil, Math.round(0.8 * otsu)));
+  const { style, foncee } = styleDuPlan(valeurs, seuil, W, H, rgb);
+  // Au trait, l'encre LUE commence à la MÉDIANE de l'encre : les lignes de cote, plus grises que les
+  // traits des murs, tombent (plan n° 1 : leurs paquets comblés faisaient des murs), et les traits des
+  // murs restent. Mesuré : le bon seuil tombe sur la médiane, aux bureaux (122), à la maison (106) et
+  // sur sa photo floue (79). La règle d'avant, 0,8 × Otsu, ne suivait pas la NETTETÉ : sur une photo,
+  // aux traits plus pâles, elle effaçait les cloisons (plan n° 16, 2 pièces au lieu de 9).
+  const seuilLu = options.seuilLu ?? (style === 'poche' ? null : Math.max(seuil, centile(valeurs, seuil, 0.5)));
   let lue = foncee;
   if (seuilLu != null) { lue = new Uint8Array(n); for (let p = 0; p < n; p++) lue[p] = valeurs[p] >= seuilLu ? 1 : 0; }
   const directions = directionsDuPlan(lue, W, H), t = demiEpaisseurFine(lue, W, H);
