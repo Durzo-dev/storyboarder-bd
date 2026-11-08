@@ -2,6 +2,51 @@
 
 *[Version française](../fr/plan-modele.md)*
 
+> **ABANDONED on 8 November 2026 (Valentin's decision).** Tried in the app, the result is still too
+> unreliable on real plans: too much manual correction for the import to be worth it. Plan import
+> has therefore been **removed from the code entirely**: the screen, the button, the modules, the
+> model and its dependency. This document and [plan-sources.md](plan-sources.md) keep the record,
+> **to come back to if the model improves**.
+
+## Outcome, and how to come back to it
+
+**What existed** (last state: commit `a7ed951`, version 1.16.28):
+- `src/plan-feuille.js`: straightening a photo taken at an angle;
+- `src/plan-murs.js`: wall detection by rules (poché, line, bands per direction);
+- `src/plan-vecteurs.js`: vectorised walls, then the editor building;
+- `src/plan-ouvertures.js`: gaps, door arcs, glazing, joins, and `ouverturesDesMasques` for a
+  model;
+- `src/plan-echelle.js`: units (toise and pied du roi included), estimation and two-point scale;
+- `src/plan-modele.js`: the model plug-in (ONNX Runtime Web 1.22.0);
+- `src/plan-import-ui.js`: the import screen, opened by a button left of the Building editor tools;
+- their tests, and the model in `assets/modeles/plans/` with its licences.
+
+**To restore everything**:
+`git checkout a7ed951 -- src/plan-echelle.js src/plan-feuille.js src/plan-import-ui.js src/plan-modele.js src/plan-murs.js src/plan-ouvertures.js src/plan-vecteurs.js tests/plan-echelle.test.mjs tests/plan-feuille.test.mjs tests/plan-modele.test.mjs tests/plan-murs.test.mjs tests/plan-ouvertures.test.mjs tests/plan-vecteurs.test.mjs assets/modeles`.
+Then re-wire by hand, from that same commit:
+- the `#batimentImporterPlan` button, `poserLePlan` and `importerUnPlan` (`src/batiment-editeur-ui.js`);
+- the `#planImportModal` modal (`src/index.html`), its styles (`src/style.css`) and labels
+  (`src/i18n.js`);
+- `initImportDePlan` (`src/events.js`) and `tests/modal-stack.test.mjs`;
+- `npm install onnxruntime-web@1.22.0` and its three files in `build.files`.
+
+The test benches (`plans-test/`, outside git) stay on Valentin's disk.
+
+**Where things stood**:
+- on the bench, the model improved the figures a lot (see "The integration");
+- on real plans, it is still far from a result that would not need reworking;
+- the scale was still an estimate, within about 30%;
+- old plans and PDF had not been started.
+
+**What would justify coming back**:
+- a new release of Floorplan Studio (v0.1.0 dates from 1 November 2026; on GitHub,
+  **Watch → Custom → Releases** gives notice of each one);
+- another model, preferably under a more open licence (see "Other models");
+- or training our own (see the estimate below).
+
+Either way, score it first on the CubiCasa bench (`modele_banc.sh test`), then on Valentin's plans,
+before re-wiring the screen.
+
 > Requested by Valentin on 8 November 2026, after scoring our rules on CubiCasa5K: hand-written rules
 > had plateaued (doors and windows around 20%). The question: should we use a trained (machine
 > learning) model, at what cost, under which licence? Valentin's constraint: Storyboarder is not
@@ -219,6 +264,7 @@ it, and fix it by dirtying the synthetic images more.
 ## Decided (Valentin)
 
 - The model is integrated along this architecture (#456g, see "The integration").
+- Then, the same day, plan import is abandoned and removed from the code (see "Outcome, and how to come back to it").
 - The rules remain the fallback when the model is absent.
 
 ## Sources

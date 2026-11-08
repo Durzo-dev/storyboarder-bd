@@ -136,7 +136,6 @@ import {
   initEditeurDeBatiment, setBatimentEditeurCallbacks, ouvrirEditeurDeBatiment, fermerEditeurDeBatiment,
   editeurDeBatimentOuvert, nomsDesPiecesDuNiveau, renommerPieceDeLEditeur, supprimerPieceDeLEditeur,
 } from './batiment-editeur-ui.js';
-import { initImportDePlan } from './plan-import-ui.js';
 import {
   initEditeurDeTerrain, setTerrainEditeurCallbacks, ouvrirEditeurDeTerrain, fermerEditeurDeTerrain, editeurDeTerrainOuvert,
   ouvrirChoixDeScene, fermerChoixDeScene, majBoutonEditeurDeTerrain, rafraichirEditeurDeTerrain, noterModificationDuTerrain,
@@ -6098,7 +6097,6 @@ document.getElementById('ctxRenommerPiece').onclick = () => {
 };
 document.getElementById('ctxSupprimerPiece').onclick = () => { hideContextMenu(); if (_ctxPiece) supprimerPieceDeLEditeur(_ctxPiece); };
 initEditeurDeBatiment();
-initImportDePlan();
 setBatimentEditeurCallbacks({
   confirmer: confirmAction,
   alerter: alertAction,

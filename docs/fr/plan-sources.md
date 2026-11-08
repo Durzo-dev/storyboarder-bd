@@ -2,6 +2,9 @@
 
 *[English version](../en/plan-sources.md)*
 
+> **L'import de plan a été abandonné le 8 novembre 2026**, et retiré du code. Ce document reste une
+> référence pour y revenir : voir [plan-modele.md](plan-modele.md), « Bilan, et comment y revenir ».
+
 > Tâche #456, « créer un bâtiment à partir d'une photo de plan d'architecte ». Avant d'écrire
 > l'outil, Valentin a demandé, le 4 novembre 2026, de chercher des sources de plans, « des sources
 > très anciennes (plusieurs siècles pour certains manoirs ou châteaux) à des sources

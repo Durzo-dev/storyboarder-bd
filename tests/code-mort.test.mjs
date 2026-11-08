@@ -316,9 +316,6 @@ const EN_ATTENTE = {
   vagues3D: '#435m : modèle JS du GLSL de l’eau, éprouvé par les tests',
   // #436c : même nature, le modèle de `cielDirection`, la déformation du ciel vers le bord du Sol.
   elevationDuCiel3D: '#436c : modèle JS du GLSL du ciel, éprouvé par les tests',
-  // #456a à #456d — LES QUATRE ÉTAPES DU PLAN (murs, segments, ouvertures, échelle) sont arrivées
-  // avant leur écran, et leur dette est SOLDÉE : #456e (plan-import-ui.js) les appelle toutes les
-  // huit. Aucune entrée ne reste ici.
 };
 
 function exportsSansAppelant(){

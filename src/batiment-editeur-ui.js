@@ -56,7 +56,6 @@ import { cadrageOriente3D, orbite3D, zoom3D, positionCamera3D, deplacement3D } f
 import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
 import { carreDeTexture } from './textures-store-ui.js';
 import { normaliserRevetement, peintureDuRevetement } from './batiment-revetements.js';
-import { ouvrirImportDePlan } from './plan-import-ui.js';
 import { sectionDroitePliee, memoriserSectionDroite } from './section-memory.js';
 import { icone } from './icones.js';
 import { ajouterMeuble, meubleSous, aimanterMeuble, tournerMeuble, echelonnerMeuble, supprimerMeuble, empreinteDuMeuble, fichiersDesMeubles,
@@ -1650,49 +1649,6 @@ function taillePlan(){
   return { c, l: c.clientWidth || 1, h: c.clientHeight || 1 };
 }
 
-// ── #456e : importer un plan d'architecte sur le niveau courant ─────────────────────────────────
-
-/**
- * Pose le bâtiment `plan` (un niveau, rendu par l'import) sur le niveau COURANT : ses murs et ses
- * ouvertures remplacent ceux du niveau (après confirmation s'il en avait), en UNE étape d'annulation.
- * Rend vrai s'il a été posé.
- */
-async function poserLePlan(plan){
-  if (!E) return false;
-  const niveauId = E.niveauId;
-  if (E.batiment.murs.some(m => m.niveauId === niveauId)) {
-    const ok = await _rappels.confirmer(
-      tr('This level already has walls. Replace them with the imported plan? (Ctrl+Z undoes it.)',
-        'Ce niveau a déjà des murs. Les remplacer par le plan importé ? (Ctrl+Z le défait.)'),
-      tr('Import a plan', 'Importer un plan'));
-    if (!ok || !E) return false;
-  }
-  modifier(b => {
-    const anciens = new Set(b.murs.filter(m => m.niveauId === niveauId).map(m => m.id));
-    b.murs = b.murs.filter(m => !anciens.has(m.id));
-    b.ouvertures = (b.ouvertures || []).filter(o => !anciens.has(o.murId));
-    const ids = new Map();
-    for (const m of plan.murs) {
-      const r = ajouterMur(b, niveauId, m.a, m.b, m.epaisseur);
-      if (r.mur) ids.set(m.id, r.mur.id);
-    }
-    for (const o of plan.ouvertures || []) {
-      const murId = ids.get(o.murId);
-      if (!murId) continue;
-      const reglages = { ...o };
-      delete reglages.id; delete reglages.murId; delete reglages.le;
-      ajouterOuverture(b, murId, o.le, reglages);
-    }
-  });
-  recadrer();
-  return true;
-}
-
-function importerUnPlan(){
-  if (!E || E.pose || E.masquage) return;
-  ouvrirImportDePlan({ surConstruire: poserLePlan, alerter: _rappels.alerter });
-}
-
 /** « Recadrer » : la vue de dessus seulement ; l'aperçu a son propre cadrage automatique (demandé). */
 function recadrer(){
   if (!E) return;
@@ -2984,7 +2940,6 @@ export function initEditeurDeBatiment(){
   if (!$('batimentEditeur')) return;
   cablerSectionsRepliables();
   $('batimentAjouterElement').onclick = () => { if (E) ajouterUnElement(); };
-  $('batimentImporterPlan').onclick = () => importerUnPlan();
   $('batimentPieceSupprimer').onclick = () => {
     const p = E && pieceSelectionnee();
     if (!p) return;

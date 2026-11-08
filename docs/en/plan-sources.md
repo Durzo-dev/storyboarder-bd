@@ -2,6 +2,10 @@
 
 *[Version française](../fr/plan-sources.md)*
 
+> **Plan import was abandoned on 8 November 2026** and removed from the code. This document remains a
+> reference for coming back to it: see [plan-modele.md](plan-modele.md), "Outcome, and how to come back
+> to it".
+
 > Task #456, "create a building from a photo of an architect's plan". Before writing the tool,
 > Valentin asked on 4 November 2026 for plan sources "from very old ones (several centuries for some
 > manors or castles) to contemporary ones", and for each period's standards where they exist. This

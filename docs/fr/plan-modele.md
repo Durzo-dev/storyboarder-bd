@@ -2,6 +2,53 @@
 
 *[English version](../en/plan-modele.md)*
 
+> **ABANDONNÉ le 8 novembre 2026 (décision de Valentin).** Essayé dans l'application, le résultat
+> reste trop peu fiable sur de vrais plans : trop de corrections à la main pour que l'import vaille
+> la peine. L'import de plan a donc été **entièrement retiré** du code : l'écran, le bouton, les
+> modules, le modèle et sa dépendance. Ce document et [plan-sources.md](plan-sources.md) en gardent
+> la trace, **pour y revenir si le modèle s'améliore**.
+
+## Bilan, et comment y revenir
+
+**Ce qui existait** (dernier état : commit `a7ed951`, version 1.16.28) :
+- `src/plan-feuille.js` : le redressement d'une photo prise de biais ;
+- `src/plan-murs.js` : la détection des murs par règles (poché, trait, bandes par direction) ;
+- `src/plan-vecteurs.js` : les murs vectorisés, puis le bâtiment de l'éditeur ;
+- `src/plan-ouvertures.js` : les trous, les arcs de porte, les vitrages, les raccords, et
+  `ouverturesDesMasques` pour un modèle ;
+- `src/plan-echelle.js` : les unités (dont toise et pied du roi), l'estimation et l'échelle en deux
+  points ;
+- `src/plan-modele.js` : le greffon du modèle (ONNX Runtime Web 1.22.0) ;
+- `src/plan-import-ui.js` : l'écran d'import, ouvert par un bouton à gauche des outils de l'Éditeur
+  de bâtiment ;
+- leurs tests, et le modèle dans `assets/modeles/plans/` avec ses licences.
+
+**Pour tout restaurer** :
+`git checkout a7ed951 -- src/plan-echelle.js src/plan-feuille.js src/plan-import-ui.js src/plan-modele.js src/plan-murs.js src/plan-ouvertures.js src/plan-vecteurs.js tests/plan-echelle.test.mjs tests/plan-feuille.test.mjs tests/plan-modele.test.mjs tests/plan-murs.test.mjs tests/plan-ouvertures.test.mjs tests/plan-vecteurs.test.mjs assets/modeles`.
+Il faut ensuite rebrancher à la main, d'après ce même commit :
+- le bouton `#batimentImporterPlan`, `poserLePlan` et `importerUnPlan` (`src/batiment-editeur-ui.js`) ;
+- la modale `#planImportModal` (`src/index.html`), ses styles (`src/style.css`) et ses libellés
+  (`src/i18n.js`) ;
+- `initImportDePlan` (`src/events.js`) et `tests/modal-stack.test.mjs` ;
+- `npm install onnxruntime-web@1.22.0` et ses trois fichiers dans `build.files`.
+
+Les bancs d'essai (`plans-test/`, hors git) restent sur le disque de Valentin.
+
+**Où on en était** :
+- sur le banc, le modèle a beaucoup amélioré les chiffres (voir « L'intégration ») ;
+- sur les vrais plans, c'est encore loin d'un résultat qu'on n'aurait pas à reprendre ;
+- l'échelle restait estimée, à environ 30 % près ;
+- les plans anciens et le PDF n'étaient pas commencés.
+
+**Ce qui justifierait d'y revenir** :
+- une nouvelle version de Floorplan Studio (la v0.1.0 date du 1er novembre 2026 ; sur GitHub,
+  **Watch → Custom → Releases** prévient de chaque sortie) ;
+- un autre modèle, de préférence à licence plus ouverte (voir « Autres modèles ») ;
+- ou l'entraînement de notre propre modèle (voir l'estimation plus bas).
+
+Dans tous les cas, on le note d'abord sur le banc CubiCasa (`modele_banc.sh test`), puis sur les
+plans de Valentin, avant de rebrancher l'écran.
+
 > Demandée par Valentin le 8 novembre 2026, après la notation de nos règles sur CubiCasa5K : les
 > règles écrites à la main plafonnaient (portes et fenêtres autour de 20 %). Question posée :
 > faut-il un modèle appris (apprentissage automatique), à quel prix, sous quelle licence ? Contrainte
@@ -229,6 +276,7 @@ scans. On le mesure, et on le corrige en salissant davantage les images de synth
 ## Ce qui a été décidé (Valentin)
 
 - Le modèle est intégré selon cette architecture (#456g, voir « L'intégration »).
+- Puis, le même jour, l'import de plan est abandonné et retiré du code (voir « Bilan, et comment y revenir »).
 - Les règles restent en secours, quand le modèle est absent.
 
 ## Sources
