@@ -13,6 +13,9 @@
  * la longueur est l'estimation (par la largeur des portes). On la valide, ou on clique deux autres
  * points (une cote, l'échelle graphique) et on tape la vraie longueur.
  *
+ * UNE PHOTO DE BIAIS est redressée d'elle-même (#456e3, plan-feuille.js) : la feuille est trouvée
+ * sur son fond et ramenée à un rectangle, sans rien demander.
+ *
  * LA CORRECTION se fait ensuite dans l'éditeur lui-même, avec ses outils (déplacer un sommet,
  * supprimer un mur, changer le type d'une ouverture) : un import se défait d'un Ctrl+Z.
  */
@@ -23,6 +26,7 @@ import { enregistrerFermeture } from './modal-stack.js';
 import { detecterLesMurs } from './plan-murs.js';
 import { vectoriserLesMurs, batimentDuPlan } from './plan-vecteurs.js';
 import { ouverturesDuPlan } from './plan-ouvertures.js';
+import { redresserLaFeuille } from './plan-feuille.js';
 import { UNITES_DE_LONGUEUR, estimerLEchelle, echelleDeuxPoints, longueurEntre, controlerLEchelle } from './plan-echelle.js';
 
 const $ = (id) => document.getElementById(id);
@@ -44,7 +48,15 @@ async function lirePixels(data, nom){
   c.width = bitmap.width; c.height = bitmap.height;
   const g = c.getContext('2d', { willReadFrequently: true });
   g.drawImage(bitmap, 0, 0);
-  return { bitmap, pixels: g.getImageData(0, 0, c.width, c.height) };
+  const pixels = g.getImageData(0, 0, c.width, c.height);
+  // #456e3 : une PHOTO de plan (une feuille sur un fond, vue de biais) est redressée d'elle-même ;
+  // un scan reste tel quel. On montre et on mesure l'image REDRESSÉE : l'échelle se clique dessus.
+  const feuille = redresserLaFeuille(pixels.data, pixels.width, pixels.height);
+  if (!feuille.coins) return { bitmap, pixels };
+  bitmap.close();
+  const redressee = g.createImageData(feuille.largeur, feuille.hauteur);
+  redressee.data.set(feuille.rgba);
+  return { bitmap: await createImageBitmap(redressee), pixels: redressee };
 }
 
 /** L'analyse complète : murs, segments, ouvertures, estimation de l'échelle. */
