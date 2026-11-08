@@ -489,16 +489,51 @@ export function detecterLesMurs(rgba, w, h, options = {}){
     // La boîte GRANDIT : les portes coupent un bâtiment en plusieurs masses, et une masse gardée
     // peut faire entrer la suivante. Jusqu'à ce que plus rien n'entre. (Exiger que son CENTRE y
     // tombe écartait la moitié d'un plan de test : une aile entière n'a pas son centre dedans.)
-    const grande = infos.reduce((a, b) => (b.aire > a.aire ? b : a));
-    const boite = { x0: grande.x0, y0: grande.y0, x1: grande.x1, y1: grande.y1 };
-    const garde = new Set([grande.id]);
+    //
+    // ⚠️ UNE BANDE DE BORD N'EST PAS UN BÂTIMENT : une masse qui touche le bord de l'image et qui est
+    // une bande mince (le bord d'un scan, une marge) est écartée d'emblée. Sur trois
+    // plans de CubiCasa5K, la bande grise du bas de l'image était la plus grande masse, et le plan
+    // lui-même partait.
+    const D0 = Math.max(W, H);
+    const cadre = (m) => {
+      const touche = m.x0 <= 1 || m.y0 <= 1 || m.x1 >= W - 2 || m.y1 >= H - 2;
+      const bw = m.x1 - m.x0 + 1, bh = m.y1 - m.y0 + 1;
+      // (Pas de critère de remplissage : un bâtiment dessiné en contours est lui aussi « vide » dans sa
+      // boîte, et un plan coupé par le bord de l'image partait.)
+      return touche && Math.min(bw, bh) < 0.04 * D0;
+    };
+    const candidates = infos.filter(m => !cadre(m));
+    if (!candidates.length) candidates.push(...infos);
+    const grande = candidates.reduce((a, b) => (b.aire > a.aire ? b : a));
+    // Un SECOND PLAN sur la feuille (un autre étage, posé à côté) : une masse au moins 30 % aussi
+    // grande que la plus grande est gardée, même séparée, et a SA boîte, qui grandit comme l'autre.
+    // Elle doit avoir DEUX dimensions (un paquet de lignes de cote, long et étroit, n'est pas un étage).
+    const plan2D = (m) => { const bw = m.x1 - m.x0 + 1, bh = m.y1 - m.y0 + 1; return Math.min(bw, bh) >= 0.35 * Math.max(bw, bh); };
+    const graines = candidates.filter(m => m === grande || (m.aire >= 0.3 * grande.aire && plan2D(m)));
+    let boites = graines.map(m => ({ x0: m.x0, y0: m.y0, x1: m.x1, y1: m.y1 }));
+    const garde = new Set(graines.map(m => m.id));
+    // Les boîtes qui se CHEVAUCHENT n'en font qu'une : les morceaux d'un même bâtiment, coupé par ses
+    // portes, se chevauchent ; deux étages posés côte à côte, non.
+    const fusionner = () => {
+      for (let i = 0; i < boites.length; i++) for (let j = i + 1; j < boites.length; j++) {
+        const a = boites[i], b = boites[j];
+        if (a.x1 < b.x0 - comble || b.x1 < a.x0 - comble || a.y1 < b.y0 - comble || b.y1 < a.y0 - comble) continue;
+        boites[i] = { x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0), x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1) };
+        boites = boites.filter((_, k) => k !== j);
+        return true;
+      }
+      return false;
+    };
+    while (fusionner()) { /* jusqu'à la dernière */ }
     for (let ajout = true; ajout;) {
       ajout = false;
-      for (const m of infos) {
+      while (fusionner()) { /* les boîtes grandies se rejoignent */ }
+      for (const m of candidates) {
         if (garde.has(m.id)) continue;
-        // Elle entre si elle TOUCHE la boîte, à la distance de comblement près : une aile séparée du
-        // reste par une porte touche ; les cotes et le cartouche, posés plus loin, non.
-        if (m.x1 < boite.x0 - comble || m.x0 > boite.x1 + comble || m.y1 < boite.y0 - comble || m.y0 > boite.y1 + comble) continue;
+        // Elle entre si elle TOUCHE une boîte, à la distance de comblement près : une aile séparée
+        // du reste par une porte touche ; les cotes et le cartouche, posés plus loin, non.
+        const boite = boites.find(b => !(m.x1 < b.x0 - comble || m.x0 > b.x1 + comble || m.y1 < b.y0 - comble || m.y0 > b.y1 + comble));
+        if (!boite) continue;
         garde.add(m.id); ajout = true;
         boite.x0 = Math.min(boite.x0, m.x0); boite.y0 = Math.min(boite.y0, m.y0);
         boite.x1 = Math.max(boite.x1, m.x1); boite.y1 = Math.max(boite.y1, m.y1);
