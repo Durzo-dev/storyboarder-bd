@@ -2,8 +2,8 @@
 
 *[English version](../en/store-guide.md)*
 
-> Les règles communes au store de modèles et au store de textures, fixées au fil des retours
-> (octobre 2026), pour qu'un nouveau store les reprenne sans les redécouvrir. Ce que chaque store
+> Les règles communes au store de modèles et au store de textures, pour qu'un nouveau store les
+> reprenne. Ce que chaque store
 > sait de ses sources (API, licences, découpage) est dans [asset-store.md](asset-store.md) ; les
 > couleurs, écarts et rayons dans le système de design (`docs/design-system.html`). Les maquettes
 > sont des **schémas** : elles montrent ce qui va où, pas les pixels. Elles se refont avec

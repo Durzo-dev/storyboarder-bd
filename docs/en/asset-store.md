@@ -2,7 +2,7 @@
 
 *[Version française](../fr/asset-store.md)*
 
-Tasks #444 to #446. Searching, showing and downloading resources from elsewhere without leaving the
+Searching, showing and downloading resources from elsewhere without leaving the
 application: 3D models first, textures next.
 
 The interface and code rules shared by every store (window, cards, thumbnails, detail page), with
@@ -10,15 +10,15 @@ mockups, are in [store-guide.md](store-guide.md).
 
 ## Agreed scope
 
-- **3D models, Sketchfab first** (#444), then **Poly Haven** (#445).
-- **Textures next** (#446): Poly Haven and ambientCG, on the same shell.
+- **3D models, Sketchfab first**, then **Poly Haven**.
+- **Textures next**: Poly Haven and ambientCG, on the same shell.
 - **No dependency on a single source.** Sketchfab has changed owners twice (Epic in 2021, KitBash on
   12 August 2026); its API may change again. Each source is an interchangeable module, and
   everything else only knows the common format.
 
 ## What the Sketchfab API allows
 
-Checked by calling the API on 5 October 2026.
+Checked by calling the API.
 
 - **Public search**, no login: `GET api.sketchfab.com/v3/search?type=models`, with
   `downloadable=true`, `q`, `license` (a single code), `categories` (one slug), `sort_by`
@@ -31,13 +31,13 @@ Checked by calling the API on 5 October 2026.
   for five minutes to a glTF archive (zip: `scene.gltf`, `scene.bin`, `textures/`). The help pages
   also mention a direct GLB, to be checked once we have a token.
 - **OAuth login required to download.** The application must be registered with Sketchfab
-  (#444-0); "Implicit" mode, no secret, redirect to a local address.
+ ; "Implicit" mode, no secret, redirect to a local address.
 - **Obligations** (Developer Terms 4.5 to 4.7): say the models come from Sketchfab, show the license
   and the author with a link, and carry that credit into whatever the user distributes.
 
 ## What the Poly Haven API allows
 
-Checked by calling the API on 6 October 2026 (`api.polyhaven.com`, guide: `polyhaven.com/llms.txt`).
+Checked by calling the API (`api.polyhaven.com`, guide: `polyhaven.com/llms.txt`).
 
 - **No key, no account**, for searching as for downloading. Everything is **CC0**: commercial use
   included, no attribution required. The terms ask for a **User-Agent** naming the application, and
@@ -76,7 +76,7 @@ or date.
 thumbnail metadata). A rigged model carries a joint icon on its thumbnail; the details say
 "Skeleton: n bones" or "No skeleton". The "Rigged / Static" filter leaves out a model not measured
 yet, which only shows under "Rigged and static". Nothing similar in the online tabs: Poly Haven does
-not say, and Sketchfab will be looked at with the API (#444c).
+not say, and Sketchfab will be looked at with the API.
 
 Thumbnails (`src/model-thumbnails.js`): decoded apart from the panels' cache, prepared like a panel,
 photographed at three quarters, released; kept in `Vignettes-modeles/` with the file's signature
@@ -132,7 +132,7 @@ commercial use nor modification. **Age-restricted** and non-downloadable models 
 
 ## Attribution
 
-Each downloaded resource keeps its source, identifier, author and link, license and date (#444e),
+Each downloaded resource keeps its source, identifier, author and link, license and date,
 and keeps them through renames and deletions. They live in `attributions-modeles.json`, next to the
 Modeles folder (which only holds `.glb` files).
 
@@ -143,10 +143,10 @@ file name. In simulation, the first two results count as already downloaded. The
 Sketchfab".
 
 **Where to see it.** The details of a model in "My models" show its source, author and license
-with their links (#444e). The left menu no longer lists models (the library opens from a top-bar
+with their links. The left menu no longer lists models (the library opens from a top-bar
 button): the details view is therefore what carries the attribution.
 
-**In exports (#444f).** An exported Page, PNG or PDF alike, carries under its image (and under the
+**In exports.** An exported Page, PNG or PDF alike, carries under its image (and under the
 list of Panels if shown) a "3D model credits" section: for each VISIBLE model of the Page that has an
 attribution (inside a Panel, neither out of its frame nor hidden behind
 something else: a Panel that received a large Scene only credits what it shows; the decision is the
@@ -158,27 +158,9 @@ are credited too; a model imported by hand has no known attribution and does not
 tested: `src/export-credits.js`; the attributions are read at export time (`store:telecharges`),
 and a failure to read them does not stop the export.
 
-## Breakdown
-
-- **#444-0** Registering the application with Sketchfab (Durzo's task).
-- **#444a** The source contract and this document. Done.
-- **#444b** Search and browsing, no login: the store window, grid, filters, detail view with the 3D
-  preview, the Sketchfab credit, and an offline simulation. Done: `store.js` (requests, main
-  process), `src/store-ui.js` and `src/store-texts.js` (interface).
-- **#444c** Sketchfab login.
-- **#444d** Downloading: direct GLB, or glTF zip converted to GLB, progress, size.
-- **#444e** Attributions. Done.
-- **#444f** Credits in exports. Done.
-- **#444g** Placing a model straight from its detail view. Dropped (the “choose” mode covers it: see
-  [store-guide.md](store-guide.md)).
-- **#444h** Finishing touches: manual, README, translations, documented simulation. Done (remembered
-  filters dropped: the store starts afresh at each launch, as requested).
-- **#445** Poly Haven: search and tabs, then downloading. Done.
-- **#446** the texture store.
-
 ## Downloading
 
-Done for Poly Haven (#445); Sketchfab will reuse the same path once signing in exists.
+Done for Poly Haven; Sketchfab will reuse the same path once signing in exists.
 
 1. `store:poids` gives the size of each offered resolution (`optionsTelechargement`) (`planTelechargement`, from `/files/{id}`).
 2. `store:telecharger` (main process) downloads the `.gltf` and each included file at the resolution
@@ -218,12 +200,12 @@ Sketchfab or Poly Haven, flagged by a yellow banner:
 
 To go back to normal, close the terminal, or `Remove-Item Env:STORYBOARD_SIMULER_STORE`.
 
-## The texture store (#446)
+## The texture store
 
 Same principles as for models: a source is a module that makes no request, tested on real
 responses, and everything else only knows the common format (`type: 'texture'`).
 
-**Sources** (checked on 25 October 2026, all CC0, no account or key):
+**Sources** (all CC0, no account or key):
 
 - **Poly Haven** (`store-textures-polyhaven.js`): `/assets?type=textures` returns all 869 textures
   at once; each has `categories` (an array), tags and its **real size** in mm. `/files/{id}` gives
@@ -231,11 +213,11 @@ responses, and everything else only knows the common format (`type: 'texture'`).
 - **ambientCG** (`store-textures-ambientcg.js`): `api/v2/full_json?type=Material`, server-side pages
   (`limit`, `offset`, `q`, `category` as a list), 2,037 materials; one JPG zip per resolution (1K ≈ 7
   to 10 MB). The real size, in cm, is often missing (0).
-- **cc0-textures.com** (#446f, DROPPED on 27 October 2026: not useful): an aggregator with no API, serving 4K zips only. It repeats
+- **cc0-textures.com**: an aggregator with no API, serving 4K zips only. It repeats
   Poly Haven and ambientCG under their former names; only ShareTextures is new there. Planned as a
   third source, limited to ShareTextures, scaled down to 1k on import.
 
-**Materials and uses** (`texture-matieres.js`, table approved on 25 October 2026). A texture has one
+**Materials and uses** (`texture-matieres.js`). A texture has one
 or more **materials** (20: grass, dirt, sand, gravel, rock, snow, asphalt, paving, brick, concrete,
 render, wood, parquet, tiles, marble, carpet, wallpaper, metal, roof tiles, foliage), recognised from
 the source's categories, then from WHOLE words in its tags and name. The **uses** (11: outdoor
@@ -243,13 +225,13 @@ ground, road, path, low wall, fence, hedge, exterior wall, interior wall, interi
 roof) follow from the materials, never from the texture itself: they say where the application
 offers it. A texture with no material (fabric, leather, food…) is left out.
 
-**Download** (#446b): nothing by default, only the texture chosen in the store, at the resolution
+**Download**: nothing by default, only the texture chosen in the store, at the resolution
 chosen on its page: **1k** by default, 2k optional, **4k only for a texture used by buildings** (a
 wall seen up close in a panel exported large); never 8k. We keep colour, relief (OpenGL normal),
 roughness, ambient occlusion and displacement when present (not DirectX normals). The ambientCG zip
 is read in memory (`zip-lecture.js`) and only those maps come out.
 
-**The window** (#446c, `src/textures-store-ui.js`): separate from the model store (requested),
+**The window**: separate from the model store (requested),
 opened by its own header button, just right of the model library. Three tabs ("My textures", Poly
 Haven, ambientCG), filters by text, material and use, the next page loading near the bottom. The
 detail page replaces the grid: materials, uses, real size of one tile, and the resolution choice
@@ -267,13 +249,13 @@ page lets you tick its materials (uses follow). Real size unknown: 2 m. Grain ba
 `ao.jpg`, `deplacement.jpg`, and the grain), plus an entry in `Textures/bibliotheque-textures.json`
 (credit, materials, uses, real size, resolution, baking measures): "My textures".
 
-**Baking** on download, not on first use (decided on 25 October 2026): the baker
+**Baking** on download, not on first use: the baker
 (`tools/bake-textures.mjs`, `cuireMatiere3D`, shipped with the application) produces the ground and
 path grain, its natural tint and its nature. A texture that tiles badly is KEPT and flagged
 (`raccordVisible`); a texture with neither displacement nor AO gets no grain and stays usable as a
 building finish. The renderer never supplies an address: the source is read again by its id.
 
-**On the Ground and paths** (#446d, `src/textures-utilisateur.js`): a texture with a `sol` use
+**On the Ground and paths**: a texture with a `sol` use
 becomes a Ground material (the Ground section of a Panel or Scene, terrain zones); a texture whose
 use is a path type (road, dirt path, low wall, fence, hedge) is chosen for a path of that type. The
 choice is made through a **large square** (the current texture, its name, “Change”), in the Ground
@@ -291,11 +273,3 @@ all the code that looked a material up by its id finds it unchanged. Grains are 
 [persisted-data.md](persisted-data.md). The detail page says how many times the texture is used in
 the open Project.
 
-## Open questions
-
-- **Direct GLB or zip**: to check with a first token. If only the zip is offered, it will have to be
-  read and packed into a GLB without a dependency.
-- **Animated and rigged filters**: the API parameters could not be checked; not offered until they
-  are.
-- **Several licenses at once**: the API accepts only one. "Commercial use only" is therefore filtered
-  by us, page by page.

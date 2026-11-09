@@ -2,8 +2,7 @@
 
 *[Version française](../fr/store-guide.md)*
 
-> The rules shared by the model store and the texture store, settled through feedback (October
-> 2026), so that a new store reuses them instead of rediscovering them. What each store knows about
+> The rules shared by the model store and the texture store, so that a new store reuses them. What each store knows about
 > its sources (APIs, licences, breakdown) is in [asset-store.md](asset-store.md); colours, spacing
 > and radii in the design system (`docs/design-system.html`). The mockups are **diagrams**: they
 > show what goes where, not the pixels. They are regenerated with

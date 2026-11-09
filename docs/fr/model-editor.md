@@ -1,302 +1,65 @@
-# Éditeur de modèle — note de conception
+# L'Éditeur de modèle
 
-> Document de travail, rédigé avant implémentation. Les commentaires de code restent en anglais
-> (cf. tâches #209–219) ; cette note a été rédigée en français, la langue des décisions prises, et
-> est tenue d'accord avec sa version anglaise.
->
-> ⚠️ **Cette note retrace un RAISONNEMENT, avec ses revirements** : plusieurs décisions y sont
-> marquées « REVU » ou « CORRIGÉ depuis ». Pour savoir comment le système fonctionne **aujourd'hui**,
-> lire [pose-library.md](pose-library.md), qui n'a pas d'archéologie.
+*[English version](../en/model-editor.md)*
 
-## Intention
+## Rôle
 
-Un éditeur de Personnage occupant la zone centrale (l'en-tête et le menu de gauche restent
-utilisables, et naviguer ailleurs quitte l'éditeur sans rouvrir la fiche dont il vient
-(`clicQuitteLEditeur3D`)), avec réglage fin des articulations, bibliothèque de poses et
-émotions. Deux points d'entrée :
+L'Éditeur de modèle pose un seul Personnage, Animal ou modèle importé articulé : réglage fin des
+articulations par curseurs et par poignées sur le canevas, et bibliothèque de poses. Il occupe la zone
+centrale ; l'en-tête et le menu de gauche restent utilisables, et naviguer ailleurs le quitte
+(`clicQuitteLEditeur3D`).
 
-- **Menu de gauche → section Personnage** : Personnage par défaut, aucune cible. La seule sortie
-  utile est « enregistrer comme pose ».
-- **Modale d'un Personnage → section Modèle 3D** : le Personnage avec ses propres réglages.
-  « Appliquer » referme l'éditeur et rend la main à la modale d'origine.
+## Les deux entrées
 
-## Ce qui existe déjà et qu'on réutilise
+- **Autonome** (bouton du bandeau) : un modèle de la bibliothèque, sans cible. On y enregistre des
+  poses ; le bouton « Appliquer » est **absent**.
+- **Depuis la fiche** d'un Personnage, d'un Animal ou d'un modèle importé (section Modèle 3D) :
+  l'Élément avec ses réglages. « Appliquer » écrit dans le **brouillon** de la fiche
+  (`S.modalDraftJoints`), ferme l'éditeur et rend la main à la fiche ; c'est l'enregistrement de la
+  fiche (`descModalSave`) qui modifie l'Élément. Quitter sans appliquer ne change rien.
 
-| Brique | Où | Rôle dans l'éditeur |
-|---|---|---|
-| Mode Scène | `S.editingSceneId` (events.js) | Modèle exact du mode qui prend la main sur le rendu sans confisquer la fenêtre |
-| Brouillon d'articulations | `S.modalDraftJoints` (modals.js) | L'éditeur alimente ce brouillon, pas l'objet |
-| Poignées d'articulation | `objectPreview3D` (animaux) | Édition directe au clic sur le canevas |
-| Renderer 3D | `personaRenderer3D` (rig3d.js) | **Vérifié** : renderer hors écran unique, `setSize` à la demande puis `drawImage` dans un canevas 2D. Aucune contention : l'éditeur est un consommateur de plus. Plafonner la résolution comme `PANEL_SCENE_RENDER_MAX_PX`. |
+## Fichiers
 
-## Modèle de données — décisions arrêtées
+| Fichier | Ce qu'il porte |
+|---|---|
+| `src/persona-editor.js` | L'éditeur : ouverture, brouillon, caméra, curseurs, poignées, poses, câblage (`wirePersonaEditor`). |
+| `src/utils.js` | Les décisions pures : poses (`makePose3D`, `renamePose3D`, `deletePose3D`), curseurs (`poseSliderSpecs3D`), gestes d'articulation (`straightDragDegrees3D`, `accumulateSweepDegrees3D`). |
+| `src/rig3d.js` | Les rigs, `getEffectiveJoints`, `cloneJoints`, les groupes de curseurs d'un modèle importé. |
+| `src/skeleton-pose.js`, `src/pose-bridge.js`, `src/skeleton-retarget.js` | La pose d'un modèle importé (os, rôles, report d'une pose humanoïde). |
+| `src/scene3d.js` | `renderModelForEditor3D`, le rendu par le renderer partagé. |
 
-### Les valeurs font foi, le nom n'est qu'une étiquette
+## Le brouillon
 
-`getEffectiveJoints(o)` retourne déjà `o.joints3d || POSE_3D[o.position] || POSE_3D.debout` :
-les valeurs priment sur la référence. Appliquer une pose **écrit les angles dans `joints3d`** et
-n'y laisse jamais une simple référence.
+Tout opère sur un brouillon (`S.personaEditorDraft`), jamais sur l'Élément. Les valeurs font foi :
+`getEffectiveJoints(o)` rend `o.joints3d`, sinon la pose de base nommée par `o.position`. Appliquer une
+pose **copie ses angles** dans `joints3d` ; `position` n'est qu'une référence d'affichage (la clé d'une
+pose de base, ou l'id d'une pose enregistrée). La bibliothèque et l'étiquette (`positionLabel`) sont
+décrites dans [pose-library.md](pose-library.md).
 
-Conséquence : supprimer une pose, ouvrir le projet sur une autre machine ou l'envoyer à quelqu'un
-ne casse aucun Personnage. La bibliothèque est un confort d'auteur dont aucun projet ne dépend.
+## Les gestes
 
-`position` reste stocké, mais uniquement comme **référence d'affichage** : la clé d'une pose
-intégrée (« assis »), ou l'**id** d'une pose personnalisée (« pose1 »). Si elle est introuvable, on
-affiche « inconnue ».
+Clic gauche maintenu dans le vide : tourner la vue ; clic droit maintenu : la déplacer ; molette :
+zoomer. Sur une poignée, le clic gauche règle l'articulation : glisser droit quand l'axe se voit de
+côté, geste circulaire quand il pointe vers l'œil. Valeurs dans [gestes-3d.md](gestes-3d.md). Le
+cadrage d'ouverture a une seule définition, `resetPersonaEditorCamera`, appelée par
+`openPersonaEditor`.
 
-**Appariement par id, pas par nom** (décidé après coup, contre la première version de cette note) :
-renommer une pose garde ainsi l'étiquette juste chez tous les Personnages qui la citent. Aucune
-collision possible avec les poses intégrées, `newId('pose')` produisant « pose1 », « pose2 »…
+## Données d'une pose
 
-Contrepartie : un id ne dit rien à un humain. Quand la pose est introuvable, on retombe sur
-`positionLabel` : le dernier nom connu, s'il a été enregistré. Champ **facultatif** : le résolveur le
-lit s'il est là, rien ne casse s'il manque. Décider s'il faut l'écrire relève de la phase 4.
+`poses: [{ id, name, skeleton, joints }]` : `joints` est ce que produit `cloneJoints`, `skeleton` le
+type de squelette (humain, type d'animal), pour ne jamais appliquer une pose à un squelette qui n'est
+pas le sien. Une pose ne contient que des articulations (ni émotion ni mains). `lieFlat` (allongé) vit
+dans les valeurs d'articulations.
 
-### Deux pièges identifiés, à traiter explicitement
+## Pièges
 
-1. **Ne jamais persister « inconnu ».** L'étiquette se calcule à l'affichage. Écrire
-   `position: 'inconnu'` dans le fichier détruirait le nom : rouvrir le projet sur la machine qui
-   possède la bibliothèque ne le reconnaîtrait plus. En laissant `position: 'maPose'` intact, le
-   projet se répare tout seul dès qu'il retrouve sa bibliothèque.
-
-2. **Le `<select>` détruit le nom silencieusement.** `modals.js:224` fait
-   `personaPositionSelect.value = obj.position`, `events.js:5251` réécrit
-   `obj.position = personaPositionSelect.value` à la sauvegarde. Affecter à un `<select>` une
-   valeur absente de ses options laisse la valeur vide (comportement standard du DOM) : la
-   première sauvegarde écraserait le nom par `''`. Il faut **injecter une option synthétique**
-   pour toute pose inconnue. C'est un bug latent **dès aujourd'hui** pour tout fichier contenant
-   une `position` non reconnue → livrable indépendamment, avant le reste.
-
-### Format d'une pose
-
-```
-poses: [ { id, name, skeleton, joints } ]
-```
-
-- Au **niveau projet**, à côté de `scenes` dans `serializeProject`, « utilisable partout dans le
-  projet, dans chaque tome et page ».
-- `joints` = exactement ce que `cloneJoints` produit déjà. Aucun format à inventer.
-- `skeleton` : `'humain'` / type d'animal. Même si la v1 ne couvre que les humains, taguer dès le
-  premier enregistrement évite d'appliquer une pose de chien à un humain. Rattrapage pénible sinon.
-- **v1 : articulations uniquement.** Ni émotion ni mains, sinon appliquer une pose écrase
-  l'expression, ce qu'on veut rarement. À revoir plus tard si le besoin se confirme.
-- `lieFlat` (pose allongée) vit **dans** les valeurs d'articulations, pas dans `position` : une pose
-  enregistrée allongée fonctionne sans cas particulier. Vérifié (`rig3d.js:367`).
-- ⚠️ Ces noms de champs deviennent **permanents** dès la première version livrée
-  (contrainte de compatibilité des projets).
-- ⚠️ `resyncIdCounter` (`io.js`) ne visite aujourd'hui que `tomes` et `scenes`. Il **doit** visiter
-  `poses` aussi, sans quoi une pose créée après chargement peut réutiliser un id déjà pris, et avec
-  l'appariement par id, c'est un Personnage qui se retrouve avec la mauvaise pose.
-
-### Réutilisation entre projets — ~~hors périmètre~~, **REVU (Fix 57)**
-
-La note excluait ce besoin. Il est revenu au moment où l'utilisateur a constaté que les poses de base
-avaient leurs boutons Renommer/Supprimer grisés, et a posé la bonne question : *si les poses de base
-valent pour toute l'application, pourquoi les miennes seraient-elles limitées à un Projet ?*
-
-L'argument d'uniformité tient. Sa conclusion (« ainsi on pourrait les supprimer sans souci ») ne
-tenait pas : déplacer la bibliothèque au niveau application rend la suppression **plus** risquée,
-puisqu'elle touche alors des Projets que l'application ne peut pas inspecter pour avertir. Et un
-fichier cesse de se décrire lui-même : envoyé à quelqu'un, il afficherait « inconnue » partout.
-
-**Conception retenue**, les deux à la fois :
-
-- **Bibliothèque au niveau Application** (`settings.json`, clé `poseLibrary`). Partagée par tous les
-  Projets.
-- **Les poses de `POSITIONS` y sont SEMÉES** au premier lancement, avec la clé intégrée comme `id`
-  (`'assis'`, `'debout'`…). Aucune migration : les fichiers existants citent déjà ces clés. Elles
-  deviennent des entrées ordinaires, renommables et supprimables comme les autres.
-- **`POSE_3D` reste consulté APRÈS la bibliothèque**, comme filet : un fichier citant une pose
-  intégrée que l'utilisateur a supprimée continue de résoudre. Il n'apparaît jamais dans la liste,
-  donc supprimer fait bien disparaître la pose de l'interface.
-- **Chaque fichier embarque les poses qu'il utilise** (`posesUsedByProject3D` — Personnages ET
-  modèles importés, cf. `docs/fr/pose-library.md`), et l'ouverture
-  **fusionne** les ids inconnus. Un fichier reste autonome ; un vieux projet ne peut pas annuler un
-  renommage, la fusion n'écrasant jamais une entrée existante.
-
-**⚠️ Les deux « surprises » ci-dessous ont été CORRIGÉES depuis (Fix 59).** Elles sont conservées
-ici parce qu'elles expliquent pourquoi le code a la forme qu'il a. Désormais : toute suppression est
-mémorisée (`S.dismissedPoses`, clé `poseLibraryDismissed`) et la fusion ne réintroduit jamais un id
-écarté. La surprise 1 ne se produit donc plus.
-
-Conséquence en chaîne : la suppression étant devenue définitive, la règle du Fix 56 (ne confirmer
-que si la pose est utilisée) n'était plus tenable. Un clic unique irréversible sur une pose
-inutilisée, alors qu'on venait de cliquer une pose intégrée pour la regarder, était trop facile.
-**Toute suppression demande maintenant confirmation**, avec un message différencié plutôt
-qu'uniforme : mentionner des Personnages là où il n'y en a aucun serait du bruit, et c'est le bruit
-qui finit par faire cliquer sans lire.
-
-En contrepartie de la surprise 2, un bouton **« Restaurer les poses de base »** (modale
-Configuration) réajoute les poses intégrées manquantes et lève leur mémorisation. Comblement de
-trous, pas remise à zéro : une pose de base renommée est présente, donc jamais écrasée. Les poses
-personnelles supprimées, elles, restent perdues : les conserver contredirait ce qu'annonce la
-confirmation.
-
-**État d'origine, pour mémoire :**
-
-1. Rouvrir un projet **déjà enregistré avant la suppression** fait **réapparaître** la pose : son
-   fichier en portait une copie, réinjectée à l'ouverture.
-
-   ⚠️ **Précision ajoutée après coup, la première rédaction était trompeuse.** La copie embarquée
-   est RECALCULÉE à chaque enregistrement, depuis la bibliothèque filtrée par l'usage
-   (`posesUsedByProject3D`). Supprimer puis réenregistrer le projet la retire donc aussi du fichier :
-   plus rien ne revient, et le Personnage garde un `position` que personne ne sait plus nommer :
-   « inconnue » définitivement. Vérifié en exécutant les deux scénarios.
-
-   Autrement dit, la réapparition ne concerne QUE les fichiers présents sur le disque au moment de
-   la suppression, et seulement tant qu'ils n'ont pas été réenregistrés.
-2. Une bibliothèque **vidée** n'est pas resemée au démarrage : le semis ne se déclenche que si la clé
-   de réglage est ABSENTE. Sans cette distinction, les poses semées réapparaîtraient à chaque
-   redémarrage en annulant la décision de l'utilisateur.
-
-### Dérive étiquette / valeurs
-
-Choisir « Assis » puis bouger un coude laisse l'étiquette sur « Assis » alors que les valeurs ont
-changé, et cette dérive existe déjà aujourd'hui. Afficher « Assis (modifié) » plutôt qu'effacer
-l'étiquette : on garde la provenance, qui est une information utile.
-
-## Découpage
-
-Ordre choisi : l'entrée par la modale d'abord (le mécanisme de brouillon y existe déjà, valeur
-immédiate), la bibliothèque ensuite, l'entrée autonome en dernier : elle n'a d'intérêt qu'une fois
-la bibliothèque en place.
-
-### Phase 0 — Fondations, sans changement visible
-
-- **0.1** Corriger le piège du `<select>` : option synthétique pour une `position` inconnue, pour
-  qu'une sauvegarde ne puisse plus détruire le nom. Test de non-régression sur un projet contenant
-  une position non reconnue. *Livrable seul, indépendant du reste.*
-- **0.2** `resolvePoseLabel3D(o, poses)` → `{ key, label, known }`. Fonction pure, calcule
-  « inconnu » à l'affichage sans rien persister.
-- **0.3** Structure `poses` au niveau projet : `serializeProject` + désérialisation tolérante
-  (absent → `[]`). Aucun consommateur encore.
-
-### Phase 1 — Coquille de l'éditeur
-
-- **1.1** Un mode dédié, calqué sur `S.editingSceneId` (implémenté en `S.personaEditorOpen` +
-  `S.personaEditorTargetId`) : prise en main du rendu, sortie,
-  garde-fous sur les clics hors zones légitimes.
-
-  ⚠️ **Piège de l'ordre d'enregistrement (Fix 67).** L'éditeur RECOUVRE l'application au lieu de la
-  remplacer : tout ce qui écoute le clavier au niveau `window` continue de tourner derrière lui.
-  `stopImmediatePropagation` n'arrête que les écouteurs enregistrés **après** le sien sur la même
-  cible ; or `io.js` est importé avant `events.js`, donc son « Échap → menu Projet » s'exécute en
-  premier, quoi que fasse l'éditeur ensuite. Résultat : quitter l'éditeur par Échap ouvrait le menu
-  Projet derrière lui. La correction est du côté d'`io.js`, dans sa liste de gardes, laquelle est
-  une **énumération** que chaque nouvel overlay doit penser à compléter, la deuxième famille de bugs
-  récurrente de ce dépôt.
-- **1.2** Canevas d'édition alimenté par le renderer partagé (render → `drawImage`), résolution
-  plafonnée.
-- **1.3** Caméra de l'éditeur (orbite, zoom) en réutilisant la logique existante. ✅ *(Fix 65/66)*
-
-  **Revu en octobre 2026 (demandé)** : l'Éditeur prend les gestes des aperçus 3D du store, eux-mêmes
-  ceux de la visionneuse de Sketchfab. **Clic gauche maintenu dans le vide** pour tourner (sur une
-  poignée, le gauche règle toujours l'articulation ; un clic sans glisser désélectionne),
-  **clic droit maintenu** pour déplacer la vue (`deplacement3D`, utils.js, partagée avec le store ;
-  `frameCameraToBox` accepte pour cela un `pan.z`), **molette** pour zoomer.
-
-  **Et les Scènes, ensuite (demandé)** : plus de mode Caméra dans l'éditeur de Scène. Clic gauche
-  maintenu dans le vide pour tourner (autour de l'Élément sélectionné, qui devient le centre
-  d'orbite au premier mouvement), clic droit maintenu pour déplacer la caméra (il ne fait plus
-  défiler la Planche), molette pour zoomer sans Élément sélectionné (sinon sa profondeur), flèches
-  et WASD idem. Un geste ne commence qu'au-delà de 3 px : en deçà, le clic garde son effet d'avant
-  (sélectionner la Scène, désélectionner un Élément, ouvrir le menu au clic droit). Le repère
-  d'orbite s'affiche pendant la rotation (`repereDOrbiteVisible3D`, dans la signature de Case). Les
-  réglages de caméra restent sous le menu de la Scène. Les Cases gardent leur mode Caméra, et
-  déplacer un Élément ne change pas (point à trancher plus tard).
-
-  État d'avant : **clic droit maintenu** pour orbiter, **molette** pour zoomer, et rien d'autre.
-  Pas de déplacement latéral : une figure seule est déjà centrée, la déplacer ne fait que la perdre
-  de vue. Le Fix 65 avait ajouté une section « Caméra » dépliable par la touche `C`, avec rotations
-  numériques, sensibilité du glisser et bouton « Recadrer » ; le Fix 66 l'a **retirée** à la
-  demande : le clic droit suffit, et trois curseurs pour ce qu'un glisser fait mieux ne payaient pas
-  leur place à l'écran. La leçon retenue : un raccourci clavier dans un mode qui en RECOUVRE un
-  autre (l'éditeur laisse la Case vivante derrière lui) coûte un `stopImmediatePropagation` et une
-  vigilance permanente ; ne pas en ouvrir un sans en avoir besoin. `resetPersonaEditorCamera` a
-  survécu au retrait : c'est désormais `openPersonaEditor` qui l'appelle, ce qui donne au « cadrage
-  d'ouverture » **une seule** définition au lieu de deux jeux d'affectations parallèles.
-
-### Phase 2 — Panneau droit : articulations
-
-- **2.1** Réglage fin par curseurs, sur le modèle des curseurs d'Animal de l'époque (`buildAnimalJointSlidersUI`, retirée en #401c quand la fiche d'un Animal a cessé de poser ; l'Éditeur les construit désormais avec `construireCurseursDAnimal3D`).
-- **2.2** Poignées cliquables sur le canevas.
-- **2.3** Tout opère sur un brouillon, jamais sur l'objet (implémenté en `S.personaEditorDraft`).
-
-### Phase 3 — Poses en lecture
-
-- **3.1** Section « poses existantes » : appliquer = copier les valeurs dans le brouillon. ✅ *(Fix 54)*
-- **3.2** ~~Section « émotions »~~ : **écartée** au moment de l'implémenter. La note prévoyait une
-  sélection d'émotion dans l'éditeur ; l'arbitrage initial (« juste se préoccuper des articulations
-  est suffisant, on verra plus tard pour les émotions et les mains ») a été reconduit. En prime, une
-  émotion modifiable ici aurait posé une question de plus en phase 5 : « Appliquer » doit-il
-  l'écrire dans le Personnage au même titre que les articulations ? À rouvrir si le besoin se
-  confirme à l'usage.
-
-⚠️ **Piège rencontré à l'implémentation.** `POSE_3D` est **complété à l'exécution** par `draw.js`,
-qui y ajoute `allonge` et `vaincu` (les deux poses couchées, cf. `lieFlat`). Au chargement de
-`constants.js` seul, elles n'existent pas. Conséquences tenues dans le code :
-
-- la liste des poses ne filtre **jamais** sur la présence d'une entrée dans `POSE_3D` : un filtre les
-  ferait disparaître selon l'ordre des imports, et disparaître dans les tests sans qu'on le voie
-  dans l'application ;
-- `poseJointsByKey3D` reçoit la table **en paramètre**, lue à l'appel et jamais capturée au
-  chargement du module.
-
-### Phase 4 — Bibliothèque de poses en écriture ✅ *(Fix 55)*
-
-- **4.1** Enregistrer le brouillon comme pose (nom, `id`, `skeleton`). ✅
-- **4.2** Renommer / supprimer, sans jamais casser un Personnage (valeurs déjà copiées chez lui). ✅
-- **4.3** Intégration `io.js` ✅, faite dès la phase 0.3 ; un test de cycle complet
-  (enregistrer → sérialiser → recharger → appliquer) la couvre désormais de bout en bout, ainsi
-  que le réalignement du compteur d'ids par `resyncIdCounter`.
-
-**`positionLabel`, tranché ici**, la note le laissait ouvert. On l'écrira : c'est le dernier nom
-connu d'une pose, et `resolvePoseLabel3D` ne le lit QUE lorsque la pose est introuvable. Une valeur
-périmée n'est donc jamais affichée tant que le nom faisant autorité existe, et quand il a disparu,
-un nom périmé vaut mieux qu'un id opaque. L'écriture elle-même relève de la phase 5, seul moment où
-l'éditeur touche à un Personnage ; le nom se déduit alors de `S.personaEditorPoseKey` et de
-`S.poses`, sans état supplémentaire à maintenir.
-
-### Phase 5 — Aller-retour avec la modale
-
-- **5.1** Bouton dans la section Modèle 3D de la modale Personnage.
-- **5.2** « Appliquer » → écrit dans `S.modalDraftJoints`, ferme l'éditeur, rouvre la modale.
-  **Jamais directement dans l'objet** : sinon on obtient une modale dont Annuler n'annule plus,
-  exactement ce que le Fix 35 vient de corriger.
-- **5.3** Quitter l'éditeur sans appliquer → aucun effet.
-
-### Phase 6 — Entrée autonome ✅ *(Fix 64)*
-
-- **6.1** Section Personnage du menu de gauche, Personnage par défaut. Pas de cible → bouton
-  « Appliquer » **absent**, pas seulement grisé : les deux modes ont des sémantiques différentes et
-  le titre doit dire lequel est actif.
-- **6.2** *(revu depuis)* Le titre est devenu celui du menu de droite, nu (« Éditeur de modèle ») :
-  la figure posée et son archétype sont passés dans la section Modèle (`figureDeLEditeur3D`). La
-  mention « Pose libre » a été retirée à l'usage : l'absence d'« Appliquer » se comprend sans elle. La liste déroulante des figures est remplacée par le
-  bouton « Mes modèles », qui ouvre le store en **mode choix** (`ouvrirStore({ choisir })` : seul
-  l'onglet « Mes modèles », une vignette choisit au lieu d'ouvrir sa fiche, un modèle statique est
-  inactif, l'onglet d'avant revient à la fermeture). Un bouton « Personnage intégré » a été essayé
-  puis retiré, jugé inutile.
-- **6.3** Les vitesses de rotation et de déplacement ne sont plus propres à l'Éditeur. Elles avaient
-  été ralenties ici à la demande, puis alignées sur l'aperçu du store, comme les Scènes et les Cases
-  en mode Caméra : `VITESSE_ROTATION_3D` (radians par pixel d'écran) et `VITESSE_DEPLACEMENT_3D` (1 =
-  le point visé suit le pointeur), dans `src/utils.js`, sont la seule source. Changer l'une change
-  tous les endroits à la fois, ce qui est le but : la même sensation partout. Le réglage de
-  sensibilité d'une Case reste un multiplicateur. Dans les Scènes, la rotation ne dépend plus ni de
-  la distance de la caméra ni du zoom de la vue (`tests/vitesses-3d.test.mjs`). Réglées ensuite à l'usage,
-  store compris : rotation à 0,0025 rad par pixel (le quart de Sketchfab), déplacement à la moitié de
-  la vitesse du pointeur. Ces valeurs sont la BASE (100 %) : la Configuration les ajuste en
-  pourcentage, de 25 à 200 % (`settings.json`, clés `vitesseRotation3D` et `vitesseDeplacement3D`),
-  et les gestes lisent `vitesseRotation3D()` / `vitesseDeplacement3D()`.
-
-### Phase 7 — Finitions
-
-- Tests + mutations à chaque étape (discipline en place).
-- README.md, README.fr.md, aide intégrée FR + EN.
-- i18n des nouveaux libellés (`i18n.js`).
-
-## À vérifier à l'usage
-
-- Ergonomie du réglage fin : curseurs seuls, poignées seules, ou les deux.
-- Coût du `setSize` par image sur un grand canevas.
-- Nombre de poses à partir duquel la liste demande un classement ou une recherche.
+- **Ne jamais écrire « inconnue » dans `position`** : l'étiquette se calcule à l'affichage ; garder
+  l'id permet au Projet de se réparer dès qu'il retrouve sa bibliothèque.
+- **Un `<select>` vide sa valeur** si elle est absente de ses options : une pose inconnue reçoit une
+  option synthétique, sinon la sauvegarde écrirait `''`.
+- **`POSE_3D` est complété à l'exécution** par `draw.js` (`allonge`, `vaincu`) : ne jamais filtrer la
+  liste des poses sur sa présence dans `POSE_3D`, et passer la table en paramètre.
+- **`resyncIdCounter` (`io.js`) doit visiter `poses`** : sinon une pose neuve pourrait reprendre l'id
+  d'une autre.
+- **L'éditeur recouvre l'application** : les écouteurs clavier de `window` tournent derrière lui. Un
+  nouvel écran par-dessus doit être ajouté aux gardes d'`io.js` (Échap ouvrirait sinon le menu Projet).

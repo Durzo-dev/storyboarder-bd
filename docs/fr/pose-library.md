@@ -1,9 +1,9 @@
-# Bibliothèque de poses — comment ça marche
+# Bibliothèque de poses
 
-> **État actuel du fonctionnement**, pas l'historique des décisions. Le raisonnement qui a mené là,
-> avec ses revirements, est dans [model-editor.md](model-editor.md).
->
-> À jour du Fix 62.
+*[English version](../en/pose-library.md)*
+
+Comment les poses sont rangées, enregistrées, appliquées et restaurées. L'Éditeur de modèle est décrit
+dans [model-editor.md](model-editor.md).
 
 ## Où vivent les poses
 
@@ -123,13 +123,13 @@ Introuvable dans les deux : étiquette « inconnue », et `position` **reste int
 
 `applyPersonaEditorToModal` (events.js) écrit dans **`S.modalDraftJoints`**, jamais dans
 `S.modalTarget`. C'est `descModalSave` qui recopie le brouillon dans l'Élément, et lui seul décide du
-moment ; sans quoi « Annuler » n'annulerait plus (le défaut corrigé par le Fix 35 ailleurs).
+moment ; sans quoi « Annuler » n'annulerait plus.
 
 Ne fait rien sans `S.personaEditorFromModal` : sans modale derrière, il n'y a rien à alimenter. C'est
 aussi la condition d'affichage du bouton, **masqué** et non grisé en mode autonome.
 
 La clé de pose n'est reportée sur le `<select>` que si la bibliothèque la connaît encore
-(`poseKeyStillInLibrary`) : le piège du Fix 44 par une autre porte : une valeur absente des options
+(`poseKeyStillInLibrary`) : une valeur absente des options
 laisse le `<select>` VIDE, et la sauvegarde suivante écrirait une chaîne vide dans `position`.
 
 ## `positionLabel` — dernier nom connu
@@ -155,14 +155,11 @@ Les portées diffèrent réellement : l'éditeur n'a ni nom ni émotion, et la m
 notion de pose de référence. **Les unifier en un seul mécanisme détacherait l'éditeur de ce qu'il
 écrit réellement** (`joints3d`, `position`, `positionLabel`) pour le lier à des widgets.
 
-Ce qui EST commun, et ce qui a été mis en commun (Fix 62) : la **granularité**. Les deux comparent
-désormais la pose telle que les curseurs l'affichent : degrés entiers. Côté modale par construction
+Ce qui est commun : la **granularité**. Les deux comparent la pose telle que les curseurs l'affichent : degrés entiers. Côté modale par construction
 (elle lit les valeurs des `input`), côté éditeur par `poseSliderSignature3D`, bâtie sur les mêmes
 descripteurs `poseSliderSpecs3D`.
 
-Cela a supprimé un seuil inventé : le Fix 61 comparait les radians avec une tolérance d'un
-demi-degré, mesurée sur le pire écart d'arrondi (0.459°). Le seuil décrivait le symptôme ; comparer
-les valeurs affichées supprime la cause.
+Comparer les valeurs affichées évite toute tolérance sur les radians.
 
 ⚠️ `recomputeModalDirty` se déclenche sur les événements `input`/`change`. Une écriture
 **programmatique** dans `S.modalDraftJoints`, ce que fait « Appliquer », n'en émet aucun : il faut

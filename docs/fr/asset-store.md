@@ -2,7 +2,7 @@
 
 *[English version](../en/asset-store.md)*
 
-Tâches #444 à #446. Chercher, montrer et télécharger des ressources venues d'ailleurs, sans
+Chercher, montrer et télécharger des ressources venues d'ailleurs, sans
 quitter l'application : des modèles 3D d'abord, des textures ensuite.
 
 Les règles d'interface et de code communes à tous les stores (fenêtre, cartes, vignettes, fiche),
@@ -10,15 +10,15 @@ avec des maquettes, sont dans [store-guide.md](store-guide.md).
 
 ## Périmètre arrêté
 
-- **Modèles 3D, Sketchfab d'abord** (#444), puis **Poly Haven** (#445).
-- **Textures ensuite** (#446) : Poly Haven et ambientCG, sur la même coquille.
+- **Modèles 3D, Sketchfab d'abord**, puis **Poly Haven**.
+- **Textures ensuite** : Poly Haven et ambientCG, sur la même coquille.
 - **Aucune dépendance à une seule source.** Sketchfab a changé deux fois de propriétaire (Epic en
   2021, KitBash le 12 août 2026) ; son API peut changer encore. Chaque source est un module
   interchangeable, et tout le reste ne connaît que le format commun.
 
 ## Ce que l'API Sketchfab permet
 
-Relevé en appelant l'API le 5 octobre 2026.
+Relevé en appelant l'API.
 
 - **Recherche publique**, sans connexion : `GET api.sketchfab.com/v3/search?type=models`, avec
   `downloadable=true`, `q`, `license` (un seul code), `categories` (un slug), `sort_by`
@@ -31,14 +31,14 @@ Relevé en appelant l'API le 5 octobre 2026.
   rendent des liens valables cinq minutes vers une archive glTF (zip : `scene.gltf`, `scene.bin`,
   `textures/`). L'aide mentionne aussi un GLB direct, à vérifier dès qu'on aura un jeton.
 - **Connexion OAuth obligatoire pour télécharger.** L'application doit être enregistrée auprès de
-  Sketchfab (#444-0) ; mode « Implicit », sans secret, redirection vers une adresse locale.
+  Sketchfab ; mode « Implicit », sans secret, redirection vers une adresse locale.
 - **Obligations** (Developer Terms 4.5 à 4.7) : dire que les modèles viennent de Sketchfab, afficher
   la licence et l'auteur avec un lien, et faire suivre ce crédit jusque dans ce que l'utilisateur
   diffuse.
 
 ## Ce que l'API Poly Haven permet
 
-Relevé en appelant l'API le 6 octobre 2026 (`api.polyhaven.com`, guide : `polyhaven.com/llms.txt`).
+Relevé en appelant l'API (`api.polyhaven.com`, guide : `polyhaven.com/llms.txt`).
 
 - **Ni clé ni compte**, pour chercher comme pour télécharger. Tout est en **CC0** : usage commercial
   compris, sans attribution obligatoire. Les conditions demandent un **User-Agent** qui nomme
@@ -76,7 +76,7 @@ squelette ; tri par nom ou par date.
 des vignettes). Un modèle articulé porte une icône d'articulation sur sa vignette ; la fiche dit
 « Squelette : n os » ou « Aucun squelette ». Le filtre « Articulés / Statiques » laisse de côté un
 modèle pas encore mesuré, qui n'apparaît que dans « Articulés et statiques ». Rien de tel pour les
-onglets en ligne : Poly Haven ne le dit pas, et pour Sketchfab on verra avec l'API (#444c).
+onglets en ligne : Poly Haven ne le dit pas, et pour Sketchfab on verra avec l'API.
 
 Les vignettes (`src/model-thumbnails.js`) : décodées à part du cache des Cases, préparées comme une
 Case, photographiées de trois quarts, libérées ; gardées dans `Vignettes-modeles/` avec la signature
@@ -132,7 +132,7 @@ modification. Les modèles **réservés aux adultes** et les non téléchargeabl
 ## L'attribution
 
 Chaque ressource téléchargée garde avec elle sa source, son identifiant, son auteur et son lien, sa
-licence et sa date (#444e), et la suit dans les renommages et suppressions. Le tout vit dans
+licence et sa date, et la suit dans les renommages et suppressions. Le tout vit dans
 `attributions-modeles.json`, à côté du dossier Modeles (qui ne contient que des `.glb`).
 
 **Doublons.** À chaque ouverture, le store relit ce fichier (`store:telecharges`) et ne retient que
@@ -142,10 +142,10 @@ le nom du fichier. En simulation, les deux premiers résultats passent pour déj
 fournis par Sketchfab » figure dans le store.
 
 **Où la voir.** La fiche d'un modèle dans « Mes modèles » montre sa source, son auteur et sa licence
-avec leurs liens (#444e). Le menu de gauche ne liste plus les modèles (la bibliothèque s'ouvre par un
+avec leurs liens. Le menu de gauche ne liste plus les modèles (la bibliothèque s'ouvre par un
 bouton du bandeau) : c'est donc la fiche qui porte l'attribution.
 
-**Dans les exports (#444f).** Une Planche exportée, en PNG comme en PDF, porte sous son image (et
+**Dans les exports.** Une Planche exportée, en PNG comme en PDF, porte sous son image (et
 sous la liste des Cases si elle est affichée) une section « Crédits des modèles 3D » : pour chaque
 modèle VISIBLE de la Planche qui a une attribution (dans une Case, ni hors de son cadre ni caché derrière
 autre chose : une Case qui a reçu une grande Scène n'en crédite que ce qu'elle montre ; la décision
@@ -158,27 +158,9 @@ un modèle importé à la main n'a pas d'attribution connue et n'apparaît pas. 
 `src/export-credits.js` ; les attributions sont lues au moment d'exporter (`store:telecharges`),
 et un échec de lecture n'empêche pas l'export.
 
-## Découpage
-
-- **#444-0** Enregistrement de l'application auprès de Sketchfab (à faire par Durzo).
-- **#444a** Le contrat des sources et ce document. Fait.
-- **#444b** Recherche et parcours, sans connexion : la fenêtre du store, la grille, les filtres, la
-  fiche avec l'aperçu 3D, la mention Sketchfab, et une simulation hors ligne. Fait : `store.js`
-  (requêtes, processus principal), `src/store-ui.js` et `src/store-texts.js` (interface).
-- **#444c** La connexion Sketchfab.
-- **#444d** Le téléchargement : GLB direct, ou zip glTF converti en GLB, progression, poids.
-- **#444e** Les attributions. Fait.
-- **#444f** Les crédits dans les exports. Fait.
-- **#444g** Placer directement un modèle depuis sa fiche. Abandonnée (le mode « choisir » y répond :
-  cf. [store-guide.md](store-guide.md)).
-- **#444h** Finitions : manuel, README, traductions, simulation documentée. Fait (filtres mémorisés
-  abandonnés : le store repart de zéro à chaque lancement, demandé).
-- **#445** Poly Haven : recherche et onglets, puis téléchargement. Fait.
-- **#446** le store de textures.
-
 ## Le téléchargement
 
-Fait pour Poly Haven (#445) ; Sketchfab réutilisera le même chemin une fois la connexion faite.
+Fait pour Poly Haven ; Sketchfab réutilisera le même chemin une fois la connexion faite.
 
 1. `store:poids` donne le poids de chaque résolution proposée (`optionsTelechargement`) (`planTelechargement`, d'après `/files/{id}`).
 2. `store:telecharger` (processus principal) télécharge le `.gltf` et chacun de ses fichiers inclus
@@ -217,12 +199,12 @@ Sketchfab ou Poly Haven, signalé par un bandeau jaune :
 
 Pour revenir à la normale, fermer le terminal, ou `Remove-Item Env:STORYBOARD_SIMULER_STORE`.
 
-## Le store de textures (#446)
+## Le store de textures
 
 Mêmes principes que pour les modèles : une source est un module sans requête, testé sur de vraies
 réponses, et tout le reste ne connaît que le format commun (`type: 'texture'`).
 
-**Sources** (relevées le 25 octobre 2026, toutes en CC0, sans compte ni clé) :
+**Sources** (toutes en CC0, sans compte ni clé) :
 
 - **Poly Haven** (`store-textures-polyhaven.js`) : `/assets?type=textures` rend les 869 textures
   d'un coup ; chacune a des `categories` (un tableau), des tags et sa **taille réelle** en mm.
@@ -230,11 +212,11 @@ réponses, et tout le reste ne connaît que le format commun (`type: 'texture'`)
 - **ambientCG** (`store-textures-ambientcg.js`) : `api/v2/full_json?type=Material`, pages côté
   serveur (`limit`, `offset`, `q`, `category` en liste), 2 037 matières ; un zip JPG par résolution
   (1K ≈ 7 à 10 Mo). La taille réelle, en cm, manque souvent (0).
-- **cc0-textures.com** (#446f, ABANDONNÉE le 27 octobre 2026 : pas utile) : un agrégateur sans API, qui ne sert que des zip 4K. Il
+- **cc0-textures.com** : un agrégateur sans API, qui ne sert que des zip 4K. Il
   reprend Poly Haven et ambientCG sous leurs anciens noms ; seul ShareTextures y est nouveau. Prévu
   en troisième source, limitée à ShareTextures, réduite en 1k à l'import.
 
-**Matières et usages** (`texture-matieres.js`, table validée le 25 octobre 2026). Une texture a une
+**Matières et usages** (`texture-matieres.js`). Une texture a une
 ou plusieurs **matières** (20 : herbe, terre, sable, gravier, roche, neige, asphalte, pavés,
 brique, béton, enduit, bois, parquet, carrelage, marbre, moquette, papier peint, métal, tuiles,
 feuillage), reconnues d'après les catégories de la source puis les mots ENTIERS de ses tags et de
@@ -243,14 +225,14 @@ mur intérieur, sol intérieur, plafond, toit) découlent des matières, jamais 
 eux qui disent où l'application la propose. Une texture sans matière (tissu, cuir, nourriture…)
 est écartée.
 
-**Téléchargement** (#446b) : rien d'office, seulement la texture choisie dans le store, à la
+**Téléchargement** : rien d'office, seulement la texture choisie dans le store, à la
 résolution choisie sur sa fiche : **1k** par défaut, 2k au choix, **4k seulement pour une texture
 qui sert aux bâtiments** (un mur vu de près dans une Case exportée en grand) ; jamais 8k. On garde
 la couleur, le relief (normal OpenGL), la rugosité, l'ombrage des creux et le déplacement s'ils
 existent (pas le relief DirectX). Le zip ambientCG est lu en mémoire (`zip-lecture.js`) et seules
 ces cartes en sortent.
 
-**La fenêtre** (#446c, `src/textures-store-ui.js`) : à part du store de modèles (demandé), ouverte
+**La fenêtre** : à part du store de modèles (demandé), ouverte
 par son propre bouton du bandeau, juste à droite de la bibliothèque de modèles. Trois onglets
 (« Mes textures », Poly Haven, ambientCG), des filtres par texte, matière et usage, la page suivante
 qui arrive en approchant du bas. La fiche remplace la grille : matières, usages, taille réelle
@@ -270,13 +252,13 @@ inconnue : 2 m. Grain cuit en grand format.
 `ao.jpg`, `deplacement.jpg`, et le grain), plus une entrée dans `Textures/bibliotheque-textures.json`
 (crédit, matières, usages, taille réelle, résolution, mesures de cuisson) : « Mes textures ».
 
-**Cuisson** au téléchargement, pas au premier usage (décidé le 25 octobre 2026) : le cuiseur
+**Cuisson** au téléchargement, pas au premier usage : le cuiseur
 (`tools/bake-textures.mjs`, `cuireMatiere3D`, livré avec l'application) tire le grain du Sol et
 des Tracés, sa teinte naturelle et sa nature. Une texture qui se répète mal est GARDÉE et signalée
 (`raccordVisible`) ; une texture sans déplacement ni AO n'a pas de grain et reste utilisable en
 revêtement. Le renderer ne fournit jamais d'adresse : la source est relue par l'identifiant.
 
-**Sur le Sol et les Tracés** (#446d, `src/textures-utilisateur.js`) : une texture dont un usage est
+**Sur le Sol et les Tracés** : une texture dont un usage est
 `sol` devient une matière du Sol (section Sol d'une Case ou d'une Scène, Zone de terrain) ; une
 texture dont un usage est un type de Tracé (route, chemin, muret, clôture, haie) se choisit pour un
 Tracé de ce type. Le choix se fait par un **grand carré** (la texture posée, son nom, « Changer »),
@@ -295,11 +277,3 @@ adresse blob. L'identifiant persisté (`tex:<dossier>`) est décrit dans
 [persisted-data.md](persisted-data.md). La fiche dit combien de fois la texture sert dans le Projet
 ouvert.
 
-## Questions ouvertes
-
-- **GLB direct ou zip** : à vérifier avec un premier jeton. Si seul le zip est proposé, il faudra le
-  lire et l'empaqueter en GLB sans dépendance.
-- **Filtres animé et rigué** : les paramètres de l'API n'ont pas pu être vérifiés ; non proposés tant
-  qu'ils ne le sont pas.
-- **Plusieurs licences à la fois** : l'API n'en accepte qu'une. « Usage commercial seulement » est
-  donc filtré par nous, page par page.

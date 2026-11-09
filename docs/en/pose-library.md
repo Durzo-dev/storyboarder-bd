@@ -1,9 +1,9 @@
-# Pose library — how it works
+# Pose library
 
-> **Current behaviour**, not the history of the decisions. The reasoning that led here, including
-> its reversals, is in [model-editor.md](model-editor.md).
->
-> Up to date as of Fix 62.
+*[Version française](../fr/pose-library.md)*
+
+How poses are stored, saved, applied and restored. The Model editor is described in
+[model-editor.md](model-editor.md).
 
 ## Where poses live
 
@@ -122,14 +122,14 @@ would destroy the name; as it stands, the Project repairs itself if it finds the
 
 `applyPersonaEditorToModal` (events.js) writes into **`S.modalDraftJoints`**, never into
 `S.modalTarget`. It is `descModalSave` that copies the draft into the Element, and it alone decides
-when; otherwise "Cancel" would no longer cancel (the defect fixed by Fix 35 elsewhere).
+when; otherwise "Cancel" would no longer cancel.
 
 It does nothing without `S.personaEditorFromModal`: with no dialog behind, there is nothing to feed.
 That is also the display condition of the button, **hidden** rather than greyed out in standalone
 mode.
 
 The pose key is only carried over to the `<select>` if the library still knows it
-(`poseKeyStillInLibrary`): the Fix 44 trap through another door: a value absent from the options
+(`poseKeyStillInLibrary`): a value absent from the options
 leaves the `<select>` EMPTY, and the next save would write an empty string into `position`.
 
 ## `positionLabel` — last known name
@@ -155,14 +155,12 @@ The scopes genuinely differ: the editor has neither name nor emotion, and the di
 of the reference-pose notion. **Unifying them into a single mechanism would detach the editor from
 what it actually writes** (`joints3d`, `position`, `positionLabel`) and bind it to widgets instead.
 
-What IS common, and what was put in common (Fix 62): the **granularity**. Both now compare the pose
+What is common: the **granularity**. Both compare the pose
 as the sliders display it: whole degrees. On the dialog side by construction (it reads the `input`
 values), on the editor side through `poseSliderSignature3D`, built on the same `poseSliderSpecs3D`
 descriptors.
 
-That removed an invented threshold: Fix 61 compared radians with a half-degree tolerance, measured
-on the worst rounding gap (0.459°). The threshold described the symptom; comparing displayed values
-removes the cause.
+Comparing displayed values avoids any tolerance on radians.
 
 ⚠️ `recomputeModalDirty` fires on `input`/`change` events. A **programmatic** write into
 `S.modalDraftJoints`, which is what "Apply" does, emits none: `syncJointSlidersFromDraft()` then
