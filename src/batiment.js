@@ -1,7 +1,7 @@
 /**
  * @file batiment.js
- * LE FICHIER DE BÂTIMENT (#454a, décisions de Durzo du 22 octobre 2026, cf.
- * docs/en/building-research.md). Fonctions PURES : créer, relire, nommer, écrire.
+ * LE FICHIER DE BÂTIMENT (cf. docs/en/building-editor.md). Fonctions PURES : créer, relire, nommer,
+ * écrire.
  *
  * Un bâtiment se construit dans l'ÉDITEUR DE BÂTIMENTS, pas dans la Scène, et il est un MODÈLE :
  * rangé dans `<dossier de Projets>/Batiments`, listé avec les modèles importés. Le placer dans une

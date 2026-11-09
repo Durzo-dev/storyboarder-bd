@@ -30,12 +30,12 @@ draw and stays written, so a version that ignores them reads ordinary Panels.
 A file without `formats` gets the four built-in formats; a Volume whose dimensions match no format
 gets one with its dimensions (only its key changes).
 
-**Building files** (#454a, October 2026, see [building-research.md](building-research.md)):
+**Building files** (#454a, October 2026, see [building-editor.md](building-editor.md)):
 `<Projects folder>/Batiments/*.batiment.json`, a separate, VERSIONED format (`version: 1`). Same
 rule as Projects: its fields are never renamed, and an unknown field is kept on reading, so a file
 written by a newer version loses nothing by passing through this one.
 
-**Placed buildings** (#454a-4, October 2026, see [building-research.md](building-research.md)): an
+**Placed buildings** (#454a-4, October 2026, see [building-editor.md](building-editor.md)): an
 `objet3d` with `objType: 'batiment'` (an ADDED value) that embeds its copy of the building in the
 ADDED field `batiment` (the shape of `.batiment.json` files), and `batimentSource` (the library file
 it was placed from, informative). A version that ignores this type draws

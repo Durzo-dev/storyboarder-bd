@@ -8,7 +8,7 @@
  * posés, les guides d'alignement sur ces sommets, la jonction en T quand un mur finit au milieu d'un
  * autre (l'autre est coupé en deux), et la chaîne qui continue depuis le dernier point.
  *
- * CE QUE L'ANALYSE A AJOUTÉ (docs/en/building-research.md, recommandation 13) :
+ * CE QUI S'Y AJOUTE (cf. docs/en/building-editor.md) :
  *   - l'ANGLE aimanté par pas de 15° depuis le point de départ (Sweet Home 3D, Planner 5D) ;
  *   - la LONGUEUR arrondie au centimètre, affichée pendant le tracé ;
  *   - le retour visuel AVANT de valider : un mur qui en croise un autre est refusé, et l'écran le
