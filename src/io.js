@@ -672,7 +672,7 @@ export function applyProjectData(data){
   // le chemin de dessin est synchrone et ne peut pas patienter, donc les modèles arrivent après, et
   // leur arrivée redéclenche un rendu (cf. setModelCacheCallbacks). Le Projet s'ouvre entièrement
   // même si un fichier manque, chaque modèle absent devient une boîte de remplacement, et aucun
-  // Élément n'est supprimé (cf. docs/en/persisted-data.md § 5).
+  // Élément n'est supprimé (cf. docs/en/persisted-data.md § 6).
   prechargerEnCascade3D();
   S.projectDirty = false;
 }

@@ -200,7 +200,7 @@ describe('readModel : un modèle introuvable n\'est pas une raison de détruire'
     // `null` veut dire « affiche une boîte de remplacement ». Tout autre contrat, lever, ou rendre
     // un drapeau de suppression, mettrait l'appelant en position de détruire l'Élément sur une
     // panne passagère : disque externe non monté, fichier verrouillé par un antivirus.
-    // Cf. docs/en/persisted-data.md § 5.
+    // Cf. docs/en/persisted-data.md § 6.
     pontSimulé({ fichiers: {} });
     assert.equal(await readModel('disparue.glb'), null);
   });

@@ -20,7 +20,7 @@
  *
  * « introuvable » n'est PAS une erreur passagère qu'on réessaie en boucle : sans cet état, chaque
  * image relancerait une lecture disque vouée à échouer. Et il ne vaut JAMAIS suppression de
- * l'Élément, cf. docs/en/persisted-data.md § 5.
+ * l'Élément, cf. docs/en/persisted-data.md § 6.
  *
  * CE QUI N'EST PAS ICI : le dessin de la boîte de remplacement (rig3d.js) et la décision de
  * redessiner (scene3d.js). Ce module ne connaît que des octets et des scènes Three.

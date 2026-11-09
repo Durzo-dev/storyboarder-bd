@@ -15,7 +15,7 @@
  * le porte. Un disque externe non monté, un antivirus qui verrouille un fichier, et le placement
  * patiemment réglé, position, échelle, orientation, disparaîtrait, gravé quelques secondes plus
  * tard par la sauvegarde automatique. L'Élément reste, en boîte de remplacement, et redevient normal
- * dès que le fichier revient. Cf. docs/en/persisted-data.md § 5.
+ * dès que le fichier revient. Cf. docs/en/persisted-data.md § 6.
  */
 
 import { OBJECT_REAL_HEIGHT_M, WALL_PX_PER_UNIT_3D } from './constants.js';

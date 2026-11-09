@@ -28,66 +28,77 @@ A section with nothing to say is left out.
 
 ## Read before touching the code
 
-| Document | What it prevents |
+| Note | Subject |
 |---|---|
-| [**persisted-data.md**](persisted-data.md) | Making every existing project file unreadable, with nothing to signal it. |
-| [**3d-rendering-single-sources.md**](3d-rendering-single-sources.md) | Reintroducing the duplication that produced five successive bugs in the 3D rendering. |
-| [**imported-skeletons.md**](imported-skeletons.md) | Assuming a bone convention that real files do not follow. |
+| [persisted-data.md](persisted-data.md) | Saved data: what is never renamed, reading back, added fields. |
+| [architecture.md](architecture.md) | What goes where, IPC channels, circular imports, shared state, naming. |
+| [3d-rendering-single-sources.md](3d-rendering-single-sources.md) | 3D rendering: one source per computation. |
+| [imported-skeletons.md](imported-skeletons.md) | Skeletons of imported models: bone conventions, mappings. |
 
-These two are not style recommendations: a breach costs data, or a regression that is hard to track
-down.
+## Method and procedures
 
-## To understand the code
-
-| Document | Subject |
+| Note | Subject |
 |---|---|
-| [3d-reference-frames.md](3d-reference-frames.md) | World constants, canvas vs world coordinates, orientation, rig scales. |
-| [architecture.md](architecture.md) | Module rules, circular imports, shared state, naming. |
-| [testing-method.md](testing-method.md) | Mutation testing, extracting to make things testable, what is out of reach. |
-| [pose-library.md](pose-library.md) | Poses: where they live, saving, deleting, restoring, merging on open. |
-| [rendering-performance.md](rendering-performance.md) | Measured cost of the drawing path, what the audit got wrong, how to re-measure. |
-| [ground-textures.md](ground-textures.md) | Texel density, the Ground's three scales, what a tileable photograph cannot carry, and GPU memory. |
+| [testing-method.md](testing-method.md) | Writing and organising tests, making code testable, what stays out of reach. |
+| [versioning.md](versioning.md) | Version numbers, git hooks, tags, publishing. |
+| [updates.md](updates.md) | Built-in updates: signed attestation, mandatory version, publishing. |
+| [missing-resources.md](missing-resources.md) | A Project's missing resources and the window that explains them. |
 
-## Procedures
+## Interface
 
-| Document | Subject |
+| Note | Subject |
 |---|---|
-| [versioning.md](versioning.md) | `major.minor.patch` policy, git hooks, tags. |
-| [missing-resources.md](missing-resources.md) | Missing resources: why a Project loses its models and images from one installation to another, the dialog that explains it, and its simulation (task #443). |
-| [updates.md](updates.md) | Built-in updates: the signed attestation, the fourteen-day offline lease, publishing a version, making one required (task #442). |
+| [interface.md](interface.md) | Interface rules: buttons, menus, Controls, icons, tooltips, modals, labels. |
+| [ui-scale-coordinates.md](ui-scale-coordinates.md) | Interface size: screen pixels and zoomed pixels. |
+| [colour-accessibility.md](colour-accessibility.md) | Colour that depicts, colour that signals, and colour-vision deficiencies. |
+| [gestes-3d.md](gestes-3d.md) | The 3D gestures of each screen: controls, speeds, steps, bounds. |
+| [store-guide.md](store-guide.md) | Making a store: window, cards, sheet, download, adding a source. |
 
-## Design in progress
+## Pages, Panels and Bubbles
 
-| Document | Subject |
+| Note | Subject |
 |---|---|
-| [model-editor.md](model-editor.md) | Model editor: settled decisions and breakdown (tasks #229 to #237). |
-| [creature-rigs.md](creature-rigs.md) | Non-humanoid rigs: corpus, measured defects, disproved hypotheses, archetypes, plan (tasks #358 to #377). |
-| [archetype-roles.md](archetype-roles.md) | Chain roles: what a pose can aim at, lists per archetype, settled decisions (tasks #378 and #375). |
-| [archetype-poses.md](archetype-poses.md) | Archetype poses: the three vocabularies, what was measured, what was disproved, decisions taken (tasks #375 to #402). |
-| [terrain-editor.md](terrain-editor.md) | The terrain editor: what lives where, added data (relief, painted Zones, slopes, water, rivers), the decisions that matter (task #462). |
-| [building-editor.md](building-editor.md) | The Building editor: files, `.batiment.json` format, levels, walls, derived rooms, openings, stairs, roofs, placed building. |
-| [formats.md](formats.md) | Volume formats: owned by the Project, created, renamed, deleted when unused; mm and px; the added field. |
-| [planche-importee.md](planche-importee.md) | Imported pages: a page image, its Panels detected then checked, the framing of the whole, what is locked, the added fields. |
-| [panel-images.md](panel-images.md) | An image in a panel instead of a 3D scene: settled decisions, what the code already provides, what is left to measure (tasks #403a to #403d). |
-| [colour-accessibility.md](colour-accessibility.md) | Colour that depicts against colour that signals, measured collisions per deficiency, why a theme is not the main remedy (tasks #409a to #409d). |
-| [interface.md](interface.md) | The interface rules set through feedback: button colours, the four gaps, one menu with a contextual section, Controls, label-free icons, tooltips, placing gestures, modals, labels (task #454). |
-| [lighting.md](lighting.md) | Lighting a panel and a Scene: what "off" must mean, the data model, why sun and ambient move together, what is out of scope (tasks #414a to #414g). |
-| [positioned-lights.md](positioned-lights.md) | Light sources placed in a Scene: why a light is an `objet3d` and not a new type (70 sites measured), the persisted fields, the shared-scene leak, the four intended exclusions (task #420). |
-| [cast-shadows.md](cast-shadows.md) | Cast shadows: what the sun costs (1.0 ms) and what eight casting sources cost (3.9 ms), the 2,004 ms of compiling that ruled the latter out, and why a shadow spread over the 12,000-unit Ground changes 0.00% of the pixels (task #422). |
-| [bubble-styles.md](bubble-styles.md) | The graphic vocabulary of Bubbles: the six axes a bubble is made of, why the same shape carries different meanings across works (the lightning tail measured on four), why the thought cloud has vanished from all twelve surveyed, and the three-level corpus status (task #424). |
-| [ui-scale-coordinates.md](ui-scale-coordinates.md) | Screen pixels against zoomed pixels: why `zoom` splits the application in two coordinate systems, the 137 px measured, why a clamping function pushed menus off screen, and the rule that follows (task #417). |
-| [imported-models-display.md](imported-models-display.md) | How imported models are displayed: the audit that followed the orange duck, the seven fixes (colours, metals, emission, the file's lights, importing a `.gltf`, compressions), and what stays ignored knowingly. |
-| [asset-store.md](asset-store.md) | The asset store: scope, what the Sketchfab API allows (checked on 5 October 2026), the common source contract, attribution, breakdown (tasks #444 to #446). |
-| [store-guide.md](store-guide.md) | Building a store: the rules shared by the model and texture stores (window, cards, recomposed thumbnails, detail page, download, classification), how to add a source, a checklist, with mockups. |
-| [gestes-3d.md](gestes-3d.md) | 3D gestures, surveyed everywhere (store, modals, Model editor, building editor, Panels, Scenes): controls, speeds, steps and bounds; common points, inconsistencies, recommendations to make them consistent. |
-| [lecteur.md](lecteur.md) | The Volume or Chapter Reader: what it does, its options (one or two pages, direction, blank page, scrolling, guided view), what lives where, and what an off-screen drawing costs. |
-| [polices.md](polices.md) | Fonts: sixty-five built in (fifty-five from DaFont, chosen by licence), and why complete ones; real or simulated bold and italic; the Fonts window; importing a file (what is read from it, the index, renames that rewrite no Project) (task #423). |
-| [non-visible.md](non-visible.md) | "Not visible": the ID render that tells whether an Element is out of frame or hidden, what it deliberately does not see, the doubt that favours visibility, and when it runs (task #449). |
+| [formats.md](formats.md) | Volume formats. |
+| [planche-importee.md](planche-importee.md) | Imported pages and their detected Panels. |
+| [panel-images.md](panel-images.md) | An image in a Panel instead of a 3D scene. |
+| [lecteur.md](lecteur.md) | The Reader of a Volume or Chapter. |
+| [bubble-styles.md](bubble-styles.md) | Bubbles: shapes, tails, borders, styles. |
+| [polices.md](polices.md) | Built-in and imported fonts, bold and italic, the Fonts window. |
+| [non-visible.md](non-visible.md) | "Not visible": knowing whether an Element is out of frame or hidden. |
+
+## 3D: frames, rendering, light
+
+| Note | Subject |
+|---|---|
+| [3d-reference-frames.md](3d-reference-frames.md) | World constants, canvas and world coordinates, orientation, scales. |
+| [rendering-performance.md](rendering-performance.md) | The cost of drawing and how to measure it. |
+| [lighting.md](lighting.md) | Lighting of a Panel and a Scene. |
+| [positioned-lights.md](positioned-lights.md) | Light sources placed in a Scene. |
+| [cast-shadows.md](cast-shadows.md) | Cast shadows. |
+| [ground-textures.md](ground-textures.md) | Ground textures: scales, density, memory. |
+| [imported-models-display.md](imported-models-display.md) | Displaying imported models: materials, lights, formats. |
+
+## Characters and models
+
+| Note | Subject |
+|---|---|
+| [model-editor.md](model-editor.md) | The Model editor. |
+| [pose-library.md](pose-library.md) | The pose library. |
+| [creature-rigs.md](creature-rigs.md) | Non-humanoid rigs and their archetypes. |
+| [archetype-roles.md](archetype-roles.md) | Chain roles, per archetype. |
+| [archetype-poses.md](archetype-poses.md) | Poses per archetype. |
+| [asset-store.md](asset-store.md) | The asset store and its sources. |
+
+## Editors
+
+| Note | Subject |
+|---|---|
+| [building-editor.md](building-editor.md) | The Building editor: format, levels, walls, rooms, openings, stairs, roofs. |
+| [terrain-editor.md](terrain-editor.md) | The Terrain editor: relief, Zones, water, rivers. |
 
 ---
 
-Every document exists in two languages, **one folder per language**: `docs/en/name.md` and
-`docs/fr/name.md`, same base name. Both are kept in step, and `tests/docs.test.mjs` refuses a
-document without its counterpart, a dead link, or a section added on one side only.
-
-The code and its comments are in English (see [architecture.md](architecture.md#language)).
+Every note exists in two languages, **one folder per language**: `docs/en/name.md` and
+`docs/fr/name.md`, same base name. Both are kept in step, and `tests/docs.test.mjs` refuses a note
+without its counterpart, a dead link, or a section added on one side only. For the language of the
+code, see [architecture.md](architecture.md#language).

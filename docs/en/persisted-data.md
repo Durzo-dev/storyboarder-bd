@@ -1,282 +1,175 @@
-# Persisted data — what is never renamed
+# Saved data: what is never renamed
 
-> **The most important rule in the repository.** A breach does not break the build, does not fail a
-> test and cannot be seen on screen: it makes every already-saved project file unreadable. The
-> symptom shows up weeks later, at someone who reopens an old file and finds their Characters
-> standing in the middle of nowhere.
+*[Version française](../fr/persisted-data.md)*
 
-A project is serialised to JSON by `serializeProject()` (`src/io.js`). Everything that ends up in
-that JSON is part of the **file format**, not of the code: it is a contract with the past.
+> **The most important rule in the repository.** Breaking it breaks neither the build nor a test, and
+> shows nothing on screen: it makes the files users have already saved unreadable.
 
-## 1. JSON field names
+A Project is serialised to JSON by `serializeProject()` (`src/io.js`). Everything that ends up in that
+JSON is part of the **file format**: adding is allowed; removing or renaming is not. The same rules
+apply to the application's other files (buildings, skeleton mappings, settings).
+`tests/persisted-format.test.mjs` checks the code against the lists in this note.
 
-Never renamed, never removed. Adding is allowed; removing or renaming is not.
+## 1. Field names
 
-**Chapters** (October 2026, see `src/chapitres.js`): `chapitres` on a Volume (`[{ id, nom }]`, their
-order) and `chapitreId` on a Page (absent = directly under the Volume). Two ADDED fields: `pages`
-stays the flat list whose order is the numbering, so a version that ignores chapters reads the same
-Pages in the same order. Invariant restored on reading: a chapter's Pages are contiguous, those
-without a chapter come first.
+**Project level**: `projectName`, `tomes`, `formats`, `scenes`, `currentTomeIndex`,
+`currentPageIndex`, `poses`.
 
-**Imported pages** (October 2026, see [planche-importee.md](planche-importee.md)): `importee` on a
-Page (`{ largeur, hauteur }`, plus `imageAnchorX`, `imageAnchorY`, `imageZoom` for the framing of
-the whole) and `regionImage` on its Panels (`{ x, y, w, h }` as fractions of the image), which also
-carry `imageFile`, and `pointsImage` (its four corners, as fractions) when a Panel has been deformed. ADDED fields: a Panel's place (`x`, `y`, `w`, `h`, `pts`) is recomputed at every
-draw and stays written, so a version that ignores them reads ordinary Panels.
+**Chapters** (`src/chapitres.js`): `chapitres` on a Volume (`[{ id, nom }]`, in order) and
+`chapitreId` on a Page (absent: directly under the Volume). `pages` remains the flat list whose order
+gives the numbering. On reading, a chapter's Pages are made contiguous, those without a chapter first.
 
-**Formats** (#453, October 2026, see [formats.md](formats.md)): `formats` at project level
-(`[{ key, nom?, unite, largeur, hauteur, w, h, scale, mmW }]`). ADDED field: each Volume keeps its
-`format` key and its copy of `w`, `h`, `scale`, so a version that ignores it reads the same Volumes.
-A file without `formats` gets the four built-in formats; a Volume whose dimensions match no format
-gets one with its dimensions (only its key changes).
+**Imported pages** (see [planche-importee.md](planche-importee.md)): `importee` on a Page
+(`{ largeur, hauteur }`, plus `imageAnchorX`, `imageAnchorY`, `imageZoom` for the framing), and on its
+Panels `regionImage` (`{ x, y, w, h }` as fractions of the image), `imageFile`, and `pointsImage` (the
+four corners, as fractions) for a distorted Panel. A Panel's place (`x`, `y`, `w`, `h`, `pts`) is
+recomputed at every draw and still written.
 
-**Building files** (#454a, October 2026, see [building-editor.md](building-editor.md)):
-`<Projects folder>/Batiments/*.batiment.json`, a separate, VERSIONED format (`version: 1`). Same
-rule as Projects: its fields are never renamed, and an unknown field is kept on reading, so a file
-written by a newer version loses nothing by passing through this one.
+**Formats** (see [formats.md](formats.md)): `formats` at project level
+(`[{ key, nom?, unite, largeur, hauteur, w, h, scale, mmW }]`). Each Volume keeps its `format` key and
+its copy of `w`, `h`, `scale`. A file without `formats` receives the four built-in formats; a Volume
+whose dimensions match no format receives one at its dimensions.
 
-**Placed buildings** (#454a-4, October 2026, see [building-editor.md](building-editor.md)): an
-`objet3d` with `objType: 'batiment'` (an ADDED value) that embeds its copy of the building in the
-ADDED field `batiment` (the shape of `.batiment.json` files), and `batimentSource` (the library file
-it was placed from, informative). A version that ignores this type draws
-it as an unknown object, losing nothing of the field.
+**Building files** (see [building-editor.md](building-editor.md)):
+`<Projects folder>/Batiments/*.batiment.json`, a separate, versioned format (`version: 1`). An unknown
+field is kept on reading.
 
-**Project level**: `projectName`, `tomes`, `formats`, `scenes`, `currentTomeIndex`, `currentPageIndex`,
-`poses` (pose library: `[{ id, name, skeleton, joints }]`).
-
-⚠️ **The scope of `poses` changed (Fix 57)** without its name or its shape moving: the library now
-belongs to the **Application** (`settings.json`, key `poseLibrary`). What the project file carries
-is no longer the whole library but a **copy of the poses it uses**, so it stays readable on a
-machine that does not have them. On opening, those poses are **merged** into the library (unknown
-ids only, so an old project cannot undo a rename). A file written before that change is
-still read identically, and a file written after stays readable by an earlier version.
-
-The 6 offered poses are **seeded** into the library on first launch, with the built-in key as
-`id` (`'assis'`, `'debout'`…), which is what avoids any migration of existing files. `POSE_3D` is
-still consulted **after** the library, as a safety net for a file citing a built-in pose the user
-has deleted.
-
-About `poses`: no Character **depends** on them. Applying a pose copies its angles into `joints3d`
-and leaves only a display reference. Deleting the library, or opening the project on a machine that
-does not have it, changes the look of no Character: only the label becomes "unknown". This is
-deliberate, and `normalizePoses3D` (`io.js`) reads the field with the same tolerance: absent, null
-or malformed yields an empty list, never an error.
+**Placed buildings**: an `objet3d` with `objType: 'batiment'` that embeds its copy of the building in
+`batiment`, and `batimentSource` (the source file, informative). A version unaware of this type draws
+it as an unknown object, without losing the field.
 
 **Elements**: `pieceId`, `pieceLabel`, `altPieceId`, `pieceFloorType`, `objType`, `caseNumber`,
 `batimentNames`, `batimentRotY`, `wallSide`, `modelFile`, `afficherMaillagesEgares`.
 
 **World coordinates**: `wxFloor`, `wyFloor`, `wzFloor`, `realHeightFloor`, `realLenFloor`.
+`realHeightFloor` is the saved size; the percentage on the "Actual size" slider is stored nowhere, it
+is recomputed when the sheet opens (`getPersonaScalePercent`).
 
-⚠️ `realHeightFloor` is the **stored** size. The percentage shown by the "Actual size" slider is
-stored nowhere: it is recomputed every time a card opens (`getPersonaScalePercent`). The card offers
-both, and applies the HEIGHT, since the slider moves in 5% steps, which would round off a height typed to
-the centimetre.
+**Wall-mounted items**: `wallYFrac`, `wallAlongFrac`, `magnetWallId`, `wallHeight`.
 
-**Openings on a support**: `wallYFrac`, `wallAlongFrac`, `magnetWallId`, `wallHeight`.
+**Panel camera**: `camWx`, `camWy`, `camWz`, `camDist`, `camRotX`, `camRotY`.
 
-**A Panel's camera**: `camWx`, `camWy`, `camWz`, `camDist`, `camRotX`, `camRotY`.
+**Textures and colours**: `groundType` (the Ground of a Panel or Scene), `terrainType` (a Terrain
+zone) and `traceTexture` (a Tracé; absent: its type's texture) hold either a built-in material id or
+`tex:<folder>`, the texture's folder in `Textures/`. `groundColor` and `terrainColor` (`#rrggbb`) tint
+the texture; absent, natural colour; changing texture removes them. `marquage: false` on a road
+removes the white line. A missing texture makes the Ground fall back to the first material and the
+Tracé to its original texture, and the id is kept: the texture returns as soon as it is downloaded
+again.
 
-**A Panel's lighting** (`lumiere`): `mode`, `azimut`, `elevation`, `couleur`, `intensite`,
-`ombresPortees`.
+**Bubble fonts**: `bulleFont`, `bulleGras`, `bulleItalique` (booleans, absent = false). A font
+removed from the application stays written as is; on reading, `policeDeBulle` (`src/constants.js`,
+table `POLICES_BULLES_RETIREES`) draws it with its replacement. The name is only rewritten when the
+user picks another font.
 
-⚠️ `ombresPortees` (#422b) lives INSIDE `lumiere` rather than beside it, and that is what makes a
-Scene hand its shadows to the Panel that loads it, and "Reset" turn them off, with no second copy to
-write — and to forget. Its default is `false`, so a Panel drawn before #422 keeps its look with no
-shadow at all: the same promise as #414's Day mode.
+Some names are French, others English, a few awkward (`batimentNames`): a saved field name is a format
+identifier, not naming.
 
-⚠️ An `active` field may linger in a file written during the few versions the checkbox existed. It
-is READ BY NOTHING and decides nothing (cf. `lighting-3d.js`): the rule forbids renaming a persisted
-name, not ceasing to read one that no longer decides anything.
+### `poses`: a copy of the poses in use
 
-Some of these names are French, others English, a few are clumsy (`batimentNames` survived the
-Bâtiment → Building rename). **That does not matter.** A persisted field name is not naming, it is
-a format identifier.
+The pose library belongs to the **application** (`settings.json`, key `poseLibrary`). The project file
+only carries a **copy of the poses it uses** (`[{ id, name, skeleton, joints }]`), to stay readable on
+a machine that lacks them. On opening, those poses are merged into the library (unknown ids only).
 
-## 2. Type discriminator values
+The six base poses are seeded on first launch with their key as `id` (`'assis'`, `'debout'`…);
+`POSE_3D` is the safety net for a deleted base pose. No Character **depends** on `poses`: applying a
+pose copies its angles into `joints3d`. `normalizePoses3D` (`io.js`) reads the field tolerantly
+(absent, null or malformed: empty list).
 
-The strings used to recognise the nature of an object are as frozen as the field names.
+### `modelFile`: a file name, not a path
+
+An imported model is an `objet3d` with `objType: 'modele'` whose `modelFile` is the **name of a file**
+in `<Projects folder>/Modeles`, never an absolute path.
+- **The file can be missing**: the model shows as a placeholder box, the Element is never deleted
+  (see § 6).
+- **Models follow the Projects**: they live in the folder chosen for Projects.
+- **Renaming a model** rewrites `modelFile` in every Element of the open Project and in its undo stack,
+  and moves its skeleton mapping. Other Projects are updated when opened: every rename is logged in
+  `settings.json` (`modelRenames`), and `proposerRepointageModeles` offers the update if the cited file
+  is gone **and** its successor exists.
+
+### The skeleton mapping file
+
+Stored next to the `Modeles` folder, indexed by file name (`SKELETON_MAP_FORMAT = 1`). An entry:
+
+| key | written by | shape |
+|---|---|---|
+| `os` | a humanoid | `{ slot: boneName }`, closed list of eighteen |
+| `roles` | any other morphology | `{ role: boneName }`, the list coming from the archetype |
+| `membres` | ticked or renamed chains | `[{ racine, nom, retenu }]` |
+| `morphologie` | the selector | a key of `ARCHETYPES_3D` |
+| `valide` | "I have seen this screen" | boolean |
+| `empreinte` | saving | `"49-ebfba2f4"`: the bone count then a digest |
+
+- `empreinte` identifies **the skeleton** the entry is about, so another file can ask "is it the same
+  one?" without decoding the `.glb`. It never creates an entry on its own.
+- `os` and `roles` can be **stored** together; only one is **read**, according to the morphology.
+  Writing one never erases the other.
+- `roles` lives next to `os` instead of widening it: a version that filters `os` on its eighteen slots
+  would otherwise lose the keys silently.
+
+### `skeletonPose3d`: slots and bones
+
+An imported model's pose is a dictionary `{ key: {x, y, z} }` in radians. A key is:
+- a humanoid **slot** (`tete`, `avantbras_g`, `cuisse_d`), closed list of eighteen;
+- or a **bone**, prefixed `os:` (`os:Bone_L_078`), the bone's name as three sees it.
+
+The prefix stops a bone named `tete` from overwriting the slot. A humanoid writes slots, a creature
+writes bones; a key that designates nothing stays inert. A bone key is read back **without being
+checked**: the `.glb` is not necessarily decoded when the Project is saved.
+
+## 2. Discriminant values
+
+The strings that recognise what an object is are as fixed as field names:
 
 ```
 type      : 'perso' | 'objet3d' | 'panel' | 'tracé' | 'terrain' | 'bulle'
 objType   : 'mur' | 'mur_coin' | 'dalle' | 'fenetre_ouverte' | 'porte_ouverte' | 'modele' | 'batiment' | …
-tracéType : 'muret' | 'cloture' | 'haie' | 'barriere' | 'route' | 'chemin' | 'terrain' | 'riviere'   (#462d)
+tracéType : 'muret' | 'cloture' | 'haie' | 'barriere' | 'route' | 'chemin' | 'terrain' | 'riviere'
 wallSide  : 'avant' | 'arriere'
 door/window state : 'gauche' | 'droite' | 'fermee'
 ```
 
-Note `'tracé'` with its accent, `'cloture'` and `'barriere'` without theirs, `'fermee'` without an
-accent: these irregularities are in the saved files. "Fixing" them would break them.
-
-### `bulleFont` — retired fonts are read, never rewritten
-
-Eight bubble fonts were retired on 11 October 2026 (#423, they had neither bold nor italic). A
-bubble saved with one of them KEEPS that name in the file: it is at read time that `policeDeBulle`
-(`src/constants.js`, table `POLICES_BULLES_RETIREES`) draws and displays it with its replacement.
-The name is only replaced if the user picks another font.
-
-Two fields were ADDED alongside, `bulleGras` and `bulleItalique` (booleans, absent = false). Always
-drawn: for real if the font has the style, simulated otherwise.
-
-Since #446d, three fields may also name a texture from “My textures”: `groundType` (the Ground of
-a Panel or Scene), `terrainType` (a terrain zone), and `traceTexture`, ADDED on a path (absent: its
-type's original texture). The value is `tex:<folder>`, the texture's folder name in `Textures/`
-(`tex:polyhaven-rocky_trail`). A fourth field is ADDED on the Panel: `groundColor` (`#rrggbb`), its
-Ground colour, which tints its texture like a path's; absent, the material's natural colour.
-Changing texture removes it. A terrain zone has its own, `terrainColor`, ADDED, with the same
-meaning. A road may carry `marquage: false` (ADDED): no white line; absent, the markings show. A missing texture (deleted, another machine) is not found: the
-Ground falls back to the first material, the path to its original texture, and the file keeps the
-id, which brings it back as soon as it is downloaded again.
-
-### `modelFile` — a name, and the file it points at
-
-An imported 3D model is an ordinary `objet3d` carrying `objType: 'modele'` and one extra field,
-`modelFile`: the **name of a file** inside `<projects folder>/Modeles`, never an absolute path. An
-absolute path would break the moment the user changed machine or account.
-
-Two consequences that are part of the format, not of the implementation:
-
-- **Nothing guarantees the file is there.** It lives outside the project, and the user may move or
-  delete it. A missing model shows as a placeholder box; the Element **is never removed**. See § 5:
-  a transient failure (unmounted drive, antivirus lock) would otherwise destroy a placement, and
-  auto-save would write the loss out seconds later.
-- **The models follow the projects.** They sit inside the folder the user chose for projects, so
-  whatever they do to sync or back those up covers the models too.
-- **The name can be RENAMED, and that is a project-wide edit.** The Models section offers it
-  (v1.4.26). Renaming rewrites `modelFile` in every Element of the OPEN project, plus its undo
-  stack — the stack holds earlier states, all citing the old name, and undoing an unrelated action
-  would otherwise resurrect a dead file name. The skeleton mapping, keyed by file name, moves with
-  it. Other projects cannot be reached at rename time, exactly as for deletion. They are covered
-  afterwards: every rename is journalled in `settings.json` under `modelRenames`, and opening a
-  project that still cites an old name OFFERS to update it (`proposerRepointageModeles`). The offer
-  only fires when the cited file is gone AND its successor is present, so a re-imported namesake is
-  never silently swapped. That journal lives in the user's settings, so it does not follow a project
-  sent to someone else. The field itself is never renamed, only its value changes.
-
-### The mapping file — `os` and `roles` never coexist
-
-Stored next to the `Modeles` folder, keyed by file name. An entry carries:
-
-| key | who writes it | shape |
-|---|---|---|
-| `os` | a HUMANOID | `{ slot: boneName }`, closed list of eighteen |
-| `roles` | any OTHER morphology | `{ role: boneName }`, the list coming from the archetype |
-| `membres` | the ticked or renamed chains | `[{ racine, nom, retenu }]` |
-| `morphologie` | the selector, when you touch it | an `ARCHETYPES_3D` key |
-| `valide` | "I have seen this screen" | boolean |
-| `empreinte` | saving, from the bones on screen | `"49-ebfba2f4"`, count then digest |
-
-⚠️ **`empreinte` is the only key here that is NOT a human choice.** It does not say what the user
-wants, it says WHICH SKELETON he was talking about, so another file can ask "is this the same one?"
-without decoding a 34 MB `.glb`. It never creates an entry on its own: a file merely opened writes
-nothing. Added in #387, because without it an entry naming no bone could be offered to nobody —
-measured on the real file, ten entries out of ten.
-
-⚠️ **`roles` does NOT widen `os`, it lives beside it.** An earlier version of the application rereads
-`os` filtering on the eighteen slots: slipping `hipFL` in would not break it, but would make it lose
-the key silently on the first rewrite. It would reread the file, drop what it does not know, and save
-it back truncated.
-
-⚠️ **Only one of the two is READ, but both may be STORED.** The morphology says which: a humanoid
-reads `os`, a creature reads `roles`. No ambiguity on reading, and that is the rule that matters.
-
-⚠️ **I first wrote "the two never coexist in one file", and writing followed that sentence to the
-letter:** saving a creature rewrote `os` as empty. Reported by the user before it cost him anything:
-correct ten slots as a humanoid, switch to quadruped out of curiosity, save, come back to humanoid,
-and the ten corrections were gone without a word.
-
-The sentence confused what is **stored** with what is **read**. Writing one does not require erasing
-the other, and keeping it costs a few bytes. Fixed in #382.
-
-`SKELETON_MAP_FORMAT` stays at **1**. `roles` was the third addition after `morphologie` and
-`membres`, `empreinte` the fourth, and the rule does not change: moving to 2 would make an earlier
-version REJECT the whole file, whereas an unknown key is simply ignored.
-
-⚠️ **Every one of these keys must be named in `normaliserFichier`.** That function REBUILDS each
-entry key by key, so a key it does not cite disappears on the first read-write cycle — silently, and
-long before anyone notices the feature that depended on it has stopped working.
-
-### `skeletonPose3d` — two kinds of key in one dictionary
-
-An imported model's pose is a `{ key: {x, y, z} }` dictionary in radians. Its keys are of **two
-kinds**, and the distinction is part of the format:
-
-- a **slot** of the humanoid mapping, `tete`, `avantbras_g`, `cuisse_d`: closed list, eighteen
-  values, never renamed;
-- a **bone**, prefixed `os:`, for example `os:Bone_L_078` (task #374). That is the bone name as
-  Three sees it, the very one the mapping file records.
-
-The prefix is what stops a bone actually named `tete` from overwriting the slot of the same name.
-Measured across the 3032 bones of the seventeen fixtures: no coincidence, no duplicate. The prefix
-answers no observed defect, it refuses a bet.
-
-The two kinds never mix **within one file**: a humanoid writes slots, a creature writes bones, and
-the recorded morphology decides. A file carrying both, written by an earlier version or changed
-morphology since, stays readable: a key designating no harvested bone is simply inert.
-
-⚠️ **A bone key is reread WITHOUT being checked**, unlike a slot. A slot can be checked because the
-list is closed; a bone name can only be checked with the decoded `.glb` at hand, which is not
-guaranteed when a Project is saved. Dropping those keys would lose work because a file happened to
-be absent.
+`'tracé'` has its accent, `'cloture'`, `'barriere'` and `'fermee'` do not: that is how they are in the
+files.
 
 ## 3. DOM ids
 
-Less obvious, and yet lived through: during the Case/Tome/Pièce/Bâtiment →
-Panel/Volume/Room/Building rename, six ids in `index.html` were not renamed at the same time as the
-code looking them up. `document.getElementById(...).onclick` threw on `null`, which interrupted the
-loading of `events.js` **entirely**: no button responded any more and no project would load.
-Nothing in the error message pointed at the cause.
-
-A DOM id can be renamed, but then **in the same commit**:
-- `index.html`
-- every `getElementById` / `querySelector` in `src/`
-- the selector tables in `src/i18n.js`
+An `index.html` id ties the HTML to the JS looking for it: a `getElementById(...)` returning `null` at
+start-up interrupts the loading of the whole of `events.js`, and no button responds any more. An id
+can be renamed, but **in the same commit** in `index.html`, in every `getElementById` /
+`querySelector` in `src/`, and in the selector tables of `src/i18n.js`.
 
 ## 4. CSS classes and displayed text
 
-Same logic: a CSS class binds `style.css` to the JS that sets or tests it. Visible labels go through
-`src/i18n.js`; change them in the right place, not hard-coded in the code.
+A CSS class ties `style.css` to the JS that sets or tests it: rename it on both sides. Visible labels
+go through `src/i18n.js` and the modules' `tr(en, fr)`, never hard-coded.
 
-## 5. The protected term `tracé`
+## 5. If a rename is really needed: a migration
 
-`tracé` / `Tracé` / `TRACÉ` is **not** translated, including in English comments. It is the name of
-the domain concept, present in the data (`type: 'tracé'`), in function identifiers
-(`tracéWallHeight3D`, `smoothTracéPath3D`) and in the interface. Translating it as "path" or
-"stroke" would only add a third vocabulary.
+`migratePanelWorldCoords` and `migrateElementWxFloor` (`src/io.js`) are the models:
+1. the new field is written on save;
+2. on load, if the old one is present and the new one absent, convert;
+3. the old field stays **read** indefinitely.
 
-## And if a rename really is necessary?
+## 6. An unreadable file does not destroy the open one
 
-It takes a **migration**, not a rename. The repository already contains some:
-`migratePanelWorldCoords`, `migrateElementWxFloor` (`src/io.js`) read the old format and write
-the new one on load. The scheme:
+`applyProjectData` validates the data's shape (`validateProjectShape`) **before writing anything**
+into `S`.
+- **Refused**: a value present and of the wrong type where loading iterates (`tomes`, `scenes`,
+  `pages`, `objects`). The open Project stays intact, and its autosave resumes.
+- **Tolerated**: absent, `null`, or merely absurd (an index out of bounds, a null name).
+- **Never silently repaired**: turning a malformed list into `[]` would open an empty Project that
+  autosave would then write over the real file.
 
-1. The new field is written on save.
-2. On load, if the old one is present and the new one absent, convert.
-3. The old field stays **read** for as long as files may contain it, that is, indefinitely, for
-   software whose files live at people's homes.
+`tests/persisted-format.test.mjs` also checks that the refusal happens before the first write.
 
-This costs more than a search-and-replace. That is precisely why the default rule is not to rename.
+## Pitfalls
 
-## 5. A file that cannot be read must not destroy the one that can
-
-`applyProjectData` validates the shape of the loaded data **before writing anything** to `S`
-(`validateProjectShape`). This is not defensive politeness, it is the difference between losing one
-file and losing two.
-
-It used to assign `S.tomes` and only then reach the code that threw. The exception left a
-half-loaded project in memory while `S.projectFilePath` still pointed at the **previous** file, one
-Ctrl+S away from overwriting it with the wreckage.
-
-**It refuses rather than repairs.** Coercing a malformed `tomes` to `[]` would open an empty project
-silently, and the next autosave would write that emptiness over the real file. Refusing loudly keeps
-both files.
-
-What is refused: a value that is present and of the wrong type where the loader iterates (`tomes`,
-`scenes`, `pages`, `objects`). What is tolerated: absent, `null`, or merely absurd (an out-of-range
-`currentTomeIndex`, a null project name). The line is drawn at *ambiguity*, not at tidiness.
-
-Related, same failure mode: a refused load used to leave **autosave switched off** for the rest of
-the session: `stopAutosave()` runs before the read, `startAutosave()` only ran on success. Silent,
-and on the previous project, which was still open.
-
-`tests/persisted-format.test.mjs` guards all of this, including the part `assert.throws` alone
-cannot see: that the refusal happens *before* the first write.
+- **`tracé` is never translated**, not in data, identifiers or comments.
+- **Every key of a mapping entry must be named in `normaliserFichier`**: the function rebuilds the
+  entry key by key, and a forgotten key disappears at the first rewrite.
+- **Do not bump a format number for an addition** (`SKELETON_MAP_FORMAT`, `VERSION_BATIMENT`): an
+  earlier version would reject the whole file, whereas it ignores an unknown key.
+- **Never delete an Element whose file is missing**: a passing absence (unmounted disk) would become a
+  permanent loss at the next autosave.

@@ -1,138 +1,96 @@
 # Testing method
 
-> The repository holds more than 840 tests, run on every commit by the `pre-commit` hook. This
-> document explains **how** they are written, because the way of doing it matters more than the
-> count.
+*[Version française](../fr/testing-method.md)*
 
-## The tooling
+The whole suite runs on every commit (`pre-commit` hook, see [versioning.md](versioning.md)). This
+note says how the tests are organised and how to write them.
 
-Node's native test runner, with no dependency:
+## Tooling
+
+Node's built-in test runner, no dependency:
 
 ```bash
-npm test                             # the whole suite
-node --test tests/scene3d.test.mjs   # a single file
+npm test                              # the whole suite
+node --test tests/scene3d.test.mjs    # a single file
 ```
 
-One test file per module of `src/`. `tests/helpers/dom-stub.mjs` imports the real `three` and stubs
-the DOM, so the tests work on **real** Three.js geometry, not on imitations.
+- **One file per module**: `tests/<module>.test.mjs`.
+- **`tests/helpers/dom-stub.mjs`** imports the real `three` and stubs the DOM: tests work on real
+  Three.js geometry. `render-stub.mjs` replaces rendering, `source.mjs` reads source code (comments
+  stripped) for tests that inspect it.
+- The **header** of each test file says what it covers and what it excludes; keep it up to date.
 
-## Mutation testing — the central rule
+## Making code testable: pure functions
 
-Writing a test that passes proves nothing. After every fix:
+Every **decision** (computation, rule, validation) lives in an exported pure function, with no DOM and
+no three; the screen only calls it and draws. That is what makes it testable under Node. Logic locked
+in an event listener or a render loop cannot be tested: extract it.
 
-1. Deliberately break the fixed code, in several distinct ways.
-2. Check that the suite falls over **every** time.
-3. **If a mutation survives, the test is decorative.**
+## Mutation testing
 
-A mutation that escapes almost always signals the same thing: the logic is locked inside somewhere
-unobservable: an event listener, a render loop. The answer is not to write a cleverer test, it is
-to **extract the logic into an exported pure function**.
+A passing test proves nothing. After a fix:
+1. deliberately break the fixed code, in several ways;
+2. check the suite fails **every time**;
+3. if a mutation passes, the test is decorative: strengthen it or extract the logic.
 
-Most of the functions in `docs/en/3d-rendering-single-sources.md` were born that way. Two examples:
+Two precautions: check the mutation was applied **in the right place** (a textual substitution can hit
+an identical line elsewhere); and when a fix has several layers (a cause and a safety net), write
+**one test per layer**, or each one hides the other's removal.
 
-- The sliding formulas lived inside the `mousemove`: impossible to mutate usefully.
-  → `wallScreenAxes3D`, `fracDeltaAlongAxis2D`, `integrateTracéFrac3D`.
-- The thickness a low wall was actually **built** with was asserted nowhere: putting the old
-  hard-coded value back made no test fail. → `buildMuretGroup3D`.
+## Thresholds are measured
 
-Two traps met while practising this method:
-
-**Mutate the right place.** A textual substitution can hit an identical line elsewhere in the file.
-A mutation that "escapes" when it ought to bite deserves a check of *where* it was applied.
-
-**Verify that the substitution happened.** A test insertion that does not match the pattern does
-nothing, silently, and an unchanged test count is the only clue.
-
-**A layered fix needs one test per layer.** `loadSceneIntoPanel` was writing NaN world coordinates
-into saved Elements. The repair had two parts: the cause (the Scene's Page was handed to the ground
-projection without its dimensions) and the net (a non-finite projection now reports `clamped`).
-Reintroducing *either half alone* left the suite green: the other half still caught it. Two real
-defects, zero red. Nothing was broken, but neither line was held by anything, and a later reader
-could have deleted one as useless. The fix is not a cleverer assertion: it is one test aimed at each
-layer. Two protections and no test is two protections and no guarantee.
-
-## Thresholds are measured, not posited
-
-An invented threshold produces either a test that does not bite, or a test that breaks for nothing.
-Twice in this repository's history a "reasonable" threshold turned out to be wrong on its first run.
-
-The procedure: measure the real value **and** the one the plausible regressions would produce, then
-pick a threshold between the two, and write all three numbers into the test.
+A threshold is chosen between the measured real value and what plausible regressions would produce,
+and the three figures are written in the test:
 
 ```js
-// Measured threshold, not posited: the real value is 0.0100. The two plausible regressions
-// (0.0147 and 0.0200) must fall above it, hence 0.012.
-assert.ok(overhang <= 0.012, …);
+// Real value 0.0100; plausible regressions 0.0147 and 0.0200: threshold 0.012.
+assert.ok(debord <= 0.012, …);
 ```
-
-## What is out of reach, and why
-
-- **Anything that builds a `THREE.WebGLRenderer`.** Fails under Node. Concerns every function going
-  through `ensurePersonaScene3D()`: `renderPanelScene3D`, `projectElementCenterToCanvas3D`,
-  `panelDragRayOnPlane`…
-- **Event wiring.** The listeners themselves are not tested; their logic is, once extracted.
-- **What a drawing looks like.** A test can check that a path is closed, that a colour comes from a
-  token, that a geometry is the one computed. It cannot tell you that a text overflows its bubble,
-  nor that a shape does not resemble its source.
-
-⚠️ **AND THAT LAST POINT HAS A MEASURED COST.** On project #425, eleven drawings had text spilling
-out of its shape, and three shapes did not resemble the page they were taken from. No test flagged
-them, because no test could. They were found by **rendering the drawings to images and looking at
-them**, then fixed over four passes.
-
-The rule that follows: when a function's output is a picture, verification means **producing the
-picture and opening it**. The rest of the suite says the code does what it was asked; it never says
-the right thing was asked.
-
-The header of each test file details its own exclusions. Keep them up to date: a stale exclusion
-suggests a coverage that does not exist.
 
 ## Invariant tests
 
-Beyond the unit tests, `tests/scene3d.test.mjs` contains a suite that checks the **relations between
-functions**: that the hole, the rig, the render box and the camera designate the same place, over
-the whole parameter range and on several support shapes.
+`tests/scene3d.test.mjs` checks **relations between functions**: that the hole, the rig, the render
+box and the camera designate the same place, over the whole parameter range. A unit test never sees
+two correct functions that are not talking about the same thing.
 
-It is the only kind of test that catches the class of bug that has cost the most here. A unit test
-validates an isolated function; it never sees two correct functions that are not talking about the
-same thing.
+## Guard tests
 
-## Static analysis — and what it deliberately does not cover
+Tests aimed not at a module, but at a rule of the repository:
+
+| Test | What it guards |
+|---|---|
+| `tests/persisted-format.test.mjs` | Saved names and values (see [persisted-data.md](persisted-data.md)). |
+| `tests/dom-ids.test.mjs` | A `getElementById` targets a real id in `index.html`. |
+| `tests/html.test.mjs`, `tests/style.test.mjs` | HTML nesting, interacting CSS rules. |
+| `tests/design-system.test.mjs` | The interface follows the design system. |
+| `tests/modal-stack.test.mjs` | Every modal registers in the stack (Esc, click outside). |
+| `tests/code-mort.test.mjs` | An export nobody calls must be justified in the file. |
+| `tests/docs.test.mjs` | `docs/`: language parity, index, links, references from the code. |
+| `tests/electron-bridge.test.mjs` | The Electron bridge and its type declaration agree. |
+| `tests/packaging.test.mjs` | What the application loads is in the installer. |
+| `tests/events.test.mjs` | Hot paths go through the scheduler. |
+
+## Static analysis
 
 ```bash
 npm i -D eslint     # once
 npm run lint
 ```
 
-ESLint handles the **grammatical** layer: a variable declared and never read, a variable used
-without being declared, a duplicate key in an object literal, unreachable code. The `pre-commit`
-hook runs it before the tests: it costs a fraction of a second where the suite costs four, and a
-lint error often explains the test failure that would follow.
+ESLint covers grammar (variable never read or undeclared, duplicate key, unreachable code). The hook
+runs it before the tests, and skips it with a message if it is not installed. What is specific to the
+project (HTML, CSS, Markdown, domain rules) stays in `tests/`.
 
-It is **tolerant of ESLint being absent**: a fresh clone with no `npm install`, or an offline
-machine, must still be able to commit. The hook says it is skipping rather than blocking. The
-tests, by contrast, do block.
+## Out of reach
 
-Everything **specific to this project** stays in `tests/`, and that split is deliberate:
+- **Anything that builds a `THREE.WebGLRenderer`**: fails under Node (everything going through
+  `ensurePersonaScene3D()`, `renderPanelScene3D`, `panelDragRayOnPlane`…).
+- **Event wiring**: only the extracted logic is tested.
+- **What a drawing looks like**: a test checks a path is closed or a geometry is right, not that text
+  fits in its bubble. When the output is an image, **produce the image and look at it**.
 
-| Check | Where | Why not ESLint |
-|---|---|---|
-| A `getElementById` targets a real id in index.html | `tests/dom-ids.test.mjs` | It would have to read the HTML |
-| Tag nesting in index.html | `tests/html.test.mjs` | Same |
-| CSS rules that interact | `tests/style.test.mjs` | It would have to read the CSS |
-| `docs/` parity between the two languages | `tests/docs.test.mjs` | It would have to read Markdown |
-| Persisted field names, never renamed | `tests/io.test.mjs` | Domain rule, not grammar |
-| Hot paths go through the coalescing scheduler | `tests/events.test.mjs` | Project convention |
+## Pitfalls
 
-Roughly: ESLint knows JavaScript, the tests know *this* application. Trying to express one in the
-other gives a fragile rule on one side, and a rewritten compiler on the other.
-
-Rules were chosen conservatively, each because it targets a defect actually seen here:
-`no-unused-vars` would have found `roomSizeDisplay`, declared and never used, without anyone
-looking for it. A configuration copied from elsewhere produces noise on 22 000 existing lines, and
-noise is what gets a tool switched off.
-
-## Bypassing the hook
-
-`git commit --no-verify` skips the tests, for a work-in-progress commit only. See
-`docs/en/versioning.md`.
+- **A threshold set "by feel"** gives a test that does not bite, or breaks for nothing.
+- **An outdated exclusion in a header** suggests coverage that does not exist.
+- **`git commit --no-verify`** skips the tests: only for a work-in-progress commit.

@@ -1,283 +1,179 @@
-# Données persistées — ce qu'on ne renomme jamais
+# Données enregistrées : ce qui ne se renomme jamais
 
-> **La règle la plus importante du dépôt.** Une infraction ne casse pas la compilation, ne fait pas
-> échouer un test et ne se voit pas à l'écran : elle rend illisibles tous les fichiers projet déjà
-> enregistrés. Le symptôme apparaît des semaines plus tard, chez quelqu'un qui rouvre un vieux
-> fichier et retrouve ses Personnages debout au milieu de nulle part.
+*[English version](../en/persisted-data.md)*
 
-Un projet est sérialisé en JSON par `serializeProject()` (`src/io.js`). Tout ce qui finit dans ce
-JSON fait partie du **format de fichier**, pas du code : c'est un contrat avec le passé.
+> **La règle la plus importante du dépôt.** Une infraction ne casse ni la compilation ni un test, et
+> ne se voit pas à l'écran : elle rend illisibles les fichiers déjà enregistrés chez les utilisateurs.
 
-## 1. Les noms de champs JSON
+Un Projet est sérialisé en JSON par `serializeProject()` (`src/io.js`). Tout ce qui finit dans ce JSON
+fait partie du **format de fichier** : ajouter est permis ; retirer ou renommer ne l'est pas. Les
+mêmes règles valent pour les autres fichiers de l'application (bâtiments, correspondances de
+squelette, réglages). `tests/persisted-format.test.mjs` confronte le code aux listes de cette note.
 
-Jamais renommés, jamais supprimés. Ajouter est permis ; retirer ou renommer ne l'est pas.
+## 1. Les noms de champs
 
-**Chapitres** (octobre 2026, cf. `src/chapitres.js`) : `chapitres` sur un Tome (`[{ id, nom }]`, leur
-ordre) et `chapitreId` sur une Planche (absent = directement sous le Tome). Deux champs AJOUTÉS :
-`pages` reste la liste à plat dont l'ordre fait la numérotation, si bien qu'une version qui ignore
-les chapitres lit les mêmes Planches dans le même ordre. Invariant rétabli à la lecture : les
-Planches d'un chapitre sont contiguës, celles sans chapitre en tête.
+**Niveau projet** : `projectName`, `tomes`, `formats`, `scenes`, `currentTomeIndex`,
+`currentPageIndex`, `poses`.
 
-**Planches importées** (octobre 2026, cf. [planche-importee.md](planche-importee.md)) : `importee`
-sur une Planche (`{ largeur, hauteur }`, plus `imageAnchorX`, `imageAnchorY`, `imageZoom` pour le
-cadrage de l'ensemble) et `regionImage` sur ses Cases (`{ x, y, w, h }` en fractions de l'image),
-qui portent aussi `imageFile`, et `pointsImage` (ses quatre coins, en fractions) quand une Case a été déformée. Champs AJOUTÉS : la place d'une Case (`x`, `y`, `w`, `h`, `pts`) est
-recalculée à chaque dessin et reste écrite, si bien qu'une version qui les ignore lit des Cases
-ordinaires.
+**Chapitres** (`src/chapitres.js`) : `chapitres` sur un Tome (`[{ id, nom }]`, dans l'ordre) et
+`chapitreId` sur une Planche (absent : directement sous le Tome). `pages` reste la liste à plat dont
+l'ordre fait la numérotation. À la lecture, les Planches d'un chapitre sont rendues contiguës, celles
+sans chapitre en tête.
 
-**Formats** (#453, octobre 2026, cf. [formats.md](formats.md)) : `formats` au niveau projet
-(`[{ key, nom?, unite, largeur, hauteur, w, h, scale, mmW }]`). Champ AJOUTÉ : chaque Tome garde sa
-clé `format` et sa copie de `w`, `h`, `scale`, si bien qu'une version qui l'ignore lit les mêmes
-Tomes. Un fichier sans `formats` reçoit les quatre formats intégrés ; un Tome dont les dimensions ne
-sont celles d'aucun format en reçoit un à ses dimensions (seule sa clé change).
+**Planches importées** (cf. [planche-importee.md](planche-importee.md)) : `importee` sur une Planche
+(`{ largeur, hauteur }`, plus `imageAnchorX`, `imageAnchorY`, `imageZoom` pour le cadrage), et sur ses
+Cases `regionImage` (`{ x, y, w, h }` en fractions de l'image), `imageFile`, et `pointsImage` (les
+quatre coins, en fractions) pour une Case déformée. La place d'une Case (`x`, `y`, `w`, `h`, `pts`)
+est recalculée à chaque dessin et reste écrite.
 
-**Fichiers de bâtiment** (#454a, octobre 2026, cf. [building-editor.md](building-editor.md)) :
-`<dossier de Projets>/Batiments/*.batiment.json`, un format à part, VERSIONNÉ (`version: 1`). Même
-règle que les Projets : ses champs ne se renomment pas, et un champ inconnu est gardé à la lecture,
-si bien qu'un fichier écrit par une version plus récente ne perd rien en passant par celle-ci.
+**Formats** (cf. [formats.md](formats.md)) : `formats` au niveau projet
+(`[{ key, nom?, unite, largeur, hauteur, w, h, scale, mmW }]`). Chaque Tome garde sa clé `format` et
+sa copie de `w`, `h`, `scale`. Un fichier sans `formats` reçoit les quatre formats intégrés ; un Tome
+dont les dimensions ne correspondent à aucun format en reçoit un à ses dimensions.
 
-**Bâtiments placés** (#454a-4, octobre 2026, cf. [building-editor.md](building-editor.md)) : un
-`objet3d` d'`objType: 'batiment'` (valeur AJOUTÉE) qui embarque sa copie du bâtiment dans le champ
-AJOUTÉ `batiment` (la forme des fichiers `.batiment.json`), et `batimentSource` (le fichier de la
-bibliothèque d'où il a été placé, informatif). Une version qui ignore ce type le dessine
-comme un objet inconnu, sans rien perdre du champ.
+**Fichiers de bâtiment** (cf. [building-editor.md](building-editor.md)) :
+`<dossier de Projets>/Batiments/*.batiment.json`, un format à part, versionné (`version: 1`). Un champ
+inconnu y est gardé à la lecture.
 
-**Niveau projet** : `projectName`, `tomes`, `formats`, `scenes`, `currentTomeIndex`, `currentPageIndex`,
-`poses` (bibliothèque de poses : `[{ id, name, skeleton, joints }]`).
-
-⚠️ **La portée de `poses` a changé (Fix 57)** sans que son nom ni sa forme bougent : la
-bibliothèque appartient désormais à l'**Application** (`settings.json`, clé `poseLibrary`). Ce que
-le fichier projet porte n'est plus la bibliothèque entière mais une **copie des poses qu'il
-utilise**, pour rester lisible sur une machine qui ne les a pas. À l'ouverture, ces poses sont
-**fusionnées** dans la bibliothèque (ids inconnus seulement, un vieux projet ne peut donc pas
-annuler un renommage). Un fichier écrit avant ce changement reste lu à l'identique, et un fichier
-écrit après reste lisible par une version antérieure.
-
-Les 6 poses proposées sont **semées** dans la bibliothèque au premier lancement, avec la clé
-intégrée comme `id` (`'assis'`, `'debout'`…), ce qui évite toute migration des fichiers
-existants. `POSE_3D` reste consulté **après** la bibliothèque, comme filet pour un fichier citant
-une pose intégrée que l'utilisateur a supprimée.
-
-Sur `poses` : aucun Personnage n'en **dépend**. Appliquer une pose copie ses angles dans `joints3d`
-et n'y laisse qu'une référence d'affichage. Supprimer la bibliothèque, ou ouvrir le projet sur une
-machine qui ne l'a pas, ne change l'allure d'aucun Personnage : seule l'étiquette devient
-« inconnue ». C'est délibéré, et `normalizePoses3D` (`io.js`) lit le champ avec la même tolérance :
-absent, nul ou malformé donne une liste vide, jamais une erreur.
+**Bâtiments placés** : un `objet3d` d'`objType: 'batiment'` qui embarque sa copie du bâtiment dans
+`batiment`, et `batimentSource` (le fichier d'origine, informatif). Une version qui ignore ce type le
+dessine comme un objet inconnu, sans perdre le champ.
 
 **Éléments** : `pieceId`, `pieceLabel`, `altPieceId`, `pieceFloorType`, `objType`, `caseNumber`,
 `batimentNames`, `batimentRotY`, `wallSide`, `modelFile`, `afficherMaillagesEgares`.
 
 **Coordonnées monde** : `wxFloor`, `wyFloor`, `wzFloor`, `realHeightFloor`, `realLenFloor`.
-
-⚠️ `realHeightFloor` est la taille **enregistrée**. Le pourcentage qu'affiche le curseur « Taille
-réelle » n'est stocké nulle part : il est recalculé à l'ouverture de chaque fiche
-(`getPersonaScalePercent`). La fiche propose les deux, et c'est la HAUTEUR qu'elle applique, car le
-curseur avance par crans de 5 %, ce qui corrigerait une hauteur saisie au centimètre.
+`realHeightFloor` est la taille enregistrée ; le pourcentage du curseur « Taille réelle » n'est
+stocké nulle part, il est recalculé à l'ouverture de la fiche (`getPersonaScalePercent`).
 
 **Parois sur un support** : `wallYFrac`, `wallAlongFrac`, `magnetWallId`, `wallHeight`.
 
 **Caméra d'une Case** : `camWx`, `camWy`, `camWz`, `camDist`, `camRotX`, `camRotY`.
 
-Certains de ces noms sont en français, d'autres en anglais, quelques-uns sont maladroits
-(`batimentNames` a survécu au renommage Bâtiment → Building). **C'est sans importance.** Un nom de
-champ persisté n'est pas de la nomenclature, c'est un identifiant de format.
+**Textures et couleurs** : `groundType` (le Sol d'une Case ou d'une Scène), `terrainType` (une Zone de
+terrain) et `traceTexture` (un Tracé ; absent : la texture de son type) valent soit un identifiant de
+matière intégrée, soit `tex:<dossier>`, le dossier de la texture dans `Textures/`. `groundColor` et
+`terrainColor` (`#rrggbb`) teintent la texture ; absents, couleur naturelle ; changer de texture les
+retire. `marquage: false` sur une route retire la ligne blanche. Une texture introuvable fait
+retomber le Sol sur la première matière et le Tracé sur sa texture d'origine, et l'identifiant est
+gardé : la texture revient dès qu'elle est retéléchargée.
 
-## 2. Les valeurs discriminantes de type
+**Polices de Bulles** : `bulleFont`, `bulleGras`, `bulleItalique` (booléens, absents = faux). Une
+police retirée de l'application reste écrite telle quelle ; à la lecture, `policeDeBulle`
+(`src/constants.js`, table `POLICES_BULLES_RETIREES`) la dessine avec sa remplaçante. Le nom n'est
+réécrit que si l'utilisateur choisit une autre police.
 
-Les chaînes qui servent à reconnaître la nature d'un objet sont aussi figées que les noms de champs.
+Certains noms sont en français, d'autres en anglais, quelques-uns maladroits (`batimentNames`) : un
+nom de champ enregistré est un identifiant de format, pas de la nomenclature.
+
+### `poses` : une copie des poses utilisées
+
+La bibliothèque de poses appartient à l'**application** (`settings.json`, clé `poseLibrary`). Le
+fichier projet ne porte qu'une **copie des poses qu'il utilise** (`[{ id, name, skeleton, joints }]`),
+pour rester lisible sur une machine qui ne les a pas. À l'ouverture, ces poses sont fusionnées dans la
+bibliothèque (ids inconnus seulement).
+
+Les six poses de base sont semées au premier lancement avec leur clé comme `id` (`'assis'`,
+`'debout'`…) ; `POSE_3D` sert de filet pour une pose de base supprimée. Aucun Personnage ne
+**dépend** de `poses` : appliquer une pose copie ses angles dans `joints3d`. `normalizePoses3D`
+(`io.js`) lit le champ avec tolérance (absent, nul ou malformé : liste vide).
+
+### `modelFile` : un nom de fichier, pas un chemin
+
+Un modèle importé est un `objet3d` d'`objType: 'modele'` dont `modelFile` est le **nom d'un fichier**
+de `<dossier de Projets>/Modeles`, jamais un chemin absolu.
+- **Le fichier peut manquer** : le modèle s'affiche en boîte de remplacement, l'Élément n'est jamais
+  supprimé (cf. § 6).
+- **Les modèles suivent les Projets** : ils sont dans le dossier choisi pour les Projets.
+- **Renommer un modèle** réécrit `modelFile` dans tous les Éléments du Projet ouvert et dans sa pile
+  d'annulation, et déplace sa correspondance de squelette. Les autres Projets sont mis à jour à leur
+  ouverture : chaque renommage est noté dans `settings.json` (`modelRenames`), et
+  `proposerRepointageModeles` propose la mise à jour si le fichier cité a disparu **et** que son
+  successeur existe.
+
+### Le fichier de correspondances de squelette
+
+Rangé à côté du dossier `Modeles`, indexé par nom de fichier (`SKELETON_MAP_FORMAT = 1`). Une entrée :
+
+| clé | qui l'écrit | forme |
+|---|---|---|
+| `os` | un humanoïde | `{ emplacement: nomDOs }`, liste fermée de dix-huit |
+| `roles` | toute autre morphologie | `{ role: nomDOs }`, la liste venant de l'archétype |
+| `membres` | les chaînes cochées ou renommées | `[{ racine, nom, retenu }]` |
+| `morphologie` | le sélecteur | une clé d'`ARCHETYPES_3D` |
+| `valide` | « j'ai vu cet écran » | booléen |
+| `empreinte` | l'enregistrement | `"49-ebfba2f4"` : le nombre d'os puis un condensé |
+
+- `empreinte` identifie **le squelette** dont parle l'entrée, pour qu'un autre fichier puisse demander
+  « est-ce le même ? » sans décoder le `.glb`. Elle ne crée jamais une entrée à elle seule.
+- `os` et `roles` peuvent être **stockés** ensemble ; un seul est **lu**, selon la morphologie. Écrire
+  l'un n'efface jamais l'autre.
+- `roles` vit à côté de `os` au lieu de l'élargir : une version qui filtre `os` sur ses dix-huit
+  emplacements perdrait sinon les clés en silence.
+
+### `skeletonPose3d` : emplacements et os
+
+La pose d'un modèle importé est un dictionnaire `{ clé: {x, y, z} }` en radians. Une clé est :
+- un **emplacement** humanoïde (`tete`, `avantbras_g`, `cuisse_d`), liste fermée de dix-huit ;
+- ou un **os**, préfixé `os:` (`os:Bone_L_078`), le nom de l'os tel que three le voit.
+
+Le préfixe empêche un os nommé `tete` d'écraser l'emplacement. Un humanoïde écrit des emplacements, une
+créature des os ; une clé qui ne désigne rien reste inerte. Une clé d'os est relue **sans être
+vérifiée** : le `.glb` n'est pas forcément décodé quand le Projet s'enregistre.
+
+## 2. Les valeurs discriminantes
+
+Les chaînes qui reconnaissent la nature d'un objet sont aussi figées que les noms de champs :
 
 ```
 type      : 'perso' | 'objet3d' | 'panel' | 'tracé' | 'terrain' | 'bulle'
 objType   : 'mur' | 'mur_coin' | 'dalle' | 'fenetre_ouverte' | 'porte_ouverte' | 'modele' | 'batiment' | …
-tracéType : 'muret' | 'cloture' | 'haie' | 'barriere' | 'route' | 'chemin' | 'terrain' | 'riviere'   (#462d)
+tracéType : 'muret' | 'cloture' | 'haie' | 'barriere' | 'route' | 'chemin' | 'terrain' | 'riviere'
 wallSide  : 'avant' | 'arriere'
 état porte/fenêtre : 'gauche' | 'droite' | 'fermee'
 ```
 
-Noter `'tracé'` avec son accent, `'cloture'` et `'barriere'` sans les leurs, `'fermee'` sans accent :
-ces irrégularités sont dans les fichiers enregistrés. Les « corriger » les casserait.
-
-### `bulleFont` — les polices retirées se lisent, elles ne se réécrivent pas
-
-Huit polices de Bulles ont été retirées le 11 octobre 2026 (#423, elles n'avaient ni gras ni
-italique). Une Bulle enregistrée avec l'une d'elles GARDE ce nom dans le fichier : c'est à la
-lecture que `policeDeBulle` (`src/constants.js`, table `POLICES_BULLES_RETIREES`) la dessine et
-l'affiche avec sa remplaçante. Le nom n'est remplacé que si l'utilisateur choisit une autre police.
-
-Deux champs AJOUTÉS avec eux, `bulleGras` et `bulleItalique` (booléens, absents = faux). Toujours
-dessinés : en vrai si la police a la variante, simulé sinon.
-
-Depuis #446d, trois champs peuvent aussi désigner une texture de « Mes textures » :
-`groundType` (le Sol d'une Case ou d'une Scène), `terrainType` (une Zone de terrain), et
-`traceTexture`, AJOUTÉ sur un Tracé (absent : la texture d'origine de son type). La valeur est
-`tex:<dossier>`, le nom du dossier de la texture dans `Textures/` (`tex:polyhaven-rocky_trail`).
-Un quatrième champ est AJOUTÉ sur la Case : `groundColor` (`#rrggbb`), la couleur de son Sol, qui
-teinte sa texture comme celle d'un Tracé ; absent, la couleur naturelle de la matière. Changer de
-texture le retire. Une Zone de terrain a le sien, `terrainColor`, AJOUTÉ, au même sens. Une route peut porter
-`marquage: false` (AJOUTÉ) : pas de ligne blanche ; absent, le marquage est affiché.
-Une texture absente (supprimée, autre machine) n'est pas trouvée : le Sol retombe sur la première
-matière, le Tracé sur sa texture d'origine, et le fichier garde l'identifiant, ce qui la rend dès
-qu'elle est retéléchargée.
-
-### `modelFile` — un nom, et le fichier qu'il désigne
-
-Un modèle 3D importé est un `objet3d` ordinaire portant `objType: 'modele'` et un champ de plus,
-`modelFile` : le **nom d'un fichier** dans `<dossier de Projets>/Modeles`, jamais un chemin absolu.
-Un chemin absolu casserait dès que l'utilisateur change de machine ou de compte.
-
-Deux conséquences qui font partie du format, pas de l'implémentation :
-
-- **Rien ne garantit que le fichier soit là.** Il vit hors du Projet, et l'utilisateur peut le
-  déplacer ou le supprimer. Un modèle introuvable s'affiche en boîte de remplacement ; l'Élément
-  **n'est jamais supprimé**. Cf. § 5 : une panne passagère (disque non monté, antivirus qui
-  verrouille) détruirait sinon un placement, et la sauvegarde automatique graverait la perte
-  quelques secondes plus tard.
-- **Les modèles suivent les Projets.** Ils sont rangés dans le dossier que l'utilisateur a choisi
-  pour ses Projets : ce qu'il fait pour les synchroniser ou les sauvegarder les couvre aussi.
-- **Le nom peut être RENOMMÉ, et c'est une modification à l'échelle du Projet.** La section Modèles
-  le propose (v1.4.26). Le renommage réécrit `modelFile` dans tous les Éléments du Projet OUVERT,
-  ainsi que dans sa pile d'annulation — elle contient des états antérieurs, qui citent tous l'ancien
-  nom, et annuler une action sans rapport ressusciterait sinon un nom de fichier mort. La
-  correspondance de squelette, indexée par nom de fichier, est déplacée avec lui. **Les autres
-  Projets sont hors d'atteinte**, exactement comme pour la suppression : ils gardent l'ancien nom et
-  affichent des boîtes de remplacement au moment du renommage. Ils sont couverts APRÈS : chaque
-  renommage est journalisé dans `settings.json` sous `modelRenames`, et ouvrir un Projet qui cite
-  encore un ancien nom PROPOSE de le mettre à jour (`proposerRepointageModeles`). La proposition ne
-  se déclenche que si le fichier cité a disparu ET que son successeur est présent : un homonyme
-  réimporté n'est donc jamais remplacé en douce. Ce journal vit dans les réglages de l'utilisateur,
-  il ne suit donc pas un Projet envoyé à quelqu'un d'autre. Le champ, lui, n'est jamais renommé,
-  seule sa valeur change.
-
-### Le fichier de correspondances — `os` et `roles` ne coexistent jamais
-
-Rangé à côté du dossier `Modeles`, indexé par nom de fichier. Une entrée porte :
-
-| clé | qui l'écrit | forme |
-|---|---|---|
-| `os` | un HUMANOÏDE | `{ emplacement: nomDOs }`, liste fermée de dix-huit |
-| `roles` | toute AUTRE morphologie | `{ role: nomDOs }`, la liste venant de l'archétype |
-| `membres` | les chaînes cochées ou renommées | `[{ racine, nom, retenu }]` |
-| `morphologie` | le sélecteur, quand vous y touchez | une clé d'`ARCHETYPES_3D` |
-| `valide` | « j'ai vu cet écran » | booléen |
-| `empreinte` | l'enregistrement, depuis les os affichés | `"49-ebfba2f4"`, le compte puis un condensé |
-
-⚠️ **`empreinte` est la seule clé d'ici qui NE SOIT PAS un choix humain.** Elle ne dit pas ce que
-l'utilisateur veut, elle dit DE QUEL SQUELETTE il parlait, pour qu'un autre fichier puisse demander
-« est-ce le même ? » sans décoder 34 Mo de `.glb`. Elle ne crée jamais une entrée à elle seule : un
-fichier simplement ouvert n'écrit rien. Ajoutée en #387, parce que sans elle une entrée qui ne nomme
-aucun os ne pouvait être proposée à personne — mesuré sur le fichier réel, dix entrées sur dix.
-
-⚠️ **`roles` n'élargit PAS `os`, il vit à côté.** Une version antérieure de l'application relit `os`
-en filtrant sur les dix-huit emplacements : y glisser `hipFL` ne la casserait pas, mais lui ferait
-perdre la clé en silence à la première réécriture. Elle relirait le fichier, jetterait ce qu'elle ne
-connaît pas, et le réenregistrerait amputé.
-
-⚠️ **Un seul des deux est LU, mais les deux peuvent être STOCKÉS.** La morphologie dit lequel :
-un humanoïde lit `os`, une créature lit `roles`. Aucune ambiguïté à la lecture, donc, et c'est cette
-règle-là qui compte.
-
-⚠️ **J'avais d'abord écrit « les deux ne coexistent jamais dans un même fichier », et l'écriture
-suivait cette phrase à la lettre :** enregistrer une créature réécrivait `os` à vide. Signalé par
-l'utilisateur avant que ça ne lui coûte : corriger dix emplacements en humanoïde, basculer en
-quadrupède par curiosité, enregistrer, revenir en humanoïde, et les dix corrections avaient disparu
-sans un mot.
-
-La phrase confondait ce qui est **stocké** et ce qui est **lu**. Écrire l'un n'oblige pas à effacer
-l'autre, et le conserver ne coûte que quelques octets. Corrigé en #382.
-
-`SKELETON_MAP_FORMAT` reste à **1**. `roles` était le troisième ajout après `morphologie` et
-`membres`, `empreinte` le quatrième, et la règle ne change pas : passer à 2 ferait REJETER le fichier
-entier par une version antérieure, alors qu'une clé inconnue est simplement ignorée.
-
-⚠️ **Chacune de ces clés doit être NOMMÉE dans `normaliserFichier`.** Cette fonction RECONSTRUIT
-l'entrée clé par clé : une clé qu'elle ne cite pas disparaît au premier cycle lecture-écriture, en
-silence, et bien avant qu'on ne s'aperçoive que la fonctionnalité qui en dépendait s'est éteinte.
-
-### `skeletonPose3d` — deux sortes de clés dans un seul dictionnaire
-
-La pose d'un modèle importé est un dictionnaire `{ clé: {x, y, z} }` en radians. Ses clés sont de
-**deux natures**, et la distinction fait partie du format :
-
-- un **emplacement** de la correspondance humanoïde, `tete`, `avantbras_g`, `cuisse_d` : liste
-  fermée, dix-huit valeurs, jamais renommées ;
-- un **os**, préfixé `os:`, par exemple `os:Bone_L_078` (tâche #374). C'est le nom de l'os tel que
-  Three le voit, celui-là même que le fichier de correspondances mémorise.
-
-Le préfixe est ce qui interdit à un os réellement nommé `tete` d'écraser l'emplacement du même nom.
-Mesuré sur les 3032 os des dix-sept fixtures : zéro coïncidence, zéro doublon. Le préfixe ne répond
-donc à aucun défaut constaté, il refuse un pari.
-
-Ces deux natures ne se mélangent jamais **dans un même fichier** : un humanoïde écrit des
-emplacements, une créature écrit des os, et c'est la morphologie enregistrée qui tranche. Un fichier
-portant les deux, écrit par une version antérieure ou changé de morphologie depuis, reste lisible :
-la clé qui ne désigne aucun os récolté est simplement inerte.
-
-⚠️ **Une clé d'os est relue SANS être vérifiée**, contrairement à un emplacement. Un emplacement se
-vérifie parce que la liste est fermée ; un nom d'os ne se vérifie qu'avec le `.glb` décodé sous la
-main, ce qui n'est pas garanti au moment où un Projet s'enregistre. Jeter ces clés perdrait du
-travail pour cause de fichier momentanément absent.
+`'tracé'` a son accent, `'cloture'`, `'barriere'` et `'fermee'` n'en ont pas : c'est ainsi dans les
+fichiers.
 
 ## 3. Les ids DOM
 
-Moins évident, et pourtant vécu : lors du renommage Case/Tome/Pièce/Bâtiment →
-Panel/Volume/Room/Building, six ids d'`index.html` n'ont pas été renommés en même temps que le code
-qui les cherche. `document.getElementById(...).onclick` a levé une exception sur `null`, ce qui a
-interrompu le chargement d'`events.js` **en entier** : plus aucun bouton ne répondait et aucun projet
-ne se chargeait. Rien dans le message d'erreur ne pointait vers la cause.
-
-Un id DOM peut être renommé, mais alors **dans le même commit** :
-- `index.html`
-- tous les `getElementById` / `querySelector` de `src/`
-- les tables de sélecteurs d'`src/i18n.js`
+Un id d'`index.html` lie le HTML au JS qui le cherche : un `getElementById(...)` qui rend `null` au
+démarrage interrompt le chargement d'`events.js` entier, et plus aucun bouton ne répond. Un id peut
+être renommé, mais **dans le même commit** dans `index.html`, dans tous les `getElementById` /
+`querySelector` de `src/`, et dans les tables de sélecteurs de `src/i18n.js`.
 
 ## 4. Les classes CSS et les textes affichés
 
-Même logique : une classe CSS lie `style.css` au JS qui la pose ou la teste. Les libellés visibles
-passent par `src/i18n.js` ; les modifier au bon endroit, pas en dur dans le code.
+Une classe CSS lie `style.css` au JS qui la pose ou la teste : la renommer des deux côtés. Les
+libellés visibles passent par `src/i18n.js` et le `tr(en, fr)` des modules, jamais en dur.
 
-## 5. Le terme protégé `tracé`
+## 5. Si un renommage est vraiment nécessaire : une migration
 
-`tracé` / `Tracé` / `TRACÉ` n'est **pas** traduit, y compris dans les commentaires anglais. C'est le
-nom du concept métier, présent dans les données (`type: 'tracé'`), dans les identifiants de fonctions
-(`tracéWallHeight3D`, `smoothTracéPath3D`) et dans l'interface. Le traduire par « path » ou « stroke »
-ne ferait qu'ajouter un troisième vocabulaire.
+`migratePanelWorldCoords` et `migrateElementWxFloor` (`src/io.js`) en sont les modèles :
+1. le nouveau champ est écrit à la sauvegarde ;
+2. au chargement, si l'ancien est présent et le nouveau absent, on convertit ;
+3. l'ancien champ reste **lu** indéfiniment.
 
-## Et si un renommage est vraiment nécessaire ?
+## 6. Un fichier illisible ne détruit pas celui qui est ouvert
 
-Il faut une **migration**, pas un renommage. Le dépôt en contient déjà :
-`migratePanelWorldCoords`, `migrateElementWxFloor` (`src/io.js`) lisent l'ancien format et
-écrivent le nouveau au chargement. Le schéma :
+`applyProjectData` valide la forme des données (`validateProjectShape`) **avant d'écrire quoi que ce
+soit** dans `S`.
+- **Refusé** : une valeur présente et du mauvais type là où le chargement itère (`tomes`, `scenes`,
+  `pages`, `objects`). Le Projet ouvert reste intact, et sa sauvegarde automatique reprend.
+- **Toléré** : absent, `null`, ou seulement absurde (un index hors bornes, un nom nul).
+- **Jamais réparé en silence** : ramener une liste malformée à `[]` ouvrirait un Projet vide que la
+  sauvegarde automatique écrirait par-dessus le vrai fichier.
 
-1. Le nouveau champ est écrit à la sauvegarde.
-2. Au chargement, si l'ancien est présent et le nouveau absent, on convertit.
-3. L'ancien champ reste **lu** aussi longtemps que des fichiers peuvent le contenir, c'est-à-dire
-   indéfiniment, pour un logiciel dont les fichiers vivent chez les gens.
+`tests/persisted-format.test.mjs` vérifie aussi que le refus a lieu avant la première écriture.
 
-C'est plus coûteux qu'un rechercher-remplacer. C'est précisément pourquoi la règle par défaut est de
-ne pas renommer.
+## Pièges
 
-## 5. Un fichier illisible ne doit pas détruire celui qui est lisible
-
-`applyProjectData` valide la forme des données chargées **avant d'écrire quoi que ce soit** dans `S`
-(`validateProjectShape`). Ce n'est pas de la politesse défensive, c'est la différence entre perdre
-un fichier et en perdre deux.
-
-Auparavant, la fonction assignait `S.tomes` puis atteignait plus loin le code qui levait.
-L'exception laissait un projet à moitié chargé en mémoire pendant que `S.projectFilePath` désignait
-encore le fichier **précédent**, à un Ctrl+S de l'écraser avec l'épave.
-
-**Elle refuse plutôt qu'elle ne répare.** Ramener un `tomes` malformé à `[]` ouvrirait un projet
-vide en silence, et la sauvegarde automatique suivante écrirait ce vide par-dessus le vrai fichier.
-Refuser bruyamment conserve les deux fichiers.
-
-Ce qui est refusé : une valeur présente et du mauvais type là où le chargement itère (`tomes`,
-`scenes`, `pages`, `objects`). Ce qui est toléré : absent, `null`, ou seulement absurde (un
-`currentTomeIndex` hors bornes, un nom de projet nul). La frontière est l'*ambiguïté*, pas la
-propreté.
-
-Même mode de défaillance, corrigé en même temps : un chargement refusé laissait la **sauvegarde
-automatique éteinte** pour le reste de la session : `stopAutosave()` s'exécute avant la lecture,
-`startAutosave()` seulement en cas de succès. En silence, et sur le projet précédent, resté ouvert.
-
-`tests/persisted-format.test.mjs` garde tout cela, y compris ce qu'`assert.throws` seul ne peut pas
-voir : que le refus a lieu *avant* la première écriture.
+- **`tracé` ne se traduit pas**, ni dans les données, ni dans les identifiants, ni en commentaire.
+- **Toute clé d'une entrée de correspondances doit être nommée dans `normaliserFichier`** : la fonction
+  reconstruit l'entrée clé par clé, et une clé oubliée disparaît à la première réécriture.
+- **Ne pas incrémenter un numéro de format pour un ajout** (`SKELETON_MAP_FORMAT`,
+  `VERSION_BATIMENT`) : une version antérieure rejetterait le fichier entier, alors qu'elle ignore une
+  clé inconnue.
+- **Ne jamais supprimer un Élément dont le fichier manque** : une absence passagère (disque non monté)
+  deviendrait une perte définitive à la sauvegarde automatique suivante.

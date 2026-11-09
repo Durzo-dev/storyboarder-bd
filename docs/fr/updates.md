@@ -2,7 +2,7 @@
 
 *[English version](../en/updates.md)*
 
-Tâche #442. Comment l'application installée apprend qu'une version existe, la télécharge, et
+Comment l'application installée apprend qu'une version existe, la télécharge, et
 comment une version devient **obligatoire** sans qu'on puisse s'y soustraire en coupant le réseau.
 
 ## Ce que voit l'utilisateur
@@ -41,9 +41,8 @@ Pourquoi chaque nuit : le bail compte depuis la date d'**émission**. Signée un
 une attestation vieillirait entre deux versions, et quelqu'un connecté la veille serait bloqué.
 
 La décision vit dans `update-policy.js` (testée sous Node nu), les entrées-sorties dans
-`updater.js`, le branchement dans `main.js`. C'est une exception à la règle n°1
-d'[architecture.md](architecture.md) : télécharger et lancer un installeur ne se fait que dans le
-processus principal.
+`updater.js`, le branchement dans `main.js` (canaux `maj:*`, cf. [architecture.md](architecture.md)) : télécharger et
+lancer un installeur ne se fait que dans le processus principal.
 
 ## Publier une version
 
@@ -81,11 +80,10 @@ sinon, tout le monde serait bloqué devant un écran sans rien à télécharger.
 - **GitHub désactive les tâches planifiées** d'un dépôt public sans activité depuis 60 jours.
   L'attestation vieillirait : les utilisateurs en ligne ne sont pas touchés, ceux qui restent hors
   ligne verraient l'écran de connexion plus tôt. Réactiver le workflow dans l'onglet Actions.
-- **Le dossier des Projets ne doit jamais être dans le dossier d'installation** (#447). Chaque mise
-  à jour exécute le désinstalleur de l'ancienne version, qui vide ce dossier en entier. Jusqu'à la
-  v1.9.1, le défaut y était : il est désormais dans Documents, l'installeur déplace l'ancien avant
-  de désinstaller (`build/installer.nsh`), et l'application le fait aussi au démarrage
-  (`projects-dir.js`).
+- **Le dossier des Projets ne doit jamais être dans le dossier d'installation** : chaque mise à jour
+  exécute le désinstalleur de l'ancienne version, qui vide ce dossier en entier. Le défaut est dans
+  Documents ; un dossier resté dans l'installation est déplacé par l'installeur avant de désinstaller
+  (`build/installer.nsh`) et par l'application au démarrage (`projects-dir.js`).
 - **Le premier lancement demande une connexion** : sans attestation gardée, il n'y a pas de bail.
 - **Les notes sont en français** : elles viennent de `CHANGELOG.md`, écrit en français seulement.
 - **Le téléchargement est complet** (environ 125 Mo), pas différentiel.
@@ -149,4 +147,4 @@ La note d'une release qui existe déjà est mise à jour, pas recréée : le cir
 
 ⚠️ **`latest.yml` n'est produit que si `build.publish` désigne le dépôt GitHub.** Avec
 `publish: null`, l'installeur se construit mais pas ce fichier, et l'application installée n'a rien
-à lire. C'est ce qui a fait échouer la première release (v1.9.0). Un test le garde.
+à lire. Un test le garde.
