@@ -56,8 +56,8 @@ atlas-des-bulles-v2.html
 atlas-des-bulles-methode.html
 atlas-des-bulles-corrections.md
 
-# Suivi de tâches partagé entre l'utilisateur et l'assistant, tenu hors du dépôt à la demande :
-# c'est un pense-bête de travail, pas un document du projet, et son contenu change à chaque séance.
+# Suivi de tâches partagé entre l'utilisateur et l'assistant : il vit dans le dépôt privé de Durzo
+# (durzo-docs) ; la ligne reste pour qu'une copie locale ne parte jamais dans le dépôt public.
 #
 # ⚠️ IL N'EST PAS LA SOURCE DE VÉRITÉ DES TÂCHES, et TACHES.md le redit en tête. Une échéance vit
 # à l'endroit où le manque se lit, sous un numéro (cf. tests/code-mort.test.mjs). Un fichier non
@@ -77,7 +77,7 @@ apercus/
 # travail, relu puis jeté, et que `git add -A` avait ramassé une fois dans un commit.
 cuisson.txt
 
-# Documentation interne gardée hors du dépôt public (#442) : ce qui touche à la sécurité des
-# mises à jour et n'a pas à être lu par tout le monde. Sauvegardée à part par l'utilisateur.
+# Documentation privée : elle vit désormais dans le dépôt privé de Durzo (durzo-docs). La ligne reste
+# pour qu'une copie locale recréée par erreur ne parte jamais dans le dépôt public.
 docs-privees/
 plans-test/
