@@ -5,6 +5,27 @@
 Contributor documentation. What is addressed to the user is in the [README](../../README.md) and in
 the built-in manual (`src/help-content.js`).
 
+## What this folder holds
+
+These notes describe **how the code works today**, so that a developer new to the project can
+understand it, change it and take it over. They do not tell how it got there: no dates, no history,
+no abandoned attempts, no decision records. That "why" lives in the maintainer's private
+documentation.
+
+A note is updated **in the same commit** as the code it describes.
+
+### Note template
+
+1. **Role**: what this part does, in a few lines.
+2. **Files**: the modules, and what each one holds.
+3. **Data**: formats, saved fields, units.
+4. **Flow**: what calls what, in which order.
+5. **Extending**: how to add a case (a type, a source, an option).
+6. **Testing**: the tests covering this part, and what is checked on screen.
+7. **Pitfalls**: what not to do, one sentence each, with its consequence.
+
+A section with nothing to say is left out.
+
 ## Read before touching the code
 
 | Document | What it prevents |
@@ -68,8 +89,7 @@ down.
 ---
 
 Every document exists in two languages, **one folder per language**: `docs/en/name.md` and
-`docs/fr/name.md`, same base name. The French version is the one the decisions were originally
-written in; both are kept in step, and `tests/docs.test.mjs` refuses a document without its
-counterpart, a dead link, or a section added on one side only.
+`docs/fr/name.md`, same base name. Both are kept in step, and `tests/docs.test.mjs` refuses a
+document without its counterpart, a dead link, or a section added on one side only.
 
 The code and its comments are in English (see [architecture.md](architecture.md#language)).

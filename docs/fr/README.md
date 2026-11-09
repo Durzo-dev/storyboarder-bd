@@ -5,6 +5,27 @@
 Documentation de contributeur. Ce qui s'adresse à l'utilisateur est dans le
 [README](../../README.fr.md) et dans le manuel intégré (`src/help-content.js`).
 
+## Ce que contient ce dossier
+
+Ces notes décrivent **comment le code fonctionne aujourd'hui**, pour qu'un développeur qui découvre
+le projet puisse le comprendre, le modifier et le reprendre. Elles ne racontent pas comment on en est
+arrivé là : ni dates, ni historique, ni essais abandonnés, ni comptes rendus de décision. Ce
+« pourquoi » vit dans la documentation privée du mainteneur.
+
+Une note se met à jour **dans le même commit** que le code qu'elle décrit.
+
+### Gabarit d'une note
+
+1. **Rôle** : ce que fait cette partie, en quelques lignes.
+2. **Fichiers** : les modules, et ce que chacun porte.
+3. **Données** : formats, champs enregistrés, unités.
+4. **Déroulé** : qui appelle quoi, dans quel ordre.
+5. **Étendre** : comment ajouter un cas (un type, une source, une option).
+6. **Tester** : les tests qui couvrent cette partie, et ce qui se vérifie à l'écran.
+7. **Pièges** : ce qu'il ne faut pas faire, une phrase chacun, avec sa conséquence.
+
+Une section sans objet est omise.
+
 ## À lire avant de toucher au code
 
 | Document | Ce qu'il évite |
@@ -68,8 +89,7 @@ régression difficile à retrouver.
 ---
 
 Chaque document existe en deux langues, **un dossier par langue** : `docs/en/nom.md` et
-`docs/fr/nom.md`, même nom de base. La version française est celle dans laquelle les décisions ont
-été prises ; les deux sont tenues d'accord, et `tests/docs.test.mjs` refuse un document sans sa
-contrepartie, un lien mort, ou une section ajoutée d'un seul côté.
+`docs/fr/nom.md`, même nom de base. Les deux sont tenues d'accord, et `tests/docs.test.mjs` refuse
+un document sans sa contrepartie, un lien mort, ou une section ajoutée d'un seul côté.
 
 Le code et ses commentaires sont en anglais (voir [architecture.md](architecture.md#langue)).
