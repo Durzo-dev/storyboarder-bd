@@ -2,22 +2,17 @@
 
 *[Version française](../fr/interface.md)*
 
-> The visual and interaction rules of the whole application, set by the user through feedback rounds
-> (button convention #398, accessibility #409, interface size #410, editors, store, building editor
-> #454…). They were scattered across `src/style.css` comments and conversations; this document
-> gathers them. The checkable ones are held by `tests/interface.test.mjs`. The values' source
-> of truth stays `src/style.css`: if a figure here and the stylesheet disagree, the stylesheet wins
-> and this document is behind.
->
-> The **design system** (the four renderings' tokens, typography, gaps, radii, controls, and every
-> screen: header, left and right menus, context menus, modals, store, editors, Reader) is a page
-> generated from the code: [design-system.html](../design-system.html), by
-> `node tools/design-system.mjs`, which the pre-commit hook runs on every commit. A test checks it is
-> up to date.
+The visual and interaction rules of the whole application. The checkable ones are held by
+`tests/interface.test.mjs` and `tests/design-system.test.mjs`. Values are authoritative in
+`src/style.css`: if a figure here diverges, the stylesheet is right.
+
+The **design system** (the four renderings' tokens, typography, gaps, radii, controls, and every
+screen) is a page generated from the code: [design-system.html](../design-system.html), by
+`node tools/design-system.mjs`, which the pre-commit hook runs on every commit.
 
 ## Colours
 
-### A button says what it does through its colour (#398)
+### A button says what it does through its colour
 
 | Colour | Class | Role | Examples |
 |---|---|---|---|
@@ -29,7 +24,7 @@
 - A **disabled** button is dark grey whatever its class: its colour does not announce what it cannot
   do.
 - Hovering a grey button is **never orange**: orange promises a creation or a confirmation.
-- **What informs is not orange** (#460b): an information chip (dimensions, progress, licence,
+- **What informs is not orange**: an information chip (dimensions, progress, licence,
   count, number) is neutral, `--ink-mid` on `--creux`. Orange only comes back when its row is active.
   **Exception**: the category and licence badges of store cards (`.store-badge`) stay orange, so
   they stand out from the thumbnails.
@@ -46,7 +41,7 @@ three themes out of four.
 
 ### Six sizes
 
-**The scale** (#460i): `--texte-micro` 10 px, `--texte-capitales` 11 px, `--texte-libelle` 12 px,
+**The scale**: `--texte-micro` 10 px, `--texte-capitales` 11 px, `--texte-libelle` 12 px,
 `--texte-courant` 13 px (buttons, list rows), `--texte-titre-modale` 14.5 px, `--texte-titre` 16 px.
 No other size enters the interface (a test checks it); only font previews, a store page title and the
 Measure result step outside it, on purpose.
@@ -92,7 +87,7 @@ also ends with "…" and scrolls the same way on hover (an overlay repeats its t
 
 ### Section hierarchy
 
-**One hierarchy** (#460f), in panels, modals and store pages: **screen or modal** (14.5 to 16 px
+**One hierarchy**, in panels, modals and store pages: **screen or modal** (14.5 to 16 px
 title) > **section** (paper card, 11 px upper-case grey title after an orange dot, folding) >
 **sub-section** (well, 13 px title).
 
@@ -112,7 +107,7 @@ A grouping inside a section (Type, Steps, Dimensions): a **well** (`--creux`), a
 ### Empty states
 
 An empty list says so in one sentence that invites action ("No room yet: close a contour of
-walls"), with a single style, `.empty-hint` (#460h): 12 px, grey `--ink-soft`, no italics.
+walls"), with a single style, `.empty-hint`: 12 px, grey `--ink-soft`, no italics.
 
 ### No status message in a menu
 
@@ -177,7 +172,7 @@ next.
 
 ### Context menus
 
-- `--white` fill, 8 px radius, drop shadow; an entry = a **line icon** (15 px, `currentColor`) then a 12.5 px label; an action keeps the same icon everywhere (#460k).
+- `--white` fill, 8 px radius, drop shadow; an entry = a **line icon** (15 px, `currentColor`) then a 12.5 px label; an action keeps the same icon everywhere.
 - A submenu shows a ▶ on the right. Delete comes last.
 
 ### Store and fonts window
@@ -215,7 +210,7 @@ Page is not enlarged**, nor the modals' veil: only what is read.
 
 ### Fields
 
-**The field rule** (#460e): a **short number** with its unit sits on one line, label on the left,
+**The field rule**: a **short number** with its unit sits on one line, label on the left,
 field on the right (`.modal-field-ligne`, `.batiment-champ`). A **list**, a **slider**, a **colour**
 or a **text** keep their label above, full-width field.
 
@@ -261,7 +256,7 @@ The icons live in `src/batiment-icones.js`.
 
 - An empty editor opens on the tool that fills it (the Wall tool), and so does a new floor.
 - A click **anywhere** in a list row picks it; right-click opens its menu (Rename, Delete).
-- **An active row** (#460d) looks the same everywhere: orange border, `--accent-soft` fill, bold
+- **An active row** looks the same everywhere: orange border, `--accent-soft` fill, bold
   orange text. **Dragging to reorder** shows a 3 px orange line above or below the target row.
 
 ### Modals
@@ -280,22 +275,17 @@ The icons live in `src/batiment-icones.js`.
 - In French, the application's nouns keep their capital: Projet, Tome, Planche, Case, Bulle, Scène,
   Élément.
 
-## Planned harmonisations (#460)
+## Common components
 
-Found while analysing the design system; to do later. Once settled, each rule joins this document
-with its test.
-
-- **#460a** ✅ Native sliders and checkboxes in orange: `accent-color: var(--accent)` on `<body>`.
-- **#460b** ✅ Orange also informed (dimension and progress chips, licence badges, level numbers): move
-  to a neutral chip.
-- **#460c** ✅ One choice component, `.choix` (building editor, Reader), with its variants
-  `.choix-types`, `.choix-options` and `.choix-bascules`.
-- **#460d** ✅ One active-row style and one drop line.
-- **#460e** ✅ Rule settled: a short number on one line, the rest above.
-- **#460f** ✅ One hierarchy: screen > section (panel style) > sub-section.
-- **#460g** ✅ One tab component, `.onglets` / `.onglet` (store, fonts, Settings).
-- **#460h** ✅ One empty state, `.empty-hint`: 12 px, grey `--ink-soft`, no italics.
-- **#460i** ✅ Six text sizes, as `--texte-*` tokens.
-- **#460j** ✅ Three radii, as tokens: `--rayon-petit` (6 px: field, choice, menu entry), `--rayon-moyen` (8 px: button, row, menu, sub-section), `--rayon-grand` (10 px: section, modal), plus `--rayon-pilule` and round (50 %). Only very small elements keep 3 px.
-- **#460k** ✅ A single line-icon family (24 grid, 2 px stroke): header (Fonts, Undo, Manual) and the 106 context-menu entries. "Rename" (a field) and "Edit" (a pencil) no longer look alike.
-- **#460l** ✅ No emoji left: list rows (Elements, Paths, Room, Building) and icon buttons take an icon from `src/icones.js` (a Character shows the face of its emotion); drop-down lists and text buttons only have their text. Typographic signs ✓ ⚠ ✖ ▶ ⏸ remain.
+- Native sliders and checkboxes in orange: `accent-color: var(--accent)` on `<body>`.
+- One choice component, `.choix`, with its variants `.choix-types`, `.choix-options` and
+  `.choix-bascules`.
+- One tab component, `.onglets` / `.onglet` (store, fonts, Settings).
+- Three radii, as tokens: `--rayon-petit` (6 px: field, choice, menu entry), `--rayon-moyen` (8 px:
+  button, row, menu, sub-section), `--rayon-grand` (10 px: section, modal), plus `--rayon-pilule` and
+  round (50 %). Only very small elements keep 3 px.
+- A single line-icon family (24 grid, 2 px stroke), in `src/icones.js`: header, context-menu entries,
+  list rows (a Character shows the face of its emotion). "Rename" (a field) and "Edit" (a pencil) do
+  not look alike.
+- No emoji: drop-down lists and text buttons only have their text. Typographic signs ✓ ⚠ ✖ ▶ ⏸
+  remain.

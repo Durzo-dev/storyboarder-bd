@@ -2,15 +2,11 @@
 
 *[English version](../en/gestes-3d.md)*
 
-> Un relevé, fait dans le code le 26 octobre 2026 (v1.11.163), de TOUS les endroits où l'on déplace
-> ou tourne quelque chose en 3D : la vue (la caméra) et les objets (un modèle, un élément, un
-> escalier). Pour chacun : les commandes (souris, clavier, boutons), et ce qu'elles font (vitesse,
-> pas, bornes). Il se termine par les points communs, les différences, et des recommandations pour
-> homogénéiser. Les valeurs viennent du code (fichiers cités en fin de page) ; ce qui demande une
-> vérification à l'écran est marqué **à vérifier**.
->
-> Unités : une unité du monde 3D est un **mètre**. « Un cran » de molette est un `deltaY` de 100,
-> la valeur courante d'une souris à molette crantée sous Windows.
+Tous les endroits où l'on déplace ou tourne quelque chose en 3D (la vue et les objets), avec leurs
+commandes et ce qu'elles font (vitesse, pas, bornes). Les valeurs viennent du code (fichiers cités
+en fin de page).
+
+Unités : une unité du monde 3D est un **mètre**. « Un cran » de molette est un `deltaY` de 100.
 
 ## En bref
 
@@ -71,10 +67,10 @@ La fenêtre d'un Personnage et celle d'un Objet ont un **aperçu**, que seule la
 
 | Geste | Effet | Valeurs |
 |---|---|---|
-| Molette sur l'aperçu | zoomer l'aperçu (pas l'Élément) | ×1,08 par cran, de 0,2 à 6 |
+| Molette sur l'aperçu | zoomer l'aperçu (pas l'Élément) | zoom commun (×1,105 par cran), de 0,2 à 6 |
 
 L'**orientation** de l'Élément se règle par des curseurs, de −180° à 180° par degré, chacun avec un
-**champ en degrés** à côté (**#463a**, 1er novembre 2026, `src/orientation-champs.js`), et « Remettre
+**champ en degrés** à côté (`src/orientation-champs.js`), et « Remettre
 droit » (Inclinaison et Bascule à zéro, la Rotation gardée) :
 
 | Fenêtre | Premier curseur | Deuxième | Troisième |
@@ -82,9 +78,7 @@ droit » (Inclinaison et Bascule à zéro, la Rotation gardée) :
 | Personnage, Objet, Pièce | « Rotation » → `rotY` | « Inclinaison » → `rotX` | « Bascule » → `rotZ` |
 | Bâtiment placé | « Rotation » → `rotY` | grisé | grisé |
 
-Les mêmes noms, dans le même ordre, que l'éditeur de bâtiment. **Corrigé en #463a** : la fenêtre
-d'un Objet reliait « Rotation horizontale » à `rotX` et « Inclinaison » à `rotY` (le rendu tourne
-autour de la verticale avec `rotY`).
+Les mêmes noms, dans le même ordre, que l'éditeur de bâtiment.
 
 La position se règle par des champs (profondeur, hauteur…), et la case « Collé au sol ».
 
@@ -98,7 +92,7 @@ l'orientation de l'Élément dans sa Case : il règle ses articulations.
 | Glisser gauche dans le vide | tourner autour de la figure | vitesse commune, sans dépendre du zoom ; geste reconnu après 3 px |
 | Clic gauche dans le vide, sans glisser | désélectionner l'articulation | |
 | Glisser droit | déplacer la vue | vitesse commune |
-| Molette | zoomer | ×1,12 par cran (quelle que soit la molette), de 0,25 à 6 |
+| Molette | zoomer | zoom commun (×1,105 par cran), de 0,25 à 6 |
 | Molette, une articulation choisie | passer au champ suivant de l'articulation | la vue ne zoome plus |
 | Glisser une poignée (articulation) | la tourner | voir ci-dessous |
 | Échap | fermer l'éditeur | |
@@ -120,7 +114,7 @@ La vue de dessus (`src/batiment-editeur-ui.js`). Sa vue ne tourne pas.
 
 | Geste | Effet | Valeurs |
 |---|---|---|
-| Molette | zoomer vers le curseur | × e^(−Δ × 0,0015), soit ×1,16 par cran |
+| Molette | zoomer vers le curseur | zoom commun (×1,105 par cran) |
 | Ctrl + molette | zoomer, quand la molette sert à autre chose (voir plus bas) | |
 | Clic droit ou milieu maintenu, dans le vide | déplacer la vue | suit la souris |
 | Clic droit, rien de sélectionné | prendre l'outil Mur ; à l'outil Mur sans tracé, revenir à la Sélection | |
@@ -189,8 +183,8 @@ On y entre par la touche **C** ou le menu contextuel « Caméra ».
 | Geste | Effet | Valeurs |
 |---|---|---|
 | Glisser gauche | tourner la caméra | vitesse commune × sensibilité de la Case ; inclinaison bornée à ±85° |
-| Glisser droit (#463c), Ctrl + glisser gauche, ou glisser milieu | déplacer la caméra ; sans bouger, le clic droit ouvre le menu | vitesse commune × distance × sensibilité |
-| Molette | avancer, reculer, vers le curseur | ×1,08 par cran ; distance de 0,3 à 6 000 ; au plus près, elle passe à travers |
+| Glisser droit, Ctrl + glisser gauche, ou glisser milieu | déplacer la caméra ; sans bouger, le clic droit ouvre le menu | vitesse commune × distance × sensibilité |
+| Molette | avancer, reculer, vers le curseur | zoom commun (×1,105 par cran) ; distance de 0,3 à 6 000 ; au plus près, elle passe à travers |
 | Flèches, ou W A S D | déplacer la caméra | 4 % de la distance par appui × sensibilité |
 
 Les mouvements de la caméra sont **lissés** (elle rejoint sa cible en quelques images).
@@ -201,9 +195,9 @@ Les mouvements de la caméra sont **lissés** (elle rejoint sa cible en quelques
 |---|---|---|
 | Glisser gauche un Élément | le déplacer dans le plan face à la caméra | suit la vraie caméra (un rayon) ; il ne passe pas sous le sol |
 | Molette, un Élément choisi | l'avancer ou le reculer le long de l'axe de la caméra | 0,72 m par cran |
-| Clic droit maintenu sur l'Élément choisi (#463d) | le tourner autour de la verticale | selon la caméra au début du geste (`rotation-objet-3d.js`) : de face (moins de 45° de plongée), un plateau tournant, glisser horizontal à 0,5°/px ; de biais ou de dessus, un bouton rotatif, l'angle que la souris parcourt autour de lui, cumulé (le glisser en ligne s'y inversait à mi-tour, signalé) ; aimant 90° (6°), Ctrl par 15°, Alt libre, Maj cinq fois plus fin ; sans bouger, le menu |
-| R (#463d) | un quart de tour, horaire vu de dessus | |
-| Les curseurs de sa fenêtre | les trois angles | ±180°, par degré, champ en degrés (#463a) |
+| Clic droit maintenu sur l'Élément choisi | le tourner autour de la verticale | selon la caméra au début du geste (`rotation-objet-3d.js`) : de face (moins de 45° de plongée), un plateau tournant, glisser horizontal à 0,5°/px ; de biais ou de dessus, un bouton rotatif, l'angle que la souris parcourt autour de lui, cumulé (le glisser en ligne s'y inversait à mi-tour, signalé) ; aimant 90° (6°), Ctrl par 15°, Alt libre, Maj cinq fois plus fin ; sans bouger, le menu |
+| R | un quart de tour, horaire vu de dessus | |
+| Les curseurs de sa fenêtre | les trois angles | ±180°, par degré, champ en degrés |
 
 Une ouverture aimantée à un mur suit son mur ; déplacer un mur emporte ses ouvertures.
 
@@ -216,7 +210,7 @@ Une Scène n'a plus de mode Caméra : ses gestes de caméra sont toujours actifs
 | Glisser gauche dans le vide | tourner la caméra | vitesse commune ; geste reconnu après 3 px (un simple clic sélectionne la Scène) |
 | Glisser gauche à côté de l'Élément choisi | tourner AUTOUR de lui | un simple clic le désélectionne |
 | Clic droit maintenu | déplacer la caméra | vitesse commune ; sans bouger, le menu contextuel s'ouvre au relâcher |
-| Molette | zoomer vers le curseur | ×1,08 par cran |
+| Molette | zoomer vers le curseur | zoom commun (×1,105 par cran) |
 | Flèches, ou W A S D (rien de choisi) | déplacer la caméra | 4 % de la distance par appui |
 | Glisser gauche un Élément, molette | comme dans une Case | |
 
@@ -225,96 +219,39 @@ Une Scène n'a plus de mode Caméra : ses gestes de caméra sont toujours actifs
 Le Lecteur, les vignettes, la fenêtre des Polices. L'image d'une Case a ses propres gestes
 (molette : zoomer l'image ; glisser : son ancrage), en 2D.
 
-## Points communs
+## La grammaire commune
 
-- **Une grammaire de vue partagée** par l'aperçu du store, l'Éditeur de modèle, l'aperçu de
-  l'éditeur de bâtiment et les Scènes : glisser gauche pour tourner, glisser droit pour déplacer,
-  molette pour zoomer, venue de Sketchfab.
-- **Une vitesse commune** de rotation et de déplacement de la vue (0,0025 rad/px et 0,5), réglable
-  dans la Configuration.
-- **La molette agit sur ce qui est choisi** quand quelque chose l'est : la profondeur d'un Élément
-  (Case), le champ d'une articulation (Éditeur de modèle), la hauteur d'une ouverture, la taille ou
-  l'élévation d'un élément (éditeur de bâtiment) ; sinon elle zoome.
-- **Alt retire l'aimant** partout où il y en a un (éditeur de bâtiment : tracer, poser, déplacer,
-  tourner).
-- **Maj affine** (1 cm au lieu de 5) ; **Ctrl** donne des pas de 15° ou rend le zoom à la molette.
-- **Un seuil de 3 px** sépare un clic d'un glisser (Éditeur de modèle, Scènes).
+- **La vue** (aperçus, Éditeur de modèle, aperçu du bâtiment, Cases en mode Caméra, Scènes) : glisser
+  gauche pour tourner, glisser droit pour déplacer, molette pour zoomer. Vitesses communes
+  (`VITESSE_ROTATION_3D`, `VITESSE_DEPLACEMENT_3D`), réglables dans la Configuration.
+- **Un seul zoom** : `facteurDeZoom3D` (`utils.js`), proportionnel à la molette (×1,105 par cran) ;
+  `deltaMolette3D` ramène lignes et pages en pixels et compte Maj + molette. Ctrl + molette zoome
+  toujours. La taille d'un élément du bâtiment garde des crans de ×1,1 : c'est une propriété, pas une
+  vue.
+- **La molette agit sur ce qui est choisi** quand quelque chose l'est (profondeur d'un Élément, champ
+  d'une articulation, hauteur d'une ouverture, taille d'un meuble) ; sinon elle zoome.
+- **Tourner un objet** : clic droit maintenu sur l'objet choisi, R pour un quart de tour. Un seul
+  moteur (`rotation-objet-3d.js`) : plateau tournant de face, bouton rotatif de biais ou de dessus ;
+  aimant 90° (à 6°), Ctrl par 15°. Vitesse : « Vitesse de rotation des objets »
+  (`degresParPixelObjet3D`).
+- **Modificateurs** : Alt retire l'aimant ; Maj affine ; Ctrl donne des pas de 15°.
+- **Un seuil de 3 px** sépare un clic d'un glisser.
 - **Suppr** supprime ce qui est choisi ; **Échap** désélectionne, puis quitte.
+- **Les orientations** se nomment partout Rotation (`rotY`), Inclinaison (`rotX`), Bascule (`rotZ`), avec
+  un champ en degrés et « Remettre droit ».
+- **Des Commandes** en tête du menu d'une Case, de son mode Caméra et d'une Scène (`commandes-3d.js`),
+  et des infobulles sur les aperçus.
 
-## Différences et incohérences
+## Écarts connus
 
-1. **Le bouton droit** : il déplace la vue partout, SAUF sur un élément de l'éditeur de bâtiment, où
-   il le tourne. Dans une Case hors mode Caméra, il fait défiler la Planche. Le même geste n'a pas le
-   même sens d'un écran à l'autre.
-2. ~~**Déplacer la caméra d'une Case** se fait au Ctrl + glisser gauche ou au glisser milieu, alors que
-   les Scènes et les aperçus le font au glisser droit.~~ Corrigé en #463c : au glisser droit, comme
-   les Scènes (les deux autres restent).
-3. **Cinq zooms différents** : ×1,105 (aperçus), ×1,08 (Cases, Scènes, fenêtres), ×1,12 (Éditeur de
-   modèle), ×1,16 (plan du bâtiment), et ×1,1 pour la taille d'un élément. Certains suivent la
-   molette (`e^Δ`), d'autres comptent des crans fixes : une molette sans crans (pavé tactile) ne se
-   comporte pas pareil partout.
-   **Corrigé en #463b** (1er novembre 2026) : un seul zoom, `facteurDeZoom3D` (utils.js),
-   proportionnel à la molette (×1,105 par cran) partout où l'on zoome ; `deltaMolette3D` ramène les
-   lignes et les pages en pixels, et compte Maj + molette (que Windows change en défilement
-   horizontal : Maj + molette vers le haut descendait). Ctrl + molette zoome toujours (Éditeur de
-   modèle avec une articulation choisie, Scène ou mode Caméra avec un Élément choisi) ; Maj affine la
-   profondeur d'un Élément (un cinquième du pas). La taille d'un élément du bâtiment garde ses crans
-   de ×1,1 : c'est une propriété, pas une vue.
-4. **Deux vitesses de rotation** : la vue tourne à 0,14° par pixel (réglable), une articulation ou
-   un élément à 0,5° par pixel (non réglable), trois fois et demie plus vite.
-5. ~~**Tourner un objet** n'a pas de geste dans les Cases et les Scènes (curseurs seulement), alors
-   que l'éditeur de bâtiment en a quatre (clic droit, clic droit maintenu, boutons, champs) et
-   l'Éditeur de modèle un (pour les articulations).~~ Corrigé en #463d (clic droit maintenu sur l'Élément choisi, R ; le mobilier du bâtiment suivait déjà le même moteur : circulaire pour Y vu de dessus, droit pour X et Z).
-6. **Les aimants d'angle** : 90° (6°) et Ctrl 15° sur un élément du bâtiment ; 15° seulement à la
-   pose d'un escalier ; aucun sur une articulation ni dans les fenêtres.
-7. ~~**Les libellés de l'orientation**~~ : corrigés en #463a (Rotation, Inclinaison, Bascule
-   partout ; la fenêtre d'un Objet sur les bons axes).
-8. **Le quart de tour** : R pour un escalier, clic droit ou bouton pour un élément, rien ailleurs.
-9. **Le sens des rotations au glisser** : l'aperçu du store retranche le glisser horizontal à son
-   angle, l'Éditeur de modèle et la caméra des Cases l'ajoutent. Les repères n'étant pas les mêmes,
-   le résultat à l'écran peut être identique : **à vérifier** que « glisser vers la droite » tourne
-   partout dans le même sens.
-10. ~~**La préférence « Gestes 3D »** ne couvre ni les articulations ni le mobilier.~~ Corrigé en #463e : « Vitesse de rotation des objets » (`degresParPixelObjet3D`), pour le plateau d'un Élément, les articulations et l'inclinaison et la bascule d'un meuble ; le bouton rotatif suit la souris et n'a pas de vitesse.
-
-## Recommandations
-
-**1. Une grammaire de vue, partout où il y a une caméra libre.** Glisser gauche dans le vide :
-tourner ; glisser droit : déplacer ; molette : zoomer ; flèches : déplacer par pas. Le mode Caméra
-d'une Case passerait au glisser droit (Ctrl + glisser et le glisser milieu restant des alternatives),
-comme les Scènes et les aperçus.
-
-**2. Une grammaire d'objet, partout où l'on manipule un objet.** Clic gauche : choisir ; glisser
-gauche : déplacer ; **clic droit maintenu SUR l'objet choisi : le tourner** (dans le vide, il
-reste le déplacement de la vue) ; clic droit bref sur lui : un quart de tour ; R : un quart de tour ;
-molette sur lui : sa propriété (profondeur, taille, hauteur) ; Suppr ; Échap. C'est déjà l'éditeur
-de bâtiment, sans le conflit du point 1 de la liste précédente : le bouton droit ne tourne que ce
-qui est choisi. Les Éléments des Cases et des Scènes y gagneraient enfin un geste de rotation.
-
-**3. Un seul moteur de rotation d'objet**, celui des articulations, qui a fait ses preuves : glisser
-droit à vitesse fixe quand l'axe se voit de côté, geste circulaire cumulé quand il pointe vers
-l'œil. Il remplacerait les règles propres au mobilier (bouton rotatif pour Y, linéaire pour X et Z)
-par une règle qui marche dans toutes les vues (de dessus, de face, en 3D). L'axe actif se choisit
-dans un repère, comme dans l'éditeur de bâtiment.
-
-**4. Des modificateurs qui veulent dire la même chose partout.** Alt : sans aimant. Ctrl : par pas
-(15° pour un angle) ; Ctrl + molette : toujours zoomer. Maj : plus fin (1 cm, 1°). Et des aimants
-d'angle partout où l'on tourne un objet : 90° à moins de 6°.
-
-**5. Des valeurs communes, en un seul endroit** (comme `VITESSE_ROTATION_3D` aujourd'hui) : un
-zoom unique proportionnel à la molette (×1,1 par cran, `e^(Δ × 0,001)`), vers le curseur quand la
-vue le permet ; une vitesse de rotation d'objet (0,5°/px) ajoutée aux réglages « Gestes 3D ».
-
-**6. Des fenêtres alignées sur l'éditeur de bâtiment** : les mêmes noms (Rotation, Inclinaison,
-Bascule), dans le même ordre, sur les mêmes axes (corriger la fenêtre d'un Objet), avec un champ en
-degrés à côté de chaque curseur et « Remettre droit ».
-
-**7. Des Commandes partout** (fait en #463f : en tête du menu d'une Case, de son mode Caméra et d'une Scène, `commandes-3d.js` ; infobulles sur les aperçus) : chaque écran qui a des gestes 3D les liste, comme le menu de
-l'éditeur de bâtiment (« Geste : effet. »), y compris les aperçus (une infobulle sur l'aperçu).
-
-**Un découpage possible**, du moins risqué au plus long : corriger les libellés de la fenêtre d'un
-Objet (6) ; unifier les zooms et les modificateurs (4, 5) ; le glisser droit pour la caméra des
-Cases (1) ; le geste de rotation des Éléments dans les Cases et les Scènes, avec le moteur des
-articulations (2, 3) ; enfin les Commandes partout (7).
+- **Le bouton droit** déplace la vue partout, sauf sur un objet choisi, où il le tourne ; dans une Case
+  hors mode Caméra, il fait défiler la Planche.
+- **Le quart de tour** : R pour un escalier ou un Élément, clic droit ou bouton pour un élément du
+  bâtiment.
+- **Les aimants d'angle** n'existent pas sur une articulation ni dans les fenêtres.
+- **Le sens des rotations au glisser** : l'aperçu du store retranche le glisser horizontal à son angle,
+  l'Éditeur de modèle et la caméra des Cases l'ajoutent ; à vérifier à l'écran que « glisser vers la
+  droite » tourne partout dans le même sens.
 
 ## Sources
 

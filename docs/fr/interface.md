@@ -2,22 +2,17 @@
 
 *[English version](../en/interface.md)*
 
-> Les règles visuelles et d'interaction de toute l'application, posées par l'utilisateur au fil des
-> retours (convention des boutons #398, accessibilité #409, taille de l'interface #410, éditeurs,
-> store, éditeur de bâtiment #454…). Elles étaient éparpillées dans les commentaires de
-> `src/style.css` et dans les conversations ; ce document les rassemble. Celles qui se vérifient sont tenues par
-> `tests/interface.test.mjs`. La source de vérité des valeurs reste `src/style.css` : si un chiffre
-> d'ici et la feuille divergent, c'est la feuille qui fait foi et ce document qui est en retard.
->
-> Le **système de design** (jetons des quatre rendus, typographie, écarts, rayons, contrôles, et
-> chaque écran : en-tête, menus de gauche et de droite, menus contextuels, modales, store, éditeurs,
-> Lecteur) est une page générée depuis le code : [design-system.html](../design-system.html), par
-> `node tools/design-system.mjs`, que le hook pre-commit lance à chaque commit. Un test vérifie
-> qu'elle est à jour.
+Les règles visuelles et d'interaction de toute l'application. Celles qui se vérifient sont tenues
+par `tests/interface.test.mjs` et `tests/design-system.test.mjs`. Les valeurs font foi dans
+`src/style.css` : si un chiffre d'ici diverge, c'est la feuille qui a raison.
+
+Le **système de design** (jetons des quatre rendus, typographie, écarts, rayons, contrôles, et chaque
+écran) est une page générée depuis le code : [design-system.html](../design-system.html), par
+`node tools/design-system.mjs`, que le hook pre-commit lance à chaque commit.
 
 ## Couleurs
 
-### Un bouton dit ce qu'il fait par sa couleur (#398)
+### Un bouton dit ce qu'il fait par sa couleur
 
 | Couleur | Classe | Rôle | Exemples |
 |---|---|---|---|
@@ -30,7 +25,7 @@
   ce qu'il ne peut pas faire.
 - Le survol d'un bouton gris n'est **jamais orange** : l'orange promet une création ou une
   validation.
-- **Ce qui informe n'est pas orange** (#460b) : une pastille d'information (dimensions, avancement,
+- **Ce qui informe n'est pas orange** : une pastille d'information (dimensions, avancement,
   licence, compte, numéro) est neutre, `--ink-mid` sur `--creux`. L'orange y revient seulement quand
   sa ligne est active. **Exception** : les badges de catégorie et de licence des cartes du store
   (`.store-badge`) restent orange, pour ressortir des vignettes.
@@ -47,7 +42,7 @@ Une valeur ajoutée en dur est fausse dans trois thèmes sur quatre.
 
 ### Six tailles
 
-**L'échelle** (#460i) : `--texte-micro` 10 px, `--texte-capitales` 11 px, `--texte-libelle` 12 px,
+**L'échelle** : `--texte-micro` 10 px, `--texte-capitales` 11 px, `--texte-libelle` 12 px,
 `--texte-courant` 13 px (boutons, lignes de liste), `--texte-titre-modale` 14,5 px, `--texte-titre`
 16 px. Aucune autre taille n'entre dans l'interface (un test le vérifie) ; seuls les aperçus de polices,
 le titre d'une fiche du store et le résultat de la Mesure en sortent, exprès.
@@ -94,7 +89,7 @@ finit aussi par « … » et défile de même au survol (un calque reprend son t
 
 ### Hiérarchie des sections
 
-**Une seule hiérarchie** (#460f), dans les panneaux, les modales et les fiches du store : **écran ou
+**Une seule hiérarchie**, dans les panneaux, les modales et les fiches du store : **écran ou
 modale** (titre 14,5 à 16 px) > **section** (carte papier, titre 11 px en capitales grises précédé
 d'un point orange, repliable) > **sous-section** (creux, titre 13 px).
 
@@ -115,7 +110,7 @@ ensemble.
 ### États vides
 
 Une liste vide le dit en une phrase qui invite à agir (« Aucune pièce : fermez un contour de murs »),
-avec un seul style, `.empty-hint` (#460h) : 12 px, gris `--ink-soft`, sans italique.
+avec un seul style, `.empty-hint` : 12 px, gris `--ink-soft`, sans italique.
 
 ### Pas de message d'état dans un menu
 
@@ -180,7 +175,7 @@ onglet à l'autre.
 
 ### Menus contextuels
 
-- Fond `--white`, rayon 8 px, ombre portée ; une entrée = une **icône au trait** (15 px, `currentColor`) puis un libellé de 12,5 px ; une action garde la même icône partout (#460k).
+- Fond `--white`, rayon 8 px, ombre portée ; une entrée = une **icône au trait** (15 px, `currentColor`) puis un libellé de 12,5 px ; une action garde la même icône partout.
 - Un sous-menu s'annonce par ▶ à droite. Supprimer vient en dernier.
 
 ### Store et fenêtre des polices
@@ -218,7 +213,7 @@ Un réglage agrandit l'interface (`--echelle-ui`) : en-tête, menus, modales et 
 
 ### Champs
 
-**La règle des champs** (#460e) : un **nombre court** avec son unité se règle sur une ligne, libellé
+**La règle des champs** : un **nombre court** avec son unité se règle sur une ligne, libellé
 à gauche, champ à droite (`.modal-field-ligne`, `.batiment-champ`). Une **liste**, un **curseur**, une
 **couleur** ou un **texte** gardent leur libellé au-dessus, champ pleine largeur.
 
@@ -268,7 +263,7 @@ Les icônes vivent dans `src/batiment-icones.js`.
 - Un éditeur vide s'ouvre sur l'outil qui le remplit (l'outil Mur), et un nouvel étage aussi.
 - Un clic **n'importe où** dans une ligne de liste la choisit ; le clic droit ouvre son menu
   (Renommer, Supprimer).
-- **Une ligne active** (#460d) a partout le même aspect : bord orange, fond `--accent-soft`, texte
+- **Une ligne active** a partout le même aspect : bord orange, fond `--accent-soft`, texte
   orange en gras. **Glisser pour réordonner** montre un trait orange de 3 px au-dessus ou au-dessous
   de la ligne visée.
 
@@ -288,22 +283,17 @@ Les icônes vivent dans `src/batiment-icones.js`.
 - Les noms de l'application gardent leur majuscule : Projet, Tome, Planche, Case, Bulle, Scène,
   Élément.
 
-## Harmonisations prévues (#460)
+## Composants communs
 
-Relevées en analysant le système de design ; à faire plus tard. Une fois tranchée, chaque règle
-rejoint ce document avec son test.
-
-- **#460a** ✅ Curseurs et cases à cocher natifs à l'orange : `accent-color: var(--accent)` sur `<body>`.
-- **#460b** ✅ L'orange servait aussi à informer (pastilles de dimensions et d'avancement, badges de
-  licence, numéros de niveau) : passer à une pastille neutre.
-- **#460c** ✅ Un seul composant de choix, `.choix` (éditeur de bâtiment, Lecteur), avec ses variantes
-  `.choix-types`, `.choix-options` et `.choix-bascules`.
-- **#460d** ✅ Un seul style de ligne active et un seul trait de dépôt.
-- **#460e** ✅ Règle tranchée : nombre court sur une ligne, le reste au-dessus.
-- **#460f** ✅ Une seule hiérarchie : écran > section (style des panneaux) > sous-section.
-- **#460g** ✅ Un seul composant d'onglets, `.onglets` / `.onglet` (store, polices, Configuration).
-- **#460h** ✅ Un seul état vide, `.empty-hint` : 12 px, gris `--ink-soft`, sans italique.
-- **#460i** ✅ Six tailles de texte, en jetons `--texte-*`.
-- **#460j** ✅ Trois rayons, en jetons : `--rayon-petit` (6 px : champ, choix, entrée de menu), `--rayon-moyen` (8 px : bouton, ligne, menu, sous-section), `--rayon-grand` (10 px : section, modale), plus `--rayon-pilule` et le rond (50 %). Seuls les très petits éléments gardent 3 px.
-- **#460k** ✅ Une seule famille d'icônes au trait (grille 24, trait 2) : bandeau (Polices, Annuler, Manuel) et les 106 entrées des menus contextuels. « Renommer » (un champ) et « Modifier » (un crayon) ne se confondent plus.
-- **#460l** ✅ Plus aucun emoji : les lignes de liste (Éléments, Tracés, Pièce, Bâtiment) et les boutons-icônes prennent une icône de `src/icones.js` (un Personnage montre le visage de son émotion) ; les listes déroulantes et les boutons texte n'ont que leur texte. Restent les signes typographiques ✓ ⚠ ✖ ▶ ⏸.
+- Curseurs et cases à cocher natifs à l'orange : `accent-color: var(--accent)` sur `<body>`.
+- Un seul composant de choix, `.choix`, avec ses variantes `.choix-types`, `.choix-options` et
+  `.choix-bascules`.
+- Un seul composant d'onglets, `.onglets` / `.onglet` (store, polices, Configuration).
+- Trois rayons, en jetons : `--rayon-petit` (6 px : champ, choix, entrée de menu), `--rayon-moyen`
+  (8 px : bouton, ligne, menu, sous-section), `--rayon-grand` (10 px : section, modale), plus
+  `--rayon-pilule` et le rond (50 %). Seuls les très petits éléments gardent 3 px.
+- Une seule famille d'icônes au trait (grille 24, trait 2), dans `src/icones.js` : bandeau, entrées des
+  menus contextuels, lignes de liste (un Personnage montre le visage de son émotion). « Renommer » (un
+  champ) et « Modifier » (un crayon) ne se confondent pas.
+- Aucun emoji : les listes déroulantes et les boutons texte n'ont que leur texte. Restent les signes
+  typographiques ✓ ⚠ ✖ ▶ ⏸.

@@ -2,8 +2,7 @@
 
 *[English version](../en/lecteur.md)*
 
-Demandé par Durzo en octobre 2026 : lire un Tome ou un Chapitre à la suite, comme un album, sans
-quitter l'application. Clic droit sur un Tome (« Lire ce tome ») ou un Chapitre (« Lire ce
+Le Lecteur fait lire un Tome ou un Chapitre à la suite, comme un album, sans quitter l'application. Clic droit sur un Tome (« Lire ce tome ») ou un Chapitre (« Lire ce
 chapitre ») ; la lecture commence à la Planche affichée si elle en fait partie.
 
 ## Ce qu'il fait
@@ -55,11 +54,11 @@ dans le menu de gauche ou le bandeau ferme le Lecteur ; déplier un Tome ou un C
 
 ## Taille et plein écran
 
-Passer en plein écran envoie plusieurs changements de taille d'affilée. Les redessiner un par un
-faisait deux ou trois sauts visibles (chaque dessin, asynchrone, arrivait à une taille déjà
-dépassée). Désormais chaque changement RECALE ce qui est à l'écran, sans redessiner (la transition
-de la vue guidée est coupée le temps du recalage), et le dessin à la bonne définition vient une
-seule fois, un quart de seconde après que la taille s'est stabilisée.
+Passer en plein écran envoie plusieurs changements de taille d'affilée. Chaque changement RECALE ce
+qui est à l'écran sans redessiner (la transition de la vue guidée est coupée le temps du recalage) ;
+le dessin à la bonne définition vient une seule fois, un quart de seconde après que la taille s'est
+stabilisée. Redessiner à chaque changement ferait des sauts visibles, chaque dessin asynchrone
+arrivant à une taille déjà dépassée.
 
 ## Coût
 
@@ -67,7 +66,3 @@ Chaque Planche est dessinée à la demande, à la hauteur affichée, et gardée 
 (seize au plus). Les miniatures sont tirées des grands dessins quand ils existent, sinon préparées
 une à une en arrière-plan. Dessiner une Planche hors de l'écran refait ses rendus 3D à cette taille :
 revenir ensuite à la Planche coûte un rendu de plus.
-
-## Plus tard
-
-La lecture verticale continue, comme les webtoons (#451 dans TACHES.md).

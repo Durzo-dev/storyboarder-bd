@@ -2,14 +2,10 @@
 
 *[Version française](../fr/gestes-3d.md)*
 
-> A survey, made in the code on 26 October 2026 (v1.11.163), of EVERY place where something is
-> moved or turned in 3D: the view (the camera) and objects (a model, an element, a staircase). For
-> each: the controls (mouse, keyboard, buttons) and what they do (speed, step, bounds). It ends with
-> the common points, the differences, and recommendations to make it consistent. Values come from
-> the code (files listed at the end); what needs an on-screen check is marked **to check**.
->
-> Units: one 3D world unit is a **metre**. “One notch” of the wheel is a `deltaY` of 100, the usual
-> value of a notched mouse wheel on Windows.
+Every place where something is moved or turned in 3D (the view and objects), with its controls and
+what they do (speed, step, bounds). Values come from the code (files listed at the end).
+
+Units: one 3D world unit is a **metre**. "One notch" of the wheel is a `deltaY` of 100.
 
 ## In short
 
@@ -70,10 +66,10 @@ The Character modal and the Object modal have a **preview** that only the wheel 
 
 | Gesture | Effect | Values |
 |---|---|---|
-| Wheel on the preview | zoom the preview (not the Element) | ×1.08 per notch, from 0.2 to 6 |
+| Wheel on the preview | zoom the preview (not the Element) | shared zoom (×1.105 per notch), from 0.2 to 6 |
 
 The Element's **orientation** is set by sliders, from −180° to 180° by the degree, each with a
-**field in degrees** next to it (**#463a**, 1 November 2026, `src/orientation-champs.js`), and
+**field in degrees** next to it (`src/orientation-champs.js`), and
 “Set upright” (Tilt and Lean back to zero, Turn kept):
 
 | Modal | First slider | Second | Third |
@@ -81,9 +77,7 @@ The Element's **orientation** is set by sliders, from −180° to 180° by the d
 | Character, Object, Room | “Turn” → `rotY` | “Tilt” → `rotX` | “Lean” → `rotZ` |
 | Placed building | “Turn” → `rotY` | greyed | greyed |
 
-The same names, in the same order, as the building editor. **Fixed in #463a**: the Object modal
-tied “Horizontal rotation” to `rotX` and “Tilt” to `rotY` (the renderer turns around the vertical
-with `rotY`).
+The same names, in the same order, as the building editor.
 
 Position is set by fields (depth, height…) and the “Stuck to the ground” box.
 
@@ -97,7 +91,7 @@ the Element's orientation in its Panel: it sets its joints.
 | Left drag in empty space | turn around the figure | shared speed, independent of zoom; gesture recognised after 3 px |
 | Left click in empty space, no drag | deselect the joint | |
 | Right drag | move the view | shared speed |
-| Wheel | zoom | ×1.12 per notch (whatever the wheel), from 0.25 to 6 |
+| Wheel | zoom | shared zoom (×1.105 per notch), from 0.25 to 6 |
 | Wheel, a joint selected | go to the joint's next field | the view no longer zooms |
 | Drag a handle (joint) | turn it | see below |
 | Esc | close the editor | |
@@ -119,7 +113,7 @@ The top view (`src/batiment-editeur-ui.js`). Its view does not turn.
 
 | Gesture | Effect | Values |
 |---|---|---|
-| Wheel | zoom towards the cursor | × e^(−Δ × 0.0015), i.e. ×1.16 per notch |
+| Wheel | zoom towards the cursor | shared zoom (×1.105 per notch) |
 | Ctrl + wheel | zoom, when the wheel is used for something else (see below) | |
 | Hold right or middle button, in empty space | move the view | follows the mouse |
 | Right-click, nothing selected | take the Wall tool; with the Wall tool and no line, back to Selection | |
@@ -188,8 +182,8 @@ Entered with the **C** key or the “Camera” context menu.
 | Gesture | Effect | Values |
 |---|---|---|
 | Left drag | turn the camera | shared speed × the Panel's sensitivity; tilt bounded to ±85° |
-| Right drag (#463c), Ctrl + left drag, or middle drag | move the camera; a right click without moving opens the menu | shared speed × distance × sensitivity |
-| Wheel | move forward, back, towards the cursor | ×1.08 per notch; distance from 0.3 to 6,000; very close, it goes through |
+| Right drag, Ctrl + left drag, or middle drag | move the camera; a right click without moving opens the menu | shared speed × distance × sensitivity |
+| Wheel | move forward, back, towards the cursor | shared zoom (×1.105 per notch); distance from 0.3 to 6,000; very close, it goes through |
 | Arrows, or W A S D | move the camera | 4 % of the distance per press × sensitivity |
 
 Camera moves are **smoothed** (it reaches its target in a few frames).
@@ -200,9 +194,9 @@ Camera moves are **smoothed** (it reaches its target in a few frames).
 |---|---|---|
 | Left drag an Element | move it in the plane facing the camera | follows the real camera (a ray); it does not go under the ground |
 | Wheel, an Element selected | move it forward or back along the camera's axis | 0.72 m per notch |
-| Right button held on the selected Element (#463d) | turn it around the vertical | depending on the camera when the gesture starts (`rotation-objet-3d.js`): from the front (less than 45° of downward tilt), a turntable, horizontal drag at 0.5°/px; at an angle or from above, a rotary knob, the angle the mouse sweeps around it, accumulated (the straight drag reversed halfway round there, reported); 90° snap (6°), Ctrl by 15°, Alt free, Shift five times finer; without moving, the menu |
-| R (#463d) | a quarter turn, clockwise seen from above | |
-| Its modal's sliders | the three angles | ±180°, by the degree, field in degrees (#463a) |
+| Right button held on the selected Element | turn it around the vertical | depending on the camera when the gesture starts (`rotation-objet-3d.js`): from the front (less than 45° of downward tilt), a turntable, horizontal drag at 0.5°/px; at an angle or from above, a rotary knob, the angle the mouse sweeps around it, accumulated (the straight drag reversed halfway round there, reported); 90° snap (6°), Ctrl by 15°, Alt free, Shift five times finer; without moving, the menu |
+| R | a quarter turn, clockwise seen from above | |
+| Its modal's sliders | the three angles | ±180°, by the degree, field in degrees |
 
 An opening snapped to a wall follows its wall; moving a wall takes its openings along.
 
@@ -215,7 +209,7 @@ A Scene no longer has a Camera mode: its camera gestures are always on.
 | Left drag in empty space | turn the camera | shared speed; gesture recognised after 3 px (a plain click selects the Scene) |
 | Left drag next to the selected Element | turn AROUND it | a plain click deselects it |
 | Hold right button | move the camera | shared speed; without moving, the context menu opens on release |
-| Wheel | zoom towards the cursor | ×1.08 per notch |
+| Wheel | zoom towards the cursor | shared zoom (×1.105 per notch) |
 | Arrows, or W A S D (nothing selected) | move the camera | 4 % of the distance per press |
 | Left drag an Element, wheel | as in a Panel | |
 
@@ -224,88 +218,37 @@ A Scene no longer has a Camera mode: its camera gestures are always on.
 The Reader, the thumbnails, the Fonts window. A Panel's image has its own gestures (wheel: zoom the
 image; drag: its anchor), in 2D.
 
-## Common points
+## The common grammar
 
-- **A shared view grammar** in the store preview, the Model editor, the building editor's preview
-  and the Scenes: left drag to turn, right drag to move, wheel to zoom, taken from Sketchfab.
-- **A shared speed** for turning and moving the view (0.0025 rad/px and 0.5), adjustable in the
-  Configuration.
-- **The wheel acts on what is selected** when something is: an Element's depth (Panel), a joint's
-  field (Model editor), an opening's height, an element's size or elevation (building editor);
-  otherwise it zooms.
-- **Alt removes snapping** wherever there is some (building editor: draw, place, move, turn).
-- **Shift refines** (1 cm instead of 5); **Ctrl** gives 15° steps or gives the wheel back to zoom.
-- **A 3 px threshold** separates a click from a drag (Model editor, Scenes).
-- **Del** deletes what is selected; **Esc** deselects, then leaves.
+- **The view** (previews, Model editor, building preview, Panels in Camera mode, Scenes): left drag to
+  turn, right drag to move, wheel to zoom. Shared speeds (`VITESSE_ROTATION_3D`,
+  `VITESSE_DEPLACEMENT_3D`), adjustable in Settings.
+- **A single zoom**: `facteurDeZoom3D` (`utils.js`), proportional to the wheel (×1.105 per notch);
+  `deltaMolette3D` converts lines and pages to pixels and counts Shift + wheel. Ctrl + wheel always
+  zooms. A building element's size keeps ×1.1 steps: it is a property, not a view.
+- **The wheel acts on what is selected** when something is (an Element's depth, a joint's field, an
+  opening's height, a piece of furniture's size); otherwise it zooms.
+- **Turning an object**: right button held on the selected object, R for a quarter turn. A single
+  engine (`rotation-objet-3d.js`): a turntable from the front, a rotary knob at an angle or from above;
+  90° snap (within 6°), Ctrl by 15°. Speed: "Object rotation speed" (`degresParPixelObjet3D`).
+- **Modifiers**: Alt removes snapping; Shift refines; Ctrl gives 15° steps.
+- **A 3 px threshold** separates a click from a drag.
+- **Delete** removes what is selected; **Esc** deselects, then leaves.
+- **Orientations** are named Turn (`rotY`), Tilt (`rotX`), Lean (`rotZ`) everywhere, with a field in
+  degrees and "Set upright".
+- **Controls** at the top of the menu of a Panel, its Camera mode and a Scene (`commandes-3d.js`), and
+  tooltips on the previews.
 
-## Differences and inconsistencies
+## Known differences
 
-1. **The right button**: it moves the view everywhere, EXCEPT on a building-editor element, where it
-   turns it. In a Panel outside Camera mode, it scrolls the Page. The same gesture does not mean the
-   same thing from one screen to another.
-2. ~~**Moving a Panel's camera** used Ctrl + left drag or middle drag, while Scenes and previews use
-   right drag.~~ Fixed in #463c: right drag, like Scenes (the other two stay).
-3. **Five different zooms**: ×1.105 (previews), ×1.08 (Panels, Scenes, modals), ×1.12 (Model
-   editor), ×1.16 (building plan), and ×1.1 for an element's size. Some follow the wheel (`e^Δ`),
-   others count fixed notches: a notchless wheel (touchpad) does not behave the same everywhere.
-   **Fixed in #463b** (1 November 2026): a single zoom, `facteurDeZoom3D` (utils.js), proportional to
-   the wheel (×1.105 per notch) wherever one zooms; `deltaMolette3D` turns lines and pages into
-   pixels, and counts Shift + wheel (which Windows turns into horizontal scrolling: Shift + wheel up
-   used to go down). Ctrl + wheel always zooms (Model editor with a joint selected, Scene or Camera
-   mode with an Element selected); Shift refines an Element's depth (a fifth of the step). A
-   building element's size keeps its ×1.1 notches: it is a property, not a view.
-4. **Two rotation speeds**: the view turns at 0.14° per pixel (adjustable), a joint or an element at
-   0.5° per pixel (not adjustable), three and a half times faster.
-5. ~~**Turning an object** has no gesture in Panels and Scenes (sliders only), while the building
-   editor has four (right-click, held right button, buttons, fields) and the Model editor one (for
-   joints).~~ Fixed in #463d (right button held on the selected Element, R; the building furniture already followed the same engine: circular for Y seen from above, straight for X and Z).
-6. **Angle snapping**: 90° (6°) and Ctrl 15° on a building element; 15° only when placing a
-   staircase; none on a joint nor in the modals.
-7. ~~**Orientation labels**~~: fixed in #463a (Turn, Tilt, Lean everywhere; the Object modal on the
-   right axes).
-8. **The quarter turn**: R for a staircase, right-click or button for an element, nothing elsewhere.
-9. **The direction of drag rotations**: the store preview subtracts the horizontal drag from its
-   angle, the Model editor and the Panels' camera add it. The frames differ, so the on-screen result
-   may be the same: **to check** that “drag right” turns the same way everywhere.
-10. ~~**The “3D gestures” preference** covers neither joints nor furniture.~~ Fixed in #463e: “Object rotation speed” (`degresParPixelObjet3D`), for an Element's turntable, joints, and a building element's tilt and lean; the rotary knob follows the mouse and has no speed.
-
-## Recommendations
-
-**1. One view grammar, wherever there is a free camera.** Left drag in empty space: turn; right
-drag: move; wheel: zoom; arrows: move by steps. A Panel's Camera mode would move to right drag (Ctrl
-+ drag and middle drag staying as alternatives), like Scenes and previews.
-
-**2. One object grammar, wherever an object is handled.** Left click: select; left drag: move;
-**held right button ON the selected object: turn it** (in empty space, it stays the view move);
-short right-click on it: a quarter turn; R: a quarter turn; wheel on it: its property (depth, size,
-height); Del; Esc. This is already the building editor, without the conflict of point 1 of the
-previous list: the right button only turns what is selected. Panel and Scene Elements would finally
-gain a rotation gesture.
-
-**3. A single object-rotation engine**, the joints', which has proven itself: straight drag at a
-fixed speed when the axis is seen from the side, accumulated circular gesture when it points at the
-eye. It would replace the furniture's own rules (knob for Y, linear for X and Z) with a rule that
-works in every view (top, front, 3D). The active axis is chosen in an axes widget, as in the building
-editor.
-
-**4. Modifiers that mean the same everywhere.** Alt: no snapping. Ctrl: by steps (15° for an angle);
-Ctrl + wheel: always zoom. Shift: finer (1 cm, 1°). And angle snapping wherever an object turns: 90°
-within 6°.
-
-**5. Shared values, in one place** (like `VITESSE_ROTATION_3D` today): a single zoom proportional to
-the wheel (×1.1 per notch, `e^(Δ × 0.001)`), towards the cursor when the view allows; an object
-rotation speed (0.5°/px) added to the “3D gestures” settings.
-
-**6. Modals aligned on the building editor**: the same names (Rotation, Tilt, Lean), in the same
-order, on the same axes (fix the Object modal), with a degree field next to each slider and
-“Straighten”.
-
-**7. Controls everywhere** (done in #463f: at the top of the menu of a Panel, its Camera mode and a Scene, `commandes-3d.js`; tooltips on the previews): every screen with 3D gestures lists them, like the building editor's
-menu (“Gesture: effect.”), previews included (a tooltip on the preview).
-
-**A possible breakdown**, from least risky to longest: fix the Object modal's labels (6); unify zooms
-and modifiers (4, 5); right drag for the Panels' camera (1); the Element rotation gesture in Panels
-and Scenes, with the joints' engine (2, 3); finally Controls everywhere (7).
+- **The right button** moves the view everywhere, except on a selected object, which it turns; in a
+  Panel outside Camera mode, it scrolls the Page.
+- **The quarter turn**: R for a staircase or an Element, right click or a button for a building
+  element.
+- **Angle snapping** does not exist on a joint or in the modals.
+- **The direction of drag rotations**: the store preview subtracts the horizontal drag from its angle,
+  the Model editor and the Panel camera add it; to check on screen that "drag right" turns the same way
+  everywhere.
 
 ## Sources
 

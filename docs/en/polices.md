@@ -1,13 +1,13 @@
 # Fonts
 
-> Task #423, October 2026. Bubble fonts: the ones shipped with the application, and the ones the
-> user adds.
+*[Version française](../fr/polices.md)*
+
+Bubble fonts: the ones shipped with the application, and the ones the user adds.
 
 ## Ten built-in fonts, one per use
 
-Chosen with Durzo on 11 October 2026, from one rule: **a bubble font is complete**, meaning the
-regular, bold, italic and bold italic are drawn by its designer. The previous ten counted only one;
-eight are therefore replaced, and the candidates were sorted so that none duplicates another.
+The rule: **a bubble font is complete**, meaning the regular, bold, italic and bold italic are drawn
+by its designer, and none duplicates another.
 
 | Original uses | Font | Styles |
 |---|---|---|
@@ -22,8 +22,8 @@ eight are therefore replaced, and the candidates were sorted so that none duplic
 | Typewriter | Courier Prime | complete |
 | Horror | Creepster | one style |
 
-The original uses were revised by Durzo on 12 October 2026 (`USAGES_POLICES` and
-`POLICES_BULLES`, `src/constants.js`); everyone changes them afterwards in "My fonts".
+The original uses are in `USAGES_POLICES` and `POLICES_BULLES` (`src/constants.js`); everyone changes
+them afterwards in "My fonts".
 
 Bangers and Creepster have no free and complete equivalent: they stay, and their styles are
 simulated. Whispers have no font of their own: they are marked by the bubble (dashed outline) and
@@ -39,10 +39,9 @@ draws it with its replacement (`POLICES_BULLES_RETIREES`). See [persisted-data.m
 
 ## Fifty-five fonts from DaFont
 
-Added on 12 October 2026, with Durzo. DaFont has no API and its licence label is "only an
-indication": the zips were downloaded by hand into `apercus/dafont/` (outside the repository), and
-the licence of **each** font was read in its zip and in its metadata. Only those whose written
-licence allows redistribution **without asking the author** were kept (CC0, public domain, SIL OFL
+DaFont has no API and its licence label is "only an indication": the zips are downloaded by hand into `apercus/dafont/` (outside the repository), and
+the licence of **each** font is read in its zip and in its metadata. Only those whose written
+licence allows redistribution **without asking the author** are kept (CC0, public domain, SIL OFL
 1.1, GPL 2, CC BY-SA 4.0), with no missing French character, then a single one per group of
 look-alike fonts, and none that duplicates a Google font.
 
@@ -68,9 +67,9 @@ user emptied stays empty.
 Two toggles, **B** and **I**, combinable, under a bubble's font. Two added fields, `bulleGras` and
 `bulleItalique`.
 
-**A missing style is simulated, never refused** (Durzo's decision): the browser thickens or
-slants the font, and the application says so, with a `~` on the toggle and a tooltip. A first
-version greyed the toggle out; it was dropped, because an incomplete imported font must stay usable.
+**A missing style is simulated, never refused**: the browser thickens or slants the font, and the
+application says so, with a `~` on the toggle and a tooltip. An incomplete imported font thus stays
+usable.
 
 `styleDuTexteDeBulle` gives the `ctx.font` prefix; `variantesDeLaPolice` (`src/polices-utilisateur.js`)
 tells, for a built-in or imported font, whether each style is real or simulated. The four styles of
@@ -94,7 +93,7 @@ every font are preloaded at start-up.
   ones (one per built-in font), seeded in their language at the first change;
 - a right click on an imported font renames or deletes it;
 - The "Import a font" card, first in the grid as in the other stores: from a file. Searching online
-  is the "Online" tab (below). (There was an "Add a font" button and its menu, removed as requested.)
+  is the "Online" tab (below).
 
 ## Importing a file
 
@@ -111,7 +110,7 @@ says about itself is no proof**: it is shown, with a warning if it declares itse
 nothing is refused.
 
 **Files of one family make a single font** (Regular, Bold, Italic…). The name shown is the family's,
-not the file's (requested).
+not the file's.
 
 **The index** `Polices/polices.json` lists the families and their files, and keeps the **renames**:
 renaming a font rewrites no Project, a bubble citing the old name is drawn with the new one, chained
@@ -129,7 +128,7 @@ by the user at run time. Each font is loaded into the browser by `FontFace`
 
 ## The font store
 
-The "Online" tab of "My fonts". Source: **Fontsource** (checked on 12 October 2026): a public API
+The "Online" tab of "My fonts". Source: **Fontsource**: a public API
 with no key, all of Google Fonts plus other free fonts, and for every font, before any download, its
 category, licence, weights and styles. Ruled out: the Google Fonts API (key required, same
 catalogue), DaFont and 1001 Fonts (no API, varying licences).
@@ -151,10 +150,7 @@ catalogue), DaFont and 1001 Fonts (no API, varying licences).
   catalogue (`tests/fixtures/fontsource-catalogue.json`), and the built-in fonts' files when a font
   of the extract is one of them.
 
-## What remains
+## A missing font
 
-- Other sources, as a second tab if needed (Fontshare: about a hundred fonts, a foundry licence of
-  its own).
-- A missing imported font (file deleted, Project sent to someone) is reported under "Missing
-  files" ([missing-resources.md](missing-resources.md)); the bubble shows in a fallback font
-  meanwhile.
+A missing imported font (file deleted, Project sent to someone) is reported under "Missing files"
+([missing-resources.md](missing-resources.md)); the bubble shows in a fallback font meanwhile.

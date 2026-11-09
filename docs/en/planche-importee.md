@@ -2,9 +2,8 @@
 
 *[Version française](../fr/planche-importee.md)*
 
-> Requested by Durzo on 12 October 2026. The code: `src/planche-importee.js` (the decisions,
-> tested under Node), `src/import-planche-ui.js` (the check), and the marked branches in `draw.js`,
-> `events.js` and `sidebar.js`.
+The code: `src/planche-importee.js` (the decisions, tested under Node), `src/import-planche-ui.js`
+(the check), and the marked branches in `draw.js`, `events.js` and `sidebar.js`.
 
 ## What it is
 
@@ -19,13 +18,12 @@ Right-click an empty area of the displayed Page, **"Import a page"** (under "Cre
 the Panels detected, and the new Page opens right after the displayed one, in the same Chapter,
 **in panel correction**.
 
-**Correction happens on the Page** (requested on 13 October 2026, the first version used a modal):
+**Correction happens on the Page**:
 a click selects a Panel (outside the Panels: deselects), dragging it moves it, dragging a corner
 or the middle of a side resizes it (as with an ordinary Panel), a corner alone deforms it (with the same square snapping), the selected Panel blinks orange and black (white when the drawing under its outline is dark), a **right-click without dragging creates one** (the only way), Delete removes it, Esc or a click outside the Page
 finishes; on leaving, nothing stays selected. The Page menu carries the **"Detected
 panels"** section: "Edit the panels" goes back to it at any time; during the correction it
-becomes **"Controls"** (one action per line) and "Done" leaves (the sensitivity
-slider was removed: correction is enough). Numbers follow reading order at import; afterwards they
+becomes **"Controls"** (one action per line) and "Done" leaves. Numbers follow reading order at import; afterwards they
 are changed by **dragging** the rows of the Page menu list (except from their field), and a click on
 a row **highlights the Panel** (a second click deselects it). An import is undone with Ctrl+Z.
 
@@ -36,10 +34,8 @@ and move the page there. Declining keeps it, with bands.
 
 ## The detection
 
-Rewritten on 13 October 2026 on fifteen real pages provided by Durzo (manga, Franco-Belgian,
-comics, double spreads, screenshots with their frame), kept outside the repository in
-`apercus/planches-test/`. The first version (a cut on full lines of paper only) found a single
-Panel on most of them.
+Its thresholds are tuned on a set of real pages (manga, Franco-Belgian, comics, double spreads,
+screenshots with their frame), kept outside the repository in `apercus/planches-test/`.
 
 1. **The paper** is the light (else dark) grey level of the image's long uniform runs; the **frame**
    of a screenshot or a viewer is removed.
@@ -55,7 +51,7 @@ Panel on most of them.
 Panels (returned as their rectangle), a Panel inset in another, borderless Panels on white paper
 (they break up).
 
-**Bubbles are not detected** (decided with Durzo).
+**Bubbles are not detected.**
 
 ## What is persisted
 
@@ -68,8 +64,7 @@ Two **added** fields, nothing renamed:
   image, as fractions.
 
 **The image name lives on the Panels**, not on the Page: this gives the imported Page, without one
-more line, what Panel images already do (preloading, Images section, renaming, Missing files). A
-second copy on the Page would have fallen behind at the first rename. `casePorteUneImage3D`
+more line, what Panel images already do (preloading, Images section, renaming, Missing files). `casePorteUneImage3D`
 nevertheless answers **no** for these Panels: it governs the menus of a Panel with an image (Image,
 Framing, right-click reframing), which they do not have.
 

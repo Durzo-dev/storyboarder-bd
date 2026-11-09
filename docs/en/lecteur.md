@@ -2,8 +2,8 @@
 
 *[Version française](../fr/lecteur.md)*
 
-Asked for by Durzo in October 2026: read a Volume or a Chapter straight through, like an album,
-without leaving the application. Right-click a Volume ("Read this volume") or a Chapter ("Read this
+The Reader reads a Volume or a Chapter straight through, like an album, without leaving the
+application. Right-click a Volume ("Read this volume") or a Chapter ("Read this
 chapter"); reading starts at the displayed Page if it belongs to it.
 
 ## What it does
@@ -55,10 +55,10 @@ expanding a Volume or a Chapter does not.
 
 ## Size and full screen
 
-Going full screen sends several size changes in a row. Redrawing each one made two or three visible
-jumps (each asynchronous drawing landed at a size already outdated). Now each change RE-FITS what is
-on screen, without redrawing (the guided view's transition is cut while re-fitting), and the drawing
-at the right resolution comes once, a quarter of a second after the size has settled.
+Going full screen sends several size changes in a row. Each change RE-FITS what is on screen without
+redrawing (the guided view's transition is cut while re-fitting); the drawing at the right resolution
+comes once, a quarter of a second after the size has settled. Redrawing at every change would make
+visible jumps, each asynchronous drawing landing at a size already outdated.
 
 ## Cost
 
@@ -66,7 +66,3 @@ Each Page is drawn on demand, at the displayed height, and kept while reading (s
 Thumbnails are taken from the large drawings when they exist, otherwise prepared one by one in the
 background. Drawing a Page off screen redoes its 3D renders at that size: going back to the Page
 afterwards costs one more render.
-
-## Later
-
-Continuous vertical reading, like webtoons (#451 in TACHES.md).

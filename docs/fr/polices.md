@@ -1,14 +1,13 @@
 # Les polices
 
-> Tâche #423, octobre 2026. Les polices des Bulles : celles livrées avec l'application, et celles
-> que l'utilisateur ajoute.
+*[English version](../en/polices.md)*
+
+Les polices des Bulles : celles livrées avec l'application, et celles que l'utilisateur ajoute.
 
 ## Dix polices intégrées, une par usage
 
-Choisies avec Durzo le 11 octobre 2026, à partir d'une règle : **une police de Bulle est
-complète**, c'est-à-dire que le normal, le gras, l'italique et le gras italique sont dessinés par son
-auteur. Les dix polices d'avant n'en comptaient qu'une ; huit sont donc remplacées, et les candidates
-ont été triées pour qu'aucune ne double une autre.
+La règle : **une police de Bulle est complète**, c'est-à-dire que le normal, le gras, l'italique et
+le gras italique sont dessinés par son auteur, et aucune ne double une autre.
 
 | Usages d'origine | Police | Styles |
 |---|---|---|
@@ -23,8 +22,8 @@ ont été triées pour qu'aucune ne double une autre.
 | Machine à écrire | Courier Prime | complète |
 | Horreur | Creepster | un seul style |
 
-Les usages d'origine ont été revus par Durzo le 12 octobre 2026 (`USAGES_POLICES` et
-`POLICES_BULLES`, `src/constants.js`) ; chacun les change ensuite dans « Mes polices ».
+Les usages d'origine sont dans `USAGES_POLICES` et `POLICES_BULLES` (`src/constants.js`) ; chacun
+les change ensuite dans « Mes polices ».
 
 Bangers et Creepster n'ont pas d'équivalent libre et complet : elles restent, et leurs variantes
 sont simulées. Les murmures n'ont pas de police à part : ils se marquent par la bulle (pointillés)
@@ -41,9 +40,9 @@ tient l'accord avec l'outil, la liste des Bulles et `BUBBLE_FONT_PRELOAD_LIST`.
 
 ## Cinquante-cinq polices venues de DaFont
 
-Ajoutées le 12 octobre 2026, avec Durzo. DaFont n'a pas d'API et son libellé de licence n'est
-« qu'une indication » : les zips ont été téléchargés à la main dans `apercus/dafont/` (hors dépôt),
-et la licence de **chaque** police lue dans son zip et dans ses métadonnées. N'ont été gardées que
+DaFont n'a pas d'API et son libellé de licence n'est « qu'une indication » : les zips sont
+téléchargés à la main dans `apercus/dafont/` (hors dépôt),
+et la licence de **chaque** police lue dans son zip et dans ses métadonnées. Ne sont gardées que
 celles dont la licence écrite permet la redistribution **sans demander l'accord de l'auteur** (CC0,
 domaine public, SIL OFL 1.1, GPL 2, CC BY-SA 4.0), sans caractère français manquant, puis une seule
 par groupe de polices trop ressemblantes, et aucune qui double une police de Google.
@@ -71,10 +70,9 @@ l'utilisateur a vidée le reste.
 Deux interrupteurs, **G** et **I**, cumulables, sous la police d'une Bulle. Deux champs ajoutés,
 `bulleGras` et `bulleItalique`.
 
-**Une variante manquante est simulée, jamais refusée** (décidé par Durzo) : le navigateur épaissit
-ou penche la police, et l'application le dit, par un `~` sur l'interrupteur et une infobulle. Une
-première version grisait l'interrupteur ; elle a été écartée, parce qu'une police importée incomplète
-doit rester utilisable.
+**Une variante manquante est simulée, jamais refusée** : le navigateur épaissit ou penche la police,
+et l'application le dit, par un `~` sur l'interrupteur et une infobulle. Une police importée
+incomplète reste ainsi utilisable.
 
 `styleDuTexteDeBulle` donne le préfixe de `ctx.font` ; `variantesDeLaPolice`
 (`src/polices-utilisateur.js`) dit, pour une police intégrée ou importée, si chaque variante est vraie
@@ -99,8 +97,7 @@ ou simulée. Les quatre styles de chaque police sont préchargés au démarrage.
   langue au premier changement ;
 - un clic droit sur une police importée la renomme ou la supprime ;
 - La carte « Importer une police », en tête de la grille comme dans les autres stores : depuis un
-  fichier. Chercher en ligne, c'est l'onglet « En ligne » (ci-dessous). (Il y avait un bouton
-  « Ajouter une police » et son menu, retirés : demandé.)
+  fichier. Chercher en ligne, c'est l'onglet « En ligne » (ci-dessous).
 
 ## Importer un fichier
 
@@ -117,7 +114,7 @@ jamais transformées. **Ce que la police dit d'elle-même n'est pas une preuve**
 un avertissement si elle se déclare restreinte, et on ne refuse rien.
 
 **Les fichiers d'une même famille n'en font qu'une** (Regular, Bold, Italic…). Le nom affiché est
-celui de la famille, pas celui du fichier (demandé).
+celui de la famille, pas celui du fichier.
 
 **L'index** `Polices/polices.json` range les familles et leurs fichiers, et garde les **renommages** :
 renommer une police ne réécrit aucun Projet, une Bulle qui cite l'ancien nom est dessinée avec le
@@ -135,7 +132,7 @@ choisis par l'utilisateur à l'exécution. Chaque police est chargée dans le na
 
 ## Le store de polices
 
-L'onglet « En ligne » de « Mes polices ». Source : **Fontsource** (vérifié le 12 octobre 2026) :
+L'onglet « En ligne » de « Mes polices ». Source : **Fontsource** :
 une API publique sans clé, tout Google Fonts et d'autres polices libres, et pour chaque police, avant
 tout téléchargement, sa catégorie, sa licence, ses graisses et ses styles. Écartées : l'API Google
 Fonts (clé obligatoire, même catalogue), DaFont et 1001 Fonts (aucune API, licences variables).
@@ -157,10 +154,8 @@ Fonts (clé obligatoire, même catalogue), DaFont et 1001 Fonts (aucune API, lic
   catalogue (`tests/fixtures/fontsource-catalogue.json`), et les fichiers des polices intégrées quand
   une police de l'extrait en est une.
 
-## Ce qui reste
+## Une police manquante
 
-- D'autres sources, en second onglet si besoin (Fontshare : une centaine de polices, licence propre
-  à la fonderie).
-- Une police importée absente (fichier supprimé, Projet envoyé à quelqu'un) est signalée dans
-  « Fichiers introuvables » ([missing-resources.md](missing-resources.md)) ; la Bulle s'affiche
-  dans une police de secours en attendant.
+Une police importée absente (fichier supprimé, Projet envoyé à quelqu'un) est signalée dans
+« Fichiers introuvables » ([missing-resources.md](missing-resources.md)) ; la Bulle s'affiche dans une
+police de secours en attendant.

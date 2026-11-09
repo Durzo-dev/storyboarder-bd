@@ -121,11 +121,13 @@ both. `'tracé'` is a saved value, it is never renamed.
 
 ### Language
 
-- **Domain terms: French**, as in the data and the interface: `tracé`, `Case`, `Tome`, `Planche`,
-  `Muret`. `tracé` is never translated, not even in a comment.
-- **Identifiers and comments**: the original modules (`events.js`, `draw.js`, `scene3d.js`,
-  `rig3d.js`, `utils.js`…) are in English, the more recent ones in French. Write in the language of the
-  file being changed.
+- **Code is in English**: identifiers, comments, file names. The more recent modules, still in French,
+  are translated as they are changed (all new or touched code is written in English).
+- **Exception: saved data.** Field names and discriminant values stay as they are, French included
+  (`tracé`, `objType: 'batiment'`, `pieceId`…), see [persisted-data.md](persisted-data.md). `tracé` is
+  never translated.
+- **The interface** is bilingual (`src/i18n.js`, `tr(en, fr)`); **`docs/`** exists in English and in
+  French.
 - **Links to the docs**: always `docs/en/…`; `tests/docs.test.mjs` checks the target exists and is the
   English one.
 

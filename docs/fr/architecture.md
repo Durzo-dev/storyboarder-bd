@@ -126,11 +126,14 @@ l'autre : chercher les deux. `'tracé'` est une valeur enregistrée, il ne se re
 
 ### Langue
 
-- **Termes métier : français**, comme dans les données et l'interface : `tracé`, `Case`, `Tome`,
-  `Planche`, `Muret`. `tracé` n'est jamais traduit, même en commentaire.
-- **Identifiants et commentaires** : les modules d'origine (`events.js`, `draw.js`, `scene3d.js`,
-  `rig3d.js`, `utils.js`…) sont en anglais, les modules plus récents en français. Écrire dans la
-  langue du fichier qu'on modifie.
+- **Le code est en anglais** : identifiants, commentaires, noms de fichiers. Les modules plus récents,
+  encore en français, sont traduits au fil des modifications (tout code nouveau ou touché s'écrit en
+  anglais).
+- **Exception : les données enregistrées.** Les noms de champs et les valeurs discriminantes restent
+  tels quels, français compris (`tracé`, `objType: 'batiment'`, `pieceId`…), cf.
+  [persisted-data.md](persisted-data.md). `tracé` n'est jamais traduit.
+- **L'interface** est bilingue (`src/i18n.js`, `tr(en, fr)`) ; **`docs/`** existe en anglais et en
+  français.
 - **Renvois vers la doc** : toujours `docs/en/…` ; `tests/docs.test.mjs` vérifie que la cible existe et
   qu'elle est anglaise.
 

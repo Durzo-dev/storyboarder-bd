@@ -2,9 +2,8 @@
 
 *[English version](../en/planche-importee.md)*
 
-> Demandé par Durzo le 12 octobre 2026. Le code : `src/planche-importee.js` (les décisions,
-> testées sous Node), `src/import-planche-ui.js` (la vérification), et les branches marquées dans
-> `draw.js`, `events.js` et `sidebar.js`.
+Le code : `src/planche-importee.js` (les décisions, testées sous Node), `src/import-planche-ui.js`
+(la vérification), et les branches marquées dans `draw.js`, `events.js` et `sidebar.js`.
 
 ## Ce que c'est
 
@@ -20,12 +19,11 @@ case » et « Créer une bulle de dialogue », et nulle part ailleurs). On chois
 WebP) : l'image est rangée, les Cases détectées, et la nouvelle Planche s'ouvre juste après celle
 affichée, dans le même Chapitre, **en correction des Cases**.
 
-**La correction se fait sur la Planche** (demandé le 13 octobre 2026, la première version passait
-par une modale) : un clic sélectionne une Case (hors des Cases : désélectionne), la tirer la déplace,
+**La correction se fait sur la Planche** : un clic sélectionne une Case (hors des Cases : désélectionne), la tirer la déplace,
 tirer un coin ou le milieu d'un bord la redimensionne (comme une Case ordinaire), un coin seul la déforme (avec la même équerre), la Case sélectionnée clignote orange et noir (blanc quand le dessin sous son contour est sombre), un **clic droit sans glisser en crée une** (le seul moyen), Suppr la
 retire, Échap ou un clic hors de la Planche termine ; en sortant, plus rien n'est sélectionné. Le menu de la Planche porte
 la section **« Cases détectées »** : « Modifier les cases » y ramène à tout moment ; pendant la
-correction, elle devient **« Commandes »** (une action par ligne) et « Terminer » en sort (le curseur de sensibilité a été retiré : la correction suffit). Les numéros suivent l'ordre de
+correction, elle devient **« Commandes »** (une action par ligne) et « Terminer » en sort. Les numéros suivent l'ordre de
 lecture à l'import ; ensuite, on les change en **glissant** les lignes de la liste du menu de la Planche
 (sauf depuis leur champ), et un clic sur une ligne **met la Case en surbrillance** (un second clic la
 désélectionne). Un
@@ -38,10 +36,8 @@ de créer un nouveau Tome à ce format et d'y placer la planche. Refuser la gard
 
 ## La détection
 
-Réécrite le 13 octobre 2026 sur quinze planches réelles fournies par Durzo (manga, BD
-franco-belge, comics, doubles pages, captures d'écran avec leur cadre), gardées hors dépôt dans
-`apercus/planches-test/`. La première version (une découpe sur les seules lignes de papier pleines)
-ne trouvait qu'une Case sur la plupart d'entre elles.
+Ses seuils sont réglés sur un jeu de planches réelles (manga, BD franco-belge, comics, doubles
+pages, captures d'écran avec leur cadre), gardé hors dépôt dans `apercus/planches-test/`.
 
 1. **Le papier** est le niveau de gris clair (à défaut sombre) des longues plages uniformes de
    l'image ; le **cadre** d'une capture d'écran ou d'une visionneuse est retiré.
@@ -57,7 +53,7 @@ ne trouvait qu'une Case sur la plupart d'entre elles.
 Cases posées dessus, des Cases inclinées (rendues par leur rectangle), une Case incrustée dans une
 autre, des Cases sans bordure sur papier blanc (elles s'émiettent).
 
-**Les bulles ne sont pas détectées** (décidé avec Durzo).
+**Les bulles ne sont pas détectées.**
 
 ## Ce qui est persisté
 
@@ -71,8 +67,7 @@ Deux champs **ajoutés**, rien de renommé :
 
 **Le nom de l'image vit sur les Cases**, pas sur la Planche : c'est ce qui donne à la Planche
 importée, sans une ligne de plus, ce que savent les images de Case (préchargement, section Images,
-renommage, Fichiers introuvables). Une seconde copie sur la Planche serait restée en arrière au
-premier renommage. `casePorteUneImage3D` répond pourtant **non** pour ces Cases : elle gouverne les
+renommage, Fichiers introuvables). `casePorteUneImage3D` répond pourtant **non** pour ces Cases : elle gouverne les
 menus d'une Case à image (Image, Cadrage, recadrage au clic droit), qu'elles n'ont pas.
 
 **La place d'une Case se déduit.** `x`, `y`, `w`, `h` et `pts` sont recalculés à chaque dessin
