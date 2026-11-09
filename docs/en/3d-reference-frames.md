@@ -1,7 +1,8 @@
 # 3D reference frames and coordinates
 
-> The groundwork for reading `scene3d.js` and `rig3d.js`. Nothing here is arbitrary, but nothing is
-> guessable either.
+*[Version française](../fr/3d-reference-frames.md)*
+
+The groundwork for reading `scene3d.js` and `rig3d.js`.
 
 ## World constants
 
@@ -9,7 +10,7 @@
 |---|---|---|
 | `GROUND_Y_DEFAULT_3D` | `-3` | Height of the Ground. Below the centre of the Panel, so that Elements appear to rest on it. |
 | `WALL_PX_PER_UNIT_3D` | `40` | Exchange rate px ↔ world units. A 60 px Window is 1.5 units. |
-| `BUILD_WALL_DEFAULT_HEIGHT` | `3.0` | Height of a Wall created by the Build tool (removed by #454f; Walls already placed keep it). |
+| `BUILD_WALL_DEFAULT_HEIGHT` | `3.0` | Height of Walls placed by the former Build tool (Projects containing them keep it). |
 | `BUILD_WALL_THICKNESS_RATIO_3D` | `0.06` | Thickness of a Wall = **6 % of its own height**. A Wall of 3.0 is therefore 0.18 thick. |
 | `PANEL_CAM_DEFAULT_DIST_3D` | `PANEL_CAM_REF_DIST_3D × 2.5` | Default camera distance. |
 | `PANEL_SCENE_RENDER_MAX_PX` | `1400` | Resolution ceiling for the off-screen render. Every new consumer of the renderer must respect it. |
@@ -23,8 +24,7 @@ with the mouse, and what the selection box draws.
 units. **This is the source of truth for 3D rendering.**
 
 The trap: an Element's `o.y` is a **canvas** coordinate, not a height. Naively converting `o.y` into
-a world Y gives an Element floating in mid-air, which is exactly what happened to Wall Openings
-before Fix 28. For Elements seen from above, `o.y` corresponds to a **depth** (world Z), not to an
+a world Y gives an Element floating in mid-air. For Elements seen from above, `o.y` corresponds to a **depth** (world Z), not to an
 elevation.
 
 ## Orientation
@@ -38,7 +38,7 @@ back often; forgetting it flips the object by 180°.
 
 For a Three.js group rotated by `rotY`, the local `+X` axis points along the tangent and the local
 `+Z` axis along the normal of the path. Both conventions must agree between a rig and the terrain
-around it, otherwise they cross each other, as measured at 47° apart in a bend.
+around it, otherwise they cross each other in bends.
 
 ## Elements with no position of their own
 

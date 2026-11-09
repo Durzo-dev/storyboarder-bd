@@ -1,206 +1,75 @@
-# Positioned light sources — settled decisions
+# Placed light sources
 
 *[Version française](../fr/positioned-lights.md)*
 
-Project #420. This note is written **before** the code, as [lighting](lighting.md) was for the sun.
-Its purpose is to settle what is decided once: what the object is, its data model, the rendering
-trap that governs everything, and what is out of scope.
+## Role
 
-A Panel's sun is covered elsewhere. Here we deal with sources one **places** in the Scene and moves
-like a piece of furniture.
+Right click → Add → **Light** places a point source (a glowing sphere) in a Panel or a Scene. It moves
+like an Element, is set through its sheet (double-click), and appears in a **separate** block at the top
+of the Element list. A Panel's sun is described in [lighting.md](lighting.md).
 
-## What the feature promises
+## A light is an `objet3d`
 
-Right-click → Add → **Light**. A glowing sphere appears in the Panel or Scene. It moves like any
-other Element, and appears in the right-hand panel in a block **separate** from the Elements list,
-like Paths.
+A light is an `objet3d` with `objType: 'lumiere'` (`OBJ_TYPE_LUMIERE`, `src/light-source-3d.js`). It
+thereby inherits everything 3D objects do (selection, dragging, belonging to a Panel, undo, cache
+signature), and only its **exclusions** are written and tested.
 
-## The decision that governs everything: a light is an `objet3d`
+## Data
 
-⚠️ **THIS REVISES THE #414 NOTE, AND MEASUREMENT FORCED IT.** That note announced sources "with a
-type of their own" that would inherit "for free" selection, dragging, Panel ownership through
-`homePanelId`, entry into the cache signature and undo.
-
-Both halves of that sentence cannot hold. **70 sites** in the repository test
-`type === 'perso' || type === 'objet3d'`:
-
-| file | sites |
-|---|---|
-| events.js | 34 |
-| scene3d.js | 17 |
-| draw.js | 10 |
-| sidebar.js | 9 |
-| modals.js | 5 |
-| scenes.js | 4 |
-| others | 1 each |
-
-A brand-new type inherits none of them. Each would have to be audited one by one, and every miss
-would be **silent**: a light absent from a filter raises nothing, it merely behaves wrongly
-somewhere.
-
-With `type: 'objet3d'` and `objType: 'lumiere'`, all 70 accept it by default, and only the intended
-**exclusions** get written. Each then becomes a decision, written down and tested, rather than an
-accident. The repository already has this idiom: the **slab** is an `objet3d` deliberately absent
-from `elementsInPanel`.
-
-⚠️ The name `lumiere` can never change: `objType` is persisted, and the repository's rule forbids
-renaming saved data (see [persisted-data](persisted-data.md)).
-
-## The data model
-
-A light is an ordinary `objet3d` — `id`, 2D box, `homePanelId`, world coordinates — plus:
+An ordinary `objet3d` (`id`, 2D box, `homePanelId`, world coordinates), plus:
 
 ```js
 {
   objType: 'lumiere',
-  color: '#FFFFFF',      // the colour OF THE LIGHT
-  intensite: 0.77,       // CLE_ACTUELLE raised by 40%
-  portee: 0,             // 0 = no limit, in Three.js terms
+  color: '#FFFFFF',      // the light's colour (the common objet3d field)
+  intensite: 0.77,       // CLE_ACTUELLE × MAJORATION_LUMIERE_POSEE (0.55 × 1.4)
+  portee: 0,             // 0 = unlimited
   sphereVisible: true,
-  projetteOmbre: false,  // #422d — unticked: six cube passes are not paid for unasked
-  realHeightFloor: 0.2,  // the sphere's radius, in metres
+  projetteOmbre: false,
+  realHeightFloor: 0.2,  // the sphere's diameter, in metres
 }
 ```
 
-⚠️ **THE COLOUR LIVES IN `color`, THE FIELD EVERY `objet3d` ALREADY HAS.** A second `couleur` field
-beside it would be an invitation to let the two diverge; this one already exists, is already
-persisted, and already plays exactly that role.
+- `sphereVisible` only hides the sphere, **on screen and in the export**; the light still shines.
+  `hidden3d` switches it off.
+- `portee` is also the far plane of a casting source's shadow camera; at 0, it is derived from the
+  Panel's visible field (`cameraOmbreSource3D`).
+- `projetteOmbre` is unticked by default: a point source's shadow is a cube map, six depth passes per
+  frame (see [cast-shadows.md](cast-shadows.md)).
 
-**Defaults are anchored rather than picked**, and where that is impossible it is written down:
+## Rendering
 
-- `intensite` is `CLE_ACTUELLE`, the intensity of the scene's key light, **raised by 40%**
-  (`MAJORATION_LUMIERE_POSEE`). An added source first lights the way what already lights does, only
-  brighter. ⚠️ **That factor comes from the eye, not from a computation**: the note said "still to
-  be judged on screen", #420c's rendering made looking possible, and the anchored value turned out
-  too dim. "At least 40%" is a **floor judged acceptable**, not an optimum: if use shows it is still
-  short, that factor goes up, in one place. It stays a FACTOR rather than a value, otherwise the key
-  light and the placed source would drift apart silently (the #415 fault);
-- `portee` is 0, no limit. **An accepted cautious choice**: the dialog that will set it does not
-  exist yet, and a finite range picked at random would give lights that illuminate nothing three
-  metres away, with no way to correct it;
-- `sphereVisible` is true, otherwise "Add → Light" would show **nothing**;
-- `projetteOmbre` is **false**, and the measured price decided it (#422d): a point light's shadow is
-  a CUBE map — six depth passes per light per frame, and **2,004 ms** of compilation on first
-  meeting eight casting sources. The cost is paid only by whoever asks for it, source by source;
-- the 0.2 m radius, roughly a head, is **chosen** and not derived.
+The Three.js scene is **shared** between Panels. `planLumieresPosees3D` decides, for each render, which
+cached `PointLight`s to switch on and place, and which to switch off: every cached id leaves the plan
+exactly once. A light left on would otherwise light the next Panel.
 
-⚠️ **AND `portee` CHANGED NATURE WITH #422d**, without changing value. It was a comfort; for a
-casting source it becomes the **far plane of its shadow camera**. At zero range — "unlimited" —
-there is no natural distance at which to stop the map, and one is then derived from the Panel's
-visible field: such a source only shadows what is on screen. `cameraOmbreSource3D` settles it, and
-says so rather than keeping quiet.
+`computePanelSceneSignature3D` clones the whole Element: a light's position, colour, intensity, range
+and sphere enter it without extra code.
 
-## The trap that governs rendering
+## Exclusions
 
-⚠️ **THE THREE.JS SCENE IS SHARED ACROSS EVERY PANEL.** `renderPanelSceneUncached3D` already resets
-the style's lights on every render, with this comment: "resetting the style's values on every render
-is what stops one Panel's lighting from leaking onto the next".
+1. **No Camera mode for a light alone**: at least one other Element is needed. A light does not block
+   inserting an image either.
+2. **Outside the automatic framing box**: a distant light would push the camera back.
+3. **No ground snapping**: a source floats where it is put. But it **does not go below the ground**,
+   unless "Can pass through the ground" (`traverseGround`): snapping and the ground guard are two
+   separate predicates.
+4. **Outside the Element list**, in its block at the top, and never under "Not visible".
 
-A positioned source must follow exactly that protocol: a cache of `PointLight`s, **all switched off
-at the start of a render**, then only the current Panel's turned on and placed. A light left on
-would illuminate the next Panel, which has none, and the defect would be blamed on anything but its
-cause.
+A light's sheet shows a "Brightness" section (colour, intensity, range, shadow, sphere) and hides what
+means nothing for it (`dispositionFicheLumiere3D`, `CHAMPS_FICHE_LUMIERE`).
 
-⚠️ **AND THEY MUST ENTER `computePanelSceneSignature3D`.** A Panel keeps its image as long as its
-signature does not change: moving a light without touching the signature would redraw nothing.
-Campaign #411 paid for that omission with a whole measurement round, and #414c already hit it for
-the sun.
+## Cost
 
-## The exclusions, decided rather than suffered
+Per frame, a source without a shadow costs almost nothing. The cost is at the **first encounter** of a
+number of lights in a session (about 30 ms per light), because that number enters the GLSL program key;
+moving or recolouring a light recompiles nothing. Measurements in
+[rendering-performance.md](rendering-performance.md).
 
-They come from an explicit exchange, and each will have its test:
+## Pitfalls
 
-1. **A light does not unlock Camera mode**, and does not block inserting an image. Camera mode is
-   only offered when the Panel holds at least one Element: a Panel holding only a light has nothing
-   to frame.
-2. **It stays out of the bounding box** used for automatic framing. A light placed far away would
-   grow the box and push the camera back for no visible reason.
-3. **It is not magnetised to the ground.** `groundMagnetEligible` returns true for any `objet3d`
-   that is neither a Wall nor a Wall opening; without an exclusion a light would be stuck to the
-   floor, when the whole point of a placed source is to float wherever one wants.
-4. **It leaves the free-Elements list** (#420e). A source has neither size nor material: it lights
-   what the others show. Mixed in with them it lengthens the list without ever answering the
-   question that list is asked — "what is in this Panel?". So it gets its own block, like Paths.
-   **And as a consequence it never goes into "Not visible"** (formerly "Off-frame", #449): that sub-section holds what relates to
-   no pixel of the image, whereas a light outside the frame explains a good part of it. Its block sits **at the top of the list**, in a fixed position: asked for
-   from use, a source is what one looks for first, and letting it drift down with the number of
-   Elements made it unfindable.
-
-### ⚠️ What that third exclusion took with it
-
-**The ground ATTRACTS, and the ground STOPS: two questions, and `groundMagnetEligible` answered
-both.** It also gated `clampWorldYAboveGround`, the guard that keeps a demagnetised Element from
-sinking below the floor. The agreement held as long as the two sets coincided: everything that
-could be magnetised was also held back.
-
-Excluding a light from magnetism therefore excluded it from the GUARD, **silently**. It could be
-dragged under the floor, and nothing turned red: a guard that stops applying breaks nothing, it
-merely stops protecting. Reported from use, like the 116 px jump before it.
-
-The two questions are now asked separately, and the decided rule is: **a light does not go below the
-ground**, unless `traverseGround`, the option that already existed for Elements and now holds for
-all of them.
-
-⚠️ **AND EVERY REMAINING EXCLUSION RAISES THE SAME QUESTION**: what else is this predicate the gate
-to, besides what it announces? This is the repository's most frequent fault, one value serving two
-opposite roles.
-
-### What rendering cost, and what it cost nothing
-
-**Nothing was added to the Panel signature, because nothing was missing from it.**
-`computePanelSceneSignature3D` clones the WHOLE Element: a light's colour, intensity, range, sphere
-visibility and position already enter it. Writing a "lights" part beside that would have made TWO
-copies of one decision. A test holds the two links that free ride depends on: the signature starts
-from `panelOwnedElements3D`, and it clones rather than enumerates.
-
-⚠️ **AND `buildPropRig3D` FALLS BACK SILENTLY ON THE CAR.** An `objType` with no builder raises
-nothing there: between #420b and #420c, a light therefore showed up as a car. The builder is now
-registered in the table, and a test counts the rig's meshes.
-
-## The sphere is NOT an editing gizmo
-
-⚠️ **AND THAT IS THE USER'S DECISION, NOT A DESIGN OVERSIGHT.** An earlier draft of this note
-treated it like the camera gizmo: visible on screen, absent from exports. The answer was that an
-option will control its visibility, and that when visible it is visible **in exports too**.
-
-The practical consequence simplifies things: no special export path, no "edit mode" to distinguish.
-One persisted field, `sphereVisible`, read by the renderer like any other.
-
-## What is NOT in this project
-
-**The settings dialog — SHIPPED SINCE, in #421.** All four fields are settable: the Element dialog
-opens on double-click, gaining a "Brightness" section and losing everything that means nothing for a
-source. The default range stays 0, "unlimited", because changing it would alter the look of already
-saved Projects — but it is now reachable, which was the precondition for any culling (cf. #420f).
-
-**Cast shadows.** Nothing casts one today, and enabling them is a performance question in its own
-right, to be handled with measurements.
-
-**A cap on the number of sources — MEASURED, and not where it was being looked for (#420f).** The
-sentence above was true and was looking the wrong way. The per-frame cost is **nil**: eight sources
-add 0.2 ms to a Panel costing 13, and thirty-two add a single one. What costs is the FIRST ENCOUNTER
-with a number of lights — about **30 ms per light**, 252 ms at eight, paid once per number per
-session, because `numPointLights` enters the GLSL program key. Moving a light or changing its colour
-recompiles nothing.
-
-**The ceiling of eight is therefore justified by the stall, not by display speed**, which is an
-entirely different reason from the one imagined. Eight is the largest number whose first encounter
-(252 ms) stays under the worst stall the application already allows itself — 296 ms for one Panel
-render, recorded in #411. Twelve would cost 334 ms, sixteen 417 ms. And if this ceiling ever chafes,
-the remedy is not to raise it but to **pre-compile while idle**, just as #405d already spreads rig
-construction.
-
-Figures, instrument, and the three instruments that lied before the right one:
-[performance note](rendering-performance.md), seventh campaign.
-
-## Breakdown
-
-| task | subject |
-|---|---|
-| #420a | the pure decisions: discriminator, defaults, conversion |
-| #420b | create a Light from "Add → Light" |
-| #420c | rendering: sphere, light cache, signature |
-| #420d | move a Light like an Element |
-| #420e | a separate block in the Elements list |
-| #420f | measure the cost of one, three and eight lights — **done**, ceiling of eight |
-| #420g | closure: README, built-in manual, on-screen check |
+- **One predicate can guard two doors**: excluding a light from snapping must not exclude it from the
+  ground guard.
+- **`buildPropRig3D` falls back to the car** for an `objType` without a builder: every new type must be
+  registered there (a test counts the rig's meshes).
+- **`lumiere` is a saved value**: it is never renamed.
