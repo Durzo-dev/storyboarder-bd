@@ -344,7 +344,7 @@ export function groupesPosablesMembres3D(os, membres, traduire){
   lignes.groupes.forEach(g => {
     // UNE CHAÎNE DÉCOCHÉE N'A PAS DE CURSEUR. C'est le seul filtre, et il est HUMAIN : la case de
     // l'écran de correspondance (#373). Le code n'écarte rien de lui-même, faute de savoir le faire,
-    // cf. l'étape 3 de docs/en/creature-rigs.md et l'hypothèse de la longueur, démentie.
+    // cf. docs/en/imported-skeletons.md (chaînes et rôles).
     const chaines = g.membres
       .filter(m => m.retenu)
       .map(m => ({ titre: m.rang > 1 ? `${m.nom} ${t('rank', 'rang')} ${m.rang}` : m.nom, os: rangees(m.segments) }))

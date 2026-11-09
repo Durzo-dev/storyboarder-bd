@@ -33,7 +33,7 @@ A section with nothing to say is left out.
 | [persisted-data.md](persisted-data.md) | Saved data: what is never renamed, reading back, added fields. |
 | [architecture.md](architecture.md) | What goes where, IPC channels, circular imports, shared state, naming. |
 | [3d-rendering-single-sources.md](3d-rendering-single-sources.md) | 3D rendering: one source per computation. |
-| [imported-skeletons.md](imported-skeletons.md) | Skeletons of imported models: bone conventions, mappings. |
+| [imported-skeletons.md](imported-skeletons.md) | Imported skeletons: recognition, morphologies, roles, mappings, posing. |
 
 ## Method and procedures
 
@@ -84,9 +84,6 @@ A section with nothing to say is left out.
 |---|---|
 | [model-editor.md](model-editor.md) | The Model editor. |
 | [pose-library.md](pose-library.md) | The pose library. |
-| [creature-rigs.md](creature-rigs.md) | Non-humanoid rigs and their archetypes. |
-| [archetype-roles.md](archetype-roles.md) | Chain roles, per archetype. |
-| [archetype-poses.md](archetype-poses.md) | Poses per archetype. |
 | [asset-store.md](asset-store.md) | The asset store and its sources. |
 
 ## Editors

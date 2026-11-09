@@ -688,7 +688,7 @@ describe('Les curseurs d\'une créature viennent de ses chaînes (#374)', () => 
   test('les os de tête de tronc, qui portent TOUS les membres, n\'ont pas de curseur', () => {
     // Même argument que pour le bassin : les tourner fait pivoter la figure entière, ce que
     // l'Orientation de l'Élément fait déjà. Critère structurel, pas un pourcentage : la mesure des
-    // fractions entraînées ne montre AUCUN trou où couper (cf. docs/en/creature-rigs.md).
+    // fractions entraînées ne montre AUCUN trou où couper (cf. docs/en/imported-skeletons.md).
     const os = charger('araignee');
     const pilotables = new Set(tousLesOs(groupesPosablesMembres3D(os, [], fr)));
     assert.equal(pilotables.has('_rootJoint'), false, 'la racine ne doit pas être pilotable');

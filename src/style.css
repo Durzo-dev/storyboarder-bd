@@ -1421,7 +1421,7 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
    champs des modales.
 
    UNE GRILLE, ET NON UN FLEX, parce que l'ordre du DOM doit rester libellé → champ → case : le
-   libellé est traduit par `previousElementSibling` (I18N_PREV_LABEL, cf. docs/en/i18n.md). Un flex
+   libellé est traduit par `previousElementSibling` (I18N_PREV_LABEL, cf. src/i18n.js). Un flex
    aurait obligé à sortir le libellé de la rangée, donc à l'éloigner du champ.
    Détail : la case est centrée sur la LIGNE du champ uniquement ; la ligne du libellé lui reste
    vide, elle n'entre pas dans le calcul. */

@@ -1527,7 +1527,7 @@ export const PERSONA_PREVIEW_PAN_SENS = 0.0055;
 //   `origine: 'structure'` — rien ne dit rien, on propose la forme la plus simple compatible.
 //
 // AUCUN ARCHÉTYPE N'EST UN VERDICT. L'utilisateur peut toujours en changer, et « Complexe » rend
-// l'écran générique, où chaque chaîne se coche et se nomme à la main. Voir docs/en/creature-rigs.md.
+// l'écran générique, où chaque chaîne se coche et se nomme à la main. Voir docs/en/imported-skeletons.md.
 /**
  * La morphologie de chaque animal intégré. SOURCE UNIQUE du lien entre les deux mondes.
  *

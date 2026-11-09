@@ -299,7 +299,7 @@ function rangDeMembre3D(cle){
  * c'est le seul arachnide du corpus.
  *
  * ⚠️ CE CHIFFRE NE REPOSE QUE SUR UN EXEMPLE, et le corpus ne contient aucun scorpion : la queue est
- * là par anticipation, pas par mesure. Consigné tel quel dans docs/en/archetype-roles.md.
+ * là par anticipation, pas par mesure. Cf. docs/en/imported-skeletons.md.
  */
 const PAIRES_ARACHNIDE_3D = 4;
 

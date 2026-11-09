@@ -33,7 +33,7 @@ Une section sans objet est omise.
 | [persisted-data.md](persisted-data.md) | Les données enregistrées : ce qui ne se renomme jamais, la relecture, les champs ajoutés. |
 | [architecture.md](architecture.md) | Où va quoi, les canaux IPC, les imports circulaires, l'état partagé, la nomenclature. |
 | [3d-rendering-single-sources.md](3d-rendering-single-sources.md) | Le rendu 3D : une seule source par calcul. |
-| [imported-skeletons.md](imported-skeletons.md) | Les squelettes des modèles importés : conventions d'os, correspondances. |
+| [imported-skeletons.md](imported-skeletons.md) | Les squelettes importés : reconnaissance, morphologies, rôles, correspondances, pose. |
 
 ## Méthode et procédures
 
@@ -84,9 +84,6 @@ Une section sans objet est omise.
 |---|---|
 | [model-editor.md](model-editor.md) | L'Éditeur de modèle. |
 | [pose-library.md](pose-library.md) | La bibliothèque de poses. |
-| [creature-rigs.md](creature-rigs.md) | Les rigs non humanoïdes et leurs archétypes. |
-| [archetype-roles.md](archetype-roles.md) | Les rôles de chaînes, par archétype. |
-| [archetype-poses.md](archetype-poses.md) | Les poses par archétype. |
 | [asset-store.md](asset-store.md) | Le store de ressources et ses sources. |
 
 ## Éditeurs

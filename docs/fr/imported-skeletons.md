@@ -1,694 +1,105 @@
-# Squelettes importés — ce qui est mesuré, et ce qui reste à faire
+# Les squelettes importés
 
 *[English version](../en/imported-skeletons.md)*
 
-Ce document rassemble les MESURES faites sur les six fichiers `.glb` réels qui ont servi de banc
-d'essai. Il existe parce que ce chantier est celui où j'ai le plus souvent supposé au lieu de
-mesurer, et où deux de mes suppositions se sont révélées fausses.
+## Rôle
 
-Les fichiers eux-mêmes ne sont pas versionnés (22 Mo d'assets appartenant à l'utilisateur). Les
-chiffres ci-dessous sont donc la seule trace de ce qu'ils contiennent.
+Un modèle importé articulé (`.glb` avec squelette) se pose comme un Personnage : il faut reconnaître
+quel os joue quel rôle, dans des fichiers dont les conventions de nommage, les rotations de repos et
+les axes n'ont rien de commun. Cette note décrit comment l'application le fait, pour un humanoïde comme
+pour une créature (quadrupède, ailé, serpent…).
 
----
+## Fichiers
 
-## 1. Sept conventions de nommage, aucune commune
-
-| Fichier | Convention | Os |
-|---|---|---|
-| `worker_j.glb` | maison, nommée d'après l'ARTICULATION (`Left_leg` = la cuisse) | 109 |
-| `hulk_-_sm_bnd.glb` | Unreal (`pelvis`, `clavicle_l`, `upperarm_l`, `thigh_l`, `calf_l`) | 1126 |
-| `capoera.glb`, `female_pose.glb` | Mixamo (`mixamorig:`) | 65 |
-| `anime_girl1.glb` | VRM (`J_Bip_C_Hips`) | — |
-| `anime_girl2.glb` | maison, proche de VRoid | — |
-| `kraken.glb` | Maya, lettre puis chiffre (`l101`, `r301`) | 47 |
-| `centaur3.glb` | CAT de 3ds Max, majuscule collée (`CATRigLLeg1`) | 79 |
-
-Les deux dernières lignes sont venues du chantier créatures
-([creature-rigs.md](creature-rigs.md)) : elles ne changent que la lecture du CÔTÉ, jamais
-celle du segment. Sans elles, ces deux fichiers rendaient **zéro membre latéral**.
-
-**Le mot « leg » est irrémédiablement ambigu** : `mixamorig:LeftLeg` désigne le TIBIA, `Left_leg`
-de `worker_j` désigne la CUISSE. C'est ce qui a imposé le partage des rôles de `skeleton-map.js` :
-le nom pour le CÔTÉ, la structure pour le SEGMENT.
-
-### 1.1 La boîte d'un modèle articulé, et les os périmés (#372)
-
-**Signalé à l'usage : des modèles importés apparaissaient sous le sol.** Ce n'était ni le placement
-ni l'aplomb, c'était l'ÉCHELLE, que `placeRigCentered3D` déduit de la boîte englobante.
-
-`box3FromObjectSkinAware3D` interroge `bone.matrixWorld` pour chaque sommet. Or **un squelette n'est
-pas un descendant du maillage qu'il déforme** : dans un glTF, c'est un frère sous la même racine. La
-fonction ne faisait qu'un `updateWorldMatrix(true, false)` par nœud, qui met à jour les ancêtres et
-le nœud lui-même ; un maillage visité avant les os les lisait donc périmés.
-
-| fichier | boîte mesurée | boîte réelle | facteur |
-|---|---|---|---|
-| `cerberus.glb` | 0,05 × 0,05 × 0,09 | 4,52 × 4,66 × 8,53 | **90** |
-| `snake.glb` | 2,14 × 0,11 × 0,09 | 7,36 × 0,37 × 0,32 | 3,4 |
-| `spider.glb` | 1,84 × 2,11 × 0,48 | 2,28 × 0,59 × 2,61 | 1,3 |
-| `labrador_dog.glb` | 1,35 × 2,78 × 5,44 | identique | 1 |
-
-Le cerbère était donc agrandi **cent seize fois**. Le chien, seul modèle sain du lot, l'était parce
-qu'il porte un maillage NON articulé dont le parcours mettait les matrices à jour au passage.
-
-**DEUX FORMES DE MISE À JOUR NE RÉPARENT PAS, et toutes deux ont été essayées :**
-
-- `updateWorldMatrix(true, true)` laisse le cerbère à 0,047. Ma première explication était fausse,
-  je l'avais attribuée au parcours ; elle descend bel et bien dans tous les enfants. **La vraie
-  cause est dans Three** : `SkinnedMesh` REDÉFINIT `updateMatrixWorld` pour recalculer
-  `bindMatrixInverse` depuis `matrixWorld`, et ne redéfinit PAS `updateWorldMatrix`. Comme
-  `boneTransform` termine par `applyMatrix4(this.bindMatrixInverse)`, cette matrice périmée fausse
-  chaque sommet ;
-- mettre à jour les OS seuls ne suffit pas non plus, pour une raison différente :
-  `bone.updateMatrixWorld(true)` compose avec la matrice de son parent, elle-même périmée, et ne
-  touche pas au `bindMatrixInverse` du maillage. Cerbère toujours à 0,05.
-
-Seul `updateMatrixWorld(true)` depuis la racine du sous-arbre répare : 4,661.
-
-⚠️ **CE QUI EST GARDÉ, ET CE QUI NE L'EST PAS.** Aucun montage ne sépare les trois formes, et
-**quatre** ont été essayés : os frères du maillage, nœuds donnés par matrice, transformation
-appliquée après le `bind`, et jusqu'à un `.glb` FABRIQUÉ décodé par le vrai chargeur. Ce qui les
-sépare tient à la valeur de `bindMatrixInverse`, qu'un montage rend difficilement significative.
-
-Le test épingle donc le **mécanisme** plutôt que le symptôme : il vérifie que `SkinnedMesh` redéfinit
-`updateMatrixWorld` et pas `updateWorldMatrix`. Si une version de Three change cela, le test tombe,
-et c'est ce qu'on veut, la raison d'écrire l'une plutôt que l'autre aura disparu.
-
----
-
-## 2. Rotations de repos : 106 os sur 108 sont déjà tournés
-
-Relevé des quaternions de repos des os mappés :
-
-| Fichier | Os mappés | Repos = identité | Repos déjà tourné |
-|---|---|---|---|
-| `anime_girl1` | 18 | 0 | 18 |
-| `anime_girl2` | 18 | 0 | 18 |
-| `capoera` | 18 | 1 | 17 |
-| `female_pose` | 18 | 1 | 17 |
-| `hulk_-_sm_bnd` | 18 | 0 | 18 |
-| `worker_j` | 18 | 0 | 18 |
-| **total** | **108** | **2** | **106** |
-
-C'est ce chiffre qui interdit d'écrire `bone.rotation.set(...)` comme pour les Animaux, et qui
-impose la composition `repos ⊗ delta` de `src/skeleton-pose.js`.
-
----
-
-## 3. Direction d'un os : dérivable, jamais universelle
-
-Direction de chaque os mappé vers son enfant, exprimée dans SON repère local :
-
-| Fichier | Axes dominants |
+| Fichier | Ce qu'il porte |
 |---|---|
-| `worker_j`, `capoera`, `female_pose`, `anime_girl1`, `anime_girl2` | `+Y` × 12 |
-| `hulk_-_sm_bnd` | `+X` × 7, `−X` × 5 |
-
-Le rig Unreal aligne ses os sur X, avec un signe qui s'inverse entre les deux côtés et entre bras
-et jambes. **Aucune convention ne peut donc être supposée**, mais la direction se MESURE, os par
-os, en lisant la position de l'enfant (qui est déjà exprimée dans le repère du parent).
-
-> ⚠️ **Correction d'une note antérieure.** J'avais écrit, à l'étape Rigs A, que sur `anime_girl1`
-> « les membres pointent selon +Y et la colonne selon −Z ». C'est faux : la colonne pointe elle
-> aussi vers +Y. Cette affirmation confondait la ROTATION de repos d'un os avec sa DIRECTION vers
-> son enfant, deux choses différentes. Elle a été recopiée telle quelle dans plusieurs
-> commentaires avant d'être vérifiée.
-
----
-
-## 4. Le repère du corps est dérivable, sans lire un seul nom
-
-- **haut** = bassin → tête
-- **droite** = clavicule droite → clavicule gauche
-- **avant** = haut ∧ droite
-
-| Fichier | haut | non-orthogonalité `haut·droite` |
-|---|---|---|
-| `anime_girl2` | `+Y` | 0,0000 |
-| `capoera` | `+Y` | 0,0108 |
-| `female_pose` | `+Y` | 0,0108 |
-| `hulk_-_sm_bnd` | `+Z` | 0,0000 |
-| `worker_j` | `+Z` | 0,0000 |
-| `anime_girl1` | `+Y` | **0,1052** |
-
-Deux axes verticaux différents cohabitent (`+Y` et `+Z`) : là encore, rien ne peut être supposé,
-mais tout se mesure.
-
-`anime_girl1` est le seul écart notable, environ 6°. Le modèle n'est pas dans une pose neutre
-(bras dissymétriques), ce qui incline la ligne d'épaules. Utilisable, mais c'est le cas à
-surveiller si une correction d'axes s'appuie sur ce repère.
-
----
-
-## 5. Ce que cela permet, et ce qui reste ouvert
-
-Les deux inconnues de l'étape « appliquer une pose à un squelette importé » sont donc **toutes
-deux dérivables de la géométrie** :
-
-1. l'axe le long de l'os, mesuré par la direction vers l'enfant ;
-2. l'orientation du corps, mesurée par le repère ci-dessus.
-
-Traduire « plier le coude vers l'avant » revient alors à exprimer l'axe de rotation voulu (celui du
-corps) dans le repère LOCAL de l'os, via l'inverse de sa rotation de repos en monde.
-
-**Ce qui reste ouvert** : une chaîne quasi rectiligne au repos (bras tendu) ne définit pas de plan
-de flexion, donc rien ne dit de quel côté un coude « devrait » plier. Le repère du corps contourne
-le problème pour les axes principaux, mais pas pour le sens de flexion d'une articulation dont le
-fichier ne donne aucun indice. Ce point n'est pas résolu et ne doit pas être présenté comme tel.
-
----
-
-## 6. Ce qui a été construit sur ces chiffres
-
-`src/skeleton-retarget.js` traduit un geste d'un corps à l'autre en passant par le repère mesuré
-ci-dessus, jamais par les axes bruts des os.
-
-**Le rig intégré n'y est pas un cas particulier** : son repère est mesuré par la même fonction que
-celui d'un fichier importé. Aucun signe n'est donc écrit à la main, et c'est délibéré, chaque
-signe écrit à la main étant un endroit où l'on peut se tromper sans que rien ne le signale. Un test
-refuse d'ailleurs que le module mentionne le rig intégré par son nom.
-
-### 6.1 Une mesure qui a changé le code : les clavicules confondues
-
-Le repère du corps était d'abord dérivé de **quatre** os : bassin, tête et les deux clavicules.
-Appliqué au Personnage intégré de l'application, il ne rendait rien du tout.
-
-Raison, mesurée sur le rig réellement construit :
-
-| Articulation | Position monde au repos |
-|---|---|
-| `hipGroup` | `(0, 0, 0)` |
-| `headGroup` | `(0, 0,660, 0)` |
-| `lClavicle` | `(0, 0,564, 0)` |
-| `rClavicle` | `(0, 0,564, 0)` |
-
-Les deux clavicules **pivotent au sternum**, ce qui est anatomiquement juste, une clavicule tournant
-au niveau du sternum et ne portant l'épaule qu'à son extrémité. Leur différence est le vecteur nul,
-et aucune direction latérale n'en sort.
-
-`repereDuCorps` retombe donc sur les **bras**, latéralement séparés sur tout humanoïde. Les deux
-paires pointent dans le même sens anatomique (de la droite du corps vers sa gauche), donc le repère
-obtenu est le même quelle que soit celle qui a servi. Tout fichier importé bâti de la même façon
-profite du même repli.
-
-### 6.2 La taille d'un modèle se mesure sur son corps
-
-Deux fichiers sur six sortaient une taille absurde à l'import : `hulk_-_sm_bnd.glb` à **0,845 m**,
-`worker_j.glb` à **9,433 m**, sans qu'aucun avertissement ne se déclenche.
-
-La mesure prenait l'extension en **Y** de la boîte englobante, et se trompait deux fois :
-
-| | ce qui était mesuré | pourquoi c'est faux |
-|---|---|---|
-| `hulk` | 0,845 m | mesure au décodage, **avant** la remise debout : c'est son épaisseur, sa taille est 2,374 m |
-| `worker_j` | 9,433 m | la boîte englobe **tout le fichier**, katana compris |
-
-La taille se mesure désormais sur les **os mappés**, projetés sur la verticale du corps, celle que
-`repereDuCorps` dérive du squelette lui-même. Aucun axe n'est supposé, et un accessoire posé à côté
-ne compte plus. Repli sur la boîte du maillage quand aucun squelette n'est reconnu : la même règle
-que le cadrage, deux chemins qui ne se recouvrent jamais.
-
-### 6.3 D'une pose du Personnage aux angles des os
-
-`src/pose-bridge.js` est le seul endroit où les deux vocabulaires de pose se rencontrent : les
-*champs* du Personnage (`lElbow`, `lClavicleRotZ`) et les *emplacements* de la correspondance
-(`avantbras_g`, `clavicule_g`).
-
-Appliquer une pose de la bibliothèque **remplace** les réglages manuels : le comportement du
-Personnage, conservé à l'identique volontairement. Le résultat est réécrit en trois angles par
-emplacement, c'est-à-dire exactement `skeletonPose3d` : la pose appliquée apparaît donc dans les
-curseurs, reste retouchable, et n'ajoute aucun champ persisté, donc aucune migration.
-
-⚠️ **Depuis #374, seuls les HUMANOÏDES la reçoivent.** Une créature ne récolte plus les dix-huit
-emplacements mais ses chaînes ; « assis » ne trouverait donc aucun os. Rétablir les emplacements
-pour que le geste « marche » n'aurait rien réparé : plier le « bras gauche » d'une araignée pliait
-une de ses huit pattes. Les poses par morphologie sont la tâche #375.
-
-### 6.2 ter Une correspondance peut resservir à un autre fichier (#386, modèle)
-
-Question de l'utilisateur : « si j'importe un autre cerbère, les changements précédents auront été
-pris en compte ? ». La réponse est en deux temps, et le second méritait du travail.
-
-**Réimporter le MÊME fichier ne fait rien perdre.** L'import compare le CONTENU octet par octet,
-reconnaît le doublon et réutilise le nom. La correspondance, indexée par nom de fichier, s'applique
-telle quelle.
-
-**Un fichier au contenu différent, même d'un octet**, devient `cerberus (2).glb` et repartait d'une
-correspondance vide. C'est ce cas que `correspondancesApplicables3D` traite.
-
-⚠️ **PAS UN SEUIL DE RESSEMBLANCE, une question fonctionnelle.** « Ces deux squelettes se
-ressemblent-ils ? » demanderait un seuil ; « cette correspondance peut-elle s'appliquer ICI ? » se
-répond par oui ou par non : chacun des os qu'elle nomme existe-t-il dans ce fichier ?
-
-**Mesure du risque de faux positif**, sur les 136 paires des dix-sept fixtures :
-
-| | |
-|---|---|
-| paires sans AUCUN os en commun | 87 sur 136 |
-| paire la plus proche | 2 os en commun, jaccard 0.011 |
-
-Aucun couple de modèles distincts n'approche, même de loin, le partage TOTAL qu'exige cette
-fonction. Un test le rejoue sur les dix-sept fixtures.
-
-⚠️ **Ce que la mesure ne dit pas, et qu'il faut dire aussi** : le corpus ne contient AUCUN couple de
-fichiers qui soient le même squelette. Le risque de faux positif est mesuré, la FRÉQUENCE des vrais
-positifs ne l'est pas. Cette proposition peut très bien ne se déclencher qu'une fois sur vingt.
-
-**Rien n'est appliqué en silence.** Elle propose, l'écran affiche, l'utilisateur tranche.
-
-### 6.2 quater Le rendu de la reprise (#386)
-
-**Un bandeau, pas une boîte de dialogue.** Cet écran s'ouvre DÉJÀ tout seul pendant un import ; en
-empiler une seconde rendrait l'import interrogatoire, et superposer deux modales est ce qui a coûté
-le blocage silencieux documenté en 6.2 bis. Ne rien faire vaut refus, la bonne valeur par défaut
-pour une proposition dont la pertinence n'est pas garantie.
-
-**Il est au-dessus du sélecteur de morphologie**, parce qu'une reprise la CHANGE. Le placer plus bas
-ferait régler à la main un sélecteur que le bouton du dessus allait corriger.
-
-**Un menu, et non une ligne par candidat.** Décision de l'utilisateur contre ma proposition : le
-bandeau garde une hauteur fixe quel que soit le nombre de réexports dans le dossier. J'avais proposé
-une ligne par candidat, plus lisible à trois, ingérable à dix, avec un repli au-delà de trois — un
-seuil que rien ne mesurait.
-
-⚠️ **AUCUNE DATE N'EST AFFICHÉE**, parce que le fichier des correspondances n'en garde aucune.
-« Le plus récent » serait le repère naturel pour choisir entre deux réexports ; l'inventer aurait été
-pire que de s'en passer. Le tri se fait sur le nombre d'os nommés, le plus riche d'abord.
-
-**Tout ou rien.** La reprise emporte les emplacements, les rôles, les chaînes ET la morphologie.
-Reprendre ligne par ligne coûterait exactement ce que la reprise prétend économiser.
-
-⚠️ **LES CANDIDATS NE SONT PAS FILTRÉS SUR LEUR ARCHÉTYPE**, et j'avais proposé l'inverse avant de me
-raviser en l'écrivant. L'archétype du fichier ouvert, à l'instant du bandeau, n'est pas un fait :
-c'est la proposition automatique, et c'est elle qui se trompe. Filtrer dessus masquerait le candidat
-PRÉCISÉMENT dans le cas où il a raison contre l'écran — un cerbère proposé `humanoide` alors que le
-fichier voisin porte le `quadrupede` corrigé à la main.
-
-**Une quatrième étiquette d'origine, `repris`.** Les trois autres disent d'où vient chaque ligne ;
-une correspondance reprise n'est aucune des trois, et la faire passer pour « votre choix » serait un
-mensonge dans un écran construit pour ne pas en faire.
-
-⚠️ **ELLE EST TENUE À PART DES DONNÉES.** `entreePourFichier` n'écrit un emplacement que si son
-origine vaut exactement `manuel` : marquer `repris` DANS la carte aurait fait disparaître toute la
-reprise au premier « Enregistrer », en silence. Les os repris restent donc `manuel`, et les clés
-reprises vivent dans un ensemble séparé, purement d'affichage, vidé par « Réinitialiser ».
-
-**`repris` compte comme SÛR** partout : les membres se replient, et le sous-titre ne les compte pas
-« à vérifier ». Le contraire rouvrirait quatorze membres juste après le clic censé les régler.
-
-#### Ce que la campagne de mutation a trouvé, et qui n'était pas dans le programme
-
-Six mutations sur vingt-neuf ont échappé. Deux ont été tuées en corrigeant le CODE, et les deux
-défauts étaient **antérieurs** à cette tâche :
-
-- `depuisLaCarte3D` lisait `enregistre.os`, alors que les choix humains d'un humanoïde sont déjà
-  dans la carte et que son appelant passe `{}`. Du code MORT, supprimable sans qu'un seul des 2239
-  tests ne bronche. Retiré, pas testé.
-- `pireOrigine3D` partait d'une graine figée à `manuel`. `repris` étant au même rang, l'égalité était
-  toujours tranchée par la graine : un membre entièrement repris s'annonçait « votre choix », et la
-  valeur `repris` était **inatteignable**. La graine est désormais le premier rôle ; pour les quatre
-  origines antérieures, `manuel` étant le rang le plus bas, rien ne change.
-
-Deux autres ont été tuées en corrigeant des tests satisfaits par une ABSENCE :
-
-- une comparaison d'ordre sur `indexOf` — supprimer l'appel rendait -1, inférieur à tout indice,
-  donc la comparaison passait. Septième occurrence de ce piège dans ce dépôt ;
-- le bouton figé sur `candidats[0]` : le menu s'ouvrait, se changeait, et n'avait aucun effet.
-
-### 6.2 quinquies Le critère de #386 ne s'ouvrait JAMAIS (#387)
-
-Signalé à l'usage, une journée après la livraison : « j'ai créé une copie de cerberus, quand je
-l'importe le bandeau n'apparaît pas ».
-
-**Mesuré sur le fichier réel**, avant de toucher au code :
-
-| fichier | morphologie | os nommés |
-|---|---|---|
-| `cerberus.glb` | `quadrupede` | **0** |
-| les neuf autres | aucune | **0** |
-
-Le critère de #386 — « chacun des os que l'entrée nomme existe-t-il ici ? » — écartait donc la
-TOTALITÉ du corpus réel. ⚠️ La fréquence de vrais positifs que j'avais déclarée « non mesurée »
-valait **zéro**, et j'aurais pu la mesurer avant de livrer : le fichier était là.
-
-⚠️ **ET C'ÉTAIT LA MÊME PHRASE, DEUX FOIS.** J'avais écrit « une entrée qui ne nomme aucun os
-n'apprend rien ». Le fichier `skeleton-store.js` contient, depuis longtemps, le démenti de la version
-antérieure de cette phrase : « le commentaire que j'avais écrit à l'époque, *une entrée sans os
-n'apprend rien*, était faux ». Une entrée apprend ce que l'utilisateur a **tranché**, et un choix ne
-se mesure pas au nombre d'os qu'il touche. Le cas écarté était le plus utile de tous : une morphologie
-corrigée à la main, sans un seul os touché, c'est-à-dire précisément ce que la reconnaissance
-automatique rate le plus souvent.
-
-**Deux vérifications faites avant de conclure**, pour ne pas corriger au mauvais endroit :
-
-- les deux `.glb` sont **octet pour octet identiques** (même md5), mais l'import ne déduplique que si
-  le NOM correspond aussi. « cerberus - Copie.glb » est donc bien un second fichier : ce n'est pas la
-  déduplication qui privait l'utilisateur du bandeau ;
-- l'écran s'ouvrait bien, l'entrée du nouveau fichier n'existant pas.
-
-**La correction : une empreinte du squelette dans l'entrée.** Sans os nommés, rien dans le fichier ne
-permettait de dire que deux squelettes sont les mêmes ; l'empreinte le dit. Une entrée est désormais
-retenue si son empreinte est celle de ce squelette **ou** si chacun de ses os nommés existe ici — la
-seconde porte restant la seule utilisable pour les entrées écrites avant #387, et couvrant en plus le
-squelette **élargi** d'un réexport.
-
-Et la condition d'utilité porte désormais sur les **décisions** (morphologie, os, rôles, chaînes), non
-plus sur le nombre d'os. `valide` n'en est pas une : il dit « j'ai vu », il n'y a rien à en reprendre.
-
-**Ce qui a été écarté, et pourquoi :**
-
-| piste | pourquoi non |
-|---|---|
-| enregistrer la LISTE des noms d'os | mesuré : 1,1 ko pour le cerbère, **31 ko** pour un rig Unreal à 1126 os, dans un fichier partagé par tous les Projets |
-| proposer toute entrée portant une morphologie, sans vérifier | n'importe quel fichier proposerait sa morphologie à n'importe quel autre |
-| décoder le `.glb` du candidat pour comparer | 34 Mo à lire, de façon asynchrone, dans un écran au rendu synchrone |
-
-**Mesures de la correction :**
-
-| | |
-|---|---|
-| empreintes distinctes sur les 17 fixtures | 17 sur 17 |
-| stable si les os sont réordonnés | oui (les noms sont TRIÉS avant condensation) |
-| change si UN seul nom change | oui |
-| faux positifs, la porte de l'empreinte grande ouverte | 0 sur 17 |
-| corpus réel, avant / après | 0 candidat / 1 candidat |
-
-**Le prix, dit à l'utilisateur avant de commencer** : les entrées existantes n'ont pas d'empreinte. Il
-faut rouvrir et enregistrer **une fois** chaque fichier déjà réglé pour l'amorcer. Ensuite c'est
-automatique.
-
-#### La mutation qui a produit un test de contrat
-
-Remplacer `Math.imul(h, k)` par `h * k` — la multiplication flottante, qui perd ses bits de poids
-faible au-delà de 2^53 — a échappé à la campagne. La mesure a montré pourquoi : sur 10 000 jeux de
-noms voisins, les deux versions donnent 10 000 empreintes distinctes, et utilisent leurs 32 bits.
-La différence n'est donc **pas** dans la qualité du hachage.
-
-Elle est ailleurs, et elle est grave : `49-ebfba2f4` devient `49-58e273f4`. Modifier le calcul, même
-en l'améliorant, rend muettes **toutes les empreintes déjà écrites sur le disque**, et le bandeau
-cesse de s'afficher partout, sans erreur ni message, longtemps après la cause. Le test gèle donc des
-valeurs témoins : il ne vérifie pas que le calcul est bon, il vérifie qu'il ne change pas.
-
-### 6.2 bis Ouvrir l'écran repart de ce qui est enregistré (#385)
-
-Signalé à l'usage : « je passe le cerbère en quadrupède, j'enregistre, je rouvre, et il est de
-nouveau humanoïde ». Le fichier sur le disque, lui, portait bien `quadrupede`.
-
-**La cause** : le bouton « Tableau de correspondance » de la fiche d'un Élément passait
-`ignorerEnregistree: true`, un drapeau écrit pour « Réinitialiser », dont le rôle est justement de
-JETER ce qui a été enregistré. Ouvrir cet écran depuis une fiche repartait donc de la reconnaissance
-automatique et perdait tout : morphologie, emplacements corrigés à la main, chaînes cochées, rôles.
-Enregistrer ensuite écrasait le fichier avec la proposition automatique.
-
-⚠️ **Le défaut est antérieur à tout le chantier des créatures.** Il date de l'écran d'origine, où il
-ne se voyait presque pas : la reconnaissance automatique redonne souvent les mêmes emplacements, et
-il n'y avait alors ni morphologie ni chaînes pour rendre la perte évidente.
-
-**Le drapeau est SUPPRIMÉ, pas corrigé.** Sa documentation désignait un appelant qui ne l'utilisait
-pas : « Tout remettre en automatique » passe en réalité par `oublierCorrespondance` puis rafraîchit
-l'écran ouvert. Un drapeau dont la documentation invoque un faux appelant donne une raison de le
-garder, et le prochain lecteur le rebranche.
-
-### 6.3 bis La morphologie décide d'où viennent les curseurs (#374)
-
-Elle décide aussi de ce que MONTRE l'écran de correspondance (#377) : un humanoïde y voit ses
-dix-huit emplacements, une créature son tronc et ses chaînes, jamais les deux. Cet écran montre ce
-qui pilote le rig, et rien d'autre ; changer le sélecteur échange les deux listes aussitôt.
-
-Un fichier articulé a **deux jeux d'os pilotables possibles**, et un seul est actif à la fois :
-
-| morphologie | curseurs et poignées | clé de pose |
-|---|---|---|
-| `humanoide` | les dix-huit emplacements, comme avant | `tete`, `avantbras_g`, … |
-| tout le reste | le tronc et les chaînes cochées (#373) | `os:<nom de l'os>` |
-
-C'est `groupesDeCurseurs3D` (`src/rig3d.js`) qui tranche, **une seule fois**, et la fiche, le rig et
-les poignées l'appellent tous. Trois lecteurs qui trancheraient chacun de leur côté finiraient par
-diverger, et la fiche montrerait les curseurs d'une morphologie pendant que le rig récolterait ceux
-d'une autre.
-
-⚠️ **Un os n'est récolté que sous une seule clé.** `applySkeletonPose` réécrit le quaternion de
-chaque entrée récoltée ; deux entrées visant le même os se termineraient par « la dernière parcourue
-gagne ». D'où une branche, jamais une union. Seule exception, le bassin d'un humanoïde : récolté
-sans curseur, parce que `repereDuModeleImporte` a besoin de sa position.
-
-Les os de tête de tronc, ceux qui portent la totalité des membres, n'ont pas de curseur. Critère
-STRUCTUREL et non un pourcentage : la fraction du squelette entraînée décroît sans aucun trou où
-couper (araignée 100, 99, 90, 67 % ; serpent 100, 99, 92, 91, 90 %), et n'importe quel seuil aurait
-coupé le serpent en plein tronc. Cf. [creature-rigs.md](creature-rigs.md).
-
-### 6.4 Le cadrage : ce qui est peint ET chaque poignée
-
-Le cadrage de la fiche et de l'éditeur s'est fait sur les **os seuls** pendant une dizaine de
-versions, pour une bonne raison : la boîte du maillage de `worker_j` était polluée par le fourreau
-de son katana. Cette raison a disparu : ce maillage est détecté et masqué (§ 6.4 ci-dessous), et la
-boîte l'ignore.
-
-Or les os seuls ne suffisaient pas, et c'était mesurable. Le cadrage laisse 22 % de marge ; voici de
-combien le maillage dépasse les os sur les fichiers réels :
-
-| fichier | dépassement max | rogné ? |
-|---|---|---|
-| `hulk_-_sm_bnd` | 13 % | non, seul des trois sous la marge |
-| `anime_girl1` | 24 % (en haut) | cheveux tout juste coupés |
-| `worker_j` | 28 % (en haut) | sommet du crâne coupé |
-
-Le cadre est désormais l'**union** des deux boîtes, et cette union n'est pas un compromis : elle est
-la somme de deux exigences distinctes. Le maillage visible, parce qu'un modèle dont les cheveux
-sortent du cadre est mal cadré. Les os mappés, parce que les poignées d'articulation sont dessinées
-à leur position, et qu'une poignée hors champ ne se clique pas.
-
-La **taille** de l'Élément, elle, continue de se mesurer sur les os seuls (§ 6.2). Cadrer et
-dimensionner sont deux questions distinctes ; c'est leur confusion qui avait produit les défauts
-des tâches #333 et #334.
-
-### 6.5 Un maillage que le fichier place hors du corps
-
-Signalé à l'usage sur `worker_j.glb` : un gros objet noir flotte très au-dessus du personnage dans
-la Case, et paraît « se décrocher » quand on redimensionne l'Élément.
-
-**Ce qui a été mesuré**, directement dans le glTF, avant d'écrire une ligne de code :
-
-| | boîte en monde, sur Y |
-|---|---|
-| corps, cheveux, chapeau, épées, armure | −0,3 → 41,8 |
-| `Sheath_1_Outfit_0` (le fourreau) | **91,4 → 131,4** |
-
-Le personnage mesure 33 unités : le fourreau flotte à trois fois sa hauteur.
-
-**Deux hypothèses ont été réfutées avant celle-ci**, et les écrire évite de les reprendre :
-
-1. *« aucun os ne le pilote »* : faux. Il est pesé à 100 % sur `Sheath_080`, enfant régulier de
-   `Spine_010`. Et cette piste était de toute façon sans issue : GLTFLoader appelle
-   `normalizeSkinWeights()`, qui remplace un vecteur de poids nul par `(1, 0, 0, 0)`. Après
-   décodage, un maillage sans poids est indiscernable d'un maillage attaché au premier os, et une
-   détection lisant `skinWeight` ne peut jamais se déclencher (test « MESURE » dans
-   `tests/glb-decoding.test.mjs`).
-2. *« c'est le redimensionnement »* : faux, le symptôme est là sans redimensionner. Rien ne se
-   décroche : le fourreau a toujours été là-haut. L'illusion vient d'un effet de **levier** : la
-   mise à l'échelle est uniforme autour d'un centre calculé sur les os, donc un point trois fois
-   plus loin se déplace trois fois plus à l'écran.
-
-**Le critère retenu n'a pas de seuil** : un maillage est égaré s'il ne recoupe la boîte d'aucun
-autre. Pas de distance maximale, pas de multiple de la hauteur du corps ; « ne touche rien » est une
-propriété du fichier, pas un réglage. Vérifié par lecture directe des six fichiers réels :
-
-| fichier | maillages | égarés |
-|---|---|---|
-| `anime_girl1` | 20 | aucun |
-| `anime_girl2` | 15 | aucun |
-| `hulk_-_sm_bnd` | 12 | aucun |
-| `worker_j` | 12 | `Sheath_1_Outfit_0` |
-| `capoera`, `female_pose` | 1 | hors critère |
-
-Ce masquage vaut aussi pour les BOÎTES : `expandBoxSkinAware3D` ignore un maillage dont la
-visibilité propre est `false`. Ce n'est pas cosmétique : `placeRigCentered3D` déduit de cette boîte
-l'échelle et le centre du rig posé dans une Case. Sur `worker_j` décodé, le fourreau la faisait
-passer de z −18,5..6,1 à z −28,4..52,4 : un facteur 4,6 sur l'échelle, et un modèle qui atterrissait
-à côté de sa Case. La visibilité du GROUPE n'est volontairement pas consultée : masquer un Élément
-entier (« Invisible dans la scène 3D ») ne doit pas vider sa boîte, sous peine de le faire
-réapparaître n'importe où.
-
-Ces maillages sont **masqués**, jamais supprimés : la géométrie reste dans le clone, le fichier sur
-le disque n'est pas touché, et la case « Afficher les morceaux détachés » de la fiche les rend. Le
-champ persisté `afficherMaillagesEgares` n'est écrit que lorsqu'il vaut `true`, et son absence
-signifie « masqués », qui est le défaut.
-
-
-## 7. Ce qui est vérifié, et ce qui ne peut l'être que manuellement
-
-### 7.1 L'audit (tâche #310)
-
-Onze modules composent ce chantier. Deux mesures ont été faites plutôt que supposées :
-
-- **surface publique couverte** : sur l'ensemble de leurs exports, un seul n'est jamais nommé dans
-  les tests : `loadedModelNames`, exercé indirectement par `figuresPosables` (rig3d.js). Un
-  deuxième, `produitVectoriel`, n'était exporté que par inadvertance : il ne servait qu'à son
-  propre fichier, et l'export a été retiré. Une surface publique que rien n'appelle est une surface
-  que rien ne vérifie ;
-- **campagnes de mutation** : chaque module en porte désormais le journal, dans son fichier de test.
-  Les trois modules du cœur (`skeleton-pose`, `skeleton-retarget`, `pose-bridge`) n'en avaient
-  aucun ; douze mutations y ont été jouées, onze rouges. La douzième était une garde REDONDANTE,
-  corrigée dans le code et non dans les tests.
-
-### 7.2 Ce que les tests ne peuvent pas dire
-
-Aucun test de ce dépôt ne décode un vrai `.glb` de modélisateur. Le témoin versionné n'a ni texture,
-ni matériau, ni extension, et les six fichiers d'essai pèsent 22 Mo qui appartiennent à
-l'utilisateur. Surtout, **GLTFLoader ne décode pas ces fichiers sous Node** : leurs textures
-réclament un environnement navigateur.
-
-C'est une limite structurelle, pas un manque de zèle, et elle explique que TOUS les défauts sérieux
-de ce chantier aient été trouvés à l'usage, jamais par la suite de tests :
-
-| trouvé à l'usage | cause réelle |
-|---|---|
-| worker_j n'affiche que ses articulations | trois causes chaînées (repères mixtes, élimination par le tronc de vue, plans de coupe) |
-| taille aberrante à l'import | la mesure, pas le seuil |
-| un accessoire flotte au-dessus du personnage | géométrie de liaison incohérente dans le fichier |
-| un modèle atterrit hors de sa Case | un geste de création oublié sur le troisième chemin |
-| boîte de sélection trop large | rapport mesuré dans le repère du fichier, pas du corps |
-| aperçu rogné en haut | cadrage sur les os seuls, marge insuffisante |
-
-### 7.3 L'essai manuel, et ce qu'il doit couvrir
-
-Sur chacun des six fichiers, en partant d'une Case VIDE :
-
-1. importer le modèle : il doit apparaître centré, à une taille comparable à celle d'un Personnage ;
-2. ouvrir sa fiche : l'aperçu doit le montrer en entier, cheveux et accessoires compris ;
-3. lui appliquer une pose de la bibliothèque, puis retoucher un curseur : les deux doivent se voir ;
-4. changer sa taille, le déplacer, le faire tourner ;
-5. enregistrer, fermer, rouvrir le Projet : tout doit être exactement dans le même état.
-
-Le point 5 est le plus important : c'est le seul qui exerce la forme persistée de bout en bout.
-
-### 7.4 Deux conventions de « devant », et ce qu'elles imposent
-
-Le Personnage intégré et un modèle importé ne regardent pas du même côté, et l'écart n'est écrit
-nulle part dans les fichiers :
-
-| | devant | conséquence |
-|---|---|---|
-| Personnage intégré | −Z | `rotY: Math.PI` à sa création dans une Case (events.js) |
-| Modèle importé | +Z (les six fichiers d'essai) | `rotY: 0` à sa création (model-store.js) |
-
-L'Éditeur de modèle ouvrait sa caméra sur un demi-tour **fixe**. C'est ce qu'il faut au premier,
-et c'est exactement ce qui retourne le second : tous les modèles importés s'ouvraient de dos.
-
-**La règle est désormais mesurée** (`orbiteDeFace3D`, utils.js) : l'azimut d'ouverture est celui qui
-place la caméra du côté du devant, lui-même dérivé du repère de corps du fichier
-(`repereDuCorpsPourFichier3D`). Coder `0` en dur aurait suffi pour les six fichiers d'essai, et
-laissé de dos le premier fichier exporté autrement.
-
-⚠️ **La règle porte sur la CAUSE, pas sur le moment.** L'azimut se reprend **quand la figure
-change**, ce qui arrive à deux endroits : l'ouverture de l'Éditeur, et le sélecteur « Modèle » de son
-panneau droit. La première version ne traitait que l'ouverture : entrer sur le Personnage puis
-choisir un modèle importé le montrait encore de dos. Une règle formulée sur le moment plutôt que sur
-la cause laisse toujours un moment dehors.
-
-Seul l'azimut est repris : l'élévation, le zoom et le déplacement ne dépendent pas de la figure, et
-les remettre à neuf annulerait un cadrage que l'utilisateur vient de composer.
-
-⚠️ **Deux pièges y sont consignés**, tous deux constatés et non supposés :
-
-- `repereDuCorps().avant` pointe vers l'**arrière visuel**. C'est une dérivée géométrique
-  (`avant = haut ∧ droite`), pas une lecture de ce qui est dessiné. Mesuré sur le Personnage, dont
-  le devant est connu par construction ;
-- `wrapAngle` ramène dans **[−π, π)** et non dans ]−π, π] comme l'annonce le commentaire qui
-  l'accompagne : il envoie π sur −π. S'en servir pour normaliser cet azimut renverrait −π pour le
-  Personnage, qui ne se compare plus à la constante existante.
-
-⚠️ **La correction reste côté caméra.** Faire pivoter la figure de 180° remettrait ses axes de
-travers vis-à-vis du monde, et le calcul de direction du glisser d'une poignée
-(`projectModelAxisToScreen3D`) redeviendrait faux, c'est ce que le Fix 76 avait supprimé.
-
-### 7.5 « Allongé » — un geste du corps entier, pas une articulation
-
-`POSE_3D.allonge` est `debout` plus un drapeau `lieFlat`. Le Personnage intégré le consomme en
-tournant son groupe RACINE (`J.root.rotation.z = π/2`). Le pont vers les os importés traduit des
-angles **os par os** : un drapeau qui fait tourner le corps entier n'est pas un angle d'os, et il
-tombait : le modèle restait debout.
-
-**Le geste, mesuré** sur le rig intégré (repère du corps avant/après application de la pose) :
-
-|  | droite | haut | avant |
-|---|---|---|---|
-| debout | (−1, 0, 0) | (0, 1, 0) | (0, 0, 1) |
-| allongé | (0, −1, 0) | (−1, 0, 0) | (0, 0, 1) |
-
-soit, dans le repère du corps : **droite → −haut, haut → droite, avant inchangé**. Un quart de tour
-autour de l'axe *avant*, donc, exprimable dans n'importe quel corps, comme les angles le sont déjà.
-
-⚠️ **On ne recopie pas `rotation.z = π/2`** : hulk est debout selon +Z, ce quart de tour le
-coucherait de travers.
-
-⚠️ **Une matrice, pas un axe-angle.** Le SIGNE de l'angle dépendrait de l'orientation du trièdre, et
-`repereDuCorps` n'en garantit aucune : mesuré, celui du Personnage est **gaucher** (déterminant −1).
-Construire la rotation depuis la correspondance ne demande aucun pari. Elle reste propre
-(déterminant +1) dans les deux cas : la permutation signée est la même des deux côtés.
-
-⚠️ **Le repère est lu sur la scène du CACHE, jamais sur le clone affiché.** Le clone porte déjà la
-bascule quand elle est active : y relire le repère composerait la rotation une seconde fois à chaque
-appel, et le modèle tournerait sur lui-même image après image.
-
-**Un groupe de pose** (`poseGroup`) s'intercale entre `figureGroup` (qui porte l'orientation de
-l'Élément) et le clone. Les écrire au même endroit ferait que l'une écraserait l'autre.
-
-#### L'ÉCHELLE
-
-`placeRigCentered3D` déduit le facteur de la hauteur de la boîte (`s = hauteurCible / size.y`).
-Couché, un corps est bas et large : le facteur s'emballe. Le Personnage s'en protège par
-`entry.deboutNaturalH`, mesuré **une fois à la construction** du rig ; un modèle importé ne peut pas
-faire pareil : sa pose change sans que le rig soit reconstruit.
-
-`hauteurDeboutModele3D` (scene3d.js) mesure donc **à chaque placement**, en neutralisant la bascule
-le temps de la mesure, et rien d'autre.
-
-⚠️ **La bascule ET la pose sont neutralisées**, la même règle que le Personnage. La taille d'un
-Élément décrit sa **stature**, pas son encombrement à l'instant : un modèle accroupi est plus bas, et
-sans cela son facteur d'échelle enflait d'autant.
-
-Ce n'a pas toujours été le cas : la première version ne neutralisait que le couchage, ce qui laissait
-l'incohérence sur toutes les autres poses. L'étendre **change la taille** des modèles importés déjà
-posés autrement que debout dans les Projets existants, arbitré avec l'utilisateur, pas glissé dans
-un correctif.
-
-⚠️ **La pose est neutralisée sur place, pas relue ailleurs.** Mesurer la scène du cache serait plus
-simple et serait faux : `boneTransform` lit `skeleton.boneMatrices`, qui ne sont calculées qu'**au
-rendu**. Sur une scène jamais rendue, la boîte sensible au skinning décrit donc la géométrie de
-liaison dans le repère du **fichier**, l'erreur qui a produit trois correctifs faux.
-
-⚠️ **Même boîte que le placement**, passée en paramètre, pas une seconde mesure. Et l'échelle du rig
-est remise à 1 avant de mesurer : la mesure a lieu AVANT `placeRigCentered3D`, donc le rig porte
-encore l'échelle de l'image précédente.
-
-### 7.6 Trois fabricants d'Élément temporaire, trois occasions de perdre un champ
-
-Le rig d'un modèle importé est construit par **une** fonction, mais alimenté depuis **trois** endroits :
-
-| | l'Élément vient de |
-|---|---|
-| la Case | l'Élément réel du Projet |
-| l'aperçu de la fiche | un Élément TEMPORAIRE (`drawObjectPreview`) |
-| l'Éditeur | un autre Élément TEMPORAIRE (`dessinerModeleDansEditeur`) |
-
-Les deux derniers recopient les champs **un à un**. Cette énumération est juste le jour où on l'écrit
-et prend du retard à chaque champ ajouté ailleurs. Ont déjà été perdus :
-
-- `maillagesEgares` (dans `buildPropRig3D`) : masquage écrit et testé, sans effet **deux versions
-  durant** ;
-- `afficherMaillagesEgares` : transmis par l'appelant, jamais recopié : cocher la case ne changeait
-  rien à l'aperçu ;
-- `joints3d` et `position` : sans l'**intention**, « allongé » restait invisible dans l'aperçu et
-  dans l'Éditeur, alors que la Case couchait bien le modèle.
-
-⚠️ **La distinction qui compte** : `skeletonPose3d` porte des angles d'**os**, le RÉSULTAT.
-Ce qui se joue au niveau du **corps** (« allongé », qui bascule la figure entière) ne voyage que dans
-l'INTENTION. Transmettre l'un sans l'autre donne un aperçu qui montre les bonnes articulations sur un
-corps mal orienté.
-
-Un test **dérive** désormais la liste au lieu de la réciter : il relit les champs que
-`ensureObjectRigEntry3D` lit sur son Élément et exige que chacun arrive, sauf exclusions justifiées
-(identifiant de rig propre à l'aperçu, taille simulée par la caméra). ⚠️ Les lectures **indirectes**
-ne se dérivent pas : `getEffectiveJoints(o)` lit `joints3d` et `position` sans que le rig les nomme,
-et sont donc ajoutées explicitement. C'est précisément ce trou qui avait laissé passer `joints3d`.
+| `src/skeleton-map.js` | La reconnaissance : les dix-huit emplacements humanoïdes (`SLOTS`), `inferSkeletonMap`, les chaînes (`membresDuSquelette3D`), la morphologie suggérée (`archetypeSuggere3D`), les lignes de l'écran de correspondance. |
+| `src/skeleton-store.js` | Ranger et relire les correspondances, et fusionner ce que l'utilisateur a corrigé avec ce que la reconnaissance propose. |
+| `src/archetype-roles.js` | Les rôles de chaînes par archétype, et leur proposition automatique (`propositionDeRoles3D`). |
+| `src/skeleton-pose.js` | La pose d'un squelette importé : clés, angles, composition avec la rotation de repos, groupes de curseurs. |
+| `src/skeleton-retarget.js` | Traduire un geste d'un corps à l'autre par la géométrie des os. |
+| `src/pose-bridge.js` | Le passage entre les poses du Personnage intégré et les emplacements d'un modèle importé. |
+| `src/constants.js` | `ARCHETYPES_3D`, `ANIMAL_ARCHETYPES_3D`, `ANIMAL_JOINT_DEFS`. |
+
+## Reconnaître les os
+
+- **Le nom donne le côté**, pas le rôle : « Left », « _L », « _l_ » se reconnaissent dans toutes les
+  conventions rencontrées (`coteDuNom`). Le rôle d'un os ne se lit pas dans son nom (« Left_leg » peut
+  être la cuisse, « Left_elbow » l'avant-bras) : un os mal attribué est pire qu'un os manquant.
+- **La structure donne le rôle** : la hiérarchie, les longueurs, la position par rapport au corps.
+- **Le repère du corps** (haut, devant, gauche) se dérive de la géométrie du squelette, sans lire de nom
+  (`repereDuCorpsPourFichier3D`).
+- **Les os d'échafaudage** (racines, contrôleurs, os d'effets d'un modèle de jeu) sont écartés des
+  candidats (`estEchafaudage3D`).
+
+## Morphologies et archétypes
+
+La morphologie d'un modèle est une clé d'`ARCHETYPES_3D` : `humanoide`, `bipede_queue`, `quadrupede`,
+`bipede_aile`, `quadrupede_aile`, `centaure`, `arachnide`, `radial`, `serpentin`, `complexe`.
+`archetypeSuggere3D` en propose une, avec son origine (le nom des chaînes, ou la structure seule) ; ce
+n'est jamais un verdict : l'utilisateur peut en changer, et « Complexe » donne l'écran générique où
+chaque chaîne se coche et se nomme à la main. Les Animaux intégrés ont chacun la leur
+(`ANIMAL_ARCHETYPES_3D`).
+
+- **Humanoïde** : dix-huit emplacements (`tete`, `avantbras_g`, `cuisse_d`…), correspondance stockée
+  dans `os`.
+- **Autre morphologie** : le squelette est décomposé en **chaînes** (membres) ; chaque chaîne reçoit un
+  **rôle** d'archétype (patte avant gauche, aile, queue…), correspondance stockée dans `roles`. Les
+  rôles reprennent les identifiants d'articulation des Animaux intégrés (`ANIMAL_JOINT_DEFS`) ; la tête
+  se cherche sur le tronc.
+
+## La correspondance
+
+- Elle appartient au **fichier**, pas à l'Élément ni au Projet : rangée à côté du dossier `Modeles`,
+  indexée par nom de fichier, elle vaut pour tous les exemplaires du modèle. Elle ne voyage pas avec un
+  Projet transmis (le `.glb` non plus).
+- Elle mémorise des **noms d'os**, jamais des indices de nœud (un réexport renumérote tout).
+- Ce que l'utilisateur a corrigé **prime** sur la reconnaissance ; le reste vient d'elle.
+- Une correspondance peut resservir à un **autre fichier** au même squelette : l'`empreinte` (nombre
+  d'os et condensé) le reconnaît (`correspondancesApplicables3D`).
+- Le format (clés `os`, `roles`, `membres`, `morphologie`, `valide`, `empreinte`) est dans
+  [persisted-data.md](persisted-data.md).
+
+L'écran de correspondance (« Tableau de correspondance », depuis l'Éditeur de modèle) montre la même
+chose que les curseurs : les emplacements ou les chaînes et leurs rôles, avec la proposition et ce qui
+a été corrigé.
+
+## Poser un squelette
+
+- **Les rotations de repos ne sont pas nulles** : dans un fichier réel, presque tous les os sont déjà
+  tournés au repos. Une pose s'applique donc **par-dessus** la rotation de repos
+  (`orientationFinale`), jamais à sa place.
+- **La pose** est un dictionnaire `skeletonPose3d` : `{ clé: {x, y, z} }` en radians, la clé étant un
+  emplacement ou un os préfixé `os:` (`PREFIXE_OS_3D`). Angles bornés à ±180° ; le bassin n'est pas
+  posable (`SLOTS_NON_POSABLES`).
+- **Les curseurs** viennent de la morphologie : emplacements pour un humanoïde, chaînes et rôles pour
+  une créature (`groupesPosablesMembres3D`, `clesARecolter3D`).
+- **Une pose de la bibliothèque** (vocabulaire du Personnage intégré : `lElbow`…) est traduite vers les
+  emplacements par `pose-bridge.js`, et vers les axes réels de chaque os par `skeleton-retarget.js`,
+  qui mesure la direction des os au lieu de supposer un axe (les fichiers alignent leurs os sur +Y,
+  ±X ou +Z selon l'exportateur).
+- **« Allongé »** est un geste du corps entier, porté par l'intention (`joints3d`, `position`), pas par
+  un angle d'os.
+
+## Devant et cadrage
+
+- Le Personnage intégré regarde vers −Z (`rotY: Math.PI` à sa création), un modèle importé vers +Z
+  (`rotY: 0`). L'Éditeur de modèle ouvre sa caméra du côté du devant mesuré (`orbiteDeFace3D`).
+- La boîte de cadrage n'unit que les os qui déforment quelque chose (cf.
+  [imported-models-display.md](imported-models-display.md)).
+
+## Tester
+
+`tests/skeleton-*.test.mjs`, sur des squelettes relevés dans de vrais fichiers (humanoïdes et créatures, `tests/fixtures/squelette-*.json`).
+Ce que les tests ne disent pas (un membre qui part de travers, un modèle vu de dos) se vérifie à l'écran
+dans l'Éditeur de modèle, sur chaque morphologie.
+
+## Pièges
+
+- **Ne jamais déduire un rôle d'un nom d'os.**
+- **Toute clé d'une entrée de correspondance doit être nommée dans `normaliserFichier`** (cf.
+  [persisted-data.md](persisted-data.md)).
+- **Trois fabricants d'Élément** alimentent le rig d'un modèle importé : la Case, l'aperçu de la fiche
+  (`drawObjectPreview`) et l'Éditeur (`dessinerModeleDansEditeur`). Un champ ajouté doit arriver aux
+  trois ; un test dérive la liste des champs lus par `ensureObjectRigEntry3D`.
+- **Ne pas coder le devant en dur** : il se mesure par fichier.

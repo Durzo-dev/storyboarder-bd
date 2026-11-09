@@ -146,7 +146,7 @@ export function imageDeLaCase3D(o){
  * ⚠️ C'EST LA QUESTION QUI DÉCIDERA DE TOUT LE RESTE (#403b, #403c) : ce qu'on dessine, ce que le
  * menu contextuel propose, ce que le panneau de droite montre. Elle est écrite ICI, une fois, pour
  * que ces trois écrans ne se mettent pas à répondre chacun de leur côté — c'est le défaut qui est
- * revenu trois fois pendant le chantier des poses (cf. docs/en/archetype-poses.md).
+ * revenu trois fois pendant le chantier des poses.
  */
 export function casePorteUneImage3D(o){
   // ⚠️ LA CASE D'UNE PLANCHE IMPORTÉE PORTE L'IMAGE DE LA PLANCHE SANS ÊTRE UNE « CASE À IMAGE » :
@@ -326,7 +326,7 @@ export function caseAccepteUneImage3D(o, estCanevasDeScene){
  * unique de #403c.
  *
  * ⚠️ TROIS ÉCRANS POSAIENT LA MÊME QUESTION, ET C'EST EXACTEMENT AINSI QUE LE DÉFAUT DES POSES EST
- * REVENU TROIS FOIS (cf. docs/en/archetype-poses.md). Le menu contextuel, le panneau de droite et le
+ * REVENU TROIS FOIS. Le menu contextuel, le panneau de droite et le
  * dessin ont tous besoin de savoir si une Case porte une image ; ils le demandent ici, ils ne le
  * recalculent pas.
  *

@@ -155,9 +155,11 @@ describe('docs/ : les renvois depuis le code visent une note existante', () => {
     const racine = join(DOCS, '..');
     // Ce fichier-ci est exclu du balayage : il cite « docs/en/xxx.md » comme EXEMPLE dans son propre
     // libellé de test, et se ferait tomber lui-même. Le scanner ne se scanne pas.
-    const sources = ['src', 'tests', 'tools'].flatMap(d =>
+    // Le HTML, le CSS et le processus principal aussi : deux renvois morts y ont vécu sans que rien
+    // ne le signale, le balayage ne regardant que le JavaScript de src/, tests/ et tools/.
+    const sources = ['src', 'tests', 'tools', 'electron'].flatMap(d =>
       readdirSync(join(racine, d))
-        .filter(f => (f.endsWith('.js') || f.endsWith('.mjs')) && f !== 'docs.test.mjs')
+        .filter(f => /\.(m?js|html|css)$/.test(f) && f !== 'docs.test.mjs')
         .map(f => join(d, f)));
     let renvois = 0;
     sources.forEach(rel => {
