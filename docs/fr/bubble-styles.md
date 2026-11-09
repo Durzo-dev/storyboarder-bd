@@ -1,1054 +1,127 @@
-# Le vocabulaire graphique des Bulles — décisions arrêtées
+# Les Bulles
 
 *[English version](../en/bubble-styles.md)*
 
-Chantiers #424 et #425. Cette note est écrite **avant** le code, comme celles de
-[lighting](lighting.md) et [positioned-lights](positioned-lights.md). Son objet est de fixer ce qui
-se décide une fois : de quoi une Bulle est faite, et pourquoi ce n'est pas une liste de styles
-nommés.
+## Rôle
 
-Elle s'appuie sur un relevé de **douze œuvres**, bande dessinée franco-belge, comics américain et
-webtoon coréen. Le corpus et son statut de vérification sont donnés en fin de note.
+Une Bulle est une combinaison **libre** d'axes graphiques, dont aucun n'implique les autres : la forme,
+le trait, le remplissage, la queue, le texte, les particules. Toute forme se combine avec toute queue.
+Les styles enregistrés sont des préréglages de ces axes, nommés par leur apparence (« Ovale à
+couronne »), jamais par un registre (« Pensée »).
 
-⚠️ **CE QUE #425 A AJOUTÉ.** La première version de cette note a été écrite sur un relevé qui n'avait
-jamais été confronté à ses propres sources. La révision a mis chaque fiche en regard d'un fragment de
-planche, ce qui a coûté **sept rétractations, dont quatre sur des corrections que j'avais moi-même
-apportées**. Elle a aussi fait apparaître un **septième axe** et le **contrat qu'une forme doit
-honorer** — deux choses qu'aucune quantité de réflexion n'aurait produites sans regarder les
-planches.
+## Fichiers
 
-## Ce que le relevé a trouvé, et qui gouverne tout
+Chaque axe a un module **pur** (décision, testée sous Node) ; le dessin est dans `src/draw.js`
+(`drawBubble`, chemin commun à l'écran et à l'export).
 
-⚠️ **UNE MÊME FORME NE PORTE PAS LE MÊME SENS SELON L'ŒUVRE.** C'est la conclusion qui a coûté le plus
-cher à établir, parce qu'elle a démenti deux fois une hypothèse posée en cours de route.
-
-La **queue en éclair** en est la démonstration :
-
-| œuvre | ce que l'éclair signale |
+| Fichier | Ce qu'il porte |
 |---|---|
-| Imperium | une voix de machine |
-| Okko | le son d'un instrument |
-| La Licorne | **rien**, c'est la queue de tout le monde |
-| Lady Mechanika | **rien**, idem |
+| `src/bubble-shape.js` | Le registre des formes et leur contrat (contour, zone du texte, queue par défaut). |
+| `src/bubble-tail.js` | Le registre des queues : triangle, éclair, cheveu, ronds, aucune. |
+| `src/bubble-style.js` | Le remplissage (opacité) et le trait (motif, régularité, tremblé). |
+| `src/bubble-texture.js` | Les textures de remplissage : piles de couches, grains. |
+| `src/bubble-grain.js` | La moitié impure des textures : chargement des grains, motifs de canevas. |
+| `src/bubble-particle.js` | Les particules semées autour du bord (tache, flamme). |
+| `src/bubble-merge.js` | La fusion de Bulles en une Bulle à plusieurs lobes. |
+| `src/bubble-library.js` | La bibliothèque de styles. |
+| `src/cyclic-noise.js` | Le bruit cyclique partagé (trait tremblé, silhouette de la tache), à graine stable. |
 
-Un style nommé « voix électronique » qui figerait une queue en éclair imposerait donc une lecture que
-le corpus contredit une fois sur deux. Le sens n'est pas dans la forme, il est dans l'**écart** entre
-cette bulle et les autres bulles de la même œuvre.
+## Les axes et leurs valeurs
 
-⚠️ **ET LE CONTOUR EST INDÉPENDANT DE LA QUEUE.** Imperium pose un éclair sur un ovale lisse, Okko sur
-un octogone, la Geste met un octogone sans aucune queue. Les figer ensemble dans un style unique
-interdirait deux de ces trois œuvres.
+| Axe | Champ | Valeurs (clés enregistrées) |
+|---|---|---|
+| Forme | `bulleShape` | `ovale` (défaut), `facette`, `rect` (rectangle **arrondi**), `rectnet` (angles vifs), `octogone`, `etoile`, `ecu`, `tache` |
+| Queue | `tailShape`, `tailVisible`, `tailMirror`, `tailAngle`, `tailLen` | `triangle` (défaut), `eclair`, `cheveu`, `ronds`, `aucune` |
+| Trait | `bulleBorderVisible`, `bulleBorderWidth`, `bulleBorderColor`, `bulleBorderDash`, `bulleBorderRegularity` | motif `plein`, `pointille`, `tirets`, `epine` ; régularité `net`, `tremble` |
+| Remplissage | `bulleColor`, `bulleFillOpacity`, `bulleTexture` | texture `aucune` (défaut), `papier`, `glace`, `lave`, `nuit-etoile` |
+| Particules | `bulleParticule` | `aucune` (défaut), `tache`, `flamme` |
+| Texte | `bulleFont`, `bulleFontScale`, `bulleGras`, `bulleItalique`, `bulleTextColor`, `bulleTextOutlineColor`, `bulleTextOutlineScale`, `bullePadding` | cf. [polices.md](polices.md) |
+| Fusion | `bulleFusionnable`, `bulleGroupe`, `bulleAvantFusion` | |
 
-⚠️ **UNE MÊME SÉRIE PEUT CHANGER DE SYSTÈME.** La Geste des Chevaliers Dragons emploie trois
-lettrages différents selon ses cycles : octogones ocre à coins coupés, rectangles blancs à queue en
-éclair, rectangles crème accompagnés d'une lettre manuscrite en pleine case. Un style « Geste des
-Chevaliers Dragons » n'aurait aucun sens.
+**Défauts et compatibilité** : un champ absent prend sa valeur par défaut (une Bulle sans
+`bulleShape` est un ovale). `bulleFillOpacity` à `0` vaut 0 (fond invisible), seul `null` vaut 1.
 
-## Les sept axes
-
-Une Bulle est une combinaison libre de sept axes. Aucun n'implique les autres.
-
-| axe | valeurs relevées dans le corpus |
-|---|---|
-| **forme** | ellipse, rectangle arrondi, rectangle net (récitatif), octogone à coins coupés, écu à côtés concaves, bosselé, polygone à facettes, étoile, couronne d'épines, bande à coins arrondis, parchemin à bords irréguliers, tache d'encre, aucune |
-| **trait** | épaisseur, motif de pointillés, régularité (net ou tremblé), couleur |
-| **remplissage** | couleur, opacité, **texture** (aucune, encre sombre, vieux papier) |
-| **queue** | triangle, éclair, chaîne de ronds décroissants, cheveu courbe (inversible), **aucune** |
-| **texte** | police, casse, graisse, italique, couleur, manuscrit |
-| **ornement** | note de musique, guillemets, crochets |
-| **couche ajoutée** | couronne rayonnante, **particules** (tache, flamme, aucune), débordement du cadre de Case |
-
-⚠️ **POURQUOI UN SEPTIÈME AXE, ET PAS DEUX FORMES DE PLUS.** La couronne rayonnante n'est pas un
-contour : le contour reste une **ellipse parfaitement lisse**, et c'est une frange de traits fins
-tout autour qui porte la charge. Même chose pour le mouchetis d'encre, qui n'est ni un remplissage ni
-une bordure — le bord EST l'effet. Les ranger dans « forme » obligerait à dupliquer chaque contour en
-deux versions, avec et sans halo.
-
-Les styles nommés sont des **préréglages** de ces axes, pas un énuméré fermé :
-
-- rectangle arrondi + blanc + triangle court → la parole ordinaire chez Blacksad
-- écu à côtés concaves + crème + pointe basse → un esprit chez Okko
-- ellipse + noir + cheveu + texte blanc → la voix qui contraint chez Croquemitaine
-- ellipse + blanc + aucune queue + **couronne rayonnante** → la pensée sous le choc, chez Eleceed
-  **et** chez Lecteur omniscient
-
-⚠️ **LES PRÉRÉGLAGES SE NOMMENT PAR LA FORME, JAMAIS PAR LE REGISTRE.** « Ovale à couronne
-rayonnante », pas « Pensée ». Nommer par le registre reviendrait à inscrire dans l'application une
-sémantique que le relevé dément une fois sur deux.
-
-## Ce que le remplissage porte à lui seul
-
-⚠️ **C'EST L'AXE LE PLUS CHARGÉ DE SENS, ET LE MOINS COÛTEUX À IMPLÉMENTER.** Quatre œuvres du corpus
-distinguent deux registres sans toucher ni au contour ni à la queue :
-
-- blanc contre crème : la parole contre le récit (Blacksad)
-- blanc contre olive : un humain contre une entité (Locke & Key)
-- blanc contre **noir à texte blanc** : la parole contre la contrainte (Croquemitaine)
-- blanc contre **rouge à texte blanc** : la parole contre le cri (Mutafukaz)
+**Clés retirées, qui migrent** : `ALIAS_FORME` (`dents` et `epines` → `etoile`, `bande` → `rect`) et
+`ALIAS_TEXTURE` (`fondus` → `nuit-etoile`). Une clé **inconnue** lève une erreur au lieu de retomber
+en silence sur le défaut.
 
 ## Le contrat d'une forme
 
-⚠️ **AJOUTER UNE FORME N'EST PAS AJOUTER UNE ENTRÉE DANS UNE LISTE DÉROULANTE.** Dans `src/draw.js`,
-`bubbleEdgePoint(o, theta)` rend le point du contour dans une direction donnée, et **trois choses en
-dépendent** : l'ancrage de la queue, le hit-test du glisser de sa pointe, et l'astuce du tracé
-continu qui saute l'arc situé sous la queue pour qu'aucun trait ne traverse l'intérieur de la Bulle.
+Une forme fournit, dans le registre de `bubble-shape.js` :
 
-Une forme fournit donc **quatre fonctions**, jamais moins :
-
-| fonction | ce qu'elle rend | ce qui casse si elle manque |
+| Fonction | Ce qu'elle rend | Qui s'en sert |
 |---|---|---|
-| `edgePoint(o, theta)` | le point du contour dans la direction `theta` | la queue s'accroche dans le vide, la poignée de glisser décroche |
-| `pointsDuContour(o)` | les points du contour, ou `null` si la forme est lisse | un trait traverse l'intérieur à la base de la queue |
-| `encartInterieur(o)` | la zone réellement inscriptible | le texte sort des pointes |
-| `queueParDefaut(o)` | une Bulle de cette forme naît-elle avec une queue ? | l'écu porte deux queues qui se contredisent, la couronne d'épines en porte une que le relevé ne montre nulle part |
-
-⚠️ **LA DEUXIÈME S'APPELAIT `sommets`, ET LE NOM MENTAIT DÈS LA PREMIÈRE FORME À CÔTÉS COURBES.**
-Entre deux pointes de l'écu, le contour n'est pas un segment mais un arc, rendu par une suite de
-points rapprochés dont aucun n'est un sommet. Le tracé, lui, n'a pas changé d'une ligne — il relie
-les points qu'on lui donne —, ce qui confirme que la bonne unité du contrat était le **point**.
-
-⚠️ **ET LA QUATRIÈME NE DÉCIDE QUE DU DÉFAUT.** Le champ `tailVisible` de l'utilisateur, dès qu'il
-existe, l'emporte : quelqu'un qui coche « Afficher la pointe » sur un écu doit la voir apparaître.
-Le piège est d'écrire `tailVisible !== false` au lieu de `tailVisible != null` — un « oui » explicite
-retomberait alors sur le défaut de la forme, et la case cochée ne ferait plus rien.
-
-⚠️ **UNE FORME INCONNUE DOIT ÉCHOUER BRUYAMMENT.** `buildPropRig3D` retombe en silence sur
-`buildCarRig3D` quand il ne reconnaît pas un `objType` : une faute de frappe y produit une voiture au
-lieu d'une erreur. Le registre des formes ne doit pas répéter ce choix — une forme inconnue lève,
-elle ne dessine pas un ovale à la place.
-
-⚠️ **ET LE TEXTE SUIT LA FORME, PAS LA BOÎTE ENGLOBANTE.** Sur une étoile, la boîte englobante est
-très supérieure à la surface inscriptible : y centrer le texte le fait sortir par les pointes.
-L'écart intérieur existant (`bullePadding`) se mesure désormais depuis `encartInterieur`, pas depuis
-`o.w`/`o.h`.
-
-**Les contours générés sont un cas à part**, et #425g a corrigé cette section sur deux points.
-
-⚠️ **LEUR `edgePoint` N'EST PAS APPROCHÉ : IL EST EXACT.** Cette note annonçait le contraire, en
-supposant une silhouette faite d'arcs irréguliers qu'il aurait fallu intersecter approximativement.
-La mise en œuvre a pris l'autre voie — celle déjà employée pour les côtés courbes de l'écu :
-**échantillonner** la courbe en points rapprochés. Le contour rendu EST donc la ligne brisée qui
-passe par ces points, et l'intersection d'un rayon avec elle est exacte, au même titre que pour un
-octogone. La prévision était pessimiste ; mieux vaut le dire que laisser une mise en garde périmée.
-
-⚠️ **LEUR GRAINE DOIT ÊTRE STABLE**, sinon la Bulle change de forme à chaque rendu — et surtout la
-planche imprimée n'est pas celle qu'on a validée à l'écran. Elle est tirée de l'identifiant de la
-Bulle, dans `src/cyclic-noise.js`, module créé pour que le tremblé du trait et la silhouette de la
-tache partagent **un seul** bruit plutôt que deux copies.
-
-⚠️ **ET LEUR ZONE INSCRIPTIBLE NE PEUT PAS ÊTRE UNE FRACTION FIXE.** C'est la vraie difficulté des
-contours générés, et elle n'avait pas été prévue. Les huit autres formes ont le même contour pour
-toutes les Bulles : on mesure la place une fois, on l'écrit. La tache, elle, a un contour **par
-Bulle** ; la bande, un contour qui dépend de l'**allongement**, parce que son inclinaison déplace
-`y` proportionnellement à la hauteur. Une fraction réglée sur un cas sort de l'autre — mesuré sur
-4 000 graines, le coin de l'encart sortait jusqu'à **16 %** au-delà du contour. Ces deux formes
-déclarent donc un rapport **visé**, que le registre rabote à ce qui tient réellement dans ce
-contour-ci. Le calcul est exact et coûte quatre divisions, la forme étant étoilée.
-
-## Le contrat d'une QUEUE, et l'indépendance qu'il protège
-
-⚠️ **AUCUNE FORME N'IMPOSE SA QUEUE, AUCUNE QUEUE N'EXIGE SA FORME.** Le relevé l'établit à lui
-seul : Imperium pose un éclair sur une ellipse lisse, Okko en pose un sur un écu à côtés concaves,
-la Geste des Chevaliers Dragons montre un octogone sans queue du tout. Lier les deux axes — ne
-serait-ce qu'en donnant à une forme le droit de « corriger » la queue qu'on lui demande — rendrait
-deux de ces trois planches impossibles à reproduire.
-
-Le test correspondant parcourt le **produit** des deux registres, lus dans les modules et jamais
-recopiés : neuf formes × quatre queues. Et il vérifie les **deux** moitiés de l'indépendance, parce
-que la première seule ne suffit pas :
-
-| ce qui est vérifié | ce que ça interdit |
-|---|---|
-| les 36 couples se dessinent | qu'une combinaison refuse de se tracer |
-| à ancrages égaux, le tracé d'une queue est le même quelle que soit la forme | qu'une queue lise `o.bulleShape` pour « s'adapter » — le couplage, écrit en douce |
-
-⚠️ **DEUX SORTES DE QUEUES, ET LA DIFFÉRENCE EST TOPOLOGIQUE.** Le triangle, l'éclair et le cheveu
-remplacent l'arc du contour situé sous la queue : le chemin reste d'un seul tenant, ce qui évite
-qu'un trait traverse l'intérieur de la Bulle. La chaîne de ronds, elle, est faite de disques
-**séparés** : le contour se referme entièrement, et les ronds se dessinent ensuite, chacun dans son
-propre chemin — les mettre dans celui de la Bulle percerait son remplissage là où un rond chevauche
-le contour.
-
-⚠️ **LE CHEVEU A UN ENVERS, ET LUI SEUL.** Une case « Inverser la pointe » renverse sa courbure :
-les deux arcs bombent de l'autre côté du même axe, et la queue penche dans l'autre sens.
-
-⚠️ **ET LE CHEVEU EST DEVENU UNE MÉDIANE COURBE ET UNE LARGEUR QUI SE REFERME.** Sa première
-construction faisait bomber ses deux bords du même côté avec des courbures INÉGALES : à mi-portée
-l'écart entre eux valait **w − 0,45 K**, et c'est cette soustraction qui donnait la finesse. Deux
-défauts en sont sortis, à deux semaines d'intervalle, et ils avaient la même racine.
-
-Le premier : inverser la pointe en ne changeant que le SIGNE faisait passer cet écart à **w + 0,45
-K**. Les flèches s'ajoutaient au lieu de se retrancher, la queue enflait. Un miroir échange aussi
-les deux côtés d'une forme, et rendre la grande courbure à l'autre bord suffisait alors.
-
-Le second, sur une queue LONGUE : K croît avec la longueur, et 0,45 K finit par DÉPASSER w. L'écart
-change de signe, les deux bords se croisent, la queue se noue en S. Aucun réglage ne rattrape cela,
-parce que la faute est dans le modèle — une soustraction qui produit la finesse produit aussi le
-croisement dès qu'elle passe sous zéro.
-
-Le modèle actuel ne peut pas croiser, par construction : une médiane va du milieu des bases à la
-pointe en s'incurvant, et chaque bord est cette médiane décalée du vecteur qui mène à SA base,
-multiplié par (1 − t). Les deux décalages restent de part et d'autre, d'un facteur qui décroît
-jusqu'à zéro. Les bords partent exactement des bases, se rejoignent exactement à la pointe, et ne se
-rencontrent nulle part entre les deux, quelle que soit la longueur. Le miroir se réduit alors au
-signe d'une seule grandeur.
-
-⚠️ **ET LES TESTS ÉCRITS SUR LA MÉCANIQUE D'UN MODÈLE MEURENT AVEC LUI.** Celui qui tenait le miroir
-a exigé successivement deux choses fausses : que chaque point garde la même amplitude en changeant
-de signe — un miroir où chaque bord resterait à sa place, qui n'existe pas —, puis l'inégalité des
-deux courbures, c'est-à-dire précisément la cause du croisement. Il porte désormais sur ce que le
-réglage VEUT DIRE : la médiane inversée est le réfléchi exact de la médiane droite, et la largeur ne
-bouge pas. Elle ne s'affiche que pour lui — un triangle est symétrique, un éclair
-alterne déjà de part et d'autre de son axe, et offrir la case aux cinq queues donnerait un **contrôle
-visible mais inopérant** pour quatre d'entre elles. C'est `queuePeutSInverser3D` qui tranche, et la
-fiche l'interroge plutôt que de recoder la liste : deux copies d'une même décision divergent
-toujours, ce chantier l'a constaté quatre fois.
-
-⚠️ **ET LE CONTOUR S'OUVRE SOUS LE PREMIER ROND, COMME SOUS LES AUTRES POINTES.** Le contour se
-refermait entièrement sous la chaîne et passait donc DEVANT le rond : on voyait le trait de la Bulle
-barrer sa base, d'un point de contact à l'autre. Relevé à l'usage — « l'espace entre les deux points
-de contact ne devrait pas être visible, comme pour les autres pointes ». C'est exactement ce que
-font le triangle, l'éclair et le cheveu : ils remplacent l'arc situé sous eux.
-
-La chaîne emploie donc désormais **les deux mécanismes** du registre : un tracé continu — la calotte
-du premier rond — et des éléments détachés, les suivants. L'avertissement en tête de `bubble-tail.js`
-porte sur la FUSION des deux notions en une liste de sous-chemins, pas sur le fait qu'une queue les
-emploie toutes les deux : elles restent déclarées séparément et se remplissent différemment, ce qui
-est tout l'objet de la distinction.
-
-⚠️ **ET L'OUVERTURE SE DEMANDE EN PIXELS, PAS EN ANGLE.** Les quatre autres queues ouvrent le contour
-d'un écart angulaire fixe, ce qui leur suffit. La calotte, elle, doit rejoindre le trait EXACTEMENT
-là où son rond coupe le contour — un nombre de pixels que le rond décide, et qui devient un angle
-différent selon la forme et les proportions de la Bulle. La queue dit donc une longueur et la
-**forme** la convertit, chacune sur son propre contour : la queue ne connaît pas les contours, la
-forme ne connaît pas les queues.
-
-⚠️ **LA PORTION INTÉRIEURE ÉTAIT DÉJÀ MASQUÉE PAR L'ORDRE DE PEINTURE, ET CE MASQUAGE RESTE.** Ils passaient
-par-dessus, du temps où le premier rond était tangent et ne chevauchait donc rien. Dès qu'il entre
-dans la Bulle, un disque cerné se voyait en travers du fond. L'ordre de peinture suffit à le
-masquer — pas de découpe, pas de masque. Ce que cet ordre ne peut pas faire : sur un fond
-translucide, la portion intérieure transparaîtra ; la corriger demanderait de découper le disque par
-le contour, c'est-à-dire de refaire en géométrie ce que la peinture fait déjà bien dans le cas
-courant. La part enfoncée est passée de 2/3 à 0,55 le jour du changement d'ordre : invisible, les
-deux tiers ne laissaient plus voir qu'un tiers de disque.
-
-⚠️ **LA TAILLE DES RONDS ET LA LONGUEUR DE LA POINTE SE COMMANDENT, ET C'EST LA POINTE QUI A CÉDÉ.**
-La chaîne la plus serrée occupe 4,08 fois le rayon du premier rond ; il faut donc une pointe au moins
-aussi longue, sans quoi le repli rétrécit les rayons. L'usage a demandé des ronds 70 % plus gros, ce
-qui rend la borne calculée sur la longueur par défaut intenable. Trois sorties existaient — rétrécir
-les ronds au départ, laisser la chaîne dépasser la pointe, ou rallonger la pointe de ce motif — et
-aucune n'est bonne en soi : la première réintroduit le défaut qu'on venait de corriger, la seconde
-retire à la longueur son sens. La troisième a été **choisie**, pas déduite, en connaissance de sa
-contrepartie : une Bulle à chaîne enregistrée sans longueur explicite voit sa pointe s'allonger.
-Entorse assumée à « pas de réglage vaut l'existant », bornée à ce motif.
-
-⚠️ **LE PREMIER ROND DE LA CHAÎNE EST À CHEVAL SUR LE CONTOUR.** Il était exactement TANGENT au
-contour, et trois écrits l'affirmaient faux de concert : le commentaire du module disait « ne touche
-pas la Bulle », le test le vérifiait par un `>` strict que seule l'arithmétique flottante rendait
-vrai, et la note ne s'en préoccupait pas. Signalé à l'usage — « au contact direct du bord ». Un rond
-qui affleure se lit comme une bosse de la Bulle ; un rond franchement engagé se lit comme un maillon
-qui en SORT, ce qui est le sens du motif.
-
-⚠️ **ET ÉTIRER LA QUEUE ÉCARTE LES RONDS, IL NE LES GROSSIT PAS.** Toute la chaîne était mise à
-l'échelle pour tenir entre le bord et la pointe : les rayons suivaient donc la longueur. Ils se
-lisent désormais sur la **Bulle**, dont ils sont une fraction du petit demi-axe — c'est elle qui donne
-l'échelle du lettrage —, et l'allongement passe dans les intervalles.
-
-Cette fraction est bornée par la longueur de queue par défaut, et le calcul mérite d'être suivi : la
-chaîne la plus serrée occupe 3,84 rayons, la queue par défaut vaut 0,45 rayon de contour, donc la
-fraction doit rester sous 0,117. Le premier essai valait 0,17 : une Bulle NEUVE tombait d'emblée dans
-le repli « queue trop courte », qui rétrécit les rayons pour faire tenir la chaîne — c'est-à-dire
-exactement le comportement qu'on venait de retirer. Un réglage qui n'est juste que pour la valeur
-d'un autre réglage doit être **tenu par un test**, pas deviné.
-
-⚠️ **« AUCUNE » EST UNE VALEUR DE L'AXE, PAS UNE ABSENCE DE RÉGLAGE.** Le relevé la compte comme les
-autres : la Geste des Chevaliers Dragons, La Licorne, une ellipse posée sur l'intervalle blanc entre
-deux Cases — ne pas avoir de queue est un choix de lettrage. La fiche a donc **une seule liste**, et
-non une liste plus une case à cocher : signalé à l'usage, et c'est la quatrième fois que ce chantier
-bute sur deux commandes pour un même réglage. L'ancien champ `tailVisible` n'est plus écrit mais
-**reste lu pour toujours**, sans quoi toutes les Bulles enregistrées sans queue se réveilleraient
-avec une pointe.
-
-Trois sources doivent donc être départagées, et l'ordre est écrit à un seul endroit :
-
-| priorité | source | ce qu'elle dit |
-|---|---|---|
-| 1 | `tailShape` | le choix explicite de l'utilisateur, « aucune » comprise |
-| 2 | `tailVisible` | l'héritage des Projets d'avant |
-| 3 | la forme | l'écu porte déjà sa pointe, la couronne d'épines ne désigne personne |
-
-⚠️ **ET `traceContinu` RENDANT « RIEN » N'EST PAS « PAS DE QUEUE ».** C'est une queue détachée.
-Confondre les deux fait disparaître la chaîne au lieu de la dessiner à part, et le contour reste par
-ailleurs correct : rien d'autre ne le voit.
-
-## Les styles enregistrés : une copie, jamais une référence
-
-Une Bulle stocke une **copie** des valeurs du style, pas un renvoi vers lui. La raison est un
-scénario banal : modifier un style six mois plus tard repeindrait des planches terminées, sans que
-personne l'ait demandé. Le seul chemin de mise à jour est un bouton **« Réappliquer le style »**
-explicite, Bulle par Bulle.
-
-C'est aussi une application directe d'un défaut déjà rencontré sur ce projet — *deux copies d'une
-même décision qui ne concordent qu'aujourd'hui*. Ici la duplication est assumée et orientée : le
-style est un **point de départ**, pas une source de vérité vivante.
-
-**Les styles vivent sur le disque, partagés entre Projets**, sur le modèle de la bibliothèque de
-modèles : les fichiers sont globaux, l'usage est déduit du Projet ouvert et n'est jamais inscrit dans
-le fichier. Un style créé sur un Projet ressert sur le suivant, ce qui est l'intérêt même d'un style.
-
-## Le nuage de pensée a disparu
-
-Sur les douze œuvres relevées, **aucune** n'emploie le nuage à bulles décroissantes. Toutes le
-remplacent par un cartouche, par du texte sans contour, ou par le même contour que la parole.
-
-⚠️ **ET DEUX ŒUVRES EMPLOIENT LE MÊME CONTOUR DENTELÉ POUR UN CRI ET POUR UNE PENSÉE PANIQUÉE**
-(Eleceed, Jungle Juice). C'est une confirmation supplémentaire que forme et registre ne sont pas en
-correspondance un pour un : ce qui distingue les deux, dans la planche, est la présence ou l'absence
-de queue, pas le contour.
-
-Conséquence pour le projet : le **cartouche** mérite au moins autant de soin que la bulle de parole,
-et le nuage classique ne mérite pas d'être le style de pensée par défaut.
-
-## Le placement, qui est la moitié du lettrage
-
-Le relevé initial ne portait que sur des contours. Les conventions de placement comptent autant, et
-elles sont précises :
-
-- **ordre de lecture en Z** : la première réplique en haut à gauche, la dernière en bas à droite. Une
-  bulle mal placée fait répondre un personnage avant qu'on lui ait posé la question ;
-- la queue vise la **bouche**, pas le personnage en général ;
-- elle s'arrête à environ **50 à 60 %** de la distance entre la bulle et la tête, elle ne touche pas
-  le visage ;
-- une voix **hors champ** termine sa queue au bord de la Case, par un petit éclat en étoile.
-
-⚠️ **CELA CONCERNE STORYBOARDER DIRECTEMENT**, puisque c'est l'utilisateur qui place ses Bulles. Ces
-règles ne sont pas à imposer, mais elles disent ce qu'un réglage par défaut devrait viser.
-
-## Ce qui n'est PAS dans ce chantier
-
-**La fenêtre d'interface.** Lecteur omniscient et Jungle Juice posent sur leurs planches des éléments
-qui ne sont plus du lettrage : une fenêtre système avec ses boutons réduire/agrandir/fermer, une
-capture de réseau social, un bandeau d'information télévisé. C'est un registre à part entière, et il
-demande autre chose qu'un contour paramétrable.
-
-**Le texte vertical.** Le manga compose de haut en bas, ce qui change la bulle elle-même, plus haute
-que large. Ce n'est pas un axe de contour mais une orientation du texte.
-
-**Les onomatopées.** Elles sortent de la bulle et relèvent du lettrage dessiné, pas du contour. Le
-relevé en a photographié deux formes — noir cerné de blanc chez Eleceed, rouge au pinceau cerné d'un
-halo blanc chez Lecteur omniscient — qui confirment que c'est un chantier de lettrage.
-
-**Les Bulles fusionnées** — ~~à décider~~, **fait** (chantier #426). Un locuteur, deux lobes soudés
-par un étranglement concave, **une seule queue** pour les deux. Ce n'est pas un attribut mais une
-**relation entre deux Bulles**. À ne pas confondre avec la bulle double, où deux personnages parlent
-en même temps et où chaque contour garde sa queue.
-
-La note demandait ce que devient le lien quand l'une des deux est supprimée, déplacée ou change de
-forme. Les trois sont tranchées, et une quatrième s'est ajoutée à l'usage :
-
-| ce qui arrive au lobe | ce que devient le groupe |
-|---|---|
-| il est **déplacé** ou **redimensionné** | le groupe tient : une butée arrête le geste sur la dernière position qui garde la soudure |
-| il **change de forme** | le groupe tient : le lobe est rapproché du plus petit déplacement qui rétablit la soudure |
-| il est **supprimé** | le groupe se dissout **entièrement**, chaque survivant retrouvant son apparence d'avant la fusion — annoncé par une question |
-| la **Case** qu'il recouvre est vidée ou supprimée | rien : une Bulle est un objet de premier niveau de la Planche, elle n'appartient à aucune Case |
-
-⚠️ **« SOUDÉES » N'EST PAS « QUI SE TOUCHENT », ET LA DIFFÉRENCE A COÛTÉ QUATRE REPRISES.** Deux
-ovales tangents se touchent en UN point et se lisent comme deux contours accolés. La fusion se
-PROPOSE dès le frôlement — c'est le bon moment pour poser la question — mais elle se TIENT à une
-largeur d'étranglement : la distance entre les deux points où les contours se croisent, exigée à
-30 % de la plus petite dimension du plus petit lobe. Deux seuils pour deux questions ; les confondre
-rend l'un des deux inutile.
-
-⚠️ **ET C'EST LA BULLE SÉLECTIONNÉE QUI IMPOSE SON STYLE, PAS CELLE DE DEVANT.** Demandé à l'usage.
-La Bulle qu'on tient en main est celle qu'on regarde, donc celle dont on attend l'apparence ;
-l'ordre d'affichage continue de décider qui sert de support, ce sont deux questions distinctes.
-L'ABSENCE d'un réglage chez la source se transporte comme le reste — c'est elle qui dit « blanc par
-défaut ».
-
-## Trois formes retirées, et leur clé qui survit (#425y)
-
-L'usage a tranché, comme cette note l'avait prévu : **dents de scie**, **couronne d'épines** et
-**bande / ruban** quittent le registre. Les deux premières faisaient double emploi avec l'étoile du
-cri — trois contours dentelés séparés par des constantes —, et la bande n'était qu'un rectangle
-arrondi penché.
-
-⚠️ **UNE CLÉ PERSISTÉE NE DISPARAÎT PAS, ELLE MIGRE.** `formeDeLaBulle` LÈVE sur une forme inconnue :
-retirer les trois clés sans rien d'autre ferait planter au dessin toute Bulle déjà enregistrée avec,
-c'est-à-dire ouvrirait un Projet sur une erreur. Une table d'alias les fait migrer — le mécanisme est
-celui de #430, où « Encre sombre » a cédé la place à la nuit étoilée.
-
-| clé retirée | devient | pourquoi |
-|---|---|---|
-| `dents` | `etoile` | même contour dentelé, densité différente |
-| `epines` | `etoile` | idem, et le hérissement revient comme MOTIF DE TRAIT |
-| `bande` | `rect` | la bande était un rectangle arrondi penché |
-
-Les Bulles concernées changent d'aspect, et c'est le sens même d'un retrait. La règle « pas de
-réglage vaut l'existant » protège celles qui n'ont rien demandé ; elle ne peut rien pour celles dont
-le réglage demandé n'existe plus.
-
-## Une forme de plus, et une reclassification (#425y)
-
-**L'ovale à côtés droits** entre au registre : la bulle tracée à la règle, une dizaine de segments
-inégaux au lieu d'une courbe. Les côtés sont inégaux **sans aucun bruit aléatoire** — les sommets
-sont posés sur l'ellipse à pas de PARAMÈTRE constant, et un tel pas parcourt beaucoup de longueur
-près des bouts du grand axe et peu sur les flancs. Sur une boîte carrée, ils redeviennent égaux. La
-forme est donc déterministe, contrairement à la tache d'encre qui tire sa graine de l'identifiant
-de la Bulle : copier une Bulle ne la déforme pas.
-
-⚠️ **ET LE HÉRISSEMENT REVIENT COMME MOTIF DE TRAIT, PAS COMME FORME.** La couronne d'épines était
-une forme, donc un choix exclusif : on ne pouvait pas avoir un rectangle hérissé. « Épines » rejoint
-Plein, Pointillé et Tirets dans la section Bordure, et s'applique à **n'importe quelle** forme.
-C'est la même reclassification que #425n a opérée pour le mouchetis — reconnaître qu'un trait
-graphique appartenait au mauvais axe.
-
-Elle n'est pas un pointillé pour autant : elle ne se règle pas avec un motif de tirets mais avec de
-la géométrie, une frange de pointes posée le long du contour. Deux décisions la gouvernent :
-
-- l'espacement et la longueur se mesurent **en épaisseurs de trait**, comme les tirets et pour la
-  même raison — à valeur fixe, la frange disparaîtrait là où l'utilisateur a demandé un contour
-  plus visible ;
-- l'espacement est une **longueur d'arc**, pas un angle. Un pas d'angle donnerait des épines
-  serrées sur les flancs d'un ovale et clairsemées à ses bouts, c'est-à-dire une densité qui change
-  avec les proportions de la Bulle — ce qu'on n'attend pas d'un motif de trait ;
-- une épine sort à la **perpendiculaire au contour**, et le centre ne sert qu'à choisir laquelle des
-  deux perpendiculaires est « dehors ». La première écriture partait du centre, au motif — juste —
-  que sur un contour dentelé la normale bascule d'un segment à l'autre. L'argument était bon et la
-  conclusion fausse : sur une ellipse, la direction du centre s'écarte de la normale d'autant plus
-  que la Bulle est allongée, jusqu'à **soixante degrés** à mi-chemin des axes d'un ovale deux fois
-  plus large que haut. Les épines s'y couchaient le long du contour et la frange paraissait
-  s'effacer sur les flancs. Rapporté à l'usage — « quand j'élargis la bulle, les épines se
-  déforment » — puis reproduit en image avant d'être corrigé ;
-- **l'écart entre deux épines est irrégulier**, sur un tirage du bruit distinct de celui des
-  longueurs. Des longueurs variées posées à intervalle constant se lisent comme un peigne : c'est
-  la régularité du pas, et non celle de la taille, qui trahit la machine ;
-- la variation est **à grain fin, et le grain se compte en épines**. À vingt-trois nœuds de bruit
-  répartis sur tout le périmètre, elle devenait une onde longue : des arcs entiers d'épines courtes
-  alternant avec des arcs d'épines longues, soit des festons réguliers — la régularité revenue par
-  la porte de derrière. Corrigé une première fois par un nombre de nœuds plus grand, ce qui n'était
-  qu'un réglage juste pour un espacement et un seul : l'espacement divisé par deux, l'onde est
-  revenue intacte. Le nombre de nœuds suit désormais le nombre d'épines, un pour deux ;
-- **la finesse des pointes s'arrête sur un rendu à 2 :1, jamais à 1 :1.** Le rasteriseur des
-  planches de contact pose un trait d'au moins un pixel plein là où un canevas antialiase une
-  largeur de 0,4 px en gris pâle : à taille réelle, la planche noircit ce que l'application
-  éclaircira, et la frange la plus fine y paraît un pâté alors qu'elle sera un voile. Vérifier que
-  l'instrument voit ce qu'on lui demande de voir vaut ici comme pour les campagnes de mesure ;
-- **le contour s'épaissit sous la frange**. Ce qu'on prend dans la source pour une frange de pointes
-  isolées est un trait gras bordé de poils : sans ce socle, des pointes fines sur un contour fin
-  donnent un ruban gris uniforme. Proposé à l'usage et vérifié sur planche de contact.
-
-Trois choses de plus, toutes trouvées en comparant un rendu de l'application à la source :
-
-- **chaque épine est un segment à elle**, et non un maillon d'un zigzag continu. Le chemin
-  enchaînait des `lineTo` de bout en bout, si bien que le RETOUR d'une pointe vers la base suivante
-  était encré comme le reste : deux fois l'encre nécessaire, et une frange soudée en bande. La
-  source montre des traits séparés. Un `moveTo` par épine a libéré la place pour deux fois plus
-  d'épines, à finesse égale et pour moins d'encre ;
-- **l'ouverture de la queue n'est pas hérissée.** Une Bulle à queue continue ne trace pas son
-  périmètre entier : l'arc sous la queue est remplacé par le tracé de celle-ci, et il n'y a donc
-  aucun trait à border à cet endroit. La frange y était posée quand même, en travers de l'ouverture ;
-- **la finesse ne se juge que sur un rendu antialiasé.** Un trait de 0,3 px sort GRIS d'un canevas et
-  NOIR d'un rasteriseur naïf : c'est l'écart que la note ci-dessous documente.
-
-Et elle **s'ajoute** au contour au lieu de le remplacer : le contour net borne le fond, les pointes
-débordent au-dehors. Les tracer à sa place laisserait un bord en dents de scie, c'est-à-dire
-l'étoile du cri.
-
-## Ce que la révision a corrigé, y compris chez moi
-
-Après cette note, chaque fiche du relevé a été mise **en regard du fragment de planche** dont elle
-prétendait rendre compte. Le résultat vaut d'être écrit, parce qu'il change la façon de travailler
-plus que les conclusions.
-
-**Trois descriptions d'origine confirmées fausses** : le contour d'Eleceed, décrit à l'envers ; les
-cartouches noirs de la Geste, qui n'existent pas ; l'attribution des légendes d'un mot, qui sont de
-Croquemitaine.
-
-⚠️ **ET QUATRE DE MES PROPRES CORRECTIONS ÉTAIENT FAUSSES À LEUR TOUR.** Le contour d'Okko, les bords
-du ruban de Croquemitaine, la prétendue distinction parole / récit de La Licorne, et l'encart système
-du Lecteur omniscient — où je n'avais pas mal vu, j'avais **tronqué une citation** pour rendre la
-description d'origine plus fautive qu'elle n'était. Sur ces quatre points, la version que je
-corrigeais était plus proche de la planche que moi.
-
-La fiche Okko a changé **trois fois** : « hexagone à bords droits », puis « festonné », puis
-« segments parfaitement droits ». Un zoom à taille réelle a tranché : un **écu**, cinq à huit pointes
-larges et inégales reliées par des **côtés concaves**. Ce qui m'a fait tourner en rond est toujours
-la même chose — juger une forme sur une vue d'ensemble au lieu de zoomer une fois.
-
-⚠️ **CE QUE ÇA IMPOSE AU CHANTIER.** Aucune valeur de l'axe **forme** ne doit entrer dans le code sans
-un fragment de planche en regard.
-
-Ces fragments sont des reproductions de planches publiées, photographiées pour étude. Ils **ne sont
-pas dans le dépôt** — `.gitignore` les écarte délibérément — et vivent en local dans
-`atlas-sources/`, avec leur provenance dans `manifeste.json`. La section suivante existe pour cette
-raison : elle consigne par écrit ce que chaque fragment établit, afin que le chantier reste
-reprenable à partir du seul dépôt.
-
-## Ce que chaque forme doit reproduire
-
-Relevé au zoom, fragment par fragment. La colonne **piège** dit ce qui a déjà été dessiné de travers
-au moins une fois.
-
-| forme | œuvre | géométrie | piège |
-|---|---|---|---|
-| ellipse | Eleceed, Jungle Juice | ellipse rigoureusement géométrique, trait d'épaisseur constante, **souvent sans queue** — posée sur l'intervalle blanc entre deux cases, la position remplace la queue | la décrire comme « tracée à main levée » ; c'est l'erreur d'origine de l'atlas |
-| rectangle arrondi | Blacksad, corpus courant | coins **arrondis**, rayon proportionnel au plus petit demi-axe ; c'est le rectangle que la fiche propose, celui du dialogue ordinaire | lui laisser des angles vifs, ce qu'il avait jusqu'à #425f |
-| rectangle net | Imperium | **aucun filet**, angles vifs, lettrage carré en capitales serrées | lui dessiner une bordure ; au registre depuis #425x, sous le libellé « Rectangle net » |
-| octogone à coins coupés | Geste des Chevaliers Dragons | très **plat et large**, ocre, coins chanfreinés asymétriques, sans queue, capitales manuscrites brunes | le dessiner comme un octogone régulier |
-| rectangle arrondi | Blacksad | coins très arrondis, **blanc cassé sans contour visible**, queue triangulaire courte ; le récitatif est un rectangle à angles vifs **gris-vert pâle**, cerné d'un filet fin | l'appeler « crème » ou « sépia » : il tire vers le vert de lichen |
-| étoile / cri | Eleceed, Mutafukaz | pointes inégales, texte en capitales grasses ; la surface inscriptible est **très inférieure** à la boîte englobante | centrer le texte dans la boîte englobante le fait sortir par les pointes |
-| dents de scie | corpus comics et manga | c'est le **contour entier** qui se hérisse, pas la queue | le confondre avec la queue en éclair, qui est l'autre solution au même problème |
-| écu à côtés concaves | Okko | **haut large et presque droit**, deux épaules à mi-hauteur, puis deux longs côtés qui **se creusent vers l'intérieur** jusqu'à une **pointe basse allongée faisant office de queue** ; contour gris épais, remplissage crème, ombre portée douce | quatre descriptions fausses à ce jour : « hexagone à bords droits », « festonné », « segments parfaitement droits », et une rosace à huit lobes obtenue en le décrivant **en polaire** (un angle plus une fraction de rayon) au lieu de coordonnées |
-| couronne d'épines | Croquemitaine | pointes rayonnantes tout autour, **aucune queue** | lui ajouter une queue par symétrie avec les autres |
-| bande à coins arrondis | Croquemitaine | petite bande gris-bleu, **coins doux et arrondis** comme un ruban adhésif, texte entre guillemets, légèrement inclinée | « bords déchirés » : la légende interne du document d'origine disait « ruban adhésif », et elle avait raison |
-| parchemin à bords irréguliers | La Licorne | rectangle aux bords à peine irréguliers, **aucun filet, aucune queue** ; le même objet porte le récit ET la parole, seul le **ton** change — récit teinté fondu dans la page, parole plus claire et détachée avec une ombre portée | l'aplat uniforme : le dispositif EST le rapport de valeur entre le cartouche et son fond, très contrasté et marbré |
-| tache d'encre | Lecteur omniscient | masse amorphe, **cœur opaque et bords translucides** laissant passer le fond, mouchetis dont la taille **et** l'opacité décroissent avec la distance, quelques filaments ; lettrage manuscrit blanc penché | la dessiner en noir plat : il n'y a pas de remplissage distinct d'un contour, **le bord EST l'effet** |
-| couronne rayonnante | Eleceed, Lecteur omniscient | ellipse **parfaitement lisse**, **sans contour lissé propre** — la frontière est faite par les bases des traits ; frange de traits très fins, longueurs peu homogènes, épaisseur de la couronne **variable selon l'angle** | lui tracer une ellipse pleine par-dessus la frange ; la source n'en a pas |
-
-## Ce que seul le rendu a montré
-
-⚠️ **DEUX DÉFAUTS DE CE CHANTIER N'ONT ÉTÉ TROUVÉS QU'EN PRODUISANT L'IMAGE ET EN LA REGARDANT.**
-Voir `docs/en/testing-method.md`, § « Ce qui est hors de portée ». Les deux étaient au vert.
-
-| défaut | pourquoi aucun test ne le voyait | depuis quand |
-|---|---|---|
-| une corde traversait la Bulle en diagonale | le tracé sans queue posait son premier point avec `sommets[0]`, alors que l'émetteur commence à l'angle 0. Pour l'octogone, l'étoile et les dents, les deux coïncidaient **par hasard** ; l'écu, dont la première pointe est en haut à droite, a révélé l'écart | le registre de formes, deux étapes plus tôt |
-| le texte sortait par le **haut** de la Bulle | un bloc plus haut que l'encart, centré dessus, déborde des deux côtés. Tant que les encarts étaient centrés cela restait symétrique et discret ; l'encart **remonté** de l'écu a envoyé la première ligne dans le décor | l'écart intérieur mesuré depuis l'encart |
-
-La correction du second est bornée exprès : le bloc ne peut plus commencer plus haut que l'encart,
-et rien d'autre ne bouge. Pour l'ovale et le rectangle, dont l'encart est la boîte entière, la butée
-ne mord que si le texte est plus haut que la Bulle — un cas déjà illisible, qui débordait avant par
-le haut **et** par le bas. **Aucun texte qui tenait ne s'est déplacé**, ce qu'un test fige.
-
-Deux autres anomalies relèvent de la même famille, **la même décision périmée recopiée trois fois**,
-du temps où il n'existait que deux formes :
-
-| copie | ce qu'elle faisait | comment elle est tombée |
-|---|---|---|
-| la fiche, en LECTURE | affichait « Ovale » pour toute Bulle qui n'était pas un rectangle | trouvée en branchant la fiche |
-| la fiche, en ÉCRITURE | **repliait le choix de l'utilisateur sur « ovale »** : choisir « Étoile » ou « Écu » n'avait aucun effet | **signalée par l'utilisateur**, après tout le chantier |
-| la création d'une Bulle | écrivait la chaîne `'ovale'` à la main plutôt que `FORME_DEFAUT` | trouvée en cherchant les deux autres |
-
-⚠️ **ET LA SECONDE EST LA PLUS GRAVE DES TROIS.** La première MENTAIT sur l'état ; la seconde
-EMPÊCHAIT l'état d'exister. Un réglage inopérant, indiscernable d'un réglage appliqué — exactement
-ce que le registre refuse par ailleurs en levant sur une clé inconnue.
-
-⚠️ **POURQUOI AUCUN TEST NE L'A VUE : toute la suite interrogeait la LECTURE, jamais l'ÉCRITURE.**
-Les tests appelaient `updateSidePanel()`, qui remplit la fiche, et vérifiaient ce qu'elle affiche.
-Une fiche qui affiche correctement et un menu qui n'écrit rien sont parfaitement compatibles. La
-leçon « appeler le vrai gestionnaire » avait été tirée pour le bouton de création, et pas appliquée
-aux menus déroulants — une leçon apprise à moitié ne protège de rien.
-
-La fiche interroge désormais les mêmes fonctions que le dessin en lecture, et valide par le registre
-en écriture, pour la forme comme pour la queue.
-
-## L'axe TEXTURE : une pile de couches, et des taches
-
-Une texture rend **deux** choses, et la plupart n'en emploient qu'une : des **couches** — le chemin
-de la Bulle rapproché de son centre par un facteur, peint d'une couleur et d'une opacité — et des
-**taches**, des disques libres posés en coordonnées normalisées.
-
-⚠️ **POURQUOI DES COUCHES ET NON UN DÉGRADÉ DE CANEVAS.** Un dégradé est radial ou linéaire ; une
-forme est quelconque. Calé sur la boîte englobante — la seule chose qu'un dégradé sache viser — le
-fondu devient **inégal autour du périmètre** : l'étoile perd ses pointes, qui touchent la boîte,
-pendant que ses creux restent opaques ; la bande se dissout par ses deux bouts seulement. C'est
-juste pour la tache d'encre, qui remplit à peu près sa boîte, et faux partout ailleurs. Un rendu
-comparatif l'a montré avant qu'une ligne soit écrite.
-
-⚠️ **ET IL A FALLU LES DEUX SORTES, APRÈS QUATRE RENDUS RATÉS.** Une couche est le contour mis à
-l'échelle : une boucle fermée, qui **entoure toujours le centre**. Elle ne peut donc jamais être une
-tache localisée. Les tentatives l'ont établi sans appel — des couches concentriques ondulées ont
-donné un oignon coupé, des couches en secteur un nœud papillon.
-
-| ce qui a été essayé | ce que ça donnait |
-|---|---|
-| couches concentriques à rayon ondulé | des anneaux : un oignon coupé |
-| couches en secteur angulaire | des pétales convergeant au centre : un nœud papillon |
-| taches posées dans l'encart inscriptible | des taches **hors** de l'ovale — l'encart de l'ovale et du rectangle EST la boîte entière, décision de compatibilité assumée plus haut |
-| taches seules, sans liseré | une marbrure si pâle qu'on ne la voyait pas : les taches n'atteignent jamais le bord, là où un papier se salit le plus |
-
-La version retenue : un **liseré** — le contour entier dans une teinte terre, puis la couleur choisie
-ramenée vers le centre avec un bord qui ondule — et des taches par-dessus.
-
-⚠️ **LES TACHES TIENNENT SANS DÉCOUPE, PAR CALCUL.** Le débordement du cadre de Case vient d'être
-figé : une Bulle ne se peint **jamais** sous découpe. Une texture qui aurait eu besoin d'un `clip()`
-aurait forcé à desserrer cette règle une étape après l'avoir écrite. La garantie tient en une ligne :
-la forme étant étoilée, la plus grande ellipse **inscrite** est entièrement dedans, et une tache
-posée dedans — `distance + rayon ≤ 1` — y reste.
-
-⚠️ **L'OPACITÉ DE LA BULLE MULTIPLIE LA TEXTURE, elle ne la remplace pas.** Sans cette règle, deux
-commandes agiraient sur la même chose et l'une des deux deviendrait inopérante sans qu'on sache
-laquelle — le défaut qui a mordu quatre fois dans ce chantier. À 0 %, une Bulle marbrée disparaît
-entièrement, marbrure comprise.
-
-⚠️ **ET UNE TEXTURE NE REÇOIT AUCUNE GÉOMÉTRIE :** ni la forme, ni la taille, ni le nombre de points
-du contour. Une couronne d'épines peut donc être marbrée et une tache d'encre rester en aplat.
-
-### ⚠️ UNE TEXTURE PORTE SA PROPRE COULEUR DE FOND
-
-Signalé à l'usage, et c'est juste : un vieux papier n'est pas « une couleur au choix, un peu
-tachée », c'est du **parchemin** ; la tache d'encre du Lecteur omniscient est **noire**, avec un
-lettrage blanc. Laisser le sélecteur commander sous une texture qui teinte donnait des parchemins
-bleus et des taches d'encre roses, que le relevé ne montre nulle part.
-
-| texture | fond imposé | texte par défaut |
-|---|---|---|
-| aucune | — *l'utilisateur choisit* | — |
-| encre sombre | noir d'encre | clair |
-| vieux papier | parchemin crème | brun sombre |
-
-⚠️ **ET « AUCUNE » N'EST PAS « BLANC » MAIS « L'UTILISATEUR DÉCIDE ».** Les confondre rendrait le
-sélecteur de couleur inopérant pour tout le monde. C'est la seule entrée où il commande quelque
-chose — et la fiche **masque** le champ sous les autres, plutôt que de laisser un bouton mort : un
-réglage visible et inopérant est pire que pas de réglage du tout, défaut rencontré quatre fois dans
-ce chantier sous d'autres formes.
-
-⚠️ **LA COULEUR DU TEXTE N'EST QU'UN DÉFAUT, jamais une contrainte** — même dispositif que la queue
-par défaut d'une forme. Sans lui, une encre sombre garderait le texte anthracite des autres Bulles,
-donc noir sur noir, et la texture serait inutilisable telle quelle. Le champ de l'utilisateur, dès
-qu'il existe, l'emporte toujours.
-
-⚠️ **LA CLÉ PERSISTÉE DE L'ENCRE SOMBRE RESTE `fondus`**, alors que le libellé a changé. Le nom
-d'origine ne décrivait que le bord ; la couleur en fait désormais partie. Mais le registre **lève**
-sur une clé inconnue, et renommer la clé ferait échouer bruyamment l'ouverture d'un Projet
-enregistré entre-temps. Un libellé peut mentir sans conséquence, une clé persistée non.
-
-### Ce que la texture coûte
-
-Mesuré sur la construction des chemins, 40 Bulles × 500 passages, hors rastérisation — le coût réel
-est donc **supérieur** à ces chiffres :
-
-| forme | aucune | bords fondus | vieux papier |
-|---|---|---|---|
-| ovale | 1,3 µs | 69,5 µs | 45,7 µs |
-| tache d'encre | 24,5 µs | 237,4 µs | 92,2 µs |
-
-⚠️ **LE DÉFAUT NE COÛTE RIEN DE PLUS**, et c'est ce qui compte pour l'existant : sans texture, le
-remplissage reste une seule couche, identique à ce qu'il était. Mais une Planche chargée de Bulles
-aux bords fondus change la donne par rapport à la campagne qui avait conclu qu'aucun cache n'était
-nécessaire. À reprendre avec l'observation du chargement.
-
-## Ce que la tache d'encre n'a PAS encore
-
-⚠️ **LA SILHOUETTE EST LIVRÉE, LA TACHE NE L'EST PAS.** Le relevé est formel : « il n'y a pas de
-remplissage distinct d'un contour, **le bord EST l'effet** » — cœur opaque, bords translucides
-laissant passer le fond, mouchetis dont la taille **et** l'opacité décroissent avec la distance,
-quelques filaments. Offerte aujourd'hui, la tache rend un **aplat**, c'est-à-dire exactement le
-piège que sa propre fiche nomme.
-
-C'est assumé, et c'est une conséquence de la règle que cette note pose elle-même : **aucun axe n'en
-implique un autre**. La texture relève du remplissage, le mouchetis de la couche ajoutée. Les faire
-entrer dans la forme, pour qu'une seule forme soit belle plus tôt, reviendrait à dénouer l'axe qui
-tient tout le reste — et interdirait, par exemple, une couronne d'épines mouchetée.
-
-Les trois questions de rattachement laissées ouvertes ici sont **toutes tranchées** :
-
-| ce qui manquait | où c'est allé | qui a tranché |
-|---|---|---|
-| ~~les textures de remplissage~~ | carré « Texture du fond », section Apparence : le store des textures, filtré sur le tag livré « Bulle de dialogue » (retirable : toute texture à grain, `int:<id>` ou `tex:<dossier>`, cf. `definirResolveurDeTexturesDeBulle`) | #425m |
-| ~~le mouchetis~~ | un axe à part entière, « Particule », et non un motif du trait | #425n |
-| ~~les bords translucides~~ | du **remplissage**, et non de la bordure | #425n |
-
-⚠️ **LA TABLE EST GARDÉE PLUTÔT QUE SUPPRIMÉE.** Elle montre qu'une question notée sans être
-tranchée finit par l'être, à condition d'être écrite quelque part — c'est la même démonstration que
-la liste `EN_ATTENTE` du détecteur de code mort, et elle vaut d'être laissée sous les yeux.
-
-⚠️ **LA DERNIÈRE FORME DU CORPUS EST ENTRÉE AU REGISTRE, ET CE N'EST PAS SON ASPECT QUI L'A DÉCIDÉ.**
-Le rectangle à angles vifs manquait encore. Mis côte à côte avec l'arrondi, à queue triangulaire,
-l'écart est une nuance graphique et rien d'autre : personne ne choisirait l'un plutôt que l'autre
-pour dire quelque chose de différent, et l'ajouter pour cela n'aurait pas valu la peine.
-
-**SANS QUEUE, il cesse d'être une bulle de dialogue et devient un RÉCITATIF** — la boîte de
-narration, que le vocabulaire ne savait pas dire du tout : l'arrondi, lui, reste lu comme une
-réplique. C'est cette fonction qui a décidé de l'ajout, et c'est pourquoi le récitatif naît **sans
-pointe** là où l'arrondi naît avec la sienne. Le relevé le confirme deux fois : le récitatif de
-Blacksad est un rectangle à angles vifs gris-vert cerné d'un filet fin, et Imperium en fait une voix
-de machine.
-
-⚠️ **« SANS FILET, FOND PLEIN » N'A EN REVANCHE RIEN DEMANDÉ À LA FORME.** Décocher la bordure et
-noircir le fond le donnent déjà, sur n'importe quelle forme. C'était donc un faux argument pour
-l'ajout, et le noter évite qu'on le reprenne comme un vrai.
-
-⚠️ **ET LA CLÉ `rect` RESTE L'ARRONDI, MALGRÉ SON NOM.** Elle a porté les angles vifs jusqu'à #425f,
-où l'arrondi a pris sa place sans changer de clé. La rendre au rectangle net ferait basculer toutes
-les Bulles rectangulaires déjà dessinées, ce qu'aucun alias ne rattrape : un alias migre une clé
-DISPARUE, il ne départage pas deux clés vivantes. Les deux libellés portent donc chacun leur
-qualificatif — « Rectangle arrondi » et « Rectangle net » — plutôt que d'en laisser un revendiquer le
-nom nu et contredire sa clé. Un test fige ce partage contre la tentation de « remettre les choses en
-ordre » un jour où plus personne ne se souviendra de #425f.
-
-## La queue ne suivait pas le curseur
-
-⚠️ **DÉFAUT TROUVÉ EN PRÉPARANT L'AXE QUEUE, PRÉSENT DEPUIS QU'IL EXISTE PLUS DE DEUX FORMES.** Le
-glisser et le dessin n'étaient d'accord ni sur ce que veut dire `tailLen`, ni sur ce que veut dire
-`tailAngle` :
-
-- le glisser écrivait l'angle par un `atan2` sur des coordonnées **normalisées** par les demi-axes,
-  et la longueur en rayons de l'**ellipse** de la boîte ;
-- le dessin interroge le **contour**, avec un angle **polaire** pour toute forme qui n'est pas
-  l'ovale.
-
-Les deux ne coïncident que pour l'ovale, dont le `theta` est justement paramétrique. Écart mesuré
-entre le point lâché et la pointe dessinée, sur une Bulle de 200 × 80 : **48 px** sur un rectangle,
-**57** sur un écu, **77** sur une bande.
-
-Le contrat d'une forme gagne donc une cinquième fonction, `angleVersLePoint`, inverse exacte de
-`edgePoint`. Que `theta` soit polaire ou paramétrique est une propriété de **chaque forme** —
-l'invariant posé dès le registre — et la laisser deviner au-dehors était la copie fautive.
-
-⚠️ **LE CHOIX DE GARDER `tailLen` RELATIF AU CONTOUR A ÉTÉ TRANCHÉ SUR IMAGE.** Le compter en
-fraction de la boîte donnerait une portée constante quelle que soit la forme, ce qui est séduisant.
-Mais la queue de toutes les Bulles rectangulaires enregistrées se déplaçait de 23 px, et surtout les
-queues sortaient **de travers** : la base reste sur le contour pendant que la pointe passerait sur
-l'ellipse, soit deux repères dans un même triangle. Sur une bande, cela donnait une écharde
-diagonale.
-
-⚠️ **CONSÉQUENCE ASSUMÉE, À ROUVRIR UN JOUR :** sur une forme qui ne remplit pas sa boîte — la bande
-n'occupe que 62 % de sa hauteur — la queue par défaut est courte. Il faut la tirer pour l'allonger.
-
-## L'éclair était accroché à un moignon
-
-⚠️ **TROISIÈME ÉCRITURE FAUSSE DE CETTE QUEUE, ET LA TROISIÈME TROUVÉE EN REGARDANT.** Signalée à
-l'usage : « on dirait que l'éclair est accroché à une autre queue ». Deux causes cumulées, dont
-aucune n'était visible dans les tests, qui comptaient des points et vérifiaient que la pointe était
-atteinte :
-
-| cause | mesure |
-|---|---|
-| **le côté** : le chemin partait de la base située à −0,75 de l'axe et son premier point de queue était à **+0,14** — il traversait, puis retraversait avant l'autre base | le contour se croisait deux fois, ce qui se lit comme un moignon |
-| **la largeur de départ** : la bande naissait à 55 % de l'ouverture | ses deux bords quittaient les bases en biais, formant un petit « V » |
-
-Le côté de départ ne peut pas être supposé : il se **mesure**, la première base n'étant pas toujours
-du même côté de la normale selon l'angle de la queue. Et une queue doit naître **à fleur** de son
-ouverture — largeur égale à l'écart des bases, décalage latéral nul — puis s'en écarter.
-
-Les deux propriétés sont désormais éprouvées sur les neuf formes.
-
-## Le débordement du cadre de Case : deux règles, tenues par accident
-
-Le relevé montre, chez Lecteur omniscient, une Bulle en tache d'encre posée **à cheval** sur le bord
-de la Case et le blanc inter-cases : le débordement fait partie du dispositif, il n'en est pas un
-défaut.
-
-⚠️ **LA TÂCHE ANNONÇAIT L'INVERSE, ET ELLE AVAIT TORT.** Elle affirmait que les Bulles étaient
-découpées au rectangle de leur Case et prévoyait un booléen pour autoriser le débordement.
-Vérification faite avant d'écrire une ligne, en instrumentant `clip`/`save`/`restore` sur une Planche
-portant deux Cases et une Bulle à cheval : **aucune découpe**, nulle part, ni à l'écran ni à
-l'export — qui passe par le même `drawContent`. Le booléen aurait « autorisé » ce qui l'est déjà, et
-l'aurait retiré dans l'autre sens.
-
-Deux règles rendent ce dispositif possible, et aucune n'était écrite :
-
-| règle | statut avant | ce qui la cassait sans bruit |
-|---|---|---|
-| une Bulle n'est **jamais découpée** par une Case | accidentelle — personne n'avait mis de `clip()` là où **cinq** autres chemins de dessin en ont un | ajouter un découpage « par symétrie avec l'image de Case » |
-| les Bulles passent **devant toutes les Cases**, quel que soit leur empilement | décidée et écrite en commentaire, **jamais testée** | fondre la passe séparée des Bulles dans la boucle générale des objets |
-
-⚠️ **ET LA SIGNATURE DU TEST D'ORDRE A DÛ ÊTRE AFFINÉE.** La première version notait le nom des
-appels : « fill stroke fill stroke fill stroke ». Deux Cases et une Bulle produisent exactement
-cette suite **quel que soit leur ordre**, si bien que la mutation qui fait peindre la Bulle dans
-l'ordre de `page.objects` — donc parfois sous une Case — passait au vert. Chaque peinture est
-désormais notée avec sa **couleur**, et la Bulle d'essai en porte deux que rien d'autre n'emploie.
-
-⚠️ **UNE LIMITE SUBSISTE, D'UNE AUTRE NATURE :** la toile d'export fait exactement la taille de la
-Planche. Ce qui sort de la **Planche** est donc coupé — mais cela n'a rien à voir avec le cadre de
-la Case, et c'est vrai de tout objet.
-
-## L'axe PARTICULE : une nuée, pas un motif de trait
-
-⚠️ **LE RATTACHEMENT A ÉTÉ DÉBATTU AVANT D'ÊTRE CODÉ.** Le mouchetis d'encre aurait pu passer pour
-un motif de bordure, au même titre que les pointillés. C'est faux : un motif de trait est une
-propriété d'**une ligne**, alors qu'une particule est une nuée répartie en **deux dimensions** autour
-du bord. Les loger sur le même attribut aurait interdit « tremblé **et** moucheté », combinaison que
-le relevé montre chez Lecteur omniscient.
-
-⚠️ **ET UNE PARTICULE N'EST PAS UNE TACHE DE TEXTURE**, malgré la ressemblance. Les taches du vieux
-papier sont **confinées** dans la Bulle, par calcul et sans découpe. Une particule se pose **à cheval
-sur le bord** — le mouchetis entoure la masse d'encre au lieu de la remplir. Rien ne s'y oppose : le
-débordement du cadre de Case est figé, donc une particule qui sort est cohérente avec une tache
-d'encre posée sur le blanc inter-cases.
-
-⚠️ **LES DEUX DÉCROISSANCES SONT IMPOSÉES PAR LE RELEVÉ** — « des points dont la taille **et**
-l'opacité décroissent avec la distance ». N'en faire décroître qu'une donne soit de gros points
-fantômes au loin, soit des points minuscules mais francs : dans les deux cas la projection ne se lit
-pas.
-
-⚠️ **« FLAMME » N'A AUCUNE SOURCE DANS LE CORPUS.** Les douze œuvres examinées ne montrent pas de
-Bulle enflammée. C'est un ajout demandé, assumé comme tel, et il ne doit jamais être présenté comme
-relevé.
-
-### Ce que trois rendus ont corrigé, et l'instrument qui mentait
-
-| version | ce qu'on voyait | la cause |
-|---|---|---|
-| langues d'un pixel | des poussières invisibles | `taille` est une fraction du **plus petit** demi-axe : sur une Bulle 210 × 80, une valeur réglée sur un carré donne 1 px |
-| langues couchées | des flaques de part et d'autre du sommet | allongées **le long du rayon** : sur une ellipse aplatie, la direction radiale près du sommet est presque horizontale |
-| langues toujours horizontales | aucun changement malgré la correction | **la sonde de rendu ignorait la rotation** passée à `ellipse` |
-
-⚠️ **LA TROISIÈME LIGNE EST LA PLUS INSTRUCTIVE.** J'ai corrigé deux fois sur la foi d'une image
-produite par un instrument infidèle, et l'une de ces corrections n'était fondée sur rien. Regarder le
-rendu ne suffit pas : encore faut-il vérifier que l'appareil qui le produit ne laisse pas tomber un
-paramètre en route. La correction retenue — langues orientées vers le haut, légèrement évasées — a
-été **revérifiée** une fois la sonde réparée, par comparaison côte à côte avec la variante radiale.
-
-⚠️ **L'ÉTALEMENT RESTE SOUS UN QUART DE TOUR, ET C'EST UN INVARIANT.** Au-delà, une langue pendrait
-**sous** la Bulle ; le feu monte. Le test l'énonce ainsi plutôt que par un seuil deviné — et c'est le
-code qui a été resserré pour lui laisser de la marge, non le test assoupli.
-
-### Ce que les particules coûtent
-
-Construction des chemins, 40 Bulles × 400 passages, hors rastérisation :
-
-| forme | aucune | tache | flamme |
-|---|---|---|---|
-| ovale | 1,6 µs | 6,1 µs | 4,2 µs |
-| tache d'encre | 23,5 µs | **346,1 µs** | **299,6 µs** |
-
-⚠️ **L'ÉCART ENTRE LES DEUX LIGNES N'EST PAS DÛ AUX PARTICULES, ET LE DIAGNOSTIC COMPTE PLUS QUE LE
-CHIFFRE.** Sur un ovale, le point du contour se calcule en une formule : trente particules coûtent
-4 µs. Sur une tache d'encre, chaque particule demande son point de contour, et **le contour entier
-est reconstruit à chaque fois** — quatre-vingt-seize points, trente-quatre fois. C'est un défaut
-d'appel, pas un coût inhérent, et il se corrigerait en construisant le contour une seule fois.
-
-Ce n'est pas fait ici : la correction touche la frontière entre le dessin et le registre des formes,
-et mérite d'être traitée avec l'observation du chargement plutôt qu'en fin d'étape. Reversé tel quel.
-
-## Le corpus, et son statut
-
-Deux niveaux, parce qu'ils ne se valent pas et que les confondre a déjà produit des erreurs.
-
-| niveau | ce que ça veut dire | œuvres |
-|---|---|---|
-| `vu` | épisode entier consulté à la source, le plus récent | Eleceed (ép. 402), Lecteur omniscient (ép. 308), Jungle Juice (ép. 79) |
-| `photo` | planches photographiées, examinées, **fragment conservé** | Geste des Chevaliers Dragons, Imperium, Blacksad, Okko, La Licorne, Locke & Key, Croquemitaine, Lady Mechanika, Mutafukaz |
-
-Un troisième niveau `à vérifier` existait, pour deux œuvres décrites sans planche sous les yeux. Il a
-été **supprimé, et les deux œuvres avec** : une fiche sans planche derrière elle n'a pas sa place
-dans un relevé qui sert à écrire du code.
-
-⚠️ **POURQUOI CE MARQUAGE EXISTE.** Le document de travail dont cette note est tirée portait un
-marquage `vérifié` sur des entrées fausses, et l'image qui contredisait l'une d'elles voyageait
-**dans le même fichier**, à quelques centimètres du texte qu'elle démentait. Ce n'est pas un défaut
-d'attention : rien dans la forme du document n'obligeait à regarder les deux ensemble.
-
-⚠️ **ET « VU » N'EST PAS « PROUVÉ ».** Deux corrections portant l'étiquette `vu` — l'encart système du
-Lecteur omniscient, la bulle sans contour de Jungle Juice — n'ont plus de fragment à montrer.
-L'étiquette dit d'où vient l'affirmation, pas si le lecteur peut la contrôler.
-
-## Le liseré du vieux papier était un facteur, et il fallait une largeur
-
-⚠️ **DEUX DÉFAUTS RAPPORTÉS À L'USAGE, UNE SEULE CAUSE.** « Certaines textures bavent un peu en
-dehors des contours de la bulle, au niveau de la pointe » et « avec Vieux papier on a des contours
-intérieurs foncés qui n'ont rien à faire ici ». Les deux viennent du même endroit.
-
-Une couche de texture est le contour de la Bulle ramené vers son centre. Ce rapprochement était un
-**facteur multiplicatif** : le cœur du vieux papier valait 0,88 du rayon, le liseré sale étant ce qui
-dépasse. Or le commentaire du module décrivait ce liseré comme faisant « deux à trois pixels de
-large ». Douze pour cent du rayon font douze pixels sur les flancs d'une Bulle de 200 px, et
-davantage sur une grande : ce n'était plus un liseré mais un contour intérieur foncé. Le commentaire
-disait vrai de l'intention, faux du code, et personne ne les a confrontés.
-
-**Et sur une QUEUE, un facteur ne veut rien dire.** Ses points sont trois fois plus loin du centre
-que ceux du corps : la même proportion y retire trois fois plus de pixels. Le cœur clair rentrait
-donc massivement dans la pointe, et la couche sombre restait exposée tout autour — ce qui se lit
-comme une texture qui déborde.
-
-Une couche déclare désormais un **retrait en pixels**, converti en rapprochement au moment du tracé,
-où le rayon de chaque point est connu. La texture n'a pas à connaître la géométrie ; le dessin n'a
-pas à connaître l'intention. Le liseré fait la même épaisseur sur le corps, sur la queue, et quelle
-que soit la taille de la Bulle.
-
-⚠️ **AUCUN TEST NE POUVAIT ATTRAPER CELA, ET LA RAISON MÉRITE D'ÊTRE RETENUE.** Le contrat ne parlait
-que de proportions : une assertion « le facteur est entre 0,7 et 1 » ne connaît pas la taille de la
-Bulle et ne peut donc rien dire d'une largeur. Il a fallu faire entrer la TAILLE dans la mesure — un
-test compare maintenant une Bulle de 120 px et une de 900 — et mesurer au CANEVAS le chemin
-réellement construit, points de la queue compris. Trois mutations de la conversion passaient jusque-là
-sans rien casser, dont celle qui fait sortir la couche au lieu de la rentrer : le symptôme d'origine.
-
-⚠️ **ET LA MIGRATION AVAIT OUBLIÉ UNE COPIE.** Le corps d'une Bulle et les disques détachés d'une
-chaîne de ronds ne se tracent pas de la même façon — un disque n'a pas de contour de forme — et ils
-appliquent donc le retrait d'une couche chacun de leur côté. Le passage du facteur au retrait n'a été
-fait que dans le constructeur du corps : celui des disques MULTIPLIAIT encore, et un retrait de 3 y
-triplait le rayon. Sur une chaîne de ronds en vieux papier, le papier débordait largement autour de
-chaque disque, pendant que la suite de tests restait verte.
-
-Une même décision appliquée à deux endroits finit toujours par n'être corrigée qu'à un seul. Les deux
-constructeurs restent séparés, parce qu'ils décrivent deux géométries ; c'est le TEST qui les
-parcourt tous les deux et exige d'eux le même retrait.
-
-## L'étoile du cri avait des creux aussi aigus que ses pointes
-
-⚠️ **SIGNALÉ À L'USAGE, IMAGE DE RÉFÉRENCE À L'APPUI : « rendre la base des pointes moins pointue ».**
-La construction reliait deux rayons alternés par des segments DROITS : le fond d'un creux était donc
-aussi aigu que le sommet d'une pointe, et la forme se lisait comme une scie. Sur une bulle de cri, le
-relevé montre l'inverse — pointes franches, fond large et doux. C'est ce **contraste** qui fait le
-cri ; adoucir les deux donnerait une fleur, adoucir les pointes seules un galet bosselé.
-
-Le fond des creux est désormais un raccord de coin : on quitte l'arête avant le creux, on y revient
-après, et le sommet du creux devient le point de CONTRÔLE d'une quadratique — donc un point par où
-la courbe ne passe plus. Le creux effectif remonte légèrement, ce qui est exactement l'effet voulu.
-
-⚠️ **ET UN TEST VOISIN A PERDU SON TÉMOIN.** Celui qui tient la concavité des côtés de l'écu opposait
-ses 86 % de points rentrants aux 50 % de l'étoile, dont les creux étaient reliés par des segments
-droits : la mesure séparait ainsi « côtés creux » de « pointes alternées ». Des creux arrondis sont
-des arcs concaves, et l'étoile rend maintenant 88 % — le témoin est devenu un second exemple. Le test
-prouve donc MOINS qu'avant, et il le dit : ce qu'il tient encore est que l'écu ne s'est pas arrondi,
-avec trois formes convexes à zéro pour témoins. Rajuster son seuil en silence aurait laissé croire
-qu'il prouvait toujours la même chose.
-
-## Les noms de la fiche ont été raccourcis
-
-⚠️ **UN LIBELLÉ DE MENU N'EST PAS UNE DESCRIPTION.** « Étoile (cri) », « Écu à côtés concaves »,
-« Tache d'encre », « Cheveu courbe », « Octogone à coins coupés », « Chaîne de ronds » : chacun
-portait, en plus de son nom, un morceau de ce que la note de spécification dit déjà mieux. Dans une
-liste déroulante, ce supplément ne distingue de rien — aucune autre entrée n'est un écu, une tache
-ou un octogone — et il allonge la lecture au moment où l'on choisit.
-
-Ils sont devenus Étoile, Écu, Tache, Courbe, Octogone, Ronds. La liste des pointes est désormais
-entièrement en un mot : Triangle, Éclair, Courbe, Ronds, Aucune. Les deux rectangles gardent leur
-qualificatif, parce qu'eux se distinguent l'un de l'autre.
-
-L'anglais suit : « Concave-sided escutcheon » devient **Shield**, un mot que les anglophones
-connaissent, et « Ink blot » devient **Blot**.
-
-⚠️ **ET LA GARDE DU MANUEL A PU SE RESSERRER, CE QUI EST LA VRAIE RAISON DE CE RANGEMENT.** Le test
-qui exige que chaque forme et chaque pointe offertes soient nommées dans le manuel ne cherchait que
-le PREMIER MOT de chaque libellé — une béquille rendue nécessaire par leur longueur, puisque le
-manuel les citait en abrégé. Elle coûtait cher : « Rectangle arrondi » et « Rectangle net » se
-réduisaient tous deux à « Rectangle », si bien que la disparition de l'un du manuel passait
-inaperçue. Les libellés courts se citent tels quels, et la garde exige maintenant le libellé entier.
-
-## Ce qui a été retiré, et ce qui a été gardé
-
-⚠️ **LE LISERÉ DU VIEUX PAPIER A DISPARU, ET AVEC LUI LE DERNIER RESTE D'UNE HABITUDE.** Cette texture
-posait le contour entier dans une teinte terre puis la couleur choisie rentrée de quelques pixels :
-un pourtour plus sale que le cœur, que le relevé de La Licorne montrait bien. Elle avait aussi porté
-des TACHES, parties en #431b3. Signalé à l'usage — « normalement il ne doit rien rester de tout ça,
-mais il reste encore un fin liseré marron sur les bords ». Un grain photographié porte déjà la
-matière ; ce que le remplissage ajoute par-dessus, personne ne l'a commandé et personne ne peut
-l'enlever.
-
-Avec lui part le **retrait**, seul mécanisme du contrat qui rapprochait une couche du centre — plus
-aucune texture n'en déclarait. C'est lui qui avait produit les trois défauts signalés juste avant :
-un contour intérieur foncé, une texture qui débordait autour de la pointe, et des disques de chaîne
-triplés. Toutes les textures sont désormais **une seule couche grainée**, et l'ovale repasse toujours
-par l'appel `c.ellipse` exact, la seconde branche échantillonnée n'ayant plus d'objet.
-
-⚠️ **ET L'AXE « PARTICULE » A ÉTÉ DÉBRANCHÉ SANS ÊTRE JETÉ.** Il semait un mouchetis d'encre ou des
-langues de flamme à cheval sur le bord. L'idée tient — le relevé la montre chez plusieurs auteurs —
-mais la rendre convaincante demande bien plus que ce qui avait été fait : taille et opacité
-décroissantes, filaments, densité qui suit la matière. Décidé avec l'utilisateur : bonne idée, pas
-prioritaire, **et ne pas jeter le code**.
-
-`src/bubble-particle.js` reste au dépôt avec ses tests, qui continuent de tourner : la décision pure
-ne peut donc pas pourrir en silence. Son export branché est inscrit dans la liste `EN_ATTENTE` du
-détecteur de code mort — c'est le mécanisme que ce dépôt emploie pour ce qui est écrit sans être
-branché, et il sert ici pour ce qui a été débranché sans être abandonné. C'est le seul endroit où
-« conserver sans brancher » peut se dire sans mentir : supprimer aurait perdu le travail, laisser
-sans exemption aurait fait rougir la suite à chaque exécution, et l'habitude aurait été prise de la
-faire taire.
-
-Ce chiffre ne redescendra pas tout seul. Les six dettes précédentes se soldaient en branchant ce qui
-attendait ; celle-ci se soldera de deux manières seulement — l'axe revient dans la fiche, ou l'on
-décide de supprimer le module pour de bon.
-
-## La bibliothèque de styles (#425j)
-
-Un style retient l'apparence d'une Bulle sous un nom, pour la réappliquer ailleurs. La section vit
-entre « Bordure » et « Texte » : elle résume ce qui la précède ET les réglages de texte qui la
-suivent, elle se lit donc naturellement au milieu.
-
-⚠️ **CE QU'UN STYLE CONTIENT SE DÉCIDE PAR EXCLUSION, ET CETTE DÉCISION ÉTAIT DÉJÀ PRISE.** Énumérer
-ce qu'un style retient — forme, pointe, trait, texture, couleurs, police… — est exactement le piège
-que `src/bubble-merge.js` avait nommé pour la fusion : la liste s'allonge à chaque axe ajouté et se
-périme en SILENCE. La fusion l'avait résolu en nommant ce qui NE se transporte pas, une liste stable
-et petite. Un style pose la même question et **réutilise la même réponse**, augmentée de l'angle et
-de la longueur de la pointe. Deux listes décrivant « ce qui est de l'apparence » auraient divergé au
-premier axe ajouté.
-
-⚠️ **L'ANGLE ET LA LONGUEUR DE LA POINTE SONT DES PLACEMENTS, PAS DES RÉGLAGES D'ASPECT.** Une pointe
-désigne qui parle, et cela dépend de la Case. Appliquer un style à une Bulle déjà posée ne doit pas
-faire tourner sa pointe vers un locuteur qui n'est pas le sien. Arbitré avec l'utilisateur.
-
-La longueur fait pourtant une exception, et le test la tient : un style à **chaîne de ronds** relève
-la pointe au minimum que ce motif exige, sans quoi ses ronds naîtraient rétrécis — le défaut corrigé
-en #425h, qui serait revenu par la porte du style.
-
-⚠️ **L'ABSENCE EST UN RÉGLAGE, DANS LES DEUX SENS.** Un style ne retient pas les clés que la Bulle
-ne porte pas : enregistrer `bulleShape: undefined` imposerait l'ovale à une Bulle rectangulaire.
-Et appliquer un style RETIRE les champs d'apparence qu'il ne nomme pas — sans quoi une Bulle
-texturée garderait sa texture, et le même style rendrait deux résultats différents selon la Bulle de
-départ. C'est la faute M14 de #426a, rencontrée une troisième fois.
-
-⚠️ **LA BIBLIOTHÈQUE EST UN RÉGLAGE DE L'APPLICATION, PAS DU PROJET.** Elle vit dans `settings.json`,
-à côté du thème : un style créé dans un Projet est disponible dans tous les autres, ce que le mot
-« bibliothèque » suppose. La contrepartie, assumée : les styles ne suivent pas le fichier qu'on
-envoie à quelqu'un. Elle ne vit donc PAS dans `S` — elle y aurait voyagé avec le Projet et se serait
-annulée au Ctrl+Z, deux comportements que personne n'attend d'elle.
-
-Une bibliothèque illisible vaut une bibliothèque vide, et les entrées abîmées sont écartées UNE PAR
-UNE : `settings.json` est un fichier que l'utilisateur peut éditer et qu'un disque plein a pu
-tronquer. Même politique que la géométrie de fenêtre de #407b.
-
-⚠️ **ET UN DÉFAUT QU'AUCUNE RELECTURE N'AURAIT ATTRAPÉ.** L'entrée « Aucun style » du menu porte une
-valeur vide ; `Number('')` vaut **zéro**, pas `NaN`. Le non-choix sélectionnait donc le PREMIER style
-de la bibliothèque et l'appliquait, en empilant une annulation pour un geste que l'utilisateur venait
-d'annuler. Le code se lisait juste ; c'est le test du branchement qui l'a dit.
-
-⚠️ **CE PARAGRAPHE ANNONÇAIT QUE RENOMMER ET SUPPRIMER RESTAIENT À FAIRE, ET IL A SURVÉCU À SA
-VÉRITÉ.** Ils ont été construits la séance suivante — voir plus bas —, et cette phrase est restée
-telle quelle jusqu'à ce qu'on relise la note en cherchant les tâches ouvertes. Une note qui décrit
-un dépôt qui n'existe plus est le défaut que ce fichier passe son temps à nommer chez les autres ;
-la trace est gardée ici plutôt qu'effacée, parce qu'elle montre par où la chose arrive : on écrit
-« reste à faire » au moment où c'est vrai, et rien ne relit cette ligne le jour où ça cesse de
-l'être.
-
-⚠️ **ET LE BOUTON ÉTEINT A DISPARU, CE QUI VAUT MIEUX QUE CE QUI AVAIT ÉTÉ LIVRÉ.** La première
-version grisait « Enregistrer » quand la Bulle portait déjà un style : un contrôle visible et
-inopérant, le défaut que ce dépôt nomme et refuse, et qui n'apprenait rien à qui le regardait. La
-section montre désormais ce qu'il y a à FAIRE — enregistrer un style qui n'existe pas, ou
-**renommer** et **supprimer** celui qu'on porte. La décision n'a pas changé d'un mot :
-`peutEnregistrerLeStyle3D` tranchait l'état grisé, elle tranche maintenant lequel des deux jeux
-s'affiche.
-
-Deux points que seul l'usage aurait révélés, et que les tests tiennent :
-
-- **renommer un style en lui-même n'est pas un doublon.** Ouvrir la modale sur « Cri », corriger une
-  virgule et valider referait tomber sur « Cri » : le style serait déclaré doublon de LUI-MÊME. Le
-  contrôle reçoit donc l'index de l'entrée qu'on renomme et l'ignore. Le refus est juste pour
-  l'ajout, absurde au renommage, et aucune relecture du contrôle seul ne le voit ;
-- **supprimer un style ne touche aucune Bulle.** Ce qui disparaît est l'entrée de la bibliothèque,
-  pas l'apparence des Bulles qui la portent. Le message de confirmation le dit, faute de quoi
-  personne ne peut deviner lequel des deux on lui demande de confirmer.
-
-La suppression passe par `confirmAction`, la confirmation générique déjà employée pour supprimer une
-Bulle ou un modèle. En écrire une quatrième aurait fait une quatrième fermeture à déclarer, une
-quatrième paire d'entrées i18n, et une quatrième occasion d'en oublier une.
-
-Le renommage, lui, a sa propre modale plutôt qu'un titre réécrit à l'ouverture : réécrire le titre
-d'une modale partagée le ferait remettre en français au prochain changement de langue, `applyI18n`
-repassant par-dessus — c'est exactement ce qui était arrivé au bouton de `confirmAction`.
-
-⚠️ **ET « RENOMMER » S'ÉTEINT TANT QUE LE NOM N'A PAS CHANGÉ — un bouton éteint qui, lui, est juste.**
-La règle du dépôt vise un contrôle qui ne PEUT rien faire et le laisse croire ; celui-ci dit qu'il
-n'y a rien à faire pour l'instant, et il se rallume au premier caractère tapé. C'est un état, pas
-une impasse : on peut agir sur lui depuis l'endroit même où on le voit.
-
-Deux nuances, et chacune est un test :
-
-- **les espaces de bord ne comptent pas, la casse si.** L'écriture retire les espaces de bord :
-  ajouter «  » autour de « Cri » n'écrirait rien. Mais « cri » vers « Cri » se voit dans la liste,
-  et refuser ce geste ferait du contrôle une gêne ;
-- **un nom vide reste cliquable.** Il sera refusé, avec son motif sous le champ — un bouton qui
-  s'éteint sans rien dire laisserait chercher ce qui ne va pas.
-
-⚠️ **« SANS EFFET » ET « DOUBLON » SONT DEUX QUESTIONS DISTINCTES, ET LES CONFONDRE CASSERAIT LE
-RENOMMAGE.** Le contrôle des doublons ignore l'entrée qu'on renomme, donc il ACCEPTE le nom
-inchangé ; c'est l'autre question qui dit qu'il n'y a rien à faire. Les fusionner rendrait
-impossible de corriger la casse d'un style — le seul emploi réel de cette exception, maintenant que
-valider sans rien changer n'est plus atteignable.
-
-Un test l'a d'ailleurs montré tout seul : celui qui vérifiait qu'on peut « renommer un style en
-lui-même » décrivait désormais un chemin que l'interface ne permet plus. Il porte maintenant sur la
-correction de casse, qui est ce qui reste de ce cas.
+| `pointDuContour(o, theta)` | le point du contour dans la direction `theta` | l'ancrage de la queue, le glisser de sa pointe |
+| `pointsDuContour(o)` | les points du contour, ou `null` si la forme est lisse | le tracé continu qui saute l'arc sous la queue |
+| `encartInterieur(o)` | la zone où le texte s'inscrit | la mise en page du texte et `bullePadding` |
+| `queueParDefaut(o)` | si une Bulle de cette forme naît avec une queue | la création ; `tailVisible`, dès qu'il existe, l'emporte |
+
+Les contours courbes (écu, tache) sont **échantillonnés** en points rapprochés : l'intersection d'un
+rayon avec eux est exacte. La tache a un contour **par Bulle**, tiré de son identifiant
+(`cyclic-noise.js`) : il est le même à l'écran et à l'export. Sa zone de texte est calculée sur ce
+contour-ci, pas une fraction fixe.
+
+L'ovale garde la boîte entière comme zone de texte : le texte peut légèrement dépasser la courbe près
+des coins.
+
+## Les queues
+
+`bubble-tail.js` décrit chaque queue par rapport au contour de la forme, sans dépendre d'elle. Le
+cheveu peut s'inverser (`tailMirror`, `queuePeutSInverser3D`). Les ronds sont une chaîne de trois
+cercles décroissants (`RONDS_*`).
+
+## Textures et particules
+
+- **Une texture** est une pile de couches, tracées dans le chemin de la Bulle rentré vers son centre,
+  plus un **grain** (une image photographiée, teintée) chargé par `bubble-grain.js`. Une texture peut
+  **imposer** sa couleur (la fiche masque alors le sélecteur) ou seulement la **suggérer**.
+- **Les particules** sont une nuée répartie autour du bord, pas un motif du trait : elles se cumulent
+  avec n'importe quel trait (tremblé et moucheté, par exemple).
+
+## La fusion
+
+Deux Bulles **fusionnables** qui se touchent (`bullesEnContact3D`) peuvent n'en faire qu'une : un
+contour unique, et autant de zones de texte que de **lobes**. Un groupe porte N lobes. La Bulle
+**sélectionnée** impose son apparence aux autres ; `CHAMPS_PROPRES_AU_LOBE` liste ce qui reste propre à
+chaque lobe (place, texte, groupe). « Séparer les bulles » rend à chaque lobe son état d'avant
+(`bulleAvantFusion`).
+
+## Les styles enregistrés
+
+- Un style est tout ce que porte une Bulle, **sauf** `CHAMPS_HORS_STYLE` (les champs propres au lobe,
+  `tailAngle`, `tailLen`) : la liste exclut au lieu d'énumérer, si bien qu'un axe ajouté entre dans
+  les styles sans rien changer ici.
+- La bibliothèque est un réglage de l'**application** (`settings.json`, clé `bulleStyles`), partagée
+  entre Projets, hors de `S` et de l'annulation.
+- Une Bulle garde une **copie** des valeurs, jamais une référence : modifier un style ne repeint pas les
+  planches déjà faites. `styleCorrespondant3D` dit si une Bulle suit encore un style.
+
+## Dessin et empilement
+
+- Une Bulle n'est **jamais découpée** par sa Case : elle peut déborder sur le blanc inter-cases.
+- Les Bulles sont dessinées dans une passe à part, **devant toutes les Cases**, quel que soit l'ordre
+  des objets.
+- L'export a la taille de la Planche : ce qui sort de la Planche est coupé.
+
+## Étendre
+
+- **Une forme** : une clé (jamais réutiliser une clé existante), une entrée dans `REGISTRE` avec ses
+  quatre fonctions, son libellé et son icône ; les tests croisent toutes les formes avec toutes les
+  queues.
+- **Une texture, une particule** : une entrée dans leur registre ; une clé retirée va dans la table
+  d'alias.
+
+## Tester
+
+`tests/bubble-*.test.mjs`, `tests/apercu-bulle.test.mjs`, `tests/bulle-gras-italique.test.mjs`. Ce que
+les tests ne voient pas (un texte qui sort de sa forme, une forme qui ne ressemble pas à ce qu'elle
+doit être) se vérifie en **rendant les Bulles en image** et en les regardant.
+
+## Pièges
+
+- **`rect` est le rectangle arrondi**, `rectnet` l'angle vif : la clé `rect` ne change plus de sens.
+- **Écrire `tailVisible != null`**, pas `!== false` : un « oui » explicite doit l'emporter sur le défaut
+  de la forme.
+- **Ne pas mettre de `clip()` sur le dessin des Bulles**, et ne pas fondre leur passe dans la boucle
+  des objets.
+- **Une graine instable** ferait changer la tache de forme à chaque rendu.
