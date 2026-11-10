@@ -132,8 +132,16 @@ export function cadrageDuSujet(boite, imgL, imgH, L, H, marge = MARGE, max = AGR
   // dégradés radiaux, des photos floues ou deux couleurs). Une image qui ne couvre pas la carte laisse
   // voir le fond reconstitué, et le raccord se voit. Si le sujet tient encore dans la carte, avec au
   // moins la moitié de la marge, à l'échelle qui couvre, on la prend : plus aucun fond reconstitué.
-  if (boite && e < echelleCouvrante && echelleCouvrante <= echelleImage * max
-    && bl * echelleCouvrante <= L - m && bh * echelleCouvrante <= H - m) e = echelleCouvrante;
+  // The margin is checked AFTER the image is held against the card's edges (seen: a head touching the
+  // top of its thumbnail ended up touching the top of the record).
+  const tientCouvert = () => {
+    const ec = echelleCouvrante, l0 = imgL * ec, h0 = imgH * ec;
+    const x0 = Math.min(0, Math.max(L - l0, L / 2 - ((b.x0 + b.x1) / 2) * ec));
+    const y0 = Math.min(0, Math.max(H - h0, H / 2 - ((b.y0 + b.y1) / 2) * ec));
+    const d = m / 2;
+    return x0 + b.x0 * ec >= d - 1e-6 && x0 + b.x1 * ec <= L - d + 1e-6 && y0 + b.y0 * ec >= d - 1e-6 && y0 + b.y1 * ec <= H - d + 1e-6;
+  };
+  if (boite && e < echelleCouvrante && echelleCouvrante <= echelleImage * max && tientCouvert()) e = echelleCouvrante;
   // ⚠️ UN FOND VARIÉ (vignettage, photo floue) NE SE PROLONGE PAS : aucun remplissage ne s'y raccorde
   // (signalé à trois reprises). L'image n'est donc jamais réduite sous sa taille contenue pour ménager
   // une marge, et elle couvre la carte dès qu'on en garde au moins 80 % (une carte 3:2 d'une image
@@ -145,9 +153,13 @@ export function cadrageDuSujet(boite, imgL, imgH, L, H, marge = MARGE, max = AGR
   const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
   let x = L / 2 - cx * e, y = H / 2 - cy * e;
   const l = imgL * e, h = imgH * e;
-  // Une image qui couvre la carte n'en découvre aucun bord : le centrage sur le sujet est borné.
-  if (l >= L) x = Math.min(0, Math.max(L - l, x));
-  if (h >= H) y = Math.min(0, Math.max(H - h, y));
+  // Sur un fond VARIÉ, une image qui couvre la carte n'en découvre aucun bord : le centrage sur le sujet
+  // est borné. Sur un fond UNI, le sujet garde sa marge, quitte à découvrir un bord qui se comble sans
+  // raccord (signalé : une tête qui touchait le haut de sa vignette touchait celui de la fiche).
+  // Une image qui couvre la carte en entier (le cas « couvrir » ci-dessus) est toujours bornée.
+  const borner = !unis || e === echelleCouvrante;
+  if (borner && l >= L) x = Math.min(0, Math.max(L - l, x));
+  if (borner && h >= H) y = Math.min(0, Math.max(H - h, y));
   return { x, y, l, h };
 }
 

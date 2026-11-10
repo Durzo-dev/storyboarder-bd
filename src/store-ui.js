@@ -359,23 +359,40 @@ function pastillePossede(t, fichier){
  */
 export const MARGE_FICHE = 0.08;
 const recadreesFiche = new Map();
+const formatsFiche = new Map();   // origine → [largeur, hauteur] de l'image source
 async function recadrerVisuel(img, visuel){
   const origine = img.getAttribute('src');
   if (!origine || !img.isConnected) return;
-  const zone = visuel.getBoundingClientRect();
-  const ratio = zone.width > 0 && zone.height > 0 ? zone.width / zone.height : 16 / 9;
-  const L = 1280, H = Math.max(1, Math.round(L / ratio));
-  const cle = `${origine}|${L}x${H}`;
   const montrer = (url) => {
     if (url) { img.src = url; img.classList.add('recadree'); }
     img.classList.remove('store-fiche-attente');
   };
-  if (recadreesFiche.has(cle)) { montrer(recadreesFiche.get(cle)); return; }
   img.classList.add('store-fiche-attente');
   try {
-    const rep = await window.storyboarderAPI.storeVignette(origine);
-    if (!rep || !rep.data) { montrer(null); return; }
-    const toile = recomposer(await createImageBitmap(new Blob([rep.data])), L, H, MARGE_FICHE);
+    let bmp = null;
+    if (!formatsFiche.has(origine)) {
+      const rep = await window.storyboarderAPI.storeVignette(origine);
+      if (!rep || !rep.data) { montrer(null); return; }
+      bmp = await createImageBitmap(new Blob([rep.data]));
+      formatsFiche.set(origine, [bmp.width, bmp.height]);
+    }
+    // ⚠️ UNE IMAGE EN PAYSAGE DONNE SA FORME AU CADRE (signalé à plusieurs reprises : une vignette 16:9
+    // de Sketchfab dans le cadre haut de la fiche laissait de grands vides, qu'aucun remplissage ne
+    // raccordait à un fond vignetté ou photo). Le cadre prend son format ; une image en portrait (Poly
+    // Haven) garde le cadre haut, où son fond uni se prolonge sans raccord.
+    const [w, h] = formatsFiche.get(origine);
+    if (w >= h) { visuel.style.aspectRatio = `${w} / ${h}`; visuel.classList.add('store-fiche-visuel-paysage'); }
+    const zone = visuel.getBoundingClientRect();
+    const ratio = zone.width > 0 && zone.height > 0 ? zone.width / zone.height : w / h;
+    const L = 1280, H = Math.max(1, Math.round(L / ratio));
+    const cle = `${origine}|${L}x${H}`;
+    if (recadreesFiche.has(cle)) { montrer(recadreesFiche.get(cle)); return; }
+    if (!bmp) {
+      const rep = await window.storyboarderAPI.storeVignette(origine);
+      if (!rep || !rep.data) { montrer(null); return; }
+      bmp = await createImageBitmap(new Blob([rep.data]));
+    }
+    const toile = recomposer(bmp, L, H, MARGE_FICHE);
     const blob = await new Promise(ok => toile.toBlob(ok, 'image/jpeg', 0.92));
     if (!blob) { montrer(null); return; }
     const url = URL.createObjectURL(blob);

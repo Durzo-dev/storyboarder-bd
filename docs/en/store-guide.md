@@ -90,7 +90,13 @@ sphere touching the edges of a square (Poly Haven). So they are recomposed:
   keeps a gap above and below only. A mostly transparent edge (Poly Haven) counts as uniform and
   keeps its margin;
 - **the record's large image** goes through the same recompose, to its frame's size, with an 8 %
-  margin (`recadrerVisuel`, `MARGE_FICHE`): no black bars, no subject on the edge;
+  margin (`recadrerVisuel`, `MARGE_FICHE`): no black bars, no subject on the edge. A LANDSCAPE image
+  gives its shape to the frame (`aspect-ratio`, `.store-fiche-visuel-paysage`): a 16:9 Sketchfab
+  thumbnail in the tall frame left large gaps no fill matched; a portrait one (Poly Haven) keeps the
+  tall frame;
+- **covering** is only taken when the subject keeps half its margin AFTER the image is held against
+  the card's edges; on a uniform background the image is not held (the subject keeps its margin, the
+  uncovered edge blends in);
 - **"My models"** keeps a source's thumbnail, except Sketchfab's (`SOURCES_SANS_VIGNETTE`,
   light background): those models are rendered like an imported one;
 - **the image's natural size**, never its displayed size: otherwise it is stretched;

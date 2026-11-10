@@ -2540,6 +2540,8 @@ button.store-chip:hover{ border-color:var(--accent); }
 /* A record's image, recomposed to its frame (store-ui.js, recadrerVisuel): hidden until ready, then it fills the frame. */
 .store-fiche-visuel img.store-fiche-attente{ opacity:0; }
 .store-fiche-visuel img.recadree{ object-fit:cover; }
+/* A landscape image gives its shape to the frame (recadrerVisuel): no gap above and below it. */
+.store-fiche-gauche .store-fiche-visuel.store-fiche-visuel-paysage{ flex:0 0 auto; min-height:0; }
 .store-fiche-visuel .store-apercu-3d{ position:absolute; inset:0; width:100%; height:100%; display:block; cursor:grab; touch-action:none; }
 .store-fiche-visuel .store-apercu-3d:active{ cursor:grabbing; }
 .store-apercu-chargement{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; margin:0; padding:16px; text-align:center; font-size:var(--texte-courant); color:var(--ink-soft); }

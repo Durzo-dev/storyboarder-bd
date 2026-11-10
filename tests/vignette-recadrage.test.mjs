@@ -57,8 +57,8 @@ describe('cadrageDuSujet : le sujet remplit la carte, moins la marge, centré', 
     assert.ok(p.l >= 600 - 1e-6 && p.h >= 400 - 1e-6, 'l\'image couvre la carte');
     assert.ok(p.x <= 1e-6 && p.y <= 1e-6 && p.x + p.l >= 600 - 1e-6 && p.y + p.h >= 400 - 1e-6, 'sans découvrir de bord');
   });
-  test('une image qui couvre ne découvre aucun bord, même si le sujet est sur le côté', () => {
-    const p = cadrageDuSujet({ x0: 0, y0: 200, x1: 100, y1: 300 }, 1024, 576, 600, 400);
+  test('sur un fond varié, une image qui couvre ne découvre aucun bord, même si le sujet est sur le côté', () => {
+    const p = cadrageDuSujet({ x0: 0, y0: 200, x1: 100, y1: 300 }, 1024, 576, 600, 400, MARGE, AGRANDISSEMENT_MAX, false);
     assert.equal(p.x, 0);
     assert.ok(p.y <= 0 && p.y + p.h >= 400);
   });
@@ -88,7 +88,9 @@ describe('the record image (asked: no black bars, a margin around the subject)',
   test('recomposed to its frame with the record margin, the original kept on failure', () => {
     const ui = lire('src/store-ui.js');
     assert.match(ui, /requestAnimationFrame\(\(\) => recadrerVisuel\(img, visuel\)\)/);
-    assert.match(ui, /recomposer\(await createImageBitmap\(new Blob\(\[rep\.data\]\)\), L, H, MARGE_FICHE\)/);
+    assert.match(ui, /recomposer\(bmp, L, H, MARGE_FICHE\)/);
+    // A landscape image gives its shape to the frame (seen: large gaps in the tall record frame).
+    assert.match(ui, /if \(w >= h\) \{ visuel\.style\.aspectRatio = /);
     assert.match(ui, /catch \(e\) \{ montrer\(null\); \}/);
   });
   test('a Sketchfab model keeps no source thumbnail in My models (light background)', () => {
@@ -130,5 +132,19 @@ describe('a varied background is never framed smaller (checked on real Sketchfab
   test('uniform: the margin is kept (Poly Haven, asked)', () => {
     const p = cadrageDuSujet({ x0: 0, y0: 0, x1: 274, y1: 512 }, 274, 512, 1280, 1445, 0.08, AGRANDISSEMENT_MAX, true);
     assert.ok(p.y >= 1445 * 0.08 - 1, 'margin above the subject');
+  });
+});
+
+describe('covering keeps the margin once held against the edges (seen: a head touching the top)', () => {
+  test('on a uniform background, a subject on the side stays centred (the uncovered edge blends in)', () => {
+    const p = cadrageDuSujet({ x0: 0, y0: 200, x1: 100, y1: 300 }, 1024, 576, 600, 400);
+    const e = p.l / 1024;
+    assert.ok(Math.abs(p.x + 50 * e - 300) < 1, 'centred');
+  });
+  test('a subject touching the top of its image is not covered', () => {
+    // 16:9 image, subject from the very top to 80 % down, uniform background, 16:9 frame.
+    const p = cadrageDuSujet({ x0: 380, y0: 0, x1: 640, y1: 460 }, 1024, 576, 1280, 720, 0.08);
+    const e = p.l / 1024;
+    assert.ok(p.y + 0 * e >= 720 * 0.08 / 2 - 1, 'the head keeps a margin');
   });
 });

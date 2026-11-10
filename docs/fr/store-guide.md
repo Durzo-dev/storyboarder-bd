@@ -94,7 +94,13 @@ Les vignettes des sources sont faites pour leur site : un petit objet dans un gr
   (`PART_COUVERTE_MIN`). Une fiche haute garde un vide en haut et en bas seulement. Un pourtour
   surtout transparent (Poly Haven) compte pour uni et garde sa marge ;
 - **la grande image de la fiche** passe par le même recadrage, à la taille de son cadre, avec une
-  marge de 8 % (`recadrerVisuel`, `MARGE_FICHE`) : ni bandes noires, ni sujet collé au bord ;
+  marge de 8 % (`recadrerVisuel`, `MARGE_FICHE`) : ni bandes noires, ni sujet collé au bord. Une image
+  en PAYSAGE donne sa forme au cadre (`aspect-ratio`, `.store-fiche-visuel-paysage`) : une vignette
+  16:9 de Sketchfab laissait dans le cadre haut de grands vides qu'aucun remplissage ne raccordait ;
+  une image en portrait (Poly Haven) garde le cadre haut ;
+- **couvrir** n'est retenu que si le sujet garde la moitié de sa marge APRÈS que l'image est calée
+  contre les bords de la carte ; sur un fond uni, l'image n'est pas calée (le sujet garde sa marge, le
+  bord découvert se fond) ;
 - **« Mes modèles »** garde la vignette d'une source, sauf celle de Sketchfab
   (`SOURCES_SANS_VIGNETTE`, fond clair) : ces modèles sont rendus comme un modèle importé ;
 - **la taille naturelle** de l'image, jamais sa taille affichée : sinon elle est étirée ;
