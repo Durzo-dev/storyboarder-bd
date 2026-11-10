@@ -2537,6 +2537,9 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-fiche-visuel img, .store-fiche-visuel iframe{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; border:0; display:block; }
 /* L'aperçu 3D local (#445, Poly Haven) : la toile remplit le cadre, on tourne autour au glisser. */
 .store-fiche-visuel{ position:relative; }
+/* A record's image, recomposed to its frame (store-ui.js, recadrerVisuel): hidden until ready, then it fills the frame. */
+.store-fiche-visuel img.store-fiche-attente{ opacity:0; }
+.store-fiche-visuel img.recadree{ object-fit:cover; }
 .store-fiche-visuel .store-apercu-3d{ position:absolute; inset:0; width:100%; height:100%; display:block; cursor:grab; touch-action:none; }
 .store-fiche-visuel .store-apercu-3d:active{ cursor:grabbing; }
 .store-apercu-chargement{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; margin:0; padding:16px; text-align:center; font-size:var(--texte-courant); color:var(--ink-soft); }

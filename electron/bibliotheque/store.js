@@ -333,6 +333,16 @@ async function lireAttributions(dossierProjets){
   catch (e) { return null; }
 }
 
+/** The store source of each downloaded model, by file name in lower case: `Map(fichier → source)`. */
+async function sourcesDesModeles(dossierProjets){
+  const a = await lireAttributions(dossierProjets);
+  const m = new Map();
+  for (const e of ((a && Array.isArray(a.ressources)) ? a.ressources : [])) {
+    if (e && typeof e.fichier === 'string') m.set(e.fichier.toLowerCase(), e.source);
+  }
+  return m;
+}
+
 /** Écrit À CÔTÉ puis remplace : une coupure en pleine écriture ne laisse jamais un fichier à moitié. */
 async function ecrireAttributions(dossierProjets, attributions){
   const cible = path.join(dossierProjets, sources.FICHIER_ATTRIBUTIONS);
@@ -408,7 +418,7 @@ async function octetsVignette(url){
 
 module.exports = {
   octetsVignette, HOTES_RECADRAGE,
-  chercher, infos, telecharges, poids, telecharger, apercu, attribuer, renommerAttribution, vignetteSource,
+  chercher, infos, telecharges, poids, telecharger, apercu, attribuer, renommerAttribution, vignetteSource, sourcesDesModeles,
   DELAI_MS, DUREE_CATALOGUE_MS, POIDS_MAX,
   // #446b : le réseau partagé avec le store de textures (store-textures.js).
   lireJson, lireOctets, md5, fixture,

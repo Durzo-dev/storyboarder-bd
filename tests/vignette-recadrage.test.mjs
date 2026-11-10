@@ -52,6 +52,20 @@ describe('cadrageDuSujet : le sujet remplit la carte, moins la marge, centré', 
     assert.ok(p.y >= 400 * MARGE - 1, 'la marge du haut est tenue');
     assert.ok(p.y + 512 * e <= 400 * (1 - MARGE) + 1, 'et celle du bas');
   });
+  test('Sketchfab : couvrir la carte dès que le sujet y tient (signalé : bords mal raccordés)', () => {
+    const p = cadrageDuSujet({ x0: 362, y0: 53, x1: 662, y1: 523 }, 1024, 576, 600, 400);
+    assert.ok(p.l >= 600 - 1e-6 && p.h >= 400 - 1e-6, 'l\'image couvre la carte');
+    assert.ok(p.x <= 1e-6 && p.y <= 1e-6 && p.x + p.l >= 600 - 1e-6 && p.y + p.h >= 400 - 1e-6, 'sans découvrir de bord');
+  });
+  test('une image qui couvre ne découvre aucun bord, même si le sujet est sur le côté', () => {
+    const p = cadrageDuSujet({ x0: 0, y0: 200, x1: 100, y1: 300 }, 1024, 576, 600, 400);
+    assert.equal(p.x, 0);
+    assert.ok(p.y <= 0 && p.y + p.h >= 400);
+  });
+  test('un sujet trop haut pour couvrir garde sa marge (on ne le rogne pas)', () => {
+    const p = cadrageDuSujet({ x0: 400, y0: 5, x1: 624, y1: 571 }, 1024, 576, 600, 400);
+    assert.ok(p.h < 400, 'contenue');
+  });
   test('sans sujet : l\'image entière, contenue', () => {
     const p = cadrageDuSujet(null, 512, 512, 600, 400);
     assert.equal(p.h, 400);
@@ -66,5 +80,18 @@ describe('le câblage', () => {
     assert.match(ui, /const toile = recomposer\(source, L, H\);/);
     assert.match(ui, /window\.storyboarderAPI\.storeVignette\(/);
     assert.match(lire('electron/bibliotheque/store.js'), /const HOTES_RECADRAGE = /);
+  });
+});
+
+describe('the record image (asked: no black bars, a margin around the subject)', () => {
+  const lire = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
+  test('recomposed to its frame with the record margin, the original kept on failure', () => {
+    const ui = lire('src/store-ui.js');
+    assert.match(ui, /requestAnimationFrame\(\(\) => recadrerVisuel\(img, visuel\)\)/);
+    assert.match(ui, /recomposer\(await createImageBitmap\(new Blob\(\[rep\.data\]\)\), L, H, MARGE_FICHE\)/);
+    assert.match(ui, /catch \(e\) \{ montrer\(null\); \}/);
+  });
+  test('a Sketchfab model keeps no source thumbnail in My models (light background)', () => {
+    assert.match(lire('electron/main.js'), /!vignettes\.SOURCES_SANS_VIGNETTE\.has\(resultat && resultat\.source\)/);
   });
 });

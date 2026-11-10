@@ -78,9 +78,21 @@ export function cadrageDuSujet(boite, imgL, imgH, L, H, marge = MARGE, max = AGR
   const b = boite || { x0: 0, y0: 0, x1: imgL, y1: imgH };
   const bl = Math.max(1, b.x1 - b.x0), bh = Math.max(1, b.y1 - b.y0);
   const echelleImage = Math.min(L / imgL, H / imgH);   // l'image entière, contenue
-  const e = boite ? Math.min((L - 2 * m) / bl, (H - 2 * m) / bh, echelleImage * max) : echelleImage;
+  const echelleCouvrante = Math.max(L / imgL, H / imgH);   // l'image qui couvre toute la carte
+  let e = boite ? Math.min((L - 2 * m) / bl, (H - 2 * m) / bh, echelleImage * max) : echelleImage;
+  // ⚠️ COUVRIR QUAND ON LE PEUT (signalé : bords mal raccordés sur Sketchfab, dont les fonds sont des
+  // dégradés radiaux, des photos floues ou deux couleurs). Une image qui ne couvre pas la carte laisse
+  // voir le fond reconstitué, et le raccord se voit. Si le sujet tient encore dans la carte, avec au
+  // moins la moitié de la marge, à l'échelle qui couvre, on la prend : plus aucun fond reconstitué.
+  if (boite && e < echelleCouvrante && echelleCouvrante <= echelleImage * max
+    && bl * echelleCouvrante <= L - m && bh * echelleCouvrante <= H - m) e = echelleCouvrante;
   const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
-  return { x: L / 2 - cx * e, y: H / 2 - cy * e, l: imgL * e, h: imgH * e };
+  let x = L / 2 - cx * e, y = H / 2 - cy * e;
+  const l = imgL * e, h = imgH * e;
+  // Une image qui couvre la carte n'en découvre aucun bord : le centrage sur le sujet est borné.
+  if (l >= L) x = Math.min(0, Math.max(L - l, x));
+  if (h >= H) y = Math.min(0, Math.max(H - h, y));
+  return { x, y, l, h };
 }
 
 /** Une couleur `[r, g, b]` en chaîne CSS. */
@@ -90,7 +102,7 @@ const css = (c) => `rgb(${c.map(v => Math.round(v)).join(',')})`;
  * Recompose `source` (une image ou un ImageBitmap décodé) dans un canevas `L × H` : fond en dégradé
  * des coins, sujet cadré, bords de l'image fondus dans le fond. Rend le canevas.
  */
-export function recomposer(source, L, H){
+export function recomposer(source, L, H, marge = MARGE){
   // ⚠️ LA TAILLE NATURELLE, PAS CELLE AFFICHÉE : `width` d'une <img> est sa largeur à l'écran (la
   // carte), et l'image en était déformée (signalé : la commode étirée). Un ImageBitmap n'a que `width`.
   const sl = source.naturalWidth || source.width, sh = source.naturalHeight || source.height;
@@ -105,7 +117,7 @@ export function recomposer(source, L, H){
   const boite = boiteDuSujet(rgba, al, ah);
   const k = sl / al;
   const b = boite && { x0: boite.x0 * k, y0: boite.y0 * k, x1: boite.x1 * k, y1: boite.y1 * k };
-  const pose = cadrageDuSujet(b, sl, sh, L, H);
+  const pose = cadrageDuSujet(b, sl, sh, L, H, marge);
 
   const sortie = document.createElement('canvas');
   sortie.width = L; sortie.height = H;
@@ -118,6 +130,15 @@ export function recomposer(source, L, H){
   c.imageSmoothingEnabled = true;
   c.imageSmoothingQuality = 'high';
   c.drawImage(g, 0.5, 0.5, 1, 1, 0, 0, L, H);
+  // Puis, quand l'image ne couvre pas la carte, l'image elle-même, couvrante et très floue : ses propres
+  // couleurs bordent ses bords, là où le dégradé des coins se raccordait mal (signalé sur Sketchfab).
+  if (pose.l < L || pose.h < H) {
+    const ec = Math.max(L / sl, H / sh);
+    c.save();
+    c.filter = `blur(${Math.round(Math.max(L, H) / 24)}px)`;
+    c.drawImage(source, (L - sl * ec) / 2, (H - sh * ec) / 2, sl * ec, sh * ec);
+    c.restore();
+  }
   // L'image, aux bords fondus : un masque qui s'efface sur 8 % de sa plus petite dimension.
   const pose2 = document.createElement('canvas');
   pose2.width = Math.max(1, Math.round(pose.l)); pose2.height = Math.max(1, Math.round(pose.h));

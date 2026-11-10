@@ -350,6 +350,39 @@ function pastillePossede(t, fichier){
  * pour toutes les cartes. Une image d'un autre site passe par le processus principal
  * (store:vignette) : un canevas refuse de lire les pixels d'une image étrangère.
  */
+/**
+ * The large image of a record, RECOMPOSED TO ITS FRAME like the cards (asked: Sketchfab's light
+ * images showed black bars in the frame, Poly Haven's subject touched its edges). Same chain as the
+ * cards, a wider margin; until it is ready the image is hidden, and on any failure the original shows.
+ */
+export const MARGE_FICHE = 0.08;
+const recadreesFiche = new Map();
+async function recadrerVisuel(img, visuel){
+  const origine = img.getAttribute('src');
+  if (!origine || !img.isConnected) return;
+  const zone = visuel.getBoundingClientRect();
+  const ratio = zone.width > 0 && zone.height > 0 ? zone.width / zone.height : 16 / 9;
+  const L = 1280, H = Math.max(1, Math.round(L / ratio));
+  const cle = `${origine}|${L}x${H}`;
+  const montrer = (url) => {
+    if (url) { img.src = url; img.classList.add('recadree'); }
+    img.classList.remove('store-fiche-attente');
+  };
+  if (recadreesFiche.has(cle)) { montrer(recadreesFiche.get(cle)); return; }
+  img.classList.add('store-fiche-attente');
+  try {
+    const rep = await window.storyboarderAPI.storeVignette(origine);
+    if (!rep || !rep.data) { montrer(null); return; }
+    const toile = recomposer(await createImageBitmap(new Blob([rep.data])), L, H, MARGE_FICHE);
+    const blob = await new Promise(ok => toile.toBlob(ok, 'image/jpeg', 0.92));
+    if (!blob) { montrer(null); return; }
+    const url = URL.createObjectURL(blob);
+    if (recadreesFiche.size >= 40) { const [premiere, u] = recadreesFiche.entries().next().value; URL.revokeObjectURL(u); recadreesFiche.delete(premiere); }
+    recadreesFiche.set(cle, url);
+    if (img.isConnected) montrer(url);
+  } catch (e) { montrer(null); }
+}
+
 /** Les vignettes déjà recadrées, par adresse d'origine : une carte refaite (filtre, page suivante,
  *  retour de fiche) reprend la sienne aussitôt, sans refaire le calcul ni clignoter. */
 const recadrees = new Map();
@@ -434,8 +467,15 @@ function ouvrirFiche(r){
   if (r.local) { ficheLocale(r); ficheCourante = r; return; }
   const t = textesStore(langue());
   const fiche = $('storeFiche');
-  const image = () => (r.vignettes.grande ? [el('img', { attrs: { src: r.vignettes.grande, alt: '', referrerpolicy: 'no-referrer' } })] : []);
-  const visuel = el('div', { classe: 'store-fiche-visuel' }, image());
+  const image = () => {
+    if (!r.vignettes.grande) return [];
+    const img = el('img', { attrs: { src: r.vignettes.grande, alt: '', referrerpolicy: 'no-referrer' } });
+    // Recomposed to the frame, once the record is laid out (its size is known then).
+    requestAnimationFrame(() => recadrerVisuel(img, visuel));
+    return [img];
+  };
+  const visuel = el('div', { classe: 'store-fiche-visuel' });
+  visuel.replaceChildren(...image());
   const boutons = el('div', { classe: 'store-fiche-boutons' });
   if (r.apercu3D) {
     // Un BASCULEMENT image / 3D, et non un aller simple : on revient à l'image d'un clic (demandé).

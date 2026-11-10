@@ -98,3 +98,17 @@ describe('Le câblage de main.js', () => {
     assert.match(s, /const HOTES_VIGNETTES = \/\^https:/);
   });
 });
+
+describe('Sketchfab thumbnails are rendered, not kept (seen: light background in My models)', () => {
+  test('a source thumbnail of a Sketchfab model is redone once; Poly Haven keeps its own', () => {
+    const idx = { version: 1, vignettes: {
+      'a.glb': { signature: 's1', origine: 'source' },
+      'b.glb': { signature: 's2', origine: 'source' },
+      'c.glb': { signature: 's3', origine: 'rendu', rendu: v.VERSION_RENDU },
+    } };
+    const sourceDe = (n) => ({ 'a.glb': 'sketchfab', 'b.glb': 'polyhaven', 'c.glb': 'sketchfab' })[n];
+    const f = [{ nom: 'a.glb', signature: 's1' }, { nom: 'b.glb', signature: 's2' }, { nom: 'c.glb', signature: 's3' }];
+    assert.deepEqual(v.aGenerer(idx, f, sourceDe).map(x => x.nom), ['a.glb']);
+    assert.deepEqual(v.aGenerer(idx, f).map(x => x.nom), []);
+  });
+});

@@ -118,9 +118,24 @@ function oublier(index, nomModele){
   return { version: 1, vignettes: v };
 }
 
-/** Les modèles dont la vignette est à faire, parmi `fichiers` : `[{ nom, signature }]`. */
-function aGenerer(index, fichiers){
-  return (fichiers || []).filter(f => f && f.nom && aRefaire(index, f.nom, f.signature));
+/**
+ * Les sources dont la vignette n'est PAS gardée (`a source thumbnail` on a light grey background, unlike
+ * every rendered one: seen in "My models"). Their models are rendered like an imported one.
+ */
+const SOURCES_SANS_VIGNETTE = new Set(['sketchfab']);
+
+/**
+ * Les modèles dont la vignette est à faire, parmi `fichiers` : `[{ nom, signature }]`. `sourceDe(nom)`
+ * gives the store source of a model (attributions): a thumbnail taken from a source that is no longer
+ * kept (SOURCES_SANS_VIGNETTE) is redone once, by the renderer.
+ */
+function aGenerer(index, fichiers, sourceDe = () => null){
+  return (fichiers || []).filter(f => {
+    if (!f || !f.nom) return false;
+    if (aRefaire(index, f.nom, f.signature)) return true;
+    const e = entrees(index)[f.nom];
+    return !!(e && e.origine === 'source' && SOURCES_SANS_VIGNETTE.has(sourceDe(f.nom)));
+  });
 }
 
-module.exports = { DOSSIER, INDEX, VERSION_RENDU, signatureFichier, nomVignette, typeImage, aRefaire, noter, noterMesures, aMesurer, metas, renommer, oublier, aGenerer };
+module.exports = { DOSSIER, INDEX, VERSION_RENDU, SOURCES_SANS_VIGNETTE, signatureFichier, nomVignette, typeImage, aRefaire, noter, noterMesures, aMesurer, metas, renommer, oublier, aGenerer };

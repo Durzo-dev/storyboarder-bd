@@ -77,6 +77,14 @@ sphere touching the edges of a square (Poly Haven). So they are recomposed:
   enlarges it to fill the card minus a 10 % margin (×2.6 at most, beyond that it blurs), extends
   the background as a four-corner gradient and fades the image edges without ever reaching the
   subject;
+- **cover whenever possible**: if the subject still fits (with half the margin) at the scale where
+  the image covers the card, that scale is taken and the image is kept from uncovering an edge.
+  Otherwise the uncovered space shows the image itself, covering and heavily blurred, over the
+  corner gradient (radial or two-colour backgrounds no longer show a seam);
+- **the record's large image** goes through the same recompose, to its frame's size, with an 8 %
+  margin (`recadrerVisuel`, `MARGE_FICHE`): no black bars, no subject on the edge;
+- **"My models"** keeps a source's thumbnail, except Sketchfab's (`SOURCES_SANS_VIGNETTE`,
+  light background): those models are rendered like an imported one;
 - **the image's natural size**, never its displayed size: otherwise it is stretched;
 - **a remote image's pixels** can only be read through the `store:vignette` IPC, limited to the
   hosts in `HOTES_RECADRAGE` (`store.js`). **A new source adds its hosts there**, or its

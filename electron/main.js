@@ -549,7 +549,8 @@ ipcMain.handle('vignettes:etat', async () => {
   const fichiers = await Promise.all(noms.map(async nom => ({ nom, signature: await signatureModele(nom) })));
   const index = await lireIndexVignettes();
   const presents = fichiers.filter(f => f.signature);
-  const aFaire = vignettes.aGenerer(index, presents);
+  const sourceDe = await store.sourcesDesModeles(getProjectsDir()).then(m => (nom) => m.get(nom.toLowerCase()) || null, () => () => null);
+  const aFaire = vignettes.aGenerer(index, presents, sourceDe);
   const connues = new Set(Object.keys(vignettes.metas(index)).concat(Object.keys((index && index.vignettes) || {})));
   return {
     aFaire,
@@ -1190,8 +1191,9 @@ ipcMain.handle('sketchfab:cancelLogin', async () => sketchfabSession.cancelLogin
 ipcMain.handle('sketchfab:logout', async () => sketchfabSession.logout());
 ipcMain.handle('store:attribuer', async (event, resultat, fichier, resolution) => {
   const r = await store.attribuer(getProjectsDir(), resultat, fichier, resolution);
-  // La vignette de la source devient celle du modèle local : déjà belle, et sans rien à rendre.
-  if (r.ok) {
+  // La vignette de la source devient celle du modèle local : déjà belle, et sans rien à rendre. Sauf
+  // Sketchfab (vignettes-modeles.js, SOURCES_SANS_VIGNETTE) : fond gris clair, rendue chez nous.
+  if (r.ok && !vignettes.SOURCES_SANS_VIGNETTE.has(resultat && resultat.source)) {
     const image = await store.vignetteSource(resultat);
     if (image) await ecrireVignette(fichier, image, 'source');
   }

@@ -80,6 +80,14 @@ Les vignettes des sources sont faites pour leur site : un petit objet dans un gr
   couleur, car un fond en dégradé radial s'écarte partout de la couleur de ses coins. Il l'agrandit
   pour qu'il remplisse la carte moins une marge de 10 % (×2,6 au plus, au-delà c'est flou), prolonge
   le fond en dégradé des quatre coins et fond les bords de l'image sans jamais atteindre le sujet ;
+- **couvrir dès que possible** : si le sujet tient encore (avec la moitié de la marge) à l'échelle
+  où l'image couvre la carte, on la prend, et l'image ne découvre aucun bord. Sinon, l'espace
+  découvert montre l'image elle-même, couvrante et très floue, sur le dégradé des coins (les fonds
+  radiaux ou à deux couleurs ne montrent plus de raccord) ;
+- **la grande image de la fiche** passe par le même recadrage, à la taille de son cadre, avec une
+  marge de 8 % (`recadrerVisuel`, `MARGE_FICHE`) : ni bandes noires, ni sujet collé au bord ;
+- **« Mes modèles »** garde la vignette d'une source, sauf celle de Sketchfab
+  (`SOURCES_SANS_VIGNETTE`, fond clair) : ces modèles sont rendus comme un modèle importé ;
 - **la taille naturelle** de l'image, jamais sa taille affichée : sinon elle est étirée ;
 - **les pixels d'une image distante** ne sont lisibles que par l'IPC `store:vignette`, réservé aux
   hôtes de `HOTES_RECADRAGE` (`store.js`). **Une nouvelle source y ajoute ses hôtes**, sinon ses
