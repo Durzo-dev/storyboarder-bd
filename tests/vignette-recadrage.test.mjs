@@ -95,3 +95,14 @@ describe('the record image (asked: no black bars, a margin around the subject)',
     assert.match(lire('electron/main.js'), /!vignettes\.SOURCES_SANS_VIGNETTE\.has\(resultat && resultat\.source\)/);
   });
 });
+
+describe('filling the uncovered space (seen: a blurred copy of the model behind it)', () => {
+  const src = readFileSync(new URL('../src/vignette-recadrage.js', import.meta.url), 'utf8');
+  test('only the image\'s edge bands are stretched, never the whole image; a side the subject touches is not', () => {
+    const f = src.slice(src.indexOf('function prolongerLesBords'), src.indexOf('/** Une couleur'));
+    assert.ok(f.length > 0);
+    assert.doesNotMatch(f, /drawImage\(source, \(L - sl/);
+    assert.match(f, /const touche = /);
+    assert.match(src, /prolongerLesBords\(c, source, sl, sh, pose, L, H, b\)/);
+  });
+});

@@ -95,6 +95,40 @@ export function cadrageDuSujet(boite, imgL, imgH, L, H, marge = MARGE, max = AGR
   return { x, y, l, h };
 }
 
+/**
+ * Draws, around `pose`, the image's outer band of pixels stretched to the card's edges (each side,
+ * and its corners), softened by a light blur. The bands also run a little INSIDE the image, under its
+ * faded edge, so that the fade shows the same colours. A side the SUBJECT touches (`b`, in source
+ * pixels) is not extended: its band would streak the subject across the card; the corner gradient
+ * shows there instead. The work canvas is wider than the card so that the blur does not darken its edges.
+ */
+function prolongerLesBords(c, source, sl, sh, pose, L, H, b){
+  const P = Math.max(4, Math.round(Math.max(L, H) / 20));   // padding beyond the card, for the blur
+  const t = document.createElement('canvas');
+  t.width = L + 2 * P; t.height = H + 2 * P;
+  const tc = t.getContext('2d');
+  const x = pose.x + P, y = pose.y + P, l = pose.l, h = pose.h;
+  const s = Math.max(1, Math.round(Math.min(sl, sh) * 0.01));   // the band taken, in source pixels
+  const f = Math.min(l, h) * 0.08;                               // how far it runs under the faded edge
+  const touche = (d) => d <= 2 * s;
+  const ok = { g: !(b && touche(b.x0)), d: !(b && touche(sl - b.x1)), h: !(b && touche(b.y0)), b: !(b && touche(sh - b.y1)) };
+  const W = t.width, Ht = t.height;
+  const gx0 = Math.max(0, x), gx1 = Math.max(0, W - (x + l)), gy0 = Math.max(0, y), gy1 = Math.max(0, Ht - (y + h));
+  const dessiner = (sx, sy, sw, sh2, dx, dy, dw, dh) => { if (dw > 0 && dh > 0) tc.drawImage(source, sx, sy, sw, sh2, dx, dy, dw, dh); };
+  if (gx0 > 0 && ok.g) dessiner(0, 0, s, sh, 0, y, gx0 + f, h);
+  if (gx1 > 0 && ok.d) dessiner(sl - s, 0, s, sh, x + l - f, y, gx1 + f, h);
+  if (gy0 > 0 && ok.h) dessiner(0, 0, sl, s, x, 0, l, gy0 + f);
+  if (gy1 > 0 && ok.b) dessiner(0, sh - s, sl, s, x, y + h - f, l, gy1 + f);
+  if (gx0 > 0 && gy0 > 0 && ok.g && ok.h) dessiner(0, 0, s, s, 0, 0, gx0 + f, gy0 + f);
+  if (gx1 > 0 && gy0 > 0 && ok.d && ok.h) dessiner(sl - s, 0, s, s, x + l - f, 0, gx1 + f, gy0 + f);
+  if (gx0 > 0 && gy1 > 0 && ok.g && ok.b) dessiner(0, sh - s, s, s, 0, y + h - f, gx0 + f, gy1 + f);
+  if (gx1 > 0 && gy1 > 0 && ok.d && ok.b) dessiner(sl - s, sh - s, s, s, x + l - f, y + h - f, gx1 + f, gy1 + f);
+  c.save();
+  c.filter = `blur(${Math.max(2, Math.round(Math.max(L, H) / 60))}px)`;
+  c.drawImage(t, -P, -P);
+  c.restore();
+}
+
 /** Une couleur `[r, g, b]` en chaîne CSS. */
 const css = (c) => `rgb(${c.map(v => Math.round(v)).join(',')})`;
 
@@ -130,15 +164,11 @@ export function recomposer(source, L, H, marge = MARGE){
   c.imageSmoothingEnabled = true;
   c.imageSmoothingQuality = 'high';
   c.drawImage(g, 0.5, 0.5, 1, 1, 0, 0, L, H);
-  // Puis, quand l'image ne couvre pas la carte, l'image elle-même, couvrante et très floue : ses propres
-  // couleurs bordent ses bords, là où le dégradé des coins se raccordait mal (signalé sur Sketchfab).
-  if (pose.l < L || pose.h < H) {
-    const ec = Math.max(L / sl, H / sh);
-    c.save();
-    c.filter = `blur(${Math.round(Math.max(L, H) / 24)}px)`;
-    c.drawImage(source, (L - sl * ec) / 2, (H - sh * ec) / 2, sl * ec, sh * ec);
-    c.restore();
-  }
+  // Puis, quand l'image ne couvre pas la carte, SES BORDS PROLONGÉS : la dernière bande de pixels de
+  // chaque côté, étirée jusqu'au bord de la carte puis adoucie. Ses propres couleurs de fond bordent
+  // ses bords (le dégradé des coins se raccordait mal sur Sketchfab), et le sujet n'est jamais recopié
+  // (⚠️ signalé : l'image entière floutée en fond montrait le modèle flou derrière lui-même).
+  if (pose.l < L || pose.h < H) prolongerLesBords(c, source, sl, sh, pose, L, H, b);
   // L'image, aux bords fondus : un masque qui s'efface sur 8 % de sa plus petite dimension.
   const pose2 = document.createElement('canvas');
   pose2.width = Math.max(1, Math.round(pose.l)); pose2.height = Math.max(1, Math.round(pose.h));
