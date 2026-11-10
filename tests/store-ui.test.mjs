@@ -60,6 +60,11 @@ describe('les mises en forme', () => {
     assert.equal(estLourd({ ...leger, details: { faces: SEUIL_LOURD.faces + 1 } }), true);
     assert.equal(estLourd({ ...leger, poids: SEUIL_LOURD.octets + 1 }), true);
     assert.equal(estLourd({ poids: null, details: null }), false);
+    // #467 : the warning follows the chosen quality (asked).
+    assert.equal(estLourd(BANC, { octets: 2 * 1024 * 1024, pixels: 1024 }), false, '8k textures, taken at 1k');
+    assert.equal(estLourd({ details: { textureMax: 8192 }, poids: SEUIL_LOURD.octets + 1 }, { octets: null, pixels: 1024 }), false, 'shrunk here: weight unknown, not counted');
+    assert.equal(estLourd({ details: { textureMax: 8192 }, poids: SEUIL_LOURD.octets + 1 }, { octets: SEUIL_LOURD.octets + 1, pixels: null }), true, 'the original');
+    assert.equal(estLourd({ details: { faces: SEUIL_LOURD.faces + 1 } }, { octets: 1, pixels: 1024 }), true, 'faces are never reduced');
   });
   test('ce que dit la licence, en clair', () => {
     assert.deepEqual(phrasesLicence(sources.licence('by')), ['Créditer l\'auteur est obligatoire.', 'Usage commercial autorisé.']);

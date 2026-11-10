@@ -321,10 +321,17 @@ export function poidsLisible(octets, lang = 'fr'){
   return `${virgule(m < 10 ? Math.round(m * 10) / 10 : Math.round(m))} ${mo}`;
 }
 
-/** Le modèle est-il lourd au point de le dire avant de le télécharger ? */
-export function estLourd(r){
+/**
+ * Le modèle est-il lourd au point de le dire avant de le télécharger ? `choix` (#467, asked: the warning
+ * follows the chosen quality) : `{ octets, pixels }` of the quality chosen in the record. Its textures
+ * count at most `pixels`; its weight is the chosen one when known, and not counted when the file is made
+ * on this computer (a shrunk Sketchfab model: weight unknown before). The faces are never reduced.
+ */
+export function estLourd(r, choix = null){
   const d = r.details || {};
-  return (d.faces || 0) > SEUIL_LOURD.faces || (r.poids || 0) > SEUIL_LOURD.octets || (d.textureMax || 0) > SEUIL_LOURD.textureMax;
+  const tx = choix && choix.pixels ? Math.min(d.textureMax || 0, choix.pixels) : (d.textureMax || 0);
+  const poids = !choix ? (r.poids || 0) : choix.octets > 0 ? choix.octets : choix.pixels ? 0 : (r.poids || 0);
+  return (d.faces || 0) > SEUIL_LOURD.faces || poids > SEUIL_LOURD.octets || tx > SEUIL_LOURD.textureMax;
 }
 
 /** Ce que dit la licence, en clair, phrase par phrase. */
