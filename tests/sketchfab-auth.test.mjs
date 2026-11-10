@@ -113,6 +113,28 @@ describe('#444c, the token', () => {
   });
 });
 
+describe('#444c, the page shown in the browser after the redirect', () => {
+  test('success and error pages, in both languages', () => {
+    assert.match(auth.callbackPage('ok', 'fr'), /Connecté à Sketchfab/);
+    assert.match(auth.callbackPage('ok', 'en'), /Signed in to Sketchfab/);
+    assert.match(auth.callbackPage('state', 'fr'), /Connexion interrompue/);
+    assert.equal(auth.callbackPage('ok', 'fr').includes('Connexion interrompue'), false);
+  });
+
+  test('its colours are the design-system tokens of src/style.css', () => {
+    const css = readFileSync(join(ROOT, 'src', 'style.css'), 'utf8');
+    const block = (sel) => css.slice(css.indexOf(sel), css.indexOf('}', css.indexOf(sel)));
+    const token = (b, name) => (b.match(new RegExp(`--${name}:\\s*(#[0-9A-Fa-f]{6})`)) || [])[1];
+    const pairs = { paper: 'paper', paperDark: 'paper-dark', ink: 'ink', inkMid: 'ink-mid', line: 'line-strong', accent: 'accent', danger: 'danger' };
+    for (const [theme, sel] of [['dark', ':root{'], ['light', 'body.theme-light{']]) {
+      for (const [k, name] of Object.entries(pairs)) {
+        const v = token(block(sel), name) || token(block(':root{'), name);
+        assert.equal(auth.PAGE_TOKENS[theme][k].toUpperCase(), v && v.toUpperCase(), `${theme} --${name}`);
+      }
+    }
+  });
+});
+
 describe('#444c, the store account line', () => {
   test('signed out: offers to sign in', () => {
     const s = accountLineState({ status: { connected: false, user: null }, lang: 'en' });
@@ -127,14 +149,16 @@ describe('#444c, the store account line', () => {
     assert.match(s.text, /Durzo/);
   });
 
-  test('while signing in, the button is disabled; an error is spelled out', () => {
-    assert.equal(accountLineState({ status: null, busy: true }).disabled, true);
+  test('while signing in (in the browser), the button cancels; an error is spelled out', () => {
+    const b = accountLineState({ status: null, busy: true });
+    assert.equal(b.action, 'cancel');
+    assert.equal(b.disabled, false);
     assert.match(accountLineState({ status: null, error: 'denied', lang: 'en' }).text, /refused/);
   });
 
   test('every error the session can return has a message in both languages', () => {
     for (const lang of ['fr', 'en']) {
-      for (const e of ['cancelled', 'denied', 'state', 'invalid', 'network', 'token', 'busy']) {
+      for (const e of ['cancelled', 'denied', 'state', 'invalid', 'network', 'token', 'busy', 'port', 'timeout', 'browser']) {
         const s = accountLineState({ status: null, error: e, lang });
         assert.notEqual(s.text, accountLineState({ status: null, lang }).text, `${lang}/${e}`);
       }

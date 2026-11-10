@@ -167,16 +167,19 @@ this app nor PKCE).
 | File | What it holds |
 |---|---|
 | `electron/bibliotheque/sketchfab-auth.js` | The decisions, pure and tested: client ID, redirect URI, authorization address, reading the redirect, request bodies, session, refresh. |
-| `electron/bibliotheque/sketchfab-session.js` | The input/output: login window, token requests (`net.fetch`), encrypted storage. |
-| `electron/main.js`, `electron/preload.js` | The `sketchfab:status`, `sketchfab:login`, `sketchfab:logout` channels. |
+| `electron/bibliotheque/sketchfab-session.js` | The input/output: opening the browser, the one-shot redirect server, token requests (`net.fetch`), encrypted storage. |
+| `electron/main.js`, `electron/preload.js` | The `sketchfab:status`, `sketchfab:login`, `sketchfab:cancelLogin`, `sketchfab:logout` channels. |
 | `src/store-ui.js` | The account line of the Sketchfab tab (`accountLineState`). |
 
 **Flow**:
-1. "Sign in" opens a window on `https://sketchfab.com/oauth2/authorize/` with `response_type=code`,
-   the client ID, the redirect URI `http://127.0.0.1:53682/sketchfab/retour` and a random `state`.
-   The window has its own session (`persist:sketchfab-login`).
-2. The redirect is caught by `webRequest.onBeforeRequest` **before it leaves**: nothing listens on
-   that port, so no other program can intercept the code. The `state` must match.
+1. "Sign in", at the bottom of the Sketchfab tab, opens `https://sketchfab.com/oauth2/authorize/` in the
+   user's **own browser** (`shell.openExternal`), with `response_type=code`, the client ID, the redirect
+   URI `http://127.0.0.1:53682/sketchfab/retour` and a random `state`. The user's existing sign-ins,
+   password manager and two-factor apply, as OAuth recommends for native apps.
+2. For the duration of the sign-in only (five minutes at most), a one-shot server listens on
+   `127.0.0.1:53682`, never on the network. It checks the `state`, answers with a page in the design
+   system (`callbackPage`: "Signed in to Sketchfab, you can close this tab"), then closes. The account
+   line offers "Cancel" meanwhile.
 3. The code is exchanged at `https://sketchfab.com/oauth2/token/`, **without a client secret**.
 4. The user's name comes from `https://api.sketchfab.com/v3/me`.
 5. The session (`accessToken`, `refreshToken`, `expiresAt`, `user`) is encrypted with `safeStorage`
@@ -190,7 +193,7 @@ this app nor PKCE).
 - **Never put the client secret Sketchfab issued in the code**: the app is a public client and its
   source is public (a test checks no `client_secret` appears).
 - The redirect URI must match the registered one exactly; another port or path is refused by
-  Sketchfab.
+  Sketchfab. If another program holds port 53682, the sign-in reports it.
 
 ## Downloading
 

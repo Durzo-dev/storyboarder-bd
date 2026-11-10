@@ -167,17 +167,20 @@ pour cette application, ni PKCE).
 | Fichier | Ce qu'il porte |
 |---|---|
 | `electron/bibliotheque/sketchfab-auth.js` | Les décisions, pures et testées : identifiant client, adresse de retour, adresse d'autorisation, lecture du retour, corps des requêtes, session, renouvellement. |
-| `electron/bibliotheque/sketchfab-session.js` | Les entrées-sorties : fenêtre de connexion, requêtes de jeton (`net.fetch`), stockage chiffré. |
-| `electron/main.js`, `electron/preload.js` | Les canaux `sketchfab:status`, `sketchfab:login`, `sketchfab:logout`. |
+| `electron/bibliotheque/sketchfab-session.js` | Les entrées-sorties : ouverture du navigateur, serveur de retour à usage unique, requêtes de jeton (`net.fetch`), stockage chiffré. |
+| `electron/main.js`, `electron/preload.js` | Les canaux `sketchfab:status`, `sketchfab:login`, `sketchfab:cancelLogin`, `sketchfab:logout`. |
 | `src/store-ui.js` | La ligne de compte de l'onglet Sketchfab (`accountLineState`). |
 
 **Déroulé** :
-1. « Se connecter » ouvre une fenêtre sur `https://sketchfab.com/oauth2/authorize/` avec
-   `response_type=code`, l'identifiant client, l'adresse de retour
-   `http://127.0.0.1:53682/sketchfab/retour` et un `state` tiré au hasard. La fenêtre a sa propre
-   session (`persist:sketchfab-login`).
-2. Le retour est attrapé par `webRequest.onBeforeRequest` **avant de partir** : rien n'écoute sur ce
-   port, donc aucun autre logiciel ne peut intercepter le code. Le `state` doit correspondre.
+1. « Se connecter », en bas de l'onglet Sketchfab, ouvre `https://sketchfab.com/oauth2/authorize/` dans
+   le **navigateur de l'utilisateur** (`shell.openExternal`), avec `response_type=code`, l'identifiant
+   client, l'adresse de retour `http://127.0.0.1:53682/sketchfab/retour` et un `state` tiré au hasard.
+   Ses connexions existantes, son gestionnaire de mots de passe et sa double authentification
+   s'appliquent, comme OAuth le recommande pour les applications natives.
+2. Le temps de la connexion seulement (cinq minutes au plus), un serveur à usage unique écoute sur
+   `127.0.0.1:53682`, jamais sur le réseau. Il vérifie le `state`, répond par une page aux couleurs du
+   système de design (`callbackPage` : « Connecté à Sketchfab, vous pouvez fermer cet onglet »), puis se
+   ferme. La ligne de compte propose « Annuler » pendant ce temps.
 3. Le code est échangé à `https://sketchfab.com/oauth2/token/`, **sans secret**.
 4. Le nom de l'utilisateur vient de `https://api.sketchfab.com/v3/me`.
 5. La session (`accessToken`, `refreshToken`, `expiresAt`, `user`) est chiffrée par `safeStorage` dans
@@ -191,7 +194,7 @@ pour cette application, ni PKCE).
 - **Ne jamais mettre dans le code le secret que Sketchfab a fourni** : l'application est un client
   public et son code est public (un test vérifie qu'aucun `client_secret` n'apparaît).
 - L'adresse de retour doit correspondre exactement à celle enregistrée ; un autre port ou un autre
-  chemin est refusé par Sketchfab.
+  chemin est refusé par Sketchfab. Si un autre logiciel occupe le port 53682, la connexion le signale.
 
 ## Le téléchargement
 

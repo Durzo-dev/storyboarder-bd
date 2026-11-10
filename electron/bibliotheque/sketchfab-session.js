@@ -1,12 +1,13 @@
 /**
  * sketchfab-session.js: the Sketchfab session, input/output side. The decisions are in
- * sketchfab-auth.js (pure, tested); this file opens the login window, requests tokens and keeps the
+ * sketchfab-auth.js (pure, tested); this file opens the browser on the authorization page, catches the redirect, requests tokens and keeps the
  * session encrypted on disk. See docs/en/asset-store.md, "Signing in to Sketchfab".
  *
  * The token never leaves the main process: the interface only learns `{ connected, user }`.
  */
 'use strict';
-const { BrowserWindow, net, safeStorage, app } = require('electron');
+const { shell, net, safeStorage, app } = require('electron');
+const http = require('http');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -16,7 +17,9 @@ const TIMEOUT_MS = 15000;
 const sessionFile = () => path.join(app.getPath('userData'), 'sketchfab-session.bin');
 
 let current;        // the session, once read (undefined: not read yet)
-let loginWindow = null;
+let pending = null; // the sign-in in progress: { cancel }
+/** How long the browser has to come back. */
+const LOGIN_TIMEOUT_MS = 5 * 60 * 1000;
 
 function load(){
   if (current !== undefined) return current;
@@ -72,41 +75,50 @@ async function fetchUser(accessToken){
   }
 }
 
-/** Opens the login window and waits for the redirect: `{ code, state }` or `{ error }`. */
-function askForCode(parent){
+/**
+ * Opens the authorization page in the user's browser and waits for the redirect on a one-shot server
+ * bound to 127.0.0.1 only: `{ code }` or `{ error }` ('busy', 'port', 'timeout', 'cancelled', or a
+ * parseRedirect error). The server answers with a page in the design system, then closes.
+ */
+function askForCode(lang){
   return new Promise((resolve) => {
-    if (loginWindow) { loginWindow.focus(); resolve({ error: 'busy' }); return; }
+    if (pending) { resolve({ error: 'busy' }); return; }
     const state = auth.newState(crypto.randomBytes(16));
-    let done = false;
+    const redirect = new URL(auth.REDIRECT_URI);
+    let timer = null;
+    const server = http.createServer((req, res) => {
+      const url = new URL(req.url, `${redirect.protocol}//${redirect.host}`).toString();
+      if (!auth.isRedirect(url)) { res.writeHead(404); res.end(); return; }
+      const result = auth.parseRedirect(url, state);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(auth.callbackPage(result.code ? 'ok' : result.error, lang));
+      finish(result);
+    });
     const finish = (result) => {
-      if (done) return;
-      done = true;
-      if (loginWindow && !loginWindow.isDestroyed()) loginWindow.close();
-      loginWindow = null;
+      if (!pending) return;
+      pending = null;
+      clearTimeout(timer);
+      server.close();
       resolve(result);
     };
-    loginWindow = new BrowserWindow({
-      parent, modal: !!parent, width: 520, height: 760, autoHideMenuBar: true,
-      title: 'Sketchfab',
-      // Its own session: Sketchfab's cookies stay apart from the application's.
-      webPreferences: { partition: 'persist:sketchfab-login', nodeIntegration: false, contextIsolation: true, sandbox: true },
+    pending = { cancel: () => finish({ error: 'cancelled' }) };
+    server.on('error', () => finish({ error: 'port' }));
+    server.listen(Number(redirect.port), redirect.hostname, () => {
+      timer = setTimeout(() => finish({ error: 'timeout' }), LOGIN_TIMEOUT_MS);
+      shell.openExternal(auth.authorizeUrl(state)).catch(() => finish({ error: 'browser' }));
     });
-    // The redirect is caught BEFORE any request leaves: nothing listens on 127.0.0.1, and nothing
-    // else can see the code.
-    const filter = { urls: [new URL('/*', auth.REDIRECT_URI).toString()] };
-    loginWindow.webContents.session.webRequest.onBeforeRequest(filter, (details, callback) => {
-      callback({ cancel: true });
-      finish(auth.parseRedirect(details.url, state));
-    });
-    loginWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-    loginWindow.on('closed', () => { loginWindow = null; finish({ error: 'cancelled' }); });
-    loginWindow.loadURL(auth.authorizeUrl(state));
   });
 }
 
+/** Stops a sign-in in progress (the user gave up in the browser). */
+function cancelLogin(){
+  if (pending) pending.cancel();
+  return auth.publicStatus(load());
+}
+
 /** Signs in: `{ connected, user }`, or `{ connected: false, error }`. */
-async function login(parent){
-  const r = await askForCode(parent);
+async function login(lang){
+  const r = await askForCode(lang);
   if (r.error) return { ...auth.publicStatus(load()), error: r.error };
   const t = await postForm(auth.TOKEN_URL, auth.codeRequestBody(r.code));
   const session = t.json && !t.error ? auth.sessionFromTokenResponse(t.json, Date.now()) : null;
@@ -141,4 +153,4 @@ async function accessToken(){
   return next.accessToken;
 }
 
-module.exports = { login, logout, status, accessToken };
+module.exports = { login, cancelLogin, logout, status, accessToken };

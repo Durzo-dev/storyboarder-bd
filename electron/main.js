@@ -1185,7 +1185,8 @@ ipcMain.handle('store:apercu', async (event, sourceId, id) =>
 // interface only gets { connected, user }.
 const sketchfabSession = require('./bibliotheque/sketchfab-session');
 ipcMain.handle('sketchfab:status', async () => sketchfabSession.status());
-ipcMain.handle('sketchfab:login', async (event) => sketchfabSession.login(BrowserWindow.fromWebContents(event.sender)));
+ipcMain.handle('sketchfab:login', async (event, lang) => sketchfabSession.login(lang === 'en' ? 'en' : 'fr'));
+ipcMain.handle('sketchfab:cancelLogin', async () => sketchfabSession.cancelLogin());
 ipcMain.handle('sketchfab:logout', async () => sketchfabSession.logout());
 ipcMain.handle('store:attribuer', async (event, resultat, fichier, resolution) => {
   const r = await store.attribuer(getProjectsDir(), resultat, fichier, resolution);

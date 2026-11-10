@@ -114,7 +114,8 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   storeApercu: (sourceId, id) => ipcRenderer.invoke('store:apercu', sourceId, id),
   // #444c: the Sketchfab session; the token never comes back here, only { connected, user }.
   sketchfabStatus: () => ipcRenderer.invoke('sketchfab:status'),
-  sketchfabLogin: () => ipcRenderer.invoke('sketchfab:login'),
+  sketchfabLogin: (lang) => ipcRenderer.invoke('sketchfab:login', lang),
+  sketchfabCancelLogin: () => ipcRenderer.invoke('sketchfab:cancelLogin'),
   sketchfabLogout: () => ipcRenderer.invoke('sketchfab:logout'),
   storeVignette: (url) => ipcRenderer.invoke('store:vignette', url),
   onStoreApercuProgression: (callback) => ipcRenderer.on('store:apercuProgression', (e, s, id, recus, total) => callback(s, id, recus, total)),

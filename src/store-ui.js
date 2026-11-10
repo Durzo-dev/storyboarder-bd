@@ -140,11 +140,11 @@ let accountError = null;
 
 /**
  * What the account line shows, from its state. PURE, exported for the tests. Returns
- * `{ text, button, action, disabled }`; `action` is 'login' or 'logout'.
+ * `{ text, button, action, disabled }`; `action` is 'login', 'logout' or 'cancel' (a sign-in in the browser).
  */
 export function accountLineState({ status, busy, error, lang = 'fr' }){
   const t = textesStore(lang).account;
-  if (busy) return { text: t.busy, button: t.signIn, action: 'login', disabled: true };
+  if (busy) return { text: t.busy, button: t.cancel, action: 'cancel', disabled: false };
   const connected = !!(status && status.connected);
   const base = connected ? t.signedIn(status.user && status.user.name) : t.signedOut;
   const text = error && t.errors[error] ? `${base} ${t.errors[error]}` : base;
@@ -178,8 +178,10 @@ async function loadSketchfabStatus(){
 
 async function onAccountButton(){
   const pont = window.storyboarderAPI;
-  if (!pont || accountBusy) return;
+  if (!pont) return;
   const action = $('storeAccountButton').dataset.action;
+  if (action === 'cancel') { if (pont.sketchfabCancelLogin) await pont.sketchfabCancelLogin(); return; }
+  if (accountBusy) return;
   accountError = null;
   if (action === 'logout') {
     sketchfabStatus = await pont.sketchfabLogout();
@@ -189,7 +191,7 @@ async function onAccountButton(){
   accountBusy = true;
   refreshAccountLine();
   try {
-    const r = await pont.sketchfabLogin();
+    const r = await pont.sketchfabLogin(langue());
     sketchfabStatus = { connected: !!r.connected, user: r.user || null };
     accountError = r.error || null;
   } catch (e) {

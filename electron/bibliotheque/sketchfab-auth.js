@@ -7,9 +7,10 @@
  *   1. the user approves Storyboarder BD on the authorization page (`response_type=code`, `state`);
  *   2. Sketchfab redirects to REDIRECT_URI with `?code=…&state=…`;
  *   3. the code is exchanged for a token at TOKEN_URL, WITHOUT a client secret (public client).
- * Sketchfab does not support PKCE. The redirect is caught inside the login window before it loads,
- * so no local port is ever opened and no other program can intercept the code; `state` ties the
- * redirect to the request that started it.
+ * Sketchfab does not support PKCE. The authorization page opens in the user's own browser (their
+ * existing sign-ins, password manager and two-factor apply, as OAuth recommends for native apps).
+ * The redirect lands on a one-shot server listening on 127.0.0.1 only, for the duration of the
+ * sign-in; `state` ties the redirect to the request that started it.
  *
  * The client secret Sketchfab issued is never used and must never appear in this repository: a desktop
  * application with public source code cannot keep it confidential.
@@ -113,6 +114,52 @@ function userFromMe(json){
   return typeof name === 'string' && name ? { name, url: typeof json.profileUrl === 'string' ? json.profileUrl : null } : null;
 }
 
+/**
+ * The page the browser shows after the redirect, in the application's design system (dark theme, or
+ * light if the system prefers it). The colours are tokens of src/style.css; a test keeps them equal.
+ * `result`: 'ok', or an error key; `lang`: 'fr' or 'en'.
+ */
+const PAGE_TOKENS = {
+  dark: { paper: '#1B1C1F', paperDark: '#212226', ink: '#EDEDEF', inkMid: '#C6C6CE', line: '#4E4F57', accent: '#FF7A45', danger: '#D9534F' },
+  light: { paper: '#F2EBDD', paperDark: '#E7DCC6', ink: '#2B2A28', inkMid: '#5C584F', line: '#BCAC8A', accent: '#FF7A45', danger: '#C9302C' },
+};
+const PAGE_TEXTS = {
+  fr: {
+    okTitle: 'Connecté à Sketchfab', okBody: 'Vous pouvez fermer cet onglet et revenir à Storyboarder BD.',
+    errorTitle: 'Connexion interrompue', errorBody: 'Revenez à Storyboarder BD pour réessayer.',
+  },
+  en: {
+    okTitle: 'Signed in to Sketchfab', okBody: 'You can close this tab and go back to Storyboarder BD.',
+    errorTitle: 'Sign-in interrupted', errorBody: 'Go back to Storyboarder BD to try again.',
+  },
+};
+function callbackPage(result, lang = 'fr'){
+  const t = PAGE_TEXTS[lang] || PAGE_TEXTS.en;
+  const ok = result === 'ok';
+  const vars = (k) => Object.entries(PAGE_TOKENS[k]).map(([n, v]) => `--${n}:${v};`).join('');
+  return `<!doctype html><html lang="${lang === 'fr' ? 'fr' : 'en'}"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Storyboarder BD</title>
+<style>
+:root{${vars('dark')}}
+@media (prefers-color-scheme: light){ :root{${vars('light')}} }
+html,body{ height:100%; margin:0; }
+body{ display:flex; align-items:center; justify-content:center; background:var(--paper); color:var(--ink);
+  font-family:'Inter','Segoe UI',system-ui,sans-serif; }
+.box{ background:var(--paperDark); border:1px solid var(--line); border-radius:10px; padding:28px 32px; max-width:420px;
+  text-align:center; }
+.mark{ width:44px; height:44px; margin:0 auto 14px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:${ok ? 'var(--accent)' : 'var(--danger)'}; color:#fff; font-size:24px; font-weight:700; }
+h1{ font-size:16px; font-weight:700; margin:0 0 8px; }
+p{ font-size:13px; color:var(--inkMid); margin:0; line-height:1.5; }
+.app{ margin-top:18px; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--inkMid); }
+</style></head><body><div class="box">
+<div class="mark">${ok ? '✓' : '!'}</div>
+<h1>${ok ? t.okTitle : t.errorTitle}</h1>
+<p>${ok ? t.okBody : t.errorBody}</p>
+<div class="app">Storyboarder BD</div>
+</div></body></html>`;
+}
+
 /** What the interface may know: never the token. */
 function publicStatus(session){
   return session ? { connected: true, user: session.user || null } : { connected: false, user: null };
@@ -121,5 +168,5 @@ function publicStatus(session){
 module.exports = {
   CLIENT_ID, REDIRECT_URI, AUTHORIZE_URL, TOKEN_URL, ME_URL, REFRESH_MARGIN_MS,
   newState, authorizeUrl, isRedirect, parseRedirect, codeRequestBody, refreshRequestBody,
-  sessionFromTokenResponse, readSession, needsRefresh, userFromMe, publicStatus,
+  sessionFromTokenResponse, readSession, needsRefresh, userFromMe, publicStatus, callbackPage, PAGE_TOKENS,
 };

@@ -113,7 +113,8 @@ interface StoryboarderAPI {
   onStoreProgression(callback: (recus: number, total: number) => void): void;
   storeApercu(sourceId: string, id: string): Promise<{ data?: Uint8Array; nom?: string; resolution?: string; erreur?: string }>;
   sketchfabStatus(): Promise<SketchfabStatus>;
-  sketchfabLogin(): Promise<SketchfabStatus & { error?: string; status?: number }>;
+  sketchfabLogin(lang?: string): Promise<SketchfabStatus & { error?: string; status?: number }>;
+  sketchfabCancelLogin(): Promise<SketchfabStatus>;
   sketchfabLogout(): Promise<SketchfabStatus>;
   onStoreApercuProgression(callback: (sourceId: string, id: string, recus: number, total: number) => void): void;
   // Modèles 3D importés. `data` voyage en Uint8Array par le clonage structuré de l'IPC : décrire
