@@ -237,7 +237,14 @@ downloaded (no recorded response contains files).
    (`gltf-archive.js`: `fichiersDuZip`, sub-folders included, unsafe paths skipped, then
    `empaqueterGlb`). It is fetched **without** the token, refused beyond 300 MB, and the result must
    start with `glTF`.
-4. The renderer saves and attributes it as for Poly Haven, with no resolution and no choice arrow.
+4. **Texture quality** (#467): Sketchfab gives one `.glb`, textures at the author's size. The arrow
+   offers 1k and 2k when smaller than the largest texture (`optionsSketchfab`, from
+   `archives.glb.textureMaxResolution`), then "original" with its weight. A shrunk quality is made
+   in the renderer after the download (`reduireTexturesGlb`, src/glb-reduction.js: canvas, halving
+   steps, same image format, an image that would come out heavier is kept), and the file rewritten
+   (`remplacerImages`, src/glb-images.js, pure). The quality is recorded with the attribution
+   (`origine` included); a model downloaded before is the original.
+5. The renderer saves and attributes it as for Poly Haven.
 
 Errors (`erreurDemande`): 401 → `connexion` (the account line shows "Session expired"), 403 →
 `interdit`, 404 → `introuvable`, 429 → `quota`; neither `.glb` nor glTF in the answer → `formatAbsent`; an unreadable archive →

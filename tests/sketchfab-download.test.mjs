@@ -178,3 +178,30 @@ describe('#444d, a glTF archive becomes a .glb', async () => {
     assert.equal(sketchfab.lienTelechargement({ usdz: { url: 'https://x/a.usdz' } }), null);
   });
 });
+
+describe('#467, the download button with a texture quality (Sketchfab)', async () => {
+  const { optionsSketchfab } = await import('../src/glb-images.js');
+  const options = optionsSketchfab(4096, 25 * 1024 * 1024);
+  const etat = (p) => etatBoutonTelechargement({ source: 'sketchfab', possible: true, options, choisie: '1k', possede: null,
+    compte: 'ok', poids: 25 * 1024 * 1024, defaut: 'origine', ...p });
+  test('a shrunk quality has no weight; the original has its own', () => {
+    assert.equal(etat({}).texte, 'Télécharger (1k)');
+    assert.equal(etat({ choisie: 'origine' }).texte, 'Télécharger (25 Mo · d\'origine)');
+  });
+  test('a model downloaded before the choice existed is the original', () => {
+    assert.equal(etat({ choisie: 'origine', possede: { fichier: 'a.glb', resolution: null } }).texte, '✓ Déjà téléchargé · d\'origine');
+    const r = etat({ possede: { fichier: 'a.glb', resolution: null } });
+    assert.equal(r.texte, 'Remplacer (1k)');
+    assert.equal(r.remplace, true);
+    assert.match(r.infobulle, /d'origine/);
+  });
+  test('signed out: sign in first, unless the chosen quality is already there', () => {
+    assert.equal(etat({ compte: 'requis' }).action, 'connexion');
+    assert.equal(etat({ compte: 'requis', possede: { fichier: 'a.glb', resolution: '1k' } }).actif, false);
+  });
+  test('the quality is recorded with the attribution, "origine" included', () => {
+    const src = readFileSync(`${ROOT}electron/bibliotheque/store-sources.js`, 'utf8');
+    assert.match(src, /\/\^\(\\d\+k\|origine\)\$\//);
+    assert.match(readFileSync(`${ROOT}src/store-ui.js`, 'utf8'), /data = await reduireTexturesGlb\(data, px,/);
+  });
+});

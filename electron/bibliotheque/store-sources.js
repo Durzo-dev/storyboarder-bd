@@ -172,7 +172,8 @@ function entreeAttribution(r, fichier, date = new Date(), resolution = null){
   return {
     source: r.source, id: String(r.id), fichier,
     // La résolution des textures prise (« 1k »…) : la fiche propose d'en changer en remplaçant.
-    resolution: typeof resolution === 'string' && /^\d+k$/.test(resolution) ? resolution : null,
+    // « origine » : a Sketchfab model whose textures were kept at the author's size (#467).
+    resolution: typeof resolution === 'string' && /^(\d+k|origine)$/.test(resolution) ? resolution : null,
     // La catégorie commune : le filtre de la bibliothèque locale s'en sert.
     categorie: typeof r.categorie === 'string' ? r.categorie : null,
     // Les dimensions réelles si la source les donne (Poly Haven) : la fiche locale les reprend.

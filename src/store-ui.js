@@ -24,6 +24,8 @@ import { usageLabel } from './model-usages.js';
 import { groupeReplie, memoriserGroupe } from './section-memory.js';
 import { ouvrirApercu3D } from './store-apercu-3d.js';
 import { recomposer } from './vignette-recadrage.js';
+import { optionsSketchfab, pixelsDe } from './glb-images.js';
+import { reduireTexturesGlb } from './glb-reduction.js';
 // #454a-4b : les bâtiments, rangés à part (Batiments/) mais listés avec les modèles.
 import { listerBatiments, lireBatimentDuDisque } from './batiment-store.js';
 import { entreesBatiments } from './batiment-bibliotheque.js';
@@ -592,30 +594,39 @@ function memoriserResolution(res){
  * (`poids`), and `compte` is 'ok', 'requis' (the button signs in, then downloads) or 'enCours' (a sign-in
  * in the browser: the button cancels it). `action` is 'telecharger', 'connexion' or 'annuler'.
  */
-export function etatBoutonTelechargement({ source, possible, possede, options, choisie, compte = null, poids: octets = null, lang = 'fr' }){
+export function etatBoutonTelechargement({ source, possible, possede, options, choisie, compte = null, poids: octets = null,
+  defaut = RESOLUTION_DEFAUT, lang = 'fr' }){
   const t = textesStore(lang);
   const opt = (options || []).find(o => o.resolution === choisie);
-  const poids = opt ? poidsLisible(opt.octets, lang) : null;
+  const poids = opt && opt.octets > 0 ? poidsLisible(opt.octets, lang) : null;
+  const lib = (res) => (res === 'origine' ? t.resolutionOrigine : res);
+  const avecChoix = (options || []).length > 0;
   if (!possible) {
     return { texte: possede ? '✓ ' + t.possede : t.telecharger, actif: false,
       note: possede ? '' : t.noteTelechargement(source), infobulle: possede ? t.possedeFiche(possede.fichier) : '', remplace: false, action: 'telecharger' };
   }
-  if (compte) {
-    if (possede) return { texte: '✓ ' + t.possede, actif: false, note: '', infobulle: t.possedeFiche(possede.fichier), remplace: false, action: 'telecharger' };
+  // A model downloaded before the choice existed: 1k for Poly Haven, the original for Sketchfab (`defaut`).
+  const dejaLa = possede && (!avecChoix || (possede.resolution || defaut) === choisie);
+  if (compte && compte !== 'ok') {
+    if (dejaLa) return { texte: '✓ ' + t.possede, actif: false, note: '', infobulle: t.possedeFiche(possede.fichier), remplace: false, action: 'telecharger' };
     if (compte === 'enCours') return { texte: t.account.cancel, actif: true, note: t.account.busy.text, remplace: false, action: 'annuler' };
-    if (compte === 'requis') return { texte: t.seConnecterTelecharger, actif: true, note: '', remplace: false, action: 'connexion' };
+    return { texte: t.seConnecterTelecharger, actif: true, note: '', remplace: false, action: 'connexion' };
+  }
+  if (!avecChoix) {
+    if (possede) return { texte: '✓ ' + t.possede, actif: false, note: '', infobulle: t.possedeFiche(possede.fichier), remplace: false, action: 'telecharger' };
     const p = octets > 0 ? poidsLisible(octets, lang) : null;
     return { texte: p ? t.telechargerSeul(p) : t.telecharger, actif: true, note: '', remplace: false, action: 'telecharger' };
   }
-  // Un modèle téléchargé avant le choix de résolution l'a été en 1k.
-  if (possede && (possede.resolution || RESOLUTION_DEFAUT) === choisie) {
-    return { texte: `✓ ${t.possede} · ${choisie}`, actif: false, note: '', infobulle: t.possedeFiche(possede.fichier), remplace: false, action: 'telecharger' };
+  if (dejaLa) {
+    return { texte: `✓ ${t.possede} · ${lib(choisie)}`, actif: false, note: '', infobulle: t.possedeFiche(possede.fichier), remplace: false, action: 'telecharger' };
   }
+  // Weight still loading (Poly Haven) : « … » ; made on this computer (Sketchfab, octets: null) : none.
+  const poidsAffiche = poids || (opt && opt.octets === null ? null : '…');
   if (possede) {
-    return { texte: t.remplacer(choisie, poids || '…'), actif: true,
-      note: '', infobulle: t.remplacerNote(possede.fichier, possede.resolution || RESOLUTION_DEFAUT), remplace: true, action: 'telecharger' };
+    return { texte: t.remplacer(lib(choisie), poidsAffiche), actif: true,
+      note: '', infobulle: t.remplacerNote(possede.fichier, lib(possede.resolution || defaut)), remplace: true, action: 'telecharger' };
   }
-  return { texte: poids ? t.telechargerPoids(poids, choisie) : t.telecharger, actif: true, note: t.noteTelechargement(source), remplace: false, action: 'telecharger' };
+  return { texte: t.telechargerPoids(poids, lib(choisie)), actif: true, note: t.noteTelechargement(source), remplace: false, action: 'telecharger' };
 }
 
 function brancherTelechargement(r, ui){
@@ -627,8 +638,11 @@ function brancherTelechargement(r, ui){
   const possible = !!(connexion && (connexion.telechargement === false || avecCompte) && pont && pont.storeTelecharger);
   const compte = () => (!avecCompte ? null
     : accountBusy ? 'enCours' : (sketchfabStatus && sketchfabStatus.connected) ? 'ok' : 'requis');
-  let options = [];
+  // #467: Sketchfab gives one .glb; its textures are shrunk here (1k, 2k) or kept (original).
+  let options = avecCompte ? optionsSketchfab(r.details && r.details.textureMax, r.poids) : [];
+  const defaut = avecCompte ? 'origine' : RESOLUTION_DEFAUT;
   ui.choisie = resolutionPreferee();
+  if (options.length && !options.some(o => o.resolution === ui.choisie)) ui.choisie = options[0].resolution;
   const enCoursIci = () => !!(enTelechargement && enTelechargement.cle === cleDe(r));
   const appliquer = () => {
     if (enCoursIci()) {
@@ -641,7 +655,7 @@ function brancherTelechargement(r, ui){
     }
     const e = etatBoutonTelechargement({
       source: r.source, possible, possede: possedes.get(cleDe(r)) || null, options, choisie: ui.choisie, lang: langue(),
-      compte: compte(), poids: r.poids,
+      compte: compte(), poids: r.poids, defaut,
     });
     ui.action = e.action;
     ui.bouton.textContent = e.texte;
@@ -654,10 +668,13 @@ function brancherTelechargement(r, ui){
   /** Le menu des qualités : une ligne par résolution, la choisie cochée, celle déjà là signalée. */
   const remplirMenu = () => {
     const p = possedes.get(cleDe(r));
-    const deja = p ? (p.resolution || RESOLUTION_DEFAUT) : null;
+    const deja = p ? (p.resolution || defaut) : null;
+    const tx = r.details && r.details.textureMax;
     ui.menu.replaceChildren(...options.map(o => {
+      const lib = o.resolution === 'origine' ? t.resolutionOrigine : o.resolution;
+      const px = pixelsDe(o.resolution) || (o.resolution === 'origine' ? tx : null);
       const ligne = el('button', {
-        texte: (o.resolution === ui.choisie ? '✓ ' : '') + t.optionResolution(o.resolution, poidsLisible(o.octets, langue()))
+        texte: (o.resolution === ui.choisie ? '✓ ' : '') + t.optionResolution(lib, o.octets > 0 ? poidsLisible(o.octets, langue()) : null, px)
           + (o.resolution === deja ? ` · ${t.possede.toLowerCase()}` : ''),
         classe: 'store-menu-resolution' + (o.resolution === ui.choisie ? ' actif' : ''),
         attrs: { type: 'button', role: 'menuitemradio', 'aria-checked': String(o.resolution === ui.choisie) },
@@ -705,7 +722,13 @@ function brancherTelechargement(r, ui){
       if (ui.note.isConnected) { ui.note.textContent = textesStore(langue()).erreurs.connexion; ui.note.classList.add('erreur'); }
     }
   };
-  if (avecCompte || !pont.storePoids) return;
+  if (avecCompte) {
+    ui.fleche.hidden = options.length < 2;
+    if (ui.fleche.parentElement) ui.fleche.parentElement.classList.toggle('avec-fleche', options.length >= 2);
+    appliquer();
+    return;
+  }
+  if (!pont.storePoids) return;
   pont.storePoids(r.source, r.id).then(p => {
     if (!p || !Array.isArray(p.options) || !p.options.length) return;
     options = p.options;
@@ -741,8 +764,15 @@ export async function telechargerModele(r, ui, resolution = RESOLUTION_DEFAUT){
     if (!rep || rep.erreur || !rep.data) {
       issue = { ok: false, erreur: (rep && rep.erreur) || 'reponse' };
     } else {
+      // #467: Sketchfab's textures shrunk here, to the chosen resolution (the original keeps them).
+      let data = rep.data;
+      const px = r.source === 'sketchfab' ? pixelsDe(resolution) : null;
+      if (px) {
+        dire(t.reduction(0, 1), null);
+        try { data = await reduireTexturesGlb(data, px, (fait, total) => dire(t.reduction(fait, total), null)); } catch (e) { data = rep.data; }
+      }
       dire(t.rangement, null);
-      const range = deja ? await remplacerModele(deja.fichier, rep.data) : await rangerModele(r.nom + '.glb', rep.data);
+      const range = deja ? await remplacerModele(deja.fichier, data) : await rangerModele(r.nom + '.glb', data);
       issue = range.ok ? { ok: true, fichier: range.name, remplace: !!deja, resolution: rep.resolution || resolution } : { ok: false, erreur: 'ecriture' };
     }
   } catch (e) {

@@ -238,7 +238,15 @@ téléchargé (aucune réponse enregistrée ne contient de fichiers).
    (`gltf-archive.js` : `fichiersDuZip`, sous-dossiers compris, chemins dangereux ignorés, puis
    `empaqueterGlb`). Le lien est lu **sans** le jeton, refusé au-delà de 300 Mo, et le résultat doit
    commencer par `glTF`.
-4. Le renderer le range et l'attribue comme pour Poly Haven, sans résolution ni flèche de choix.
+4. **Qualité des textures** (#467) : Sketchfab donne un seul `.glb`, textures à la taille de
+   l'auteur. La flèche propose 1k et 2k s'ils sont plus petits que la plus grande texture
+   (`optionsSketchfab`, d'après `archives.glb.textureMaxResolution`), puis « d'origine » avec son
+   poids. Une qualité réduite est faite dans le renderer après le téléchargement
+   (`reduireTexturesGlb`, src/glb-reduction.js : canevas, réductions par moitiés, même format
+   d'image, une image qui sortirait plus lourde est gardée), et le fichier réécrit
+   (`remplacerImages`, src/glb-images.js, pur). La qualité est notée avec l'attribution (`origine`
+   comprise) ; un modèle téléchargé avant est l'original.
+5. Le renderer le range et l'attribue comme pour Poly Haven.
 
 Erreurs (`erreurDemande`) : 401 → `connexion` (la ligne de compte affiche « Session expirée »), 403 →
 `interdit`, 404 → `introuvable`, 429 → `quota` ; ni `.glb` ni glTF dans la réponse → `formatAbsent` ; une archive illisible →
