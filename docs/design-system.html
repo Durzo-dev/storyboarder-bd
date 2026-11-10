@@ -2545,6 +2545,9 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-note.erreur{ color:var(--danger); }
 .store-note:empty{ display:none; }
 .store-credit{ font-size:var(--texte-libelle); color:var(--ink-soft); margin:12px 0 0; text-align:right; }
+/* #444c: the Sketchfab account line, under the filters of the Sketchfab tab. */
+.store-account{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:8px 0 0; font-size:var(--texte-libelle); color:var(--ink-mid); }
+.store-account[hidden]{ display:none; }
 .store-credit a{ color:inherit; }
 
 /* ── La fenêtre des POLICES (#423, src/polices-ui.js) ─────────────────────────────────────────── */
@@ -4722,6 +4725,7 @@ This can be undone with Ctrl+Z.</span></p>
       <select id="storeSquelette"><option data-ds-fr="Articulés et statues" data-ds-en="Rigged and statues">Articulés et statues</option></select>
       <span id="storeCommercialCase"><label class="store-case"><input type="checkbox" id="storeCommercial"> <span id="storeCommercialLibelle"><span class="ds-fr">Usage commercial</span><span class="ds-en">Commercial use</span></span></label></span>
     </form>
+    <div id="storeAccount" class="store-account" hidden><span id="storeAccountText"></span><button id="storeAccountButton" class="nav-btn" type="button"></button></div>
     <p id="storeMessage" class="maj-message"></p>
     
     <div id="storeDefilement" class="store-defilement">

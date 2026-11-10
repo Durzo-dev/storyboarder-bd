@@ -7,8 +7,8 @@
  * les résultats. Le processus principal fait les requêtes (store.js) ; ici on construit le DOM.
  * Tout texte venu du réseau (noms, auteurs) passe par textContent, jamais par innerHTML.
  *
- * Le téléchargement (#445) : Poly Haven, sans compte. Sketchfab attend la connexion (#444c) : son
- * bouton reste désactivé, et la fiche dit pourquoi. Un modèle téléchargé est rangé par le chemin de
+ * Le téléchargement (#445) : Poly Haven, sans compte. Sketchfab : the account line signs in (#444c);
+ * downloading waits for #444d, so its button stays disabled and the sheet says why. Un modèle téléchargé est rangé par le chemin de
  * l'import (model-store.js, rangerModele), puis son attribution est notée.
  *
  * Un modèle DÉJÀ TÉLÉCHARGÉ (et encore présent) porte un badge sur sa carte, et sa fiche désactive
@@ -127,6 +127,77 @@ export function rafraichirTextesStore(){
   $('storeCredit').replaceChildren(...(infos.source.credit ? [lien(infos.source.credit[langue()], infos.source.site)] : []));
   $('storeSimulation').hidden = !infos.simulation;
   $('storeSimulation').textContent = infos.simulation ? t.simulation : '';
+  refreshAccountLine();
+  if (source === 'sketchfab') loadSketchfabStatus();
+}
+
+// ── #444c: the Sketchfab account line ───────────────────────────────────────────────────────────
+
+/** The Sketchfab session as last known by the interface: `{ connected, user }`, or null if unknown. */
+let sketchfabStatus = null;
+let accountBusy = false;
+let accountError = null;
+
+/**
+ * What the account line shows, from its state. PURE, exported for the tests. Returns
+ * `{ text, button, action, disabled }`; `action` is 'login' or 'logout'.
+ */
+export function accountLineState({ status, busy, error, lang = 'fr' }){
+  const t = textesStore(lang).account;
+  if (busy) return { text: t.busy, button: t.signIn, action: 'login', disabled: true };
+  const connected = !!(status && status.connected);
+  const base = connected ? t.signedIn(status.user && status.user.name) : t.signedOut;
+  const text = error && t.errors[error] ? `${base} ${t.errors[error]}` : base;
+  return connected
+    ? { text, button: t.signOut, action: 'logout', disabled: false }
+    : { text, button: t.signIn, action: 'login', disabled: false };
+}
+
+/** Shows the line on the Sketchfab tab only, and refreshes it (the elements are built once, in the HTML). */
+function refreshAccountLine(){
+  const zone = $('storeAccount');
+  const pont = window.storyboarderAPI;
+  if (!zone) return;
+  const shown = source === 'sketchfab' && !!(pont && pont.sketchfabStatus);
+  zone.hidden = !shown;
+  if (!shown) return;
+  const s = accountLineState({ status: sketchfabStatus, busy: accountBusy, error: accountError, lang: langue() });
+  $('storeAccountText').textContent = s.text;
+  const b = $('storeAccountButton');
+  b.textContent = s.button;
+  b.disabled = s.disabled;
+  b.dataset.action = s.action;
+}
+
+async function loadSketchfabStatus(){
+  const pont = window.storyboarderAPI;
+  if (!pont || !pont.sketchfabStatus || sketchfabStatus) return;
+  try { sketchfabStatus = await pont.sketchfabStatus(); } catch (e) { sketchfabStatus = { connected: false, user: null }; }
+  refreshAccountLine();
+}
+
+async function onAccountButton(){
+  const pont = window.storyboarderAPI;
+  if (!pont || accountBusy) return;
+  const action = $('storeAccountButton').dataset.action;
+  accountError = null;
+  if (action === 'logout') {
+    sketchfabStatus = await pont.sketchfabLogout();
+    refreshAccountLine();
+    return;
+  }
+  accountBusy = true;
+  refreshAccountLine();
+  try {
+    const r = await pont.sketchfabLogin();
+    sketchfabStatus = { connected: !!r.connected, user: r.user || null };
+    accountError = r.error || null;
+  } catch (e) {
+    accountError = 'network';
+  } finally {
+    accountBusy = false;
+    refreshAccountLine();
+  }
 }
 
 /** Les onglets des sources. Celui de la source affichée est marqué, les autres la changent. */
@@ -1434,5 +1505,6 @@ export function cablerStore(rappels = {}){
   // Plus de bouton « Charger plus » (demandé) : la suite se charge au fil du défilement.
   $('storeDefilement').addEventListener('scroll', chargerLaSuiteSiBesoin, { passive: true });
   storeModal.addEventListener('mousedown', (e) => { if (e.target === storeModal) fermerStore(); });
+  if ($('storeAccountButton')) $('storeAccountButton').onclick = () => onAccountButton();
   rafraichirTextesStore();
 }

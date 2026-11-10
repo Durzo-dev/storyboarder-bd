@@ -158,6 +158,40 @@ are credited too; a model imported by hand has no known attribution and does not
 tested: `src/export-credits.js`; the attributions are read at export time (`store:telecharges`),
 and a failure to read them does not stop the export.
 
+## Signing in to Sketchfab
+
+Downloading from Sketchfab requires the user's account. Storyboarder BD is registered with Sketchfab
+as a **public client** using the **Authorization Code** grant (Sketchfab supports neither Implicit for
+this app nor PKCE).
+
+| File | What it holds |
+|---|---|
+| `electron/bibliotheque/sketchfab-auth.js` | The decisions, pure and tested: client ID, redirect URI, authorization address, reading the redirect, request bodies, session, refresh. |
+| `electron/bibliotheque/sketchfab-session.js` | The input/output: login window, token requests (`net.fetch`), encrypted storage. |
+| `electron/main.js`, `electron/preload.js` | The `sketchfab:status`, `sketchfab:login`, `sketchfab:logout` channels. |
+| `src/store-ui.js` | The account line of the Sketchfab tab (`accountLineState`). |
+
+**Flow**:
+1. "Sign in" opens a window on `https://sketchfab.com/oauth2/authorize/` with `response_type=code`,
+   the client ID, the redirect URI `http://127.0.0.1:53682/sketchfab/retour` and a random `state`.
+   The window has its own session (`persist:sketchfab-login`).
+2. The redirect is caught by `webRequest.onBeforeRequest` **before it leaves**: nothing listens on
+   that port, so no other program can intercept the code. The `state` must match.
+3. The code is exchanged at `https://sketchfab.com/oauth2/token/`, **without a client secret**.
+4. The user's name comes from `https://api.sketchfab.com/v3/me`.
+5. The session (`accessToken`, `refreshToken`, `expiresAt`, `user`) is encrypted with `safeStorage`
+   into `sketchfab-session.bin` in the user data folder; without OS encryption, it stays in memory.
+   It is refreshed five minutes before it expires (`accessToken()`), and forgotten if the refresh is
+   refused.
+
+**The interface never receives the token**: only `{ connected, user }`.
+
+**Pitfalls**:
+- **Never put the client secret Sketchfab issued in the code**: the app is a public client and its
+  source is public (a test checks no `client_secret` appears).
+- The redirect URI must match the registered one exactly; another port or path is refused by
+  Sketchfab.
+
 ## Downloading
 
 Done for Poly Haven; Sketchfab will reuse the same path once signing in exists.

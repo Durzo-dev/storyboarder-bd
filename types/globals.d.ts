@@ -35,6 +35,9 @@ declare const THREE: any;
  * `{ canceled, filePath, data }` pour une boîte de dialogue. Le défaut « un échec annoncé comme un
  * succès », corrigé aujourd'hui, vivait précisément dans la lecture de ce `ok`.
  */
+/** The Sketchfab session as the interface sees it: never the token. */
+interface SketchfabStatus { connected: boolean; user: { name: string; url: string | null } | null }
+
 interface StoryboarderAPI {
   // Recopié de preload.js, qui est la source de vérité. tests/electron-bridge.test.mjs vérifie que
   // les deux listes ne divergent pas — sans quoi une méthode ajoutée au pont resterait invisible
@@ -109,6 +112,9 @@ interface StoryboarderAPI {
   storeAttribuer(resultat: object, fichier: string, resolution?: string): Promise<{ ok: boolean; raison?: string }>;
   onStoreProgression(callback: (recus: number, total: number) => void): void;
   storeApercu(sourceId: string, id: string): Promise<{ data?: Uint8Array; nom?: string; resolution?: string; erreur?: string }>;
+  sketchfabStatus(): Promise<SketchfabStatus>;
+  sketchfabLogin(): Promise<SketchfabStatus & { error?: string; status?: number }>;
+  sketchfabLogout(): Promise<SketchfabStatus>;
   onStoreApercuProgression(callback: (sourceId: string, id: string, recus: number, total: number) => void): void;
   // Modèles 3D importés. `data` voyage en Uint8Array par le clonage structuré de l'IPC : décrire
   // ici la forme des réponses évite d'aller relire main.js pour savoir si un échec se lit sur `ok`

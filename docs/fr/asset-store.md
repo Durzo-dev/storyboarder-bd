@@ -158,6 +158,41 @@ un modèle importé à la main n'a pas d'attribution connue et n'apparaît pas. 
 `src/export-credits.js` ; les attributions sont lues au moment d'exporter (`store:telecharges`),
 et un échec de lecture n'empêche pas l'export.
 
+## Se connecter à Sketchfab
+
+Télécharger depuis Sketchfab demande le compte de l'utilisateur. Storyboarder BD est enregistré chez
+Sketchfab comme **client public** avec le type **Authorization Code** (Sketchfab ne propose ni l'Implicit
+pour cette application, ni PKCE).
+
+| Fichier | Ce qu'il porte |
+|---|---|
+| `electron/bibliotheque/sketchfab-auth.js` | Les décisions, pures et testées : identifiant client, adresse de retour, adresse d'autorisation, lecture du retour, corps des requêtes, session, renouvellement. |
+| `electron/bibliotheque/sketchfab-session.js` | Les entrées-sorties : fenêtre de connexion, requêtes de jeton (`net.fetch`), stockage chiffré. |
+| `electron/main.js`, `electron/preload.js` | Les canaux `sketchfab:status`, `sketchfab:login`, `sketchfab:logout`. |
+| `src/store-ui.js` | La ligne de compte de l'onglet Sketchfab (`accountLineState`). |
+
+**Déroulé** :
+1. « Se connecter » ouvre une fenêtre sur `https://sketchfab.com/oauth2/authorize/` avec
+   `response_type=code`, l'identifiant client, l'adresse de retour
+   `http://127.0.0.1:53682/sketchfab/retour` et un `state` tiré au hasard. La fenêtre a sa propre
+   session (`persist:sketchfab-login`).
+2. Le retour est attrapé par `webRequest.onBeforeRequest` **avant de partir** : rien n'écoute sur ce
+   port, donc aucun autre logiciel ne peut intercepter le code. Le `state` doit correspondre.
+3. Le code est échangé à `https://sketchfab.com/oauth2/token/`, **sans secret**.
+4. Le nom de l'utilisateur vient de `https://api.sketchfab.com/v3/me`.
+5. La session (`accessToken`, `refreshToken`, `expiresAt`, `user`) est chiffrée par `safeStorage` dans
+   `sketchfab-session.bin`, dans le dossier des données de l'utilisateur ; sans chiffrement du système,
+   elle reste en mémoire. Elle est renouvelée cinq minutes avant son expiration (`accessToken()`), et
+   oubliée si le renouvellement est refusé.
+
+**L'interface ne reçoit jamais le jeton** : seulement `{ connected, user }`.
+
+**Pièges** :
+- **Ne jamais mettre dans le code le secret que Sketchfab a fourni** : l'application est un client
+  public et son code est public (un test vérifie qu'aucun `client_secret` n'apparaît).
+- L'adresse de retour doit correspondre exactement à celle enregistrée ; un autre port ou un autre
+  chemin est refusé par Sketchfab.
+
 ## Le téléchargement
 
 Fait pour Poly Haven ; Sketchfab réutilisera le même chemin une fois la connexion faite.

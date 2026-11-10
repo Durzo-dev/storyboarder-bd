@@ -1181,6 +1181,12 @@ ipcMain.handle('store:apercu', async (event, sourceId, id) =>
   store.apercu(sourceId, id, (recus, total) => {
     if (!event.sender.isDestroyed()) event.sender.send('store:apercuProgression', sourceId, id, recus, total);
   }, SIMULATION_STORE ? RACINE : null));
+// #444c: the Sketchfab session. The token stays in this process (sketchfab-session.js); the
+// interface only gets { connected, user }.
+const sketchfabSession = require('./bibliotheque/sketchfab-session');
+ipcMain.handle('sketchfab:status', async () => sketchfabSession.status());
+ipcMain.handle('sketchfab:login', async (event) => sketchfabSession.login(BrowserWindow.fromWebContents(event.sender)));
+ipcMain.handle('sketchfab:logout', async () => sketchfabSession.logout());
 ipcMain.handle('store:attribuer', async (event, resultat, fichier, resolution) => {
   const r = await store.attribuer(getProjectsDir(), resultat, fichier, resolution);
   // La vignette de la source devient celle du modèle local : déjà belle, et sans rien à rendre.

@@ -2541,6 +2541,9 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-note.erreur{ color:var(--danger); }
 .store-note:empty{ display:none; }
 .store-credit{ font-size:var(--texte-libelle); color:var(--ink-soft); margin:12px 0 0; text-align:right; }
+/* #444c: the Sketchfab account line, under the filters of the Sketchfab tab. */
+.store-account{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:8px 0 0; font-size:var(--texte-libelle); color:var(--ink-mid); }
+.store-account[hidden]{ display:none; }
 .store-credit a{ color:inherit; }
 
 /* ── La fenêtre des POLICES (#423, src/polices-ui.js) ─────────────────────────────────────────── */
