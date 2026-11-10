@@ -2541,11 +2541,14 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-note.erreur{ color:var(--danger); }
 .store-note:empty{ display:none; }
 .store-credit{ font-size:var(--texte-libelle); color:var(--ink-soft); margin:0 0 0 auto; text-align:right; }
-/* The store footer: the Sketchfab account on the left (status, then button), the credit on the right. */
-.store-pied{ display:flex; align-items:center; gap:14px; margin:12px 0 0; }
-.store-account{ display:flex; align-items:center; gap:8px; font-size:var(--texte-libelle); color:var(--ink-mid); }
+/* Store footer: status on the left, button centred, credit on the right. Two equal side columns keep the
+   button in the middle whatever the length of the status. */
+.store-pied{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:14px; margin:12px 0 0; }
+.store-account{ display:contents; }
 .store-account[hidden]{ display:none; }
-.store-account .nav-btn{ width:auto; margin:0; }
+#storeAccountText{ grid-column:1; font-size:var(--texte-libelle); color:var(--ink-mid); line-height:1.35; }
+.store-account .nav-btn{ grid-column:2; width:220px; margin:0; }
+.store-pied .store-credit{ grid-column:3; justify-self:end; margin:0; }
 .store-credit a{ color:inherit; }
 
 /* ── La fenêtre des POLICES (#423, src/polices-ui.js) ─────────────────────────────────────────── */
