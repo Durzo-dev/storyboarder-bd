@@ -81,8 +81,14 @@ sphere touching the edges of a square (Poly Haven). So they are recomposed:
   the image covers the card, that scale is taken and the image is kept from uncovering an edge.
   Otherwise the card's background is a smooth 3 × 3 gradient: each side's MEAN edge colour
   (`couleursDesBords`) at its middle, the image's corners at the corners, and the image's edges fade
-  into it over 16 % on a side with a gap. Colours only: the image itself as a background showed a
-  blurred copy of the model, and its stretched edge bands made streaks;
+  into it over 16 % on a side with a gap (no fade on a side without one). Colours only: the image
+  itself as a background showed a blurred copy of the model, and its stretched edge bands made streaks;
+- **a varied background** (vignetting, blurred photo: luminance standard deviation of the edge band
+  above `SEUIL_FOND_UNI` = 15, opaque pixels only; measured on real Sketchfab thumbnails: 5–11
+  uniform, 20–63 varied) never blends with any fill: such an image is never framed smaller than
+  contained, and covers the card when at least 80 % of it stays (`PART_COUVERTE_MIN`). A tall record
+  keeps a gap above and below only. A mostly transparent edge (Poly Haven) counts as uniform and
+  keeps its margin;
 - **the record's large image** goes through the same recompose, to its frame's size, with an 8 %
   margin (`recadrerVisuel`, `MARGE_FICHE`): no black bars, no subject on the edge;
 - **"My models"** keeps a source's thumbnail, except Sketchfab's (`SOURCES_SANS_VIGNETTE`,

@@ -5,7 +5,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { boiteDuSujet, cadrageDuSujet, fondDesCoins, couleursDesBords, MARGE, AGRANDISSEMENT_MAX } from '../src/vignette-recadrage.js';
+import { boiteDuSujet, cadrageDuSujet, fondDesCoins, couleursDesBords, bordsUnis, MARGE, AGRANDISSEMENT_MAX } from '../src/vignette-recadrage.js';
 
 /** Une image RGBA `w × h` : un fond (fonction de x, y) et un rectangle plein. */
 function image(w, h, fond, rect, couleur = [40, 160, 90]){
@@ -111,5 +111,24 @@ describe('filling the uncovered space (seen: a blurred copy of the model, then s
     assert.equal(Math.round(c.g[0]), 200);
     assert.equal(Math.round(c.d[0]), 20);
     assert.equal(Math.round(c.h[0]), 110);
+  });
+});
+
+describe('a varied background is never framed smaller (checked on real Sketchfab thumbnails, 10 Nov. 2026)', () => {
+  const image = (w, h, px) => { const a = new Uint8ClampedArray(w * h * 4); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const [r, g, b, al] = px(x, y); const i = (y * w + x) * 4; a[i] = r; a[i + 1] = g; a[i + 2] = b; a[i + 3] = al; } return a; };
+  test('uniform edges, a vignetted or photo background, a transparent one', () => {
+    assert.equal(bordsUnis(image(64, 36, () => [40, 40, 40, 255]), 64, 36), true);
+    assert.equal(bordsUnis(image(64, 36, (x) => [x * 4, x * 4, x * 4, 255]), 64, 36), false, 'a strong gradient along the edge');
+    assert.equal(bordsUnis(image(64, 64, (x) => (x > 20 && x < 44 ? [230, 230, 230, 255] : [0, 0, 0, 0])), 64, 64), true, 'mostly transparent: uniform');
+  });
+  test('varied: the subject filling its image, never shrunk to add a margin; covers when 80 % stays', () => {
+    const p = cadrageDuSujet({ x0: 10, y0: 10, x1: 710, y1: 395 }, 720, 405, 600, 400, MARGE, AGRANDISSEMENT_MAX, false);
+    assert.ok(p.l >= 600 - 1e-6 && p.h >= 400 - 1e-6, 'covers a 3:2 card (84 % of a 16:9 image)');
+    const f = cadrageDuSujet({ x0: 10, y0: 10, x1: 1014, y1: 566 }, 1024, 576, 1280, 1445, 0.08, AGRANDISSEMENT_MAX, false);
+    assert.ok(Math.abs(f.l - 1280) < 1e-6 && f.x === 0, 'a tall record: the full width, the gap only above and below');
+  });
+  test('uniform: the margin is kept (Poly Haven, asked)', () => {
+    const p = cadrageDuSujet({ x0: 0, y0: 0, x1: 274, y1: 512 }, 274, 512, 1280, 1445, 0.08, AGRANDISSEMENT_MAX, true);
+    assert.ok(p.y >= 1445 * 0.08 - 1, 'margin above the subject');
   });
 });

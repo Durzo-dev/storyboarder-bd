@@ -84,8 +84,15 @@ Les vignettes des sources sont faites pour leur site : un petit objet dans un gr
   où l'image couvre la carte, on la prend, et l'image ne découvre aucun bord. Sinon, le fond de la
   carte est un dégradé lisse 3 × 3 : la couleur MOYENNE de la bande de bord de chaque côté
   (`couleursDesBords`) en son milieu, les coins de l'image aux coins, et les bords de l'image s'y
-  fondent sur 16 % du côté d'un vide. Des couleurs seulement : l'image elle-même en fond montrait une
-  copie floue du modèle, et ses bandes de bord étirées faisaient des traînées ;
+  fondent sur 16 % du côté d'un vide (aucun fondu d'un côté sans vide). Des couleurs seulement :
+  l'image elle-même en fond montrait une copie floue du modèle, et ses bandes de bord étirées
+  faisaient des traînées ;
+- **un fond varié** (vignettage, photo floue : écart-type de luminosité de la bande de bord au-delà de
+  `SEUIL_FOND_UNI` = 15, pixels opaques seulement ; mesuré sur de vraies vignettes Sketchfab : 5 à 11
+  pour un fond uni, 20 à 63 pour un fond varié) ne se raccorde à aucun remplissage : l'image n'est
+  jamais réduite sous sa taille contenue, et couvre la carte dès qu'on en garde 80 %
+  (`PART_COUVERTE_MIN`). Une fiche haute garde un vide en haut et en bas seulement. Un pourtour
+  surtout transparent (Poly Haven) compte pour uni et garde sa marge ;
 - **la grande image de la fiche** passe par le même recadrage, à la taille de son cadre, avec une
   marge de 8 % (`recadrerVisuel`, `MARGE_FICHE`) : ni bandes noires, ni sujet collé au bord ;
 - **« Mes modèles »** garde la vignette d'une source, sauf celle de Sketchfab

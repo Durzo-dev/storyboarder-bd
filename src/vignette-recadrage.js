@@ -62,6 +62,35 @@ export function couleursDesBords(rgba, w, h){
   return { g: moy(0, 0, n, h), d: moy(w - n, 0, w, h), h: moy(0, 0, w, n), b: moy(0, h - n, w, h) };
 }
 
+/** Au-delà de cet écart-type de luminosité sur la bande de bord, le fond n'est plus « uni ». */
+export const SEUIL_FOND_UNI = 15;
+/** Un fond varié couvre la carte si l'on en garde au moins cette part (sinon il prend toute la largeur). */
+export const PART_COUVERTE_MIN = 0.8;
+
+/**
+ * Le fond de l'image est-il UNI sur son pourtour ? Mesuré sur de vraies vignettes Sketchfab (10 nov.
+ * 2026) : écart-type de 5 à 11 pour un fond uni ou un dégradé doux, de 20 à 63 pour un vignettage ou
+ * une photo floue. Seul un fond uni se prolonge sans raccord visible autour de l'image.
+ * Un pourtour surtout TRANSPARENT (les vignettes de Poly Haven, sujet détouré qui touche ses bords) est
+ * uni : la transparence ne se mesure pas, seuls les pixels opaques comptent, et s'ils sont moins d'un
+ * tiers du pourtour, le fond est uni.
+ */
+export function bordsUnis(rgba, w, h, seuil = SEUIL_FOND_UNI){
+  const n = Math.max(1, Math.round(Math.min(w, h) * 0.03));
+  let s = 0, s2 = 0, c = 0, total = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (x >= n && x < w - n && y >= n && y < h - n) continue;
+    const i = (y * w + x) * 4;
+    total++;
+    if (rgba[i + 3] < 250) continue;
+    const l = 0.3 * rgba[i] + 0.59 * rgba[i + 1] + 0.11 * rgba[i + 2];
+    s += l; s2 += l * l; c++;
+  }
+  if (!c || c < total / 3) return true;
+  const m = s / c;
+  return Math.sqrt(Math.max(0, s2 / c - m * m)) <= seuil;
+}
+
 /**
  * La boîte du sujet `{ x0, y0, x1, y1 }` (en pixels de l'image analysée), ou null s'il n'y a rien
  * qui se distingue du fond.
@@ -92,7 +121,7 @@ export function boiteDuSujet(rgba, w, h, seuil = SEUIL_SUJET){
  * Où poser l'image (`{ x, y, l, h }` en pixels de la carte) pour que la boîte du sujet remplisse la
  * carte `L × H` moins la marge, centrée. Sans sujet : l'image entière, contenue et centrée.
  */
-export function cadrageDuSujet(boite, imgL, imgH, L, H, marge = MARGE, max = AGRANDISSEMENT_MAX){
+export function cadrageDuSujet(boite, imgL, imgH, L, H, marge = MARGE, max = AGRANDISSEMENT_MAX, unis = true){
   const m = H * marge;
   const b = boite || { x0: 0, y0: 0, x1: imgL, y1: imgH };
   const bl = Math.max(1, b.x1 - b.x0), bh = Math.max(1, b.y1 - b.y0);
@@ -105,6 +134,14 @@ export function cadrageDuSujet(boite, imgL, imgH, L, H, marge = MARGE, max = AGR
   // moins la moitié de la marge, à l'échelle qui couvre, on la prend : plus aucun fond reconstitué.
   if (boite && e < echelleCouvrante && echelleCouvrante <= echelleImage * max
     && bl * echelleCouvrante <= L - m && bh * echelleCouvrante <= H - m) e = echelleCouvrante;
+  // ⚠️ UN FOND VARIÉ (vignettage, photo floue) NE SE PROLONGE PAS : aucun remplissage ne s'y raccorde
+  // (signalé à trois reprises). L'image n'est donc jamais réduite sous sa taille contenue pour ménager
+  // une marge, et elle couvre la carte dès qu'on en garde au moins 80 % (une carte 3:2 d'une image
+  // 16:9 : 84 %). Seule une fiche haute garde un vide, en haut et en bas seulement.
+  if (!unis) {
+    e = Math.max(e, echelleImage);
+    if (e < echelleCouvrante && echelleImage / echelleCouvrante >= PART_COUVERTE_MIN) e = echelleCouvrante;
+  }
   const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
   let x = L / 2 - cx * e, y = H / 2 - cy * e;
   const l = imgL * e, h = imgH * e;
@@ -139,7 +176,7 @@ export function recomposer(source, L, H, marge = MARGE){
   const boite = boiteDuSujet(rgba, al, ah);
   const k = sl / al;
   const b = boite && { x0: boite.x0 * k, y0: boite.y0 * k, x1: boite.x1 * k, y1: boite.y1 * k };
-  const pose = cadrageDuSujet(b, sl, sh, L, H, marge);
+  const pose = cadrageDuSujet(b, sl, sh, L, H, marge, AGRANDISSEMENT_MAX, bordsUnis(rgba, al, ah));
 
   const sortie = document.createElement('canvas');
   sortie.width = L; sortie.height = H;
@@ -167,12 +204,14 @@ export function recomposer(source, L, H, marge = MARGE){
   // de chaque côté, au plus 8 %, et jamais plus que la distance entre ce bord et la boîte du sujet.
   // Plus long (16 %) d'un côté où l'image laisse un vide à combler : le raccord y est plus doux.
   const base = Math.min(pose2.width, pose2.height);
-  const f = Math.max(2, base * 0.08), fl = Math.max(2, base * 0.16);
+  const fl = Math.max(2, base * 0.16);
   const vide = { g: pose.x > 0.5, d: pose.x + pose.l < L - 0.5, h: pose.y > 0.5, b: pose.y + pose.h < H - 0.5 };
   const e = pose2.width / sl;
   const cote = b ? { g: b.x0 * e, d: (sl - b.x1) * e, h: b.y0 * e, b: (sh - b.y1) * e } : { g: fl, d: fl, h: fl, b: fl };
-  const fg = Math.min(vide.g ? fl : f, cote.g), fd = Math.min(vide.d ? fl : f, cote.d);
-  const fh = Math.min(vide.h ? fl : f, cote.h), fb = Math.min(vide.b ? fl : f, cote.b);
+  // No fade on a side without a gap: the image runs past the card there, a fade only let the gradient
+  // beneath show through along the edge.
+  const fg = vide.g ? Math.min(fl, cote.g) : 0, fd = vide.d ? Math.min(fl, cote.d) : 0;
+  const fh = vide.h ? Math.min(fl, cote.h) : 0, fb = vide.b ? Math.min(fl, cote.b) : 0;
   pc.globalCompositeOperation = 'destination-out';
   const fondu = (x0, y0, x1, y1, rx, ry, rl, rh) => {
     const d = pc.createLinearGradient(x0, y0, x1, y1);
