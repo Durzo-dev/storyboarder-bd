@@ -386,3 +386,13 @@ describe('the list message and the record messages (asked: centred, with an icon
     assert.match(tex, /droite\.appendChild\(note\)/);
   });
 });
+
+describe('loading the next page (seen: a spinner at the top over a full list)', () => {
+  const ui = lire('src/store-ui.js');
+  test('the next page is announced at the bottom of the list, and a failed request never leaves it turning', () => {
+    assert.match(lire('src/index.html'), /<div id="storeFiche"[^>]*><\/div>\s*<!--[\s\S]*?-->\s*<p id="storeSuite"/);
+    assert.match(ui, /if \(suite && indicateurSuite\)/);
+    assert.match(ui, /catch \(e\) \{\s*page = \{ erreur: 'reponse' \};/);
+    assert.match(lire('src/style.css'), /\.store-fiche:not\(\[hidden\]\) ~ \.store-suite\{ display:none; \}/);
+  });
+});

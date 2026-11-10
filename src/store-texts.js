@@ -68,6 +68,7 @@ const T = {
     tousLesTags: 'Tous les tags',
     tagsChoisis: (n) => `${n} tag(s)`,
     chargement: 'Recherche…',
+    chargementSuite: 'Chargement de la suite…',
     aucun: 'Aucun modèle ne correspond à cette recherche.',
     erreurs: {
       reseau: 'Pas de connexion à Internet, ou le site ne répond pas. Réessayez dans un instant.',
@@ -203,6 +204,7 @@ const T = {
     tousLesTags: 'All tags',
     tagsChoisis: (n) => `${n} tag(s)`,
     chargement: 'Searching…',
+    chargementSuite: 'Loading more…',
     aucun: 'No model matches this search.',
     erreurs: {
       reseau: 'No Internet connection, or the site is not responding. Try again in a moment.',

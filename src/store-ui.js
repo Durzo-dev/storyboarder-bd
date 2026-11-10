@@ -847,11 +847,21 @@ async function chercher(suite = false){
   const moi = ++generation;
   enCours = true;
   if (!suite) { fermerFiche(); $('storeGrille').replaceChildren(); affiches = []; suivant = null; derniereRecherche = parametres(); }
+  if (!suite && $('storeSuite')) $('storeSuite').hidden = true;
   if (source === LOCAL) { await chercherLocal(moi); return; }
-  message(t.chargement, 'chargement');
-  const page = await window.storyboarderAPI.storeChercher(source, suite ? { ...derniereRecherche, curseur: suivant } : derniereRecherche);
+  // The next page is announced at the bottom of the list (seen: a spinner at the top over a full list
+  // looked like a search stuck); a new search, in the middle of the empty list.
+  const indicateurSuite = $('storeSuite');
+  if (suite && indicateurSuite) { indicateurSuite.textContent = t.chargementSuite; indicateurSuite.hidden = false; } else message(t.chargement, 'chargement');
+  let page;
+  try {
+    page = await window.storyboarderAPI.storeChercher(source, suite ? { ...derniereRecherche, curseur: suivant } : derniereRecherche);
+  } catch (e) {
+    page = { erreur: 'reponse' };   // never leave the spinner turning
+  }
   if (moi !== generation) return;   // une recherche plus récente a pris la main
   enCours = false;
+  if (indicateurSuite) indicateurSuite.hidden = true;
   if (!page || page.erreur) { message(t.erreurs[page && page.erreur] || t.erreurs.reponse, true); return; }
   page.resultats.forEach(r => { affiches.push(r); $('storeGrille').appendChild(carte(r)); });
   suivant = page.suivant;
