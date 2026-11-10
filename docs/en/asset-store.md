@@ -245,7 +245,8 @@ downloaded (no recorded response contains files).
    (`remplacerImages`, src/glb-images.js, pure). The quality is recorded with the attribution
    (`origine` included); a model downloaded before is the original. The "Heavy model" warning
    follows the chosen quality (`estLourd(r, choix)`): textures counted at most at its size, its weight
-   when known; the faces always count.
+   when known; the faces always count. The details follow it too (`lignesDetails(r, lang, choix)`):
+   textures at the chosen size, the chosen weight, or the downloaded one said to be shrunk afterwards.
 5. The renderer saves and attributes it as for Poly Haven.
 
 Errors (`erreurDemande`): 401 → `connexion` (the account line shows "Session expired"), 403 →

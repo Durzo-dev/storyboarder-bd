@@ -247,7 +247,9 @@ téléchargé (aucune réponse enregistrée ne contient de fichiers).
    (`remplacerImages`, src/glb-images.js, pur). La qualité est notée avec l'attribution (`origine`
    comprise) ; un modèle téléchargé avant est l'original. L'avertissement « Modèle lourd » suit la
    qualité choisie (`estLourd(r, choix)`) : textures comptées au plus à sa taille, son poids s'il est
-   connu ; les faces comptent toujours.
+   connu ; les faces comptent toujours. Les caractéristiques la suivent aussi
+   (`lignesDetails(r, lang, choix)`) : textures à la taille choisie, poids choisi, ou celui
+   téléchargé, précisé réduit ensuite.
 5. Le renderer le range et l'attribue comme pour Poly Haven.
 
 Erreurs (`erreurDemande`) : 401 → `connexion` (la ligne de compte affiche « Session expirée »), 403 →

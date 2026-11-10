@@ -519,18 +519,20 @@ function ouvrirFiche(r){
   const scinde = el('div', { classe: 'store-bouton-scinde' }, [telecharger, fleche, menu]);
   const lourd = el('p', { texte: t.lourd, classe: 'store-avertissement' });
   lourd.hidden = !estLourd(r);
-  brancherTelechargement(r, { bouton: telecharger, note, fleche, menu, lourd, choisie: null });
   const section = (titre, lignes, avant = []) => el('section', { classe: 'store-fiche-section' }, [
     el('h5', { texte: titre }), ...avant, el('ul', {}, lignes.map(p => el('li', { texte: p }))),
   ]);
   const details = lignesDetails(r, langue());
+  // The details' list, rewritten by the download button after the chosen quality (#467).
+  const listeDetails = el('ul', {}, details.map(p => el('li', { texte: p })));
+  brancherTelechargement(r, { bouton: telecharger, note, fleche, menu, lourd, details: listeDetails, choisie: null });
   // DEUX COLONNES (demandé) : l'aperçu et ses boutons à gauche, la description à droite. Pleine
   // largeur, l'aperçu poussait les boutons du bas hors de la fenêtre.
   const droite = [
     el('h4', { texte: r.nom }),
     el('p', {}, [el('span', { texte: t.par + ' ' }), lien(r.auteur.nom, r.auteur.url)]),
     section(t.licence, phrasesLicence(r.licence, langue()), [el('p', {}, [lien(r.licence.libelle, r.licence.url)])]),
-    details.length ? section(t.caracteristiques, details) : null,
+    details.length ? el('section', { classe: 'store-fiche-section' }, [el('h5', { texte: t.caracteristiques }), listeDetails]) : null,
     // Shown or hidden by the download button, after the chosen quality (brancherTelechargement).
     lourd,
     ...avertissementsLicence(r.licence, langue()).map(m => el('p', { texte: m, classe: 'store-avertissement' })),
@@ -661,10 +663,10 @@ function brancherTelechargement(r, ui){
       compte: compte(), poids: r.poids, defaut,
     });
     ui.action = e.action;
-    if (ui.lourd) {
-      const o = options.find(x => x.resolution === ui.choisie);
-      ui.lourd.hidden = !estLourd(r, options.length ? { octets: o ? o.octets : null, pixels: pixelsDe(ui.choisie) } : null);
-    }
+    const o = options.find(x => x.resolution === ui.choisie);
+    const choix = options.length ? { octets: o ? o.octets : null, pixels: pixelsDe(ui.choisie) } : null;
+    if (ui.lourd) ui.lourd.hidden = !estLourd(r, choix);
+    if (ui.details) ui.details.replaceChildren(...lignesDetails(r, langue(), choix).map(p => el('li', { texte: p })));
     ui.bouton.textContent = e.texte;
     ui.bouton.disabled = !e.actif || !!enTelechargement;
     ui.fleche.disabled = !!enTelechargement;

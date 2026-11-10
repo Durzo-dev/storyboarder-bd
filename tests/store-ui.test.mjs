@@ -74,6 +74,10 @@ describe('les mises en forme', () => {
   test('les lignes de la fiche', () => {
     assert.deepEqual(lignesDetails(BANC), ['50 k faces', '1 texture(s), jusqu\'à 8192 px', 'Téléchargement : 23 Mo']);
     assert.deepEqual(lignesDetails({ ...BANC, details: { anime: true }, poids: null }, 'en'), ['Animated']);
+    // #467 : the details follow the chosen quality.
+    assert.deepEqual(lignesDetails(BANC, 'fr', { octets: 2 * 1024 * 1024, pixels: 1024 }), ['50 k faces', '1 texture(s), jusqu\'à 1024 px', 'Téléchargement : 2 Mo']);
+    assert.deepEqual(lignesDetails(BANC, 'fr', { octets: null, pixels: 1024 }).slice(1), ['1 texture(s), jusqu\'à 1024 px', 'Téléchargement : 23 Mo, textures réduites ensuite sur votre ordinateur']);
+    assert.deepEqual(lignesDetails(BANC, 'fr', { octets: 23 * 1024 * 1024, pixels: null }).slice(1), ['1 texture(s), jusqu\'à 8192 px', 'Téléchargement : 23 Mo']);
     // Poly Haven donne la taille réelle : largeur × profondeur × hauteur, en mètres.
     assert.deepEqual(lignesDetails({ details: { dimensions: [0.848, 0.766, 1.065] } }), ['Taille : 0,85 × 0,77 × 1,07 m']);
   });
@@ -143,7 +147,7 @@ describe('le câblage', () => {
     assert.match(f, /bascule\.textContent = en3D \? t\.voirImage : t\.voir3D;/);
     // Deux sections titrées : licence, caractéristiques.
     assert.match(f, /section\(t\.licence,/);
-    assert.match(f, /section\(t\.caracteristiques, details\)/);
+    assert.match(f, /el\('h5', \{ texte: t\.caracteristiques \}\), listeDetails/);
     // Plus de bouton Rechercher : la saisie relance après une pause, Entrée tout de suite.
     assert.ok(!lire('src/index.html').includes('storeChercherBtn'));
     assert.match(UI, /minuterie = setTimeout\(\(\) => chercher\(\), PAUSE_SAISIE_MS\);/);

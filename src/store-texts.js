@@ -129,6 +129,7 @@ const T = {
     faces: (n) => `${n} faces`,
     textures: (n, r) => (r ? `${n} texture(s), jusqu'à ${r} px` : `${n} texture(s)`),
     poids: (p) => `Téléchargement : ${p}`,
+    poidsReduit: (p) => `Téléchargement : ${p}, textures réduites ensuite sur votre ordinateur`,
     lourd: 'Modèle lourd : il peut ralentir les Cases qui l\'affichent.',
     anime: 'Animé',
     // Largeur × profondeur × hauteur, en mètres, quand la source les donne (Poly Haven).
@@ -269,6 +270,7 @@ const T = {
     faces: (n) => `${n} faces`,
     textures: (n, r) => (r ? `${n} texture(s), up to ${r} px` : `${n} texture(s)`),
     poids: (p) => `Download: ${p}`,
+    poidsReduit: (p) => `Download: ${p}, textures then shrunk on your computer`,
     lourd: 'Heavy model: it may slow down the panels that show it.',
     anime: 'Animated',
     dimensions: (d) => `Size: ${d.map(deuxDecimales).join(' × ')} m`,
@@ -354,13 +356,21 @@ export function avertissementsLicence(l, lang = 'fr'){
 }
 
 /** Les lignes d'informations d'une fiche. */
-export function lignesDetails(r, lang = 'fr'){
+/**
+ * `choix` (#467, asked: the details follow the chosen quality): `{ octets, pixels }` of the chosen quality,
+ * as for estLourd. Textures are given at most at its size; the weight is the chosen one, or, for a
+ * quality made on this computer (Sketchfab), the one downloaded, said to be shrunk afterwards.
+ */
+export function lignesDetails(r, lang = 'fr', choix = null){
   const t = textesStore(lang);
   const d = r.details || {};
   const lignes = [];
   if (Number.isFinite(d.faces)) lignes.push(t.faces(nombreCourt(d.faces, lang)));
-  if (Number.isFinite(d.textures) && d.textures > 0) lignes.push(t.textures(d.textures, d.textureMax));
-  if (r.poids) lignes.push(t.poids(poidsLisible(r.poids, lang)));
+  const tx = choix && choix.pixels && d.textureMax ? Math.min(d.textureMax, choix.pixels) : d.textureMax;
+  if (Number.isFinite(d.textures) && d.textures > 0) lignes.push(t.textures(d.textures, tx));
+  if (choix && choix.octets > 0) lignes.push(t.poids(poidsLisible(choix.octets, lang)));
+  else if (choix && choix.pixels && r.poids && d.textureMax > choix.pixels) lignes.push(t.poidsReduit(poidsLisible(r.poids, lang)));
+  else if (r.poids) lignes.push(t.poids(poidsLisible(r.poids, lang)));
   if (d.anime) lignes.push(t.anime);
   if (Array.isArray(d.dimensions) && d.dimensions.length === 3) lignes.push(t.dimensions(d.dimensions));
   return lignes;
