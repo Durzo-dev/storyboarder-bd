@@ -44,6 +44,25 @@ export function fondDesCoins(rgba, w, h){
 
 
 /**
+ * La couleur MOYENNE de la bande extérieure de chaque côté `{ g, d, h, b }` (3 % de la plus petite
+ * dimension). ⚠️ UNE MOYENNE, PAS LA BANDE ÉTIRÉE (signalé) : étirer la bande recopiait ses variations
+ * (vignettage, fond photo) en traînées. Une couleur par côté, fondue dans ses voisines, n'en fait aucune.
+ */
+export function couleursDesBords(rgba, w, h){
+  const n = Math.max(1, Math.round(Math.min(w, h) * 0.03));
+  const moy = (x0, y0, x1, y1) => {
+    const s = [0, 0, 0];
+    let c = 0;
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+      const i = (y * w + x) * 4;
+      s[0] += rgba[i]; s[1] += rgba[i + 1]; s[2] += rgba[i + 2]; c++;
+    }
+    return s.map(v => v / Math.max(1, c));
+  };
+  return { g: moy(0, 0, n, h), d: moy(w - n, 0, w, h), h: moy(0, 0, w, n), b: moy(0, h - n, w, h) };
+}
+
+/**
  * La boîte du sujet `{ x0, y0, x1, y1 }` (en pixels de l'image analysée), ou null s'il n'y a rien
  * qui se distingue du fond.
  *
@@ -95,39 +114,8 @@ export function cadrageDuSujet(boite, imgL, imgH, L, H, marge = MARGE, max = AGR
   return { x, y, l, h };
 }
 
-/**
- * Draws, around `pose`, the image's outer band of pixels stretched to the card's edges (each side,
- * and its corners), softened by a light blur. The bands also run a little INSIDE the image, under its
- * faded edge, so that the fade shows the same colours. A side the SUBJECT touches (`b`, in source
- * pixels) is not extended: its band would streak the subject across the card; the corner gradient
- * shows there instead. The work canvas is wider than the card so that the blur does not darken its edges.
- */
-function prolongerLesBords(c, source, sl, sh, pose, L, H, b){
-  const P = Math.max(4, Math.round(Math.max(L, H) / 20));   // padding beyond the card, for the blur
-  const t = document.createElement('canvas');
-  t.width = L + 2 * P; t.height = H + 2 * P;
-  const tc = t.getContext('2d');
-  const x = pose.x + P, y = pose.y + P, l = pose.l, h = pose.h;
-  const s = Math.max(1, Math.round(Math.min(sl, sh) * 0.01));   // the band taken, in source pixels
-  const f = Math.min(l, h) * 0.08;                               // how far it runs under the faded edge
-  const touche = (d) => d <= 2 * s;
-  const ok = { g: !(b && touche(b.x0)), d: !(b && touche(sl - b.x1)), h: !(b && touche(b.y0)), b: !(b && touche(sh - b.y1)) };
-  const W = t.width, Ht = t.height;
-  const gx0 = Math.max(0, x), gx1 = Math.max(0, W - (x + l)), gy0 = Math.max(0, y), gy1 = Math.max(0, Ht - (y + h));
-  const dessiner = (sx, sy, sw, sh2, dx, dy, dw, dh) => { if (dw > 0 && dh > 0) tc.drawImage(source, sx, sy, sw, sh2, dx, dy, dw, dh); };
-  if (gx0 > 0 && ok.g) dessiner(0, 0, s, sh, 0, y, gx0 + f, h);
-  if (gx1 > 0 && ok.d) dessiner(sl - s, 0, s, sh, x + l - f, y, gx1 + f, h);
-  if (gy0 > 0 && ok.h) dessiner(0, 0, sl, s, x, 0, l, gy0 + f);
-  if (gy1 > 0 && ok.b) dessiner(0, sh - s, sl, s, x, y + h - f, l, gy1 + f);
-  if (gx0 > 0 && gy0 > 0 && ok.g && ok.h) dessiner(0, 0, s, s, 0, 0, gx0 + f, gy0 + f);
-  if (gx1 > 0 && gy0 > 0 && ok.d && ok.h) dessiner(sl - s, 0, s, s, x + l - f, 0, gx1 + f, gy0 + f);
-  if (gx0 > 0 && gy1 > 0 && ok.g && ok.b) dessiner(0, sh - s, s, s, 0, y + h - f, gx0 + f, gy1 + f);
-  if (gx1 > 0 && gy1 > 0 && ok.d && ok.b) dessiner(sl - s, sh - s, s, s, x + l - f, y + h - f, gx1 + f, gy1 + f);
-  c.save();
-  c.filter = `blur(${Math.max(2, Math.round(Math.max(L, H) / 60))}px)`;
-  c.drawImage(t, -P, -P);
-  c.restore();
-}
+/** La moyenne de plusieurs couleurs `[r, g, b]`. */
+const moyenneDe = (cs) => [0, 1, 2].map(k => cs.reduce((t, c) => t + c[k], 0) / cs.length);
 
 /** Une couleur `[r, g, b]` en chaîne CSS. */
 const css = (c) => `rgb(${c.map(v => Math.round(v)).join(',')})`;
@@ -156,19 +144,19 @@ export function recomposer(source, L, H, marge = MARGE){
   const sortie = document.createElement('canvas');
   sortie.width = L; sortie.height = H;
   const c = sortie.getContext('2d');
-  // Le fond : les quatre coins, étirés en un dégradé lisse (une image de 2 × 2 agrandie).
+  // Le fond : une grille 3 × 3 agrandie en un dégradé lisse. Les milieux des côtés ont la couleur
+  // moyenne de la bande de bord de l'image (couleursDesBords), les coins celle des coins de l'image :
+  // là où l'image ne couvre pas la carte, ses bords se fondent dans leurs propres couleurs.
+  // ⚠️ Jamais l'image elle-même en fond (floutée : une copie floue du modèle ; bandes étirées : des traînées).
+  const bords = couleursDesBords(rgba, al, ah);
+  const grille = [coins[0], bords.h, coins[1], bords.g, moyenneDe([bords.g, bords.d, bords.h, bords.b]), bords.d, coins[2], bords.b, coins[3]];
   const g = document.createElement('canvas');
-  g.width = 2; g.height = 2;
+  g.width = 3; g.height = 3;
   const gc = g.getContext('2d');
-  coins.forEach((col, i) => { gc.fillStyle = css(col); gc.fillRect(i % 2, i > 1 ? 1 : 0, 1, 1); });
+  grille.forEach((col, i) => { gc.fillStyle = css(col); gc.fillRect(i % 3, Math.floor(i / 3), 1, 1); });
   c.imageSmoothingEnabled = true;
   c.imageSmoothingQuality = 'high';
-  c.drawImage(g, 0.5, 0.5, 1, 1, 0, 0, L, H);
-  // Puis, quand l'image ne couvre pas la carte, SES BORDS PROLONGÉS : la dernière bande de pixels de
-  // chaque côté, étirée jusqu'au bord de la carte puis adoucie. Ses propres couleurs de fond bordent
-  // ses bords (le dégradé des coins se raccordait mal sur Sketchfab), et le sujet n'est jamais recopié
-  // (⚠️ signalé : l'image entière floutée en fond montrait le modèle flou derrière lui-même).
-  if (pose.l < L || pose.h < H) prolongerLesBords(c, source, sl, sh, pose, L, H, b);
+  c.drawImage(g, 0.5, 0.5, 2, 2, 0, 0, L, H);
   // L'image, aux bords fondus : un masque qui s'efface sur 8 % de sa plus petite dimension.
   const pose2 = document.createElement('canvas');
   pose2.width = Math.max(1, Math.round(pose.l)); pose2.height = Math.max(1, Math.round(pose.h));
@@ -177,10 +165,14 @@ export function recomposer(source, L, H, marge = MARGE){
   pc.drawImage(source, 0, 0, pose2.width, pose2.height);
   // Le fondu s'arrête AVANT le sujet (mesuré : un sujet qui touchait le bord de l'image était effacé) :
   // de chaque côté, au plus 8 %, et jamais plus que la distance entre ce bord et la boîte du sujet.
-  const f = Math.max(2, Math.min(pose2.width, pose2.height) * 0.08);
+  // Plus long (16 %) d'un côté où l'image laisse un vide à combler : le raccord y est plus doux.
+  const base = Math.min(pose2.width, pose2.height);
+  const f = Math.max(2, base * 0.08), fl = Math.max(2, base * 0.16);
+  const vide = { g: pose.x > 0.5, d: pose.x + pose.l < L - 0.5, h: pose.y > 0.5, b: pose.y + pose.h < H - 0.5 };
   const e = pose2.width / sl;
-  const cote = b ? { g: b.x0 * e, d: (sl - b.x1) * e, h: b.y0 * e, b: (sh - b.y1) * e } : { g: f, d: f, h: f, b: f };
-  const fg = Math.min(f, cote.g), fd = Math.min(f, cote.d), fh = Math.min(f, cote.h), fb = Math.min(f, cote.b);
+  const cote = b ? { g: b.x0 * e, d: (sl - b.x1) * e, h: b.y0 * e, b: (sh - b.y1) * e } : { g: fl, d: fl, h: fl, b: fl };
+  const fg = Math.min(vide.g ? fl : f, cote.g), fd = Math.min(vide.d ? fl : f, cote.d);
+  const fh = Math.min(vide.h ? fl : f, cote.h), fb = Math.min(vide.b ? fl : f, cote.b);
   pc.globalCompositeOperation = 'destination-out';
   const fondu = (x0, y0, x1, y1, rx, ry, rl, rh) => {
     const d = pc.createLinearGradient(x0, y0, x1, y1);

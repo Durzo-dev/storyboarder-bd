@@ -5,7 +5,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { boiteDuSujet, cadrageDuSujet, fondDesCoins, MARGE, AGRANDISSEMENT_MAX } from '../src/vignette-recadrage.js';
+import { boiteDuSujet, cadrageDuSujet, fondDesCoins, couleursDesBords, MARGE, AGRANDISSEMENT_MAX } from '../src/vignette-recadrage.js';
 
 /** Une image RGBA `w × h` : un fond (fonction de x, y) et un rectangle plein. */
 function image(w, h, fond, rect, couleur = [40, 160, 90]){
@@ -96,13 +96,20 @@ describe('the record image (asked: no black bars, a margin around the subject)',
   });
 });
 
-describe('filling the uncovered space (seen: a blurred copy of the model behind it)', () => {
+describe('filling the uncovered space (seen: a blurred copy of the model, then streaks)', () => {
   const src = readFileSync(new URL('../src/vignette-recadrage.js', import.meta.url), 'utf8');
-  test('only the image\'s edge bands are stretched, never the whole image; a side the subject touches is not', () => {
-    const f = src.slice(src.indexOf('function prolongerLesBords'), src.indexOf('/** Une couleur'));
-    assert.ok(f.length > 0);
-    assert.doesNotMatch(f, /drawImage\(source, \(L - sl/);
-    assert.match(f, /const touche = /);
-    assert.match(src, /prolongerLesBords\(c, source, sl, sh, pose, L, H, b\)/);
+  test('the fill is made of colours only: the image is never drawn as a background', () => {
+    const r = src.slice(src.indexOf('export function recomposer'));
+    // The source is drawn twice: once small for the analysis (ac), once as the image (pc); never on the card.
+    assert.deepEqual(r.match(/\b\w+\.drawImage\(source/g), ['ac.drawImage(source', 'pc.drawImage(source']);
+    assert.doesNotMatch(src, /prolongerLesBords|blur\(/);
+  });
+  test('each side\'s colour is the mean of its outer band', () => {
+    const w = 10, h = 10, rgba = new Uint8ClampedArray(w * h * 4);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = (y * w + x) * 4; rgba[i] = x < 5 ? 200 : 20; rgba[i + 3] = 255; }
+    const c = couleursDesBords(rgba, w, h);
+    assert.equal(Math.round(c.g[0]), 200);
+    assert.equal(Math.round(c.d[0]), 20);
+    assert.equal(Math.round(c.h[0]), 110);
   });
 });

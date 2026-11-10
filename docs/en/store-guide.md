@@ -79,10 +79,10 @@ sphere touching the edges of a square (Poly Haven). So they are recomposed:
   subject;
 - **cover whenever possible**: if the subject still fits (with half the margin) at the scale where
   the image covers the card, that scale is taken and the image is kept from uncovering an edge.
-  Otherwise the image's outer band of pixels is stretched to the card's edges and softened
-  (`prolongerLesBords`), over the corner gradient: the background's own colours, never the subject
-  (the whole image blurred behind showed a blurred copy of the model). A side the subject touches
-  is not extended (it would streak);
+  Otherwise the card's background is a smooth 3 × 3 gradient: each side's MEAN edge colour
+  (`couleursDesBords`) at its middle, the image's corners at the corners, and the image's edges fade
+  into it over 16 % on a side with a gap. Colours only: the image itself as a background showed a
+  blurred copy of the model, and its stretched edge bands made streaks;
 - **the record's large image** goes through the same recompose, to its frame's size, with an 8 %
   margin (`recadrerVisuel`, `MARGE_FICHE`): no black bars, no subject on the edge;
 - **"My models"** keeps a source's thumbnail, except Sketchfab's (`SOURCES_SANS_VIGNETTE`,

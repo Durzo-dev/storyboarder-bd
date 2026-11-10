@@ -81,11 +81,11 @@ Les vignettes des sources sont faites pour leur site : un petit objet dans un gr
   pour qu'il remplisse la carte moins une marge de 10 % (×2,6 au plus, au-delà c'est flou), prolonge
   le fond en dégradé des quatre coins et fond les bords de l'image sans jamais atteindre le sujet ;
 - **couvrir dès que possible** : si le sujet tient encore (avec la moitié de la marge) à l'échelle
-  où l'image couvre la carte, on la prend, et l'image ne découvre aucun bord. Sinon, la dernière
-  bande de pixels de l'image est étirée jusqu'aux bords de la carte puis adoucie
-  (`prolongerLesBords`), sur le dégradé des coins : les couleurs du fond, jamais le sujet (l'image
-  entière floutée derrière montrait une copie floue du modèle). Un côté que le sujet touche n'est pas
-  prolongé (il ferait une traînée) ;
+  où l'image couvre la carte, on la prend, et l'image ne découvre aucun bord. Sinon, le fond de la
+  carte est un dégradé lisse 3 × 3 : la couleur MOYENNE de la bande de bord de chaque côté
+  (`couleursDesBords`) en son milieu, les coins de l'image aux coins, et les bords de l'image s'y
+  fondent sur 16 % du côté d'un vide. Des couleurs seulement : l'image elle-même en fond montrait une
+  copie floue du modèle, et ses bandes de bord étirées faisaient des traînées ;
 - **la grande image de la fiche** passe par le même recadrage, à la taille de son cadre, avec une
   marge de 8 % (`recadrerVisuel`, `MARGE_FICHE`) : ni bandes noires, ni sujet collé au bord ;
 - **« Mes modèles »** garde la vignette d'une source, sauf celle de Sketchfab
