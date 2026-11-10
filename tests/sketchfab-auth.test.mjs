@@ -136,31 +136,52 @@ describe('#444c, the page shown in the browser after the redirect', () => {
 });
 
 describe('#444c, the store account line', () => {
-  test('signed out: offers to sign in', () => {
+  test('signed out: offers to sign in, the tooltip says why', () => {
     const s = accountLineState({ status: { connected: false, user: null }, lang: 'en' });
     assert.equal(s.action, 'login');
     assert.equal(s.disabled, false);
     assert.match(s.text, /Not signed in/);
+    assert.match(s.tip, /download/);
   });
 
-  test('signed in: shows the name and offers to sign out', () => {
+  test('signed in: the name comes apart (highlighted), no trailing full stop, offers to sign out', () => {
     const s = accountLineState({ status: { connected: true, user: { name: 'Durzo' } }, lang: 'fr' });
     assert.equal(s.action, 'logout');
-    assert.match(s.text, /Durzo/);
+    assert.equal(s.text, 'Connecté en tant que');
+    assert.equal(s.name, 'Durzo');
+    const anon = accountLineState({ status: { connected: true, user: null }, lang: 'en' });
+    assert.equal(anon.name, '');
+    assert.match(anon.text, /Signed in to Sketchfab/);
   });
 
-  test('while signing in (in the browser), the button cancels; an error is spelled out', () => {
+  test('status not known yet: checking, button disabled', () => {
+    const s = accountLineState({ status: null, lang: 'fr' });
+    assert.equal(s.text, 'Vérification…');
+    assert.equal(s.disabled, true);
+    assert.equal(s.action, '');
+  });
+
+  test('an expired session says so, in the error tone', () => {
+    const s = accountLineState({ status: { connected: false, user: null, expired: true }, lang: 'fr' });
+    assert.match(s.text, /Session expirée/);
+    assert.equal(s.tone, 'error');
+    assert.equal(s.action, 'login');
+  });
+
+  test('while signing in (in the browser), the button cancels', () => {
     const b = accountLineState({ status: null, busy: true });
     assert.equal(b.action, 'cancel');
     assert.equal(b.disabled, false);
-    assert.match(accountLineState({ status: null, error: 'denied', lang: 'en' }).text, /refused/);
   });
 
-  test('every error the session can return has a message in both languages', () => {
+  test('every error the session can return: short line, error tone, both languages', () => {
+    const off = { connected: false, user: null };
     for (const lang of ['fr', 'en']) {
       for (const e of ['cancelled', 'denied', 'state', 'invalid', 'network', 'token', 'busy', 'port', 'timeout', 'browser']) {
-        const s = accountLineState({ status: null, error: e, lang });
-        assert.notEqual(s.text, accountLineState({ status: null, lang }).text, `${lang}/${e}`);
+        const s = accountLineState({ status: off, error: e, lang });
+        assert.notEqual(s.text, accountLineState({ status: off, lang }).text, `${lang}/${e}`);
+        assert.equal(s.tone, 'error', `${lang}/${e}`);
+        assert.ok(s.text.length <= 36, `${lang}/${e} too long for the line: ${s.text}`);
       }
     }
   });

@@ -2547,7 +2547,9 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-account{ display:contents; }
 .store-account[hidden]{ display:none; }
 #storeAccountText{ grid-column:1; font-size:var(--texte-libelle); color:var(--ink-mid); line-height:1.35; }
-.store-account .nav-btn{ grid-column:2; width:220px; margin:0; }
+.store-account .nav-btn{ grid-column:2; width:280px; margin:0; }
+#storeAccountText.erreur{ color:var(--danger); }
+.store-account-name{ color:var(--accent); font-weight:600; }
 .store-pied .store-credit{ grid-column:3; justify-self:end; margin:0; }
 .store-credit a{ color:inherit; }
 

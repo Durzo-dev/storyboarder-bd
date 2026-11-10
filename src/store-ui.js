@@ -140,17 +140,24 @@ let accountError = null;
 
 /**
  * What the account line shows, from its state. PURE, exported for the tests. Returns
- * `{ text, button, action, disabled }`; `action` is 'login', 'logout' or 'cancel' (a sign-in in the browser).
+ * `{ text, name, tip, tone, button, action, disabled }`: `name` (the Sketchfab user, highlighted) follows `text`;
+ * `tip` is the hover tooltip with the full reason; `tone` is 'error' or ''; `action` is 'login', 'logout',
+ * 'cancel' (a sign-in in the browser) or '' (status still unknown).
  */
 export function accountLineState({ status, busy, error, lang = 'fr' }){
   const t = textesStore(lang).account;
-  if (busy) return { text: t.busy, button: t.cancel, action: 'cancel', disabled: false };
-  const connected = !!(status && status.connected);
-  const base = connected ? t.signedIn(status.user && status.user.name) : t.signedOut;
-  const text = error && t.errors[error] ? `${base} ${t.errors[error]}` : base;
-  return connected
-    ? { text, button: t.signOut, action: 'logout', disabled: false }
-    : { text, button: t.signIn, action: 'login', disabled: false };
+  const line = (m, tone = '') => ({ text: m.text, name: '', tip: m.tip || '', tone });
+  if (busy) return { ...line(t.busy), button: t.cancel, action: 'cancel', disabled: false };
+  if (!status) return { text: t.checking, name: '', tip: '', tone: '', button: t.signIn, action: '', disabled: true };
+  if (status.connected) {
+    const name = (status.user && status.user.name) || '';
+    const e = error && t.errors[error];
+    const shown = e ? line(e, 'error') : { text: name ? t.signedIn : t.signedInNoName, name, tip: '', tone: '' };
+    return { ...shown, button: t.signOut, action: 'logout', disabled: false };
+  }
+  const e = error && t.errors[error];
+  const shown = e ? line(e, 'error') : status.expired ? line(t.expired, 'error') : line(t.signedOut);
+  return { ...shown, button: t.signIn, action: 'login', disabled: false };
 }
 
 /** Shows the line on the Sketchfab tab only, and refreshes it (the elements are built once, in the HTML). */
@@ -162,7 +169,10 @@ function refreshAccountLine(){
   zone.hidden = !shown;
   if (!shown) return;
   const s = accountLineState({ status: sketchfabStatus, busy: accountBusy, error: accountError, lang: langue() });
-  $('storeAccountText').textContent = s.text;
+  const txt = $('storeAccountText');
+  txt.replaceChildren(s.text, ...(s.name ? [' ', el('strong', { texte: s.name, classe: 'store-account-name' })] : []));
+  txt.title = s.tip;
+  txt.classList.toggle('erreur', s.tone === 'error');
   const b = $('storeAccountButton');
   b.textContent = s.button;
   b.disabled = s.disabled;
@@ -180,6 +190,7 @@ async function onAccountButton(){
   const pont = window.storyboarderAPI;
   if (!pont) return;
   const action = $('storeAccountButton').dataset.action;
+  if (!action) return;
   if (action === 'cancel') { if (pont.sketchfabCancelLogin) await pont.sketchfabCancelLogin(); return; }
   if (accountBusy) return;
   accountError = null;

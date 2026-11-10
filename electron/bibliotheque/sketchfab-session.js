@@ -133,7 +133,13 @@ function logout(){
   return auth.publicStatus(null);
 }
 
-function status(){
+/** The public status; an access token due for renewal is renewed first, so a lost session shows as expired. */
+async function status(){
+  const s = load();
+  if (s && auth.needsRefresh(s, Date.now())) {
+    await accessToken();
+    if (!load()) return { ...auth.publicStatus(null), expired: true };
+  }
   return auth.publicStatus(load());
 }
 

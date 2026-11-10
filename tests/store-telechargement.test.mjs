@@ -248,10 +248,10 @@ describe('Le bouton dit ce qu\'il fera', () => {
   test('téléchargé avant le choix de résolution : compté comme 1k', () => {
     assert.equal(etat({ possede: { fichier: 'a.glb', resolution: null } }).actif, false);
   });
-  test('source sans téléchargement possible (Sketchfab) : désactivé, et la note dit pourquoi', () => {
+  test('source sans téléchargement possible (Sketchfab) : désactivé, sans note (retirée à la demande de Durzo)', () => {
     const e = etatBoutonTelechargement({ source: 'sketchfab', possible: false, options: [], choisie: '1k', possede: null });
     assert.equal(e.actif, false);
-    assert.match(e.note, /Sketchfab/);
+    assert.equal(e.note, '');
   });
 });
 

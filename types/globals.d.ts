@@ -36,7 +36,7 @@ declare const THREE: any;
  * succès », corrigé aujourd'hui, vivait précisément dans la lecture de ce `ok`.
  */
 /** The Sketchfab session as the interface sees it: never the token. */
-interface SketchfabStatus { connected: boolean; user: { name: string; url: string | null } | null }
+interface SketchfabStatus { connected: boolean; user: { name: string; url: string | null } | null; expired?: boolean }
 
 interface StoryboarderAPI {
   // Recopié de preload.js, qui est la source de vérité. tests/electron-bridge.test.mjs vérifie que
