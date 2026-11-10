@@ -232,12 +232,23 @@ downloaded (no recorded response contains files).
    downloads. Meanwhile it offers "Cancel". The account line is hidden in a model's details view.
 2. `store:telecharger` asks `sketchfabSession.accessToken()` (main process) and calls
    `GET https://api.sketchfab.com/v3/models/{uid}/download` with `Authorization: Bearer`.
-3. The answer gives a **signed, short-lived** link (`glb.url`, `glb.size`; `lienGlb`). It is fetched
-   **without** the token, refused beyond 300 MB, and must start with `glTF`.
+3. The answer gives **signed, short-lived** links (`lienTelechargement`): the `.glb` when offered,
+   else the glTF archive (`gltf.url`, a zip), unpacked and packed into a `.glb` in memory
+   (`gltf-archive.js`: `fichiersDuZip`, sub-folders included, unsafe paths skipped, then
+   `empaqueterGlb`). It is fetched **without** the token, refused beyond 300 MB, and the result must
+   start with `glTF`.
 4. The renderer saves and attributes it as for Poly Haven, with no resolution and no choice arrow.
 
 Errors (`erreurDemande`): 401 → `connexion` (the account line shows "Session expired"), 403 →
-`interdit`, 404 → `introuvable`, 429 → `quota`; no `.glb` in the answer → `formatAbsent`.
+`interdit`, 404 → `introuvable`, 429 → `quota`; neither `.glb` nor glTF in the answer → `formatAbsent`; an unreadable archive →
+`corrompu`.
+
+**Licence warnings** (`avertissementsLicence`, from the licence code): NC ("not in a comic that is
+sold, funded or monetised") and ND ("do not share an image where this model is posed, recoloured or
+retouched") show as warnings in the store record and in the "My models" record.
+
+**Credits**: each credit in an export gives the model's address, then the **author's profile**
+(`auteur.url`), then the licence's (`lignesCredit`).
 
 ## Seeing the store without network
 

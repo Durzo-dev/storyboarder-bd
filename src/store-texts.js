@@ -83,7 +83,7 @@ const T = {
       connexion: 'Session Sketchfab expirée : reconnectez-vous, puis réessayez.',
       interdit: 'L\'auteur ne permet plus de télécharger ce modèle.',
       introuvable: 'Ce modèle n\'existe plus sur Sketchfab.',
-      formatAbsent: 'Sketchfab ne propose pas ce modèle au format .glb.',
+      formatAbsent: 'Sketchfab ne propose ce modèle ni en .glb ni en glTF.',
     },
     // Short line texts; `tip` (the hover tooltip) gives the full reason when the line would be too long.
     account: {
@@ -123,6 +123,9 @@ const T = {
     commercialOui: 'Usage commercial autorisé.',
     commercialNon: 'Usage commercial interdit.',
     modificationNon: 'Pas de diffusion de versions modifiées.',
+    // #444d: what an NC or ND licence forbids, said in the terms of a comic (shown as warnings).
+    avertissementNC: 'Licence non commerciale (NC) : pas dans une BD vendue, financée ou monétisée.',
+    avertissementND: 'Licence sans modification (ND) : ne diffusez pas d\'image où ce modèle est posé, recoloré ou retouché.',
     faces: (n) => `${n} faces`,
     textures: (n, r) => (r ? `${n} texture(s), jusqu'à ${r} px` : `${n} texture(s)`),
     poids: (p) => `Téléchargement : ${p}`,
@@ -219,7 +222,7 @@ const T = {
       connexion: 'Sketchfab session expired: sign in again, then try again.',
       interdit: 'The author no longer allows downloading this model.',
       introuvable: 'This model no longer exists on Sketchfab.',
-      formatAbsent: 'Sketchfab does not offer this model as a .glb.',
+      formatAbsent: 'Sketchfab offers this model neither as .glb nor as glTF.',
     },
     account: {
       checking: 'Checking…',
@@ -258,6 +261,8 @@ const T = {
     commercialOui: 'Commercial use allowed.',
     commercialNon: 'No commercial use.',
     modificationNon: 'Modified versions may not be distributed.',
+    avertissementNC: 'Non-commercial licence (NC): not in a comic that is sold, funded or monetised.',
+    avertissementND: 'No-derivatives licence (ND): do not share an image where this model is posed, recoloured or retouched.',
     faces: (n) => `${n} faces`,
     textures: (n, r) => (r ? `${n} texture(s), up to ${r} px` : `${n} texture(s)`),
     poids: (p) => `Download: ${p}`,
@@ -323,6 +328,17 @@ export function phrasesLicence(l, lang = 'fr'){
   const p = [l.attribution ? t.attributionRequise : t.attributionLibre, l.commercial ? t.commercialOui : t.commercialNon];
   if (!l.modification) p.push(t.modificationNon);
   return p;
+}
+
+/**
+ * #444d: the warnings of a licence, from its CODE (`by-nc`, `by-nd`, `by-nc-sa`…): the only thing an
+ * attribution stores, so the store and "My models" say the same. An unknown licence warns nothing here:
+ * its record already says it is unknown.
+ */
+export function avertissementsLicence(l, lang = 'fr'){
+  const t = textesStore(lang);
+  const parties = String((l && l.code) || '').toLowerCase().split('-');
+  return [parties.includes('nc') ? t.avertissementNC : null, parties.includes('nd') ? t.avertissementND : null].filter(Boolean);
 }
 
 /** Les lignes d'informations d'une fiche. */

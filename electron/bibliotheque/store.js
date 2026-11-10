@@ -18,6 +18,7 @@ const sources = require('./store-sources');
 const sketchfab = require('./store-sketchfab');
 const polyhaven = require('./store-polyhaven');
 const { empaqueterGlb } = require('./gltf-glb');
+const { glbDepuisArchiveGltf } = require('./gltf-archive');
 
 // 20 s: a Sketchfab search without words can take more than 10 s (seen on 10 Nov. 2026).
 const DELAI_MS = 20000;
@@ -249,7 +250,7 @@ async function telechargerSketchfab(id, progression, jeton){
     const rep = await net.fetch(url, { signal: abandon.signal,
       headers: { Accept: 'application/json', 'User-Agent': agent(), Authorization: `Bearer ${token}` } });
     if (!rep.ok) return { erreur: sketchfab.erreurDemande(rep.status) };
-    lien = sketchfab.lienGlb(await rep.json());
+    lien = sketchfab.lienTelechargement(await rep.json());
   } catch (e) {
     return { erreur: 'reseau' };
   } finally {
@@ -264,9 +265,14 @@ async function telechargerSketchfab(id, progression, jeton){
   });
   if (r.erreur) return r;
   if (r.octets.length > POIDS_MAX) return { erreur: 'tropLourd' };
+  let octets = r.octets;
+  if (lien.format === 'gltf') {
+    // A few models come only as a glTF archive: unpacked and packed into one .glb, in memory.
+    try { octets = glbDepuisArchiveGltf(octets, POIDS_MAX); } catch (e) { signaler(lien.url, `glTF archive: ${e.message}`); return { erreur: 'corrompu' }; }
+  }
   // A .glb starts with the magic "glTF": anything else (an error page) must not become a model.
-  if (r.octets.length < 12 || r.octets.toString('latin1', 0, 4) !== 'glTF') return { erreur: 'corrompu' };
-  const glb = new Uint8Array(r.octets);
+  if (octets.length < 12 || Buffer.from(octets).toString('latin1', 0, 4) !== 'glTF') return { erreur: 'corrompu' };
+  const glb = new Uint8Array(octets);
   recents.set(`sketchfab:${id}`, glb);
   return { data: glb, nom: id, resolution: null };
 }

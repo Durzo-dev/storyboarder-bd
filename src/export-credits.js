@@ -62,8 +62,9 @@ export function titreCredits(lang){
 }
 
 /**
- * Un crédit en lignes : d'abord titre, auteur, licence et source ; puis l'adresse du modèle et celle
- * de la licence, chacune sur sa ligne (CC BY demande un lien vers la licence, pas seulement son nom).
+ * Un crédit en lignes : d'abord titre, auteur, licence et source ; puis l'adresse du modèle, celle du
+ * profil de l'auteur (#444d : Sketchfab la demande dans son modèle d'attribution) et celle de la
+ * licence, chacune sur sa ligne (CC BY demande un lien vers la licence, pas seulement son nom).
  */
 export function lignesCredit(a, lang){
   const en = lang === 'en';
@@ -72,7 +73,7 @@ export function lignesCredit(a, lang){
   const licence = a.licence && a.licence.libelle ? a.licence.libelle : (en ? 'licence unknown' : 'licence inconnue');
   const source = NOMS_SOURCES[a.source] || a.source || '';
   const tete = `${titre}, ${en ? 'by' : 'par'} ${auteur}, ${licence}${source ? `, via ${source}` : ''}`;
-  return [tete, a.url, a.licence && a.licence.url].filter(Boolean);
+  return [tete, a.url, a.auteur && a.auteur.url, a.licence && a.licence.url].filter(Boolean);
 }
 
 /**

@@ -97,6 +97,18 @@ function lienGlb(json){
   return { url: g.url, octets: Number.isFinite(g.size) && g.size > 0 ? g.size : null };
 }
 
+/**
+ * What to download from the /download answer: the `.glb` when offered, else the glTF archive (a zip,
+ * packed into a `.glb` here: gltf-archive.js). `{ url, octets, format: 'glb' | 'gltf' }`, or null.
+ */
+function lienTelechargement(json){
+  const glb = lienGlb(json);
+  if (glb) return { ...glb, format: 'glb' };
+  const g = json && json.gltf;
+  if (!g || typeof g.url !== 'string' || !/^https:\/\//.test(g.url)) return null;
+  return { url: g.url, octets: Number.isFinite(g.size) && g.size > 0 ? g.size : null, format: 'gltf' };
+}
+
 /** The store error for a failed /download answer, from its HTTP status. */
 function erreurDemande(statut){
   if (statut === 401) return 'connexion';     // the token is no longer accepted: sign in again
@@ -162,5 +174,5 @@ function pageNormalisee(json){
 
 module.exports = {
   API, CODES_PAR_LIBELLE, CATEGORIES,
-  urlRecherche, urlDemandeTelechargement, lienGlb, erreurDemande, vignette, modeleNormalise, pageNormalisee,
+  urlRecherche, urlDemandeTelechargement, lienGlb, lienTelechargement, erreurDemande, vignette, modeleNormalise, pageNormalisee,
 };

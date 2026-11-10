@@ -29,7 +29,7 @@ import { listerBatiments, lireBatimentDuDisque } from './batiment-store.js';
 import { entreesBatiments } from './batiment-bibliotheque.js';
 import { vignetteDuBatiment } from './batiment-vignettes.js';
 import { construireBatiment3D, materiauxBatiment3D } from './batiment-3d.js';
-import { textesStore, PLAFONDS_FACES, nombreCourt, poidsLisible, estLourd, phrasesLicence, lignesDetails } from './store-texts.js';
+import { textesStore, PLAFONDS_FACES, nombreCourt, poidsLisible, estLourd, phrasesLicence, avertissementsLicence, lignesDetails } from './store-texts.js';
 
 /**
  * Les onglets, dans l'ordre (demandé : un onglet par source). « local » est la bibliothèque « Mes
@@ -488,6 +488,7 @@ function ouvrirFiche(r){
     section(t.licence, phrasesLicence(r.licence, langue()), [el('p', {}, [lien(r.licence.libelle, r.licence.url)])]),
     details.length ? section(t.caracteristiques, details) : null,
     estLourd(r) ? el('p', { texte: t.lourd, classe: 'store-avertissement' }) : null,
+    ...avertissementsLicence(r.licence, langue()).map(m => el('p', { texte: m, classe: 'store-avertissement' })),
     // The download messages (errors, sign-in) live in the information column: nothing under the buttons (asked).
     note,
     // The source's mention (required by Sketchfab, Developer Terms 4.5), at the bottom right of the
@@ -1421,6 +1422,7 @@ function ficheLocale(e){
     section(t.utilisation, usages),
     a && a.licence ? section(t.licence, [el('p', {}, [lien(a.licence.libelle, a.licence.url)]),
       liste([a.licence.attribution ? t.attributionRequise : t.attributionLibre])]) : null,
+    ...(a && a.licence ? avertissementsLicence(a.licence, langue()).map(m => el('p', { texte: m, classe: 'store-avertissement' })) : []),
     section(t.caracteristiques, [liste([
       t.ligneFichier(e.fichier),
       e.dimensions ? t.dimensions(e.dimensions) : null,

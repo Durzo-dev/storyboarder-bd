@@ -54,6 +54,10 @@ describe('Le texte d’un crédit', () => {
     assert.equal(lignesCredit(canard, 'en')[0], '"Rubber Duck Toy", by Rico Cilliers, CC0 1.0, via Poly Haven');
     assert.equal(titreCredits('fr'), 'Crédits des modèles 3D');
   });
+  test('#444d : le profil de l’auteur, entre l’adresse du modèle et celle de la licence', () => {
+    const l = lignesCredit({ ...araignee, auteur: { nom: 'Quelqu’un', url: 'https://sketchfab.com/quelquun' } }, 'fr');
+    assert.deepEqual(l.slice(1), ['https://sketchfab.com/3d-models/abc', 'https://sketchfab.com/quelquun', 'https://creativecommons.org/licenses/by/4.0/']);
+  });
   test('une adresse trop longue est coupée entre ses caractères, sans rien perdre', () => {
     const mesurer = (t) => t.length * 10;
     const url = 'https://sketchfab.com/3d-models/un-modele-au-nom-tres-long-0123456789';

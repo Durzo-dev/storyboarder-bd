@@ -233,12 +233,24 @@ téléchargé (aucune réponse enregistrée ne contient de fichiers).
    masquée dans la fiche d'un modèle.
 2. `store:telecharger` demande `sketchfabSession.accessToken()` (processus principal) et appelle
    `GET https://api.sketchfab.com/v3/models/{uid}/download` avec `Authorization: Bearer`.
-3. La réponse donne un lien **signé et éphémère** (`glb.url`, `glb.size` ; `lienGlb`). Il est lu
-   **sans** le jeton, refusé au-delà de 300 Mo, et doit commencer par `glTF`.
+3. La réponse donne des liens **signés et éphémères** (`lienTelechargement`) : le `.glb` s'il est
+   proposé, sinon l'archive glTF (`gltf.url`, un zip), dépaquetée puis empaquetée en `.glb` en mémoire
+   (`gltf-archive.js` : `fichiersDuZip`, sous-dossiers compris, chemins dangereux ignorés, puis
+   `empaqueterGlb`). Le lien est lu **sans** le jeton, refusé au-delà de 300 Mo, et le résultat doit
+   commencer par `glTF`.
 4. Le renderer le range et l'attribue comme pour Poly Haven, sans résolution ni flèche de choix.
 
 Erreurs (`erreurDemande`) : 401 → `connexion` (la ligne de compte affiche « Session expirée »), 403 →
-`interdit`, 404 → `introuvable`, 429 → `quota` ; pas de `.glb` dans la réponse → `formatAbsent`.
+`interdit`, 404 → `introuvable`, 429 → `quota` ; ni `.glb` ni glTF dans la réponse → `formatAbsent` ; une archive illisible →
+`corrompu`.
+
+**Avertissements de licence** (`avertissementsLicence`, d'après le code de la licence) : NC (« pas dans
+une BD vendue, financée ou monétisée ») et ND (« ne diffusez pas d'image où ce modèle est posé,
+recoloré ou retouché ») s'affichent en avertissement dans la fiche du store et dans celle de « Mes
+modèles ».
+
+**Crédits** : chaque crédit d'un export donne l'adresse du modèle, puis le **profil de l'auteur**
+(`auteur.url`), puis celle de la licence (`lignesCredit`).
 
 ## Voir le store sans réseau
 

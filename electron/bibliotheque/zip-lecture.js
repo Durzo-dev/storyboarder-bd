@@ -58,17 +58,47 @@ function extraire(buf, noms){
   const sortie = new Map();
   for (const e of entrees) {
     if (!voulus.has(e.nom) || e.nom.includes('/') || e.nom.includes('\\') || e.nom.includes('..')) continue;
-    if (e.chiffre) throw new Error(`fichier chiffré : ${e.nom}`);
-    if (e.taille > TAILLE_MAX_FICHIER) throw new Error(`fichier trop gros : ${e.nom}`);
-    if (e.local + 30 > buf.length || buf.readUInt32LE(e.local) !== SIG_LOCAL) throw new Error('archive illisible');
-    const debut = e.local + 30 + buf.readUInt16LE(e.local + 26) + buf.readUInt16LE(e.local + 28);
-    const brut = buf.subarray(debut, debut + e.tailleCompressee);
-    let donnees;
-    if (e.methode === 0) donnees = Buffer.from(brut);
-    else if (e.methode === 8) donnees = zlib.inflateRawSync(brut, { maxOutputLength: TAILLE_MAX_FICHIER });
-    else throw new Error(`méthode de compression inconnue (${e.methode}) : ${e.nom}`);
-    if (donnees.length !== e.taille) throw new Error(`fichier tronqué : ${e.nom}`);
-    sortie.set(e.nom, donnees);
+    sortie.set(e.nom, lireEntree(buf, e));
+  }
+  return sortie;
+}
+
+/** The bytes of one entry; throws on an encrypted, oversized, truncated or unknown-method entry. */
+function lireEntree(buf, e){
+  if (e.chiffre) throw new Error(`fichier chiffré : ${e.nom}`);
+  if (e.taille > TAILLE_MAX_FICHIER) throw new Error(`fichier trop gros : ${e.nom}`);
+  if (e.local + 30 > buf.length || buf.readUInt32LE(e.local) !== SIG_LOCAL) throw new Error('archive illisible');
+  const debut = e.local + 30 + buf.readUInt16LE(e.local + 26) + buf.readUInt16LE(e.local + 28);
+  const brut = buf.subarray(debut, debut + e.tailleCompressee);
+  let donnees;
+  if (e.methode === 0) donnees = Buffer.from(brut);
+  else if (e.methode === 8) donnees = zlib.inflateRawSync(brut, { maxOutputLength: TAILLE_MAX_FICHIER });
+  else throw new Error(`méthode de compression inconnue (${e.methode}) : ${e.nom}`);
+  if (donnees.length !== e.taille) throw new Error(`fichier tronqué : ${e.nom}`);
+  return donnees;
+}
+
+/** A relative path that stays inside the archive: no `..` segment, no drive, no leading slash, no backslash. */
+function cheminSur(nom){
+  return typeof nom === 'string' && nom.length > 0 && !nom.endsWith('/') && !nom.startsWith('/')
+    && !nom.includes('\\') && !nom.includes(':') && !nom.split('/').includes('..');
+}
+
+/**
+ * #444d: EVERY file of the archive, sub-folders included (a glTF archive keeps its images in
+ * `textures/`): `Map(relative path → Buffer)`. Unsafe paths are skipped; beyond `tailleTotaleMax`
+ * decompressed bytes in all, it throws (an archive that would unpack into gigabytes).
+ */
+function fichiersDuZip(buf, tailleTotaleMax = 300 * 1024 * 1024){
+  const entrees = entreesDuZip(buf);
+  if (!entrees) throw new Error('archive illisible');
+  const sortie = new Map();
+  let total = 0;
+  for (const e of entrees) {
+    if (!cheminSur(e.nom)) continue;
+    total += e.taille;
+    if (total > tailleTotaleMax) throw new Error('archive trop grosse');
+    sortie.set(e.nom, lireEntree(buf, e));
   }
   return sortie;
 }
@@ -79,4 +109,4 @@ function nomsDuZip(buf){
   return e ? e.map(x => x.nom).filter(n => !n.includes('/') && !n.endsWith('/')) : null;
 }
 
-module.exports = { entreesDuZip, extraire, nomsDuZip, TAILLE_MAX_FICHIER };
+module.exports = { entreesDuZip, extraire, nomsDuZip, fichiersDuZip, cheminSur, TAILLE_MAX_FICHIER };
