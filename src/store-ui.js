@@ -83,10 +83,14 @@ function lien(texte, url, classe){
   return url ? el('a', { texte, classe, attrs: { href: url, target: '_blank', rel: 'noopener' } }) : el('span', { texte, classe });
 }
 
-function message(texte, erreur = false){
+/** The list's message; `genre` is true (an error) or 'chargement' (a search under way: a spinner). */
+function message(texte, genre = false){
   const m = $('storeMessage');
   m.textContent = texte || '';
-  m.classList.toggle('erreur', erreur);
+  m.classList.toggle('erreur', genre === true);
+  m.classList.toggle('chargement', genre === 'chargement');
+  // Alone on screen (no card, no record): centred in the list's space. Decided here, where it is known.
+  m.classList.toggle('seul', !$('storeGrille').children.length && $('storeFiche').hidden);
 }
 
 function options(select, liste){
@@ -484,6 +488,8 @@ function ouvrirFiche(r){
     section(t.licence, phrasesLicence(r.licence, langue()), [el('p', {}, [lien(r.licence.libelle, r.licence.url)])]),
     details.length ? section(t.caracteristiques, details) : null,
     estLourd(r) ? el('p', { texte: t.lourd, classe: 'store-avertissement' }) : null,
+    // The download messages (errors, sign-in) live in the information column: nothing under the buttons (asked).
+    note,
     // The source's mention (required by Sketchfab, Developer Terms 4.5), at the bottom right of the
     // information (asked: not under the buttons); the footer is hidden meanwhile.
     infos.source.credit ? el('p', { classe: 'store-credit store-fiche-credit' }, [lien(infos.source.credit[langue()], infos.source.site)]) : null,
@@ -497,7 +503,6 @@ function ouvrirFiche(r){
     // Retour et Télécharger TOUJOURS visibles (demandé) : un pied collé au bas de la zone qui défile.
     el('div', { classe: 'store-fiche-pied' }, [
       el('div', { classe: 'store-fiche-actions' }, [retour, scinde]),
-      note,
     ]),
   );
   // La fiche REMPLACE la liste (demandé) ; on garde la position dans la liste pour le retour.
@@ -843,7 +848,7 @@ async function chercher(suite = false){
   enCours = true;
   if (!suite) { fermerFiche(); $('storeGrille').replaceChildren(); affiches = []; suivant = null; derniereRecherche = parametres(); }
   if (source === LOCAL) { await chercherLocal(moi); return; }
-  message(t.chargement);
+  message(t.chargement, 'chargement');
   const page = await window.storyboarderAPI.storeChercher(source, suite ? { ...derniereRecherche, curseur: suivant } : derniereRecherche);
   if (moi !== generation) return;   // une recherche plus récente a pris la main
   enCours = false;

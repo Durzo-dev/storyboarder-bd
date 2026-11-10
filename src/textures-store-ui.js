@@ -81,7 +81,18 @@ const poids = (o) => (o >= 1048576 ? `${(o / 1048576).toLocaleString(langue(), {
   : `${Math.max(1, Math.round(o / 1024))} ${tr('KB', 'Ko')}`);
 const cle = (r) => `${r.source}:${r.id}`;
 const possedee = (r) => mes.find(t => t.cle === cle(r)) || null;
-const message = (t) => { $('texturesMessage').textContent = t || ''; };
+/** The list's message; `genre` is true (an error) or 'chargement' (a search under way: a spinner). */
+const message = (t, genre = false) => {
+  const m = $('texturesMessage');
+  m.textContent = t || '';
+  m.classList.toggle('erreur', genre === true);
+  m.classList.toggle('chargement', genre === 'chargement');
+  majMessageSeul();
+};
+/** Alone on screen (no card, no record): the message is centred in the list's space. Also redone by rendreGrille. */
+function majMessageSeul(){
+  $('texturesMessage').classList.toggle('seul', !$('texturesGrille').children.length && $('texturesFiche').hidden);
+}
 
 function erreurLisible(e){
   return {
@@ -177,10 +188,10 @@ async function chercher(curseur = null){
   const gen = ++generation;
   message('');
   if (onglet === LOCAL) { await relireMes(); if (gen === generation) rendreGrille(); return; }
-  if (!curseur) { page = { resultats: [], suivant: null }; rendreGrille(); message(tr('Searching…', 'Recherche…')); }
+  if (!curseur) { page = { resultats: [], suivant: null }; rendreGrille(); message(tr('Searching…', 'Recherche…'), 'chargement'); }
   const r = await api().texturesChercher(onglet, parametres(curseur));
   if (gen !== generation) return;
-  message(r.erreur ? erreurLisible(r.erreur) : '');
+  message(r.erreur ? erreurLisible(r.erreur) : '', !!r.erreur);
   if (r.erreur) return;
   page = { resultats: curseur ? [...page.resultats, ...r.resultats] : r.resultats, suivant: r.suivant };
   rendreGrille();
@@ -375,7 +386,7 @@ async function choisirCarte(r, local){
   const res = o && !o.erreur && o.options && o.options.length
     ? await api().texturesTelecharger(r.source, r.id, o.options[0].resolution) : { erreur: (o && o.erreur) || 'reponse' };
   enCours.delete(cle(r));
-  if (res.erreur) { message(erreurLisible(res.erreur)); rendreGrille(); return; }
+  if (res.erreur) { message(erreurLisible(res.erreur), true); rendreGrille(); return; }
   await relireMes();
   const t = possedee(r);
   if (!t || !t.grain) {
@@ -425,6 +436,10 @@ async function importerUnDossier(){
 }
 
 function rendreGrille(){
+  try { rendreGrilleSeule(); } finally { majMessageSeul(); }
+}
+
+function rendreGrilleSeule(){
   const g = $('texturesGrille');
   if (!infos) return;
   if (onglet === LOCAL) {
@@ -576,7 +591,7 @@ function boutonTelecharger(r, note){
     telecharger.textContent = tr('Downloading…', 'Téléchargement…');
     const res = await api().texturesTelecharger(r.source, r.id, choisie);
     enCours.delete(cle(r));
-    if (res.erreur) { message(erreurLisible(res.erreur)); telecharger.disabled = false; fleche.disabled = false; majTexte(); return; }
+    if (res.erreur) { message(erreurLisible(res.erreur), true); telecharger.disabled = false; fleche.disabled = false; majTexte(); return; }
     await relireMes();
     message(res.entree && res.entree.raccordVisible
       ? tr(`“${r.nom}” is in My textures (visible seam: it does not tile perfectly).`, `« ${r.nom} » est dans Mes textures (raccord visible : elle ne se répète pas parfaitement).`)
@@ -762,8 +777,10 @@ async function ouvrirFiche(r, local){
   const note = el('p', { classe: 'store-note' });
   // Déjà dans Mes textures : on propose de la SUPPRIMER, pas de la retélécharger (demandé).
   const action = t ? boutonSupprimer(t, () => (local ? fermerFiche() : ouvrirFiche(r, false))) : boutonTelecharger(r, note);
+  // The messages live in the information column, as in the model store: nothing under the buttons (asked).
+  droite.appendChild(note);
   fiche.replaceChildren(el('div', { classe: 'store-fiche-corps' }, [gauche, droite]),
-    el('div', { classe: 'store-fiche-pied' }, [el('div', { classe: 'store-fiche-actions' }, [retour, action]), note]));
+    el('div', { classe: 'store-fiche-pied' }, [el('div', { classe: 'store-fiche-actions' }, [retour, action])]));
   if ($('texturesFiche').hidden) positionListe = $('texturesDefilement').scrollTop;
   $('texturesGrille').hidden = true;
   $('texturesFormulaire').hidden = true;

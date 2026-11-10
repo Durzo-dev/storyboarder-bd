@@ -364,3 +364,25 @@ describe('le défilement infini (demandé, à la place de « Charger plus »)', 
     assert.ok(!html.includes('storePlusBtn') && !html.includes('policesEnLignePlus'));
   });
 });
+
+describe('the list message and the record messages (asked: centred, with an icon; nothing under the buttons)', () => {
+  const ui = lire('src/store-ui.js');
+  const tex = lire('src/textures-store-ui.js');
+  const css = lire('src/style.css');
+  test('a search shows a spinner, an error its icon, both stores', () => {
+    assert.match(ui, /message\(t\.chargement, 'chargement'\)/);
+    assert.match(tex, /message\(tr\('Searching…', 'Recherche…'\), 'chargement'\)/);
+    assert.match(css, /\.maj-message\.chargement::before/);
+    assert.match(css, /\.maj-message\.erreur::before\{ content:'!'/);
+  });
+  test('with an empty list, the message is centred in its space', () => {
+    assert.match(css, /\.store-box > \.maj-message\.seul:not\(:empty\)\{/);
+    assert.match(ui, /m\.classList\.toggle\('seul', !\$\('storeGrille'\)\.children\.length && \$\('storeFiche'\)\.hidden\)/);
+    assert.match(tex, /classList\.toggle\('seul', !\$\('texturesGrille'\)\.children\.length && \$\('texturesFiche'\)\.hidden\)/);
+    assert.match(tex, /try \{ rendreGrilleSeule\(\); \} finally \{ majMessageSeul\(\); \}/);
+  });
+  test('the record footer holds the buttons only', () => {
+    assert.doesNotMatch(ui, /store-fiche-actions' \}, \[retour, scinde\]\),\s*note/);
+    assert.match(tex, /droite\.appendChild\(note\)/);
+  });
+});

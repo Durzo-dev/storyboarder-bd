@@ -2509,6 +2509,24 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-fiche-actions-locales{ flex-wrap:wrap; }
 /* Le message vide ne doit pas creuser d'écart entre le titre et la fiche (demandé). */
 .store-box .maj-message:empty{ display:none; }
+/* The list's message: a spinner while searching, an icon for an error. With nothing else to show (empty grid,
+   no record open: the code marks it `.seul`, see message() in store-ui.js), it is CENTRED in the space of the
+   list (asked), and the list gives it its room. */
+.store-box .maj-message.chargement::before, .store-box .maj-message.erreur::before{
+  content:''; display:inline-block; flex:none; width:16px; height:16px; margin-right:8px; vertical-align:-3px; box-sizing:border-box; }
+.store-box .maj-message.chargement::before{ border:2px solid var(--line); border-top-color:var(--accent); border-radius:50%;
+  animation:store-tourne .8s linear infinite; }
+.store-box .maj-message.erreur::before{ content:'!'; border:2px solid var(--danger); border-radius:50%; color:var(--danger);
+  font-weight:700; font-size:var(--texte-capitales); line-height:12px; text-align:center; }
+@keyframes store-tourne{ to{ transform:rotate(360deg); } }
+@media (prefers-reduced-motion: reduce){ .store-box .maj-message.chargement::before{ animation-duration:2.4s; } }
+.store-box > .maj-message.seul:not(:empty){
+  flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+  margin:0; text-align:center; max-width:none; }
+.store-box > .maj-message.seul:not(:empty)::before{ margin:0; width:32px; height:32px;
+  border-width:3px; font-size:var(--texte-titre); line-height:26px; }
+.store-box > .maj-message.seul:not(:empty) ~ .store-defilement{ flex:0 0 auto; }
+.store-fiche-droite > .store-note{ margin:10px 0 0; }
 /* ⚠️ L'IMAGE NE DONNE PAS SA TAILLE AU CADRE (signalé à l'usage). En flux normal, une vignette
    carrée ou haute (un buste) imposait sa hauteur naturelle à la colonne : le cadre grandissait, et
    « Voir en 3D » et « Voir sur Poly Haven » glissaient sous le pied de la fiche, invisibles. Posés
