@@ -165,8 +165,10 @@ function refreshAccountLine(){
   const zone = $('storeAccount');
   const pont = window.storyboarderAPI;
   if (!zone) return;
-  // Hidden in a model's record (asked: the bottom was too busy); its download button signs in there.
+  // No footer in a model's record (asked: the bottom was too busy): its download button signs in, and
+  // the source's mention moves into the information column.
   const fiche = $('storeFiche');
+  if (zone.parentElement) zone.parentElement.hidden = !!(fiche && !fiche.hidden);
   const shown = source === 'sketchfab' && !!(pont && pont.sketchfabStatus) && !!(fiche && fiche.hidden);
   zone.hidden = !shown;
   if (!shown) return;
@@ -480,6 +482,9 @@ function ouvrirFiche(r){
     section(t.licence, phrasesLicence(r.licence, langue()), [el('p', {}, [lien(r.licence.libelle, r.licence.url)])]),
     details.length ? section(t.caracteristiques, details) : null,
     estLourd(r) ? el('p', { texte: t.lourd, classe: 'store-avertissement' }) : null,
+    // The source's mention (required by Sketchfab, Developer Terms 4.5), at the bottom right of the
+    // information (asked: not under the buttons); the footer is hidden meanwhile.
+    infos.source.credit ? el('p', { classe: 'store-credit store-fiche-credit' }, [lien(infos.source.credit[langue()], infos.source.site)]) : null,
   ];
   // ⚠️ replaceChildren(null) écrit « null » : un enfant conditionnel absent doit être RETIRÉ.
   fiche.replaceChildren(
@@ -1091,6 +1096,7 @@ function ficheBatiment(e){
   $('storeFormulaire').hidden = true;
   message('');
   fiche.hidden = false;
+  refreshAccountLine();
   $('storeDefilement').scrollTop = 0;
 }
 
@@ -1432,6 +1438,7 @@ function ficheLocale(e){
   $('storeFormulaire').hidden = true;
   message('');
   fiche.hidden = false;
+  refreshAccountLine();
   $('storeDefilement').scrollTop = 0;
   // L'IMAGE AU FORMAT DU CADRE (signalé : la vignette, au format des cartes, flottait petite dans le
   // grand cadre de la fiche). La vignette s'affiche tout de suite ; l'image cadrée sur la fiche la

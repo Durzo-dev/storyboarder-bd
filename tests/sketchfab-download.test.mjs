@@ -82,3 +82,14 @@ describe('#444d, the token stays in the main process', () => {
     for (const m of f.matchAll(/return \{([^}]*)\}/g)) assert.doesNotMatch(m[1], /token|jeton/i);
   });
 });
+
+describe('the source mention in a record', () => {
+  const ui = readFileSync(`${ROOT}src/store-ui.js`, 'utf8');
+  const css = readFileSync(`${ROOT}src/style.css`, 'utf8');
+  test('a record carries the mention in its information column, and hides the footer', () => {
+    assert.match(ui, /classe: 'store-credit store-fiche-credit'/);
+    assert.match(ui, /zone\.parentElement\.hidden = !!\(fiche && !fiche\.hidden\)/);
+    // A class that sets `display` beats the hidden attribute: the footer needs its own rule.
+    assert.match(css, /\.store-pied\[hidden\]\{ display:none; \}/);
+  });
+});

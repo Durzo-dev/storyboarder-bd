@@ -2388,6 +2388,9 @@ body.modale-en-glisser, body.modale-en-glisser *{ cursor:move !important; user-s
   .store-fiche-gauche .store-fiche-visuel{ flex:none; aspect-ratio:16/9; min-height:0; }
 }
 .store-fiche-droite > h4:first-child{ margin-top:0; }
+/* The source's mention, pinned to the bottom right of the information column (the padding keeps it clear). */
+.store-fiche-droite{ position:relative; padding-bottom:28px; }
+.store-fiche-droite > .store-fiche-credit{ position:absolute; right:0; bottom:0; margin:0; }
 /* Le pied colle au bas de la zone qui défile : Retour et Télécharger restent visibles. */
 .store-fiche-pied{ position:sticky; bottom:0; background:var(--paper-dark); padding:10px 0 2px; margin-top:12px; }
 .store-fiche-pied .store-fiche-actions{ margin-top:0; }
@@ -2548,6 +2551,7 @@ button.store-chip:hover{ border-color:var(--accent); }
 /* Store footer: status on the left, button centred, credit on the right. Two equal side columns keep the
    button in the middle whatever the length of the status. */
 .store-pied{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:14px; margin:12px 0 0; }
+.store-pied[hidden]{ display:none; }
 .store-account{ display:contents; }
 .store-account[hidden]{ display:none; }
 #storeAccountText{ grid-column:1; font-size:var(--texte-libelle); color:var(--ink-mid); line-height:1.35; }
