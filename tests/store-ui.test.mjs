@@ -27,7 +27,7 @@ describe('les textes', () => {
     // Tous les codes entre apostrophes des lignes qui posent une erreur, ternaires compris.
     const lignes = lire('electron/bibliotheque/store.js').split('\n').filter(l => /erreur: /.test(l) && !/^\s*(\/\/|\*)/.test(l));
     const codes = new Set(lignes.flatMap(l => [...l.slice(l.indexOf('erreur: ')).matchAll(/'(\w+)'/g)].map(m => m[1])));
-    assert.deepEqual([...codes].sort(), ['connexion', 'corrompu', 'formatAbsent', 'quota', 'reponse', 'reseau', 'simulation', 'source', 'tropLourd']);
+    assert.deepEqual([...codes].sort(), ['connexion', 'corrompu', 'delai', 'formatAbsent', 'quota', 'reponse', 'reseau', 'simulation', 'source', 'tropLourd']);
     for (const c of codes) { assert.ok(textesStore('fr').erreurs[c], c); assert.ok(textesStore('en').erreurs[c], c); }
   });
   test('la simulation dit comment en sortir', () => {

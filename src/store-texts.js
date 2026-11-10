@@ -71,6 +71,7 @@ const T = {
     aucun: 'Aucun modèle ne correspond à cette recherche.',
     erreurs: {
       reseau: 'Pas de connexion à Internet, ou le site ne répond pas. Réessayez dans un instant.',
+      delai: 'Le site met trop de temps à répondre. Réessayez dans un instant.',
       quota: 'Trop de recherches d\'affilée : le site demande de patienter un peu.',
       reponse: 'Le site a renvoyé une réponse inattendue. Réessayez plus tard.',
       source: 'Cette source n\'est pas disponible.',
@@ -205,6 +206,7 @@ const T = {
     aucun: 'No model matches this search.',
     erreurs: {
       reseau: 'No Internet connection, or the site is not responding. Try again in a moment.',
+      delai: 'The site is taking too long to answer. Try again in a moment.',
       quota: 'Too many searches in a row: the site asks to wait a little.',
       reponse: 'The site sent an unexpected response. Try again later.',
       source: 'This source is not available.',

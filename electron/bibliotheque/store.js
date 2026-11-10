@@ -19,7 +19,8 @@ const sketchfab = require('./store-sketchfab');
 const polyhaven = require('./store-polyhaven');
 const { empaqueterGlb } = require('./gltf-glb');
 
-const DELAI_MS = 10000;
+// 20 s: a Sketchfab search without words can take more than 10 s (seen on 10 Nov. 2026).
+const DELAI_MS = 20000;
 
 const MODULES = { sketchfab, polyhaven };
 
@@ -37,15 +38,27 @@ function agent(){
   return _agent;
 }
 
+/**
+ * A failed request is written to the terminal (host and path, never a token: the store's addresses carry
+ * none), so that "no connection" can be told apart from a timeout or an unreadable answer.
+ */
+function signaler(url, quoi){
+  let ou = url;
+  try { const u = new URL(url); ou = u.host + u.pathname; } catch (e) { /* keep it as given */ }
+  console.warn(`[store] ${ou}: ${quoi}`);
+}
+
 async function lireJson(url){
   const abandon = new AbortController();
   const minuterie = setTimeout(() => abandon.abort(), DELAI_MS);
   try {
     const rep = await net.fetch(url, { signal: abandon.signal, headers: { Accept: 'application/json', 'User-Agent': agent() } });
-    if (!rep.ok) return { erreur: rep.status === 429 ? 'quota' : 'reponse', statut: rep.status };
-    return { json: await rep.json() };
+    if (!rep.ok) { signaler(url, `HTTP ${rep.status}`); return { erreur: rep.status === 429 ? 'quota' : 'reponse', statut: rep.status }; }
+    try { return { json: await rep.json() }; } catch (e) { signaler(url, `unreadable JSON (${e.message})`); return { erreur: 'reponse' }; }
   } catch (e) {
-    return { erreur: 'reseau' };
+    const delai = abandon.signal.aborted;
+    signaler(url, delai ? `no answer within ${DELAI_MS / 1000} s` : `${e.name}: ${e.message}`);
+    return { erreur: delai ? 'delai' : 'reseau' };
   } finally {
     clearTimeout(minuterie);
   }
