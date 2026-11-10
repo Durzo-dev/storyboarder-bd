@@ -151,7 +151,7 @@ async function telecharges(dossierProjets, simulation){
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Le téléchargement (#445 : Poly Haven, sans compte ; Sketchfab suivra avec la connexion)
+// Le téléchargement (#445 : Poly Haven, sans compte ; #444d : Sketchfab, avec la connexion)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Un fichier dépasse ce délai sans finir : on abandonne plutôt que de laisser la barre figée. */
@@ -214,9 +214,54 @@ async function poids(sourceId, id, simulation){
  */
 const recents = sources.memoireBornee(6, 80 * 1024 * 1024);
 
-async function telecharger(sourceId, id, resolution, progression, simulation){
-  if (sourceId !== 'polyhaven') return { erreur: 'source' };
+/**
+ * #444d: a Sketchfab model. `jeton()` gives a valid access token (sketchfab-session.js) or null when the
+ * user must sign in; it is asked here, in the main process, and never reaches the renderer. The API gives
+ * a SIGNED, short-lived link to the .glb, fetched without the token (it is not Sketchfab's server).
+ */
+async function telechargerSketchfab(id, progression, jeton){
+  const url = sketchfab.urlDemandeTelechargement(id);
+  if (!url) return { erreur: 'reponse' };
+  const deja = recents.get(`sketchfab:${id}`);
+  if (deja) {
+    if (progression) progression(deja.length, deja.length);
+    return { data: deja, nom: id, resolution: null };
+  }
+  const token = jeton ? await jeton() : null;
+  if (!token) return { erreur: 'connexion' };
+  const abandon = new AbortController();
+  const minuterie = setTimeout(() => abandon.abort(), DELAI_MS);
+  let lien;
+  try {
+    const rep = await net.fetch(url, { signal: abandon.signal,
+      headers: { Accept: 'application/json', 'User-Agent': agent(), Authorization: `Bearer ${token}` } });
+    if (!rep.ok) return { erreur: sketchfab.erreurDemande(rep.status) };
+    lien = sketchfab.lienGlb(await rep.json());
+  } catch (e) {
+    return { erreur: 'reseau' };
+  } finally {
+    clearTimeout(minuterie);
+  }
+  if (!lien) return { erreur: 'formatAbsent' };
+  if (lien.octets && lien.octets > POIDS_MAX) return { erreur: 'tropLourd' };
+  let recus = 0;
+  const r = await lireOctets(lien.url, (n) => {
+    recus += n;
+    if (progression && lien.octets) progression(Math.min(recus, lien.octets), lien.octets);
+  });
+  if (r.erreur) return r;
+  if (r.octets.length > POIDS_MAX) return { erreur: 'tropLourd' };
+  // A .glb starts with the magic "glTF": anything else (an error page) must not become a model.
+  if (r.octets.length < 12 || r.octets.toString('latin1', 0, 4) !== 'glTF') return { erreur: 'corrompu' };
+  const glb = new Uint8Array(r.octets);
+  recents.set(`sketchfab:${id}`, glb);
+  return { data: glb, nom: id, resolution: null };
+}
+
+async function telecharger(sourceId, id, resolution, progression, simulation, jeton){
   if (simulation) return { erreur: 'simulation' };
+  if (sourceId === 'sketchfab') return telechargerSketchfab(id, progression, jeton);
+  if (sourceId !== 'polyhaven') return { erreur: 'source' };
   const resDemandee = polyhaven.RESOLUTIONS.includes(resolution) ? resolution : polyhaven.RESOLUTION;
   const deja = recents.get(`${sourceId}:${id}:${resDemandee}`);
   if (deja) {

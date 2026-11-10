@@ -87,6 +87,26 @@ function urlDemandeTelechargement(uid){
 }
 
 /**
+ * The signed link of the .glb, from the answer of /models/{uid}/download: `{ url, octets }`, or null.
+ * The answer also offers `gltf` (a zip) and `usdz`; only the .glb is taken: it is what the models
+ * folder stores, and every model the search returns has one (`archives.glb`).
+ */
+function lienGlb(json){
+  const g = json && json.glb;
+  if (!g || typeof g.url !== 'string' || !/^https:\/\//.test(g.url)) return null;
+  return { url: g.url, octets: Number.isFinite(g.size) && g.size > 0 ? g.size : null };
+}
+
+/** The store error for a failed /download answer, from its HTTP status. */
+function erreurDemande(statut){
+  if (statut === 401) return 'connexion';     // the token is no longer accepted: sign in again
+  if (statut === 403) return 'interdit';      // the author does not allow downloading (any more)
+  if (statut === 404) return 'introuvable';
+  if (statut === 429) return 'quota';
+  return 'reponse';
+}
+
+/**
  * La plus petite vignette d'au moins `largeurMin` pixels, ou la plus grande s'il n'y en a pas.
  * Une grille n'a pas besoin des 1920 px ; la fiche, si.
  */
@@ -142,5 +162,5 @@ function pageNormalisee(json){
 
 module.exports = {
   API, CODES_PAR_LIBELLE, CATEGORIES,
-  urlRecherche, urlDemandeTelechargement, vignette, modeleNormalise, pageNormalisee,
+  urlRecherche, urlDemandeTelechargement, lienGlb, erreurDemande, vignette, modeleNormalise, pageNormalisee,
 };

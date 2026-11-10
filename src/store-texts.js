@@ -78,6 +78,10 @@ const T = {
       corrompu: 'Un fichier est arrivé abîmé. Réessayez.',
       'tropLourd': 'Ce modèle est trop lourd pour être téléchargé ici.',
       ecriture: 'Le modèle n\'a pas pu être rangé dans le dossier Modeles.',
+      connexion: 'Session Sketchfab expirée : reconnectez-vous, puis réessayez.',
+      interdit: 'L\'auteur ne permet plus de télécharger ce modèle.',
+      introuvable: 'Ce modèle n\'existe plus sur Sketchfab.',
+      formatAbsent: 'Sketchfab ne propose pas ce modèle au format .glb.',
     },
     // Short line texts; `tip` (the hover tooltip) gives the full reason when the line would be too long.
     account: {
@@ -137,6 +141,8 @@ const T = {
     telechargeOk: (f) => `Ajouté à vos modèles sous le nom « ${f} ».`,
     fermerFiche: 'Retour',
     possede: 'Déjà téléchargé',
+    seConnecterTelecharger: 'Se connecter et télécharger',
+    telechargerSeul: (p) => `Télécharger (${p})`,
     possedeFiche: (f) => `Ce modèle est déjà dans vos modèles, sous le nom « ${f} ».`,
   },
   en: {
@@ -206,6 +212,10 @@ const T = {
       corrompu: 'A file arrived damaged. Try again.',
       'tropLourd': 'This model is too heavy to be downloaded here.',
       ecriture: 'The model could not be saved to the Modeles folder.',
+      connexion: 'Sketchfab session expired: sign in again, then try again.',
+      interdit: 'The author no longer allows downloading this model.',
+      introuvable: 'This model no longer exists on Sketchfab.',
+      formatAbsent: 'Sketchfab does not offer this model as a .glb.',
     },
     account: {
       checking: 'Checking…',
@@ -262,6 +272,8 @@ const T = {
     telechargeOk: (f) => `Added to your models as "${f}".`,
     fermerFiche: 'Back',
     possede: 'Already downloaded',
+    seConnecterTelecharger: 'Sign in and download',
+    telechargerSeul: (p) => `Download (${p})`,
     possedeFiche: (f) => `This model is already in your models, as "${f}".`,
   },
 };

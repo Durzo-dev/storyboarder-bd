@@ -198,7 +198,7 @@ pour cette application, ni PKCE).
 
 ## Le téléchargement
 
-Fait pour Poly Haven ; Sketchfab réutilisera le même chemin une fois la connexion faite.
+Poly Haven ne demande pas de compte ; Sketchfab demande d'être connecté (voir la sous-section suivante).
 
 1. `store:poids` donne le poids de chaque résolution proposée (`optionsTelechargement`) (`planTelechargement`, d'après `/files/{id}`).
 2. `store:telecharger` (processus principal) télécharge le `.gltf` et chacun de ses fichiers inclus
@@ -225,6 +225,20 @@ Rien n'est écrit sur le disque avant « Télécharger ».
 
 Un seul téléchargement à la fois ; il continue si l'on ferme la fiche. En simulation, rien n'est
 téléchargé (aucune réponse enregistrée ne contient de fichiers).
+
+### Depuis Sketchfab
+
+1. Déconnecté, le bouton dit « Se connecter et télécharger » : il connecte dans le navigateur
+   (`signIn`), puis télécharge. Pendant ce temps, il propose « Annuler ». La ligne de compte est
+   masquée dans la fiche d'un modèle.
+2. `store:telecharger` demande `sketchfabSession.accessToken()` (processus principal) et appelle
+   `GET https://api.sketchfab.com/v3/models/{uid}/download` avec `Authorization: Bearer`.
+3. La réponse donne un lien **signé et éphémère** (`glb.url`, `glb.size` ; `lienGlb`). Il est lu
+   **sans** le jeton, refusé au-delà de 300 Mo, et doit commencer par `glTF`.
+4. Le renderer le range et l'attribue comme pour Poly Haven, sans résolution ni flèche de choix.
+
+Erreurs (`erreurDemande`) : 401 → `connexion` (la ligne de compte affiche « Session expirée »), 403 →
+`interdit`, 404 → `introuvable`, 429 → `quota` ; pas de `.glb` dans la réponse → `formatAbsent`.
 
 ## Voir le store sans réseau
 

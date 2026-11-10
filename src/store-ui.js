@@ -165,7 +165,9 @@ function refreshAccountLine(){
   const zone = $('storeAccount');
   const pont = window.storyboarderAPI;
   if (!zone) return;
-  const shown = source === 'sketchfab' && !!(pont && pont.sketchfabStatus);
+  // Hidden in a model's record (asked: the bottom was too busy); its download button signs in there.
+  const fiche = $('storeFiche');
+  const shown = source === 'sketchfab' && !!(pont && pont.sketchfabStatus) && !!(fiche && fiche.hidden);
   zone.hidden = !shown;
   if (!shown) return;
   const s = accountLineState({ status: sketchfabStatus, busy: accountBusy, error: accountError, lang: langue() });
@@ -199,8 +201,20 @@ async function onAccountButton(){
     refreshAccountLine();
     return;
   }
+  await signIn();
+}
+
+/**
+ * Signs in to Sketchfab (in the browser); true when connected. `onChange` is called when the state
+ * changes (the download button of an open record follows it). Exported for the tests.
+ */
+export async function signIn(onChange = () => {}){
+  const pont = window.storyboarderAPI;
+  if (!pont || !pont.sketchfabLogin || accountBusy) return false;
+  accountError = null;
   accountBusy = true;
   refreshAccountLine();
+  onChange();
   try {
     const r = await pont.sketchfabLogin(langue());
     sketchfabStatus = { connected: !!r.connected, user: r.user || null };
@@ -210,7 +224,9 @@ async function onAccountButton(){
   } finally {
     accountBusy = false;
     refreshAccountLine();
+    onChange();
   }
+  return !!(sketchfabStatus && sketchfabStatus.connected);
 }
 
 /** Les onglets des sources. Celui de la source affichée est marqué, les autres la changent. */
@@ -484,6 +500,7 @@ function ouvrirFiche(r){
   $('storeFormulaire').hidden = true;
   message('');
   fiche.hidden = false;
+  refreshAccountLine();
   $('storeDefilement').scrollTop = 0;
   ficheCourante = r;
 }
@@ -515,32 +532,47 @@ function memoriserResolution(res){
 /**
  * Ce que dit le bouton, d'après l'état : fonction PURE de ses entrées, exportée pour les tests.
  * `possede` : { fichier, resolution } ou null ; `options` : [{ resolution, octets }] ; `choisie` :
- * la résolution sélectionnée. Rend `{ texte, actif, note, remplace }`.
+ * la résolution sélectionnée. Rend `{ texte, actif, note, remplace, action }`.
+ *
+ * #444d, a source that needs an account (Sketchfab): no resolutions, the weight comes from the result
+ * (`poids`), and `compte` is 'ok', 'requis' (the button signs in, then downloads) or 'enCours' (a sign-in
+ * in the browser: the button cancels it). `action` is 'telecharger', 'connexion' or 'annuler'.
  */
-export function etatBoutonTelechargement({ source, possible, possede, options, choisie, lang = 'fr' }){
+export function etatBoutonTelechargement({ source, possible, possede, options, choisie, compte = null, poids: octets = null, lang = 'fr' }){
   const t = textesStore(lang);
   const opt = (options || []).find(o => o.resolution === choisie);
   const poids = opt ? poidsLisible(opt.octets, lang) : null;
   if (!possible) {
     return { texte: possede ? '✓ ' + t.possede : t.telecharger, actif: false,
-      note: possede ? t.possedeFiche(possede.fichier) : t.noteTelechargement(source), remplace: false };
+      note: possede ? t.possedeFiche(possede.fichier) : t.noteTelechargement(source), remplace: false, action: 'telecharger' };
+  }
+  if (compte) {
+    if (possede) return { texte: '✓ ' + t.possede, actif: false, note: t.possedeFiche(possede.fichier), remplace: false, action: 'telecharger' };
+    if (compte === 'enCours') return { texte: t.account.cancel, actif: true, note: t.account.busy.text, remplace: false, action: 'annuler' };
+    if (compte === 'requis') return { texte: t.seConnecterTelecharger, actif: true, note: '', remplace: false, action: 'connexion' };
+    const p = octets > 0 ? poidsLisible(octets, lang) : null;
+    return { texte: p ? t.telechargerSeul(p) : t.telecharger, actif: true, note: '', remplace: false, action: 'telecharger' };
   }
   // Un modèle téléchargé avant le choix de résolution l'a été en 1k.
   if (possede && (possede.resolution || RESOLUTION_DEFAUT) === choisie) {
-    return { texte: `✓ ${t.possede} · ${choisie}`, actif: false, note: t.possedeFiche(possede.fichier), remplace: false };
+    return { texte: `✓ ${t.possede} · ${choisie}`, actif: false, note: t.possedeFiche(possede.fichier), remplace: false, action: 'telecharger' };
   }
   if (possede) {
     return { texte: t.remplacer(choisie, poids || '…'), actif: true,
-      note: t.remplacerNote(possede.fichier, possede.resolution || RESOLUTION_DEFAUT), remplace: true };
+      note: t.remplacerNote(possede.fichier, possede.resolution || RESOLUTION_DEFAUT), remplace: true, action: 'telecharger' };
   }
-  return { texte: poids ? t.telechargerPoids(poids, choisie) : t.telecharger, actif: true, note: t.noteTelechargement(source), remplace: false };
+  return { texte: poids ? t.telechargerPoids(poids, choisie) : t.telecharger, actif: true, note: t.noteTelechargement(source), remplace: false, action: 'telecharger' };
 }
 
 function brancherTelechargement(r, ui){
   const t = textesStore(langue());
   const pont = window.storyboarderAPI;
-  const possible = !!(infos && infos.source.connexion && infos.source.connexion.telechargement === false
-    && pont && pont.storeTelecharger);
+  const connexion = infos && infos.source.connexion;
+  // #444d: a source whose downloads need an account (Sketchfab) signs in from this button.
+  const avecCompte = !!(connexion && connexion.telechargement === true && pont && pont.sketchfabLogin);
+  const possible = !!(connexion && (connexion.telechargement === false || avecCompte) && pont && pont.storeTelecharger);
+  const compte = () => (!avecCompte ? null
+    : accountBusy ? 'enCours' : (sketchfabStatus && sketchfabStatus.connected) ? 'ok' : 'requis');
   let options = [];
   ui.choisie = resolutionPreferee();
   const enCoursIci = () => !!(enTelechargement && enTelechargement.cle === cleDe(r));
@@ -555,7 +587,9 @@ function brancherTelechargement(r, ui){
     }
     const e = etatBoutonTelechargement({
       source: r.source, possible, possede: possedes.get(cleDe(r)) || null, options, choisie: ui.choisie, lang: langue(),
+      compte: compte(), poids: r.poids,
     });
+    ui.action = e.action;
     ui.bouton.textContent = e.texte;
     ui.bouton.disabled = !e.actif || !!enTelechargement;
     ui.fleche.disabled = !!enTelechargement;
@@ -597,8 +631,26 @@ function brancherTelechargement(r, ui){
   appliquer();
   if (enCoursIci()) ui.bouton.textContent = t.telechargement(0);
   if (!possible) return;
-  ui.bouton.onclick = () => telechargerModele(r, ui, ui.choisie);
-  if (!pont.storePoids) return;
+  ui.bouton.onclick = async () => {
+    if (ui.action === 'annuler') { if (pont.sketchfabCancelLogin) await pont.sketchfabCancelLogin(); return; }
+    if (ui.action === 'connexion') {
+      const ok = await signIn(appliquer);
+      if (!ok) {
+        const m = accountError && textesStore(langue()).account.errors[accountError];
+        if (m && ui.note.isConnected) { ui.note.textContent = m.tip || m.text; ui.note.classList.add('erreur'); }
+        return;
+      }
+    }
+    const issue = await telechargerModele(r, ui, ui.choisie);
+    // The token was refused: the session is gone, the account line and this button say so.
+    if (issue && issue.erreur === 'connexion') {
+      sketchfabStatus = { connected: false, user: null, expired: true };
+      refreshAccountLine();
+      appliquer();
+      if (ui.note.isConnected) { ui.note.textContent = textesStore(langue()).erreurs.connexion; ui.note.classList.add('erreur'); }
+    }
+  };
+  if (avecCompte || !pont.storePoids) return;
   pont.storePoids(r.source, r.id).then(p => {
     if (!p || !Array.isArray(p.options) || !p.options.length) return;
     options = p.options;
@@ -739,6 +791,7 @@ function fermerFiche(){
   $('storeFiche').hidden = true;
   $('storeFiche').replaceChildren();   // arrête un aperçu 3D en cours
   $('storeGrille').hidden = false;
+  refreshAccountLine();
   $('storeFormulaire').hidden = false;
   // Une catégorie ou un tag changé dans la fiche : la grille suit (sans relire le disque).
   if (listePerimee && source === LOCAL && afficherLocal) { listePerimee = false; afficherLocal(); rendreFiltreTags(); }

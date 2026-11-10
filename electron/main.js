@@ -1167,6 +1167,9 @@ ipcMain.handle('store:infos', async (event, sourceId) => ({ ...store.infos(sourc
 ipcMain.handle('store:chercher', async (event, sourceId, params) =>
   store.chercher(sourceId, params, SIMULATION_STORE ? RACINE : null));
 ipcMain.handle('store:vignette', async (event, url) => store.octetsVignette(String(url || '')));
+// #444c: the Sketchfab session. The token stays in this process (sketchfab-session.js); the
+// interface only gets { connected, user }. Downloading (#444d) asks it for a token, here.
+const sketchfabSession = require('./bibliotheque/sketchfab-session');
 ipcMain.handle('store:telecharges', async () => store.telecharges(getProjectsDir(), SIMULATION_STORE ? RACINE : null));
 // #445 : le téléchargement. Le .glb revient au renderer, qui le RANGE par le chemin de l'import
 // (src/model-store.js : nom libre, doublon à l'identique) ; puis il demande l'attribution.
@@ -1174,16 +1177,13 @@ ipcMain.handle('store:poids', async (event, sourceId, id) => store.poids(sourceI
 ipcMain.handle('store:telecharger', async (event, sourceId, id, resolution) =>
   store.telecharger(sourceId, id, resolution, (recus, total) => {
     if (!event.sender.isDestroyed()) event.sender.send('store:progression', recus, total);
-  }, SIMULATION_STORE ? RACINE : null));
+  }, SIMULATION_STORE ? RACINE : null, () => sketchfabSession.accessToken()));
 // L'aperçu 3D d'une fiche : un .glb en mémoire, rien sur le disque. Sa progression a son canal, pour
 // ne pas se mêler à celle d'un téléchargement en cours.
 ipcMain.handle('store:apercu', async (event, sourceId, id) =>
   store.apercu(sourceId, id, (recus, total) => {
     if (!event.sender.isDestroyed()) event.sender.send('store:apercuProgression', sourceId, id, recus, total);
   }, SIMULATION_STORE ? RACINE : null));
-// #444c: the Sketchfab session. The token stays in this process (sketchfab-session.js); the
-// interface only gets { connected, user }.
-const sketchfabSession = require('./bibliotheque/sketchfab-session');
 ipcMain.handle('sketchfab:status', async () => sketchfabSession.status());
 ipcMain.handle('sketchfab:login', async (event, lang) => sketchfabSession.login(lang === 'en' ? 'en' : 'fr'));
 ipcMain.handle('sketchfab:cancelLogin', async () => sketchfabSession.cancelLogin());

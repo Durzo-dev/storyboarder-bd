@@ -197,7 +197,7 @@ this app nor PKCE).
 
 ## Downloading
 
-Done for Poly Haven; Sketchfab will reuse the same path once signing in exists.
+Poly Haven needs no account; Sketchfab needs the user signed in (see the next subsection).
 
 1. `store:poids` gives the size of each offered resolution (`optionsTelechargement`) (`planTelechargement`, from `/files/{id}`).
 2. `store:telecharger` (main process) downloads the `.gltf` and each included file at the resolution
@@ -225,6 +225,19 @@ before "Download".
 
 One download at a time; it carries on if the details view is closed. In simulation nothing is
 downloaded (no recorded response contains files).
+
+### From Sketchfab
+
+1. Signed out, the button reads "Sign in and download": it signs in in the browser (`signIn`), then
+   downloads. Meanwhile it offers "Cancel". The account line is hidden in a model's details view.
+2. `store:telecharger` asks `sketchfabSession.accessToken()` (main process) and calls
+   `GET https://api.sketchfab.com/v3/models/{uid}/download` with `Authorization: Bearer`.
+3. The answer gives a **signed, short-lived** link (`glb.url`, `glb.size`; `lienGlb`). It is fetched
+   **without** the token, refused beyond 300 MB, and must start with `glTF`.
+4. The renderer saves and attributes it as for Poly Haven, with no resolution and no choice arrow.
+
+Errors (`erreurDemande`): 401 → `connexion` (the account line shows "Session expired"), 403 →
+`interdit`, 404 → `introuvable`, 429 → `quota`; no `.glb` in the answer → `formatAbsent`.
 
 ## Seeing the store without network
 
