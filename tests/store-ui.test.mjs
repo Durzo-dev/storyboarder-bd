@@ -86,7 +86,7 @@ describe('le câblage', () => {
   });
   test('le téléchargement est désactivé tant que la connexion n\'existe pas, et la fiche dit pourquoi', () => {
     assert.match(UI, /texte: fichier \? '✓ ' \+ t\.possede : t\.telecharger, classe: 'full-btn'/);
-    assert.match(UI, /texte: fichier \? t\.possedeFiche\(fichier\) : t\.noteTelechargement\(r\.source\)/);
+    assert.match(UI, /if \(fichier\) telecharger\.title = t\.possedeFiche\(fichier\)/);
     // Seule une source SANS connexion requise peut télécharger aujourd'hui (Sketchfab attend #444c).
     assert.match(UI, /infos\.source\.connexion\.telechargement === false/);
   });

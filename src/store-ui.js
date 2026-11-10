@@ -460,7 +460,9 @@ function ouvrirFiche(r){
   retour.onclick = fermerFiche;
   const fichier = fichierPossede(r);
   const telecharger = el('button', { texte: fichier ? '✓ ' + t.possede : t.telecharger, classe: 'full-btn', attrs: { type: 'button' } });
-  const note = el('p', { texte: fichier ? t.possedeFiche(fichier) : t.noteTelechargement(r.source), classe: 'store-note' });
+  // Already there: said by the button's tooltip, not by a sentence under it (asked).
+  if (fichier) telecharger.title = t.possedeFiche(fichier);
+  const note = el('p', { texte: fichier ? '' : t.noteTelechargement(r.source), classe: 'store-note' });
   // BOUTON SCINDÉ (demandé) : « Télécharger (2,9 Mo · 1k) » à gauche, et à droite une flèche qui
   // ouvre le choix de la qualité des textures. La flèche reste cachée tant que la source n'en propose
   // pas plusieurs.
@@ -537,7 +539,8 @@ function memoriserResolution(res){
 /**
  * Ce que dit le bouton, d'après l'état : fonction PURE de ses entrées, exportée pour les tests.
  * `possede` : { fichier, resolution } ou null ; `options` : [{ resolution, octets }] ; `choisie` :
- * la résolution sélectionnée. Rend `{ texte, actif, note, remplace, action }`.
+ * la résolution sélectionnée. Rend `{ texte, actif, note, infobulle, remplace, action }` ; `infobulle`
+ * (le survol du bouton) dit le nom du modèle déjà là, plutôt qu'une phrase sous le bouton (demandé).
  *
  * #444d, a source that needs an account (Sketchfab): no resolutions, the weight comes from the result
  * (`poids`), and `compte` is 'ok', 'requis' (the button signs in, then downloads) or 'enCours' (a sign-in
@@ -549,10 +552,10 @@ export function etatBoutonTelechargement({ source, possible, possede, options, c
   const poids = opt ? poidsLisible(opt.octets, lang) : null;
   if (!possible) {
     return { texte: possede ? '✓ ' + t.possede : t.telecharger, actif: false,
-      note: possede ? t.possedeFiche(possede.fichier) : t.noteTelechargement(source), remplace: false, action: 'telecharger' };
+      note: possede ? '' : t.noteTelechargement(source), infobulle: possede ? t.possedeFiche(possede.fichier) : '', remplace: false, action: 'telecharger' };
   }
   if (compte) {
-    if (possede) return { texte: '✓ ' + t.possede, actif: false, note: t.possedeFiche(possede.fichier), remplace: false, action: 'telecharger' };
+    if (possede) return { texte: '✓ ' + t.possede, actif: false, note: '', infobulle: t.possedeFiche(possede.fichier), remplace: false, action: 'telecharger' };
     if (compte === 'enCours') return { texte: t.account.cancel, actif: true, note: t.account.busy.text, remplace: false, action: 'annuler' };
     if (compte === 'requis') return { texte: t.seConnecterTelecharger, actif: true, note: '', remplace: false, action: 'connexion' };
     const p = octets > 0 ? poidsLisible(octets, lang) : null;
@@ -560,11 +563,11 @@ export function etatBoutonTelechargement({ source, possible, possede, options, c
   }
   // Un modèle téléchargé avant le choix de résolution l'a été en 1k.
   if (possede && (possede.resolution || RESOLUTION_DEFAUT) === choisie) {
-    return { texte: `✓ ${t.possede} · ${choisie}`, actif: false, note: t.possedeFiche(possede.fichier), remplace: false, action: 'telecharger' };
+    return { texte: `✓ ${t.possede} · ${choisie}`, actif: false, note: '', infobulle: t.possedeFiche(possede.fichier), remplace: false, action: 'telecharger' };
   }
   if (possede) {
     return { texte: t.remplacer(choisie, poids || '…'), actif: true,
-      note: t.remplacerNote(possede.fichier, possede.resolution || RESOLUTION_DEFAUT), remplace: true, action: 'telecharger' };
+      note: '', infobulle: t.remplacerNote(possede.fichier, possede.resolution || RESOLUTION_DEFAUT), remplace: true, action: 'telecharger' };
   }
   return { texte: poids ? t.telechargerPoids(poids, choisie) : t.telecharger, actif: true, note: t.noteTelechargement(source), remplace: false, action: 'telecharger' };
 }
@@ -600,6 +603,7 @@ function brancherTelechargement(r, ui){
     ui.fleche.disabled = !!enTelechargement;
     ui.note.textContent = e.note;
     ui.note.classList.remove('erreur');
+    ui.bouton.title = e.infobulle || '';
   };
   /** Le menu des qualités : une ligne par résolution, la choisie cochée, celle déjà là signalée. */
   const remplirMenu = () => {
@@ -704,8 +708,9 @@ export async function telechargerModele(r, ui, resolution = RESOLUTION_DEFAUT){
   if (issue.ok) {
     if (pont.storeAttribuer) await pont.storeAttribuer(r, issue.fichier, issue.resolution);
     await rafraichirPossedes();
-    if (courant && courant.bouton) { courant.bouton.textContent = '✓ ' + t.possede; courant.bouton.disabled = true; }
-    if (courant && courant.note) { courant.note.textContent = t.telechargeOk(issue.fichier); courant.note.classList.remove('erreur'); }
+    // The file name goes to the tooltip, like a model already there (asked: no sentence under the button).
+    if (courant && courant.bouton) { courant.bouton.textContent = '✓ ' + t.possede; courant.bouton.disabled = true; courant.bouton.title = t.telechargeOk(issue.fichier); }
+    if (courant && courant.note) { courant.note.textContent = ''; courant.note.classList.remove('erreur'); }
     // La coche sur la carte, et la section Modèles du menu de gauche (et les Cases, si remplacé).
     $('storeGrille').replaceChildren(...affiches.map(carte));
     if (_rappels.apresTelechargement) _rappels.apresTelechargement(issue.fichier, issue.remplace);

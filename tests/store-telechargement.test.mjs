@@ -172,7 +172,9 @@ describe('Télécharger depuis la fiche', () => {
     assert.deepEqual(j.apres, [['Arm Chair 01.glb', false]]);
     assert.equal(fichierPossede(RESULTAT), 'Arm Chair 01.glb', 'la coche ne suit pas');
     assert.match(bouton.textContent, /Déjà téléchargé|Already downloaded/);
-    assert.match(note.textContent, /Arm Chair 01\.glb/);
+    // The name goes to the button's tooltip, nothing under it (asked).
+    assert.match(bouton.title, /Arm Chair 01\.glb/);
+    assert.equal(note.textContent, '');
   });
   test('un nom déjà pris par un AUTRE fichier : rangé à côté, rien n\'est écrasé', async () => {
     const j = await monter({ existants: ['Arm Chair 01.glb'] });
@@ -237,13 +239,16 @@ describe('Le bouton dit ce qu\'il fera', () => {
     const e = etat({ possede: { fichier: 'a.glb', resolution: '1k' } });
     assert.equal(e.actif, false);
     assert.equal(e.texte, '✓ Déjà téléchargé · 1k');
+    assert.match(e.infobulle, /a\.glb/);
+    assert.equal(e.note, '');
   });
-  test('déjà là dans une autre : remplacer, et la note dit que les Cases suivront', () => {
+  test('déjà là dans une autre : remplacer, et l\'infobulle dit que les Cases suivront', () => {
     const e = etat({ possede: { fichier: 'a.glb', resolution: '1k' }, choisie: '2k' });
     assert.equal(e.actif, true);
     assert.equal(e.remplace, true);
     assert.equal(e.texte, 'Remplacer (2,8 Mo · 2k)');
-    assert.match(e.note, /en 1k.*a\.glb.*Cases/);
+    assert.match(e.infobulle, /en 1k.*a\.glb.*Cases/);
+    assert.equal(e.note, '');
   });
   test('téléchargé avant le choix de résolution : compté comme 1k', () => {
     assert.equal(etat({ possede: { fichier: 'a.glb', resolution: null } }).actif, false);
