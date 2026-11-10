@@ -4,7 +4,7 @@
 
 > 🇬🇧 [English version](README.md)
 
-**Version 1.16.59**
+**Version 1.17.0**
 
 **Application de découpage de Bandes Dessinées** : outil de storyboard pour créer, organiser et visualiser des planches de BD avec rendu 3D des scènes.
 
@@ -28,7 +28,7 @@ Versions précédentes et notes de version : [toutes les releases](https://githu
 - 🎬 **Scènes 3D** : décors réutilisables avec Personnages, Animaux, mobilier, véhicules, lumière et ombres, chargés dans n'importe quelle Case, avec les mêmes gestes 3D partout
 - ⛰️ **Éditeur de terrain** : relief, Zones, routes, murets et eau, façonnés en vue de dessus avec un aperçu 3D
 - 🏠 **Éditeur de bâtiment** : murs, pièces, ouvertures, escaliers, niveaux et sous-sols, revêtements, mobilier, toits et cours
-- 📦 **Modèles 3D** : import glTF, bibliothèque de modèles, modèles en ligne (Sketchfab, Poly Haven), modèles articulés que l'on pose
+- 📦 **Modèles 3D** : import glTF, bibliothèque de modèles, modèles en ligne (Sketchfab avec votre compte, Poly Haven), en 1k, 2k ou d'origine, modèles articulés que l'on pose
 - 🧩 **Textures** : un store (Poly Haven, ambientCG, vos dossiers) pour les sols, routes, murets et revêtements
 - 📚 **Lecteur & export** : lire un Tome comme un livre, exporter les Planches en PNG ou PDF
 - 💾 **Application** : Projets JSON lisibles, sauvegarde automatique, annulation, mises à jour intégrées, hors ligne, thèmes sombre et clair, manuel intégré

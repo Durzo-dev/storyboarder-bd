@@ -13,6 +13,62 @@ version coûterait plus qu'il ne rapporte.
 
 ---
 
+## v1.17.0
+
+**Les modèles de Sketchfab se téléchargent.** On se connecte à son compte Sketchfab depuis le store,
+dans son propre navigateur, et un modèle s'ajoute à « Mes modèles » d'un clic, crédité à son auteur,
+dans la qualité de textures choisie.
+
+### Ce qui change pour vous
+
+**Se connecter à Sketchfab.** En bas de l'onglet Sketchfab : l'état de la connexion à gauche (votre
+nom en couleur), le bouton au centre, la mention de Sketchfab à droite. « Se connecter » ouvre la page
+de Sketchfab dans votre navigateur habituel : vos connexions (Google…), votre gestionnaire de mots de
+passe et votre double authentification y servent, et Storyboarder ne voit jamais votre mot de passe.
+Une page aux couleurs de l'application confirme la connexion. Les messages sont courts, la raison
+complète s'affiche au survol ; une session expirée le dit.
+
+**Télécharger depuis Sketchfab.** Dans la fiche d'un modèle, « Télécharger », ou « Se connecter et
+télécharger » si vous ne l'êtes pas encore. Le modèle est rangé dans « Mes modèles » et crédité comme
+ceux de Poly Haven ; un modèle que Sketchfab ne propose qu'en archive glTF est rassemblé en un seul
+fichier.
+
+**Choisir la qualité des textures.** La flèche du bouton propose 1k, 2k ou d'origine, quand le modèle
+a des textures plus grandes. Les textures sont réduites sur votre ordinateur après le téléchargement
+(un modèle de 16 Mo passe à 4,6 Mo en 1k). Les caractéristiques de la fiche et l'avertissement
+« Modèle lourd » suivent la qualité choisie, sur Sketchfab comme sur Poly Haven.
+
+**Licences et crédits.** Un avertissement dans la fiche pour les licences non commerciales (NC) et
+sans modification (ND), dans le store comme dans « Mes modèles ». Les crédits d'une planche exportée
+donnent aussi le lien vers le profil de l'auteur.
+
+**Des vignettes et des fiches plus propres.** Les vignettes des deux stores sont recadrées sans bord
+visible ni copie floue du modèle : une image au fond varié couvre sa carte, une image au fond uni
+garde sa marge. Dans la fiche, une image en paysage donne sa forme au cadre. Les modèles de Sketchfab
+ont dans « Mes modèles » une vignette rendue par l'application, comme les autres.
+
+**Les messages du store.** « Recherche… » s'affiche avec un indicateur animé, centré dans la liste, et
+une erreur avec une icône ; la page suivante s'annonce en bas de la liste. Dans une fiche, rien ne
+s'affiche plus sous les boutons : « Déjà téléchargé » et « Remplacer » s'expliquent au survol, la
+mention de la source est en bas à droite des informations.
+
+**Le carrelage du Sol** est ramené à des carreaux de 60 cm.
+
+### Sous le capot
+
+- Connexion OAuth (Authorization Code, client public, sans secret), page de retour sur
+  `127.0.0.1:53682` le temps de la connexion seulement ; le jeton reste chiffré dans le processus
+  principal (`safeStorage`) et n'atteint jamais l'interface.
+- Les requêtes du store qui échouent s'écrivent dans le terminal ; un délai dépassé se distingue d'une
+  absence de réseau (délai porté à 20 s).
+- `src/glb-images.js` (lire et réécrire les images d'un `.glb`, pur et testé) et
+  `src/glb-reduction.js` (réduction au canevas) ; `electron/bibliotheque/gltf-archive.js`.
+- Recadrage des vignettes vérifié sur de vraies vignettes Sketchfab et Poly Haven.
+- L'import de plans d'architecte (#456) a été essayé puis retiré : trop peu fiable ; sa trace reste
+  dans la documentation.
+- Documentation scindée : `docs/` décrit le fonctionnement actuel (EN et FR), les raisonnements vivent
+  dans un dépôt privé ; le code s'écrit désormais en anglais.
+
 ## v1.16.0
 
 **L'Éditeur de terrain.** Le sol d'une Scène se façonne désormais dans son propre éditeur, comme les

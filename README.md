@@ -4,7 +4,7 @@
 
 > 🇫🇷 [Version française](README.fr.md)
 
-**Version 1.16.59**
+**Version 1.17.0**
 
 **Comic book storyboarding application**: a desktop tool to create, organize and visualize comic book pages with real-time 3D scene rendering.
 
@@ -28,7 +28,7 @@ Previous versions and release notes: [all releases](https://github.com/Durzo-dev
 - 🎬 **3D scenes**: reusable settings with characters, animals, furniture, vehicles, light and shadows, loaded into any panel, with the same 3D gestures everywhere
 - ⛰️ **Terrain editor**: relief, zones, roads, walls and water, shaped from above with a 3D preview
 - 🏠 **Building editor**: walls, rooms, openings, stairs, levels and basements, finishes, furniture, roofs and courtyards
-- 📦 **3D models**: glTF import, a model library, online models (Sketchfab, Poly Haven), articulated models you can pose
+- 📦 **3D models**: glTF import, a model library, online models (Sketchfab with your account, Poly Haven), at 1k, 2k or original size, articulated models you can pose
 - 🧩 **Textures**: a store (Poly Haven, ambientCG, your folders) for grounds, roads, walls and finishes
 - 📚 **Reader & export**: read a volume like a book, export pages as PNG or PDF
 - 💾 **Application**: readable JSON projects, auto-save, undo, built-in updates, offline use, dark and light themes, built-in manual
