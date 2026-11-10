@@ -2540,10 +2540,12 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-note{ font-size:var(--texte-libelle); color:var(--ink-soft); }
 .store-note.erreur{ color:var(--danger); }
 .store-note:empty{ display:none; }
-.store-credit{ font-size:var(--texte-libelle); color:var(--ink-soft); margin:12px 0 0; text-align:right; }
-/* #444c: the Sketchfab account line, under the filters of the Sketchfab tab. */
-.store-account{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:8px 0 0; font-size:var(--texte-libelle); color:var(--ink-mid); }
+.store-credit{ font-size:var(--texte-libelle); color:var(--ink-soft); margin:0 0 0 auto; text-align:right; }
+/* The store footer: the Sketchfab account on the left (status, then button), the credit on the right. */
+.store-pied{ display:flex; align-items:center; gap:14px; margin:12px 0 0; }
+.store-account{ display:flex; align-items:center; gap:8px; font-size:var(--texte-libelle); color:var(--ink-mid); }
 .store-account[hidden]{ display:none; }
+.store-account .nav-btn{ width:auto; margin:0; }
 .store-credit a{ color:inherit; }
 
 /* ── La fenêtre des POLICES (#423, src/polices-ui.js) ─────────────────────────────────────────── */

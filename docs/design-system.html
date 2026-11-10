@@ -2544,10 +2544,12 @@ button.store-chip:hover{ border-color:var(--accent); }
 .store-note{ font-size:var(--texte-libelle); color:var(--ink-soft); }
 .store-note.erreur{ color:var(--danger); }
 .store-note:empty{ display:none; }
-.store-credit{ font-size:var(--texte-libelle); color:var(--ink-soft); margin:12px 0 0; text-align:right; }
-/* #444c: the Sketchfab account line, under the filters of the Sketchfab tab. */
-.store-account{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:8px 0 0; font-size:var(--texte-libelle); color:var(--ink-mid); }
+.store-credit{ font-size:var(--texte-libelle); color:var(--ink-soft); margin:0 0 0 auto; text-align:right; }
+/* The store footer: the Sketchfab account on the left (status, then button), the credit on the right. */
+.store-pied{ display:flex; align-items:center; gap:14px; margin:12px 0 0; }
+.store-account{ display:flex; align-items:center; gap:8px; font-size:var(--texte-libelle); color:var(--ink-mid); }
 .store-account[hidden]{ display:none; }
+.store-account .nav-btn{ width:auto; margin:0; }
 .store-credit a{ color:inherit; }
 
 /* ── La fenêtre des POLICES (#423, src/polices-ui.js) ─────────────────────────────────────────── */
@@ -4725,14 +4727,17 @@ This can be undone with Ctrl+Z.</span></p>
       <select id="storeSquelette"><option data-ds-fr="Articulés et statues" data-ds-en="Rigged and statues">Articulés et statues</option></select>
       <span id="storeCommercialCase"><label class="store-case"><input type="checkbox" id="storeCommercial"> <span id="storeCommercialLibelle"><span class="ds-fr">Usage commercial</span><span class="ds-en">Commercial use</span></span></label></span>
     </form>
-    <div id="storeAccount" class="store-account" hidden><span id="storeAccountText"></span><button id="storeAccountButton" class="nav-btn" type="button"></button></div>
     <p id="storeMessage" class="maj-message"></p>
     
     <div id="storeDefilement" class="store-defilement">
       <div id="storeGrille" class="store-grille"><button type="button" class="store-carte store-carte-ajout"><svg viewBox="0 0 24 24" aria-hidden="true" class="store-ajout-icone"><path d="M12 3v12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="store-carte-nom"><span class="ds-fr">Importer un modèle</span><span class="ds-en">Import a model</span></span></button><button type="button" class="store-carte"><div class="store-sans-vignette"></div><span class="store-carte-nom"><span class="ds-fr">Lampe tempête</span><span class="ds-en">Storm lantern</span></span><span class="store-carte-auteur"><span class="ds-fr">par</span><span class="ds-en">by</span> atelier_k</span><span class="store-carte-infos"><span class="store-badge">CC BY</span><span><span class="ds-fr">2,4 Mo</span><span class="ds-en">2.4 MB</span></span></span></button><button type="button" class="store-carte"><div class="store-sans-vignette"></div><span class="store-carte-nom"><span class="ds-fr">Chaise en bois</span><span class="ds-en">Wooden chair</span></span><span class="store-carte-auteur"><span class="ds-fr">par</span><span class="ds-en">by</span> polyhaven</span><span class="store-carte-infos"><span class="store-badge">CC0</span><span><span class="ds-fr">2,4 Mo</span><span class="ds-en">2.4 MB</span></span></span></button><button type="button" class="store-carte"><div class="store-sans-vignette"></div><span class="store-carte-nom"><span class="ds-fr">Vieux gréement</span><span class="ds-en">Old rigging</span></span><span class="store-carte-auteur"><span class="ds-fr">par</span><span class="ds-en">by</span> naval3d</span><span class="store-carte-infos"><span class="store-badge store-badge-nc">CC BY-NC</span><span><span class="ds-fr">2,4 Mo</span><span class="ds-en">2.4 MB</span></span></span></button><button type="button" class="store-carte"><div class="store-sans-vignette"></div><span class="store-carte-nom"><span class="ds-fr">Phare côtier</span><span class="ds-en">Coastal lighthouse</span></span><span class="store-carte-auteur"><span class="ds-fr">par</span><span class="ds-en">by</span> mer_et_pierre</span><span class="store-carte-infos"><span class="store-badge">CC BY</span><span><span class="ds-fr">2,4 Mo</span><span class="ds-en">2.4 MB</span></span></span></button><button type="button" class="store-carte"><div class="store-sans-vignette"></div><span class="store-carte-nom"><span class="ds-fr">Chat noir</span><span class="ds-en">Black cat</span></span><span class="store-carte-auteur"><span class="ds-fr">par</span><span class="ds-en">by</span> félin</span><span class="store-carte-infos"><span class="store-badge">CC BY</span><span><span class="ds-fr">2,4 Mo</span><span class="ds-en">2.4 MB</span></span></span></button></div>
       <div id="storeFiche" class="store-fiche" hidden></div>
     </div>
-    <p id="storeCredit" class="store-credit"><span class="ds-fr">Modèles des sources externes : licence et auteur affichés sur chaque fiche.</span><span class="ds-en">Models from external sources: licence and author shown on each page.</span></p>
+    
+    <div class="store-pied">
+      <div id="storeAccount" class="store-account" hidden><span id="storeAccountText"></span><button id="storeAccountButton" class="nav-btn" type="button"></button></div>
+      <p id="storeCredit" class="store-credit"><span class="ds-fr">Modèles des sources externes : licence et auteur affichés sur chaque fiche.</span><span class="ds-en">Models from external sources: licence and author shown on each page.</span></p>
+    </div>
   </div>
 </div></div>
 </figure>
