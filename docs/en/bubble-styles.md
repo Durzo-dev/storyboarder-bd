@@ -5,7 +5,7 @@
 ## Role
 
 A Bubble is a **free** combination of graphic axes, none of which implies the others: shape, stroke,
-fill, tail, text, particles. Any shape combines with any tail. Saved styles are presets of these axes,
+fill, tail, text. Any shape combines with any tail. Saved styles are presets of these axes,
 named by their look ("Oval with halo"), never by a register ("Thought").
 
 ## Files
@@ -20,7 +20,6 @@ Each axis has a **pure** module (decision, tested under Node); drawing is in `sr
 | `src/bubble-style.js` | Fill (opacity) and stroke (pattern, regularity, wobble). |
 | `src/bubble-texture.js` | Fill textures: layer stacks, grains. |
 | `src/bubble-grain.js` | The impure half of textures: loading grains, canvas patterns. |
-| `src/bubble-particle.js` | Particles scattered around the edge (blot, flame). |
 | `src/bubble-merge.js` | Merging Bubbles into one Bubble with several lobes. |
 | `src/bubble-library.js` | The style library. |
 | `src/cyclic-noise.js` | The shared cyclic noise (wobbly stroke, blot silhouette), with a stable seed. |
@@ -33,7 +32,6 @@ Each axis has a **pure** module (decision, tested under Node); drawing is in `sr
 | Tail | `tailShape`, `tailVisible`, `tailMirror`, `tailAngle`, `tailLen` | `triangle` (default), `eclair`, `cheveu`, `ronds`, `aucune` |
 | Stroke | `bulleBorderVisible`, `bulleBorderWidth`, `bulleBorderColor`, `bulleBorderDash`, `bulleBorderRegularity` | pattern `plein`, `pointille`, `tirets`, `epine`; regularity `net`, `tremble` |
 | Fill | `bulleColor`, `bulleFillOpacity`, `bulleTexture` | texture `aucune` (default), `papier`, `glace`, `lave`, `nuit-etoile` |
-| Particles | `bulleParticule` | `aucune` (default), `tache`, `flamme` |
 | Text | `bulleFont`, `bulleFontScale`, `bulleGras`, `bulleItalique`, `bulleTextColor`, `bulleTextOutlineColor`, `bulleTextOutlineScale`, `bullePadding` | see [polices.md](polices.md) |
 | Merging | `bulleFusionnable`, `bulleGroupe`, `bulleAvantFusion` | |
 
@@ -67,13 +65,13 @@ The oval keeps the whole box as its text area: text may slightly overflow the cu
 tail can be flipped (`tailMirror`, `queuePeutSInverser3D`). Circles are a chain of three decreasing
 circles (`RONDS_*`).
 
-## Textures and particles
+## Textures
 
 - **A texture** is a stack of layers, drawn in the Bubble's path inset towards its centre, plus a
   **grain** (a photographed image, tinted) loaded by `bubble-grain.js`. A texture can **impose** its
   colour (the sheet then hides the picker) or only **suggest** it.
-- **Particles** are a cloud spread around the edge, not a stroke pattern: they combine with any stroke
-  (wobbly and speckled, for instance).
+- **Particles** (`bulleParticule`) no longer exist: an older file may still carry
+  the field, it is kept and ignored.
 
 ## Merging
 
@@ -102,7 +100,7 @@ bubbles" gives each lobe back its earlier state (`bulleAvantFusion`).
 
 - **A shape**: a key (never reuse an existing one), an entry in `REGISTRE` with its four functions, its
   label and its icon; the tests cross every shape with every tail.
-- **A texture, a particle**: an entry in their registry; a retired key goes into the alias table.
+- **A texture**: an entry in its registry; a retired key goes into the alias table.
 
 ## Testing
 

@@ -5,7 +5,7 @@
 ## Rôle
 
 Une Bulle est une combinaison **libre** d'axes graphiques, dont aucun n'implique les autres : la forme,
-le trait, le remplissage, la queue, le texte, les particules. Toute forme se combine avec toute queue.
+le trait, le remplissage, la queue, le texte. Toute forme se combine avec toute queue.
 Les styles enregistrés sont des préréglages de ces axes, nommés par leur apparence (« Ovale à
 couronne »), jamais par un registre (« Pensée »).
 
@@ -21,7 +21,6 @@ Chaque axe a un module **pur** (décision, testée sous Node) ; le dessin est da
 | `src/bubble-style.js` | Le remplissage (opacité) et le trait (motif, régularité, tremblé). |
 | `src/bubble-texture.js` | Les textures de remplissage : piles de couches, grains. |
 | `src/bubble-grain.js` | La moitié impure des textures : chargement des grains, motifs de canevas. |
-| `src/bubble-particle.js` | Les particules semées autour du bord (tache, flamme). |
 | `src/bubble-merge.js` | La fusion de Bulles en une Bulle à plusieurs lobes. |
 | `src/bubble-library.js` | La bibliothèque de styles. |
 | `src/cyclic-noise.js` | Le bruit cyclique partagé (trait tremblé, silhouette de la tache), à graine stable. |
@@ -34,7 +33,6 @@ Chaque axe a un module **pur** (décision, testée sous Node) ; le dessin est da
 | Queue | `tailShape`, `tailVisible`, `tailMirror`, `tailAngle`, `tailLen` | `triangle` (défaut), `eclair`, `cheveu`, `ronds`, `aucune` |
 | Trait | `bulleBorderVisible`, `bulleBorderWidth`, `bulleBorderColor`, `bulleBorderDash`, `bulleBorderRegularity` | motif `plein`, `pointille`, `tirets`, `epine` ; régularité `net`, `tremble` |
 | Remplissage | `bulleColor`, `bulleFillOpacity`, `bulleTexture` | texture `aucune` (défaut), `papier`, `glace`, `lave`, `nuit-etoile` |
-| Particules | `bulleParticule` | `aucune` (défaut), `tache`, `flamme` |
 | Texte | `bulleFont`, `bulleFontScale`, `bulleGras`, `bulleItalique`, `bulleTextColor`, `bulleTextOutlineColor`, `bulleTextOutlineScale`, `bullePadding` | cf. [polices.md](polices.md) |
 | Fusion | `bulleFusionnable`, `bulleGroupe`, `bulleAvantFusion` | |
 
@@ -70,13 +68,13 @@ des coins.
 cheveu peut s'inverser (`tailMirror`, `queuePeutSInverser3D`). Les ronds sont une chaîne de trois
 cercles décroissants (`RONDS_*`).
 
-## Textures et particules
+## Textures
 
 - **Une texture** est une pile de couches, tracées dans le chemin de la Bulle rentré vers son centre,
   plus un **grain** (une image photographiée, teintée) chargé par `bubble-grain.js`. Une texture peut
   **imposer** sa couleur (la fiche masque alors le sélecteur) ou seulement la **suggérer**.
-- **Les particules** sont une nuée répartie autour du bord, pas un motif du trait : elles se cumulent
-  avec n'importe quel trait (tremblé et moucheté, par exemple).
+- **Les particules** (`bulleParticule`) n'existent plus : un ancien fichier
+  peut encore porter le champ, il est gardé et ignoré.
 
 ## La fusion
 
@@ -108,7 +106,7 @@ chaque lobe (place, texte, groupe). « Séparer les bulles » rend à chaque lob
 - **Une forme** : une clé (jamais réutiliser une clé existante), une entrée dans `REGISTRE` avec ses
   quatre fonctions, son libellé et son icône ; les tests croisent toutes les formes avec toutes les
   queues.
-- **Une texture, une particule** : une entrée dans leur registre ; une clé retirée va dans la table
+- **Une texture** : une entrée dans son registre ; une clé retirée va dans la table
   d'alias.
 
 ## Tester

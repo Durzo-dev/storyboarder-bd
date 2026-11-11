@@ -19,10 +19,10 @@ Shaping the ground of a Scene: relief, Zones, Paths, water.
 Added fields: an old file reads as it is.
 
 - **`panel.relief`** (the Scene canvas, and a Panel that loads it): `{ pas, x0, z0, nx, nz, h, v }`,
-  heights in metres every metre, row by row in z, between `HAUTEUR_MIN` and `HAUTEUR_MAX` (±300 m,
-  #457b-1; -20 to +30 m before, older Projects read as they are). Absent: flat Ground. Optional
+  heights in metres every metre, row by row in z, between `HAUTEUR_MIN` and `HAUTEUR_MAX` (±300 m;
+  any older Project is within them). Absent: flat Ground. Optional
   `altitude`: the real altitude (metres above sea level) of the grid's level 0, for a relief taken
-  from a real place (set by the import, #457b-4); heights stay relative to it, the real altitude of a
+  from a real place (set by the import); heights stay relative to it, the real altitude of a
   point is `altitude` + height. Kept by every operation that rebuilds the grid.
 - **`terrain` path** (Zone): `world.masque` `{ pas, x0, z0, nx, nz, plein }` for a painted Zone (the
   bounding rectangle stays in `world`); `hauteurZone`, `penteZone` (degrees), `sensPente` (degrees);

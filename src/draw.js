@@ -1384,15 +1384,10 @@ function remplirEtCernerBulle3D(c, o, app, largeurTrait, construireChemin, ancre
  * plus que ce qui avait été fait : taille et opacité décroissantes, filaments, densité qui suit la
  * matière. Décidé avec l'utilisateur : l'idée est bonne, ce n'est pas prioritaire.
  *
- * ⚠️ ET LE CODE EST CONSERVÉ PLUTÔT QUE JETÉ, À LA DEMANDE. `src/bubble-particle.js` reste au
- * dépôt avec ses tests, qui continuent de tourner : la décision pure ne peut donc pas pourrir en
- * silence. Ses exports sont inscrits dans la liste EN_ATTENTE du détecteur de code mort, avec cette
- * raison — c'est le mécanisme que ce dépôt emploie pour ce qui est écrit sans être branché, et il
- * sert ici pour ce qui a été débranché sans être abandonné.
- *
- * Pour le remettre : le menu dans index.html, ses quatre entrées i18n, la lecture dans la fiche,
- * l'écouteur dans events.js, et un appel ici entre le remplissage et le texte — l'ordre comptait,
- * des particules peintes après le lettrage le mangent, peintes avant le fond elles disparaissent.
+ * The module (`src/bubble-particle.js`) was kept for a while, then DELETED on 11 November 2026 (decided
+ * by Durzo): it is in the git history. To bring the axis back: the menu in index.html, its i18n
+ * entries, the reading in the record, the listener in events.js, and a call here between the fill and
+ * the text — the order mattered: particles painted after the lettering eat it, before the fill they vanish.
  */
 
 // Draws a speech Bubble: Oval or Rectangle shape (as chosen, via the right-hand panel) +

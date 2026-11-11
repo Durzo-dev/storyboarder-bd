@@ -1448,9 +1448,8 @@ describe('#425c — la fiche montre ce que le dessin applique, et la création p
   /*
    * ⚠️ IL Y AVAIT ICI « CHOISIR UNE PARTICULE LA POSE VRAIMENT, ET LA FICHE LA RELIT ». Le menu a
    * été retiré de la fiche avec tout l'axe « Particule » : il n'y a plus ni écouteur à actionner ni
-   * valeur à relire. Le module et ses tests de décision restent au dépôt — voir la liste EN_ATTENTE
-   * de tests/code-mort.test.mjs, qui dit pourquoi, et l'endroit d'où l'appel du dessin a été retiré,
-   * qui dit comment le rebrancher.
+   * valeur à relire. Le module et ses tests ont ensuite été supprimés (11 nov. 2026) : ils sont dans
+   * l'historique git ; draw.js dit comment rebrancher l'axe.
    */
 
   /**

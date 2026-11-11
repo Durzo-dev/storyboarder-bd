@@ -237,7 +237,7 @@ downloaded (no recorded response contains files).
    (`gltf-archive.js`: `fichiersDuZip`, sub-folders included, unsafe paths skipped, then
    `empaqueterGlb`). It is fetched **without** the token, refused beyond 300 MB, and the result must
    start with `glTF`.
-4. **Texture quality** (#467): Sketchfab gives one `.glb`, textures at the author's size. The arrow
+4. **Texture quality**: Sketchfab gives one `.glb`, textures at the author's size. The arrow
    offers 1k and 2k when smaller than the largest texture (`optionsSketchfab`, from
    `archives.glb.textureMaxResolution`), then "original" with its weight. A shrunk quality is made
    in the renderer after the download (`reduireTexturesGlb`, src/glb-reduction.js: canvas, halving

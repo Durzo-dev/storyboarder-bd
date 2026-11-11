@@ -3419,12 +3419,8 @@ describe('#425m bis — la texture porte la couleur du fond', () => {
  * le lettrage. L'axe a été retiré de la fiche — l'idée est bonne, la rendre convaincante demande
  * bien plus de travail, et ce n'est pas prioritaire ; décidé avec l'utilisateur.
  *
- * ⚠️ LE MODULE, LUI, RESTE, ET SES TESTS AUSSI. `tests/bubble-particle.test.mjs` continue de tenir
- * la décision pure : ce qui est conservé ne peut donc pas pourrir en silence. Ce qui disparaît ici
- * est exactement ce qui n'a plus de sens — on ne teste pas l'arrivée au canevas de quelque chose
- * qui n'y est plus envoyé, et garder ces tests aurait voulu dire garder l'appel « pour eux ».
- *
- * Le jour où l'axe revient, ces tests sont dans l'historique, à côté de l'appel qu'ils gardaient.
+ * The module and its own tests were deleted afterwards (11 Nov. 2026, decided by Durzo). The day the
+ * axis comes back, all of it is in the git history, next to the call these tests held.
  */
 
 describe('⚠️ LE MOTIF « ÉPINE » ARRIVE AU CANEVAS (#425y)', () => {

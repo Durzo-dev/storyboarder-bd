@@ -238,7 +238,7 @@ téléchargé (aucune réponse enregistrée ne contient de fichiers).
    (`gltf-archive.js` : `fichiersDuZip`, sous-dossiers compris, chemins dangereux ignorés, puis
    `empaqueterGlb`). Le lien est lu **sans** le jeton, refusé au-delà de 300 Mo, et le résultat doit
    commencer par `glTF`.
-4. **Qualité des textures** (#467) : Sketchfab donne un seul `.glb`, textures à la taille de
+4. **Qualité des textures** : Sketchfab donne un seul `.glb`, textures à la taille de
    l'auteur. La flèche propose 1k et 2k s'ils sont plus petits que la plus grande texture
    (`optionsSketchfab`, d'après `archives.glb.textureMaxResolution`), puis « d'origine » avec son
    poids. Une qualité réduite est faite dans le renderer après le téléchargement

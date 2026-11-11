@@ -868,13 +868,9 @@
           <label id="sideBubbleTextureLabel">Texture du fond</label>
           <div id="sideBubbleTextureGrid" class="texture-carre-zone"></div>
         </div>
-        <!-- ⚠️ LA SECTION « PARTICULE » A ÉTÉ RETIRÉE D'ICI, ET SON CODE EST CONSERVÉ. L'axe
-             semait un mouchetis d'encre ou des langues de flamme autour d'une Bulle. L'idée tient,
-             mais le rendre convaincant demande bien plus de travail que ce qui a été fait, et ce
-             n'est pas prioritaire — décidé avec l'utilisateur.
-             `src/bubble-particle.js` reste au dépôt, avec ses tests, et ses exports sont inscrits
-             dans la liste EN_ATTENTE du détecteur de code mort : rien ne pourrit, et le jour où
-             l'axe revient, il suffit de remettre ce menu et l'appel du dessin. -->
+        <!-- The "Particle" section was removed from here, then its module deleted (11 Nov. 2026): it
+             scattered ink specks or flame tongues around a Bubble. Good idea, not convincing enough,
+             not a priority. It is in the git history (src/bubble-particle.js); see draw.js to bring it back. -->
         <div id="sideBubbleBgColorWrap" class="tome-format side-border-color">
           <label for="sideBubbleBgColorInput">Couleur du fond</label>
           <input type="color" id="sideBubbleBgColorInput" value="#ffffff">

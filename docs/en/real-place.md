@@ -3,7 +3,7 @@
 *[Version française](../fr/real-place.md)*
 
 Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, grounds, trees and lamps.
-The translator exists (#457b-2); the import screen comes with #457b-4.
+The translator exists; the import screen does not yet.
 
 ## What lives where
 
@@ -46,6 +46,6 @@ The ground under buildings needs nothing: the rendered relief is already flatten
 
 - **The fixtures' geometry is `[lat, lon]`** (compacted); Overpass gives `{lat, lon}`. The translator
   reads both.
-- **Overpass refused the browser pane** with a 406 (11 Nov. 2026): the fixtures come from the OSM API
-  (`/api/0.6/map`), compacted to the Overpass shape. The import (#457b-4) queries Overpass from the
+- **Overpass may refuse a browser** (an HTTP 406): the fixtures come from the OSM API
+  (`/api/0.6/map`), compacted to the Overpass shape. The import is to query Overpass from the
   main process, with its User-Agent.

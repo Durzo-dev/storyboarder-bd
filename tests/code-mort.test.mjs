@@ -245,37 +245,24 @@ const EN_ATTENTE = {
   // ce garde-fou fait mieux que signaler du code mort : il a posé la question « à quoi sert cet
   // export ? », et la réponse honnête était « à rien que le test ne fasse mieux lui-même ».
 
-  /*
-   * ⚠️ #425p — L'AXE « PARTICULE » A ÉTÉ DÉBRANCHÉ, ET C'EST LE PREMIER NOM QUI ENTRE ICI SANS
-   * ÊTRE « EN AVANCE ». Toutes les entrées ci-dessus sont des décisions écrites avant leur
-   * application, chacune avec son numéro de tâche pour échéance. Celle-ci est l'inverse : du code
-   * qui a été branché, qui marchait, et qu'on a retiré de la fiche.
-   *
-   * L'axe semait un mouchetis d'encre ou des langues de flamme à cheval sur le bord d'une Bulle.
-   * L'idée est bonne — le relevé la montre chez plusieurs auteurs — mais la rendre convaincante
-   * demande bien plus que ce qui avait été fait : taille et opacité décroissantes, filaments,
-   * densité qui suit la matière. Décidé avec l'utilisateur, qui a demandé expressément de NE PAS
-   * jeter le code.
-   *
-   * ⚠️ ET CETTE LISTE EST LE SEUL ENDROIT OÙ « CONSERVER SANS BRANCHER » PEUT SE DIRE SANS MENTIR.
-   * Supprimer le module aurait perdu le travail ; le laisser sans exemption aurait fait rougir la
-   * suite à chaque exécution, et l'habitude aurait été prise de la faire taire. Inscrit ici, le
-   * module garde ses tests — la décision pure ne peut donc pas pourrir en silence — et personne ne
-   * peut croire par erreur qu'il est encore utilisé.
-   *
-   * Pour le rebrancher : le menu dans index.html, ses quatre entrées i18n, la lecture dans la
-   * fiche, l'écouteur dans events.js, et l'appel dans `drawBubble` entre le remplissage et le
-   * texte. Le détail de cet ordre est écrit à l'endroit exact d'où l'appel a été retiré.
-   *
-   * `particuleDeLaBulle`, `particulesConnues` et les quatre constantes ne sont PAS ici : le
-   * détecteur les voit appelées à l'intérieur du module. Sixième fois que ce garde-fou évite des
-   * exemptions qui ne surveilleraient rien.
-   */
-  particulesDeLaBulle: '#425p — axe retiré de la fiche, code conservé sur demande',
+  // #425p — the « Particle » axis, removed from the record then DELETED on 11 Nov. 2026 (decided by
+  // Durzo): its module and tests are in the git history. Debt settled by removal.
   // #454a-1 — LE RANGEMENT DES BÂTIMENTS EST ARRIVÉ AVANT L'ÉDITEUR, et sa dette est SOLDÉE : #454a-2
   // a branché l'enregistrement, #454a-4b la lecture, le renommage et la suppression (la bibliothèque
   // « Mes modèles »). Aucune entrée ne reste ici.
 
+  // #457b-2: the OSM translator, pure and tested on two real extracts, ahead of its import screen.
+  translateOsm: '#457b-4 : the import screen of a real place calls it',
+};
+
+/**
+ * MODELS AND CRITERIA HELD BY THE TESTS (split from EN_ATTENTE on 11 Nov. 2026, decided by Durzo). These
+ * exports will NEVER have a caller in the application, and that is their design: a criterion the ground
+ * tests demand of every material, or a JavaScript model of a shader (the GLSL computes; the model lets
+ * Node test what it computes). They are not pending decisions, so they do not count in EN_ATTENTE.
+ * Adding one here still needs its reason, and the detector still checks it is truly uncalled.
+ */
+const MODELES_ET_CRITERES = {
   // #435b — LE CRITÈRE QUI RESTE APRÈS LE DÉFAUT QU'IL AURAIT ÉVITÉ. Le Sol portait un déplacement
   // qui n'a jamais produit de relief : sa carte se répétait des dizaines de fois entre deux sommets
   // voisins, donc tous lisaient le même texel. Quatre versions livrées sans que rien ne le dise.
@@ -316,8 +303,6 @@ const EN_ATTENTE = {
   vagues3D: '#435m : modèle JS du GLSL de l’eau, éprouvé par les tests',
   // #436c : même nature, le modèle de `cielDirection`, la déformation du ciel vers le bord du Sol.
   elevationDuCiel3D: '#436c : modèle JS du GLSL du ciel, éprouvé par les tests',
-  // #457b-2: the OSM translator, pure and tested on two real extracts, ahead of its import screen.
-  translateOsm: '#457b-4 : the import screen of a real place calls it',
 };
 
 function exportsSansAppelant(){
@@ -340,7 +325,7 @@ function exportsSansAppelant(){
 describe('Aucun export de src/ ne reste sans appelant', () => {
   test('tout ce qui n\'est appelé nulle part est nommé, avec sa raison', () => {
     const inattendus = exportsSansAppelant()
-      .filter(e => !SEAUX_DE_TEST.includes(e.nom) && !EN_ATTENTE[e.nom]);
+      .filter(e => !SEAUX_DE_TEST.includes(e.nom) && !EN_ATTENTE[e.nom] && !MODELES_ET_CRITERES[e.nom]);
     assert.deepEqual(inattendus, [],
       'exports que plus rien n\'appelle : '
       + inattendus.map(e => `${e.nom} (${e.fichier})`).join(', ')
@@ -359,7 +344,7 @@ describe('Aucun export de src/ ne reste sans appelant', () => {
     // une liste VIDE, et le premier test devenait vert pour toujours. Une assertion d'absence a
     // besoin d'une assertion de présence en face, sinon elle finit par ne plus rien mesurer.
     const trouves = exportsSansAppelant().map(e => e.nom).sort();
-    const exemptes = [...SEAUX_DE_TEST, ...Object.keys(EN_ATTENTE)].sort();
+    const exemptes = [...SEAUX_DE_TEST, ...Object.keys(EN_ATTENTE), ...Object.keys(MODELES_ET_CRITERES)].sort();
     assert.deepEqual(trouves, exemptes,
       'la liste des exports sans appelant ne correspond plus aux exemptions écrites ici');
   });
@@ -421,8 +406,11 @@ describe('Aucun export de src/ ne reste sans appelant', () => {
     // Remonté à 13, 15, 16 puis 20 de #456a à #456d (les étapes du plan, en avance sur leur
     // écran), redescendu à 12 en #456e, qui les branche toutes.
     // Raised to 13 in #457b-2 (decided by Durzo, 11 Nov. 2026): `translateOsm`, the OSM translator,
-    // ahead of its import screen; back to 12 in #457b-4, which calls it.
-    assert.equal(Object.keys(EN_ATTENTE).length, 13,
+    // ahead of its import screen.
+    // Down to 1 the same day (decided by Durzo): the eleven models and criteria moved to
+    // MODELES_ET_CRITERES (never to be called: not pending), and `particulesDeLaBulle` DELETED (#425p
+    // settled by removal). What remains is a real deadline: `translateOsm`, back to 0 in #457b-4.
+    assert.equal(Object.keys(EN_ATTENTE).length, 1,
       'une décision de plus a été REPORTÉE au lieu d\'être prise');
   });
 });

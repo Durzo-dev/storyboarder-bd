@@ -3,7 +3,7 @@
 *[English version](../en/real-place.md)*
 
 Construire une Scène d'après OpenStreetMap : bâtiments, routes, chemins, murets, rivières, sols, arbres
-et lampadaires. Le traducteur existe (#457b-2) ; l'écran d'import arrive avec #457b-4.
+et lampadaires. Le traducteur existe ; l'écran d'import, pas encore.
 
 ## Où vit quoi
 
@@ -50,6 +50,6 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
 
 - **La géométrie des données de test est `[lat, lon]`** (compactée) ; Overpass donne `{lat, lon}`. Le
   traducteur lit les deux.
-- **Overpass a refusé le navigateur intégré** par une erreur 406 (11 nov. 2026) : les données de test
-  viennent de l'API OSM (`/api/0.6/map`), compactées à la forme d'Overpass. L'import (#457b-4) interroge
+- **Overpass peut refuser un navigateur** (erreur HTTP 406) : les données de test
+  viennent de l'API OSM (`/api/0.6/map`), compactées à la forme d'Overpass. L'import doit interroger
   Overpass depuis le processus principal, avec son User-Agent.
