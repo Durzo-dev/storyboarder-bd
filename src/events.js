@@ -437,7 +437,7 @@ setModelImportCallbacks({
 });
 setProjectTreeCallbacks({
   openModelContextMenu, openModelPlace, openImageContextMenu, openImageUsage,
-  createScene, openScene, disableSceneCameraMode,
+  openScene, disableSceneCameraMode,
   openPageContextMenu, openVolumeContextMenu, openSceneContextMenu, openChapterContextMenu, snapshot,
 });
 // `disableSceneCameraMode` n'est pas facultatif ici : se rendre dans une Case depuis l'éditeur de
@@ -9272,6 +9272,11 @@ enregistrerFermeture('storeModal', fermerStore);
 // A Scene from a real place (src/real-place-ui.js): the screen assembles the content, it is laid here, in
 // ONE step of the history (a snapshot per object would serialise the whole Project hundreds of times).
 cablerLieuReel({
+  creerSceneManuelle: () => {
+    snapshot();
+    const s = createScene();
+    openScene(s.id);
+  },
   creerScene: (contenu, { nom, demiCote }) => {
     snapshot();
     const s = createScene();
@@ -9279,7 +9284,12 @@ cablerLieuReel({
     const page = s.pages[0], panel = page.objects.find(o => o.type === 'panel');
     if (contenu.relief) panel.relief = contenu.relief;
     panel.creditsDuLieu = contenu.credits.slice();
-    const placer = (o, x, z) => { o.z = z; o.wzFloor = z; setElementWorldPos3D(o, panel, x, 0); o.wxFloor = x; };
+    // ⚠️ THE DEPTH `o.z` STAYS 0 (seen: no building in an imported Scene). An Element's size is its 2D size
+    // seen at the depth `o.z`, a perspective made for a few metres in front of the camera (30 m): put at
+    // the place's north-south position (up to ±200 m), a building to the south shrank to nothing and one
+    // to the north grew out of scale. The position in the world is `wxFloor`/`wzFloor`, which the
+    // rendering reads.
+    const placer = (o, x, z) => { o.z = 0; setElementWorldPos3D(o, panel, x, 0); o.wxFloor = x; o.wzFloor = z; };
     for (const t of contenu.traces) { t.panelId = panel.id; page.objects.push(t); tracéUpdateScreenPts(t, panel, page); }
     for (const b of contenu.buildings) {
       const el = creerElementBatiment({ panel, page, batiment: b.building });

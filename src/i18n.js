@@ -152,9 +152,12 @@ export const I18N_TEXT = [
   // Sidebar
   ['#addVolumeBtn', 'New volume', 'Nouveau tome'],
   ['#addSceneBtn', 'New scene', 'Nouvelle scène'],
-  ['#addRealSceneBtn', 'Scene from a real place', 'Scène depuis un lieu réel'],
-  // A Scene from a real place (src/real-place-ui.js)
-  ['#realPlaceTitle', 'A Scene from a real place', 'Une Scène depuis un lieu réel'],
+  // A new Scene, manual or from a real place (src/real-place-ui.js)
+  ['#realPlaceTitle', 'New scene', 'Nouvelle scène'],
+  ['#realPlaceManual', 'Manual creation', 'Création manuelle'],
+  ['#realPlaceManualText', 'An empty scene, to compose yourself.', 'Une scène vide, à composer soi-même.'],
+  ['#realPlaceExisting', 'From an existing place', 'Depuis un lieu existant'],
+  ['#realPlaceExistingText', 'The buildings, streets and relief of a real place.', 'Les bâtiments, les rues et le relief d\'un lieu réel.'],
   ['#realPlaceQuery', null, null, 'placeholder', 'A town, a street, an address…', 'Une ville, une rue, une adresse…'],
   ['#realPlaceSearchBtn', 'Search', 'Chercher'],
   ['#realPlaceSizeLabel', 'Zone size', 'Taille de la zone'],

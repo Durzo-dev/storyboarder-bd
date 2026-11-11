@@ -492,7 +492,6 @@
         <div class="dropdown-panel open" id="scenePanel">
           <div id="sceneList"></div>
           <button class="full-btn" id="addSceneBtn">Nouvelle scène</button>
-          <button class="nav-btn" id="addRealSceneBtn" type="button">Scène depuis un lieu réel</button>
         </div>
       </div>
     </div>
@@ -1128,6 +1127,9 @@
             <button type="button" class="help-group" data-help="scenes">
               <span class="help-group-title">Scènes</span><span class="help-group-compte"></span>
             </button>
+            <button type="button" class="help-group" data-help="lieu_reel">
+              <span class="help-group-title">Scène depuis un lieu réel</span><span class="help-group-compte"></span>
+            </button>
             <button type="button" class="help-group" data-help="camera">
               <span class="help-group-title">Caméra</span><span class="help-group-compte"></span>
             </button>
@@ -1481,11 +1483,23 @@
 <!-- #446c : le STORE DE TEXTURES, à part du store de modèles (demandé). Trois onglets (Mes textures,
      Poly Haven, ambientCG), des filtres par matière et par usage ; la fiche REMPLACE la grille, comme
      dans le store de modèles. Écrit par src/textures-store-ui.js. -->
-<!-- A Scene from a real place (src/real-place-ui.js): search or click a place, choose the zone, import. -->
+<!-- A new Scene (src/real-place-ui.js): manual, or from a real place (search or click a place, choose the
+     zone, import with its progress). -->
 <div class="modal-overlay hidden" id="realPlaceModal">
   <div class="modal-box real-place-box">
     <button class="modal-close-btn" id="realPlaceClose" type="button" title="Fermer (Échap)">×</button>
-    <h3 id="realPlaceTitle">Une Scène depuis un lieu réel</h3>
+    <h3 id="realPlaceTitle">Nouvelle scène</h3>
+    <div id="realPlaceChoice" class="real-place-choice">
+      <div class="real-place-choice-card" data-choix="realPlaceManual">
+        <button id="realPlaceManual" class="real-place-choice-btn" type="button">Création manuelle</button>
+        <p id="realPlaceManualText">Une scène vide, à composer soi-même.</p>
+      </div>
+      <div class="real-place-choice-card" data-choix="realPlaceExisting">
+        <button id="realPlaceExisting" class="real-place-choice-btn" type="button">Depuis un lieu existant</button>
+        <p id="realPlaceExistingText">Les bâtiments, les rues et le relief d'un lieu réel.</p>
+      </div>
+    </div>
+    <div id="realPlacePlace" class="real-place-step" hidden>
     <form id="realPlaceSearchForm" class="real-place-search">
       <input id="realPlaceQuery" class="modal-input" type="search" autocomplete="off">
       <button id="realPlaceSearchBtn" class="nav-btn" type="submit">Chercher</button>
@@ -1505,10 +1519,15 @@
       </select>
       <span id="realPlaceHint" class="real-place-hint"></span>
     </div>
+    <div id="realPlaceProgress" class="real-place-progress" hidden>
+      <div class="real-place-bar"><span id="realPlaceBar"></span></div>
+      <ol id="realPlaceSteps" class="real-place-steps"></ol>
+    </div>
     <p id="realPlaceStatus" class="maj-message"></p>
     <div class="real-place-actions">
       <button id="realPlaceCancel" class="nav-btn" type="button">Annuler</button>
       <button id="realPlaceImport" class="full-btn" type="button">Créer la scène</button>
+    </div>
     </div>
   </div>
 </div>

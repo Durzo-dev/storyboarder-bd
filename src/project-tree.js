@@ -34,7 +34,6 @@ const GERER_LES_FORMATS = '__gerer';
 
 let _cb = {};
 export function setProjectTreeCallbacks(callbacks) { _cb = callbacks; }
-const createScene              = (...a) => _cb.createScene(...a);
 const openScene                = (...a) => _cb.openScene(...a);
 const disableSceneCameraMode   = (...a) => _cb.disableSceneCameraMode(...a);
 const openPageContextMenu      = (...a) => _cb.openPageContextMenu(...a);
@@ -75,11 +74,8 @@ export function renderSceneList(){
 // top-level statement here that DOES would run before setProjectTreeCallbacks, since an
 // imported module is evaluated before its importer.
 renderSceneList();
-document.getElementById('addSceneBtn').onclick = () => {
-  snapshot();
-  const s = createScene();
-  openScene(s.id);
-};
+// « New scene » opens the choice, manual or from a real place (src/real-place-ui.js, cablerLieuReel);
+// events.js hands it the manual creation (an empty Scene, opened).
 
 // ---------- TREE (S.tomes / pages) ----------
 // Drag-and-drop to reorder the Pages of a Volume (on user request: a Page can't be renamed, but

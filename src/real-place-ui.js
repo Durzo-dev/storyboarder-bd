@@ -1,7 +1,8 @@
 /**
  * @file real-place-ui.js
- * THE SCREEN of « A Scene from a real place »: search a place (Nominatim), or click on the map (OpenStreetMap
- * tiles), choose the zone's size, import. The network is the main process's (electron/bibliotheque/
+ * THE SCREEN of a new Scene: « Manual creation » (an empty Scene, as before) or « From an existing place »:
+ * search a place (Nominatim), or click on the map (OpenStreetMap tiles), choose the zone's size, import, with
+ * a progress bar and the list of steps. The network is the main process's (electron/bibliotheque/
  * real-place.js); the decisions are pure (osm-scene.js, real-place-sources.js, real-place-import.js); laying
  * the content in a new Scene is events.js's (`creerScene`, injected). Its static texts are in i18n.js.
  */
@@ -9,7 +10,7 @@
 import { tr, newId } from './state.js';
 import { translateOsm, ZONE_SIDE_MAX } from './osm-scene.js';
 import { planRelief } from './real-place-sources.js';
-import { sceneContentOf } from './real-place-import.js';
+import { sceneContentOf, IMPORT_STEPS, importProgress } from './real-place-import.js';
 import { projector } from './geo-local.js';
 import { nomDuTrace } from './canvas-tools.js';
 import { enregistrerFermeture } from './modal-stack.js';
@@ -20,14 +21,21 @@ const ZOOM_MIN = 3, ZOOM_MAX = 18;
 /** Where the map opens before any search: France (France first). */
 const DEFAULT_VIEW = { lat: 46.6, lon: 2.4, z: 6 };
 
-let _rappels = { creerScene: () => null };
+let _rappels = { creerScene: () => null, creerSceneManuelle: () => null };
 /** The screen's state: the view, the chosen zone, the chosen place's name and country. */
 let V = null;
 
 /** The callbacks (injected: the screen does not import events.js). */
 export function cablerLieuReel(rappels){
   _rappels = { ..._rappels, ...rappels };
-  $('addRealSceneBtn').onclick = () => ouvrirLieuReel();
+  // ONE button for a new Scene (asked): it opens the choice, manual or from a real place.
+  $('addSceneBtn').onclick = () => ouvrirNouvelleScene();
+  $('realPlaceManual').onclick = () => { fermer(); _rappels.creerSceneManuelle(); };
+  $('realPlaceExisting').onclick = () => montrerLeLieu();
+  // The whole card answers, not only its title (the button keeps the keyboard).
+  document.querySelectorAll('.real-place-choice-card').forEach(c => {
+    c.addEventListener('click', (e) => { if (e.target === c || e.target.tagName === 'P') $(c.dataset.choix).click(); });
+  });
   $('realPlaceClose').onclick = fermer;
   $('realPlaceCancel').onclick = fermer;
   $('realPlaceSearchForm').onsubmit = (e) => { e.preventDefault(); chercher(); };
@@ -40,14 +48,40 @@ export function cablerLieuReel(rappels){
   realPlaceModal.addEventListener('mousedown', (e) => { if (e.target === realPlaceModal) fermer(); });
 }
 
-export function ouvrirLieuReel(){
+/** The new Scene's window, at its first step: the choice. */
+export function ouvrirNouvelleScene(){
   V = { view: { ...DEFAULT_VIEW }, zone: null, halfSize: Number($('realPlaceSize').value) / 2, name: null, country: null, busy: false };
+  $('realPlaceChoice').hidden = false;
+  $('realPlacePlace').hidden = true;
   $('realPlaceResults').hidden = true;
   $('realPlaceResults').replaceChildren();
+  $('realPlaceProgress').hidden = true;
   dire('');
   majBoutons();
   $('realPlaceModal').classList.remove('hidden');
+}
+
+/** The second step, from an existing place: search, map, zone. */
+function montrerLeLieu(){
+  if (!V) return;
+  $('realPlaceChoice').hidden = true;
+  $('realPlacePlace').hidden = false;
   requestAnimationFrame(() => { taillerLaCarte(); dessiner(); $('realPlaceQuery').focus(); });
+}
+
+/** The import's steps as a list (done, under way, to come) and the bar. `step` null: all to come. */
+function montrerLaProgression(step, sub = 0){
+  const labels = { map: tr('Map data (OpenStreetMap)', 'Données de la carte (OpenStreetMap)'), country: tr('Country of the place', 'Pays du lieu'),
+    buildings: tr('Buildings, streets and grounds', 'Bâtiments, rues et sols'), relief: tr('Relief', 'Relief'), scene: tr('Creating the scene', 'Création de la scène') };
+  const i = step ? IMPORT_STEPS.indexOf(step) : -1;
+  $('realPlaceProgress').hidden = false;
+  $('realPlaceBar').style.width = `${Math.round((step ? importProgress(step, sub) : 0) * 100)}%`;
+  $('realPlaceSteps').replaceChildren(...IMPORT_STEPS.map((k, n) => {
+    const li = document.createElement('li');
+    li.textContent = labels[k];
+    li.className = n < i ? 'fait' : n === i ? 'encours' : '';
+    return li;
+  }));
 }
 
 function fermer(){
@@ -219,26 +253,31 @@ async function importer(){
   const api = window.storyboarderAPI;
   V.busy = true;
   majBoutons();
+  dire('');
   const centre = { ...V.zone }, halfSize = Math.min(V.halfSize, ZONE_SIDE_MAX / 2);
+  // Each step shows on the list before its work: an await lets the window draw it.
+  const etape = async (step, sub = 0) => { montrerLaProgression(step, sub); await new Promise(ok => setTimeout(ok, 0)); };
   try {
-    dire(tr('Fetching the map data (OpenStreetMap)…', 'Récupération des données de la carte (OpenStreetMap)…'), 'chargement');
+    await etape('map');
     const { toGeo } = projector(centre);
     const nw = toGeo({ x: -halfSize, z: -halfSize }), se = toGeo({ x: halfSize, z: halfSize });
     const extrait = await api.realPlaceOsm({ south: se.lat, west: nw.lon, north: nw.lat, east: se.lon });
     if (!V) return;
     if (extrait.error) { dire(erreur(extrait.error), true); return; }
+    await etape('country');
     let country = V.country;
     if (!country) { const c = await api.realPlaceCountry(centre.lat, centre.lon); country = (c && c.country) || null; }
-    dire(tr('Building the buildings and paths…', 'Construction des bâtiments et des tracés…'), 'chargement');
-    await new Promise(ok => setTimeout(ok, 0));   // let the message show before the work
+    await etape('buildings');
     const translated = translateOsm(extrait.json, { centre, halfSize, country: country || 'world', translate: tr });
-    dire(tr('Fetching the relief…', 'Récupération du relief…'), 'chargement');
-    const relief = await reliefDuLieu(centre, halfSize, country);
+    await etape('relief');
+    const relief = await reliefDuLieu(centre, halfSize, country, (sub) => montrerLaProgression('relief', sub));
     if (!V) return;
+    await etape('scene');
     const contenu = sceneContentOf(translated, { panelId: null, newId, nameOf: nomDuTrace,
       altitudes: relief && relief.altitudes, reliefCredit: relief && relief.credit });
     // The Paths' canvas is the new Scene's: creerScene attaches them to it.
     _rappels.creerScene(contenu, { nom: V.name || tr('Real place', 'Lieu réel'), demiCote: halfSize });
+    montrerLaProgression('scene', 1);
     V.busy = false;
     fermer();
   } catch (e) {
@@ -251,14 +290,22 @@ async function importer(){
 
 /**
  * The relief: the country's best provider, then the next ones; null if none answers (the Scene is then
- * flat, and the Scene still comes).
+ * flat, and the Scene still comes). Its requests one by one, at the provider's rate, so `avance(sub)` can
+ * follow them.
  */
-async function reliefDuLieu(centre, halfSize, country){
+async function reliefDuLieu(centre, halfSize, country, avance = () => {}){
   for (let i = 0; ; i++) {
     const plan = planRelief({ centre, halfSize, country, providerIndex: i });
     if (!plan) return null;
-    const r = await window.storyboarderAPI.realPlaceAltitudes(plan.requests, plan.provider.perSecond);
-    const altitudes = r && r.answers ? plan.assemble(r.answers) : null;
+    const answers = [];
+    for (let k = 0; k < plan.requests.length; k++) {
+      if (k) await new Promise(ok => setTimeout(ok, 1000 / plan.provider.perSecond));
+      const r = await window.storyboarderAPI.realPlaceAltitudes([plan.requests[k]], plan.provider.perSecond);
+      if (!r || !r.answers) break;
+      answers.push(r.answers[0]);
+      avance((k + 1) / plan.requests.length);
+    }
+    const altitudes = answers.length === plan.requests.length ? plan.assemble(answers) : null;
     if (altitudes) return { altitudes, credit: plan.provider.attribution };
   }
 }

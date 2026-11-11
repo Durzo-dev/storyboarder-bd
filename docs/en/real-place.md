@@ -3,7 +3,7 @@
 *[Version française](../fr/real-place.md)*
 
 Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, grounds, trees and lamps.
-Opened by "Scene from a real place", under "New scene".
+"New scene" opens a choice: "Manual creation" (an empty Scene) or "From an existing place".
 
 ## What lives where
 
@@ -13,7 +13,7 @@ Opened by "Scene from a real place", under "New scene".
 | `src/real-place-sources.js` | PURE. The sources per country: relief providers (best first) and building rules, with a world fallback. |
 | `src/geo-local.js` | PURE. Local metres around a geographic centre (`projector`). |
 | `src/real-place-import.js` | PURE. The translation and the altitudes turned into a Scene's content (`sceneContentOf`: Path and Zone objects, relief, credits). |
-| `src/real-place-ui.js` | The screen: search, map (OpenStreetMap tiles), zone size, import. |
+| `src/real-place-ui.js` | The new Scene's window: the choice, then search, map (OpenStreetMap tiles), zone size, import with its progress. |
 | `electron/bibliotheque/real-place.js` | The network (main process): Nominatim, Overpass (with mirrors), altitudes, tiles; identified by the application's User-Agent. |
 | `src/events.js` (`cablerLieuReel`, `creerScene`) | Lays the content in a new Scene, in one undo step. |
 | `tests/osm-scene.test.mjs`, `tests/real-place-sources.test.mjs` | Their tests, on real extracts and real altimetry answers. |
@@ -50,8 +50,11 @@ The ground under buildings needs nothing: the rendered relief is already flatten
 
 ## The import
 
-1. The screen: search (Nominatim, `realplace:search`) or a click on the map (tiles `realplace:tile`, cached for
-   the session), the zone's size (100 to 400 m), "Create the scene".
+1. The window: "New scene" (`ouvrirNouvelleScene`) shows the choice; "Manual creation" calls
+   `creerSceneManuelle` (events.js: an empty Scene, opened). "From an existing place" shows search (Nominatim, `realplace:search`) or a click on the map (tiles `realplace:tile`, cached for
+   the session), the zone's size (100 to 400 m), "Create the scene". During the import, a bar and the list
+   of steps (`IMPORT_STEPS`, `importProgress`: map data, country, buildings, relief, scene); the relief's
+   requests are sent one by one so the bar follows them.
 2. The extract: `realplace:osm` with the zone's bounding box; Overpass servers in order (`OVERPASS`), the
    first that answers; cached. The country: the chosen place's, else `realplace:country` (Nominatim reverse).
 3. `translateOsm` with the country's rules, then the relief: `planRelief` for the country, its requests sent by
@@ -92,6 +95,10 @@ requests, assemble(answers) }`:
 A country is added by an entry in `COUNTRIES` (its providers, best first, and its rules).
 
 ## Pitfalls
+
+- **An imported Element keeps the depth `o.z = 0`.** An Element's size is its 2D size seen at its depth, a
+  perspective made for a few metres in front of the camera (30 m): at the place's north-south position
+  (±200 m), a building shrank to nothing or grew out of scale. Its place is `wxFloor`/`wzFloor`.
 
 - **The fixtures' geometry is `[lat, lon]`** (compacted); Overpass gives `{lat, lon}`. The translator
   reads both.

@@ -3,7 +3,7 @@
 *[English version](../en/real-place.md)*
 
 Construire une Scène d'après OpenStreetMap : bâtiments, routes, chemins, murets, rivières, sols, arbres
-et lampadaires. Ouverte par « Scène depuis un lieu réel », sous « Nouvelle scène ».
+et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » (une Scène vide) ou « Depuis un lieu existant ».
 
 ## Où vit quoi
 
@@ -13,7 +13,7 @@ et lampadaires. Ouverte par « Scène depuis un lieu réel », sous « Nouvelle 
 | `src/real-place-sources.js` | PUR. Les sources par pays : fournisseurs de relief (le meilleur d'abord) et règles des bâtiments, avec un repli mondial. |
 | `src/geo-local.js` | PUR. Des mètres locaux autour d'un centre géographique (`projector`). |
 | `src/real-place-import.js` | PUR. La traduction et les altitudes devenues le contenu d'une Scène (`sceneContentOf` : objets Tracés et Zones, relief, crédits). |
-| `src/real-place-ui.js` | L'écran : recherche, carte (tuiles OpenStreetMap), taille de la zone, import. |
+| `src/real-place-ui.js` | La fenêtre d'une Scène neuve : le choix, puis recherche, carte (tuiles OpenStreetMap), taille de la zone, import avec sa progression. |
 | `electron/bibliotheque/real-place.js` | Le réseau (processus principal) : Nominatim, Overpass (avec miroirs), altitudes, tuiles ; identifié par le User-Agent de l'application. |
 | `src/events.js` (`cablerLieuReel`, `creerScene`) | Pose le contenu dans une Scène neuve, en une seule étape d'annulation. |
 | `tests/osm-scene.test.mjs`, `tests/real-place-sources.test.mjs` | Leurs tests, sur des extraits réels et de vraies réponses d'altimétrie. |
@@ -54,8 +54,11 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
 
 ## L'import
 
-1. L'écran : une recherche (Nominatim, `realplace:search`) ou un clic sur la carte (tuiles `realplace:tile`,
-   gardées pendant la session), la taille de la zone (100 à 400 m), « Créer la scène ».
+1. La fenêtre : « Nouvelle scène » (`ouvrirNouvelleScene`) montre le choix ; « Création manuelle » appelle
+   `creerSceneManuelle` (events.js : une Scène vide, ouverte). « Depuis un lieu existant » montre une recherche (Nominatim, `realplace:search`) ou un clic sur la carte (tuiles `realplace:tile`,
+   gardées pendant la session), la taille de la zone (100 à 400 m), « Créer la scène ». Pendant l'import, une
+   barre et la liste des étapes (`IMPORT_STEPS`, `importProgress` : données de la carte, pays, bâtiments,
+   relief, scène) ; les requêtes du relief partent une à une pour que la barre les suive.
 2. L'extrait : `realplace:osm` avec l'emprise de la zone ; les serveurs Overpass dans l'ordre (`OVERPASS`), le
    premier qui répond ; gardé en mémoire. Le pays : celui du lieu choisi, sinon `realplace:country` (Nominatim
    inverse).
@@ -98,6 +101,11 @@ requests, assemble(answers) }` :
 Un pays s'ajoute par une entrée dans `COUNTRIES` (ses fournisseurs, le meilleur d'abord, et ses règles).
 
 ## Pièges
+
+- **Un Élément importé garde la profondeur `o.z = 0`.** La taille d'un Élément est sa taille 2D vue à sa
+  profondeur, une perspective faite pour quelques mètres devant la caméra (30 m) : à la position nord-sud du
+  lieu (±200 m), un bâtiment rétrécissait à rien ou grandissait hors d'échelle. Sa place est
+  `wxFloor`/`wzFloor`.
 
 - **La géométrie des données de test est `[lat, lon]`** (compactée) ; Overpass donne `{lat, lon}`. Le
   traducteur lit les deux.

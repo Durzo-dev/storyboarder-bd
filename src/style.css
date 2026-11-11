@@ -3174,3 +3174,23 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 .real-place-hint{ margin-left:auto; }
 .real-place-actions{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .real-place-actions .nav-btn, .real-place-actions .full-btn{ margin:0; }
+.real-place-step[hidden], .real-place-progress[hidden]{ display:none; }
+.real-place-step{ display:flex; flex-direction:column; gap:10px; }
+.real-place-choice{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.real-place-choice[hidden]{ display:none; }
+/* A choice: a card (the whole card is clickable), its button as title, its description under it. */
+.real-place-choice-card{ display:flex; flex-direction:column; gap:6px; padding:16px; cursor:pointer;
+  background:var(--paper-dark); border:1px solid var(--line); border-radius:var(--rayon-moyen); }
+.real-place-choice-card:hover, .real-place-choice-card:focus-within{ border-color:var(--accent); }
+.real-place-choice-btn{ text-align:left; padding:0; background:none; border:0; color:var(--ink); font:inherit; font-weight:600; font-size:var(--texte-courant); cursor:pointer; }
+.real-place-choice-card p{ margin:0; font-size:var(--texte-libelle); color:var(--ink-mid); }
+/* The import's progress: a bar, then the steps (done, under way, to come). */
+.real-place-progress{ display:flex; flex-direction:column; gap:8px; }
+.real-place-bar{ height:8px; background:var(--line); border-radius:var(--rayon-pilule); overflow:hidden; }
+.real-place-bar span{ display:block; height:100%; width:0; background:var(--accent); transition:width .25s ease; }
+.real-place-steps{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:3px; font-size:var(--texte-libelle); color:var(--ink-soft); }
+.real-place-steps li::before{ content:'○'; display:inline-block; width:1.4em; }
+.real-place-steps li.fait{ color:var(--ink-mid); }
+.real-place-steps li.fait::before{ content:'✓'; color:var(--accent); }
+.real-place-steps li.encours{ color:var(--ink); font-weight:600; }
+.real-place-steps li.encours::before{ content:'●'; color:var(--accent); }

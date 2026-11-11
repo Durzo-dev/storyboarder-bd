@@ -90,3 +90,25 @@ describe('the relief from real altitudes', () => {
     assert.equal(R.reliefDepuisAltitudes({ x0: 0, z0: 0, nx: 2, nz: 2, altitudes: [null, null, null, null] }), null);
   });
 });
+
+describe('the import\'s progress and placement', async () => {
+  const { IMPORT_STEPS, importProgress } = await import('../src/real-place-import.js');
+  test('the steps in order; the bar grows through them, each step\'s share filled by its own progress', () => {
+    assert.deepEqual(IMPORT_STEPS, ['map', 'country', 'buildings', 'relief', 'scene']);
+    assert.equal(importProgress('map'), 0);
+    let last = -1;
+    for (const s of IMPORT_STEPS) for (const sub of [0, 0.5, 1]) { const p = importProgress(s, sub); assert.ok(p >= last); last = p; }
+    assert.ok(Math.abs(importProgress('scene', 1) - 1) < 1e-9);
+    assert.ok(importProgress('relief', 0.5) > importProgress('relief', 0) && importProgress('relief', 0.5) < importProgress('scene', 0));
+    assert.equal(importProgress('unknown'), 0);
+  });
+  test('an imported Element keeps the depth 0: its place is wxFloor/wzFloor (seen: buildings shrunk to nothing)', () => {
+    const ev = readFileSync(new URL('../src/events.js', import.meta.url), 'utf8');
+    assert.match(ev, /const placer = \(o, x, z\) => \{ o\.z = 0; setElementWorldPos3D\(o, panel, x, 0\); o\.wxFloor = x; o\.wzFloor = z; \};/);
+  });
+  test('« New scene » opens the choice, manual or from a real place', () => {
+    const ui = readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8');
+    assert.match(ui, /\$\('addSceneBtn'\)\.onclick = \(\) => ouvrirNouvelleScene\(\);/);
+    assert.doesNotMatch(readFileSync(new URL('../src/index.html', import.meta.url), 'utf8'), /addRealSceneBtn/);
+  });
+});

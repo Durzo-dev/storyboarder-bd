@@ -19,12 +19,15 @@ const evt = lire('src/events.js');
 const arbre = lire('src/project-tree.js');
 
 describe('project-tree.js : la couture avec events.js', () => {
-  test('RÉGRESSION : events.js injecte les sept dépendances remontantes', () => {
+  test('RÉGRESSION : events.js injecte les six dépendances remontantes', () => {
     // Sans injection, cliquer une Scène, un Tome ou une Planche du menu de gauche lève un
     // TypeError sur un callback absent. Rien ne le dit avant le clic.
+    // `createScene` is no longer one of them: « New scene » opens the choice (real-place-ui.js), and the
+    // manual creation is handed to that screen.
     const m = evt.match(/setProjectTreeCallbacks\(\{([\s\S]*?)\}\)/);
     assert.ok(m, 'l\'appel d\'injection a disparu d\'events.js');
-    ['createScene', 'openScene', 'disableSceneCameraMode', 'openPageContextMenu',
+    assert.match(evt, /creerSceneManuelle: \(\) => \{\n    snapshot\(\);\n    const s = createScene\(\);\n    openScene\(s\.id\);/);
+    ['openScene', 'disableSceneCameraMode', 'openPageContextMenu',
      'openVolumeContextMenu', 'openSceneContextMenu', 'snapshot']
       .forEach(n => assert.ok(m[1].includes(n), `${n} n'est plus injecté`));
   });
