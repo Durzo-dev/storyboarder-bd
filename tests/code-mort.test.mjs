@@ -316,6 +316,8 @@ const EN_ATTENTE = {
   vagues3D: '#435m : modèle JS du GLSL de l’eau, éprouvé par les tests',
   // #436c : même nature, le modèle de `cielDirection`, la déformation du ciel vers le bord du Sol.
   elevationDuCiel3D: '#436c : modèle JS du GLSL du ciel, éprouvé par les tests',
+  // #457b-2: the OSM translator, pure and tested on two real extracts, ahead of its import screen.
+  translateOsm: '#457b-4 : the import screen of a real place calls it',
 };
 
 function exportsSansAppelant(){
@@ -418,7 +420,9 @@ describe('Aucun export de src/ ne reste sans appelant', () => {
     // #454a-2, qui en branche deux, puis à 12 en #454a-4b, qui branche les trois dernières.
     // Remonté à 13, 15, 16 puis 20 de #456a à #456d (les étapes du plan, en avance sur leur
     // écran), redescendu à 12 en #456e, qui les branche toutes.
-    assert.equal(Object.keys(EN_ATTENTE).length, 12,
+    // Raised to 13 in #457b-2 (decided by Durzo, 11 Nov. 2026): `translateOsm`, the OSM translator,
+    // ahead of its import screen; back to 12 in #457b-4, which calls it.
+    assert.equal(Object.keys(EN_ATTENTE).length, 13,
       'une décision de plus a été REPORTÉE au lieu d\'être prise');
   });
 });
