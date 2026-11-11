@@ -15,8 +15,8 @@
  * The importer (#457b-4) turns these into Page objects (ids, panel, 2D frames, relief); the ground under
  * buildings is already flattened by the rendering (reliefEffectif3D).
  *
- * The defaults (level height, levels and roof per building type) are those of FRANCE; #457b-3 makes them a
- * per-country table. OSM gives no windows: they are GENERATED, a facade "inspired by", not a survey.
+ * The defaults (level height, levels and roof per building type) come from the country's table
+ * (real-place-sources.js). OSM gives no windows: they are GENERATED, a facade "inspired by", not a survey.
  */
 
 import { creerBatiment } from './batiment.js';
@@ -26,6 +26,8 @@ import { actualiserPieces } from './batiment-pieces.js';
 import { fixerToit } from './batiment-toits.js';
 import { ajouterOuverture } from './batiment-ouvertures.js';
 import { mondeDuMasque } from './terrain-zone-pinceau.js';
+import { projector } from './geo-local.js';
+import { rulesFor } from './real-place-sources.js';
 
 /** The attribution OSM data requires near the work (export credits, #457b-4). */
 export const OSM_ATTRIBUTION = '© OpenStreetMap contributors, ODbL';
@@ -33,21 +35,7 @@ export const OSM_ATTRIBUTION = '© OpenStreetMap contributors, ODbL';
 /** The largest zone (metres of side): the relief's largest side (COTE_MAX_DU_RELIEF − 1). */
 export const ZONE_SIDE_MAX = 400;
 
-const EARTH_RADIUS = 6371008.8;
-const DEG = Math.PI / 180;
 const finite = (v) => typeof v === 'number' && Number.isFinite(v);
-
-/**
- * Local metres around `centre` ({lat, lon}): an equirectangular projection, exact enough on 400 m (the
- * error grows with the square of the distance: well under a centimetre here). x to the east, z to the south.
- */
-export function projector(centre){
-  const kx = EARTH_RADIUS * DEG * Math.cos(centre.lat * DEG), kz = EARTH_RADIUS * DEG;
-  return {
-    toLocal: (p) => ({ x: (p.lon - centre.lon) * kx, z: -(p.lat - centre.lat) * kz }),
-    toGeo: (q) => ({ lat: centre.lat - q.z / kz, lon: centre.lon + q.x / kx }),
-  };
-}
 
 /** A geometry point, whether Overpass `{lat, lon}` or the compact `[lat, lon]`. */
 function geoPoint(p){
@@ -57,19 +45,6 @@ function geoPoint(p){
 
 const round = (v) => Math.round(v * 1000) / 1000;
 const roundPoint = (p) => ({ x: round(p.x), z: round(p.z) });
-
-/**
- * THE FRENCH DEFAULTS (#457b-3 turns them into a per-country table). Levels and roof per `building`
- * value; the rest falls back on `default`. A level of 2.8 m, as the building editor's default.
- */
-export const DEFAULT_RULES = Object.freeze({
-  levelHeight: 2.8,
-  levels: { house: 2, detached: 2, semidetached_house: 2, terrace: 2, residential: 3, apartments: 4, hotel: 4,
-    commercial: 2, retail: 1, office: 4, industrial: 1, warehouse: 1, garage: 1, garages: 1, shed: 1, hut: 1,
-    church: 3, chapel: 2, school: 2, government: 3, public: 2, farm_auxiliary: 1, barn: 1, default: 2 },
-  flatRoofs: ['commercial', 'retail', 'office', 'industrial', 'warehouse', 'garage', 'garages', 'school', 'government', 'public', 'supermarket'],
-  roofPitch: 35,
-});
 
 /** OSM `roof:shape` → the building editor's roof types. Unknown: the default for the building type. */
 const ROOF_SHAPES = { flat: 'plat', gabled: 'deux-pans', hipped: 'quatre-pans', 'half-hipped': 'quatre-pans',
@@ -187,7 +162,7 @@ export function maskOfPolygon(poly, h, step = ZONE_STEP){
 // ── Buildings ───────────────────────────────────────────────────────────────────────────────────
 
 /** How many levels, and how high each: `building:levels`, else `height`, else the type's default. */
-export function levelsOf(tags, rules = DEFAULT_RULES){
+export function levelsOf(tags, rules = rulesFor('fr')){
   const levels = parseInt(tags['building:levels'], 10);
   const height = parseFloat(tags.height);
   const type = tags.building;
@@ -199,7 +174,7 @@ export function levelsOf(tags, rules = DEFAULT_RULES){
 }
 
 /** The roof type: `roof:shape`, else flat for commercial and public types, else gabled (France). */
-export function roofOf(tags, rules = DEFAULT_RULES){
+export function roofOf(tags, rules = rulesFor('fr')){
   const shape = ROOF_SHAPES[tags['roof:shape']];
   if (shape) return shape;
   return rules.flatRoofs.includes(tags.building) ? 'plat' : 'deux-pans';
@@ -232,7 +207,7 @@ function generateOpenings(b, doorWallId){
  * its centre; `roads` (world polylines) to put the door on the side of the street. Returns the building, or
  * null if the editor refuses its walls (a footprint that crosses itself).
  */
-export function buildingOf(footprint, tags, centre, roads = [], rules = DEFAULT_RULES, translate = null){
+export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor('fr'), translate = null){
   const t = translate || ((en, fr) => fr);
   const name = tags.name || (tags['addr:housenumber'] && tags['addr:street'] ? `${tags['addr:housenumber']} ${tags['addr:street']}` : t('Building', 'Bâtiment'));
   const b = creerBatiment(name, t);
@@ -281,9 +256,10 @@ export function zoneTypeOf(tags){
 
 /**
  * Translates an Overpass extract. `centre`: {lat, lon}; `halfSize`: half the side of the zone (metres, at
- * most ZONE_SIDE_MAX / 2). Returns { buildings, paths, zones, elements, skipped, attribution }.
+ * most ZONE_SIDE_MAX / 2); `country` (ISO code, `fr` by default: France first) picks the default values
+ * (real-place-sources.js), unless `rules` are given. Returns { buildings, paths, zones, elements, skipped, attribution }.
  */
-export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, rules = DEFAULT_RULES, translate = null } = {}){
+export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, country = 'fr', rules = rulesFor(country), translate = null } = {}){
   const h = Math.min(Math.max(1, halfSize), ZONE_SIDE_MAX / 2);
   const { toLocal } = projector(centre);
   const out = { buildings: [], paths: [], zones: [], elements: [], skipped: { outside: 0, invalid: 0, tunnels: 0, relations: 0 }, attribution: OSM_ATTRIBUTION };

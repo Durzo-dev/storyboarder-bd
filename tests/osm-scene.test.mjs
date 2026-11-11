@@ -9,10 +9,11 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import {
-  translateOsm, projector, clipPolyline, maskOfPolygon, cleanFootprint, levelsOf, roofOf, pathKindOf, zoneTypeOf,
+  translateOsm, clipPolyline, maskOfPolygon, cleanFootprint, levelsOf, roofOf, pathKindOf, zoneTypeOf,
   OSM_ATTRIBUTION, ZONE_SIDE_MAX,
 } from '../src/osm-scene.js';
 import { lireBatiment, ecrireBatiment } from '../src/batiment.js';
+import { projector } from '../src/geo-local.js';
 import { toitsDuNiveau } from '../src/batiment-toits.js';
 
 const fixture = (name) => JSON.parse(readFileSync(new URL(`./fixtures/${name}.json`, import.meta.url), 'utf8'));
