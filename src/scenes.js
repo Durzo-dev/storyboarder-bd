@@ -334,6 +334,10 @@ export async function loadSceneIntoPanel(scene, panel){
     panel.relief = JSON.parse(JSON.stringify(scenePanel.relief));
     panel.relief.x0 -= worldBboxCx;
   } else delete panel.relief;
+  // A Scene from a real place: its credits (OpenStreetMap, the relief's source) follow into the Panel, for
+  // the export (export-credits.js, creditsDuLieu).
+  if (scenePanel && Array.isArray(scenePanel.creditsDuLieu) && scenePanel.creditsDuLieu.length) panel.creditsDuLieu = scenePanel.creditsDuLieu.slice();
+  else delete panel.creditsDuLieu;
   S.selectedId = panel.id; S.selectedRoomId = null;
   // Reset the target Panel's camera: a previously tilted (camRotX ≠ 0) or zoomed
   // (camDist ≠ PANEL_CAM_DEFAULT_DIST_3D) camera could make the Ground dominant and make Elements

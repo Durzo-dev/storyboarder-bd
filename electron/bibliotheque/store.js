@@ -422,4 +422,6 @@ module.exports = {
   DELAI_MS, DUREE_CATALOGUE_MS, POIDS_MAX,
   // #446b : le réseau partagé avec le store de textures (store-textures.js).
   lireJson, lireOctets, md5, fixture,
+  // The application's User-Agent, shared with the real-place network (real-place.js).
+  agent,
 };

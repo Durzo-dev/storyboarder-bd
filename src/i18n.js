@@ -152,6 +152,17 @@ export const I18N_TEXT = [
   // Sidebar
   ['#addVolumeBtn', 'New volume', 'Nouveau tome'],
   ['#addSceneBtn', 'New scene', 'Nouvelle scène'],
+  ['#addRealSceneBtn', 'Scene from a real place', 'Scène depuis un lieu réel'],
+  // A Scene from a real place (src/real-place-ui.js)
+  ['#realPlaceTitle', 'A Scene from a real place', 'Une Scène depuis un lieu réel'],
+  ['#realPlaceQuery', null, null, 'placeholder', 'A town, a street, an address…', 'Une ville, une rue, une adresse…'],
+  ['#realPlaceSearchBtn', 'Search', 'Chercher'],
+  ['#realPlaceSizeLabel', 'Zone size', 'Taille de la zone'],
+  ['#realPlaceHint', 'Click on the map to place the zone.', 'Cliquez sur la carte pour placer la zone.'],
+  ['#realPlaceCancel', 'Cancel', 'Annuler'],
+  ['#realPlaceImport', 'Create the scene', 'Créer la scène'],
+  ['#realPlaceMapCredit', '© OpenStreetMap contributors', '© les contributeurs d\'OpenStreetMap'],
+  ['#realPlaceClose', null, null, 'title', 'Close (Esc)', 'Fermer (Échap)'],
   // Planche menu
   ['#pageMenuHeader .menu-close-btn', null, null, 'title', 'Close', 'Fermer'],
   ['#sidePageBgSection > h2', 'Background', 'Arrière-plan'],

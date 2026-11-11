@@ -56,6 +56,20 @@ export function creditsDeLaPage(page, attributions, visible){
     .sort((a, b) => String(a.nom || '').localeCompare(String(b.nom || ''), 'fr'));
 }
 
+/**
+ * The credits of the real places shown on a Page: the `creditsDuLieu` of its Panels (a Scene built from a
+ * real place carries them on its canvas, and a Panel that loads it receives them), each line once.
+ */
+export function creditsDuLieu(page){
+  const vus = [];
+  for (const o of (page && page.objects) || []) {
+    if (o && o.type === 'panel' && Array.isArray(o.creditsDuLieu)) {
+      for (const l of o.creditsDuLieu) if (typeof l === 'string' && l && !vus.includes(l)) vus.push(l);
+    }
+  }
+  return vus;
+}
+
 /** Le titre de la section des crédits. */
 export function titreCredits(lang){
   return lang === 'en' ? '3D model credits' : 'Crédits des modèles 3D';

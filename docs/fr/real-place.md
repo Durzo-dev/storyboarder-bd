@@ -3,7 +3,7 @@
 *[English version](../en/real-place.md)*
 
 Construire une Scène d'après OpenStreetMap : bâtiments, routes, chemins, murets, rivières, sols, arbres
-et lampadaires. Le traducteur existe ; l'écran d'import, pas encore.
+et lampadaires. Ouverte par « Scène depuis un lieu réel », sous « Nouvelle scène ».
 
 ## Où vit quoi
 
@@ -12,6 +12,10 @@ et lampadaires. Le traducteur existe ; l'écran d'import, pas encore.
 | `src/osm-scene.js` | PUR. Le traducteur OSM : un extrait Overpass (`out geom`) devient bâtiments, Tracés, Zones et Éléments, en mètres. |
 | `src/real-place-sources.js` | PUR. Les sources par pays : fournisseurs de relief (le meilleur d'abord) et règles des bâtiments, avec un repli mondial. |
 | `src/geo-local.js` | PUR. Des mètres locaux autour d'un centre géographique (`projector`). |
+| `src/real-place-import.js` | PUR. La traduction et les altitudes devenues le contenu d'une Scène (`sceneContentOf` : objets Tracés et Zones, relief, crédits). |
+| `src/real-place-ui.js` | L'écran : recherche, carte (tuiles OpenStreetMap), taille de la zone, import. |
+| `electron/bibliotheque/real-place.js` | Le réseau (processus principal) : Nominatim, Overpass (avec miroirs), altitudes, tuiles ; identifié par le User-Agent de l'application. |
+| `src/events.js` (`cablerLieuReel`, `creerScene`) | Pose le contenu dans une Scène neuve, en une seule étape d'annulation. |
 | `tests/osm-scene.test.mjs`, `tests/real-place-sources.test.mjs` | Leurs tests, sur des extraits réels et de vraies réponses d'altimétrie. |
 
 ## Le traducteur
@@ -47,6 +51,28 @@ et lampadaires. Le traducteur existe ; l'écran d'import, pas encore.
   de l'export.
 
 Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà aplani (`reliefEffectif3D`).
+
+## L'import
+
+1. L'écran : une recherche (Nominatim, `realplace:search`) ou un clic sur la carte (tuiles `realplace:tile`,
+   gardées pendant la session), la taille de la zone (100 à 400 m), « Créer la scène ».
+2. L'extrait : `realplace:osm` avec l'emprise de la zone ; les serveurs Overpass dans l'ordre (`OVERPASS`), le
+   premier qui répond ; gardé en mémoire. Le pays : celui du lieu choisi, sinon `realplace:country` (Nominatim
+   inverse).
+3. `translateOsm` avec les règles du pays, puis le relief : `planRelief` pour le pays, ses requêtes envoyées
+   par `realplace:altitudes` (seulement vers `ALTITUDE_HOSTS`, au rythme du fournisseur), `assemble` ; en cas
+   d'échec le fournisseur suivant, et sans aucun un Sol plat.
+4. `sceneContentOf` : Zones et Tracés (`pathObject`, `zoneObject`, nommés par `nomDuTrace`), le relief
+   (`reliefDepuisAltitudes` : base au milieu de l'étendue, bords ramenés à 0 sur 20 m pour rejoindre le Sol
+   plat), les crédits.
+5. `creerScene` (events.js) : un seul instantané, `createScene`, le relief et `creditsDuLieu` sur le canevas,
+   les Tracés (`tracéUpdateScreenPts`), les bâtiments (`creerElementBatiment`), arbres et lampadaires
+   (`objetIntegreNeuf`, la même construction qu'« Ajouter »), chacun placé par `wxFloor`/`wzFloor` ; la
+   caméra cadre la zone (`distanceCameraPourPremierElement3D`).
+
+**Crédits** : `panel.creditsDuLieu` (une liste de lignes) sur le canevas de la Scène ; `loadSceneIntoPanel` la
+recopie dans la Case ; l'export les dessine une fois chacune (`creditsDuLieu`, export-credits.js) après les
+crédits des modèles.
 
 ## Les sources par pays
 

@@ -79,7 +79,9 @@ describe('Le branchement dans l’export', () => {
   test('les crédits sont TOUJOURS dessinés, quel que soit le réglage des descriptions', () => {
     assert.match(corps, /const credits = creditsDeLaPage\(page, attributions, visibleDansSaCase\);/);
     assert.match(corps, /off\.height = pageH \+ infoHeight \+ creditsHeight;/);
-    assert.match(corps, /if \(credits\.length\) \{\n    const y0 = pageH \+ infoHeight;/);
+    // The model credits and those of a real place (OpenStreetMap, the relief's source) are blocks of one section.
+    assert.match(corps, /if \(creditBlocs\.length\) \{\n    const y0 = pageH \+ infoHeight;/);
+    assert.match(corps, /const lieu = creditsDuLieu\(page\);/);
     assert.doesNotMatch(corps.slice(corps.indexOf('const credits')), /exportShowPanelDescriptions/);
   });
   test('#449 : la Planche est dessinée AVANT les crédits, toutes ses Cases mesurées, et la mesure s\'éteint ensuite', () => {
@@ -93,5 +95,22 @@ describe('Le branchement dans l’export', () => {
     const f = corps.slice(corps.indexOf('const visibleDansSaCase'), corps.indexOf('const credits'));
     assert.match(f, /const panel = findOwningPanel\(o, page\);\n      return !!panel && !elementNonVisible3D\(o, panel, page, false\);/);
     assert.match(f, /\} catch \{ return true; \}/);
+  });
+});
+
+describe('the credits of a real place', async () => {
+  const { creditsDuLieu } = await import('../src/export-credits.js');
+  test('the Panels\' place credits, each line once', () => {
+    const page = { objects: [
+      { type: 'panel', creditsDuLieu: ['© OpenStreetMap contributors, ODbL', '© IGN, RGE ALTI®'] },
+      { type: 'panel', creditsDuLieu: ['© OpenStreetMap contributors, ODbL'] },
+      { type: 'panel' }, { type: 'objet3d', creditsDuLieu: ['ignored'] },
+    ] };
+    assert.deepEqual(creditsDuLieu(page), ['© OpenStreetMap contributors, ODbL', '© IGN, RGE ALTI®']);
+    assert.deepEqual(creditsDuLieu({ objects: [] }), []);
+  });
+  test('they follow a Scene into the Panel that loads it', () => {
+    const scenes = readFileSync(new URL('../src/scenes.js', import.meta.url), 'utf8');
+    assert.match(scenes, /panel\.creditsDuLieu = scenePanel\.creditsDuLieu\.slice\(\);/);
   });
 });

@@ -3156,3 +3156,21 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 #terrainTraceReglages .modal-input{ width:100%; margin:0; }
 #terrainTraceReglages .terrain-couleur{ width:100%; height:32px; padding:2px; cursor:pointer; }
 
+
+/* ── A Scene from a real place (src/real-place-ui.js) ─────────────────────────────────────────── */
+.real-place-box{ width:min(820px, 94vw); display:flex; flex-direction:column; gap:10px; }
+.real-place-search{ display:flex; gap:8px; }
+.real-place-search .modal-input{ flex:1 1 auto; margin:0; }
+.real-place-search .nav-btn{ width:auto; margin:0; }
+.real-place-results{ display:flex; flex-direction:column; max-height:150px; overflow-y:auto; border:1px solid var(--line); border-radius:var(--rayon-moyen); }
+.real-place-results[hidden]{ display:none; }
+.real-place-result{ text-align:left; background:none; border:0; border-bottom:1px solid var(--line); color:var(--ink); padding:6px 10px; font-size:var(--texte-courant); cursor:pointer; }
+.real-place-result:hover{ background:var(--accent-soft); }
+.real-place-map-wrap{ position:relative; }
+.real-place-map{ display:block; width:100%; height:min(52vh, 440px); border-radius:var(--rayon-moyen); cursor:crosshair; touch-action:none; }
+.real-place-credit{ position:absolute; right:6px; bottom:4px; margin:0; padding:1px 6px; font-size:var(--texte-libelle); color:var(--ink); background:var(--paper); opacity:.85; border-radius:var(--rayon-petit); }
+.real-place-options{ display:flex; align-items:center; gap:10px; font-size:var(--texte-libelle); color:var(--ink-mid); }
+.real-place-options select{ width:auto; }
+.real-place-hint{ margin-left:auto; }
+.real-place-actions{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.real-place-actions .nav-btn, .real-place-actions .full-btn{ margin:0; }

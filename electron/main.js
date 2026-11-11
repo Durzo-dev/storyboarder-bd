@@ -1189,6 +1189,13 @@ ipcMain.handle('sketchfab:status', async () => sketchfabSession.status());
 ipcMain.handle('sketchfab:login', async (event, lang) => sketchfabSession.login(lang === 'en' ? 'en' : 'fr'));
 ipcMain.handle('sketchfab:cancelLogin', async () => sketchfabSession.cancelLogin());
 ipcMain.handle('sketchfab:logout', async () => sketchfabSession.logout());
+// A Scene from a real place (src/real-place-ui.js): place search, OSM extract, altitudes, map tiles.
+const realPlace = require('./bibliotheque/real-place');
+ipcMain.handle('realplace:search', async (event, query, lang) => realPlace.search(String(query || ''), lang === 'en' ? 'en' : 'fr'));
+ipcMain.handle('realplace:country', async (event, lat, lon) => realPlace.country(Number(lat), Number(lon)));
+ipcMain.handle('realplace:osm', async (event, bbox) => realPlace.osm(bbox));
+ipcMain.handle('realplace:altitudes', async (event, requests, perSecond) => realPlace.altitudes(requests, perSecond));
+ipcMain.handle('realplace:tile', async (event, z, x, y) => realPlace.tile(z, x, y));
 ipcMain.handle('store:attribuer', async (event, resultat, fichier, resolution) => {
   const r = await store.attribuer(getProjectsDir(), resultat, fichier, resolution);
   // La vignette de la source devient celle du modèle local : déjà belle, et sans rien à rendre. Sauf

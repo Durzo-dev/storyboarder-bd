@@ -3,7 +3,7 @@
 *[Version française](../fr/real-place.md)*
 
 Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, grounds, trees and lamps.
-The translator exists; the import screen does not yet.
+Opened by "Scene from a real place", under "New scene".
 
 ## What lives where
 
@@ -12,6 +12,10 @@ The translator exists; the import screen does not yet.
 | `src/osm-scene.js` | PURE. The OSM translator: an Overpass extract (`out geom`) becomes buildings, paths, Zones and Elements, in metres. |
 | `src/real-place-sources.js` | PURE. The sources per country: relief providers (best first) and building rules, with a world fallback. |
 | `src/geo-local.js` | PURE. Local metres around a geographic centre (`projector`). |
+| `src/real-place-import.js` | PURE. The translation and the altitudes turned into a Scene's content (`sceneContentOf`: Path and Zone objects, relief, credits). |
+| `src/real-place-ui.js` | The screen: search, map (OpenStreetMap tiles), zone size, import. |
+| `electron/bibliotheque/real-place.js` | The network (main process): Nominatim, Overpass (with mirrors), altitudes, tiles; identified by the application's User-Agent. |
+| `src/events.js` (`cablerLieuReel`, `creerScene`) | Lays the content in a new Scene, in one undo step. |
 | `tests/osm-scene.test.mjs`, `tests/real-place-sources.test.mjs` | Their tests, on real extracts and real altimetry answers. |
 
 ## The translator
@@ -43,6 +47,26 @@ The translator exists; the import screen does not yet.
 
 The ground under buildings needs nothing: the rendered relief is already flattened there
 (`reliefEffectif3D`).
+
+## The import
+
+1. The screen: search (Nominatim, `realplace:search`) or a click on the map (tiles `realplace:tile`, cached for
+   the session), the zone's size (100 to 400 m), "Create the scene".
+2. The extract: `realplace:osm` with the zone's bounding box; Overpass servers in order (`OVERPASS`), the
+   first that answers; cached. The country: the chosen place's, else `realplace:country` (Nominatim reverse).
+3. `translateOsm` with the country's rules, then the relief: `planRelief` for the country, its requests sent by
+   `realplace:altitudes` (only to `ALTITUDE_HOSTS`, at the provider's rate), `assemble`; on failure the next
+   provider, and with none a flat Ground.
+4. `sceneContentOf`: Zones and Paths (`pathObject`, `zoneObject`, named by `nomDuTrace`), the relief
+   (`reliefDepuisAltitudes`: base at the middle of the range, edges blended to 0 over 20 m to meet the flat
+   Ground), the credits.
+5. `creerScene` (events.js): one snapshot, `createScene`, the relief and `creditsDuLieu` on the canvas, the
+   Paths (`tracéUpdateScreenPts`), the buildings (`creerElementBatiment`), trees and lamps
+   (`objetIntegreNeuf`, the same construction as « Add »), each placed by `wxFloor`/`wzFloor`; the camera
+   frames the zone (`distanceCameraPourPremierElement3D`).
+
+**Credits**: `panel.creditsDuLieu` (a list of lines) on the Scene's canvas; `loadSceneIntoPanel` copies it to
+the Panel; the export draws them once each (`creditsDuLieu`, export-credits.js) after the model credits.
 
 ## The sources per country
 

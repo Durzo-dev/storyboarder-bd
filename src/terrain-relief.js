@@ -84,6 +84,37 @@ export function etendreLeRelief(r, x0, z0, x1, z1){
   return res;
 }
 
+/**
+ * A relief from REAL ALTITUDES (metres above sea level): a grid `nx × nz` every `pas` metres, row by row
+ * in z, as `h` (real-place-sources.js, planRelief). The base altitude is the MIDDLE of the range, rounded
+ * to the metre: relative heights stay centred, so within the bounds for 600 m of rise at most; beyond,
+ * they are clamped (and `bornee` says so). An unreadable altitude takes the base.
+ * The heights are brought to 0 over the last `raccord` metres of each side: the relief meets the flat
+ * Ground around it (outside the grid, the height is 0) without a cliff.
+ * Returns `{ relief, bornee }`, or null if the grid is inconsistent.
+ */
+export function reliefDepuisAltitudes({ x0, z0, pas = PAS_DU_RELIEF, nx, nz, altitudes }, raccord = 20){
+  if (!fini(x0) || !fini(z0) || !(pas > 0) || !Number.isInteger(nx) || !Number.isInteger(nz) || nx < 2 || nz < 2
+    || nx > COTE_MAX_DU_RELIEF || nz > COTE_MAX_DU_RELIEF || !Array.isArray(altitudes) || altitudes.length !== nx * nz) return null;
+  let min = Infinity, max = -Infinity;
+  for (const a of altitudes) if (fini(a)) { if (a < min) min = a; if (a > max) max = a; }
+  if (min === Infinity) return null;
+  const base = Math.round((min + max) / 2);
+  let bornee = false;
+  const doux = (d) => { const t = Math.max(0, Math.min(1, d / Math.max(1e-9, raccord))); return t * t * (3 - 2 * t); };
+  const h = new Array(nx * nz);
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+    const a = altitudes[j * nx + i];
+    let v = fini(a) ? a - base : 0;
+    const b = Math.max(HAUTEUR_MIN, Math.min(HAUTEUR_MAX, v));
+    if (b !== v) bornee = true;
+    v = b;
+    if (raccord > 0) v *= doux(Math.min(i, j, nx - 1 - i, nz - 1 - j) * pas);
+    h[j * nx + i] = Math.round(v * 1000) / 1000 || 0;   // never -0 in saved data
+  }
+  return { relief: { pas, x0, z0, nx, nz, h, v: 0, altitude: base }, bornee };
+}
+
 /** L'atténuation du pinceau à la distance d (0 au bord, 1 au centre), douce. */
 export function attenuation(d, rayon){
   if (!(d < rayon)) return 0;

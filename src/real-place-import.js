@@ -1,0 +1,56 @@
+/**
+ * @file real-place-import.js
+ * What the translator gives (osm-scene.js) and the altitudes (real-place-sources.js), turned into the
+ * content of a Scene: Path and Zone objects, buildings and Elements to place, the relief and the credits.
+ * PURE: ids come from `newId`; placing the buildings and Elements (2D frames, depth) is the screen's
+ * (real-place-ui.js), which uses the application's own creation functions.
+ */
+
+import { TRACÉ_DEFAULTS } from './constants.js';
+import { PROFONDEUR_RIVIERE, reliefDepuisAltitudes } from './terrain-relief.js';
+import { LARGEUR_PAR_DEFAUT_M } from './terrain-plan.js';
+
+/**
+ * A Path object (road, dirt path, wall, river) from a translated path, as the terrain editor lays one.
+ * `nameOf(kind)`: the application's default name of a Path (canvas-tools.js, nomDuTrace), when OSM has none.
+ */
+export function pathObject(p, { panelId, newId, nameOf = (k) => k }){
+  const def = TRACÉ_DEFAULTS[p.kind] || {};
+  const o = { id: newId(), type: 'tracé', tracéType: p.kind, name: p.name || nameOf(p.kind), panelId,
+    color: def.color, width: def.width, world: { ...p.world, pts: p.world.pts.map(q => ({ x: q.x, z: q.z })) } };
+  // The plan's stroke keeps its proportion to the 3D width, as the terrain editor's settings do.
+  if (p.world.width && def.width && LARGEUR_PAR_DEFAUT_M[p.kind]) o.width = def.width * p.world.width / LARGEUR_PAR_DEFAUT_M[p.kind];
+  if (def.wallHeight !== undefined) o.wallHeight = def.wallHeight;
+  if (p.kind === 'riviere') o.profondeur = PROFONDEUR_RIVIERE;
+  if (p.marking === false) o.marquage = false;
+  return o;
+}
+
+/** A Zone object (a painted mask) from a translated zone. */
+export function zoneObject(z, { panelId, newId, nameOf = () => 'Terrain' }){
+  return { id: newId(), type: 'tracé', tracéType: 'terrain', name: z.name || nameOf('terrain'), panelId, terrainType: z.terrainType, label: '',
+    world: JSON.parse(JSON.stringify(z.world)) };
+}
+
+/**
+ * The content of a Scene from a real place. `translated`: translateOsm's result; `altitudes`: planRelief's
+ * assembly (or null: a flat Ground); `reliefCredit`: the altitude provider's attribution; `nameOf`: the
+ * default name of a Path or Zone (nomDuTrace). Zones come first
+ * (drawn under the Paths). Returns { traces, buildings, elements, relief, bornee, credits, counts }.
+ */
+export function sceneContentOf(translated, { panelId, newId, nameOf, altitudes = null, reliefCredit = null }){
+  const zones = translated.zones.map(z => zoneObject(z, { panelId, newId, nameOf }));
+  const paths = translated.paths.map(p => pathObject(p, { panelId, newId, nameOf }));
+  const r = altitudes ? reliefDepuisAltitudes(altitudes) : null;
+  const credits = [translated.attribution];
+  if (r && reliefCredit) credits.push(reliefCredit);
+  return {
+    traces: [...zones, ...paths],
+    buildings: translated.buildings,
+    elements: translated.elements,
+    relief: r ? r.relief : null,
+    bornee: !!(r && r.bornee),
+    credits,
+    counts: { buildings: translated.buildings.length, paths: paths.length, zones: zones.length, elements: translated.elements.length },
+  };
+}

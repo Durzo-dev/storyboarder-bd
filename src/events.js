@@ -46,6 +46,7 @@ import { enregistrerFermeture, pileOuverte } from './modal-stack.js';
 import { initialiserMiseAJour, rafraichirTextesMaj, fermerModaleMaj } from './update-button.js';
 import { verifierRessources, rafraichirApresChangementDeDossier, simulationRessources } from './missing-resources.js';
 import { cablerStore, rafraichirTextesStore, fermerStore, rafraichirBibliothequeLocale, basculerStore, ouvrirStore } from './store-ui.js';
+import { cablerLieuReel } from './real-place-ui.js';
 import { initLecteur, cablerLecteur, ouvrirLecteur, fermerLecteur, lecteurOuvert } from './lecteur-ui.js';
 import { oublierVignette } from './model-thumbnails.js';
 import { definirLumiereDeCase3D, effacerLumiereDeCase3D, directionDepuisDome3D,
@@ -161,7 +162,7 @@ import {
   getCamOrbitWorld, getElementProjectedHalfExtents3D, getElementProjectedBox3D, groundMagnetEligible, panelPixelToGroundXZ3D,
   projectElementCenterToCanvas3D, setElementWorldPos3D, smoothTracéPath3D, tracéPointAtFrac3D,
   wallOpeningWorldPosOnTracé3D, startCamSmoothing, storeElementWorldCoords, useObjectBoxFormat3D,
-  distanceCameraPourPremierElement3D, estPremierElement3DdeLaCase,
+  distanceCameraPourPremierElement3D, estPremierElement3DdeLaCase, tracéUpdateScreenPts,
   useObjectFormat3D, worldPointToPageXY3D, panelSceneCache3D, elaguerCacheDeCases3D, tracéMeshCache3D,
   getRoomScreenBBoxFrom2DProjections, getBuildingJunctionCorners,
 } from './scene3d.js';
@@ -1264,9 +1265,12 @@ function resizeWallTo(wall, newRealW, newRealH, page){
 // ════════════════════════════════════════════════════════════
 // OBJECTS & WALLS
 // ════════════════════════════════════════════════════════════
-function addObjectToPanel(panel, objType){
-  snapshot();
-  const page = currentPage();
+/**
+ * A new built-in Object (`objType`) for `panel`, at its real size, centred in it: the fields every Object
+ * gets, not yet in the Page. Shared by « Add » (addObjectToPanel) and the import of a real place (trees,
+ * street lamps), which places it in the world itself.
+ */
+function objetIntegreNeuf(panel, page, objType){
   // The default box respects the object's real aspect ratio (OBJECT_ASPECT_RATIOS) when known,
   // otherwise, we fall back to the objects' landscape render format ratio (OBJECT_3D_W/H), suited
   // to cars/bikes/furniture. Without respecting this ratio, the rendered image would be stretched
@@ -1316,6 +1320,14 @@ function addObjectToPanel(panel, objType){
   if (objType === 'porte_ouverte') { obj.doorState = 'gauche'; obj.doorAngle = 76; }
   // Same for an open Window, at 58° by default.
   if (objType === 'fenetre_ouverte') { obj.windowState = 'gauche'; obj.windowAngle = 58; }
+  return obj;
+}
+
+function addObjectToPanel(panel, objType){
+  snapshot();
+  const page = currentPage();
+  const obj = objetIntegreNeuf(panel, page, objType);
+  const w = obj.w, h = obj.h;
   if (WALL_TYPES.includes(objType)) {
     S.lastWallId = obj.id;
     // Freezes once and for all which screen axis (x or y) is "locked" (perpendicular to the Wall,
@@ -9257,6 +9269,34 @@ enregistrerFermeture('storeModal', fermerStore);
 // #445 : un modèle téléchargé depuis le store apparaît aussitôt dans la section Modèles. REMPLACÉ
 // (autre résolution, même nom), le cache garde l'ancien décodé : le vider fait relire le nouveau
 // par toutes les Cases qui l'utilisent.
+// A Scene from a real place (src/real-place-ui.js): the screen assembles the content, it is laid here, in
+// ONE step of the history (a snapshot per object would serialise the whole Project hundreds of times).
+cablerLieuReel({
+  creerScene: (contenu, { nom, demiCote }) => {
+    snapshot();
+    const s = createScene();
+    if (nom) s.name = nom;
+    const page = s.pages[0], panel = page.objects.find(o => o.type === 'panel');
+    if (contenu.relief) panel.relief = contenu.relief;
+    panel.creditsDuLieu = contenu.credits.slice();
+    const placer = (o, x, z) => { o.z = z; o.wzFloor = z; setElementWorldPos3D(o, panel, x, 0); o.wxFloor = x; };
+    for (const t of contenu.traces) { t.panelId = panel.id; page.objects.push(t); tracéUpdateScreenPts(t, panel, page); }
+    for (const b of contenu.buildings) {
+      const el = creerElementBatiment({ panel, page, batiment: b.building });
+      placer(el, b.x, b.z);
+      page.objects.push(el);
+    }
+    for (const e of contenu.elements) {
+      const o = objetIntegreNeuf(panel, page, e.objType);
+      placer(o, e.x, e.z);
+      page.objects.push(o);
+    }
+    // The whole place in view: the camera distance that frames its side (the same rule as a Panel's first Element).
+    panel.camDist = panel.camDistTarget = distanceCameraPourPremierElement3D(2 * demiCote);
+    openScene(s.id);
+    return s;
+  },
+});
 cablerStore({
   apresTelechargement: (fichier, remplace) => { if (remplace) { clearModelCache(); oublierVignette(fichier); } renderAll(); },
   // La bibliothèque « Mes modèles » : les mêmes gestes que le clic droit et la liste d'autrefois.

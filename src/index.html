@@ -492,6 +492,7 @@
         <div class="dropdown-panel open" id="scenePanel">
           <div id="sceneList"></div>
           <button class="full-btn" id="addSceneBtn">Nouvelle scène</button>
+          <button class="nav-btn" id="addRealSceneBtn" type="button">Scène depuis un lieu réel</button>
         </div>
       </div>
     </div>
@@ -1480,6 +1481,38 @@
 <!-- #446c : le STORE DE TEXTURES, à part du store de modèles (demandé). Trois onglets (Mes textures,
      Poly Haven, ambientCG), des filtres par matière et par usage ; la fiche REMPLACE la grille, comme
      dans le store de modèles. Écrit par src/textures-store-ui.js. -->
+<!-- A Scene from a real place (src/real-place-ui.js): search or click a place, choose the zone, import. -->
+<div class="modal-overlay hidden" id="realPlaceModal">
+  <div class="modal-box real-place-box">
+    <button class="modal-close-btn" id="realPlaceClose" type="button" title="Fermer (Échap)">×</button>
+    <h3 id="realPlaceTitle">Une Scène depuis un lieu réel</h3>
+    <form id="realPlaceSearchForm" class="real-place-search">
+      <input id="realPlaceQuery" class="modal-input" type="search" autocomplete="off">
+      <button id="realPlaceSearchBtn" class="nav-btn" type="submit">Chercher</button>
+    </form>
+    <div id="realPlaceResults" class="real-place-results" hidden></div>
+    <div class="real-place-map-wrap">
+      <canvas id="realPlaceMap" class="real-place-map"></canvas>
+      <p id="realPlaceMapCredit" class="real-place-credit"></p>
+    </div>
+    <div class="real-place-options">
+      <label id="realPlaceSizeLabel" for="realPlaceSize">Taille de la zone</label>
+      <select id="realPlaceSize">
+        <option value="100">100 m</option>
+        <option value="200" selected>200 m</option>
+        <option value="300">300 m</option>
+        <option value="400">400 m</option>
+      </select>
+      <span id="realPlaceHint" class="real-place-hint"></span>
+    </div>
+    <p id="realPlaceStatus" class="maj-message"></p>
+    <div class="real-place-actions">
+      <button id="realPlaceCancel" class="nav-btn" type="button">Annuler</button>
+      <button id="realPlaceImport" class="full-btn" type="button">Créer la scène</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay hidden" id="texturesModal">
   <div class="modal-box store-box">
     <button class="modal-close-btn" id="texturesFermer" type="button" title="Fermer (Échap)">×</button>

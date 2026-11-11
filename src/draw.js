@@ -55,7 +55,7 @@ import {
   drawPersona3D,
 } from './rig3d.js';
 import { noDescriptionLabel } from './i18n.js';
-import { creditsDeLaPage, lignesCredit, replierLigne, titreCredits } from './export-credits.js';
+import { creditsDeLaPage, creditsDuLieu, lignesCredit, replierLigne, titreCredits } from './export-credits.js';
 // L'image d'une Case : ce qu'elle porte (image-store) et ce qui est décodé (image-cache). Les deux
 // lectures sont SYNCHRONES, seule condition pour vivre dans le chemin de dessin.
 import {
@@ -2975,7 +2975,15 @@ export async function exportPage(volumeIdx, pageIdx, format = 'png'){
     creditsHeight += lignes.length * (creditTaille + creditInterligne) + creditEcart;
     return lignes;
   });
-  if (credits.length) creditsHeight += padTop + creditTitre + 10 + padBottom - creditEcart;
+  // A Scene from a real place: its map and relief credits (OpenStreetMap, the altitude source), once each.
+  const lieu = creditsDuLieu(page);
+  if (lieu.length) {
+    measureCtx.font = `${creditTaille}px system-ui, sans-serif`;
+    const lignes = lieu.flatMap(l => replierLigne(x => measureCtx.measureText(x).width, l, contentWidth));
+    creditsHeight += lignes.length * (creditTaille + creditInterligne) + creditEcart;
+    creditBlocs.push(lignes);
+  }
+  if (creditBlocs.length) creditsHeight += padTop + creditTitre + 10 + padBottom - creditEcart;
 
   const off = document.createElement('canvas');
   off.width = pageW; off.height = pageH + infoHeight + creditsHeight;
@@ -3008,7 +3016,7 @@ export async function exportPage(volumeIdx, pageIdx, format = 'png'){
     octx.restore();
   }
 
-  if (credits.length) {
+  if (creditBlocs.length) {
     const y0 = pageH + infoHeight;
     octx.save();
     octx.fillStyle = '#fff';

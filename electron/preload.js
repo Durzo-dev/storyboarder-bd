@@ -118,5 +118,10 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   sketchfabCancelLogin: () => ipcRenderer.invoke('sketchfab:cancelLogin'),
   sketchfabLogout: () => ipcRenderer.invoke('sketchfab:logout'),
   storeVignette: (url) => ipcRenderer.invoke('store:vignette', url),
+  realPlaceSearch: (query, lang) => ipcRenderer.invoke('realplace:search', query, lang),
+  realPlaceCountry: (lat, lon) => ipcRenderer.invoke('realplace:country', lat, lon),
+  realPlaceOsm: (bbox) => ipcRenderer.invoke('realplace:osm', bbox),
+  realPlaceAltitudes: (requests, perSecond) => ipcRenderer.invoke('realplace:altitudes', requests, perSecond),
+  realPlaceTile: (z, x, y) => ipcRenderer.invoke('realplace:tile', z, x, y),
   onStoreApercuProgression: (callback) => ipcRenderer.on('store:apercuProgression', (e, s, id, recus, total) => callback(s, id, recus, total)),
 });

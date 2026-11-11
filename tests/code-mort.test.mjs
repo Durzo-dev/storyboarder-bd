@@ -251,10 +251,6 @@ const EN_ATTENTE = {
   // a branché l'enregistrement, #454a-4b la lecture, le renommage et la suppression (la bibliothèque
   // « Mes modèles »). Aucune entrée ne reste ici.
 
-  // #457b-2: the OSM translator, pure and tested on two real extracts, ahead of its import screen.
-  translateOsm: '#457b-4 : the import screen of a real place calls it',
-  // #457b-3: the relief of a zone, planned and assembled (pure); the import sends its requests.
-  planRelief: '#457b-4 : the import screen of a real place calls it',
 };
 
 /**
@@ -412,8 +408,9 @@ describe('Aucun export de src/ ne reste sans appelant', () => {
     // Down to 1 the same day (decided by Durzo): the eleven models and criteria moved to
     // MODELES_ET_CRITERES (never to be called: not pending), and `particulesDeLaBulle` DELETED (#425p
     // settled by removal). What remains is a real deadline: `translateOsm`, back to 0 in #457b-4.
-    // Raised to 2 in #457b-3: `planRelief`, same deadline (#457b-4).
-    assert.equal(Object.keys(EN_ATTENTE).length, 2,
+    // Raised to 2 in #457b-3: `planRelief`, same deadline (#457b-4). Back to 0 in #457b-4, whose import
+    // screen calls both: the two deadlines held.
+    assert.equal(Object.keys(EN_ATTENTE).length, 0,
       'une décision de plus a été REPORTÉE au lieu d\'être prise');
   });
 });
