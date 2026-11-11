@@ -328,3 +328,25 @@ test('pendant un coup de pinceau : Tracés figés, aperçu bridé, calque du pla
   assert.match(ui, /if \(\(T\.coup \|\| T\.chaine\) && T\.dernierApercu && maintenant - T\.dernierApercu < INTERVALLE_APERCU_EN_COUP_MS\)/);
   assert.match(ui, /function calqueDuRelief\(r\)\{\n  if \(_calque\.r === r && _calque\.toile\) return _calque\.toile;/);
 });
+
+// #457b-1 : le relief élargi, et l'altitude de base d'un lieu réel.
+test('#457b-1 : les bornes sont élargies à ±300 m ; un ancien relief (-20 à +30) se lit tel quel', () => {
+  assert.equal(R.HAUTEUR_MIN, -300);
+  assert.equal(R.HAUTEUR_MAX, 300);
+  const ancien = { pas: 1, x0: 0, z0: 0, nx: 2, nz: 2, h: [-20, 30, 0, 12.5], v: 3 };
+  assert.equal(R.reliefValide(ancien), true);
+  assert.equal(R.hauteurDuRelief(ancien, 1, 0), 30);
+  let r = ancien;
+  for (let k = 0; k < 40; k++) r = R.peindreLeRelief(r, { x: 0, z: 0 }, { mode: 'monter', rayon: 3, force: 1 });
+  assert.ok(R.hauteurDuRelief(r, 0, 0) > 30, 'monte au-delà de l\'ancienne borne');
+});
+
+test('#457b-1 : l\'altitude de base survit au pinceau, à l\'agrandissement et à l\'aplanissement', () => {
+  const lieu = { pas: 1, x0: 0, z0: 0, nx: 3, nz: 3, h: [-5, -5, -5, -5, 5, -5, -5, -5, -5], v: 0, altitude: 105 };
+  let r = R.peindreLeRelief(lieu, { x: 20, z: 20 }, { mode: 'monter', rayon: 2, force: 1 });   // hors de la grille : elle grandit
+  assert.equal(r.altitude, 105);
+  assert.ok(r.nx > 3);
+  r = R.aplanirSousLesEmprises(r, [{ polys: [[{ x: 0, z: 0 }, { x: 2, z: 0 }, { x: 2, z: 2 }, { x: 0, z: 2 }]], base: 0 }]);
+  assert.equal(r.altitude, 105);
+  assert.equal(R.etendreLeRelief(null, 0, 0, 2, 2).altitude, undefined, 'sans lieu : pas d\'altitude');
+});

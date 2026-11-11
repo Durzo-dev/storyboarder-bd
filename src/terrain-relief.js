@@ -8,13 +8,22 @@
  * Elle ne couvre que ce qui a été peint, et S'AGRANDIT quand le pinceau en sort (jusqu'à 400 m de
  * côté). `v` compte les coups de pinceau (indicatif ; la signature du rendu lit les hauteurs).
  * Hors de la grille, et sur ses bords, la hauteur vaut 0 : le relief se raccorde au Sol plat.
+ *
+ * #457b-1 : `altitude` (champ AJOUTÉ, facultatif) est l'altitude réelle, en mètres au-dessus de la mer,
+ * du niveau 0 de la grille : un relief tiré d'un lieu réel garde ses hauteurs RELATIVES à elle, donc
+ * petites et précises (l'altitude réelle d'un point = altitude + hauteur). Absente : un relief peint à la
+ * main, sans lieu. Toute opération qui refait la grille la garde ; l'import d'un lieu réel (#457b-4) la pose.
  */
 
 export const PAS_DU_RELIEF = 1;
 /** Le plus grand côté de la grille, en points. */
 export const COTE_MAX_DU_RELIEF = 401;
-/** Les bornes des hauteurs (mètres). */
-export const HAUTEUR_MIN = -20, HAUTEUR_MAX = 30;
+/**
+ * Les bornes des hauteurs (mètres). #457b-1 (décidé le 9 novembre 2026 : élargir plutôt qu'écraser un
+ * village en pente) : ±300 m, assez pour 400 m de côté sur une pente de montagne. Elles étaient de -20 à
+ * +30 m ; un ancien Projet est dedans, il se lit tel quel.
+ */
+export const HAUTEUR_MIN = -300, HAUTEUR_MAX = 300;
 /** Les modes du pinceau. */
 export const MODES_DU_PINCEAU = Object.freeze(['monter', 'creuser', 'aplanir', 'adoucir']);
 /** Ce qu'un passage du pinceau ajoute au plus (mètres), à pleine force, au centre. */
@@ -69,7 +78,10 @@ export function etendreLeRelief(r, x0, z0, x1, z1){
       if (I >= 0 && J >= 0 && I < nx && J < nz) h[J * nx + I] = r.h[j * r.nx + i];
     }
   }
-  return { pas, x0: nx0, z0: nz0, nx, nz, h, v: (reliefValide(r) && r.v) || 0 };
+  const res = { pas, x0: nx0, z0: nz0, nx, nz, h, v: (reliefValide(r) && r.v) || 0 };
+  // L'altitude de base suit le relief agrandi (un coup de pinceau ne doit pas oublier le lieu).
+  if (reliefValide(r) && fini(r.altitude)) res.altitude = r.altitude;
+  return res;
 }
 
 /** L'atténuation du pinceau à la distance d (0 au bord, 1 au centre), douce. */

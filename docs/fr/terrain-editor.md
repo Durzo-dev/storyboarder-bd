@@ -19,7 +19,11 @@ Façonner le sol d'une Scène : relief, Zones, Tracés, eau.
 Des champs ajoutés : un fichier ancien se lit tel quel.
 
 - **`panel.relief`** (le canevas de la Scène, et une Case qui la charge) : `{ pas, x0, z0, nx, nz, h, v }`,
-  hauteurs en mètres au pas de 1 m, ligne par ligne en z. Absent : Sol plat.
+  hauteurs en mètres au pas de 1 m, ligne par ligne en z, entre `HAUTEUR_MIN` et `HAUTEUR_MAX` (±300 m,
+  #457b-1 ; -20 à +30 m avant, un ancien Projet se lit tel quel). Absent : Sol plat. `altitude`
+  facultative : l'altitude réelle (mètres au-dessus de la mer) du niveau 0 de la grille, pour un relief
+  tiré d'un lieu réel (posée par l'import, #457b-4) ; les hauteurs restent relatives à elle, l'altitude
+  réelle d'un point vaut `altitude` + hauteur. Gardée par toute opération qui refait la grille.
 - **Tracé `terrain`** (Zone) : `world.masque` `{ pas, x0, z0, nx, nz, plein }` pour une Zone peinte
   (le rectangle englobant reste dans `world`) ; `hauteurZone`, `penteZone` (degrés), `sensPente`
   (degrés) ; `niveauEau` quand `terrainType === 'eau'`.
