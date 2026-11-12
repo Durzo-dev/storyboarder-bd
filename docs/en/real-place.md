@@ -156,6 +156,11 @@ A country is added by an entry in `COUNTRIES` (its providers, best first, and it
 
 ## Pitfalls
 
+- **An altitude can be nonsense without being « no data ».** A few IGN samples in Montpellier came some 2,500 m
+  under the town (not -99999): the relief's base (middle of the range) fell to -1,233 m and the town stood on a
+  300 m cliff. A sample under -450 m or over 9,000 m, or more than 600 m from the zone's median, is treated as
+  missing (`OUTLIER_METRES`, real-place-sources.js). The import logs the relief's range (`[real-place] relief:`).
+
 - **An imported Element keeps the depth `o.z = 0`.** An Element's size is its 2D size seen at its depth, a
   perspective made for a few metres in front of the camera (30 m): at the place's north-south position
   (±200 m), a building shrank to nothing or grew out of scale. Its place is `wxFloor`/`wzFloor`.

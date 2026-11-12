@@ -91,3 +91,18 @@ describe('real place, the relief of a zone', () => {
     assert.equal(g.altitudes[200 * 401 + 200], 34);
   });
 });
+
+describe('real place, altitudes that cannot be', () => {
+  test('a few samples far under the town are no data (seen: Montpellier on a 300 m cliff)', () => {
+    const p = planRelief({ centre: EGUISHEIM, halfSize: 5, country: 'fr' });
+    const odd = { elevations: IGN_9.elevations.map((v, i) => (i === 4 ? -2514.3 : v)) };
+    const g = p.assemble([odd]);
+    assert.ok(Math.abs(g.missing - 1 / 9) < 1e-9, 'counted as missing');
+    assert.ok(Math.min(...g.altitudes) > 208 && Math.max(...g.altitudes) < 210, 'the town keeps its few metres of relief');
+  });
+  test('no land under -450 m nor over 9,000 m', () => {
+    const p = planRelief({ centre: EGUISHEIM, halfSize: 5, country: 'fr' });
+    const g = p.assemble([{ elevations: IGN_9.elevations.map((v, i) => (i === 0 ? 12000 : v)) }]);
+    assert.ok(Math.max(...g.altitudes) < 210);
+  });
+});

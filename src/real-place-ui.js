@@ -553,6 +553,10 @@ async function reliefDuLieu(centre, halfSize, country, avance = () => {}, arrete
       avance((k + 1) / plan.requests.length);
     }
     const altitudes = answers.length === plan.requests.length ? plan.assemble(answers) : null;
-    if (altitudes) return { altitudes, credit: plan.provider.attribution };
+    if (altitudes) {
+      const a = altitudes.altitudes;
+      console.info(`[real-place] relief: ${plan.provider.id}, ${Math.min(...a)} to ${Math.max(...a)} m, ${Math.round(altitudes.missing * 100)} % without data`);
+      return { altitudes, credit: plan.provider.attribution };
+    }
   }
 }

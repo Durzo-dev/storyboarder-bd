@@ -1,0 +1,34 @@
+import './helpers/dom-stub.mjs';
+import './helpers/render-stub.mjs';
+import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
+const { translateOsm } = await import('../src/osm-scene.js');
+const { sceneContentOf } = await import('../src/real-place-import.js');
+const { layRealPlace } = await import('../src/real-place-lay.js');
+const { createScene } = await import('../src/scenes.js');
+const { drawPanelScene3D } = await import('../src/scene3d.js');
+const { readBdTopo } = await import('../src/building-survey.js');
+const { planRelief } = await import('../src/real-place-sources.js');
+const L = await import('../src/scene-loading.js');
+const rig = await import('../src/rig3d.js');
+test('d', async () => {
+  const v = JSON.parse(readFileSync(new URL('./fixtures/osm-eguisheim.json', import.meta.url), 'utf8'));
+  const bd = JSON.parse(readFileSync(new URL('./fixtures/bdtopo-eguisheim.json', import.meta.url), 'utf8'));
+  const centre = { lat: (v.bbox.sud + v.bbox.nord) / 2, lon: (v.bbox.ouest + v.bbox.est) / 2 };
+  const half = 100;
+  const plan = planRelief({ centre, halfSize: half, country: 'fr' });
+  const answers = plan.requests.map(r => ({ elevations: Array.from({ length: r.count }, (_, i) => 40 + (i % 37) * 0.45) }));
+  const altitudes = plan.assemble(answers);
+  let n = 0;
+  const c = sceneContentOf(translateOsm(v, { centre, halfSize: half, survey: readBdTopo(bd, centre), detail: 'realistic' }), { panelId: 'P', newId: () => 'z' + (++n), altitudes, reliefCredit: 'x' });
+  const hs = c.relief.h; console.log('relief h range', Math.min(...hs), Math.max(...hs), 'nx', c.relief.nx, 'x0', c.relief.x0, 'altitude', c.relief.altitude);
+  const s = createScene();
+  const { page, panel } = layRealPlace(s, c, { halfSize: half, newObject: () => null });
+  const view = { ...page, w: s.w, h: s.h, objects: page.objects };
+  const ctx = document.createElement('canvas').getContext('2d');
+  await L.buildScene(s, { render: () => drawPanelScene3D(ctx, panel, view, s.style3d) });
+  let mesh = null; rig.personaScene3D.traverse(m => { if (m.isMesh && m.userData.relief) mesh = m; });
+  const p = mesh.geometry.attributes.position; let lo = 1e9, hi = -1e9;
+  for (let k = 0; k < p.count; k++) { lo = Math.min(lo, p.getY(k)); hi = Math.max(hi, p.getY(k)); }
+  console.log('mesh y', lo.toFixed(2), hi.toFixed(2));
+});

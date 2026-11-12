@@ -50,9 +50,12 @@ const PROVIDERS = Object.freeze({
   }),
 });
 
+/** No land is lower or higher than this (metres): the Dead Sea's shore, Everest's summit and some margin. */
+const LOWEST_LAND = -450, HIGHEST_LAND = 9000;
+
 function readAltitudes(list, n, noData){
   if (!Array.isArray(list) || list.length !== n) return null;
-  return list.map(v => (typeof v === 'number' && Number.isFinite(v) && !noData(v) ? v : null));
+  return list.map(v => (typeof v === 'number' && Number.isFinite(v) && !noData(v) && v >= LOWEST_LAND && v <= HIGHEST_LAND ? v : null));
 }
 
 /** The countries with their own sources (ISO 3166-1 alpha-2, lower case). The rest takes `world`. */
@@ -113,9 +116,20 @@ export function planRelief({ centre, halfSize, country, step = 5, providerIndex 
  * at most 401 points of side, the relief's largest), by bilinear interpolation. A sample without data takes
  * the mean of the others (a hole would otherwise be a pit to sea level).
  */
+/**
+ * ⚠️ A ZONE'S ALTITUDES SPREAD OVER A FEW METRES, NEVER OVER A KILOMETRE. Seen in Montpellier: a few samples
+ * of the IGN answer some 2,500 m under the town (not its -99999 « no data »): the relief's base, the middle of
+ * the range, fell to -1,233 m, every height was clamped to +300 m and the town stood on a cliff. A sample more
+ * than OUTLIER_METRES from the zone's median is no data (it takes the mean, as a hole does).
+ */
+const OUTLIER_METRES = 600;
+
 function resampleToMetre(samples, n, step, h, out, providerId){
+  const sorted = samples.filter(v => v !== null).sort((a, b) => a - b);
+  if (!sorted.length) return null;
+  const median = sorted[Math.floor(sorted.length / 2)];
+  samples = samples.map(v => (v !== null && Math.abs(v - median) > OUTLIER_METRES ? null : v));
   const known = samples.filter(v => v !== null);
-  if (!known.length) return null;
   const mean = known.reduce((a, b) => a + b, 0) / known.length;
   const s = samples.map(v => (v === null ? mean : v));
   const side = 2 * out + 1;

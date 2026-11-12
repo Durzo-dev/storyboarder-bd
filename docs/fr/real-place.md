@@ -168,6 +168,12 @@ Un pays s'ajoute par une entrée dans `COUNTRIES` (ses fournisseurs, le meilleur
 
 ## Pièges
 
+- **Une altitude peut être absurde sans être « sans donnée ».** Quelques points de l'IGN à Montpellier sont
+  arrivés environ 2 500 m sous la ville (pas -99999) : la base du relief (le milieu de l'étendue) est tombée à
+  -1 233 m et la ville s'est dressée sur une falaise de 300 m. Un point sous -450 m ou au-dessus de 9 000 m, ou
+  à plus de 600 m de la médiane de la zone, est traité comme manquant (`OUTLIER_METRES`, real-place-sources.js).
+  L'import note l'étendue du relief au journal (`[real-place] relief:`).
+
 - **Un Élément importé garde la profondeur `o.z = 0`.** La taille d'un Élément est sa taille 2D vue à sa
   profondeur, une perspective faite pour quelques mètres devant la caméra (30 m) : à la position nord-sud du
   lieu (±200 m), un bâtiment rétrécissait à rien ou grandissait hors d'échelle. Sa place est
