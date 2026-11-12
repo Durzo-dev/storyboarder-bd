@@ -129,5 +129,12 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   realPlaceBdTopo: (bbox) => ipcRenderer.invoke('realplace:bdtopo', bbox),
   realPlaceAltitudes: (requests, perSecond) => ipcRenderer.invoke('realplace:altitudes', requests, perSecond),
   realPlaceTile: (z, x, y) => ipcRenderer.invoke('realplace:tile', z, x, y),
+  mcpStatus: () => ipcRenderer.invoke('mcp:status'),
+  mcpSetEnabled: (on) => ipcRenderer.invoke('mcp:setEnabled', on),
+  onMcpRequest: (callback) => ipcRenderer.on('mcp:request', (e, n, message) => callback(n, message)),
+  mcpRespond: (n, response) => ipcRenderer.invoke('mcp:response', n, response),
+  mcpTools: (tools) => ipcRenderer.invoke('mcp:tools', tools),
+  mcpClientConfig: (kind) => ipcRenderer.invoke('mcp:clientConfig', kind),
+  mcpCapture: (rect) => ipcRenderer.invoke('mcp:capture', rect),
   onStoreApercuProgression: (callback) => ipcRenderer.on('store:apercuProgression', (e, s, id, recus, total) => callback(s, id, recus, total)),
 });

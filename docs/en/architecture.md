@@ -44,8 +44,8 @@ A channel is opened for a feature only if **all three** conditions hold:
 Open channels: `models:*` (imported 3D models), `images:*` (Panel images, see
 [panel-images.md](panel-images.md)), `fonts:*` (user fonts, see [polices.md](polices.md)),
 `skeletons:*` (the mapping file), `batiments:*` (buildings, see
-[building-editor.md](building-editor.md)), `textures:*`, `fontstore:*`, `project:*`, `settings:*` and
-`maj:*` (updates, see [updates.md](updates.md)). The full list is in `electron/preload.js`, and its
+[building-editor.md](building-editor.md)), `textures:*`, `fontstore:*`, `project:*`, `settings:*`,
+`maj:*` (updates, see [updates.md](updates.md)) and `mcp:*` (the AI connection, see [mcp.md](mcp.md)). The full list is in `electron/preload.js`, and its
 declaration in `types/globals.d.ts`.
 
 ## Rule 2: circular imports are broken by injection

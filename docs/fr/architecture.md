@@ -45,8 +45,8 @@ Un canal ne s'ouvre pour une fonctionnalité que si **les trois** conditions tie
 Canaux ouverts : `models:*` (modèles 3D importés), `images:*` (images de Case, cf.
 [panel-images.md](panel-images.md)), `fonts:*` (polices de l'utilisateur, cf. [polices.md](polices.md)),
 `skeletons:*` (le fichier de correspondances), `batiments:*` (les bâtiments, cf.
-[building-editor.md](building-editor.md)), `textures:*`, `fontstore:*`, `project:*`, `settings:*` et
-`maj:*` (mises à jour, cf. [updates.md](updates.md)). La liste complète est dans `electron/preload.js`,
+[building-editor.md](building-editor.md)), `textures:*`, `fontstore:*`, `project:*`, `settings:*`,
+`maj:*` (mises à jour, cf. [updates.md](updates.md)) et `mcp:*` (la connexion d'une IA, cf. [mcp.md](mcp.md)). La liste complète est dans `electron/preload.js`,
 et sa déclaration dans `types/globals.d.ts`.
 
 ## Règle 2 : les imports circulaires se cassent par injection

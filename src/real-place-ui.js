@@ -382,8 +382,10 @@ function cablerLaCarte(c){
 
 // ── Import ──────────────────────────────────────────────────────────────────────────────────────
 
+/** Imports the chosen zone. Resolves to { scene } once built, or { error } (a sentence, for an AI's tool). */
 async function importer(){
-  if (!V || !V.zone || V.busy) return;
+  if (!V || !V.zone || V.busy) return { error: 'No zone is chosen, or an import is already under way.' };
+  const annule = { error: 'The import was cancelled by the user.' };
   const api = window.storyboarderAPI;
   V.busy = true; V.cancelled = false; V.echec = false;
   majBoutons();
@@ -408,19 +410,19 @@ async function importer(){
     const bbox = { south: se.lat, west: nw.lon, north: nw.lat, east: se.lon };
     try { extrait = await api.realPlaceOsm(bbox); }
     finally { clearInterval(tick); if (V === moi) { V.download = null; montrerLeTelechargement(); } }
-    if (arrete()) return;
-    if (extrait.error) { V.echec = true; dire(erreur(extrait.error), true); return; }
+    if (arrete()) return annule;
+    if (extrait.error) { V.echec = true; dire(erreur(extrait.error), true); return { error: `The map data could not be downloaded (${extrait.error}).` }; }
     await etape('country');
     let country = V.country;
     if (!country) { const c = await api.realPlaceCountry(centre.lat, centre.lon); country = (c && c.country) || null; }
-    if (arrete()) return;
+    if (arrete()) return annule;
     await etape('buildings');
     // France: the IGN's surveyed buildings (heights, roofs, materials), matched to OSM's. Without them (no
     // answer, another country) OSM alone, as before.
     let survey = null;
     if (country === 'fr' && niveau !== 'simple' && api.realPlaceBdTopo) {
       const s = await api.realPlaceBdTopo(bbox);
-      if (arrete()) return;
+      if (arrete()) return annule;
       if (s && s.json) survey = readBdTopo(s.json, centre);
     }
     const translated = translateOsm(extrait.json, { centre, halfSize, country: country || 'world', translate: tr, survey, detail: niveau });
@@ -430,36 +432,66 @@ async function importer(){
     if (niveau === 'realistic') {
       await etape('facades');
       photoCredits = await couleursDesFacades(translated, bbox, centre, (sub) => montrerLaProgression('facades', sub), arrete);
-      if (arrete()) return;
+      if (arrete()) return annule;
     }
     await etape('relief');
     const relief = await reliefDuLieu(centre, halfSize, country, (sub) => montrerLaProgression('relief', sub), arrete);
-    if (arrete()) return;
+    if (arrete()) return annule;
     await etape('scene');
     const contenu = sceneContentOf(translated, { panelId: null, newId, nameOf: nomDuTrace,
       altitudes: relief && relief.altitudes, reliefCredit: relief && relief.credit });
     contenu.credits.push(...photoCredits);
     // The Paths' canvas is the new Scene's: creerScene attaches them to it.
-    const scene = _rappels.creerScene(contenu, { nom: V.name || tr('Real place', 'Lieu réel'), demiCote: halfSize });
+    const scene = _rappels.creerScene(contenu, { nom: V.name || tr('Real place', 'Lieu réel'), demiCote: halfSize,
+      lieu: { lat: centre.lat, lon: centre.lon, size_m: halfSize * 2, detail: niveau, country: country || null } });
     // Then built behind this window, which shows it to the end (scene-loading.js): one bar, start to end.
     // Cancelled: the Scene is removed (construireScene).
     const fini = await _rappels.construireScene(scene, {
       onProgress: (step, sub, detail) => montrerLaProgression(step === 'buildings' ? 'construction' : 'ground', sub, detail),
       cancelled: arrete,
     });
-    if (V !== moi) return;
+    if (V !== moi) return fini ? { scene } : annule;
     V.busy = false;
     fermer();
-    if (!fini) return;
+    return fini ? { scene } : annule;
   } catch (e) {
     console.error('[real-place]', e);
-    if (V !== moi) return;
+    if (V !== moi) return annule;
     V.echec = true;
     dire(erreur('response'), true);
+    return { error: `The import failed inside Storyboarder: ${e && e.message ? e.message : e}` };
   } finally {
     // Still open (failed): the instructions come back; the error stays said.
     if (V === moi) { V.busy = false; rendreLaConsigne(); majBoutons(); }
   }
+}
+
+/**
+ * AN IMPORT ASKED BY AN AI (mcp-tools.js, create_scene_from_place): the « New scene » window opens on the
+ * place, as if the user had chosen it, and imports it; the user sees the progress and may cancel. The place by
+ * name (`query`: the first place found) or by `lat` and `lon`. Resolves to { scene } or { error }.
+ */
+export async function importerPourIA({ query = null, lat, lon, sideM = 200, detail = 'detailed', name = null }){
+  if (V && V.busy) return { error: 'An import is already under way in Storyboarder: wait for it to end, then try again.' };
+  const api = window.storyboarderAPI;
+  let place;
+  if (query) {
+    const r = await api.realPlaceSearch(query, tr('en', 'fr'));
+    if (r.error) return { error: `The place search failed (${r.error}).` };
+    if (!r.places.length) return { error: `No place found for « ${query} ». Try another wording, or give lat and lon.` };
+    place = r.places[0];
+  } else {
+    place = { lat, lon, name: name || tr('Real place', 'Lieu réel'), country: null };
+  }
+  ouvrirNouvelleScene();
+  montrerLeLieu();
+  choisirLieu(place);
+  V.halfSize = Math.min(sideM, ZONE_SIDE_MAX) / 2;
+  const taille = $('realPlaceSize');
+  if ([...taille.options].some(o => Number(o.value) === sideM)) taille.value = String(sideM);
+  if (DETAIL_LEVELS.includes(detail)) { $('realPlaceDetailLevel').value = detail; direLeNiveau(); }
+  dessiner();
+  return importer();
 }
 
 /** The most street photos read for one import: each is ~300-500 KB, and a 360° one serves many buildings. */

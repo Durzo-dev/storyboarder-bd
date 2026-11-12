@@ -976,6 +976,8 @@ describe('#403n : un libellé porte UNE majuscule, la première', () => {
   // Celles de DaFont (#423) sont lues dans leur table générée : toutes, sans en recopier aucune.
   const NOMS_PROPRES = new Set(['Comic Neue', 'Shantell Sans', 'Chakra Petch', 'EB Garamond',
     'Courier Prime', ...POLICES_DAFONT.map(p => p.nom)]);
+  // Les noms des clients d'IA (Configuration, « Connexion d'une IA ») : des noms de logiciels.
+  const LOGICIELS = new Set(['Claude', 'Desktop', 'Gemini']);
   const AVEC_LETTRE = /[A-Za-zÀ-ÿ]/;
   const nu = (mot) => mot.replace(/^[^A-Za-zÀ-ÿ0-9]+|[^A-Za-zÀ-ÿ0-9]+$/g, '');
 
@@ -985,7 +987,7 @@ describe('#403n : un libellé porte UNE majuscule, la première', () => {
     const mots = libelle.split(/\s+/).filter(w => AVEC_LETTRE.test(w));
     return mots.slice(1).map(nu).filter(w =>
       w && w[0] === w[0].toUpperCase() && w[0] !== w[0].toLowerCase()
-      && !ACRONYMES.has(w) && w !== w.toUpperCase());
+      && !ACRONYMES.has(w) && !LOGICIELS.has(w) && w !== w.toUpperCase());
   };
 
   test('la mesure elle-même sait reconnaître une faute', () => {

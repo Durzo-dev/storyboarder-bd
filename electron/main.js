@@ -164,6 +164,8 @@ let isQuitting = false;
 
 // `mode` vaut 'app' (l'application) ou 'blocage' (#442 : l'écran plein de mise à jour obligatoire
 // ou de connexion requise, sans menus, avec son propre pont qui n'expose QUE les mises à jour).
+/** The application's window (not the blocking screen's): the AI connection's messages go to it. */
+let fenetreApp = null;
 function createWindow(mode = 'app') {
   const bloque = mode === 'blocage';
   // La fenêtre renaît là où l'utilisateur l'avait laissée. Ce n'est pas qu'un confort : elle
@@ -243,6 +245,7 @@ function createWindow(mode = 'app') {
     const simulerRessources = !app.isPackaged && process.env.STORYBOARD_SIMULER_RESSOURCES;
     win.loadFile(path.join(RACINE, 'src', 'index.html'), simulerRessources ? { query: { simulerRessources: '1' } } : undefined);
   }
+  if (!bloque) fenetreApp = win;
   return win;
 }
 
@@ -1285,12 +1288,45 @@ ipcMain.handle('maj:reessayer', async () => {
   return etatPourAffichage();
 });
 
+// ── The AI connection (MCP, docs/en/mcp.md) ─────────────────────────────────────────────────────
+// The transport is mcp-server.js's; the protocol and the tools are the window's (src/mcp-link.js). Off
+// until the user turns it on in Settings (`mcpEnabled`).
+const { createMcpServer } = require('./mcp-server');
+const mcp = createMcpServer({ userData: app.getPath('userData'), window: () => fenetreApp });
+/** The bridge's path as the client must start it: outside the archive once packaged (asarUnpack). */
+const cheminDuPont = () => path.join(__dirname, 'mcp-bridge.js').replace(/app\.asar([\\/])/, 'app.asar.unpacked$1');
+const etatMcp = () => ({ ...mcp.status(), enabled: readSettings().mcpEnabled === true });
+ipcMain.handle('mcp:status', async () => etatMcp());
+ipcMain.handle('mcp:setEnabled', async (event, on) => {
+  const settings = readSettings();
+  settings.mcpEnabled = on === true;
+  fs.writeFileSync(settingsFilePath, JSON.stringify(settings), 'utf-8');
+  if (on === true) await mcp.start(); else await mcp.stop();
+  return etatMcp();
+});
+ipcMain.handle('mcp:response', async (event, n, response) => { mcp.answer(n, response); return true; });
+ipcMain.handle('mcp:tools', async (event, tools) => { mcp.rememberTools(tools); return true; });
+ipcMain.handle('mcp:clientConfig', async (event, kind) => JSON.stringify(
+  mcp.clientConfig(kind === 'gemini' ? 'gemini' : 'claude', { execPath: process.execPath, bridgePath: cheminDuPont() }), null, 2));
+// An image of a part of the window (a Scene's view), for the AI: JPEG, at most 1280 px wide, base64.
+ipcMain.handle('mcp:capture', async (event, rect) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) return null;
+  const r = rect && ['x', 'y', 'width', 'height'].every(k => Number.isFinite(rect[k]))
+    ? { x: Math.max(0, Math.round(rect.x)), y: Math.max(0, Math.round(rect.y)), width: Math.max(1, Math.round(rect.width)), height: Math.max(1, Math.round(rect.height)) }
+    : undefined;
+  let image = await win.webContents.capturePage(r);
+  if (image.getSize().width > 1280) image = image.resize({ width: 1280, quality: 'good' });
+  return { data: image.toJPEG(85).toString('base64'), mimeType: 'image/jpeg' };
+});
+
 app.whenReady().then(async () => {
   migrerAncienDossierProjets();
   ensureProjectsDir();
   try { etatMaj = await preparerMaj(); } catch (err) { /* une panne de vérification ne bloque pas */ }
   if (ecranBloquant(etatMaj)) fenetreBlocage = createWindow('blocage');
   else createWindow('app');
+  if (readSettings().mcpEnabled === true) mcp.start();
 });
 
 app.on('window-all-closed', () => {

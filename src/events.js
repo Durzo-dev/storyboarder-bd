@@ -47,6 +47,7 @@ import { initialiserMiseAJour, rafraichirTextesMaj, fermerModaleMaj } from './up
 import { verifierRessources, rafraichirApresChangementDeDossier, simulationRessources } from './missing-resources.js';
 import { cablerStore, rafraichirTextesStore, fermerStore, rafraichirBibliothequeLocale, basculerStore, ouvrirStore } from './store-ui.js';
 import { cablerLieuReel } from './real-place-ui.js';
+import { cablerConnexionIA } from './mcp-link.js';
 import { layRealPlace } from './real-place-lay.js';
 import { buildScene, cablerChargementDeScene, ouvrirSceneProgressivement } from './scene-loading.js';
 import { initLecteur, cablerLecteur, ouvrirLecteur, fermerLecteur, lecteurOuvert } from './lecteur-ui.js';
@@ -9286,17 +9287,21 @@ function retourApresChargement(previous){
   renderAll();
 }
 cablerChargementDeScene({ render: renderAll, retour: retourApresChargement });
+// The AI connection (MCP): its tools use the application's gestures (mcp-link.js).
+cablerConnexionIA({ openScene: (id) => openScene(id), version: APP_VERSION });
 cablerLieuReel({
   creerSceneManuelle: () => {
     snapshot();
     const s = createScene();
     openScene(s.id);
   },
-  creerScene: (contenu, { nom, demiCote }) => {
+  creerScene: (contenu, { nom, demiCote, lieu }) => {
     snapshot();
     const s = createScene();
     if (nom) s.name = nom;
-    layRealPlace(s, contenu, { halfSize: demiCote, newObject: objetIntegreNeuf });
+    const { panel } = layRealPlace(s, contenu, { halfSize: demiCote, newObject: objetIntegreNeuf });
+    // Where it was taken from (added field): an AI reads it (mcp-tools.js), the facades' photos need it.
+    if (lieu) panel.lieu = lieu;
     return s;
   },
   // The new Scene built behind the « New scene » window, which shows the progress (scene-loading.js). It is

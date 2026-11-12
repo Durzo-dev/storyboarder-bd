@@ -93,6 +93,7 @@ A section with nothing to say is left out.
 | [building-editor.md](building-editor.md) | The Building editor: format, levels, walls, rooms, openings, stairs, roofs. |
 | [terrain-editor.md](terrain-editor.md) | The Terrain editor: relief, Zones, water, rivers. |
 | [real-place.md](real-place.md) | A Scene from a real place: OpenStreetMap, relief, import screen. |
+| [mcp.md](mcp.md) | The AI connection: an MCP server for the user's AI, its tools and security. |
 
 ---
 

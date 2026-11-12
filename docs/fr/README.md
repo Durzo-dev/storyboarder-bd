@@ -93,6 +93,7 @@ Une section sans objet est omise.
 | [building-editor.md](building-editor.md) | L'Éditeur de bâtiment : format, niveaux, murs, pièces, ouvertures, escaliers, toits. |
 | [terrain-editor.md](terrain-editor.md) | L'Éditeur de terrain : relief, Zones, eau, rivières. |
 | [real-place.md](real-place.md) | Une Scène depuis un lieu réel : OpenStreetMap, relief, écran d'import. |
+| [mcp.md](mcp.md) | La connexion d'une IA : un serveur MCP pour l'IA de l'utilisateur, ses outils, sa sécurité. |
 
 ---
 
