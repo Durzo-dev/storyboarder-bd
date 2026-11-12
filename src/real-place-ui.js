@@ -11,6 +11,7 @@ import { S, tr, newId } from './state.js';
 import { translateOsm, ZONE_SIDE_MAX } from './osm-scene.js';
 import { planRelief } from './real-place-sources.js';
 import { readBdTopo } from './building-survey.js';
+import { buildStepLabel } from './scene-loading.js';
 import { sceneContentOf, IMPORT_STEPS, importProgress, downloadDetail } from './real-place-import.js';
 import { projector } from './geo-local.js';
 import { nomDuTrace } from './canvas-tools.js';
@@ -22,7 +23,7 @@ const ZOOM_MIN = 3, ZOOM_MAX = 18;
 /** Where the map opens before any search: France (France first). */
 const DEFAULT_VIEW = { lat: 46.6, lon: 2.4, z: 6 };
 
-let _rappels = { creerScene: () => null, creerSceneManuelle: () => null };
+let _rappels = { creerScene: () => null, creerSceneManuelle: () => null, construireScene: async () => true };
 /** The screen's state: the view, the chosen zone, the chosen place's name and country. */
 let V = null;
 
@@ -45,14 +46,14 @@ export function cablerLieuReel(rappels){
     V.download.p = p;
     montrerLeTelechargement();
   });
-  $('realPlaceClose').onclick = fermer;
-  $('realPlaceCancel').onclick = fermer;
+  $('realPlaceClose').onclick = annulerOuFermer;
+  $('realPlaceCancel').onclick = annulerOuFermer;
   $('realPlaceSearchForm').onsubmit = (e) => { e.preventDefault(); chercher(); };
   $('realPlaceImport').onclick = importer;
   $('realPlaceSize').onchange = () => { if (V) { V.halfSize = Number($('realPlaceSize').value) / 2; dessiner(); } };
   cablerLaCarte($('realPlaceMap'));
   // Esc and a click outside close it, as its neighbours (modal-stack.js).
-  enregistrerFermeture('realPlaceModal', fermer);
+  enregistrerFermeture('realPlaceModal', annulerOuFermer);
   const realPlaceModal = document.getElementById('realPlaceModal');
   realPlaceModal.addEventListener('mousedown', (e) => { if (e.target === realPlaceModal) fermer(); });
 }
@@ -79,9 +80,10 @@ function montrerLeLieu(){
 }
 
 /** The import's steps as a list (done, under way, to come) and the bar. `step` null: all to come. */
-function montrerLaProgression(step, sub = 0){
+function montrerLaProgression(step, sub = 0, detail = null){
   const labels = { map: tr('Map data (OpenStreetMap)', 'Données de la carte (OpenStreetMap)'), country: tr('Country of the place', 'Pays du lieu'),
-    buildings: tr('Buildings, streets and grounds', 'Bâtiments, rues et sols'), relief: tr('Relief', 'Relief'), scene: tr('Creating the scene', 'Création de la scène') };
+    buildings: tr('Buildings, streets and grounds', 'Bâtiments, rues et sols'), relief: tr('Relief', 'Relief'), scene: tr('Creating the scene', 'Création de la scène'),
+    construction: buildStepLabel('buildings', step === 'construction' ? detail : null), ground: buildStepLabel('ground') };
   const i = step ? IMPORT_STEPS.indexOf(step) : -1;
   $('realPlaceProgress').hidden = false;
   $('realPlaceBar').style.width = `${Math.round((step ? importProgress(step, sub) : 0) * 100)}%`;
@@ -97,6 +99,19 @@ function montrerLaProgression(step, sub = 0){
 function montrerLeTelechargement(){
   const d = V && V.download;
   $('realPlaceDetail').textContent = d ? downloadDetail(d.p, (Date.now() - d.since) / 1000, S.appLang === 'en' ? 'en' : 'fr') : '';
+}
+
+/**
+ * « Cancel » (and the cross, and Esc): during an import, the import stops at its next step and the Scene
+ * being made is removed (importer); otherwise the window closes.
+ */
+function annulerOuFermer(){
+  if (V && V.busy) {
+    V.cancelled = true;
+    dire(tr('Cancelling…', 'Annulation…'), 'chargement');
+    return;
+  }
+  fermer();
 }
 
 function fermer(){
@@ -268,9 +283,16 @@ function cablerLaCarte(c){
 async function importer(){
   if (!V || !V.zone || V.busy) return;
   const api = window.storyboarderAPI;
-  V.busy = true;
+  V.busy = true; V.cancelled = false;
   majBoutons();
   dire('');
+  // Stopped by « Cancel »: the window closes at the next step (a request under way is let finish).
+  const arrete = () => {
+    if (!V || !V.cancelled) return false;
+    V.busy = false;
+    fermer();
+    return true;
+  };
   const centre = { ...V.zone }, halfSize = Math.min(V.halfSize, ZONE_SIDE_MAX / 2);
   // Each step shows on the list before its work: an await lets the window draw it.
   const etape = async (step, sub = 0) => { montrerLaProgression(step, sub); await new Promise(ok => setTimeout(ok, 0)); };
@@ -286,32 +308,40 @@ async function importer(){
     const bbox = { south: se.lat, west: nw.lon, north: nw.lat, east: se.lon };
     try { extrait = await api.realPlaceOsm(bbox); }
     finally { clearInterval(tick); if (V) { V.download = null; montrerLeTelechargement(); } }
-    if (!V) return;
+    if (!V || arrete()) return;
     if (extrait.error) { dire(erreur(extrait.error), true); return; }
     await etape('country');
     let country = V.country;
     if (!country) { const c = await api.realPlaceCountry(centre.lat, centre.lon); country = (c && c.country) || null; }
+    if (arrete()) return;
     await etape('buildings');
     // France: the IGN's surveyed buildings (heights, roofs, materials), matched to OSM's. Without them (no
     // answer, another country) OSM alone, as before.
     let survey = null;
     if (country === 'fr' && api.realPlaceBdTopo) {
       const s = await api.realPlaceBdTopo(bbox);
-      if (!V) return;
+      if (!V || arrete()) return;
       if (s && s.json) survey = readBdTopo(s.json, centre);
     }
     const translated = translateOsm(extrait.json, { centre, halfSize, country: country || 'world', translate: tr, survey });
     await etape('relief');
     const relief = await reliefDuLieu(centre, halfSize, country, (sub) => montrerLaProgression('relief', sub));
-    if (!V) return;
+    if (!V || arrete()) return;
     await etape('scene');
     const contenu = sceneContentOf(translated, { panelId: null, newId, nameOf: nomDuTrace,
       altitudes: relief && relief.altitudes, reliefCredit: relief && relief.credit });
     // The Paths' canvas is the new Scene's: creerScene attaches them to it.
-    _rappels.creerScene(contenu, { nom: V.name || tr('Real place', 'Lieu réel'), demiCote: halfSize });
-    montrerLaProgression('scene', 1);
+    const scene = _rappels.creerScene(contenu, { nom: V.name || tr('Real place', 'Lieu réel'), demiCote: halfSize });
+    // Then built behind this window, which shows it to the end (scene-loading.js): one bar, start to end.
+    // Cancelled: the Scene is removed (construireScene).
+    const fini = await _rappels.construireScene(scene, {
+      onProgress: (step, sub, detail) => montrerLaProgression(step === 'buildings' ? 'construction' : 'ground', sub, detail),
+      cancelled: () => !V || V.cancelled,
+    });
+    if (!V) return;
     V.busy = false;
     fermer();
+    if (!fini) return;
   } catch (e) {
     console.error('[real-place]', e);
     dire(erreur('response'), true);

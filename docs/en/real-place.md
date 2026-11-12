@@ -62,8 +62,10 @@ The ground under buildings needs nothing: the rendered relief is already flatten
 1. The window: "New scene" (`ouvrirNouvelleScene`) shows the choice; "Manual creation" calls
    `creerSceneManuelle` (events.js: an empty Scene, opened). "From an existing place" shows search (Nominatim, `realplace:search`) or a click on the map (tiles `realplace:tile`, cached for
    the session), the zone's size (100 to 400 m), "Create the scene". During the import, a bar and the list
-   of steps (`IMPORT_STEPS`, `importProgress`: map data, country, buildings, relief, scene); the relief's
-   requests are sent one by one so the bar follows them.
+   of steps (`IMPORT_STEPS`, `importProgress`: map data, country, buildings, relief, scene, then the Scene's
+   building: buildings n / N, relief roads and grounds); the relief's requests are sent one by one so the bar
+   follows them. « Cancel », the cross or Esc during the import (`annulerOuFermer`) stop it at its next step
+   (a request under way finishes) and remove the Scene being made.
 2. The extract: `realplace:osm` with the zone's bounding box; Overpass servers in order (`OVERPASS`: the
    public instances without key or limit first, the overloaded main instance last), the first that answers
    completely (an answer ending with a runtime-error `remark` is incomplete, and the next server is asked);
@@ -92,7 +94,16 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    (`creerElementBatiment`), trees and lamps (`objetIntegreNeuf`, the same construction as « Add »), each
    placed by `wxFloor`/`wzFloor` and set on the Ground (`applyGroundMagnetY`); the camera, from above, at the
    distance where the zone fills the view with a 10 % margin (the field of view is fixed: the page's height
-   seen at 30 m).
+   seen at 30 m). It returns the Scene, unopened.
+6. `construireScene` (events.js): `buildScene` (scene-loading.js) marks the Panel as being built (the render
+   skips it), then `openScene(id, { progressif: false })` opens it behind the window; the buildings are built
+   in slices of about 40 ms, the window showing their count, then the first complete render. Cancelled: the
+   Scene is removed and one goes back where one was (`retourApresChargement`).
+
+**Opening an existing large Scene** (`PROGRESSIVE_FROM`, 20 placed buildings or more): `openScene` asks
+`ouvrirSceneProgressivement` before its first render; the same `buildScene`, behind an opaque mask over the
+Scene (`#sceneLoading`, in `main`) with a card at the bottom (bar, the two steps, « Cancel », which closes the
+Scene and goes back where one was). A smaller Scene opens at once, as before.
 
 **Credits**: `panel.creditsDuLieu` (a list of lines) on the Scene's canvas; `loadSceneIntoPanel` copies it to
 the Panel; the export draws them once each (`creditsDuLieu`, export-credits.js) after the model credits.

@@ -29,7 +29,12 @@ import { confirmAction } from './io.js';
 
 // One upward dependency, the undo stack. Injected, not imported (cf. docs/en/architecture.md rule #2).
 let _snapshot = () => {};
-export function setScenesCallbacks({ snapshot }) { _snapshot = snapshot; }
+// Called by openScene before its first render: a large Scene is built progressively (scene-loading.js).
+let _avantOuverture = () => {};
+export function setScenesCallbacks({ snapshot, avantOuverture }) {
+  _snapshot = snapshot;
+  if (avantOuverture) _avantOuverture = avantOuverture;
+}
 
 // Creates a new Scene (per user request): same shape as a Volume with a single Page
 // containing a single full-frame Panel (the Scene's "canvas"), to reuse as-is the
@@ -72,7 +77,8 @@ function nextDefaultSceneName(){
 // Switches the central canvas to the dedicated editor of the given Scene (per user request: "we would
 // switch to this new editor by adding a new Scene or selecting an
 // existing scene"), cf. currentVolume/currentPageData, which then redirect to this Scene.
-export function openScene(id){
+export function openScene(id, { progressif = true } = {}){
+  const previous = { editingSceneId: S.editingSceneId, selectedId: S.selectedId };
   S.editingSceneId = id;
   // Automatically select the Scene's canvas upon opening (per user request), so the
   // "Scène" menu immediately appears on the right without having to click on it.
@@ -80,6 +86,7 @@ export function openScene(id){
   const panel = scene && scene.pages[0].objects.find(o => o.type === 'panel');
   S.selectedId = panel ? panel.id : null;
   S.selectedRoomId = null; S.dragMode = null; S.snapGuide = null;
+  if (progressif && scene) _avantOuverture(scene, previous);
   renderAll();
 }
 

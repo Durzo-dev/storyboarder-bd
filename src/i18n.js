@@ -355,6 +355,8 @@ export const I18N_TRAILING = [
   ['#ctxAddLampadaire', 'Street lamp', 'Lampadaire'],
   ['#ctxAddPanneauSignalisation', 'Road sign', 'Panneau de signalisation'],
   ['#ctxAddBanc', 'Bench', 'Banc'],
+  ['#sceneLoadingTitle', 'Opening the scene', 'Ouverture de la scène'],
+  ['#sceneLoadingCancel', 'Cancel', 'Annuler'],
   ['#ctxAddTombe', 'Grave', 'Tombe'],
   ['#ctxAddPierreTombale', 'Headstone', 'Pierre tombale'],
   ['#ctxAddCaveau', 'Vault', 'Caveau'],

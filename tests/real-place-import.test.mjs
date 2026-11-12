@@ -94,11 +94,11 @@ describe('the relief from real altitudes', () => {
 describe('the import\'s progress and placement', async () => {
   const { IMPORT_STEPS, importProgress } = await import('../src/real-place-import.js');
   test('the steps in order; the bar grows through them, each step\'s share filled by its own progress', () => {
-    assert.deepEqual(IMPORT_STEPS, ['map', 'country', 'buildings', 'relief', 'scene']);
+    assert.deepEqual(IMPORT_STEPS, ['map', 'country', 'buildings', 'relief', 'scene', 'construction', 'ground']);
     assert.equal(importProgress('map'), 0);
     let last = -1;
     for (const s of IMPORT_STEPS) for (const sub of [0, 0.5, 1]) { const p = importProgress(s, sub); assert.ok(p >= last); last = p; }
-    assert.ok(Math.abs(importProgress('scene', 1) - 1) < 1e-9);
+    assert.ok(Math.abs(importProgress('ground', 1) - 1) < 1e-9);
     assert.ok(importProgress('relief', 0.5) > importProgress('relief', 0) && importProgress('relief', 0.5) < importProgress('scene', 0));
     assert.equal(importProgress('unknown'), 0);
   });

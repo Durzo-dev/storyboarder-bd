@@ -69,7 +69,10 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    `creerSceneManuelle` (events.js : une Scène vide, ouverte). « Depuis un lieu existant » montre une recherche (Nominatim, `realplace:search`) ou un clic sur la carte (tuiles `realplace:tile`,
    gardées pendant la session), la taille de la zone (100 à 400 m), « Créer la scène ». Pendant l'import, une
    barre et la liste des étapes (`IMPORT_STEPS`, `importProgress` : données de la carte, pays, bâtiments,
-   relief, scène) ; les requêtes du relief partent une à une pour que la barre les suive.
+   relief, scène, puis la construction de la Scène : bâtiments n / N, relief, routes et sols) ; les requêtes
+   du relief partent une à une pour que la barre les suive. « Annuler », la croix ou Échap pendant l'import
+   (`annulerOuFermer`) l'arrêtent à l'étape suivante (une requête en cours se termine) et retirent la Scène
+   en cours de création.
 2. L'extrait : `realplace:osm` avec l'emprise de la zone ; les serveurs Overpass dans l'ordre (`OVERPASS` : les
    instances publiques sans clé ni limite d'abord, l'instance principale, surchargée, en dernier), le premier
    qui répond en entier (une réponse finie par une `remark` d'erreur d'exécution est incomplète, et le
@@ -99,7 +102,16 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    (`creerElementBatiment`), arbres et lampadaires (`objetIntegreNeuf`, la même construction qu'« Ajouter »),
    chacun placé par `wxFloor`/`wzFloor` et posé sur le Sol (`applyGroundMagnetY`) ; la caméra, de dessus, à
    la distance où la zone remplit la vue avec 10 % de marge (le champ de vision est fixe : la hauteur de la
-   page vue à 30 m).
+   page vue à 30 m). Elle rend la Scène, sans l'ouvrir.
+6. `construireScene` (events.js) : `buildScene` (scene-loading.js) marque la Case en construction (le rendu
+   la saute), puis `openScene(id, { progressif: false })` l'ouvre derrière la fenêtre ; les bâtiments sont
+   construits par tranches d'environ 40 ms, la fenêtre montrant leur compte, puis vient le premier rendu
+   complet. Annulé : la Scène est retirée et on revient où l'on était (`retourApresChargement`).
+
+**Ouvrir une grosse Scène existante** (`PROGRESSIVE_FROM`, 20 bâtiments placés ou plus) : `openScene` demande
+`ouvrirSceneProgressivement` avant son premier rendu ; le même `buildScene`, derrière un masque opaque sur la
+Scène (`#sceneLoading`, dans `main`) avec un encart en bas (barre, les deux étapes, « Annuler », qui ferme la
+Scène et ramène où l'on était). Une Scène plus petite s'ouvre aussitôt, comme avant.
 
 **Crédits** : `panel.creditsDuLieu` (une liste de lignes) sur le canevas de la Scène ; `loadSceneIntoPanel` la
 recopie dans la Case ; l'export les dessine une fois chacune (`creditsDuLieu`, export-credits.js) après les

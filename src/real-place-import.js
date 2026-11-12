@@ -62,8 +62,9 @@ export function sceneContentOf(translated, { panelId, newId, nameOf, altitudes =
  * THE IMPORT'S STEPS, in order, with their share of the progress bar (what they usually take: the map data
  * and the relief are network, the rest is computing).
  */
-export const IMPORT_STEPS = Object.freeze(['map', 'country', 'buildings', 'relief', 'scene']);
-const STEP_WEIGHTS = Object.freeze({ map: 0.35, country: 0.05, buildings: 0.2, relief: 0.3, scene: 0.1 });
+export const IMPORT_STEPS = Object.freeze(['map', 'country', 'buildings', 'relief', 'scene', 'construction', 'ground']);
+// The last two are the Scene's building (scene-loading.js), shown in the same window: one bar, start to end.
+const STEP_WEIGHTS = Object.freeze({ map: 0.3, country: 0.05, buildings: 0.1, relief: 0.2, scene: 0.05, construction: 0.25, ground: 0.05 });
 
 /** The progress (0 to 1) at `step`, that step itself `sub` done (0 to 1). An unknown step: 0. */
 export function importProgress(step, sub = 0){

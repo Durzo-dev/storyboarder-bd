@@ -55,7 +55,7 @@ describe('scenes.js : la couture avec events.js', () => {
   const sc = lire('src/scenes.js');
 
   test('RÉGRESSION : events.js injecte snapshot', () => {
-    assert.match(evt, /setScenesCallbacks\(\{\s*snapshot\s*\}\)/,
+    assert.match(evt, /setScenesCallbacks\(\{\s*snapshot\b/,
       'sans injection, charger une Scène dans une Case ne pose plus de point d\'annulation — '
       + 'et remplacer le contenu d\'une Case est irréversible');
   });

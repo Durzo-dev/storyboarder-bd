@@ -655,7 +655,7 @@ select{ text-overflow:ellipsis; }
 /* `#colorSwatches` A ÉTÉ RETIRÉ (#402d) : même raison, plus aucun élément ne porte cet identifiant. */
 
 /* MAIN */
-main{ flex:1; display:flex; flex-direction:column; min-width:0; }
+main{ flex:1; display:flex; flex-direction:column; min-width:0; position:relative; }
 
 /* RIGHT PANEL (description de la case sélectionnée) */
 .right-panel{
@@ -3196,3 +3196,10 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 .real-place-steps li.encours::before{ content:'●'; color:var(--accent); }
 .real-place-detail{ margin:0; padding-left:1.4em; font-size:var(--texte-libelle); color:var(--ink-mid); font-variant-numeric:tabular-nums; }
 .real-place-detail:empty{ display:none; }
+
+/* A large Scene being opened (scene-loading.js): an opaque mask over it, the progress card at the bottom. */
+.scene-loading{ position:absolute; inset:0; z-index:40; background:var(--paper); display:flex; align-items:flex-end; justify-content:center; padding-bottom:48px; }
+.scene-loading[hidden]{ display:none; }
+.scene-loading-card{ width:min(420px, 90%); display:flex; flex-direction:column; gap:10px; padding:16px 18px; background:var(--paper-dark); border:1px solid var(--line); border-radius:var(--rayon-grand); }
+.scene-loading-title{ margin:0; font-size:var(--texte-titre-modale); font-weight:600; color:var(--ink); }
+.scene-loading-card .nav-btn{ margin:0; align-self:flex-end; width:auto; }

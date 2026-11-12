@@ -48,6 +48,7 @@ import { verifierRessources, rafraichirApresChangementDeDossier, simulationResso
 import { cablerStore, rafraichirTextesStore, fermerStore, rafraichirBibliothequeLocale, basculerStore, ouvrirStore } from './store-ui.js';
 import { cablerLieuReel } from './real-place-ui.js';
 import { layRealPlace } from './real-place-lay.js';
+import { buildScene, cablerChargementDeScene, ouvrirSceneProgressivement } from './scene-loading.js';
 import { initLecteur, cablerLecteur, ouvrirLecteur, fermerLecteur, lecteurOuvert } from './lecteur-ui.js';
 import { oublierVignette } from './model-thumbnails.js';
 import { definirLumiereDeCase3D, effacerLumiereDeCase3D, directionDepuisDome3D,
@@ -412,7 +413,7 @@ setPersonaEditorCallbacks({
   // la vignette cliquée est décodée puis posée dans l'Éditeur, au lieu d'ouvrir sa fiche.
   choisirFigureDansLeStore: () => ouvrirStore({ choisir: (fichier) => poserFigureChoisie(fichier, (f) => preloadModels([f])) }),
 });
-setScenesCallbacks({ snapshot });
+setScenesCallbacks({ snapshot, avantOuverture: ouvrirSceneProgressivement });
 setCanvasToolsCallbacks({ snapshot });
 // Un modèle importé qui finit d'être décodé doit apparaître sans que l'utilisateur touche à
 // quoi que ce soit. C'est ce rappel qui remplace la boîte de remplacement par le modèle.
@@ -9272,6 +9273,19 @@ enregistrerFermeture('storeModal', fermerStore);
 // par toutes les Cases qui l'utilisent.
 // A Scene from a real place (src/real-place-ui.js): the screen assembles the content, it is laid here, in
 // ONE step of the history (a snapshot per object would serialise the whole Project hundreds of times).
+// Back to where one was, after a Scene's opening was cancelled (scene-loading.js): the Scene open before,
+// or the Page.
+function retourApresChargement(previous){
+  disableSceneCameraMode();
+  if (previous.editingSceneId && S.scenes.some(x => x.id === previous.editingSceneId)) {
+    openScene(previous.editingSceneId);
+    return;
+  }
+  S.editingSceneId = null;
+  S.selectedId = previous.selectedId || null; S.selectedRoomId = null;
+  renderAll();
+}
+cablerChargementDeScene({ render: renderAll, retour: retourApresChargement });
 cablerLieuReel({
   creerSceneManuelle: () => {
     snapshot();
@@ -9283,8 +9297,21 @@ cablerLieuReel({
     const s = createScene();
     if (nom) s.name = nom;
     layRealPlace(s, contenu, { halfSize: demiCote, newObject: objetIntegreNeuf });
-    openScene(s.id);
     return s;
+  },
+  // The new Scene built behind the « New scene » window, which shows the progress (scene-loading.js). It is
+  // opened at once (buildScene has marked its Panel: the render skips it until built). Cancelled: removed,
+  // and back to where one was.
+  construireScene: async (s, { onProgress, cancelled }) => {
+    const previous = { editingSceneId: S.editingSceneId, selectedId: S.selectedId };
+    const construction = buildScene(s, { onProgress, cancelled, render: renderAll });
+    openScene(s.id, { progressif: false });
+    const fini = await construction;
+    if (!fini) {
+      S.scenes = S.scenes.filter(x => x !== s);
+      retourApresChargement(previous);
+    }
+    return fini;
   },
 });
 cablerStore({

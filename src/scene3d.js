@@ -3866,8 +3866,18 @@ export function elementNonVisible3D(o, panel, page, demander = true){
 // drawPersona3D/drawObject3D (which it replaces, for Elements owned by a Panel, in
 // drawContent): a single combined render per Panel rather than an independent render per Element.
 
+/**
+ * The Panels being BUILT (scene-loading.js): their buildings are made a few at a time, behind a mask; a
+ * render now would make all the rest at once, in one frozen frame. They are not drawn until built.
+ */
+const _panneauxEnConstruction3D = new Set();
+export function marquerEnConstruction3D(panelId, oui){
+  if (oui) _panneauxEnConstruction3D.add(panelId); else _panneauxEnConstruction3D.delete(panelId);
+}
+
 export function drawPanelScene3D(c, panel, page, styleKey, scale = 1){
   if (typeof THREE === 'undefined') return;
+  if (panel && _panneauxEnConstruction3D.has(panel.id)) return;
   const style = resolveStyle3D(styleKey);
   const rendu = renderPanelScene3D(panel, page, style, scale);
   // `null` veut dire « remis à plus tard » (budget de la frame épuisé, et aucune image antérieure).
