@@ -90,7 +90,8 @@ async function suggest(query, lang){
   const q = String(query || '').trim().slice(0, 200);
   if (q.length < 3) return { places: [] };
   const r = await request(`https://photon.komoot.io/api/?limit=6&lang=${lang === 'en' ? 'en' : 'fr'}&q=${encodeURIComponent(q)}`, { timeout: 8000 });
-  if (r.error) return r;
+  // Written to the log, as Overpass is: a silent suggestion service looks like a broken field.
+  if (r.error) { console.warn(`[real-place] photon: ${r.error}${r.status ? ` (HTTP ${r.status})` : ''}`); return r; }
   return { places: placesOfPhoton(r.json) };
 }
 /** Photon's GeoJSON answer as places: a readable name (name, street, town, region, country), lat, lon, country code. */

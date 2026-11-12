@@ -3234,7 +3234,9 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 .champ-recherche input{ flex:1 1 auto; min-width:0; border:0; background:none; color:var(--ink); padding:7px 8px;
   font-family:'Inter',sans-serif; font-size:var(--texte-titre-modale); font-weight:700; }
 .champ-recherche input:focus-visible{ outline-offset:0; border-radius:var(--rayon-petit); }
-.champ-recherche input::-webkit-search-cancel-button{ -webkit-appearance:none; appearance:none; }
+/* The browser's own clear cross (a type=search field) would make two: the field is a text field, and if one is
+   ever made a search field its cross is removed. */
+.champ-recherche input::-webkit-search-cancel-button{ -webkit-appearance:none; appearance:none; display:none; }
 .champ-recherche-effacer, .champ-recherche-lancer{ display:flex; align-items:center; justify-content:center; flex:0 0 auto;
   width:30px; height:30px; padding:0; border:0; border-radius:var(--rayon-petit); background:none; color:var(--ink-soft); cursor:pointer; }
 .champ-recherche-effacer[hidden]{ display:none; }
@@ -3451,8 +3453,8 @@ html[lang="fr"] .ds-en, html[lang="en"] .ds-fr{ display:none; }
     <label class="side-bulle-tail"><input type="checkbox" checked> <span class="ds-fr">Case à cocher</span><span class="ds-en">Checkbox</span></label>
   </section>
   <section class="side-section"><h2><span class="ds-fr">Recherche</span><span class="ds-en">Search</span></h2>
-    <div class="champ-recherche"><input type="search" value="Montpellier"><button type="button" class="champ-recherche-effacer" title="<span class="ds-fr">Effacer</span><span class="ds-en">Clear</span>"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><button type="submit" class="champ-recherche-lancer" title="<span class="ds-fr">Chercher</span><span class="ds-en">Search</span>"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button></div>
-    <div class="champ-recherche"><input type="search" value="<span class="ds-fr">Suggestions en direct</span><span class="ds-en">Live suggestions</span>"><button type="button" class="champ-recherche-effacer" title="<span class="ds-fr">Effacer</span><span class="ds-en">Clear</span>"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="champ-recherche"><input type="text" value="Montpellier"><button type="button" class="champ-recherche-effacer" title="<span class="ds-fr">Effacer</span><span class="ds-en">Clear</span>"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><button type="submit" class="champ-recherche-lancer" title="<span class="ds-fr">Chercher</span><span class="ds-en">Search</span>"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button></div>
+    <div class="champ-recherche"><input type="text" value="<span class="ds-fr">Suggestions en direct</span><span class="ds-en">Live suggestions</span>"><button type="button" class="champ-recherche-effacer" title="<span class="ds-fr">Effacer</span><span class="ds-en">Clear</span>"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   </section>
   <section class="side-section"><h2><span class="ds-fr">Indications</span><span class="ds-en">Hints</span></h2>
     <span class="dim-chip"><span class="ds-fr">Largeur</span><span class="ds-en">Width</span> <b>182</b> mm</span>

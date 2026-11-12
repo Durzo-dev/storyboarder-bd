@@ -39,6 +39,7 @@ test('the field\'s parts and its place in the design system', () => {
   const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
   assert.match(css, /\.champ-recherche\{ display:flex;/);
   assert.match(css, /\.champ-recherche-effacer\[hidden\]\{ display:none; \}/);
+  assert.doesNotMatch(readFileSync(new URL('../src/index.html', import.meta.url), 'utf8'), /<div class="champ-recherche">\s*<input[^>]*type="search"/, 'a search-type input adds a second cross');
   assert.match(readFileSync(new URL('../tools/design-system.mjs', import.meta.url), 'utf8'), /class="champ-recherche"/);
   assert.match(readFileSync(new URL('../docs/en/interface.md', import.meta.url), 'utf8'), /### Search field/);
 });

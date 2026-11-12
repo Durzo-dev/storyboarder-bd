@@ -379,8 +379,8 @@ const CONTROLES = `
     <label class="side-bulle-tail"><input type="checkbox" checked> ${L('Case à cocher', 'Checkbox')}</label>
   </section>
   <section class="side-section"><h2>${L('Recherche', 'Search')}</h2>
-    <div class="champ-recherche"><input type="search" value="Montpellier"><button type="button" class="champ-recherche-effacer" title="${L('Effacer', 'Clear')}"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true">${ICONES_APP.effacer}</svg></button><button type="submit" class="champ-recherche-lancer" title="${L('Chercher', 'Search')}"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true">${ICONES_APP.chercher}</svg></button></div>
-    <div class="champ-recherche"><input type="search" value="${L('Suggestions en direct', 'Live suggestions')}"><button type="button" class="champ-recherche-effacer" title="${L('Effacer', 'Clear')}"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true">${ICONES_APP.effacer}</svg></button></div>
+    <div class="champ-recherche"><input type="text" value="Montpellier"><button type="button" class="champ-recherche-effacer" title="${L('Effacer', 'Clear')}"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true">${ICONES_APP.effacer}</svg></button><button type="submit" class="champ-recherche-lancer" title="${L('Chercher', 'Search')}"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true">${ICONES_APP.chercher}</svg></button></div>
+    <div class="champ-recherche"><input type="text" value="${L('Suggestions en direct', 'Live suggestions')}"><button type="button" class="champ-recherche-effacer" title="${L('Effacer', 'Clear')}"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true">${ICONES_APP.effacer}</svg></button></div>
   </section>
   <section class="side-section"><h2>${L('Indications', 'Hints')}</h2>
     <span class="dim-chip">${L('Largeur', 'Width')} <b>182</b> mm</span>

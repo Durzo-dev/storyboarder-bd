@@ -222,7 +222,9 @@ Un réglage agrandit l'interface (`--echelle-ui`) : en-tête, menus, modales et 
 **Une recherche** est un seul champ (`.champ-recherche`, src/search-field.js) : le texte, puis DEDANS à droite
 un bouton d'effacement (une croix, seulement quand il y a du texte : il vide le champ et lui rend le focus) et,
 quand la recherche ne se fait pas pendant la frappe, le bouton de recherche (une loupe, son nom en
-infobulle). Avec des suggestions en direct, pas de bouton de recherche : Entrée cherche toujours. Le cadre est celui du conteneur (sa bordure prend la couleur du focus) ; au clavier, le champ garde sa bague.
+infobulle). Avec des suggestions en direct, pas de bouton de recherche : Entrée cherche toujours.
+Le champ est un champ TEXTE (`type="text"`, `enterkeyhint="search"`) : un champ `type="search"` ajoute la
+croix du navigateur, une seconde. Le cadre est celui du conteneur (sa bordure prend la couleur du focus) ; au clavier, le champ garde sa bague.
 Les suggestions, s'il y en a, se déroulent dessous (une animation de 0,18 s, aucune en mouvement
 réduit) ; en choisir une remplit le champ et vaut sa recherche.
 
