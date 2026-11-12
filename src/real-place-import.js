@@ -9,6 +9,7 @@
 import { TRACÉ_DEFAULTS } from './constants.js';
 import { PROFONDEUR_RIVIERE, reliefDepuisAltitudes } from './terrain-relief.js';
 import { LARGEUR_PAR_DEFAUT_M } from './terrain-plan.js';
+import { poidsLisible } from './store-texts.js';
 
 /**
  * A Path object (road, dirt path, wall, river) from a translated path, as the terrain editor lays one.
@@ -69,4 +70,16 @@ export function importProgress(step, sub = 0){
   let done = 0;
   for (let k = 0; k < i; k++) done += STEP_WEIGHTS[IMPORT_STEPS[k]];
   return Math.min(1, done + STEP_WEIGHTS[step] * Math.max(0, Math.min(1, sub)));
+}
+
+/**
+ * The line under the steps while the map data comes: the server asked (Overpass, with mirrors), the time
+ * spent on it, what has arrived. `p`: { server, servers, bytes } from the main process; `lang`: 'en' or 'fr'.
+ */
+export function downloadDetail(p, seconds, lang = 'fr'){
+  if (!p || !(p.server > 0)) return '';
+  const en = lang === 'en';
+  const parts = [en ? `Server ${p.server} of ${p.servers}` : `Serveur ${p.server} sur ${p.servers}`, `${Math.max(0, Math.floor(seconds))} s`];
+  parts.push(p.bytes > 0 ? `${poidsLisible(p.bytes, lang)} ${en ? 'received' : 'reçus'}` : (en ? 'waiting for the answer' : 'en attente de la réponse'));
+  return parts.join(' · ');
 }

@@ -61,7 +61,10 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    barre et la liste des étapes (`IMPORT_STEPS`, `importProgress` : données de la carte, pays, bâtiments,
    relief, scène) ; les requêtes du relief partent une à une pour que la barre les suive.
 2. L'extrait : `realplace:osm` avec l'emprise de la zone ; les serveurs Overpass dans l'ordre (`OVERPASS`), le
-   premier qui répond ; gardé en mémoire. Le pays : celui du lieu choisi, sinon `realplace:country` (Nominatim
+   premier qui répond ; gardé en mémoire. La réponse est lue en flux : `realplace:osmProgress` envoie le
+   serveur interrogé et les octets reçus (toutes les 200 ms au plus), et la fenêtre les montre sous les
+   étapes avec les secondes écoulées (`downloadDetail`). Chaque tentative est journalisée
+   (`[real-place] overpass <hôte>` : résultat, durée, taille). Le pays : celui du lieu choisi, sinon `realplace:country` (Nominatim
    inverse).
 3. `translateOsm` avec les règles du pays, puis le relief : `planRelief` pour le pays, ses requêtes envoyées
    par `realplace:altitudes` (seulement vers `ALTITUDE_HOSTS`, au rythme du fournisseur), `assemble` ; en cas

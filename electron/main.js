@@ -1193,7 +1193,9 @@ ipcMain.handle('sketchfab:logout', async () => sketchfabSession.logout());
 const realPlace = require('./bibliotheque/real-place');
 ipcMain.handle('realplace:search', async (event, query, lang) => realPlace.search(String(query || ''), lang === 'en' ? 'en' : 'fr'));
 ipcMain.handle('realplace:country', async (event, lat, lon) => realPlace.country(Number(lat), Number(lon)));
-ipcMain.handle('realplace:osm', async (event, bbox) => realPlace.osm(bbox));
+ipcMain.handle('realplace:osm', async (event, bbox) => realPlace.osm(bbox, (p) => {
+  if (!event.sender.isDestroyed()) event.sender.send('realplace:osmProgress', p);
+}));
 ipcMain.handle('realplace:altitudes', async (event, requests, perSecond) => realPlace.altitudes(requests, perSecond));
 ipcMain.handle('realplace:tile', async (event, z, x, y) => realPlace.tile(z, x, y));
 ipcMain.handle('store:attribuer', async (event, resultat, fichier, resolution) => {

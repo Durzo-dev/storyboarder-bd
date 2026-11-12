@@ -7,10 +7,10 @@
  * the content in a new Scene is events.js's (`creerScene`, injected). Its static texts are in i18n.js.
  */
 
-import { tr, newId } from './state.js';
+import { S, tr, newId } from './state.js';
 import { translateOsm, ZONE_SIDE_MAX } from './osm-scene.js';
 import { planRelief } from './real-place-sources.js';
-import { sceneContentOf, IMPORT_STEPS, importProgress } from './real-place-import.js';
+import { sceneContentOf, IMPORT_STEPS, importProgress, downloadDetail } from './real-place-import.js';
 import { projector } from './geo-local.js';
 import { nomDuTrace } from './canvas-tools.js';
 import { enregistrerFermeture } from './modal-stack.js';
@@ -35,6 +35,14 @@ export function cablerLieuReel(rappels){
   // The whole card answers, not only its title (the button keeps the keyboard).
   document.querySelectorAll('.real-place-choice-card').forEach(c => {
     c.addEventListener('click', (e) => { if (e.target === c || e.target.tagName === 'P') $(c.dataset.choix).click(); });
+  });
+  // The map data's progress (main process): the server asked and the bytes received, shown with the time.
+  const api = window.storyboarderAPI;
+  if (api && api.onRealPlaceOsmProgress) api.onRealPlaceOsmProgress((p) => {
+    if (!V || !V.download) return;
+    if (!V.download.p || p.server !== V.download.p.server) V.download.since = Date.now();
+    V.download.p = p;
+    montrerLeTelechargement();
   });
   $('realPlaceClose').onclick = fermer;
   $('realPlaceCancel').onclick = fermer;
@@ -82,6 +90,12 @@ function montrerLaProgression(step, sub = 0){
     li.className = n < i ? 'fait' : n === i ? 'encours' : '';
     return li;
   }));
+}
+
+/** The detail line of the map data: the server, the seconds spent on it, the bytes received. */
+function montrerLeTelechargement(){
+  const d = V && V.download;
+  $('realPlaceDetail').textContent = d ? downloadDetail(d.p, (Date.now() - d.since) / 1000, S.appLang === 'en' ? 'en' : 'fr') : '';
 }
 
 function fermer(){
@@ -261,7 +275,13 @@ async function importer(){
     await etape('map');
     const { toGeo } = projector(centre);
     const nw = toGeo({ x: -halfSize, z: -halfSize }), se = toGeo({ x: halfSize, z: halfSize });
-    const extrait = await api.realPlaceOsm({ south: se.lat, west: nw.lon, north: nw.lat, east: se.lon });
+    // The longest step, with no known total: the line under the steps says which server, for how long,
+    // and what has arrived, every second.
+    V.download = { p: null, since: Date.now() };
+    const tick = setInterval(montrerLeTelechargement, 1000);
+    let extrait;
+    try { extrait = await api.realPlaceOsm({ south: se.lat, west: nw.lon, north: nw.lat, east: se.lon }); }
+    finally { clearInterval(tick); if (V) { V.download = null; montrerLeTelechargement(); } }
     if (!V) return;
     if (extrait.error) { dire(erreur(extrait.error), true); return; }
     await etape('country');

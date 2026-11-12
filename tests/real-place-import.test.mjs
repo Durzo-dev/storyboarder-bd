@@ -108,3 +108,21 @@ describe('the import\'s progress and placement', async () => {
     assert.doesNotMatch(readFileSync(new URL('../src/index.html', import.meta.url), 'utf8'), /addRealSceneBtn/);
   });
 });
+
+describe('real place, the map data\'s detail line', async () => {
+  const { downloadDetail } = await import('../src/real-place-import.js');
+  test('the server asked, the seconds on it, then what has arrived', () => {
+    assert.equal(downloadDetail({ server: 1, servers: 3, bytes: 0 }, 4.7), 'Serveur 1 sur 3 · 4 s · en attente de la réponse');
+    assert.equal(downloadDetail({ server: 2, servers: 3, bytes: 1.5 * 1024 * 1024 }, 12, 'en'), 'Server 2 of 3 · 12 s · 1.5 MB received');
+    assert.equal(downloadDetail({ server: 1, servers: 3, bytes: 2048 }, 1), 'Serveur 1 sur 3 · 1 s · 2 Ko reçus');
+  });
+  test('nothing heard yet: no line', () => {
+    assert.equal(downloadDetail(null, 3), '');
+  });
+  test('the main process reads Overpass as a stream, reports it, and logs each attempt', () => {
+    const net = readFileSync(new URL('../electron/bibliotheque/real-place.js', import.meta.url), 'utf8');
+    assert.match(net, /rep\.body\.getReader\(\)/);
+    assert.match(net, /console\.info\(`\[real-place\] overpass \$\{host\}/);
+    assert.match(readFileSync(new URL('../electron/main.js', import.meta.url), 'utf8'), /event\.sender\.send\('realplace:osmProgress', p\)/);
+  });
+});

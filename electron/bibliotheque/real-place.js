@@ -24,7 +24,11 @@ const OVERPASS = [
 /** The altitude services the renderer may ask for (src/real-place-sources.js). */
 const ALTITUDE_HOSTS = /^https:\/\/(data\.geopf\.fr\/altimetrie\/|api\.open-meteo\.com\/v1\/elevation\?)/;
 
-async function request(url, { method = 'GET', body = null, json = true, timeout = TIMEOUT_MS, headers = {} } = {}){
+/**
+ * One request. `onBytes(received)`: the answer is read as a stream and every chunk reported (a long answer
+ * then shows that it is coming); the JSON is parsed at the end. The result carries `size` (bytes).
+ */
+async function request(url, { method = 'GET', body = null, json = true, timeout = TIMEOUT_MS, headers = {}, onBytes = null } = {}){
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), timeout);
   try {
@@ -34,7 +38,20 @@ async function request(url, { method = 'GET', body = null, json = true, timeout 
       console.warn(`[real-place] ${new URL(url).host}: HTTP ${rep.status}`);
       return { error: rep.status === 429 ? 'quota' : 'response', status: rep.status };
     }
-    return json ? { json: await rep.json() } : { bytes: new Uint8Array(await rep.arrayBuffer()) };
+    if (json && onBytes && rep.body) {
+      const reader = rep.body.getReader(), chunks = [];
+      let size = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value); size += value.length;
+        onBytes(size);
+      }
+      const text = Buffer.concat(chunks.map(c => Buffer.from(c.buffer, c.byteOffset, c.length))).toString('utf8');
+      try { return { json: JSON.parse(text), size }; } catch { return { error: 'response', size }; }
+    }
+    if (json) return { json: await rep.json() };
+    return { bytes: new Uint8Array(await rep.arrayBuffer()) };
   } catch (e) {
     const late = abort.signal.aborted;
     console.warn(`[real-place] ${new URL(url).host}: ${late ? 'timeout' : `${e.name}: ${e.message}`}`);
@@ -77,18 +94,32 @@ function overpassQuery({ south, west, north, east }){
 }
 
 const extracts = sources.memoireBornee(4, 40 * 1024 * 1024);
-/** The OSM extract of a zone (bbox in degrees): the first Overpass server that answers. Cached. */
-async function osm(bbox){
+/** Bytes received are reported at most this often (the window redraws its line each time). */
+const PROGRESS_EVERY_MS = 200;
+/**
+ * The OSM extract of a zone (bbox in degrees): the first Overpass server that answers. Cached.
+ * `progress({ server, servers, bytes })`: the server being asked (1-based) and the bytes received from it.
+ * Each attempt is written to the log (server, outcome, duration, size): where the time goes.
+ */
+async function osm(bbox, progress = null){
   const ok = bbox && ['south', 'west', 'north', 'east'].every(k => Number.isFinite(bbox[k]));
   if (!ok || bbox.north - bbox.south > 0.01 || bbox.east - bbox.west > 0.02) return { error: 'zone' };
   const key = JSON.stringify(bbox);
   const cached = extracts.get(key);
   if (cached) return { json: cached };
   let last = { error: 'network' };
-  for (const url of OVERPASS) {
+  for (let k = 0; k < OVERPASS.length; k++) {
+    const url = OVERPASS[k], host = new URL(url).host, started = Date.now();
+    const tell = (bytes) => { if (progress) progress({ server: k + 1, servers: OVERPASS.length, bytes }); };
+    let told = 0;
+    tell(0);
     const r = await request(url, { method: 'POST', body: `data=${encodeURIComponent(overpassQuery(bbox))}`, timeout: OVERPASS_TIMEOUT_MS,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
-    if (r.json && Array.isArray(r.json.elements)) { extracts.set(key, r.json); return { json: r.json, server: new URL(url).host }; }
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      onBytes: (bytes) => { const now = Date.now(); if (now - told >= PROGRESS_EVERY_MS) { told = now; tell(bytes); } } });
+    const good = r.json && Array.isArray(r.json.elements);
+    console.info(`[real-place] overpass ${host}: ${good ? 'ok' : (r.error || 'response')}${r.status ? ` (HTTP ${r.status})` : ''}`
+      + ` in ${Date.now() - started} ms, ${r.size || 0} bytes`);
+    if (good) { tell(r.size || 0); extracts.set(key, r.json); return { json: r.json, server: host }; }
     last = r.error ? r : { error: 'response' };
   }
   return last;

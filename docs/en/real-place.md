@@ -57,7 +57,10 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    of steps (`IMPORT_STEPS`, `importProgress`: map data, country, buildings, relief, scene); the relief's
    requests are sent one by one so the bar follows them.
 2. The extract: `realplace:osm` with the zone's bounding box; Overpass servers in order (`OVERPASS`), the
-   first that answers; cached. The country: the chosen place's, else `realplace:country` (Nominatim reverse).
+   first that answers; cached. The answer is read as a stream: `realplace:osmProgress` sends the server
+   asked and the bytes received (every 200 ms at most), and the window shows them under the steps with the
+   seconds spent (`downloadDetail`). Each attempt is logged (`[real-place] overpass <host>`: outcome,
+   duration, size). The country: the chosen place's, else `realplace:country` (Nominatim reverse).
 3. `translateOsm` with the country's rules, then the relief: `planRelief` for the country, its requests sent by
    `realplace:altitudes` (only to `ALTITUDE_HOSTS`, at the provider's rate), `assemble`; on failure the next
    provider, and with none a flat Ground.
