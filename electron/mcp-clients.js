@@ -1,11 +1,26 @@
-// THE AI CLIENTS' OWN SETTINGS (docs/en/mcp.md): Gemini CLI reads its MCP servers from ~/.gemini/settings.json;
-// « Add to Gemini CLI » writes Storyboarder's entry there, leaving everything else as it was. The file is
-// read as JSON: one with comments (which Gemini CLI tolerates) is not rewritten, since its comments would be
+// THE AI CLIENTS' OWN SETTINGS (docs/en/mcp.md). Two clients read their MCP servers from a JSON file under
+// `mcpServers`: Gemini CLI from ~/.gemini/settings.json, Google Antigravity (its app, CLI and IDE share it)
+// from ~/.gemini/config/mcp_config.json. Their card writes Storyboarder's entry there, leaving everything
+// else as it was. The file is read as JSON: one with comments is not rewritten, since its comments would be
 // lost; the user gets the configuration to paste instead. PURE but for the paths.
 const path = require('path');
 
 /** Where Gemini CLI keeps its user settings. */
 const geminiSettingsPath = (home) => path.join(home, '.gemini', 'settings.json');
+/** Where Google Antigravity keeps its global MCP servers. */
+const antigravityConfigPath = (home) => path.join(home, '.gemini', 'config', 'mcp_config.json');
+/** Folders that only Google Antigravity makes (its app, its CLI): it is on this computer. */
+const antigravityFolders = (home) => [path.join(home, '.gemini', 'antigravity'), path.join(home, '.gemini', 'antigravity-cli')];
+
+/**
+ * Storyboarder's entry for a client that reaches the endpoint over HTTP. Both wait 10 minutes for a tool (an
+ * import takes minutes; Antigravity's default is 3).
+ */
+function httpEntry(kind, { url, token }){
+  const headers = { Authorization: `Bearer ${token}` };
+  if (kind === 'antigravity') return { serverUrl: url, headers, timeoutSeconds: 600 };
+  return { httpUrl: url, headers, timeout: 600000 };
+}
 
 /** The settings `text` (null: no file yet) parsed, or null when it is not plain JSON. */
 function parse(text){
@@ -35,4 +50,4 @@ function hasStoryboarder(text){
   return /"storyboarder"\s*:/.test(String(text || ''));   // a file with comments: its key, at least
 }
 
-module.exports = { geminiSettingsPath, withStoryboarder, hasStoryboarder };
+module.exports = { geminiSettingsPath, antigravityConfigPath, antigravityFolders, httpEntry, withStoryboarder, hasStoryboarder };

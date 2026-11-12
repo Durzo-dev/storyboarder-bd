@@ -1,12 +1,13 @@
 /**
  * @file mcp-status.js
  * WHAT THE AI TAB OF SETTINGS SAYS (mcp-link.js), from the connection's state (electron/main.js, etatMcp):
- * the connection on or off, and for each client whether it was never seen, is installed or connected. PURE.
+ * the connection on or off, and for each client (Claude Desktop, Google Antigravity, Gemini CLI) whether it was
+ * never seen, is installed or connected. PURE.
  *
  * A client is CONNECTED when it spoke within CONNECTED_MS: Claude Desktop's bridge pings every 30 s while
- * Claude Desktop runs; Gemini CLI speaks only while used. Seen before: INSTALLED. Claude Desktop never seen
- * but its installation offered: OFFERED (the user may not have clicked « Install »). Gemini CLI never seen but
- * its settings hold Storyboarder: INSTALLED.
+ * Claude Desktop runs; Antigravity and Gemini CLI speak only while used. Seen before: INSTALLED. Claude Desktop
+ * never seen but its installation offered: OFFERED (the user may not have clicked « Install »). Antigravity or
+ * Gemini CLI never seen but their file holds Storyboarder: INSTALLED.
  */
 
 /** A client spoke this recently (milliseconds): connected. Two of the bridge's heartbeats and a margin. */
@@ -23,7 +24,7 @@ function ago(ms, tr){
 }
 
 /**
- * The tab's texts: { general, claude: { level, text }, gemini: { level, text } }. `level`: 'off', 'none',
+ * The tab's texts: { general, claude, antigravity, gemini }, each client { level, text }. `level`: 'off', 'none',
  * 'offered', 'installed', 'connected' or 'missing' (Gemini CLI not on this computer). `tr(en, fr)`.
  */
 export function connectionTexts(state, tr){
@@ -46,15 +47,19 @@ export function connectionTexts(state, tr){
   else if (s.claudeOffered) claude = { level: 'offered', text: tr('Installation offered: click « Install » in Claude Desktop, then restart it.', 'Installation proposée : cliquez sur « Installer » dans Claude Desktop, puis relancez-le.') };
   else claude = { level: 'none', text: tr('Not installed yet: click the card.', 'Pas encore installé : cliquez sur la carte.') };
 
-  const g = s.gemini || {};
-  const geminiSeen = seen('gemini');
-  let gemini;
-  if (on && geminiSeen && now - geminiSeen < CONNECTED_MS) gemini = { level: 'connected', text: tr('Connected', 'Connecté') };
-  else if (g.configured || geminiSeen) gemini = { level: 'installed', text: geminiSeen
-    ? tr(`Added. Last used ${ago(now - geminiSeen, tr)}.`, `Ajouté. Utilisé ${ago(now - geminiSeen, tr)}.`)
-    : tr('Added: start gemini in a terminal (restart it if it was open).', 'Ajouté : lancez gemini dans un terminal (relancez-le s\'il était ouvert).') };
-  else if (g.installed === false) gemini = { level: 'missing', text: tr('Gemini CLI does not seem to be installed on this computer.', 'Gemini CLI ne semble pas installé sur cet ordinateur.') };
-  else gemini = { level: 'none', text: tr('Not added yet: click the card.', 'Pas encore ajouté : cliquez sur la carte.') };
+  // The clients written in a file (Gemini CLI, Google Antigravity): connected while used, otherwise added.
+  const fileClient = (k, missing) => {
+    const g = s[k] || {};
+    const at = seen(k);
+    if (on && at && now - at < CONNECTED_MS) return { level: 'connected', text: tr('Connected', 'Connecté') };
+    if (g.configured || at) return { level: 'installed', text: at
+      ? tr(`Added. Last used ${ago(now - at, tr)}.`, `Ajouté. Utilisé ${ago(now - at, tr)}.`)
+      : tr('Added: restart it if it was open.', 'Ajouté : relancez-le s\'il était ouvert.') };
+    if (g.installed === false) return { level: 'missing', text: missing };
+    return { level: 'none', text: tr('Not added yet: click the card.', 'Pas encore ajouté : cliquez sur la carte.') };
+  };
+  const gemini = fileClient('gemini', tr('Gemini CLI does not seem to be installed on this computer.', 'Gemini CLI ne semble pas installé sur cet ordinateur.'));
+  const antigravity = fileClient('antigravity', tr('Antigravity does not seem to be installed on this computer.', 'Antigravity ne semble pas installé sur cet ordinateur.'));
 
-  return { general, claude, gemini };
+  return { general, claude, gemini, antigravity };
 }

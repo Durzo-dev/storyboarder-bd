@@ -10,6 +10,7 @@ const http = require('http');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const { httpEntry } = require('./mcp-clients');
 
 const DEFAULT_PORT = 47615;
 const ENDPOINT = '/mcp';
@@ -28,7 +29,8 @@ function createMcpServer({ userData, window, log = console }){
   let next = 1;
   const pending = new Map();
   /**
-   * THE CLIENTS SEEN, for the connection's state in Settings: { claude | gemini | other: { name, lastSeen } },
+   * THE CLIENTS SEEN, for the connection's state in Settings: { claude | antigravity | gemini | other: { name,
+   * lastSeen } },
    * kept in mcp.json (written at most once a minute per client). The bridge says its client's name in
    * `X-Mcp-Client` and pings every 30 s while its client runs; a client over HTTP gives it at `initialize`.
    */
@@ -156,8 +158,8 @@ function createMcpServer({ userData, window, log = console }){
   /** The configuration of a client: Claude Desktop (through the bridge) or Gemini CLI (HTTP). */
   function clientConfig(kind, { execPath, bridgePath }){
     const c = config();
-    if (kind === 'gemini') {
-      return { mcpServers: { storyboarder: { httpUrl: `http://127.0.0.1:${c.port}${ENDPOINT}`, headers: { Authorization: `Bearer ${c.token}` } } } };
+    if (kind === 'gemini' || kind === 'antigravity') {
+      return { mcpServers: { storyboarder: httpEntry(kind, { url: `http://127.0.0.1:${c.port}${ENDPOINT}`, token: c.token }) } };
     }
     return { mcpServers: { storyboarder: { command: execPath, args: [bridgePath, file], env: { ELECTRON_RUN_AS_NODE: '1' } } } };
   }
@@ -165,10 +167,11 @@ function createMcpServer({ userData, window, log = console }){
   return { start, stop, status, answer, rememberTools, clientConfig, config };
 }
 
-/** Which client a name is: Claude Desktop (« claude-ai »), Gemini CLI, or another. */
+/** Which client a name is: Claude Desktop (« claude-ai »), Google Antigravity, Gemini CLI, or another. */
 function clientKind(name){
   const n = String(name || '');
   if (/claude/i.test(n)) return 'claude';
+  if (/antigravity/i.test(n)) return 'antigravity';
   if (/gemini/i.test(n)) return 'gemini';
   return 'other';
 }

@@ -33,11 +33,19 @@ connexion.
   chemin du `mcp.json` de cet ordinateur ; les outils sont listés depuis `mcp.json`. Sans Claude Desktop
   (aucun logiciel n'ouvre les `.mcpb`), le fichier est montré dans son dossier, à glisser dans la fenêtre
   de Claude Desktop.
-- **Gemini CLI** (`mcp:installGemini`, `electron/mcp-clients.js`) écrit l'entrée de Storyboarder
-  (`httpUrl` et l'en-tête `Authorization`) sous `mcpServers` dans `~/.gemini/settings.json`, tous les
-  autres réglages gardés, l'ancien fichier copié dans `settings.json.storyboarder-backup`. Un fichier qui
-  n'est pas du JSON simple (commentaires) n'est pas réécrit : la configuration est copiée dans le
-  presse-papiers, à coller.
+- **Google Antigravity** (`mcp:installAntigravity`) et **Gemini CLI** (`mcp:installGemini`),
+  `electron/mcp-clients.js` : l'entrée de Storyboarder est écrite sous `mcpServers` dans le fichier du
+  client, tous les autres réglages gardés, l'ancien fichier copié à côté (`.storyboarder-backup`).
+  Antigravity (son application, son CLI et son éditeur le partagent) : `~/.gemini/config/mcp_config.json`,
+  entrée `serverUrl` (il ne lit pas `httpUrl`), `headers`, `timeoutSeconds: 600` (son défaut, 3 minutes,
+  est plus court qu'un gros import). Gemini CLI (désormais pour les clés d'API et les comptes
+  d'entreprise ; les comptes personnels sont passés à Antigravity) : `~/.gemini/settings.json`, entrée
+  `httpUrl`, `headers`, `timeout: 600000`. Un fichier qui n'est pas du JSON simple (commentaires) n'est
+  pas réécrit : la configuration est copiée dans le presse-papiers, à coller.
+
+Les cartes montrent les logos officiels des clients (`assets/logos/`, leurs sources et leurs droits dans
+son `LISEZMOI.md`), jamais recolorés ; un client sans logo garde une illustration générique
+(`.ia-illustration`).
 
 Aucun fichier de configuration à modifier par l'utilisateur. `clientConfig('claude')` donne encore la
 forme écrite à la main (`claude_desktop_config.json` : l'exécutable de Storyboarder avec
@@ -51,11 +59,13 @@ affiché :
 - le point d'accès note chaque client entendu dans `mcp.json` (`clients` : `claude`, `gemini`, `other`,
   avec son nom et `lastSeen`) : le pont envoie le nom de son client (`clientInfo.name` de son
   `initialize`) dans `X-Mcp-Client`, et fait un ping toutes les 30 s tant que son client tourne ; un
-  client en HTTP donne son nom à `initialize` ;
-- **connecté** : entendu depuis moins de 75 s ; **installé** : entendu avant, ou les réglages de Gemini
-  contiennent Storyboarder ; **proposé** : la fenêtre d'installation de Claude Desktop a été ouverte
-  (`mcpClaudeOffered`) mais Claude Desktop jamais entendu ; **absent** : pas de dossier `~/.gemini` ;
-  **aucun** sinon.
+  client en HTTP donne son nom à `initialize` (`clientKind` : « claude », puis « antigravity », puis
+  « gemini », sinon `other`) ;
+- **connecté** : entendu depuis moins de 75 s ; **installé** : entendu avant, ou le fichier du client
+  contient Storyboarder ; **proposé** : la fenêtre d'installation de Claude Desktop a été ouverte
+  (`mcpClaudeOffered`) mais Claude Desktop jamais entendu ; **absent** : le client n'est pas sur cet
+  ordinateur (pas de `~/.gemini/settings.json` pour Gemini CLI ; ni dossier `~/.gemini/antigravity*` ni
+  `mcp_config.json` pour Antigravity) ; **aucun** sinon.
 
 ChatGPT ne joint que des serveurs distants en HTTPS : non pris en charge.
 

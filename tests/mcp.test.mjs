@@ -250,8 +250,21 @@ describe('MCP, the local endpoint', () => {
   });
 });
 
-describe('MCP, Gemini CLI\'s settings', () => {
-  const { withStoryboarder, hasStoryboarder, geminiSettingsPath } = require('../electron/mcp-clients.js');
+describe('MCP, Gemini CLI\'s and Antigravity\'s settings', () => {
+  const { withStoryboarder, hasStoryboarder, geminiSettingsPath, antigravityConfigPath, httpEntry } = require('../electron/mcp-clients.js');
+  const { clientKind } = require('../electron/mcp-server.js');
+  test('each client\'s entry: Antigravity wants serverUrl (httpUrl is not read), both wait 10 minutes for a tool', () => {
+    const t = { url: 'http://127.0.0.1:1/mcp', token: 'k' };
+    assert.deepEqual(httpEntry('antigravity', t), { serverUrl: t.url, headers: { Authorization: 'Bearer k' }, timeoutSeconds: 600 });
+    assert.deepEqual(httpEntry('gemini', t), { httpUrl: t.url, headers: { Authorization: 'Bearer k' }, timeout: 600000 });
+    assert.equal(antigravityConfigPath('/h'), join('/h', '.gemini', 'config', 'mcp_config.json'));
+  });
+  test('which client a name is', () => {
+    assert.equal(clientKind('claude-ai'), 'claude');
+    assert.equal(clientKind('Antigravity CLI (gemini)'), 'antigravity', 'Antigravity before Gemini');
+    assert.equal(clientKind('gemini-cli-mcp-client'), 'gemini');
+    assert.equal(clientKind('cursor'), 'other');
+  });
   const entry = { httpUrl: 'http://127.0.0.1:47615/mcp', headers: { Authorization: 'Bearer t' } };
   test('no file yet: the settings with Storyboarder alone', () => {
     assert.deepEqual(JSON.parse(withStoryboarder(null, entry).text), { mcpServers: { storyboarder: entry } });
@@ -295,6 +308,13 @@ describe('MCP, what the AI tab says', async () => {
     assert.equal(lvl({ clients: { claude: { lastSeen: now - CONNECTED_MS - 1 } } }), 'installed');
     assert.equal(lvl({ enabled: false, listening: false, clients: { claude: { lastSeen: now - 1000 } } }), 'installed', 'connection off: not connected');
     assert.match(connectionTexts({ ...base, clients: { claude: { lastSeen: now - 3 * 3600e3 } } }, tr).claude.text, /3 h ago/);
+  });
+  test('Google Antigravity: the same states, its own client kind', () => {
+    const lvl = (g, clients = {}) => connectionTexts({ ...base, antigravity: g, clients }, tr).antigravity.level;
+    assert.equal(lvl({ installed: false, configured: false }), 'missing');
+    assert.equal(lvl({ installed: true, configured: true }), 'installed');
+    assert.equal(lvl({ installed: true, configured: true }, { antigravity: { lastSeen: now - 1000 } }), 'connected');
+    assert.equal(lvl({ installed: true, configured: true }, { gemini: { lastSeen: now - 1000 } }), 'installed', 'Gemini CLI seen is not Antigravity');
   });
   test('Gemini CLI: missing, not added, added, connected', () => {
     const lvl = (g, clients = {}) => connectionTexts({ ...base, gemini: g, clients }, tr).gemini.level;

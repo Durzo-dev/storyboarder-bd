@@ -61,7 +61,7 @@ export function cablerConnexionIA(rappels){
 // ── The AI tab of Settings ───────────────────────────────────────────────────────────────────────
 
 /** A message under a card, said after a click (it stays until the next state that changes the card). */
-const _messages = { claude: null, gemini: null };
+const _messages = { claude: null, antigravity: null, gemini: null };
 
 /** The tab from the connection's state (mcp-status.js decides the words). */
 function montrerEtat(etat){
@@ -69,7 +69,7 @@ function montrerEtat(etat){
   const t = connectionTexts(etat, tr);
   $('mcpEnabledCheckbox').checked = !!etat.enabled;
   $('mcpStatus').textContent = t.general;
-  for (const [k, id] of [['claude', 'mcpClaudeEtat'], ['gemini', 'mcpGeminiEtat']]) {
+  for (const [k, id] of [['claude', 'mcpClaudeEtat'], ['antigravity', 'mcpAntigravityEtat'], ['gemini', 'mcpGeminiEtat']]) {
     const el = $(id);
     // A click's message holds until the client is seen.
     const message = _messages[k] && t[k].level !== 'connected' ? _messages[k] : null;
@@ -108,24 +108,27 @@ function cablerReglage(){
         'Claude Desktop ne semble pas installé. Le fichier de l\'extension est montré dans son dossier : glissez-le dans la fenêtre de Claude Desktop.');
     montrerEtat(r && r.state);
   };
-  // Gemini CLI: Storyboarder added to its settings file; a file it cannot rewrite: the configuration copied.
-  const installerGemini = async () => {
-    const r = await api.mcpInstallGemini();
-    if (r && r.ok) _messages.gemini = tr('Added. Start gemini in a terminal (restart it if it was open).', 'Ajouté. Lancez gemini dans un terminal (relancez-le s\'il était ouvert).');
+  // Google Antigravity and Gemini CLI: Storyboarder added to the client's file; a file it cannot rewrite: the
+  // configuration copied, to paste in it.
+  const ajouter = async (kind) => {
+    const r = await (kind === 'antigravity' ? api.mcpInstallAntigravity() : api.mcpInstallGemini());
+    if (r && r.ok) _messages[kind] = tr('Added. Restart it if it was open.', 'Ajouté. Relancez-le s\'il était ouvert.');
     else {
       let copie = false;
       try { await navigator.clipboard.writeText(r.config); copie = true; } catch { /* the message says so */ }
-      _messages.gemini = copie
-        ? tr('Gemini CLI\'s settings could not be changed (comments in the file?). The configuration is copied: paste it in ~/.gemini/settings.json.',
-          'Les réglages de Gemini CLI n\'ont pas pu être modifiés (commentaires dans le fichier ?). La configuration est copiée : collez-la dans ~/.gemini/settings.json.')
-        : tr('Gemini CLI\'s settings could not be changed.', 'Les réglages de Gemini CLI n\'ont pas pu être modifiés.');
+      _messages[kind] = copie
+        ? tr(`Its settings could not be changed (comments in the file?). The configuration is copied: paste it in ${r.file}.`,
+          `Ses réglages n'ont pas pu être modifiés (commentaires dans le fichier ?). La configuration est copiée : collez-la dans ${r.file}.`)
+        : tr('Its settings could not be changed.', 'Ses réglages n\'ont pas pu être modifiés.');
     }
     montrerEtat(r && r.state);
   };
+  const installer = { claude: installerClaude, antigravity: () => ajouter('antigravity'), gemini: () => ajouter('gemini') };
   // The whole card answers, not only its title (the button keeps the keyboard), as a new Scene's choice.
-  $('mcpInstallClaude').onclick = (e) => { e.stopPropagation(); installerClaude(); };
-  $('mcpInstallGemini').onclick = (e) => { e.stopPropagation(); installerGemini(); };
+  for (const [kind, id] of [['claude', 'mcpInstallClaude'], ['antigravity', 'mcpInstallAntigravity'], ['gemini', 'mcpInstallGemini']]) {
+    $(id).onclick = (e) => { e.stopPropagation(); installer[kind](); };
+  }
   document.querySelectorAll('#settingsModal .ia-client').forEach(c => {
-    c.addEventListener('click', () => (c.dataset.client === 'claude' ? installerClaude() : installerGemini()));
+    c.addEventListener('click', () => installer[c.dataset.client]());
   });
 }

@@ -31,10 +31,17 @@ card per client; the whole card installs. Installing a client turns the connecti
   bridge with Claude Desktop's own Node (`server.type: node`), with the path of this computer's
   `mcp.json` as argument; the tools are listed from `mcp.json`. Without Claude Desktop (no program opens
   `.mcpb`), the file is shown in its folder, to drag into Claude Desktop's window.
-- **Gemini CLI** (`mcp:installGemini`, `electron/mcp-clients.js`) writes Storyboarder's entry
-  (`httpUrl` and the `Authorization` header) under `mcpServers` in `~/.gemini/settings.json`, every other
-  setting kept, the previous file copied to `settings.json.storyboarder-backup`. A file that is not plain
-  JSON (comments) is not rewritten: the configuration is copied to the clipboard, to paste.
+- **Google Antigravity** (`mcp:installAntigravity`) and **Gemini CLI** (`mcp:installGemini`),
+  `electron/mcp-clients.js`: Storyboarder's entry is written under `mcpServers` in the client's file,
+  every other setting kept, the previous file copied next to it (`.storyboarder-backup`). Antigravity (its
+  app, CLI and IDE share it): `~/.gemini/config/mcp_config.json`, entry `serverUrl` (it does not read
+  `httpUrl`), `headers`, `timeoutSeconds: 600` (its default, 3 minutes, is shorter than a large import).
+  Gemini CLI (now for API keys and company accounts; personal accounts moved to Antigravity):
+  `~/.gemini/settings.json`, entry `httpUrl`, `headers`, `timeout: 600000`. A file that is not plain JSON
+  (comments) is not rewritten: the configuration is copied to the clipboard, to paste.
+
+The cards show the clients' official logos (`assets/logos/`, their sources and rights in its
+`LISEZMOI.md`), never recoloured; a client without one keeps a generic illustration (`.ia-illustration`).
 
 No configuration file for the user to edit. `clientConfig('claude')` still gives the hand-written form
 (`claude_desktop_config.json`: Storyboarder's executable with `ELECTRON_RUN_AS_NODE=1` running the
@@ -47,10 +54,11 @@ bridge), for a client that has no extensions.
 - the endpoint records each client it hears in `mcp.json` (`clients`: `claude`, `gemini`, `other`, with
   its name and `lastSeen`): the bridge sends its client's name (`clientInfo.name` of its `initialize`) in
   `X-Mcp-Client`, and pings every 30 s while its client runs; a client over HTTP gives its name at
-  `initialize`;
-- **connected**: heard within 75 s; **installed**: heard before, or Gemini's settings hold Storyboarder;
+  `initialize` (`clientKind`: « claude », then « antigravity », then « gemini », else `other`);
+- **connected**: heard within 75 s; **installed**: heard before, or the client's file holds Storyboarder;
   **offered**: Claude Desktop's installation window was opened (`mcpClaudeOffered`) but Claude Desktop was
-  never heard; **missing**: no `~/.gemini` folder; **none** otherwise.
+  never heard; **missing**: the client is not on this computer (no `~/.gemini/settings.json` for Gemini
+  CLI; no `~/.gemini/antigravity*` folder nor `mcp_config.json` for Antigravity); **none** otherwise.
 
 ChatGPT only reaches remote servers over HTTPS: not supported.
 

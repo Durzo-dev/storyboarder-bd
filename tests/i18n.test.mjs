@@ -977,7 +977,7 @@ describe('#403n : un libellé porte UNE majuscule, la première', () => {
   const NOMS_PROPRES = new Set(['Comic Neue', 'Shantell Sans', 'Chakra Petch', 'EB Garamond',
     'Courier Prime', ...POLICES_DAFONT.map(p => p.nom)]);
   // Les noms de logiciels : les clients d'IA (Configuration, onglet IA) et l'application elle-même.
-  const LOGICIELS = new Set(['Claude', 'Desktop', 'Gemini', 'Storyboarder']);
+  const LOGICIELS = new Set(['Claude', 'Desktop', 'Gemini', 'Antigravity', 'Google', 'Storyboarder']);
   const AVEC_LETTRE = /[A-Za-zÀ-ÿ]/;
   const nu = (mot) => mot.replace(/^[^A-Za-zÀ-ÿ0-9]+|[^A-Za-zÀ-ÿ0-9]+$/g, '');
 

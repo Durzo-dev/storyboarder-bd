@@ -2055,7 +2055,8 @@
     <!-- La connexion d'une IA (MCP, docs/fr/mcp.md, src/mcp-link.js), un onglet à elle (demandé). Éteinte par
          défaut ; installer un client l'allume. Chaque client est une CARTE (comme le choix d'une nouvelle
          scène) : toute la carte installe ; sous son nom, son état (jamais vu, installé, connecté), tenu à
-         jour pendant que l'onglet est ouvert. Les illustrations sont génériques : pas de logo de marque. -->
+         jour pendant que l'onglet est ouvert. Les logos sont les fichiers officiels (assets/logos/LISEZMOI.md) ;
+         un client sans logo garde une illustration générique. -->
     <div class="config-page" data-onglet="ia" role="tabpanel" hidden>
       <p id="mcpIntro" class="ia-intro">Branchez votre propre IA sur Storyboarder : elle pourra lire vos scènes, en créer depuis un lieu réel et les regarder.</p>
       <label class="ia-interrupteur">
@@ -2064,30 +2065,29 @@
       <p id="mcpStatus" class="ia-etat-general"></p>
       <div class="ia-clients">
         <div class="real-place-choice-card ia-client" data-client="claude">
-          <svg class="ia-illustration" viewBox="0 0 240 120" aria-hidden="true">
-            <!-- Une fenêtre d'application de bureau et une conversation. -->
-            <rect class="ia-fenetre" x="40" y="14" width="160" height="96" rx="8"/>
-            <rect class="ia-barre" x="40" y="14" width="160" height="16" rx="8"/>
-            <circle class="ia-point" cx="54" cy="22" r="3"/><circle class="ia-point" cx="64" cy="22" r="3"/>
-            <rect class="ia-bulle-a" x="56" y="40" width="88" height="18" rx="9"/>
-            <rect class="ia-bulle-b" x="96" y="64" width="88" height="18" rx="9"/>
-            <rect class="ia-bulle-a" x="56" y="88" width="60" height="14" rx="7"/>
-          </svg>
+          <img class="ia-logo" src="../assets/logos/claude.svg" alt="" aria-hidden="true">
           <button id="mcpInstallClaude" class="real-place-choice-btn" type="button">Claude Desktop</button>
-          <p id="mcpClaudeText">L'application de bureau de Claude, installée en un clic.</p>
+          <p id="mcpClaudeText">L'application de bureau de Claude.</p>
           <p class="ia-client-etat" id="mcpClaudeEtat"></p>
         </div>
-        <div class="real-place-choice-card ia-client" data-client="gemini">
+        <div class="real-place-choice-card ia-client" data-client="antigravity">
           <svg class="ia-illustration" viewBox="0 0 240 120" aria-hidden="true">
-            <!-- Un terminal et son invite de commande. -->
-            <rect class="ia-terminal" x="40" y="14" width="160" height="96" rx="8"/>
+            <!-- Générique, en attendant son logo : une fenêtre d'éditeur et ses lignes de code. -->
+            <rect class="ia-fenetre" x="40" y="14" width="160" height="96" rx="8"/>
             <rect class="ia-barre" x="40" y="14" width="160" height="16" rx="8"/>
-            <path class="ia-invite" d="M56 50 70 60 56 70"/>
-            <rect class="ia-curseur" x="78" y="66" width="22" height="5"/>
-            <rect class="ia-ligne" x="56" y="84" width="96" height="5" rx="2"/>
+            <rect class="ia-bulle-b" x="56" y="42" width="54" height="6" rx="3"/>
+            <rect class="ia-ligne" x="70" y="56" width="84" height="6" rx="3"/>
+            <rect class="ia-ligne" x="70" y="70" width="62" height="6" rx="3"/>
+            <rect class="ia-bulle-a" x="56" y="84" width="40" height="6" rx="3"/>
           </svg>
+          <button id="mcpInstallAntigravity" class="real-place-choice-btn" type="button">Antigravity</button>
+          <p id="mcpAntigravityText">L'agent de Google (application, terminal, éditeur).</p>
+          <p class="ia-client-etat" id="mcpAntigravityEtat"></p>
+        </div>
+        <div class="real-place-choice-card ia-client" data-client="gemini">
+          <img class="ia-logo" src="../assets/logos/gemini-cli.svg" alt="" aria-hidden="true">
           <button id="mcpInstallGemini" class="real-place-choice-btn" type="button">Gemini CLI</button>
-          <p id="mcpGeminiText">Gemini dans un terminal, ajouté à ses réglages en un clic.</p>
+          <p id="mcpGeminiText">Gemini dans un terminal (clé d'API ou compte d'entreprise).</p>
           <p class="ia-client-etat" id="mcpGeminiEtat"></p>
         </div>
       </div>

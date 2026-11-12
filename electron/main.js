@@ -1304,8 +1304,13 @@ const etatMcp = () => {
     now: Date.now(),
     claudeOffered: Number(reglages.mcpClaudeOffered) || null,
     gemini: {
-      installed: fs.existsSync(path.dirname(mcpClients.geminiSettingsPath(app.getPath('home')))),
+      installed: fs.existsSync(mcpClients.geminiSettingsPath(app.getPath('home'))),
       configured: mcpClients.hasStoryboarder(lireSiExiste(mcpClients.geminiSettingsPath(app.getPath('home')))),
+    },
+    antigravity: {
+      installed: mcpClients.antigravityFolders(app.getPath('home')).some(d => fs.existsSync(d))
+        || fs.existsSync(mcpClients.antigravityConfigPath(app.getPath('home'))),
+      configured: mcpClients.hasStoryboarder(lireSiExiste(mcpClients.antigravityConfigPath(app.getPath('home')))),
     },
   };
 };
@@ -1336,24 +1341,29 @@ ipcMain.handle('mcp:installClaude', async () => {
   fs.writeFileSync(settingsFilePath, JSON.stringify(reglages), 'utf-8');
   return { ok: true, file: fichier, state: etatMcp() };
 });
-// Gemini CLI: Storyboarder's entry written in ~/.gemini/settings.json (the rest kept, a copy of the file made
-// first). A file it cannot rewrite (comments): the configuration is given back, to paste.
-ipcMain.handle('mcp:installGemini', async () => {
+// Gemini CLI (~/.gemini/settings.json) and Google Antigravity (~/.gemini/config/mcp_config.json): Storyboarder's
+// entry written in the client's file (the rest kept, a copy of the file made first). A file it cannot rewrite
+// (comments): the configuration is given back, to paste.
+async function ajouterAuFichierDuClient(kind){
   await activerMcp(true);
-  const fichier = mcpClients.geminiSettingsPath(app.getPath('home'));
-  const entree = mcp.clientConfig('gemini', {}).mcpServers.storyboarder;
+  const home = app.getPath('home');
+  const fichier = kind === 'antigravity' ? mcpClients.antigravityConfigPath(home) : mcpClients.geminiSettingsPath(home);
+  const entree = mcp.clientConfig(kind, {}).mcpServers.storyboarder;
+  const config = JSON.stringify({ mcpServers: { storyboarder: entree } }, null, 2);
   const avant = lireSiExiste(fichier);
   const r = mcpClients.withStoryboarder(avant, entree);
-  if (r.error) return { ok: false, reason: r.error, config: JSON.stringify({ mcpServers: { storyboarder: entree } }, null, 2), state: etatMcp() };
+  if (r.error) return { ok: false, reason: r.error, config, file: fichier, state: etatMcp() };
   try {
     fs.mkdirSync(path.dirname(fichier), { recursive: true });
     if (avant !== null) fs.writeFileSync(`${fichier}.storyboarder-backup`, avant, 'utf-8');
     fs.writeFileSync(fichier, r.text, 'utf-8');
   } catch (e) {
-    return { ok: false, reason: 'write', config: JSON.stringify({ mcpServers: { storyboarder: entree } }, null, 2), state: etatMcp() };
+    return { ok: false, reason: 'write', config, file: fichier, state: etatMcp() };
   }
-  return { ok: true, state: etatMcp() };
-});
+  return { ok: true, file: fichier, state: etatMcp() };
+}
+ipcMain.handle('mcp:installGemini', async () => ajouterAuFichierDuClient('gemini'));
+ipcMain.handle('mcp:installAntigravity', async () => ajouterAuFichierDuClient('antigravity'));
 // An image of a part of the window (a Scene's view), for the AI: JPEG, at most 1280 px wide, base64.
 ipcMain.handle('mcp:capture', async (event, rect) => {
   const win = BrowserWindow.fromWebContents(event.sender);

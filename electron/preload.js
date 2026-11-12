@@ -136,6 +136,7 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   mcpTools: (tools) => ipcRenderer.invoke('mcp:tools', tools),
   mcpInstallClaude: () => ipcRenderer.invoke('mcp:installClaude'),
   mcpInstallGemini: () => ipcRenderer.invoke('mcp:installGemini'),
+  mcpInstallAntigravity: () => ipcRenderer.invoke('mcp:installAntigravity'),
   mcpCapture: (rect) => ipcRenderer.invoke('mcp:capture', rect),
   onStoreApercuProgression: (callback) => ipcRenderer.on('store:apercuProgression', (e, s, id, recus, total) => callback(s, id, recus, total)),
 });
