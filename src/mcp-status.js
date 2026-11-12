@@ -74,3 +74,17 @@ export function connectionTexts(state, tr){
   };
   return { general, claude, antigravity: other('antigravity'), gemini: other('gemini'), lmstudio: other('lmstudio') };
 }
+
+/** The clients, in the AI tab's order. */
+export const CLIENT_KINDS = Object.freeze(['claude', 'lmstudio', 'antigravity', 'gemini']);
+
+/**
+ * IS AN AI READY for an action that needs one (mcp-link.js demanderIA)? Storyboarder connected, and at least
+ * one client connected or set up (Claude Desktop counts once it has spoken: its extension may be offered but
+ * not installed). Not ready: the AI tab opens, and the action goes on once this turns true.
+ */
+export function iaPrete(state){
+  const t = connectionTexts(state, (en) => en);
+  if (!(state && state.enabled && state.listening)) return false;
+  return CLIENT_KINDS.some(k => t[k].level === 'connected' || (t[k].level === 'installed'));
+}

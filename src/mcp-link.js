@@ -9,7 +9,7 @@ import { S, tr } from './state.js';
 import { handleMessage, describeTool } from './mcp-protocol.js';
 import { makeTools, INSTRUCTIONS } from './mcp-tools.js';
 import { importerPourIA } from './real-place-ui.js';
-import { connectionTexts } from './mcp-status.js';
+import { connectionTexts, iaPrete } from './mcp-status.js';
 
 const $ = (id) => document.getElementById(id);
 const frames = (n = 2) => new Promise(ok => { const step = (k) => (k ? requestAnimationFrame(() => step(k - 1)) : ok()); step(n); });
@@ -24,11 +24,12 @@ async function untilBuilt(){
   }
 }
 
-let _rappels = { openScene: () => {}, version: '' };
+let _rappels = { openScene: () => {}, version: '', ouvrirConfiguration: () => {}, fermerConfiguration: () => {}, ongletConfiguration: () => 'general' };
 
 /**
- * Wires the connection once (events.js): `openScene(id)`, the application's; `version`, its version. The
- * tools are made here; their list is given to the main process, which keeps it for the bridge.
+ * Wires the connection once (events.js): `openScene(id)`, the application's; `version`, its version;
+ * `ouvrirConfiguration(onglet)`, `fermerConfiguration()`, `ongletConfiguration()`: Settings, for demanderIA.
+ * The tools are made here; their list is given to the main process, which keeps it for the bridge.
  */
 export function cablerConnexionIA(rappels){
   _rappels = { ..._rappels, ...rappels };
@@ -169,4 +170,41 @@ function cablerReglage(){
   document.querySelectorAll('#settingsModal .ia-client').forEach(c => {
     c.addEventListener('click', () => installer[c.dataset.client]());
   });
+}
+
+// ── An action that needs an AI ───────────────────────────────────────────────────────────────────
+
+/** How often demanderIA looks whether an AI has been set up meanwhile (milliseconds). */
+const ATTENTE_MS = 1500;
+
+/**
+ * BEFORE AN ACTION THAT NEEDS AN AI (asked: every such action goes through here). An AI ready (mcp-status.js
+ * iaPrete): resolves to true at once. Otherwise Settings opens on its AI tab, saying why (`raison`, a sentence:
+ * « To read the facades, connect an AI. »), over whatever was open (the modal stack keeps it); once an AI is
+ * set up, Settings closes, back on the tab it had, and resolves to true: the caller goes on where it was.
+ * Settings closed without an AI: false.
+ */
+export async function demanderIA(raison = ''){
+  const api = window.storyboarderAPI;
+  if (!api || !api.mcpStatus) return false;
+  if (iaPrete(await api.mcpStatus())) return true;
+  const ongletAvant = _rappels.ongletConfiguration();
+  const bandeau = $('mcpRaison');
+  bandeau.textContent = raison || tr('This action needs an AI: click one to connect it.', 'Cette action demande une IA : cliquez sur l\'une d\'elles pour la brancher.');
+  bandeau.hidden = false;
+  _rappels.ouvrirConfiguration('ia');
+  try {
+    for (;;) {
+      await new Promise(ok => setTimeout(ok, ATTENTE_MS));
+      if ($('settingsModal').classList.contains('hidden')) return false;   // closed by the user
+      const etat = await api.mcpStatus();
+      if (iaPrete(etat)) {
+        _rappels.fermerConfiguration();
+        _rappels.ouvrirConfiguration(ongletAvant, { sansOuvrir: true });
+        return true;
+      }
+    }
+  } finally {
+    bandeau.hidden = true;
+  }
 }

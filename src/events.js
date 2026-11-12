@@ -9288,7 +9288,13 @@ function retourApresChargement(previous){
 }
 cablerChargementDeScene({ render: renderAll, retour: retourApresChargement });
 // The AI connection (MCP): its tools use the application's gestures (mcp-link.js).
-cablerConnexionIA({ openScene: (id) => openScene(id), version: APP_VERSION });
+cablerConnexionIA({
+  openScene: (id) => openScene(id), version: APP_VERSION,
+  // demanderIA (an action that needs an AI): Settings on its AI tab, then back on the tab it had.
+  ouvrirConfiguration: (onglet, { sansOuvrir = false } = {}) => { ongletConfig = onglet; if (!sansOuvrir) openSettingsModal(); },
+  fermerConfiguration: () => closeSettingsModal(),
+  ongletConfiguration: () => ongletConfig,
+});
 cablerLieuReel({
   creerSceneManuelle: () => {
     snapshot();

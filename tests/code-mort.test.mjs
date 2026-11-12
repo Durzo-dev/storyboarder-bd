@@ -60,6 +60,10 @@ const SEAUX_DE_TEST = [
  * cela, cette liste redeviendrait le tapis sous lequel on glisse ce qu'on ne veut pas regarder.
  */
 const EN_ATTENTE = {
+  // #474d (asked by Durzo, 12 Nov. 2026: « toute action qui demandera l'IA ouvrira cet onglet ») —
+  // `demanderIA`, the gate every action that needs an AI goes through, written before its first caller:
+  // the facades read by the AI. Deadline: #474d.
+  demanderIA: '#474d',
   // #414a — L'ÉCLAIRAGE : LA DÉCISION EST ARRIVÉE AVANT SON APPLICATION, comme le magasin d'images
   // de #403a en son temps. Ces exports ne sont pas morts, ils sont EN AVANCE, et chaque échéance
   // est un NUMÉRO DE TÂCHE : c'est la leçon que #403 a laissée ici même, « à brancher plus tard »
@@ -410,7 +414,8 @@ describe('Aucun export de src/ ne reste sans appelant', () => {
     // settled by removal). What remains is a real deadline: `translateOsm`, back to 0 in #457b-4.
     // Raised to 2 in #457b-3: `planRelief`, same deadline (#457b-4). Back to 0 in #457b-4, whose import
     // screen calls both: the two deadlines held.
-    assert.equal(Object.keys(EN_ATTENTE).length, 0,
+    // Raised to 1 on 12 Nov. 2026 (asked by Durzo): `demanderIA`, ahead of #474d, its first caller.
+    assert.equal(Object.keys(EN_ATTENTE).length, 1,
       'une décision de plus a été REPORTÉE au lieu d\'être prise');
   });
 });

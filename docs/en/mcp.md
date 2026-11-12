@@ -55,6 +55,15 @@ No configuration file for the user to edit. `clientConfig('claude')` still gives
 (`claude_desktop_config.json`: Storyboarder's executable with `ELECTRON_RUN_AS_NODE=1` running the
 bridge), for a client that has no extensions.
 
+### An action that needs an AI
+
+Every action of Storyboarder that needs an AI first calls `demanderIA(reason)` (`mcp-link.js`). An AI ready
+(`iaPrete`, `mcp-status.js`: connected, and a client connected or set up; an offered or outdated Claude
+Desktop extension does not count): it goes on at once. Otherwise Settings opens on the AI tab, over whatever
+was open (the modal stack keeps it), with the reason in a banner (`#mcpRaison`); `demanderIA` looks every
+1.5 s, and once an AI is ready closes Settings, puts back the tab it had and resolves to true: the caller
+goes on where it was. Settings closed without an AI: false.
+
 ### The state under each card
 
 `src/mcp-status.js` (PURE) words it from `mcp:status`, read again every 3 s while the tab is shown:

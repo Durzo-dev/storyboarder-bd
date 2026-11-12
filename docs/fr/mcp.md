@@ -58,6 +58,16 @@ Aucun fichier de configuration à modifier par l'utilisateur. `clientConfig('cla
 forme écrite à la main (`claude_desktop_config.json` : l'exécutable de Storyboarder avec
 `ELECTRON_RUN_AS_NODE=1` qui lance le pont), pour un client sans extensions.
 
+### Une action qui demande une IA
+
+Toute action de Storyboarder qui demande une IA appelle d'abord `demanderIA(raison)` (`mcp-link.js`). Une
+IA prête (`iaPrete`, `mcp-status.js` : connectée, et un client connecté ou installé ; une extension Claude
+Desktop proposée ou à mettre à jour ne compte pas) : elle continue aussitôt. Sinon la Configuration s'ouvre
+sur l'onglet IA, par-dessus ce qui était ouvert (la pile des modales le garde), la raison dans un bandeau
+(`#mcpRaison`) ; `demanderIA` regarde toutes les 1,5 s, et dès qu'une IA est prête ferme la Configuration,
+remet l'onglet qu'elle avait et rend vrai : l'appelant reprend là où il était. Configuration fermée sans IA :
+faux.
+
 ### L'état sous chaque carte
 
 `src/mcp-status.js` (PUR) le formule depuis `mcp:status`, relu toutes les 3 s tant que l'onglet est

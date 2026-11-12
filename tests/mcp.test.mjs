@@ -308,7 +308,7 @@ describe('MCP, Gemini CLI\'s and Antigravity\'s settings', () => {
 });
 
 describe('MCP, what the AI tab says', async () => {
-  const { connectionTexts, CONNECTED_MS } = await import('../src/mcp-status.js');
+  const { connectionTexts, CONNECTED_MS, iaPrete } = await import('../src/mcp-status.js');
   const tr = (en) => en;
   const now = 1e12;
   const base = { enabled: true, listening: true, port: 47615, now, clients: {}, gemini: { installed: true, configured: false } };
@@ -344,6 +344,15 @@ describe('MCP, what the AI tab says', async () => {
     assert.equal(lvl({ installed: true, configured: false }), 'none');
     assert.equal(lvl({ installed: true, configured: true }), 'installed');
     assert.equal(lvl({ installed: true, configured: true }, { lmstudio: { lastSeen: now - 1000 } }), 'connected');
+  });
+  test('an AI is ready (an action that needs one goes on) only connected and with a client set up', () => {
+    assert.equal(iaPrete({ ...base }), false, 'nothing set up');
+    assert.equal(iaPrete({ ...base, gemini: { installed: true, configured: true } }), true, 'a client added');
+    assert.equal(iaPrete({ ...base, enabled: false, listening: false, gemini: { installed: true, configured: true } }), false, 'disconnected');
+    assert.equal(iaPrete({ ...base, claudeOffered: now - 1000 }), false, 'Claude Desktop offered, not yet installed');
+    assert.equal(iaPrete({ ...base, clients: { claude: { lastSeen: now - 1000, bridge: 2 } }, bridgeVersion: 2 }), true);
+    assert.equal(iaPrete({ ...base, clients: { claude: { lastSeen: now - 1000 } }, bridgeVersion: 2 }), false, 'an outdated extension');
+    assert.equal(iaPrete(null), false);
   });
   test('Google Antigravity: the same states, its own client kind', () => {
     const lvl = (g, clients = {}) => connectionTexts({ ...base, antigravity: g, clients }, tr).antigravity.level;
