@@ -36,7 +36,7 @@ describe('Traces : le registre des textures', () => {
     for (const g of grainsDesTraces3D()) {
       assert.ok(existsSync(join(RACINE, 'assets', 'textures', g + '.png')), `${g}.png manque`);
     }
-    assert.equal(grainsDesTraces3D().length, 6);
+    assert.equal(grainsDesTraces3D().length, 7, 'the pavement borrows the Ground\'s concrete grain');
   });
 
   test('les tuiles ont une taille réelle, et celle du muret garde le 2:1 de sa source', () => {

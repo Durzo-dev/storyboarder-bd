@@ -112,7 +112,7 @@ export function pasDeLaGrille(ppm){
 // ── #462b-1 : tracer et retoucher les Zones et les Tracés ────────────────────────────────────
 
 /** La largeur 3D d'une route ou d'un chemin posé dans l'éditeur, en mètres (réglable ensuite). */
-export const LARGEUR_PAR_DEFAUT_M = Object.freeze({ route: 5, chemin: 1.5, riviere: 4 });
+export const LARGEUR_PAR_DEFAUT_M = Object.freeze({ route: 5, chemin: 1.5, trottoir: 2, riviere: 4 });
 /** En deçà, un rectangle de Zone est un glissement de souris, pas une intention (mètres). */
 export const COTE_MIN_DE_ZONE = 0.5;
 

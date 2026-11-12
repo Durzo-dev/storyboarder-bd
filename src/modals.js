@@ -1760,7 +1760,7 @@ export function closeBuildingModal() {
 export function openTracéModal(obj){
   S.tracéModalTarget = obj;
   const _tracéTitles = {
-    route: tr('Road', 'Route'), chemin: tr('Dirt path', 'Chemin de terre'), riviere: tr('River', 'Rivière'),
+    route: tr('Road', 'Route'), chemin: tr('Dirt path', 'Chemin de terre'), trottoir: tr('Pavement', 'Trottoir'), riviere: tr('River', 'Rivière'),
     muret: tr('Low wall', 'Muret'), cloture: tr('Fence', 'Clôture'),
     haie: tr('Hedge', 'Haie végétale'), barriere: tr('Road barrier', 'Barrière de route'),
   };
@@ -1778,7 +1778,7 @@ export function openTracéModal(obj){
   document.getElementById('tracéMarquageInput').checked = obj.marquage !== false;
   // La largeur 3D en mètres, pour une route ou un chemin qui en a une (largeurDeTrace3D). Un muret,
   // une clôture, une haie ou une barrière tirent leur épaisseur de leur hauteur : pas de champ.
-  const _largeur = (obj.tracéType === 'route' || obj.tracéType === 'chemin') && obj.world && obj.world.width > 0;
+  const _largeur = (obj.tracéType === 'route' || obj.tracéType === 'chemin' || obj.tracéType === 'trottoir') && obj.world && obj.world.width > 0;
   document.getElementById('tracéWidthField').style.display = _largeur ? '' : 'none';
   if (_largeur) document.getElementById('tracéWidthInput').value = Math.round(obj.world.width * 100) / 100;
   // Height field: only for types with a vertical volume

@@ -402,6 +402,8 @@ export const MODEL_HEIGHT_WARN_MAX_M = 10;
 export const TRACÉ_DEFAULTS = {
   route:    { color: '#888888', width: 10 },
   chemin:   { color: '#9B7240', width: 8  },
+  // A raised walkway along a street: its kerb (TROTTOIR_BORDURE_M) and its paved top.
+  trottoir: { color: '#B4B0A8', width: 6  },
   terrain:  { color: '#6B8E23' },
   // Fix 33 : hauteur par défaut portée de 0.50 à 1.00, et épaisseur ramenée à 0.12 (soit le ratio
   // 0.12 appliqué dans tracéWallThickness3D) : à 0.50 de haut pour 0.18 d'épaisseur, le Muret
@@ -413,6 +415,9 @@ export const TRACÉ_DEFAULTS = {
   // #462d : la rivière, un Tracé qui creuse son lit et se remplit d'eau (largeur et profondeur en mètres).
   riviere:  { color: '#2E6E9E', width: 8 },
 };
+
+/** The height of a pavement's kerb, metres: its top stands this high above the street. */
+export const TROTTOIR_BORDURE_M = 0.14;
 
 /**
  * LA LARGEUR D'UNE ROUTE OU D'UN CHEMIN, EN MÈTRES (demandé, à la place de « Épaisseur (px) »).
@@ -452,6 +457,8 @@ export function largeurDeTrace3D(o, metres){
 export const TRACÉ_TEXTURES = {
   route:    { grain: 'route',            teinte: '#555147', tuile: [4.0, 4.0] },
   chemin:   { grain: 'chemin.couleur',   teinte: '#B39872', tuile: [3.0, 3.0] },
+  // The Ground's concrete grain, lighter: a pavement.
+  trottoir: { grain: 'beton',            teinte: '#B4B0A8', tuile: [3.0, 3.0] },
   muret:    { grain: 'muret.couleur',    teinte: '#817459', tuile: [2.4, 1.2] },
   cloture:  { grain: 'cloture.couleur',  teinte: '#C6A67C', tuile: [1.5, 1.5] },
   haie:     { grain: 'haie',             teinte: '#40481D', tuile: [1.2, 1.2] },

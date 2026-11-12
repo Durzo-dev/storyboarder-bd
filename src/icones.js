@@ -136,7 +136,7 @@ export const ICONE_TYPE_OBJET = {
 
 /** L'icône de chaque type de Tracé. */
 export const ICONE_TRACÉ = {
-  route: 'tracer', chemin: 'chemin_terre', terrain: 'zone',
+  route: 'tracer', chemin: 'chemin_terre', trottoir: 'ville', terrain: 'zone',
   muret: 'muret', cloture: 'cloture', haie: 'haie', barriere: 'barriere', riviere: 'piscine',
 };
 

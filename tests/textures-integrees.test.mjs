@@ -185,9 +185,9 @@ describe('la largeur d\'une route ou d\'un chemin, en mètres (à la place de «
     assert.equal(largeurDeTrace3D({ width: 8, world: { width: 2 } }, 'large'), null);
     assert.equal(largeurDeTrace3D({ width: 8 }, '3'), null);
   });
-  test('câblage : le champ n\'existe que pour la route et le chemin ; l\'ancien parseInt a disparu', () => {
+  test('câblage : le champ n\'existe que pour la route, le chemin et le trottoir ; l\'ancien parseInt a disparu', () => {
     const lire = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
-    assert.match(lire('modals.js'), /\(obj\.tracéType === 'route' \|\| obj\.tracéType === 'chemin'\) && obj\.world && obj\.world\.width > 0/);
+    assert.match(lire('modals.js'), /\(obj\.tracéType === 'route' \|\| obj\.tracéType === 'chemin' \|\| obj\.tracéType === 'trottoir'\) && obj\.world && obj\.world\.width > 0/);
     assert.doesNotMatch(lire('events.js'), /parseInt\(document\.getElementById\('tracéWidthInput'\)\.value\)/);
     assert.match(lire('index.html'), /id="tracéWidthLabel">Largeur \(m\)</);
   });

@@ -275,7 +275,7 @@ function clavier(e){
 
 // ── Les outils (#462b) ────────────────────────────────────────────────────────────────────────
 
-const SORTES_DE_TRACE = ['route', 'chemin', 'riviere', 'muret', 'cloture', 'haie', 'barriere'];
+const SORTES_DE_TRACE = ['route', 'chemin', 'trottoir', 'riviere', 'muret', 'cloture', 'haie', 'barriere'];
 // Une Zone se trace en rectangle ou au pinceau (demandé) ; l'eau est une texture de Zone (« Régler »).
 const SORTES_DE_ZONE = ['rectangle', 'pinceau'];
 const OUTILS = [['terrainOutilSelection', 'selection'], ['terrainOutilZone', 'zone'], ['terrainOutilTrace', 'trace'], ['terrainOutilRelief', 'relief']];
@@ -297,7 +297,7 @@ function arreterLeCoup(){
   figerLesTraces3D(false);
 }
 function nomDeSorte(sorte){
-  return ({ route: tr('Road', 'Route'), chemin: tr('Dirt path', 'Chemin'), muret: tr('Low wall', 'Muret'),
+  return ({ route: tr('Road', 'Route'), chemin: tr('Dirt path', 'Chemin'), trottoir: tr('Pavement', 'Trottoir'), muret: tr('Low wall', 'Muret'),
     cloture: tr('Fence', 'Clôture'), haie: tr('Hedge', 'Haie'), barriere: tr('Barrier', 'Barrière'), riviere: tr('River', 'Rivière'),
     rectangle: tr('Rectangle', 'Rectangle'), pinceau: tr('Brush', 'Pinceau') })[sorte] || sorte;
 }
@@ -389,7 +389,7 @@ function tournerLObjet(obj, geste, angle){
  * posé les prend. Vides : les valeurs par défaut du genre.
  */
 const T_TRACES = {};
-const AVEC_LARGEUR = ['route', 'chemin', 'riviere'];
+const AVEC_LARGEUR = ['route', 'chemin', 'trottoir', 'riviere'];
 const MURETS = ['muret', 'cloture', 'haie', 'barriere'];
 function reglagesDuGenre(sorte){ return (T_TRACES[sorte] = T_TRACES[sorte] || {}); }
 function largeurDuGenre(sorte){ const r = reglagesDuGenre(sorte); return r.largeur || LARGEUR_PAR_DEFAUT_M[sorte] || 0.2; }
@@ -671,7 +671,7 @@ function reglagesDeZone(obj){
 function reglagesDuChoisi(obj){
   const boite = $('terrainChoisiReglages');
   const murets = ['muret', 'cloture', 'haie', 'barriere'];
-  const defs = !obj ? [] : (obj.tracéType === 'route' || obj.tracéType === 'chemin')
+  const defs = !obj ? [] : (obj.tracéType === 'route' || obj.tracéType === 'chemin' || obj.tracéType === 'trottoir')
     // Demandé : la largeur d'une route ou d'un chemin ici (le trait du plan garde sa proportion).
     ? [{ cle: 'largeur', nom: tr('Width (m)', 'Largeur (m)'), min: 0.5, max: 30, pas: 0.5,
          lire: () => (obj.world && obj.world.width) || 1,

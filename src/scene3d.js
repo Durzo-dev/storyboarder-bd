@@ -27,7 +27,7 @@ import {
   BUILD_WALL_DEFAULT_HEIGHT, BUILD_WALL_THICKNESS_RATIO_3D, CAM_SMOOTH_EPS, CAM_SMOOTH_FACTOR, CAM_SMOOTH_FACTOR_PAN, PANEL_CAM_DEFAULT_DIST_3D, PANEL_CAM_REF_DIST_3D, PERSONA_REAL_HEIGHT_M,
   PANEL_DEPTH_MAX_3D, PANEL_SCENE_RENDER_MAX_PX, CHILD_DESIGN_SIZE_3D, FIXED_COLOR, WALL_OPENING_MAGNET_TYPES,
   GROUND_CONTACT_EPS_3D, GROUND_TYPE_DEFS, teinteDuSol3D, GROUND_PLANE_SIZE_3D, GROUND_Y_DEFAULT_3D, TRAVERSANT_TYPES, WALL_PX_PER_UNIT_3D,
-  TRACÉ_DEFAULTS, WALL_TYPES,
+  TRACÉ_DEFAULTS, TROTTOIR_BORDURE_M, WALL_TYPES,
 } from './constants.js';
 // FIX (pre-existing latent bug, surfaced by the Fix 28 tests): TRACÉ_DEFAULTS above was already
 // referenced when placing a Wall-Opening on a Trace wall whose wallHeight was unset, but was never
@@ -3401,6 +3401,13 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
           terrMesh.position.set(w.cx, GROUND_Y_DEFAULT_3D + 0.005, w.cz);
         }
         group.add(terrMesh);
+      } else if (o.tracéType === 'trottoir') {
+        // ── Pavement: a slab as wide as the Path, its kerb TROTTOIR_BORDURE_M high (the street's side shows
+        // it); its top in the world-mapped pavement texture.
+        const geo = buildTracéWallGeometry3D(w.pts, TROTTOIR_BORDURE_M, w.width || 2, GROUND_Y_DEFAULT_3D);
+        if (!geo) return;
+        group.add(new THREE.Mesh(geo, materiauDeTrace3D('trottoir', o.color, { texture: o.traceTexture,
+          couleurAplat: o.color || '#B4B0A8', roughness: 0.92, metalness: 0, side: THREE.DoubleSide })));
       } else if (o.tracéType === 'muret') {
         // ── Low Wall: vertical concrete ribbon (configurable height) ───────────────
         // #462c-2 : la ligne redécoupée (w), sans quoi le muret ne suit pas le relief entre ses points.

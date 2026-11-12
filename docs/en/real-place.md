@@ -38,7 +38,8 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
   A footprint the editor refuses (crossing itself) is skipped. Each building comes with its centre
   (`x`, `z`): the importer places it as a building Element (`creerElementBatiment`, `wxFloor`/`wzFloor`).
 - **Paths** (`pathKindOf`): `highway` roads → `route` (width by type; a centre line (`markingOf`) with 2
-  lanes or more, none with 1 or one-way, else only on main roads: motorway to tertiary and their links), footways, paths, tracks, steps → `chemin`; `barrier` → `muret`, `cloture`,
+  lanes or more, none with 1 or one-way, else only on main roads: motorway to tertiary and their links), pavements (`footway=sidewalk`) → `trottoir`, and a road's `sidewalk` tags (`sidewalkSides`) give a
+  `trottoir` beside it on each side (`offsetPolyline`, 1.8 m unless `sidewalk:width`); other footways, paths, tracks, steps → `chemin`; `barrier` → `muret`, `cloture`,
   `haie`, `barriere`; `waterway` → `riviere`. A `width` tag wins. Tunnels are skipped. Clipped to the zone
   (`clipPolyline`). `world` is the Path's own (`pts`, `width`).
 - **Zones** (`zoneTypeOf`): grass, meadow, forest… → `herbe`; park, garden, pitch → `gazon`; farmland,

@@ -50,7 +50,7 @@ function setCanvasCursor(valeur){
 // Display names, kept next to the only place that assigns them. French because they are shown to
 // the user and stored in the project file.
 const TRACÉ_NAMES = {
-  route: 'Route', chemin: 'Chemin de terre', muret: 'Muret',
+  route: 'Route', chemin: 'Chemin de terre', trottoir: 'Trottoir', muret: 'Muret',
   cloture: 'Clôture', haie: 'Haie végétale', barriere: 'Barrière de route', riviere: 'Rivière',
 };
 /** Le nom donné à un Tracé neuf (aussi par l'éditeur de terrain, #462b). */

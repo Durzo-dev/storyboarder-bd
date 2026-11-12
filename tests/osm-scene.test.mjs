@@ -210,3 +210,32 @@ describe('OSM translator, streets and grounds (#468b)', async () => {
     assert.deepEqual(t.elements.map(e => e.objType), ['panneau_signalisation', 'panneau_signalisation', 'buisson']);
   });
 });
+
+describe('OSM translator, pavements', async () => {
+  const { sidewalkSides, offsetPolyline } = await import('../src/osm-scene.js');
+  test('the sides that have a pavement drawn with the road', () => {
+    assert.deepEqual(sidewalkSides({ sidewalk: 'both' }), { left: true, right: true });
+    assert.deepEqual(sidewalkSides({ sidewalk: 'right' }), { left: false, right: true });
+    assert.deepEqual(sidewalkSides({ 'sidewalk:left': 'yes', 'sidewalk:right': 'separate' }), { left: true, right: false });
+    assert.deepEqual(sidewalkSides({ sidewalk: 'separate' }), { left: false, right: false });
+    assert.deepEqual(sidewalkSides({}), { left: false, right: false });
+  });
+  test('a polyline moved to its left: north of a road going east (z to the south)', () => {
+    assert.deepEqual(offsetPolyline([{ x: 0, z: 0 }, { x: 10, z: 0 }], 2), [{ x: 0, z: -2 }, { x: 10, z: -2 }]);
+    const corner = offsetPolyline([{ x: 0, z: 0 }, { x: 10, z: 0 }, { x: 10, z: -10 }], 1);
+    assert.ok(Math.abs(corner[1].x - 9) < 1e-9 && Math.abs(corner[1].z + 1) < 1e-9, 'the inner corner, 1 m from both segments');
+  });
+  test('a road with pavements on both sides: two pavement Paths beside it; a mapped pavement is one too', () => {
+    const data = { elements: [
+      { type: 'way', id: 1, tags: { highway: 'residential', sidewalk: 'both' }, geometry: [[48, 7], [48, 7.001]] },
+      { type: 'way', id: 2, tags: { highway: 'footway', footway: 'sidewalk' }, geometry: [[48.0002, 7], [48.0002, 7.001]] },
+    ] };
+    const t = translateOsm(data, { centre: { lat: 48, lon: 7.0005 }, halfSize: 100 });
+    const pavements = t.paths.filter(p => p.kind === 'trottoir');
+    assert.equal(pavements.length, 3);
+    const beside = pavements.filter(p => p.osmId === 1).map(p => p.world.pts[0].z).sort((a, b) => a - b);
+    const road = t.paths.find(p => p.kind === 'route').world.pts[0].z;
+    assert.ok(Math.abs(beside[0] - (road - 3.4)) < 0.01 && Math.abs(beside[1] - (road + 3.4)) < 0.01, 'half the road (2.5) and half the pavement (0.9)');
+    assert.equal(pavements.find(p => p.osmId === 2).world.width, 1.8);
+  });
+});

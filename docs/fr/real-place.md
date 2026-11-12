@@ -40,7 +40,9 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
   `z`) : l'import le pose en Élément bâtiment (`creerElementBatiment`, `wxFloor`/`wzFloor`).
 - **Tracés** (`pathKindOf`) : les routes `highway` → `route` (largeur selon le type ; une ligne centrale
   (`markingOf`) à partir de 2 voies, aucune à 1 voie ou en sens unique, sinon seulement sur les grands
-  axes : autoroute à tertiaire et leurs bretelles), trottoirs, sentiers, pistes, escaliers → `chemin` ;
+  axes : autoroute à tertiaire et leurs bretelles), trottoirs cartographiés (`footway=sidewalk`) → `trottoir`, et les balises `sidewalk` d'une route
+  (`sidewalkSides`) donnent un `trottoir` à côté d'elle de chaque côté (`offsetPolyline`, 1,8 m sauf
+  `sidewalk:width`) ; autres sentiers, pistes, escaliers → `chemin` ;
   `barrier` → `muret`, `cloture`, `haie`, `barriere` ; `waterway` → `riviere`. Une balise `width` l'emporte.
   Les tunnels sont écartés. Découpés à la zone (`clipPolyline`). `world` est celui d'un Tracé (`pts`,
   `width`).

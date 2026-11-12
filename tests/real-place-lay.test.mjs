@@ -129,3 +129,21 @@ describe('real place with the IGN survey: materials and heights drawn', () => {
     }
   });
 });
+
+describe('a pavement Path, rendered', () => {
+  test('a slab as wide as the Path, its top a kerb above the Ground', () => {
+    const scene = createScene();
+    const t = { id: 'pv1', type: 'tracé', tracéType: 'trottoir', name: 'Trottoir', color: '#B4B0A8', width: 6,
+      world: { pts: [{ x: -10, z: 0 }, { x: 10, z: 0 }], width: 2 } };
+    const { page, panel } = layRealPlace(scene, { traces: [t], buildings: [], elements: [], credits: [] }, { halfSize: 20, newObject });
+    drawPanelScene3D(document.createElement('canvas').getContext('2d'), panel, { ...page, w: scene.w, h: scene.h, objects: page.objects }, scene.style3d);
+    let box = null;
+    rig.personaScene3D.traverse(m => {
+      if (!m.isMesh || !m.geometry || !m.geometry.attributes.position) return;
+      const b = new globalThis.THREE.Box3().setFromObject(m);
+      if (b.max.y - b.min.y > 0.1 && b.max.y - b.min.y < 0.2 && Math.abs(b.max.z - b.min.z - 2) < 0.1) box = b;
+    });
+    assert.ok(box, 'a 14 cm high, 2 m wide slab');
+    assert.ok(Math.abs(box.max.y - (GROUND_Y_DEFAULT_3D + 0.145)) < 0.02);
+  });
+});

@@ -77,6 +77,46 @@ const BUILT_UP = 0.25;
 /** The paved Ground of a built-up zone, and the covering of a flat roof OSM and the survey say nothing of. */
 const URBAN_GROUND = 'béton', FLAT_ROOF = '#8f8b84';
 
+/** A pavement's width when OSM gives none (metres): a common French pavement. */
+const SIDEWALK_WIDTH = 1.8;
+
+/**
+ * The sides of a road that have a pavement drawn WITH the road (`sidewalk`, `sidewalk:both|left|right`):
+ * { left, right } (OSM's left and right, along the way's direction). `separate` or `no`: none (a pavement
+ * mapped as its own way comes as a `footway=sidewalk`).
+ */
+export function sidewalkSides(tags){
+  const yes = (v) => v === 'yes';
+  const s = tags.sidewalk;
+  let left = s === 'both' || s === 'left' || s === 'yes', right = s === 'both' || s === 'right' || s === 'yes';
+  if (yes(tags['sidewalk:both'])) left = right = true;
+  if (yes(tags['sidewalk:left'])) left = true;
+  if (yes(tags['sidewalk:right'])) right = true;
+  if (tags['sidewalk:left'] === 'no' || tags['sidewalk:left'] === 'separate') left = false;
+  if (tags['sidewalk:right'] === 'no' || tags['sidewalk:right'] === 'separate') right = false;
+  return { left, right };
+}
+
+/**
+ * A polyline moved sideways by `d` metres (positive: to its left, along its direction; x to the east, z to the
+ * south), each corner on the bisector of its two segments (the shift bounded at a sharp corner).
+ */
+export function offsetPolyline(pts, d){
+  const n = pts.length, out = [];
+  const normal = (a, b) => { const l = Math.hypot(b.x - a.x, b.z - a.z) || 1; return { x: (b.z - a.z) / l, z: -(b.x - a.x) / l }; };
+  for (let i = 0; i < n; i++) {
+    const n0 = i > 0 ? normal(pts[i - 1], pts[i]) : null, n1 = i < n - 1 ? normal(pts[i], pts[i + 1]) : null;
+    let nx, nz, k = 1;
+    if (n0 && n1) {
+      nx = n0.x + n1.x; nz = n0.z + n1.z;
+      const l = Math.hypot(nx, nz);
+      if (l < 1e-6) { nx = n1.x; nz = n1.z; } else { nx /= l; nz /= l; k = Math.min(2, 1 / Math.max(0.5, nx * n1.x + nz * n1.z)); }
+    } else { const m = n0 || n1; nx = m.x; nz = m.z; }
+    out.push({ x: pts[i].x + nx * d * k, z: pts[i].z + nz * d * k });
+  }
+  return out;
+}
+
 const DIRT_PATHS = { footway: 1.5, path: 1.2, track: 3, cycleway: 2, bridleway: 2, steps: 1.5 };
 const BARRIERS = { wall: 'muret', retaining_wall: 'muret', city_wall: 'muret', fence: 'cloture', hedge: 'haie',
   guard_rail: 'barriere', railing: 'barriere' };
@@ -291,6 +331,7 @@ export function pathKindOf(tags){
   const width = parseFloat(tags.width);
   if (tags.highway && tags.area !== 'yes') {
     if (ROADS[tags.highway]) return { kind: 'route', width: width > 0 ? width : ROADS[tags.highway], marking: markingOf(tags) };
+    if (tags.highway === 'footway' && tags.footway === 'sidewalk') return { kind: 'trottoir', width: width > 0 ? width : SIDEWALK_WIDTH };
     if (DIRT_PATHS[tags.highway]) return { kind: 'chemin', width: width > 0 ? width : DIRT_PATHS[tags.highway] };
   }
   if (BARRIERS[tags.barrier]) return { kind: BARRIERS[tags.barrier] };
@@ -347,6 +388,15 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       if (kind.marking === false) path.marking = false;
       out.paths.push(path);
       if (kind.kind === 'route' || kind.kind === 'chemin') roads.push(piece);
+      // The pavements drawn with the road: a Path each, beside it (just past its edge).
+      if (kind.kind === 'route') {
+        const sides = sidewalkSides(w.tags);
+        const sw = parseFloat(w.tags['sidewalk:width'] || w.tags['sidewalk:both:width']) > 0 ? parseFloat(w.tags['sidewalk:width'] || w.tags['sidewalk:both:width']) : SIDEWALK_WIDTH;
+        for (const [side, sign] of [['left', 1], ['right', -1]]) {
+          if (!sides[side]) continue;
+          out.paths.push({ kind: 'trottoir', world: { pts: offsetPolyline(piece, sign * (kind.width / 2 + sw / 2)).map(roundPoint), width: sw }, osmId: w.id });
+        }
+      }
     }
   }
   // The survey (building-survey.js, readBdTopo): each OSM building takes the surveyed building it is.

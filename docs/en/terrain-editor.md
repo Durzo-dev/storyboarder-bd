@@ -28,6 +28,7 @@ Added fields: an old file reads as it is.
   bounding rectangle stays in `world`); `hauteurZone`, `penteZone` (degrees), `sensPente` (degrees);
   `niveauEau` when `terrainType === 'eau'`.
 - **`riviere` path**: `world.pts`, `world.width`, `profondeur`.
+- **`trottoir` path**: `world.pts`, `world.width` (2 m by default); drawn as a slab `TROTTOIR_BORDURE_M` (0.14 m) high, its kerb on both sides, in the Ground's concrete grain, lighter.
 
 ## The rules that matter
 
