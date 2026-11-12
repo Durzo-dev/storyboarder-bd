@@ -129,6 +129,10 @@ function dire(texte, genre = false){
 
 function majBoutons(){
   $('realPlaceImport').disabled = !V || !V.zone || V.busy;
+  // During the import, « Create the scene » has nothing left to do (asked): only « Cancel » stays, full width.
+  const busy = !!(V && V.busy);
+  $('realPlaceImport').hidden = busy;
+  document.querySelector('.real-place-actions').classList.toggle('seul', busy);
   $('realPlaceSearchBtn').disabled = !V || V.busy;
 }
 

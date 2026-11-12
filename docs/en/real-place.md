@@ -69,7 +69,8 @@ The ground under buildings needs nothing: the rendered relief is already flatten
 2. The extract: `realplace:osm` with the zone's bounding box; Overpass servers in order (`OVERPASS`: the
    public instances without key or limit first, the overloaded main instance last), the first that answers
    completely (an answer ending with a runtime-error `remark` is incomplete, and the next server is asked);
-   cached. The server that answered is asked first next time (`lastGood`, for the session). All failed:
+   cached. Before the extract, every server is asked the smallest query at once (`overpassOrder`, `probeOverpass`, 6 s at most):
+   the extract goes to them in the order they answered (Overpass publishes no load an application can read). All failed:
    `busy`, or `network` when none could be reached. The answer is read as a stream: `realplace:osmProgress` sends the server
    asked and the bytes received (every 200 ms at most), and the window shows them under the steps with the
    seconds spent (`downloadDetail`). Each attempt is logged (`[real-place] overpass <host>`: outcome,

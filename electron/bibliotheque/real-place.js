@@ -100,11 +100,6 @@ function overpassQuery({ south, west, north, east }){
 }
 
 const extracts = sources.memoireBornee(4, 40 * 1024 * 1024);
-/**
- * The server that last gave an extract, asked first next time (seen: the first of the list silent for 90 s,
- * the second answering in 18 s; every import after that waited the 90 s again).
- */
-let lastGood = null;
 /** Bytes received are reported at most this often (the window redraws its line each time). */
 const PROGRESS_EVERY_MS = 200;
 /**
@@ -119,7 +114,8 @@ async function osm(bbox, progress = null){
   const cached = extracts.get(key);
   if (cached) return { json: cached };
   const failures = [];
-  const order = lastGood ? [lastGood, ...OVERPASS.filter(u => u !== lastGood)] : OVERPASS;
+  if (progress) progress({ server: 0, servers: OVERPASS.length, bytes: 0, probing: true });
+  const order = await overpassOrder();
   for (let k = 0; k < order.length; k++) {
     const url = order[k], host = new URL(url).host, started = Date.now();
     const tell = (bytes) => { if (progress) progress({ server: k + 1, servers: OVERPASS.length, bytes }); };
@@ -135,10 +131,32 @@ async function osm(bbox, progress = null){
     const good = r.json && Array.isArray(r.json.elements) && !remark;
     console.info(`[real-place] overpass ${host}: ${good ? 'ok' : (remark ? 'incomplete' : (r.error || 'response'))}${r.status ? ` (HTTP ${r.status})` : ''}`
       + ` in ${Date.now() - started} ms, ${r.size || 0} bytes${remark ? ` (${remark.slice(0, 120)})` : ''}`);
-    if (good) { tell(r.size || 0); extracts.set(key, r.json); lastGood = url; return { json: r.json, server: host }; }
+    if (good) { tell(r.size || 0); extracts.set(key, r.json); return { json: r.json, server: host }; }
     failures.push(remark ? 'incomplete' : (r.error || 'response'));
   }
   return { error: overpassFailure(failures) };
+}
+
+/**
+ * THE MOST AVAILABLE SERVER, ASKED FIRST. Overpass publishes no load an application can read (an instance's
+ * /api/status only speaks of the caller's own slots), so each server is asked the smallest query there is,
+ * all at once, and the extract goes to them in the order they answered (seen: the first of the list silent
+ * for 90 s while the second answered in 18 s; on average 80 s per import). One that does not answer within
+ * PROBE_TIMEOUT_MS comes last; it is still tried.
+ */
+const PROBE_QUERY = '[out:json][timeout:5];node(1);out ids;';
+const PROBE_TIMEOUT_MS = 6000;
+async function probeOverpass(url){
+  const started = Date.now();
+  const r = await request(url, { method: 'POST', body: `data=${encodeURIComponent(PROBE_QUERY)}`, timeout: PROBE_TIMEOUT_MS,
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+  return r.json && Array.isArray(r.json.elements) ? Date.now() - started : Infinity;
+}
+/** The servers, the quickest to answer the probe first (a tie keeps the list's order). */
+async function overpassOrder(){
+  const times = await Promise.all(OVERPASS.map(probeOverpass));
+  console.info(`[real-place] overpass probe: ${OVERPASS.map((u, i) => `${new URL(u).host} ${Number.isFinite(times[i]) ? `${times[i]} ms` : 'no answer'}`).join(', ')}`);
+  return OVERPASS.map((url, i) => ({ url, t: times[i], i })).sort((a, b) => (a.t - b.t) || (a.i - b.i)).map(x => x.url);
 }
 
 /**

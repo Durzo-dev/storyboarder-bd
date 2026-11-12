@@ -80,8 +80,9 @@ export function importProgress(step, sub = 0){
  * spent on it, what has arrived. `p`: { server, servers, bytes } from the main process; `lang`: 'en' or 'fr'.
  */
 export function downloadDetail(p, seconds, lang = 'fr'){
-  if (!p || !(p.server > 0)) return '';
   const en = lang === 'en';
+  if (p && p.probing) return en ? 'Finding the most available server…' : 'Recherche du serveur le plus disponible…';
+  if (!p || !(p.server > 0)) return '';
   const parts = [en ? `Server ${p.server} of ${p.servers}` : `Serveur ${p.server} sur ${p.servers}`, `${Math.max(0, Math.floor(seconds))} s`];
   parts.push(p.bytes > 0 ? `${poidsLisible(p.bytes, lang)} ${en ? 'received' : 'reçus'}` : (en ? 'waiting for the answer' : 'en attente de la réponse'));
   return parts.join(' · ');

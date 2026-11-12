@@ -77,8 +77,9 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    instances publiques sans clé ni limite d'abord, l'instance principale, surchargée, en dernier), le premier
    qui répond en entier (une réponse finie par une `remark` d'erreur d'exécution est incomplète, et le
    serveur suivant est interrogé) ; gardé en mémoire. Tous en échec : `busy`, ou `network` quand aucun n'a
-   pu être joint. Le serveur qui a répondu est interrogé en premier la fois suivante (`lastGood`, pour la
-   session). La réponse est lue en flux : `realplace:osmProgress` envoie le
+   pu être joint. Avant l'extrait, chaque serveur reçoit en même temps la plus petite requête (`overpassOrder`,
+   `probeOverpass`, 6 s au plus) : l'extrait leur est demandé dans l'ordre où ils ont répondu (Overpass ne
+   publie aucune charge lisible par une application). La réponse est lue en flux : `realplace:osmProgress` envoie le
    serveur interrogé et les octets reçus (toutes les 200 ms au plus), et la fenêtre les montre sous les
    étapes avec les secondes écoulées (`downloadDetail`). Chaque tentative est journalisée
    (`[real-place] overpass <hôte>` : résultat, durée, taille). Le pays : celui du lieu choisi, sinon `realplace:country` (Nominatim
