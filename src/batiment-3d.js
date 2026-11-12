@@ -115,7 +115,7 @@ function boiteUnite(T){
  * qui coulisse, un meneau entre deux battants. Rien pour un passage. Les portes sont dessinées
  * fermées. Construite dans le repère du mur (x le long, y vers le haut, z à travers), puis posée.
  */
-function construireMenuiserie(T, mur, o, mats){
+function construireMenuiserie(T, mur, o, mats, exterieur = 1){
   const g = new T.Group();
   const L = Math.hypot(mur.b.x - mur.a.x, mur.b.z - mur.a.z) || 1;
   const u = { x: (mur.b.x - mur.a.x) / L, z: (mur.b.z - mur.a.z) / L };
@@ -133,6 +133,23 @@ function construireMenuiserie(T, mur, o, mats){
     g.add(b);
   };
   // Le cadre : deux montants, la traverse haute, et l'appui d'une fenêtre.
+  // The facade's details (realistic real places, osm-scene.js), on the OUTSIDE face (`exterieur`, the sign of
+  // the wall's local z that looks out): a stone surround (`encadrement`), and for a window its shutters
+  // (`volets`, opened flat against the wall, `couleurVolets`).
+  const peinture = (couleur, repli) => (mats.revetement && couleur ? mats.revetement({ texture: null, couleur }, 'mur-ext') : repli);
+  const face = exterieur * (mur.epaisseur / 2);
+  const bord = o.encadrement ? 0.12 : 0;
+  if (o.encadrement) {
+    const pierre = peinture(typeof o.encadrement === 'string' ? o.encadrement : '#e6dccb', mats.cadre);
+    boite(bord, h + 2 * bord, 0.03, -w / 2 - bord / 2, h / 2, face + exterieur * 0.015, pierre);
+    boite(bord, h + 2 * bord, 0.03, w / 2 + bord / 2, h / 2, face + exterieur * 0.015, pierre);
+    boite(w, bord, 0.03, 0, h + bord / 2, face + exterieur * 0.015, pierre);
+    if (o.type !== 'porte') boite(w + 2 * bord, bord * 0.8, 0.06, 0, -bord * 0.4, face + exterieur * 0.03, pierre);
+  }
+  if (o.volets && o.type === 'fenetre') {
+    const volet = peinture(o.couleurVolets || '#5d7a8c', mats.bois);
+    for (const cote of [-1, 1]) boite(w / 2, h, 0.03, cote * (w / 2 + bord + w / 4 + 0.01), h / 2, face + exterieur * 0.03, volet);
+  }
   boite(ep, h, prof, -w / 2 + ep / 2, h / 2, 0, mats.cadre);
   boite(ep, h, prof, w / 2 - ep / 2, h / 2, 0, mats.cadre);
   boite(w, ep, prof, 0, h - ep / 2, 0, mats.cadre);
@@ -360,7 +377,12 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, 
           arche.position.y += n.elevation;
           groupe.add(arche);
         }
-        const menuiserie = construireMenuiserie(T, m, o, mats);
+        // Which side of the wall is outside: the one with no room in front of it (the wall's local z, see
+        // construireMenuiserie, is the normal (-u.z, u.x) of its direction u).
+        const L = Math.hypot(m.b.x - m.a.x, m.b.z - m.a.z) || 1, u = { x: (m.b.x - m.a.x) / L, z: (m.b.z - m.a.z) / L };
+        const mi = { x: m.a.x + u.x * o.le * L, z: m.a.z + u.z * o.le * L };
+        const exterieur = pieceDevantLaFace(formesDuNiveau, mi, { x: -u.z, z: u.x }, m.epaisseur / 2 + 0.05) ? -1 : 1;
+        const menuiserie = construireMenuiserie(T, m, o, mats, exterieur);
         menuiserie.position.y += n.elevation;
         groupe.add(menuiserie);
       });

@@ -54,7 +54,7 @@ y upwards in 3D, free origin). The placed Element converts to the Scene.
   niveaux:    [{ id, nom, elevation, hauteur, dalle, toit? }]
   murs:       [{ id, niveauId, a:{x,z}, b:{x,z}, epaisseur, hauteurPropre?, revetement? }]
   ouvertures: [{ id, murId, type, le, y, largeur, hauteur, battants, coulissant, vitre, sens,
-                 charniere, dessus }]
+                 charniere, dessus, encadrement?, volets?, couleurVolets? }]
   escaliers:  [{ id, niveauId, type, depart:{x,z}, angle, largeur, sens, contremarches, rampe }]
   pieces:     [{ id, niveauId, nom, repere, vide?, murs?, sol?, plafond? }]
   elements:   [{ id, niveauId, modelFile, nom, x, z, rotY, echelle, dims, base, colle?, y? }]
@@ -66,7 +66,9 @@ y upwards in 3D, free origin). The placed Element converts to the Scene.
   stays at 0, basements have a negative elevation.
 - **Walls**: one wall per level; two walls only touch at their ends.
 - **Openings**: attached to a wall; `le` is the fraction of the wall's length where their centre falls,
-  `y` the sill height. Types: `porte`, `fenetre`, `baie`, `passage`.
+  `y` the sill height. Types: `porte`, `fenetre`, `baie`, `passage`. Optional, set by a realistic real place
+  (not in the editor yet): `encadrement` (a stone surround's colour), `volets` and `couleurVolets` (a
+  window's shutters, opened flat against the wall); drawn on the outside face, the side with no room.
 - **Rooms**: only the name, the `repere` (an inside point) and the finishes are kept; the shape is
   recomputed. `vide: true` makes a courtyard.
 - **Roofs**: one per level (`niveau.toit`, absent = flat): `{ type, pente, debord, sens, bordure,

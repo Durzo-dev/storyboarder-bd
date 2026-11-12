@@ -28,6 +28,7 @@ import { ajouterOuverture } from './batiment-ouvertures.js';
 import { mondeDuMasque } from './terrain-zone-pinceau.js';
 import { projector } from './geo-local.js';
 import { rulesFor } from './real-place-sources.js';
+import { facadeStyleOf } from './facade-style.js';
 import { BDTOPO_ATTRIBUTION, matchSurvey, buildingTypeOf, surveyedRoof, wallFinishOf, roofFinishOf } from './building-survey.js';
 
 /** The attribution OSM data requires near the work (export credits, #457b-4). */
@@ -121,9 +122,10 @@ export function offsetPolyline(pts, d){
  * THE LEVELS OF DETAIL of an import (asked: richer is heavier, so one chooses), in order:
  *   - 'simple': the volumes from OSM, default roofs, roads, paths, Zones, trees and lamps;
  *   - 'detailed': and the IGN survey in France (heights, roofs, materials), materials from OSM, pavements,
- *     road signs, shrubs and benches.
+ *     road signs, shrubs and benches;
+ *   - 'realistic': and the facades (facade-style.js): shutters, stone surrounds, shop windows, by region.
  */
-export const DETAIL_LEVELS = Object.freeze(['simple', 'detailed']);
+export const DETAIL_LEVELS = Object.freeze(['simple', 'detailed', 'realistic']);
 
 const DIRT_PATHS = { footway: 1.5, path: 1.2, track: 3, cycleway: 2, bridleway: 2, steps: 1.5 };
 const BARRIERS = { wall: 'muret', retaining_wall: 'muret', city_wall: 'muret', fence: 'cloture', hedge: 'haie',
@@ -268,19 +270,30 @@ export function roofOf(tags, rules = rulesFor('fr'), surveyed = null){
  * the middle of the wall (1.5 m or more) that faces the nearest road (`doorWallId`). An opening the editor refuses (too
  * wide, overlapping) is skipped: a facade "inspired by".
  */
-function generateOpenings(b, doorWallId){
+function generateOpenings(b, doorWallId, style = null){
   const levels = b.niveaux.slice().sort((p, q) => p.elevation - q.elevation);
   const ground = levels[0] && levels[0].id;
+  // The facade's details (realistic level, facade-style.js): a surround on every opening, shutters on the windows.
+  const details = (type) => {
+    if (!style) return {};
+    const d = {};
+    if (style.surround) d.encadrement = style.surround;
+    if (style.shutters && type === 'fenetre') { d.volets = true; d.couleurVolets = style.shutterColour; }
+    return d;
+  };
   for (const wall of b.murs.slice()) {
     const length = Math.hypot(wall.b.x - wall.a.x, wall.b.z - wall.a.z);
     const isDoorWall = wall.id === doorWallId && wall.niveauId === ground;
-    if (isDoorWall) ajouterOuverture(b, wall.id, 0.5, { type: 'porte', largeur: 0.9, hauteur: 2.1, y: 0 });
+    if (isDoorWall) ajouterOuverture(b, wall.id, 0.5, { type: 'porte', largeur: 0.9, hauteur: 2.1, y: 0, ...details('porte') });
     if (length < 2) continue;
+    // A shop's street side, on the ground floor: shop windows instead of windows.
+    const shopFront = isDoorWall && style && style.shopWindows;
     const n = Math.max(1, Math.floor((length - 0.8) / 2.6));
     for (let i = 0; i < n; i++) {
       const le = (i + 0.5) / n;
       if (isDoorWall && Math.abs(le - 0.5) * length < 1.2) continue;
-      ajouterOuverture(b, wall.id, le, { type: 'fenetre', largeur: 1, hauteur: 1.3, y: 0.9 });
+      if (shopFront) ajouterOuverture(b, wall.id, le, { type: 'baie', largeur: 1.8, hauteur: 2.2, y: 0, coulissant: false, battants: 1 });
+      else ajouterOuverture(b, wall.id, le, { type: 'fenetre', largeur: 1, hauteur: 1.3, y: 0.9, ...details('fenetre') });
     }
   }
 }
@@ -291,7 +304,7 @@ function generateOpenings(b, doorWallId){
  * surveyed building it is (building-survey.js), for its heights, roof and materials where OSM says nothing.
  * Returns the building, or null if the editor refuses its walls (a footprint that crosses itself).
  */
-export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor('fr'), translate = null, survey = null, finishes = true){
+export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor('fr'), translate = null, survey = null, finishes = true, place = null){
   const t = translate || ((en, fr) => fr);
   const name = tags.name || (tags['addr:housenumber'] && tags['addr:street'] ? `${tags['addr:housenumber']} ${tags['addr:street']}` : t('Building', 'Bâtiment'));
   const b = creerBatiment(name, t);
@@ -319,7 +332,9 @@ export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor
     const mid = { x: centre.x + (wall.a.x + wall.b.x) / 2, z: centre.z + (wall.a.z + wall.b.z) / 2 };
     for (const road of roads) { const d = distanceToPolyline(mid, road); if (d < best) { best = d; doorWallId = wall.id; } }
   }
-  generateOpenings(b, doorWallId);
+  // Realistic (`place`: { lat, lon, seed, shop }): the facade of the building's type, height and region.
+  const style = place ? facadeStyleOf({ type: tags.building, levels: count, lat: place.lat, lon: place.lon, seed: place.seed, shop: place.shop }) : null;
+  generateOpenings(b, doorWallId, style);
   return b;
 }
 
@@ -362,7 +377,8 @@ export function zoneTypeOf(tags){
  * ground? } (`ground`: the paved Ground of a built-up zone).
  */
 export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, country = 'fr', rules = rulesFor(country), translate = null, survey = null, detail = 'detailed' } = {}){
-  const detailed = detail !== 'simple';
+  const detailed = detail !== 'simple', realistic = detail === 'realistic';
+  const shops = [];
   const h = Math.min(Math.max(1, halfSize), ZONE_SIDE_MAX / 2);
   const { toLocal } = projector(centre);
   const out = { buildings: [], paths: [], zones: [], elements: [], skipped: { outside: 0, invalid: 0, tunnels: 0, relations: 0 }, attribution: OSM_ATTRIBUTION };
@@ -376,6 +392,8 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       const objType = tags.natural === 'tree' ? 'arbre' : tags.highway === 'street_lamp' ? 'lampadaire'
         : (tags.traffic_sign || tags.highway === 'stop' || tags.highway === 'give_way') ? 'panneau_signalisation'
           : tags.natural === 'shrub' ? 'buisson' : tags.amenity === 'bench' ? 'banc' : null;
+      // Realistic: a shop or a café is a point inside its building (shop windows on its ground floor).
+      if (realistic && (tags.shop || ['restaurant', 'cafe', 'bar', 'pharmacy', 'bank', 'fast_food'].includes(tags.amenity))) shops.push(p);
       // Simple: the trees and lamps only.
       if (!detailed && objType !== 'arbre' && objType !== 'lampadaire') continue;
       if (objType) out.elements.push({ objType, x: round(p.x), z: round(p.z), osmId: e.id });
@@ -427,7 +445,8 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       if (Math.abs(centreOf.x) > h || Math.abs(centreOf.z) > h) { out.skipped.outside++; continue; }
       const local = fp.map(p => roundPoint({ x: p.x - centreOf.x, z: p.z - centreOf.z }));
       const surveyed = surveys.length ? matchSurvey(fp, surveys, taken) : null;
-      const building = buildingOf(local, w.tags, centreOf, roads, rules, translate, surveyed, detailed);
+      const building = buildingOf(local, w.tags, centreOf, roads, rules, translate, surveyed, detailed,
+        realistic ? { lat: centre.lat, lon: centre.lon, seed: w.id, shop: shops.some(p => insidePolygon(p, fp)) || (surveyed && surveyed.use === 'Commercial et services') } : null);
       if (!building) { out.skipped.invalid++; continue; }
       const entry = { building, x: round(centreOf.x), z: round(centreOf.z), osmId: w.id };
       if (surveyed) entry.surveyId = surveyed.id;
@@ -453,7 +472,8 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
     const centreOf = { x: (x0 + x1) / 2, z: (z0 + z1) / 2 };
     if (Math.abs(centreOf.x) > h || Math.abs(centreOf.z) > h) continue;
     const local = fp.map(p => roundPoint({ x: p.x - centreOf.x, z: p.z - centreOf.z }));
-    const building = buildingOf(local, { building: buildingTypeOf(s) }, centreOf, roads, rules, translate, s, detailed);
+    const building = buildingOf(local, { building: buildingTypeOf(s) }, centreOf, roads, rules, translate, s, detailed,
+      realistic ? { lat: centre.lat, lon: centre.lon, seed: s.id, shop: s.use === 'Commercial et services' } : null);
     if (!building) continue;
     taken.add(s.id);
     out.buildings.push({ building, x: round(centreOf.x), z: round(centreOf.z), surveyId: s.id });

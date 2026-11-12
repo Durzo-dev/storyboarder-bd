@@ -165,6 +165,7 @@ export const I18N_TEXT = [
   ['#realPlaceDetailLevelLabel', 'Detail', 'Détail'],
   ['#realPlaceDetailLevel option[value="simple"]', 'Simple', 'Simple'],
   ['#realPlaceDetailLevel option[value="detailed"]', 'Detailed', 'Détaillé'],
+  ['#realPlaceDetailLevel option[value="realistic"]', 'Realistic', 'Réaliste'],
   ['#realPlaceHint', 'Click on the map to place the zone.', 'Cliquez sur la carte pour placer la zone.'],
   ['#realPlaceCancel', 'Cancel', 'Annuler'],
   ['#realPlaceImport', 'Create the scene', 'Créer la scène'],

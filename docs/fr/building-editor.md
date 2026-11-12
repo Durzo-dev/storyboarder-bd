@@ -54,7 +54,7 @@ vue de dessus, y vers le haut en 3D, origine libre). C'est l'Élément placé qu
   niveaux:    [{ id, nom, elevation, hauteur, dalle, toit? }]
   murs:       [{ id, niveauId, a:{x,z}, b:{x,z}, epaisseur, hauteurPropre?, revetement? }]
   ouvertures: [{ id, murId, type, le, y, largeur, hauteur, battants, coulissant, vitre, sens,
-                 charniere, dessus }]
+                 charniere, dessus, encadrement?, volets?, couleurVolets? }]
   escaliers:  [{ id, niveauId, type, depart:{x,z}, angle, largeur, sens, contremarches, rampe }]
   pieces:     [{ id, niveauId, nom, repere, vide?, murs?, sol?, plafond? }]
   elements:   [{ id, niveauId, modelFile, nom, x, z, rotY, echelle, dims, base, colle?, y? }]
@@ -67,6 +67,9 @@ vue de dessus, y vers le haut en 3D, origine libre). C'est l'Élément placé qu
 - **Murs** : un mur par niveau ; deux murs ne se touchent que par leurs bouts.
 - **Ouvertures** : rattachées à un mur ; `le` est la fraction de la longueur du mur où tombe leur
   centre, `y` la hauteur d'allège. Types : `porte`, `fenetre`, `baie`, `passage`.
+  Facultatifs, posés par un lieu réel réaliste (pas encore dans l'éditeur) : `encadrement` (la couleur d'un
+  encadrement de pierre), `volets` et `couleurVolets` (les volets d'une fenêtre, ouverts à plat contre le
+  mur) ; dessinés sur la face extérieure, le côté sans pièce.
 - **Pièces** : seuls le nom, le `repere` (un point intérieur) et les revêtements sont gardés ; la forme
   se recalcule. `vide: true` fait une cour.
 - **Toits** : un par niveau (`niveau.toit`, absent = plat) : `{ type, pente, debord, sens, bordure,

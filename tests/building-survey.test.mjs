@@ -116,7 +116,7 @@ describe('BD TOPO, what it decides', () => {
 describe('the level of detail', async () => {
   const { DETAIL_LEVELS } = await import('../src/osm-scene.js');
   test('simple: OSM\'s volumes and default roofs, no survey, no materials; detailed: all of it', () => {
-    assert.deepEqual(DETAIL_LEVELS, ['simple', 'detailed']);
+    assert.deepEqual(DETAIL_LEVELS, ['simple', 'detailed', 'realistic']);
     const simple = translateOsm(osm, { centre, halfSize: 100, survey, detail: 'simple' });
     const detailed = translateOsm(osm, { centre, halfSize: 100, survey });
     assert.ok(simple.buildings.every(b => !b.surveyId && !b.building.facade), 'no survey, no facade');

@@ -120,12 +120,15 @@ function montrerLeDetail(texte){
 
 /** What the chosen level of detail brings (osm-scene.js, DETAIL_LEVELS): what is made, not a duration (asked). */
 function direLeNiveau(){
-  const simple = $('realPlaceDetailLevel').value === 'simple';
-  $('realPlaceDetailInfo').textContent = simple
+  const niveau = $('realPlaceDetailLevel').value;
+  $('realPlaceDetailInfo').textContent = niveau === 'simple'
     ? tr('Simple: the buildings\' volumes, default roofs, roads, paths, grounds, relief, trees and lamps.',
       'Simple : volumes des bâtiments, toits par défaut, routes, chemins, sols, relief, arbres et lampadaires.')
-    : tr('Detailed: also the real heights, roofs and materials (IGN, in France), pavements, road signs, shrubs and benches.',
-      'Détaillé : en plus, hauteurs, toits et matériaux réels (IGN, en France), trottoirs, panneaux, buissons et bancs.');
+    : niveau === 'realistic'
+      ? tr('Realistic: all of Detailed, and the facades: shutters, stone surrounds and shop windows, in the region\'s colours.',
+        'Réaliste : tout le niveau Détaillé, et les façades : volets, encadrements de pierre et vitrines, aux couleurs de la région.')
+      : tr('Detailed: also the real heights, roofs and materials (IGN, in France), pavements, road signs, shrubs and benches.',
+        'Détaillé : en plus, hauteurs, toits et matériaux réels (IGN, en France), trottoirs, panneaux, buissons et bancs.');
 }
 
 /** The detail line of the map data: the server, the seconds spent on it, the bytes received. */
@@ -413,7 +416,7 @@ async function importer(){
     // France: the IGN's surveyed buildings (heights, roofs, materials), matched to OSM's. Without them (no
     // answer, another country) OSM alone, as before.
     let survey = null;
-    if (country === 'fr' && niveau === 'detailed' && api.realPlaceBdTopo) {
+    if (country === 'fr' && niveau !== 'simple' && api.realPlaceBdTopo) {
       const s = await api.realPlaceBdTopo(bbox);
       if (arrete()) return;
       if (s && s.json) survey = readBdTopo(s.json, centre);
