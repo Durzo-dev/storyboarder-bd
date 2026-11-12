@@ -96,13 +96,14 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    placed by `wxFloor`/`wzFloor` and set on the Ground (`applyGroundMagnetY`); the camera, from above, at the
    distance where the zone fills the view with a 10 % margin (the field of view is fixed: the page's height
    seen at 30 m). It returns the Scene, unopened.
-6. `construireScene` (events.js): `buildScene` (scene-loading.js) marks the Panel as being built (the render
-   skips it), then `openScene(id, { progressif: false })` opens it behind the window; the buildings are built
-   in slices of about 40 ms, the window showing their count, then the first complete render. Cancelled: the
+6. `construireScene` (events.js): `buildScene` (scene-loading.js) marks the Panel as being built (a render then
+   draws only the buildings already built and does not flatten the ground under them; the Panel's
+   signature is the step reached), then `openScene(id, { progressif: false })` opens it behind the window; the buildings are built
+   in slices of about 40 ms, the window showing their count and the Scene drawn every 300 ms as it grows, then the first complete render. Cancelled: the
    Scene is removed and one goes back where one was (`retourApresChargement`).
 
 **Opening an existing large Scene** (`PROGRESSIVE_FROM`, 20 placed buildings or more): `openScene` asks
-`ouvrirSceneProgressivement` before its first render; the same `buildScene`, behind an opaque mask over the
+`ouvrirSceneProgressivement` before its first render; the same `buildScene`, behind a translucent veil over the
 Scene (`#sceneLoading`, in `main`) with a card at the bottom (bar, the two steps, « Cancel », which closes the
 Scene and goes back where one was). A smaller Scene opens at once, as before.
 

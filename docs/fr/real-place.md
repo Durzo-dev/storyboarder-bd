@@ -104,13 +104,15 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    chacun placé par `wxFloor`/`wzFloor` et posé sur le Sol (`applyGroundMagnetY`) ; la caméra, de dessus, à
    la distance où la zone remplit la vue avec 10 % de marge (le champ de vision est fixe : la hauteur de la
    page vue à 30 m). Elle rend la Scène, sans l'ouvrir.
-6. `construireScene` (events.js) : `buildScene` (scene-loading.js) marque la Case en construction (le rendu
-   la saute), puis `openScene(id, { progressif: false })` l'ouvre derrière la fenêtre ; les bâtiments sont
-   construits par tranches d'environ 40 ms, la fenêtre montrant leur compte, puis vient le premier rendu
+6. `construireScene` (events.js) : `buildScene` (scene-loading.js) marque la Case en construction (un rendu ne
+   dessine alors que les bâtiments déjà construits et n'aplanit pas le sol dessous ; la signature de la Case
+   est l'étape atteinte), puis `openScene(id, { progressif: false })` l'ouvre derrière la fenêtre ; les bâtiments sont
+   construits par tranches d'environ 40 ms, la fenêtre montrant leur compte et la Scène redessinée toutes les
+   300 ms à mesure qu'elle se remplit, puis vient le premier rendu
    complet. Annulé : la Scène est retirée et on revient où l'on était (`retourApresChargement`).
 
 **Ouvrir une grosse Scène existante** (`PROGRESSIVE_FROM`, 20 bâtiments placés ou plus) : `openScene` demande
-`ouvrirSceneProgressivement` avant son premier rendu ; le même `buildScene`, derrière un masque opaque sur la
+`ouvrirSceneProgressivement` avant son premier rendu ; le même `buildScene`, derrière un voile translucide sur la
 Scène (`#sceneLoading`, dans `main`) avec un encart en bas (barre, les deux étapes, « Annuler », qui ferme la
 Scène et ramène où l'on était). Une Scène plus petite s'ouvre aussitôt, comme avant.
 

@@ -1,20 +1,21 @@
 /**
  * @file scene-loading.js
- * A LARGE SCENE BUILT A FEW BUILDINGS AT A TIME, behind a mask, with its progress.
+ * A LARGE SCENE BUILT A FEW BUILDINGS AT A TIME, seen through a translucent veil, with its progress.
  *
  * Opening a Scene of a few hundred buildings built every building in the first frame: seconds of a frozen
  * window (measured: 2.2 s for Montpellier's Écusson, 300 buildings). Here the buildings are made in slices
- * of about 40 ms, the window drawing the progress between them; the Panel is not drawn meanwhile
- * (marquerEnConstruction3D), then the first complete render (relief, roads, grounds) ends it.
+ * of about 40 ms, the window drawing the progress between them, and the Scene is drawn every DRAW_EVERY_MS
+ * with the buildings built so far (marquerEnConstruction3D: the rest wait, the ground is flattened at the
+ * end); then the first complete render (relief, roads, grounds) ends it.
  *
  * Two places show the progress, with the same steps (BUILD_STEPS): the « New scene » window when a Scene is
  * made from a real place (real-place-ui.js, which calls buildScene), and, when an existing large Scene is
- * opened, the CARD over the Scene (an opaque mask, the card at the bottom, « Cancel » closes the Scene and
- * goes back to where one was).
+ * opened, the CARD over the Scene (a translucent veil, the card at the bottom, « Cancel » closes the Scene
+ * and goes back to where one was).
  */
 import { tr } from './state.js';
 import { ensureObjectRigEntry3D } from './rig3d.js';
-import { marquerEnConstruction3D } from './scene3d.js';
+import { marquerEnConstruction3D, avancerConstruction3D } from './scene3d.js';
 import { estUnBatimentPlace } from './batiment-element.js';
 
 /** From this many placed buildings, a Scene is built progressively (with the card when opened). */
@@ -24,6 +25,8 @@ export const BUILD_STEPS = Object.freeze(['buildings', 'ground']);
 const STEP_SHARE = Object.freeze({ buildings: 0.85, ground: 0.15 });
 /** A slice of building work, milliseconds, before the window is given back to draw the progress. */
 const SLICE_MS = 40;
+/** How often the Scene is drawn while built (milliseconds): it is seen growing, without slowing it much. */
+const DRAW_EVERY_MS = 300;
 
 /** The placed buildings of a Scene's page. */
 export const placedBuildings = (page) => ((page && page.objects) || []).filter(o => estUnBatimentPlace(o));
@@ -64,12 +67,13 @@ export async function buildScene(scene, { onProgress = () => {}, cancelled = () 
     const buildings = placedBuildings(page), total = buildings.length;
     onProgress('buildings', 0, { done: 0, total });
     await pause();
-    let started = performance.now();
+    let started = performance.now(), drawn = started;
     for (let i = 0; i < total; i++) {
       if (cancelled()) return false;
       try { ensureObjectRigEntry3D(buildings[i]); } catch (e) { console.warn('[scene-loading]', e); }
       if (performance.now() - started > SLICE_MS) {
         onProgress('buildings', (i + 1) / total, { done: i + 1, total });
+        if (performance.now() - drawn > DRAW_EVERY_MS) { avancerConstruction3D(panel.id); render(); drawn = performance.now(); }
         await pause();
         started = performance.now();
       }

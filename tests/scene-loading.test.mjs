@@ -23,32 +23,32 @@ const content = sceneContentOf(translateOsm(village, { centre, halfSize: 100 }),
 const newScene = () => { const s = createScene(); layRealPlace(s, { ...content, elements: [] }, { halfSize: 100, newObject: () => null }); return s; };
 
 describe('a Scene built progressively', () => {
-  test('its buildings counted up to the total, then the ground; one render, at the end', async () => {
+  test('its buildings counted up to the total, then the ground; a complete render at the end', async () => {
     const s = newScene(), total = L.placedBuildings(s.pages[0]).length;
     const seen = [];
     let renders = 0;
     const fini = await L.buildScene(s, { onProgress: (step, sub, detail) => seen.push({ step, sub, detail }), render: () => { renders++; } });
     assert.equal(fini, true);
-    assert.equal(renders, 1);
+    assert.ok(renders >= 1, 'drawn as it grows (every 300 ms), and once complete');
     assert.deepEqual(seen[0], { step: 'buildings', sub: 0, detail: { done: 0, total } });
     assert.deepEqual(seen.at(-1), { step: 'ground', sub: 1, detail: null });
     let last = -1;
     for (const p of seen) { const v = L.buildProgress(p.step, p.sub); assert.ok(v >= last); last = v; }
   });
-  test('not drawn while being built: a render then would build everything at once', async () => {
+  test('drawn while being built, with the buildings built so far only: the rest would freeze the window', async () => {
     const s = newScene(), page = s.pages[0], panel = page.objects.find(o => o.type === 'panel');
-    let drawnDuring = null;
+    const rig = await import('../src/rig3d.js');
     const view = { ...page, w: s.w, h: s.h, objects: page.objects };
     const ctx = document.createElement('canvas').getContext('2d');
     let calls = 0;
     ctx.drawImage = () => { calls++; };
-    const promise = L.buildScene(s, { render: () => {} });
+    const ids = L.placedBuildings(page).map(o => o.id);
+    const promise = L.buildScene(s, { render: () => drawPanelScene3D(ctx, panel, view, s.style3d) });
     drawPanelScene3D(ctx, panel, view, s.style3d);
-    drawnDuring = calls;
+    assert.ok(calls > 0, 'drawn at once (the ground, the roads)');
+    assert.equal(ids.filter(id => rig.objectRigCache3D.has(id)).length, 0, 'no building built by that render');
     await promise;
-    assert.equal(drawnDuring, 0);
-    drawPanelScene3D(ctx, panel, view, s.style3d);
-    assert.ok(calls > 0, 'built: drawn');
+    assert.equal(ids.filter(id => rig.objectRigCache3D.has(id)).length, ids.length, 'all built in the end');
   });
   test('cancelled: stops, says so, and leaves the Panel drawable', async () => {
     const s = newScene();

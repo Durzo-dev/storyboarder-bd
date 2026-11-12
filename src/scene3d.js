@@ -2163,6 +2163,8 @@ export const wallJunctionMeshCache3D = new Map();
 // Panel would invalidate the cache on every frame (since Elements' o.x/o.y follow the Panel's center),
 // whereas the RENDERED 3D scene itself remains rigorously identical throughout.
 function computePanelSceneSignature3D(panel, page, styleKey){
+  // Being built: the step reached is part of what is drawn (more buildings at every step).
+  if (_panneauxEnConstruction3D.has(panel.id)) return `construction:${_panneauxEnConstruction3D.get(panel.id)}`;
   const elements = panelOwnedElements3D(panel, page);
   const parts = elements.map(o => {
     const wp = ensureElementWorldPos3D(o, panel);
@@ -2554,6 +2556,8 @@ function poserRelief3D(panel, visible, r){
  */
 function reliefEffectif3D(panel, page){
   if (!panel) return null;
+  // Being built: the ground is not flattened under the buildings yet, and nothing is kept (see above).
+  if (_panneauxEnConstruction3D.has(panel.id)) return reliefEffectifCalcule3D(panel, page, false);
   const parts = [signatureDuRelief(panel.relief)];
   for (const o of (page && page.objects) || []) {
     if (o.type === 'tracé' && o.panelId === panel.id) {
@@ -2583,7 +2587,7 @@ function identite3D(objet){
   if (n === undefined) { n = ++_identiteSuivante3D; _identites3D.set(objet, n); }
   return n;
 }
-function reliefEffectifCalcule3D(panel, page){
+function reliefEffectifCalcule3D(panel, page, sousLesBatiments = true){
   // #462d : les rivières creusent leur lit (une Scène plate reçoit alors un relief à cet endroit).
   const rivieres = ((page && page.objects) || []).filter(o => o.type === 'tracé' && o.panelId === panel.id && o.tracéType === 'riviere'
     && o.world && Array.isArray(o.world.pts) && o.world.pts.length >= 2)
@@ -2625,7 +2629,7 @@ function reliefEffectifCalcule3D(panel, page){
   const r = creuserLesRivieres(releverLesZones(panel && panel.relief, zones), rivieres);
   if (reliefPlat(r)) return null;
   const emprises = [];
-  for (const o of panelOwnedElements3D(panel, page)) {
+  for (const o of sousLesBatiments ? panelOwnedElements3D(panel, page) : []) {
     if (!estUnBatimentPlace(o) || !o.batiment || !o.batiment.niveaux) continue;
     try {
       const tries = niveauxTries(o.batiment);
@@ -2788,7 +2792,9 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
   applyStyle3DLighting(style);
   const _eclairage = resoudreEclairage3D(lumiereDeCase3D(panel));
   appliquerEclairageDeCase3D(_eclairage);
-  const elements = panelOwnedElements3D(panel, page);
+  // Being built (scene-loading.js): the buildings not built yet wait for their turn.
+  const _enConstruction = _panneauxEnConstruction3D.has(panel.id);
+  const elements = panelOwnedElements3D(panel, page).filter(o => !_enConstruction || !estUnBatimentPlace(o) || objectRigCache3D.has(o.id));
   // ⚠️ LE PLAN DES SOURCES EST FAIT ICI, ET PAS PLUS BAS OÙ IL S'EXÉCUTE (#422d). Les ombres ont
   // besoin de savoir si une source projette AVANT de poser le drapeau du renderer ; le faire deux
   // fois, ou refiltrer `elements` une seconde fois, serait la copie qui ne s'accorde qu'aujourd'hui.
@@ -3867,17 +3873,22 @@ export function elementNonVisible3D(o, panel, page, demander = true){
 // drawContent): a single combined render per Panel rather than an independent render per Element.
 
 /**
- * The Panels being BUILT (scene-loading.js): their buildings are made a few at a time, behind a mask; a
- * render now would make all the rest at once, in one frozen frame. They are not drawn until built.
+ * The Panels being BUILT (scene-loading.js): their buildings are made a few at a time, behind a translucent
+ * veil, and drawn as they come (asked: « see the creation live »). Meanwhile a render draws only the buildings
+ * already built (building the rest would freeze the window), and does not flatten the ground under them
+ * (redone for hundreds of buildings at every step: seconds). `avancerConstruction3D` counts the steps: it is
+ * in the Panel's signature, so its cached image is not served after more buildings came.
  */
-const _panneauxEnConstruction3D = new Set();
+const _panneauxEnConstruction3D = new Map();
 export function marquerEnConstruction3D(panelId, oui){
-  if (oui) _panneauxEnConstruction3D.add(panelId); else _panneauxEnConstruction3D.delete(panelId);
+  if (oui) _panneauxEnConstruction3D.set(panelId, 0); else _panneauxEnConstruction3D.delete(panelId);
+}
+export function avancerConstruction3D(panelId){
+  if (_panneauxEnConstruction3D.has(panelId)) _panneauxEnConstruction3D.set(panelId, _panneauxEnConstruction3D.get(panelId) + 1);
 }
 
 export function drawPanelScene3D(c, panel, page, styleKey, scale = 1){
   if (typeof THREE === 'undefined') return;
-  if (panel && _panneauxEnConstruction3D.has(panel.id)) return;
   const style = resolveStyle3D(styleKey);
   const rendu = renderPanelScene3D(panel, page, style, scale);
   // `null` veut dire « remis à plus tard » (budget de la frame épuisé, et aucune image antérieure).
