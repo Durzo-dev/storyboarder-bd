@@ -159,7 +159,9 @@ describe('real place, the most available Overpass server', () => {
 describe('real place, the window', () => {
   const ui = readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8');
   const net = readFileSync(new URL('../electron/bibliotheque/real-place.js', import.meta.url), 'utf8');
-  test('suggestions while typing come from Photon (Nominatim forbids auto-complete), after a pause, from three letters', () => {
+  test('suggestions while typing come from the IGN and Photon (Nominatim forbids auto-complete), after a pause, from three letters', () => {
+    assert.match(net, /https:\/\/data\.geopf\.fr\/geocodage\/completion\?maximumResponses=6/, 'the IGN: quick, France');
+    assert.match(ui, /for \(const source of \['ign', 'photon'\]\)/, 'both asked, merged as they come');
     assert.match(ui, /\$\('realPlaceQuery'\)\.addEventListener\('input', suggerer\);/);
     assert.match(ui, /if \(q\.length < 3 \|\| !V \|\| V\.busy\)/);
     assert.match(net, /https:\/\/photon\.komoot\.io\/api\/\?limit=6/);

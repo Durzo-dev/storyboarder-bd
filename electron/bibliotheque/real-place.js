@@ -46,10 +46,11 @@ function abortImport(){
 /** Set by abortImport, reset by the next import's first request (osm): the loops stop asking. */
 let _importAnnule = false;
 
-async function request(url, { method = 'GET', body = null, json = true, timeout = TIMEOUT_MS, headers = {}, onBytes = null } = {}){
+async function request(url, { method = 'GET', body = null, json = true, timeout = TIMEOUT_MS, headers = {}, onBytes = null, onController = null } = {}){
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), timeout);
   _enCours.add(abort);
+  if (onController) onController(abort);
   try {
     const rep = await net.fetch(url, { method, body, signal: abort.signal,
       headers: { 'User-Agent': agent(), Accept: json ? 'application/json' : '*/*', ...headers } });
@@ -98,20 +99,37 @@ async function search(query, lang){
 }
 
 /**
- * SUGGESTIONS WHILE TYPING (Photon, komoot's public demo server). Nominatim forbids auto-complete in its usage
- * policy; Photon is made for search-as-you-type, its public server welcoming « a reasonable number of
- * requests » (the window waits for a pause in the typing and asks from three letters). Same shape as search.
+ * SUGGESTIONS WHILE TYPING, from two services asked separately (the window merges them as they come):
+ *   - 'ign': the IGN's completion service (Géoplateforme, no key), made for this, quick, France only: places,
+ *     addresses, streets, towns;
+ *   - 'photon': Photon (komoot's public server), the world, but slow or silent at times (seen: every request
+ *     timing out), hence a short timeout.
+ * Nominatim forbids auto-complete in its usage policy. The window waits for a pause in the typing and asks from
+ * three letters; a newer suggestion from the same service aborts the one under way. Same shape as search.
  */
-async function suggest(query, lang){
+const SUGGESTION_SOURCES = {
+  ign: { timeout: 4000, url: (q) => `https://data.geopf.fr/geocodage/completion?maximumResponses=6&text=${encodeURIComponent(q)}`, read: placesOfIgn },
+  photon: { timeout: 3000, url: (q, lang) => `https://photon.komoot.io/api/?limit=6&lang=${lang}&q=${encodeURIComponent(q)}`, read: placesOfPhoton },
+};
+const _suggestionsEnCours = {};
+async function suggest(query, lang, source = 'photon'){
   const q = String(query || '').trim().slice(0, 200);
-  if (q.length < 3) return { places: [] };
+  const src = SUGGESTION_SOURCES[source];
+  if (q.length < 3 || !src) return { places: [] };
+  if (_suggestionsEnCours[source]) { _suggestionsEnCours[source].annule = true; _suggestionsEnCours[source].abort(); }
   const started = Date.now();
-  const r = await request(`https://photon.komoot.io/api/?limit=6&lang=${lang === 'en' ? 'en' : 'fr'}&q=${encodeURIComponent(q)}`, { timeout: 8000 });
+  const r = await request(src.url(q, lang === 'en' ? 'en' : 'fr'), { timeout: src.timeout, onController: (c) => { _suggestionsEnCours[source] = c; } });
   // Every answer written to the log, as Overpass's are: a silent suggestion service looks like a broken field.
-  if (r.error) { console.warn(`[real-place] photon "${q}": ${r.error}${r.status ? ` (HTTP ${r.status})` : ''} in ${Date.now() - started} ms`); return r; }
-  const places = placesOfPhoton(r.json);
-  console.info(`[real-place] photon "${q}": ${places.length} places (${(r.json && Array.isArray(r.json.features)) ? r.json.features.length : 'no'} features) in ${Date.now() - started} ms`);
+  if (r.error) { console.warn(`[real-place] ${source} "${q}": ${r.error}${r.status ? ` (HTTP ${r.status})` : ''} in ${Date.now() - started} ms`); return r; }
+  const places = src.read(r.json);
+  console.info(`[real-place] ${source} "${q}": ${places.length} places in ${Date.now() - started} ms`);
   return { places };
+}
+/** The IGN completion answer as places: its full text, lat, lon; France. */
+function placesOfIgn(json){
+  return ((json && Array.isArray(json.results)) ? json.results : []).map(p => ({
+    name: String(p.fulltext || ''), lat: Number(p.y), lon: Number(p.x), country: 'fr',
+  })).filter(p => p.name && Number.isFinite(p.lat) && Number.isFinite(p.lon));
 }
 /** Photon's GeoJSON answer as places: a readable name (name, street, town, region, country), lat, lon, country code. */
 function placesOfPhoton(json){

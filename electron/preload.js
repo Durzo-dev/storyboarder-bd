@@ -119,7 +119,7 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   sketchfabLogout: () => ipcRenderer.invoke('sketchfab:logout'),
   storeVignette: (url) => ipcRenderer.invoke('store:vignette', url),
   realPlaceSearch: (query, lang) => ipcRenderer.invoke('realplace:search', query, lang),
-  realPlaceSuggest: (query, lang) => ipcRenderer.invoke('realplace:suggest', query, lang),
+  realPlaceSuggest: (query, lang, source) => ipcRenderer.invoke('realplace:suggest', query, lang, source),
   realPlaceCountry: (lat, lon) => ipcRenderer.invoke('realplace:country', lat, lon),
   realPlaceOsm: (bbox) => ipcRenderer.invoke('realplace:osm', bbox),
   onRealPlaceOsmProgress: (callback) => ipcRenderer.on('realplace:osmProgress', (e, p) => callback(p)),

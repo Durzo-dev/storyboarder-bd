@@ -195,8 +195,8 @@ async function chercher(){
 }
 
 /**
- * Suggestions while typing (asked): after a pause of SUGGESTION_MS, from three letters, the places Photon
- * proposes (main process, real-place.js) in the same list as a search. An answer that comes after newer
+ * Suggestions while typing (asked): after a pause of SUGGESTION_MS, from three letters, the places the IGN and
+ * Photon propose (main process, real-place.js) in the same list as a search. An answer that comes after newer
  * typing is dropped (`n`). Enter still searches (Nominatim).
  */
 const SUGGESTION_MS = 350;
@@ -206,16 +206,25 @@ function suggerer(){
   const q = $('realPlaceQuery').value.trim();
   const n = ++_suggestion.n;
   if (q.length < 3 || !V || V.busy) { if (q.length < 3) $('realPlaceResults').hidden = true; return; }
-  _suggestion.minuteur = setTimeout(async () => {
+  _suggestion.minuteur = setTimeout(() => {
     const api = window.storyboarderAPI;
     if (!api || !api.realPlaceSuggest) return;
-    const r = await api.realPlaceSuggest(q, tr('en', 'fr'));
-    console.info('[real-place] suggestions', JSON.stringify(q), r && (r.error || `${(r.places || []).length} places`), n === _suggestion.n ? '' : '(superseded)');
-    if (!V || n !== _suggestion.n || !r) return;
-    // The suggestion service unreachable: said, gently (Enter still searches), rather than a field that seems dead.
-    if (r.error) { dire(tr('Suggestions are unavailable for now: press Enter to search.', 'Suggestions indisponibles pour le moment : Entrée lance la recherche.')); return; }
-    dire('');
-    montrerLesLieux(r.places);
+    // Two services at once (main process, real-place.js): the IGN's (France, quick) shown as soon as it comes,
+    // Photon's (the world) added after it. Both failed: said, gently (Enter still searches).
+    const recus = { ign: null, photon: null };
+    const montrer = () => {
+      if (!V || n !== _suggestion.n) return;
+      const places = [...(recus.ign && recus.ign.places) || [], ...(recus.photon && recus.photon.places) || []];
+      const vus = new Set();
+      const uniques = places.filter(p => { const k = `${p.lat.toFixed(4)},${p.lon.toFixed(4)}`; if (vus.has(k)) return false; vus.add(k); return true; }).slice(0, 8);
+      if (uniques.length) { dire(''); montrerLesLieux(uniques); return; }
+      if (recus.ign && recus.photon && recus.ign.error && recus.photon.error) {
+        dire(tr('Suggestions are unavailable for now: press Enter to search.', 'Suggestions indisponibles pour le moment : Entrée lance la recherche.'));
+      }
+    };
+    for (const source of ['ign', 'photon']) {
+      api.realPlaceSuggest(q, tr('en', 'fr'), source).then(r => { recus[source] = r || { error: 'response' }; montrer(); });
+    }
   }, SUGGESTION_MS);
 }
 
