@@ -1979,15 +1979,15 @@
       <label class="modal-field-label" id="messagesMasquesLabel">Messages de confirmation</label>
       <button type="button" class="nav-btn" id="reafficherMessagesBtn">Réafficher les messages masqués</button>
       <!-- La connexion d'une IA (MCP, docs/fr/mcp.md, src/mcp-link.js) : éteinte par défaut ; allumée,
-           l'application écoute sur cet ordinateur seulement, et les deux boutons copient la configuration
-           à coller dans le client d'IA. -->
+           l'application écoute sur cet ordinateur seulement ; « Installer dans Claude Desktop » lui fait une
+           extension en un clic, l'autre bouton copie la configuration de Gemini CLI. -->
       <label class="modal-field-label" id="mcpLabel" style="margin-top:14px;">Connexion d'une IA</label>
       <label style="display:flex; align-items:center; gap:6px; font-size:var(--texte-courant); margin:2px 0 6px; cursor:pointer;">
         <input type="checkbox" id="mcpEnabledCheckbox"> <span id="mcpEnabledLabel">Laisser une IA de cet ordinateur lire et créer des scènes</span>
       </label>
       <p id="mcpStatus" style="font-size:var(--texte-libelle); color:var(--ink-soft); margin:0 0 8px;"></p>
       <div id="mcpConfigButtons" style="display:flex; gap:8px;" hidden>
-        <button type="button" class="nav-btn" id="mcpCopyClaude" style="flex:1;">Copier la config Claude Desktop</button>
+        <button type="button" class="nav-btn" id="mcpInstallClaude" style="flex:1;">Installer dans Claude Desktop</button>
         <button type="button" class="nav-btn" id="mcpCopyGemini" style="flex:1;">Copier la config Gemini CLI</button>
       </div>
     </div>

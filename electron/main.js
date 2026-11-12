@@ -1308,6 +1308,18 @@ ipcMain.handle('mcp:response', async (event, n, response) => { mcp.answer(n, res
 ipcMain.handle('mcp:tools', async (event, tools) => { mcp.rememberTools(tools); return true; });
 ipcMain.handle('mcp:clientConfig', async (event, kind) => JSON.stringify(
   mcp.clientConfig(kind === 'gemini' ? 'gemini' : 'claude', { execPath: process.execPath, bridgePath: cheminDuPont() }), null, 2));
+// Claude Desktop: an extension (.mcpb) made for this computer, opened so that Claude Desktop offers to install
+// it (mcp-bundle.js). Without Claude Desktop (no program opens .mcpb), the file is shown in its folder.
+ipcMain.handle('mcp:installClaude', async () => {
+  const { buildBundle } = require('./mcp-bundle');
+  const c = mcp.config();
+  const fichier = path.join(app.getPath('userData'), 'Storyboarder.mcpb');
+  fs.writeFileSync(fichier, buildBundle({ version: app.getVersion(), mcpJsonPath: mcp.status().file, bridgePath: path.join(__dirname, 'mcp-bridge.js'),
+    iconPath: path.join(RACINE, 'assets', 'icone', 'storyboarder-bd-512.png'), tools: Array.isArray(c.tools) ? c.tools : [] }));
+  const erreur = await shell.openPath(fichier);
+  if (erreur) { shell.showItemInFolder(fichier); return { ok: false, file: fichier }; }
+  return { ok: true, file: fichier };
+});
 // An image of a part of the window (a Scene's view), for the AI: JPEG, at most 1280 px wide, base64.
 ipcMain.handle('mcp:capture', async (event, rect) => {
   const win = BrowserWindow.fromWebContents(event.sender);

@@ -115,6 +115,7 @@ interface StoryboarderAPI {
   mcpRespond(n: number, response: any): Promise<boolean>;
   mcpTools(tools: any[]): Promise<boolean>;
   mcpClientConfig(kind: 'claude' | 'gemini'): Promise<string>;
+  mcpInstallClaude(): Promise<{ ok: boolean; file: string }>;
   mcpCapture(rect: { x: number; y: number; width: number; height: number }): Promise<{ data: string; mimeType: string } | null>;
   storeChercher(sourceId: string, params: object): Promise<{ resultats?: object[]; suivant?: string | null; ecartes?: number; erreur?: string }>;
   bibliothequeLire(): Promise<{ version: number; categories: Record<string, string>; tags: { id: string; nom: string }[]; tagsParModele: Record<string, string[]> }>;

@@ -76,7 +76,7 @@ function cablerReglage(){
   if (!box) return;
   api.mcpStatus().then(montrerEtat);
   box.onchange = async () => montrerEtat(await api.mcpSetEnabled(box.checked));
-  // Copy a client's configuration: the user pastes it in the client's settings (docs/en/mcp.md).
+  // Gemini CLI: its configuration copied, to paste in its settings (docs/en/mcp.md).
   const copier = (kind, bouton) => async () => {
     const texte = await api.mcpClientConfig(kind);
     try { await navigator.clipboard.writeText(texte); } catch { return; }
@@ -84,6 +84,14 @@ function cablerReglage(){
     bouton.textContent = tr('Copied', 'Copiée');
     setTimeout(() => { bouton.textContent = avant; }, 1500);
   };
-  $('mcpCopyClaude').onclick = copier('claude', $('mcpCopyClaude'));
+  // Claude Desktop: an extension made for this computer, which Claude Desktop offers to install in one click.
+  $('mcpInstallClaude').onclick = async () => {
+    const r = await api.mcpInstallClaude();
+    $('mcpStatus').textContent = r && r.ok
+      ? tr('Claude Desktop opens its installation window: click « Install ». Then, in a new chat, ask for example « list my Storyboarder scenes ».',
+        'Claude Desktop ouvre sa fenêtre d\'installation : cliquez sur « Installer ». Puis, dans une nouvelle conversation, demandez par exemple « liste mes scènes Storyboarder ».')
+      : tr('Claude Desktop does not seem to be installed. The extension file is shown in its folder: drag it into Claude Desktop\'s window.',
+        'Claude Desktop ne semble pas installé. Le fichier de l\'extension est montré dans son dossier : glissez-le dans la fenêtre de Claude Desktop.');
+  };
   $('mcpCopyGemini').onclick = copier('gemini', $('mcpCopyGemini'));
 }

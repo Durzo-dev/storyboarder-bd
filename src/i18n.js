@@ -96,7 +96,7 @@ export const I18N_TEXT = [
   ['#reafficherMessagesBtn', 'Show hidden messages again', 'Réafficher les messages masqués'],
   ['#mcpLabel', 'AI connection', 'Connexion d\'une IA'],
   ['#mcpEnabledLabel', 'Let an AI on this computer read and create scenes', 'Laisser une IA de cet ordinateur lire et créer des scènes'],
-  ['#mcpCopyClaude', 'Copy the Claude Desktop config', 'Copier la config Claude Desktop'],
+  ['#mcpInstallClaude', 'Install in Claude Desktop', 'Installer dans Claude Desktop'],
   ['#mcpCopyGemini', 'Copy the Gemini CLI config', 'Copier la config Gemini CLI'],
   ['#personaRedresserBtn', 'Set upright', 'Remettre droit'],
   ['#objectRedresserBtn', 'Set upright', 'Remettre droit'],

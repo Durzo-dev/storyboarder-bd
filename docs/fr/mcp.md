@@ -12,6 +12,7 @@ les Scènes, importer un lieu réel et voir une Scène en image.
 |---|---|
 | `electron/mcp-server.js` | Le transport : un point d'accès HTTP local, `http://127.0.0.1:PORT/mcp`, et `mcp.json` (port, jeton, dernière liste d'outils) dans le dossier de données de l'utilisateur. Passe chaque message à la fenêtre et renvoie sa réponse. |
 | `electron/mcp-bridge.js` | Le pont stdio pour les clients qui lancent leurs serveurs comme des programmes (Claude Desktop). Modules intégrés de Node seulement. |
+| `electron/mcp-bundle.js` | L'extension Claude Desktop : un `.mcpb` (zip et `manifest.json`) fait pour cet ordinateur, qui contient le pont. |
 | `src/mcp-protocol.js` | PUR. JSON-RPC 2.0 : `initialize`, `ping`, `tools/list`, `tools/call`. Sans état. |
 | `src/mcp-schema.js` | PUR. Vérifie les arguments selon le schéma d'entrée de l'outil (un sous-ensemble de JSON Schema), erreurs en phrases. |
 | `src/mcp-tools.js` | Les outils : ce que l'IA lit (nom, description, schéma) et ce qu'ils font, par des gestes injectés. |
@@ -21,12 +22,20 @@ les Scènes, importer un lieu réel et voir une Scène en image.
 ## L'activer
 
 Configuration > Général > « Connexion d'une IA » : éteinte par défaut (`mcpEnabled` dans
-`settings.json`). Allumée, l'application écoute et deux boutons copient la configuration d'un client :
+`settings.json`). Allumée, l'application écoute, et :
 
-- **Claude Desktop** : à coller dans `claude_desktop_config.json` (`mcpServers`). La commande est
-  l'exécutable de Storyboarder lui-même avec `ELECTRON_RUN_AS_NODE=1`, qui lance `mcp-bridge.js` avec le
-  chemin de `mcp.json` : rien à installer.
-- **Gemini CLI** : à coller dans `settings.json` (`mcpServers`) : `httpUrl` et l'en-tête `Authorization`.
+- **« Installer dans Claude Desktop »** (`mcp:installClaude`) écrit `Storyboarder.mcpb` dans le dossier
+  de données de l'utilisateur et l'ouvre : Claude Desktop montre sa fenêtre d'installation, un clic sur
+  « Installer ». Le manifeste lance le pont avec le Node de Claude Desktop (`server.type: node`), avec en
+  argument le chemin du `mcp.json` de cet ordinateur ; les outils sont listés depuis `mcp.json`. Sans
+  Claude Desktop (aucun logiciel n'ouvre les `.mcpb`), le fichier est montré dans son dossier, à glisser
+  dans la fenêtre de Claude Desktop. Aucun fichier de configuration à modifier.
+- **« Copier la config Gemini CLI »** : à coller dans `settings.json` (`mcpServers`) : `httpUrl` et
+  l'en-tête `Authorization`.
+
+`clientConfig('claude')` donne encore la forme écrite à la main (`claude_desktop_config.json` :
+l'exécutable de Storyboarder avec `ELECTRON_RUN_AS_NODE=1` qui lance le pont), pour un client sans
+extensions.
 
 ChatGPT ne joint que des serveurs distants en HTTPS : non pris en charge.
 
@@ -79,5 +88,6 @@ par `mcp-link.js`. Le tester dans `tests/mcp.test.mjs` avec des `deps` de rempla
 - Dans le pont, la sortie standard appartient au protocole : les journaux vont sur la sortie d'erreur.
 - Empaqueté, le pont doit être hors de `app.asar` (`asarUnpack` dans `package.json`) ; le chemin donné au
   client est celui de `app.asar.unpacked`.
-- La version Microsoft Store de Claude Desktop peut lire sa configuration dans un dossier virtualisé :
-  l'utilisateur la colle par « Edit config » de Claude Desktop.
+- L'extension contient le chemin absolu de `mcp.json` : elle est faite sur l'ordinateur qui s'en sert,
+  jamais distribuée comme fichier.
+- L'extension n'est pas signée : Claude Desktop le dit dans sa fenêtre d'installation.

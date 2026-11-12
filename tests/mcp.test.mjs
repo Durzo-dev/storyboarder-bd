@@ -265,3 +265,33 @@ describe('MCP, the bridge with Storyboarder closed', () => {
     assert.equal(lines.find(l => l.id === null).error.code, -32700);
   });
 });
+
+describe('MCP, the Claude Desktop extension (.mcpb)', () => {
+  const { buildBundle, manifestOf } = require('../electron/mcp-bundle.js');
+  const { fichiersDuZip } = require('../electron/bibliotheque/zip-lecture.js');
+  const bridgePath = new URL('../electron/mcp-bridge.js', import.meta.url);
+  const iconPath = new URL('../assets/icone/storyboarder-bd-512.png', import.meta.url);
+  const archive = buildBundle({ version: '1.17.39', mcpJsonPath: 'C:\\Users\\u\\AppData\\Roaming\\Storyboarder BD\\mcp.json',
+    bridgePath, iconPath, tools: [{ name: 'list_scenes', description: 'The Scenes', inputSchema: {} }] });
+  const files = fichiersDuZip(archive);
+  const byName = (n) => files.get(n);
+  test('a zip a reader opens: the manifest, the bridge as is, the icon', () => {
+    assert.deepEqual([...files.keys()].sort(), ['icon.png', 'manifest.json', 'server/index.js']);
+    assert.ok(byName('server/index.js').equals(readFileSync(bridgePath)));
+    assert.ok(byName('icon.png').equals(readFileSync(iconPath)));
+  });
+  test('the manifest: the bridge started by Claude Desktop\'s Node, with this computer\'s mcp.json', () => {
+    const m = JSON.parse(byName('manifest.json').toString('utf8'));
+    assert.equal(m.manifest_version, '0.3');
+    assert.equal(m.name, 'storyboarder');
+    assert.equal(m.version, '1.17.39');
+    assert.equal(m.server.type, 'node');
+    assert.equal(m.server.entry_point, 'server/index.js');
+    assert.deepEqual(m.server.mcp_config.args, ['${__dirname}/server/index.js', 'C:\\Users\\u\\AppData\\Roaming\\Storyboarder BD\\mcp.json']);
+    assert.deepEqual(m.tools, [{ name: 'list_scenes', description: 'The Scenes' }]);
+    assert.ok(m.author.name && m.description);
+  });
+  test('a version that is not semver falls back (the manifest requires one)', () => {
+    assert.equal(manifestOf({ version: 'dev', mcpJsonPath: 'x' }).version, '1.0.0');
+  });
+});

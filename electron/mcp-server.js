@@ -144,7 +144,7 @@ function createMcpServer({ userData, window, log = console }){
     return { mcpServers: { storyboarder: { command: execPath, args: [bridgePath, file], env: { ELECTRON_RUN_AS_NODE: '1' } } } };
   }
 
-  return { start, stop, status, answer, rememberTools, clientConfig };
+  return { start, stop, status, answer, rememberTools, clientConfig, config };
 }
 
 module.exports = { createMcpServer, DEFAULT_PORT, ENDPOINT };

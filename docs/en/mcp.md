@@ -12,6 +12,7 @@ Scenes, import a real place, and see a Scene as an image.
 |---|---|
 | `electron/mcp-server.js` | The transport: a local HTTP endpoint, `http://127.0.0.1:PORT/mcp`, and `mcp.json` (port, token, last tool list) in the user's data folder. Hands each message to the window and sends back its answer. |
 | `electron/mcp-bridge.js` | The stdio bridge for clients that start their servers as programs (Claude Desktop). Node built-ins only. |
+| `electron/mcp-bundle.js` | The Claude Desktop extension: a `.mcpb` (zip and `manifest.json`) made for this computer, holding the bridge. |
 | `src/mcp-protocol.js` | PURE. JSON-RPC 2.0: `initialize`, `ping`, `tools/list`, `tools/call`. Stateless. |
 | `src/mcp-schema.js` | PURE. Checks the arguments against the tool's input schema (a JSON Schema subset), mistakes in words. |
 | `src/mcp-tools.js` | The tools: what the AI reads (name, description, schema) and what they do, through injected gestures. |
@@ -21,12 +22,19 @@ Scenes, import a real place, and see a Scene as an image.
 ## Turning it on
 
 Settings > General > « AI connection »: off by default (`mcpEnabled` in `settings.json`). On, the
-application listens and two buttons copy a client's configuration:
+application listens, and:
 
-- **Claude Desktop**: to paste into `claude_desktop_config.json` (`mcpServers`). The command is
-  Storyboarder's own executable with `ELECTRON_RUN_AS_NODE=1`, running `mcp-bridge.js` with the path of
-  `mcp.json`: nothing to install.
-- **Gemini CLI**: to paste into `settings.json` (`mcpServers`): `httpUrl` and the `Authorization` header.
+- **« Install in Claude Desktop »** (`mcp:installClaude`) writes `Storyboarder.mcpb` in the user's data
+  folder and opens it: Claude Desktop shows its installation window, one click on « Install ». The
+  manifest starts the bridge with Claude Desktop's own Node (`server.type: node`), with the path of this
+  computer's `mcp.json` as argument; the tools are listed from `mcp.json`. Without Claude Desktop (no
+  program opens `.mcpb`), the file is shown in its folder, to drag into Claude Desktop's window. No
+  configuration file to edit.
+- **« Copy the Gemini CLI config »**: to paste into `settings.json` (`mcpServers`): `httpUrl` and the
+  `Authorization` header.
+
+`clientConfig('claude')` still gives the hand-written form (`claude_desktop_config.json`: Storyboarder's
+executable with `ELECTRON_RUN_AS_NODE=1` running the bridge), for a client that has no extensions.
 
 ChatGPT only reaches remote servers over HTTPS: not supported.
 
@@ -78,5 +86,6 @@ by `mcp-link.js`. Test it in `tests/mcp.test.mjs` with stand-in `deps`.
 - stdout is the protocol's in the bridge: logs go to stderr.
 - Packaged, the bridge must be outside `app.asar` (`asarUnpack` in `package.json`); the path given to the
   client is the `app.asar.unpacked` one.
-- The Windows Store build of Claude Desktop may read its configuration from a virtualised folder: the user
-  pastes it through Claude Desktop's own « Edit config ».
+- The extension embeds the absolute path of `mcp.json`: it is made on the computer that uses it, never
+  shipped as a file.
+- The extension is not signed: Claude Desktop says so in its installation window.
