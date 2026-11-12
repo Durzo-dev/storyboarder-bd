@@ -50,9 +50,14 @@ et d'ombres entre dans la clé du programme. Déplacer ou recolorer ne recompile
   porteurs de userData (masque du Sol, mobilier), un ordre de rendu, une couche, un ancêtre masqué. Un
   bâtiment coupé à un niveau, avec des parties masquées ou ses murs de devant retirés reste en morceaux
   (ces réglages le reconstruisent souvent). Les groupes vides sont retirés.
+- **La menuiserie partage une boîte unité** (`boiteUnite`, batiment-3d.js), mise à l'échelle de chaque
+  pièce : une géométrie de boîte neuve par montant, vitre et appui coûtait un tiers de la construction d'un
+  bâtiment.
 - **Le relief effectif est gardé d'une image à l'autre** (`reliefEffectif3D`, voir terrain-editor.md).
 - Mesuré sur l'Écusson de Montpellier (300 bâtiments, avant les deux) : 78 000 appels de dessin et
   1,6 M de triangles par image ; 1,6 à 2,3 s par image en bougeant la caméra, 11,9 s à l'ouverture.
+  Après : 1 723 appels de dessin, environ 21 ms par image, 2,8 s à l'ouverture (dont 2,2 s de construction
+  des bâtiments).
 
 ## Mesurer
 

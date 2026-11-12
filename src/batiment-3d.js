@@ -102,6 +102,13 @@ function collecteur(T){
 /** L'aire signée d'un polygone (x, z) : positive dans le sens trigonométrique. */
 const aireSignee = (pts) => pts.reduce((s, p, i) => { const q = pts[(i + 1) % pts.length]; return s + p.x * q.z - q.x * p.z; }, 0) / 2;
 
+/** The unit box shared by the joinery (construireMenuiserie). Disposing it only frees the GPU copy. */
+let _boiteUnite = null;
+function boiteUnite(T){
+  if (!_boiteUnite || _boiteUnite.T !== T) _boiteUnite = { T, geo: new T.BoxGeometry(1, 1, 1) };
+  return _boiteUnite.geo;
+}
+
 /**
  * La menuiserie d'une ouverture (#454a-3c), simple en attendant les modèles du store : un cadre, du
  * verre pour ce qui est vitré, un battant de bois pour une porte pleine, deux vantaux décalés pour ce
@@ -116,8 +123,12 @@ function construireMenuiserie(T, mur, o, mats){
   g.position.set(mur.a.x + u.x * c, o.y, mur.a.z + u.z * c);
   g.rotation.y = -Math.atan2(u.z, u.x);
   if (o.type === 'passage') return g;
+  // ONE unit box for every piece of joinery, scaled to its size (a box's texture coordinates are 0 to 1 on
+  // each face whatever its size: the same look). A building has hundreds of these pieces; a new box
+  // geometry each was a third of the time to build one (measured on Eguisheim's old town).
   const boite = (lx, ly, lz, x, y, z, mat) => {
-    const b = new T.Mesh(new T.BoxGeometry(lx, ly, lz), mat);
+    const b = new T.Mesh(boiteUnite(T), mat);
+    b.scale.set(lx, ly, lz);
     b.position.set(x, y, z);
     g.add(b);
   };

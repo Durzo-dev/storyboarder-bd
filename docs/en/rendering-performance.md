@@ -47,9 +47,12 @@ enters the program key. Moving or recolouring recompiles nothing.
   skinned, instanced or multi-material meshes, meshes or ancestors with userData (ground mask,
   furniture), a render order, a layer, a hidden ancestor. A building cut at a level, with hidden parts or
   its front walls taken away stays in pieces (those settings rebuild it often). Empty groups are removed.
+- **The joinery shares one unit box** (`boiteUnite`, batiment-3d.js), scaled to each piece: a new box
+  geometry per frame piece, glass and sill was a third of a building's build time.
 - **The effective relief is kept between frames** (`reliefEffectif3D`, see terrain-editor.md).
 - Measured on Montpellier's Écusson (300 buildings, before both): 78 000 draw calls and 1.6 M triangles
-  per frame; 1.6 to 2.3 s per frame while moving the camera, 11.9 s to open.
+  per frame; 1.6 to 2.3 s per frame while moving the camera, 11.9 s to open. After: 1 723 draw calls,
+  about 21 ms per frame, 2.8 s to open (the buildings' construction, 2.2 s of it).
 
 ## Measuring
 
