@@ -49,8 +49,9 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
   Les tunnels sont écartés. Découpés à la zone (`clipPolyline`). `world` est celui d'un Tracé (`pts`,
   `width`).
 - **Zones** (`zoneTypeOf`) : prairie, pelouse, forêt… → `herbe` ; parc, jardin, terrain de sport →
-  `gazon` ; champs, vignes… → `terre` ; sable, plage → `sable` ; eau → `eau` ; parkings et places
-  piétonnes → `bitume`. `landuse=residential` et ses pareils sont trop vastes : ce n'est pas un sol. Le
+  `gazon` ; champs, vignes… → `terre` ; sable, plage → `sable` ; eau → `eau` ; parkings → `bitume`, place
+  piétonne → `béton` (dallée) ; les deux suivent le `surface` d'OSM quand il nomme un des sols (asphalte,
+  pavés, gravier…). `landuse=residential` et ses pareils sont trop vastes : ce n'est pas un sol. Le
   polygone devient un masque de Zone peinte en cases de 1 m (`maskOfPolygon`), `world` par
   `mondeDuMasque`.
 - **Éléments** : `natural=tree` → `arbre`, `highway=street_lamp` → `lampadaire`, `traffic_sign` et

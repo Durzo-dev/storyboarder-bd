@@ -45,7 +45,8 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
   `haie`, `barriere`; `waterway` → `riviere`. A `width` tag wins. Tunnels are skipped. Clipped to the zone
   (`clipPolyline`). `world` is the Path's own (`pts`, `width`).
 - **Zones** (`zoneTypeOf`): grass, meadow, forest… → `herbe`; park, garden, pitch → `gazon`; farmland,
-  vineyard… → `terre`; sand, beach → `sable`; water → `eau`; parking and pedestrian squares → `bitume`.
+  vineyard… → `terre`; sand, beach → `sable`; water → `eau`; parking → `bitume`, a pedestrian square →
+  `béton` (paved); both follow the OSM `surface` when it names one of the grounds (asphalt, sett, gravel…).
   `landuse=residential` and the like are too wide: not a ground. The polygon becomes a painted Zone mask
   of 1 m cells (`maskOfPolygon`), `world` from `mondeDuMasque`.
 - **Elements**: `natural=tree` → `arbre`, `highway=street_lamp` → `lampadaire`, `traffic_sign` and

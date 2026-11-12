@@ -35,7 +35,7 @@ describe('real place, the content of a Scene', () => {
     assert.equal(grandRue.world.width, 5);
     assert.equal(grandRue.width, 10, 'the default 10 px stroke for 5 m');
     const square = c.traces.find(o => o.tracéType === 'terrain' && o.name === 'Place du Marché aux Saules');
-    assert.equal(square.terrainType, 'bitume');
+    assert.equal(square.terrainType, 'béton');
     assert.ok(square.world.masque);
   });
   test('a wall gets its default height, a river its depth, an unnamed Path the application\'s name', () => {

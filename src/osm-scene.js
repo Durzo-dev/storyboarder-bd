@@ -410,10 +410,20 @@ export function pathKindOf(tags){
   return null;
 }
 
+/** The ground of an OSM `surface` value, or undefined when it has none of ours. */
+const SURFACES = {
+  asphalt: 'bitume', chipseal: 'bitume',
+  paved: 'béton', concrete: 'béton', 'concrete:plates': 'béton', paving_stones: 'béton', sett: 'béton',
+  cobblestone: 'béton', unhewn_cobblestone: 'béton', stone: 'béton', marble: 'béton', granite: 'béton',
+  gravel: 'gravier', fine_gravel: 'gravier', pebblestone: 'gravier', compacted: 'gravier',
+  grass: 'herbe', sand: 'sable', dirt: 'terre', ground: 'terre', earth: 'terre', mud: 'terre',
+};
+
 /** The ground of a closed way that is a Zone, or null. */
 export function zoneTypeOf(tags){
-  if (tags.amenity === 'parking') return 'bitume';
-  if (tags.highway === 'pedestrian' && tags.area === 'yes') return 'bitume';
+  if (tags.amenity === 'parking') return SURFACES[tags.surface] || 'bitume';
+  // A pedestrian square is paved, not asphalted, unless its `surface` says otherwise.
+  if (tags.highway === 'pedestrian' && tags.area === 'yes') return SURFACES[tags.surface] || 'béton';
   return ZONE_TYPES[tags.landuse] || ZONE_TYPES[tags.leisure] || ZONE_TYPES[tags.natural] || null;
 }
 

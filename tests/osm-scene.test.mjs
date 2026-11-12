@@ -71,7 +71,7 @@ describe('#457b-2, the village (Eguisheim)', () => {
     assert.ok(V.paths.some(p => p.kind === 'chemin' && p.world.width === 1.2), 'a path');
     assert.ok(V.paths.some(p => p.kind === 'muret'), 'the retaining wall');
     const square = V.zones.find(z => z.name === 'Place du Marché aux Saules');
-    assert.equal(square.terrainType, 'bitume');
+    assert.equal(square.terrainType, 'béton', 'paved (surface sett), not asphalt');
     assert.ok(square.world.masque.plein.includes('1'));
   });
   test('relations are counted as skipped (multipolygons: later), the attribution is given', () => {
@@ -155,6 +155,11 @@ describe('#457b-2, the pieces', () => {
     assert.equal(zoneTypeOf({ leisure: 'park' }), 'gazon');
     assert.equal(zoneTypeOf({ natural: 'water' }), 'eau');
     assert.equal(zoneTypeOf({ amenity: 'parking' }), 'bitume');
+    assert.equal(zoneTypeOf({ amenity: 'parking', surface: 'gravel' }), 'gravier');
+    assert.equal(zoneTypeOf({ highway: 'pedestrian', area: 'yes' }), 'béton', 'a square is paved');
+    assert.equal(zoneTypeOf({ highway: 'pedestrian', area: 'yes', surface: 'asphalt' }), 'bitume', 'unless asphalted');
+    assert.equal(zoneTypeOf({ highway: 'pedestrian', area: 'yes', surface: 'unknown' }), 'béton');
+    assert.equal(zoneTypeOf({ highway: 'pedestrian' }), null, 'a pedestrian street is a Path, not a Zone');
     assert.equal(zoneTypeOf({ landuse: 'residential' }), null, 'too wide: not a ground');
   });
   test('a synthetic extract: a lawn, a lake, a tree, a relation; everything outside the zone is left out', () => {
