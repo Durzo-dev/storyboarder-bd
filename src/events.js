@@ -47,6 +47,7 @@ import { initialiserMiseAJour, rafraichirTextesMaj, fermerModaleMaj } from './up
 import { verifierRessources, rafraichirApresChangementDeDossier, simulationRessources } from './missing-resources.js';
 import { cablerStore, rafraichirTextesStore, fermerStore, rafraichirBibliothequeLocale, basculerStore, ouvrirStore } from './store-ui.js';
 import { cablerLieuReel } from './real-place-ui.js';
+import { layRealPlace } from './real-place-lay.js';
 import { initLecteur, cablerLecteur, ouvrirLecteur, fermerLecteur, lecteurOuvert } from './lecteur-ui.js';
 import { oublierVignette } from './model-thumbnails.js';
 import { definirLumiereDeCase3D, effacerLumiereDeCase3D, directionDepuisDome3D,
@@ -162,7 +163,7 @@ import {
   getCamOrbitWorld, getElementProjectedHalfExtents3D, getElementProjectedBox3D, groundMagnetEligible, panelPixelToGroundXZ3D,
   projectElementCenterToCanvas3D, setElementWorldPos3D, smoothTracéPath3D, tracéPointAtFrac3D,
   wallOpeningWorldPosOnTracé3D, startCamSmoothing, storeElementWorldCoords, useObjectBoxFormat3D,
-  distanceCameraPourPremierElement3D, estPremierElement3DdeLaCase, tracéUpdateScreenPts,
+  distanceCameraPourPremierElement3D, estPremierElement3DdeLaCase,
   useObjectFormat3D, worldPointToPageXY3D, panelSceneCache3D, elaguerCacheDeCases3D, tracéMeshCache3D,
   getRoomScreenBBoxFrom2DProjections, getBuildingJunctionCorners,
 } from './scene3d.js';
@@ -9281,28 +9282,7 @@ cablerLieuReel({
     snapshot();
     const s = createScene();
     if (nom) s.name = nom;
-    const page = s.pages[0], panel = page.objects.find(o => o.type === 'panel');
-    if (contenu.relief) panel.relief = contenu.relief;
-    panel.creditsDuLieu = contenu.credits.slice();
-    // ⚠️ THE DEPTH `o.z` STAYS 0 (seen: no building in an imported Scene). An Element's size is its 2D size
-    // seen at the depth `o.z`, a perspective made for a few metres in front of the camera (30 m): put at
-    // the place's north-south position (up to ±200 m), a building to the south shrank to nothing and one
-    // to the north grew out of scale. The position in the world is `wxFloor`/`wzFloor`, which the
-    // rendering reads.
-    const placer = (o, x, z) => { o.z = 0; setElementWorldPos3D(o, panel, x, 0); o.wxFloor = x; o.wzFloor = z; };
-    for (const t of contenu.traces) { t.panelId = panel.id; page.objects.push(t); tracéUpdateScreenPts(t, panel, page); }
-    for (const b of contenu.buildings) {
-      const el = creerElementBatiment({ panel, page, batiment: b.building });
-      placer(el, b.x, b.z);
-      page.objects.push(el);
-    }
-    for (const e of contenu.elements) {
-      const o = objetIntegreNeuf(panel, page, e.objType);
-      placer(o, e.x, e.z);
-      page.objects.push(o);
-    }
-    // The whole place in view: the camera distance that frames its side (the same rule as a Panel's first Element).
-    panel.camDist = panel.camDistTarget = distanceCameraPourPremierElement3D(2 * demiCote);
+    layRealPlace(s, contenu, { halfSize: demiCote, newObject: objetIntegreNeuf });
     openScene(s.id);
     return s;
   },

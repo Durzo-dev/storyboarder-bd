@@ -15,8 +15,9 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
 | `src/real-place-import.js` | PURE. The translation and the altitudes turned into a Scene's content (`sceneContentOf`: Path and Zone objects, relief, credits). |
 | `src/real-place-ui.js` | The new Scene's window: the choice, then search, map (OpenStreetMap tiles), zone size, import with its progress. |
 | `electron/bibliotheque/real-place.js` | The network (main process): Nominatim, Overpass (with mirrors), altitudes, tiles; identified by the application's User-Agent. |
-| `src/events.js` (`cablerLieuReel`, `creerScene`) | Lays the content in a new Scene, in one undo step. |
-| `tests/osm-scene.test.mjs`, `tests/real-place-sources.test.mjs` | Their tests, on real extracts and real altimetry answers. |
+| `src/real-place-lay.js` | Lays the content in a new Scene (`layRealPlace`): objects at their place, on the Ground, the zone framed from above. |
+| `src/events.js` (`cablerLieuReel`, `creerScene`) | Calls it on a new Scene, in one undo step, then opens the Scene. |
+| `tests/osm-scene.test.mjs`, `tests/real-place-sources.test.mjs`, `tests/real-place-import.test.mjs`, `tests/real-place-lay.test.mjs` | Their tests, on real extracts and real altimetry answers; the last one renders the laid Scene with the real 3D code. |
 
 ## The translator
 
@@ -63,10 +64,12 @@ The ground under buildings needs nothing: the rendered relief is already flatten
 4. `sceneContentOf`: Zones and Paths (`pathObject`, `zoneObject`, named by `nomDuTrace`), the relief
    (`reliefDepuisAltitudes`: base at the middle of the range, edges blended to 0 over 20 m to meet the flat
    Ground), the credits.
-5. `creerScene` (events.js): one snapshot, `createScene`, the relief and `creditsDuLieu` on the canvas, the
-   Paths (`tracéUpdateScreenPts`), the buildings (`creerElementBatiment`), trees and lamps
-   (`objetIntegreNeuf`, the same construction as « Add »), each placed by `wxFloor`/`wzFloor`; the camera
-   frames the zone (`distanceCameraPourPremierElement3D`).
+5. `creerScene` (events.js): one snapshot, `createScene`, then `layRealPlace` (real-place-lay.js): the relief
+   and `creditsDuLieu` on the canvas, the Paths (`tracéUpdateScreenPts`), the buildings
+   (`creerElementBatiment`), trees and lamps (`objetIntegreNeuf`, the same construction as « Add »), each
+   placed by `wxFloor`/`wzFloor` and set on the Ground (`applyGroundMagnetY`); the camera, from above, at the
+   distance where the zone fills the view with a 10 % margin (the field of view is fixed: the page's height
+   seen at 30 m).
 
 **Credits**: `panel.creditsDuLieu` (a list of lines) on the Scene's canvas; `loadSceneIntoPanel` copies it to
 the Panel; the export draws them once each (`creditsDuLieu`, export-credits.js) after the model credits.
@@ -99,6 +102,10 @@ A country is added by an entry in `COUNTRIES` (its providers, best first, and it
 - **An imported Element keeps the depth `o.z = 0`.** An Element's size is its 2D size seen at its depth, a
   perspective made for a few metres in front of the camera (30 m): at the place's north-south position
   (±200 m), a building shrank to nothing or grew out of scale. Its place is `wxFloor`/`wzFloor`.
+
+- **A Scene's page has no size of its own.** The size is the Scene's (`scene.w`, `scene.h`), and the
+  application reads it through `currentPage()`. Every 2D frame made against the bare page is NaN, and the
+  Element is not drawn: `layRealPlace` gives the builders the same view as `currentPage()`.
 
 - **The fixtures' geometry is `[lat, lon]`** (compacted); Overpass gives `{lat, lon}`. The translator
   reads both.

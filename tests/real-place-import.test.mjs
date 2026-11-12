@@ -102,10 +102,6 @@ describe('the import\'s progress and placement', async () => {
     assert.ok(importProgress('relief', 0.5) > importProgress('relief', 0) && importProgress('relief', 0.5) < importProgress('scene', 0));
     assert.equal(importProgress('unknown'), 0);
   });
-  test('an imported Element keeps the depth 0: its place is wxFloor/wzFloor (seen: buildings shrunk to nothing)', () => {
-    const ev = readFileSync(new URL('../src/events.js', import.meta.url), 'utf8');
-    assert.match(ev, /const placer = \(o, x, z\) => \{ o\.z = 0; setElementWorldPos3D\(o, panel, x, 0\); o\.wxFloor = x; o\.wzFloor = z; \};/);
-  });
   test('« New scene » opens the choice, manual or from a real place', () => {
     const ui = readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8');
     assert.match(ui, /\$\('addSceneBtn'\)\.onclick = \(\) => ouvrirNouvelleScene\(\);/);

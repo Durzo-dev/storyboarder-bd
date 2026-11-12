@@ -15,8 +15,9 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
 | `src/real-place-import.js` | PUR. La traduction et les altitudes devenues le contenu d'une Scène (`sceneContentOf` : objets Tracés et Zones, relief, crédits). |
 | `src/real-place-ui.js` | La fenêtre d'une Scène neuve : le choix, puis recherche, carte (tuiles OpenStreetMap), taille de la zone, import avec sa progression. |
 | `electron/bibliotheque/real-place.js` | Le réseau (processus principal) : Nominatim, Overpass (avec miroirs), altitudes, tuiles ; identifié par le User-Agent de l'application. |
-| `src/events.js` (`cablerLieuReel`, `creerScene`) | Pose le contenu dans une Scène neuve, en une seule étape d'annulation. |
-| `tests/osm-scene.test.mjs`, `tests/real-place-sources.test.mjs` | Leurs tests, sur des extraits réels et de vraies réponses d'altimétrie. |
+| `src/real-place-lay.js` | Pose le contenu dans une Scène neuve (`layRealPlace`) : les objets à leur place, sur le Sol, la zone cadrée de dessus. |
+| `src/events.js` (`cablerLieuReel`, `creerScene`) | L'appelle sur une Scène neuve, en une seule étape d'annulation, puis ouvre la Scène. |
+| `tests/osm-scene.test.mjs`, `tests/real-place-sources.test.mjs`, `tests/real-place-import.test.mjs`, `tests/real-place-lay.test.mjs` | Leurs tests, sur des extraits réels et de vraies réponses d'altimétrie ; le dernier rend la Scène posée avec le vrai code 3D. |
 
 ## Le traducteur
 
@@ -68,10 +69,12 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
 4. `sceneContentOf` : Zones et Tracés (`pathObject`, `zoneObject`, nommés par `nomDuTrace`), le relief
    (`reliefDepuisAltitudes` : base au milieu de l'étendue, bords ramenés à 0 sur 20 m pour rejoindre le Sol
    plat), les crédits.
-5. `creerScene` (events.js) : un seul instantané, `createScene`, le relief et `creditsDuLieu` sur le canevas,
-   les Tracés (`tracéUpdateScreenPts`), les bâtiments (`creerElementBatiment`), arbres et lampadaires
-   (`objetIntegreNeuf`, la même construction qu'« Ajouter »), chacun placé par `wxFloor`/`wzFloor` ; la
-   caméra cadre la zone (`distanceCameraPourPremierElement3D`).
+5. `creerScene` (events.js) : un seul instantané, `createScene`, puis `layRealPlace` (real-place-lay.js) : le
+   relief et `creditsDuLieu` sur le canevas, les Tracés (`tracéUpdateScreenPts`), les bâtiments
+   (`creerElementBatiment`), arbres et lampadaires (`objetIntegreNeuf`, la même construction qu'« Ajouter »),
+   chacun placé par `wxFloor`/`wzFloor` et posé sur le Sol (`applyGroundMagnetY`) ; la caméra, de dessus, à
+   la distance où la zone remplit la vue avec 10 % de marge (le champ de vision est fixe : la hauteur de la
+   page vue à 30 m).
 
 **Crédits** : `panel.creditsDuLieu` (une liste de lignes) sur le canevas de la Scène ; `loadSceneIntoPanel` la
 recopie dans la Case ; l'export les dessine une fois chacune (`creditsDuLieu`, export-credits.js) après les
@@ -106,6 +109,10 @@ Un pays s'ajoute par une entrée dans `COUNTRIES` (ses fournisseurs, le meilleur
   profondeur, une perspective faite pour quelques mètres devant la caméra (30 m) : à la position nord-sud du
   lieu (±200 m), un bâtiment rétrécissait à rien ou grandissait hors d'échelle. Sa place est
   `wxFloor`/`wzFloor`.
+
+- **La page d'une Scène n'a pas de taille à elle.** La taille est celle de la Scène (`scene.w`, `scene.h`),
+  que l'application lit par `currentPage()`. Tout cadre 2D fait sur la page nue vaut NaN, et l'Élément n'est
+  pas dessiné : `layRealPlace` donne aux constructeurs la même vue que `currentPage()`.
 
 - **La géométrie des données de test est `[lat, lon]`** (compactée) ; Overpass donne `{lat, lon}`. Le
   traducteur lit les deux.
