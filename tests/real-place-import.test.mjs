@@ -126,3 +126,19 @@ describe('real place, the map data\'s detail line', async () => {
     assert.match(readFileSync(new URL('../electron/main.js', import.meta.url), 'utf8'), /event\.sender\.send\('realplace:osmProgress', p\)/);
   });
 });
+
+describe('real place, the Overpass servers', () => {
+  const net = readFileSync(new URL('../electron/bibliotheque/real-place.js', import.meta.url), 'utf8');
+  test('the free public instances first, the overloaded main one last; the dead old address gone', () => {
+    const list = net.slice(net.indexOf('const OVERPASS = ['), net.indexOf('];', net.indexOf('const OVERPASS = [')));
+    const hosts = [...list.matchAll(/https:\/\/([^/']+)/g)].map(m => m[1]);
+    assert.deepEqual(hosts, ['overpass.private.coffee', 'maps.mail.ru', 'overpass-api.de']);
+    assert.doesNotMatch(net, /kumi\.systems\/api/);
+  });
+  test('a « 200 » answer with a runtime error remark is a failure; all failed: busy, unless no connection at all', () => {
+    assert.match(net, /r\.json\.remark === 'string' && \/error\/i\.test\(r\.json\.remark\)/);
+    assert.match(net, /const good = r\.json && Array\.isArray\(r\.json\.elements\) && !remark;/);
+    assert.match(net, /failures\.every\(f => f === 'network'\) \? 'network' : 'busy'/);
+    assert.match(readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8'), /busy: tr\('The OpenStreetMap servers are busy/);
+  });
+});

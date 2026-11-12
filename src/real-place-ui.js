@@ -123,6 +123,8 @@ const ERREURS = () => ({
   quota: tr('The service asks to wait a little before asking again.', 'Le service demande de patienter un peu avant de redemander.'),
   response: tr('The service sent an unexpected answer. Try again later.', 'Le service a renvoyé une réponse inattendue. Réessayez plus tard.'),
   zone: tr('This zone is too large.', 'Cette zone est trop grande.'),
+  busy: tr('The OpenStreetMap servers are busy and did not send the map data. Try again in a moment, or with a smaller zone.',
+    'Les serveurs OpenStreetMap sont surchargés et n\'ont pas envoyé les données de la carte. Réessayez dans un instant, ou avec une zone plus petite.'),
 });
 const erreur = (code) => ERREURS()[code] || ERREURS().response;
 

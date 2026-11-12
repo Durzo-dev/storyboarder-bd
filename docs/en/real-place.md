@@ -57,8 +57,10 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    the session), the zone's size (100 to 400 m), "Create the scene". During the import, a bar and the list
    of steps (`IMPORT_STEPS`, `importProgress`: map data, country, buildings, relief, scene); the relief's
    requests are sent one by one so the bar follows them.
-2. The extract: `realplace:osm` with the zone's bounding box; Overpass servers in order (`OVERPASS`), the
-   first that answers; cached. The answer is read as a stream: `realplace:osmProgress` sends the server
+2. The extract: `realplace:osm` with the zone's bounding box; Overpass servers in order (`OVERPASS`: the
+   public instances without key or limit first, the overloaded main instance last), the first that answers
+   completely (an answer ending with a runtime-error `remark` is incomplete, and the next server is asked);
+   cached. All failed: `busy`, or `network` when none could be reached. The answer is read as a stream: `realplace:osmProgress` sends the server
    asked and the bytes received (every 200 ms at most), and the window shows them under the steps with the
    seconds spent (`downloadDetail`). Each attempt is logged (`[real-place] overpass <host>`: outcome,
    duration, size). The country: the chosen place's, else `realplace:country` (Nominatim reverse).

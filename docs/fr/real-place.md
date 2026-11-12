@@ -61,8 +61,11 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    gardées pendant la session), la taille de la zone (100 à 400 m), « Créer la scène ». Pendant l'import, une
    barre et la liste des étapes (`IMPORT_STEPS`, `importProgress` : données de la carte, pays, bâtiments,
    relief, scène) ; les requêtes du relief partent une à une pour que la barre les suive.
-2. L'extrait : `realplace:osm` avec l'emprise de la zone ; les serveurs Overpass dans l'ordre (`OVERPASS`), le
-   premier qui répond ; gardé en mémoire. La réponse est lue en flux : `realplace:osmProgress` envoie le
+2. L'extrait : `realplace:osm` avec l'emprise de la zone ; les serveurs Overpass dans l'ordre (`OVERPASS` : les
+   instances publiques sans clé ni limite d'abord, l'instance principale, surchargée, en dernier), le premier
+   qui répond en entier (une réponse finie par une `remark` d'erreur d'exécution est incomplète, et le
+   serveur suivant est interrogé) ; gardé en mémoire. Tous en échec : `busy`, ou `network` quand aucun n'a
+   pu être joint. La réponse est lue en flux : `realplace:osmProgress` envoie le
    serveur interrogé et les octets reçus (toutes les 200 ms au plus), et la fenêtre les montre sous les
    étapes avec les secondes écoulées (`downloadDetail`). Chaque tentative est journalisée
    (`[real-place] overpass <hôte>` : résultat, durée, taille). Le pays : celui du lieu choisi, sinon `realplace:country` (Nominatim

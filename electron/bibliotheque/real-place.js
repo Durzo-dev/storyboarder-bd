@@ -15,11 +15,16 @@ const sources = require('./store-sources');
 const TIMEOUT_MS = 30000;
 const OVERPASS_TIMEOUT_MS = 90000;
 
-/** The Overpass servers, in order: the main one, then mirrors (one may refuse or be overloaded). */
+/**
+ * The Overpass servers, in order (OSM wiki, « Public Overpass API instances », read 12 Nov. 2026): the two
+ * public instances that ask no key and set no limit first (Private.coffee, formerly overpass.kumi.systems,
+ * whose old address no longer answers; VK Maps), the main instance last: its page says it is overloaded
+ * and asks to use the alternatives when possible.
+ */
 const OVERPASS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+  'https://overpass-api.de/api/interpreter',
 ];
 /** The altitude services the renderer may ask for (src/real-place-sources.js). */
 const ALTITUDE_HOSTS = /^https:\/\/(data\.geopf\.fr\/altimetrie\/|api\.open-meteo\.com\/v1\/elevation\?)/;
@@ -107,7 +112,7 @@ async function osm(bbox, progress = null){
   const key = JSON.stringify(bbox);
   const cached = extracts.get(key);
   if (cached) return { json: cached };
-  let last = { error: 'network' };
+  const failures = [];
   for (let k = 0; k < OVERPASS.length; k++) {
     const url = OVERPASS[k], host = new URL(url).host, started = Date.now();
     const tell = (bytes) => { if (progress) progress({ server: k + 1, servers: OVERPASS.length, bytes }); };
@@ -116,13 +121,25 @@ async function osm(bbox, progress = null){
     const r = await request(url, { method: 'POST', body: `data=${encodeURIComponent(overpassQuery(bbox))}`, timeout: OVERPASS_TIMEOUT_MS,
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       onBytes: (bytes) => { const now = Date.now(); if (now - told >= PROGRESS_EVERY_MS) { told = now; tell(bytes); } } });
-    const good = r.json && Array.isArray(r.json.elements);
-    console.info(`[real-place] overpass ${host}: ${good ? 'ok' : (r.error || 'response')}${r.status ? ` (HTTP ${r.status})` : ''}`
-      + ` in ${Date.now() - started} ms, ${r.size || 0} bytes`);
+    // ⚠️ AN OVERPASS ANSWER CAN BE « 200 OK » AND INCOMPLETE: a query that ran out of time or memory ends with
+    // a `remark` (« runtime error: … ») after the elements it had. Taken, it would make a Scene with
+    // holes; it is a failure, and the next server is asked.
+    const remark = r.json && typeof r.json.remark === 'string' && /error/i.test(r.json.remark) ? r.json.remark : null;
+    const good = r.json && Array.isArray(r.json.elements) && !remark;
+    console.info(`[real-place] overpass ${host}: ${good ? 'ok' : (remark ? 'incomplete' : (r.error || 'response'))}${r.status ? ` (HTTP ${r.status})` : ''}`
+      + ` in ${Date.now() - started} ms, ${r.size || 0} bytes${remark ? ` (${remark.slice(0, 120)})` : ''}`);
     if (good) { tell(r.size || 0); extracts.set(key, r.json); return { json: r.json, server: host }; }
-    last = r.error ? r : { error: 'response' };
+    failures.push(remark ? 'incomplete' : (r.error || 'response'));
   }
-  return last;
+  return { error: overpassFailure(failures) };
+}
+
+/**
+ * What to tell when no Overpass server gave the extract: no connection at all ('network'), else the servers
+ * are busy ('busy': too slow, refused, answered an error or half an answer), which is what it nearly always is.
+ */
+function overpassFailure(failures){
+  return failures.length && failures.every(f => f === 'network') ? 'network' : 'busy';
 }
 
 /** The BD TOPO buildings of a zone (France): the IGN's WFS, no key. Only the properties building-survey.js reads. */
