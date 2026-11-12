@@ -99,6 +99,9 @@ function montrerLaProgression(step, sub = 0, detail = null){
   const hint = $('realPlaceHint');
   hint.textContent = i < 0 ? '' : `${labels[step]} · ${tr('step', 'étape')} ${i + 1}/${IMPORT_STEPS.length}`;
   hint.classList.add('encours');
+  // The zone's size is set: its place goes to the step's detail (asked).
+  $('realPlaceSizeLabel').hidden = $('realPlaceSize').hidden = true;
+  $('realPlaceDetail').hidden = false;
 }
 
 /** Back to the instructions, the progress put away (an import failed or cancelled, or the window opened). */
@@ -107,6 +110,8 @@ function rendreLaConsigne(){
   hint.textContent = tr('Click on the map to place the zone.', 'Cliquez sur la carte pour placer la zone.');
   hint.classList.remove('encours');
   $('realPlaceProgress').hidden = true;
+  $('realPlaceSizeLabel').hidden = $('realPlaceSize').hidden = false;
+  $('realPlaceDetail').hidden = true;
 }
 
 /** The detail line of the map data: the server, the seconds spent on it, the bytes received. */
@@ -155,7 +160,6 @@ function majBoutons(){
   const busy = !!(V && V.busy);
   $('realPlaceImport').hidden = busy;
   document.querySelector('.real-place-actions').classList.toggle('seul', busy);
-  $('realPlaceSearchBtn').disabled = !V || V.busy;
 }
 
 const ERREURS = () => ({

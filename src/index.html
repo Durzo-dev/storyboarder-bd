@@ -1533,7 +1533,6 @@
       <div class="champ-recherche">
         <input id="realPlaceQuery" type="search" autocomplete="off">
         <button id="realPlaceClearBtn" class="champ-recherche-effacer" type="button" title="Effacer" aria-label="Effacer" hidden><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
-        <button id="realPlaceSearchBtn" class="champ-recherche-lancer" type="submit" title="Chercher" aria-label="Chercher"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
       </div>
     </form>
     <div id="realPlaceResults" class="real-place-results" hidden></div>
@@ -1542,6 +1541,8 @@
       <p id="realPlaceMapCredit" class="real-place-credit"></p>
     </div>
     <div class="real-place-options">
+      <!-- During the import (asked): the zone's size gives way to the step's detail, on the left. -->
+      <p id="realPlaceDetail" class="real-place-detail" hidden></p>
       <label id="realPlaceSizeLabel" for="realPlaceSize">Taille de la zone</label>
       <select id="realPlaceSize">
         <option value="100">100 m</option>
@@ -1552,10 +1553,9 @@
       <span id="realPlaceHint" class="real-place-hint"></span>
     </div>
     <p id="realPlaceStatus" class="maj-message"></p>
-    <!-- The import's progress, at the bottom above the buttons (asked): its detail line, then the bar. The step under
-         way takes the instructions' place (#realPlaceHint). -->
+    <!-- The import's progress, at the bottom above the buttons (asked): the bar. The step under way takes the
+         instructions' place (#realPlaceHint), its detail the zone's size's (#realPlaceDetail). -->
     <div id="realPlaceProgress" class="real-place-progress" hidden>
-      <p id="realPlaceDetail" class="real-place-detail"></p>
       <div class="real-place-bar"><span id="realPlaceBar"></span></div>
     </div>
     <div class="real-place-actions">

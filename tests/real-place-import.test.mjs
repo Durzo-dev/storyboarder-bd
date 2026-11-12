@@ -172,9 +172,13 @@ describe('real place, the window', () => {
     assert.ok(i > html.indexOf('id="realPlaceStatus"') && i < html.indexOf('class="real-place-actions"'), 'just above the buttons');
     assert.match(ui, /hint\.textContent = i < 0 \? '' : `\$\{labels\[step\]\} · \$\{tr\('step', 'étape'\)\}/, 'the step in the instructions\' place');
   });
-  test('an icon search button, its name in the tooltip; « Try again » after a failure; closing forgets the search', () => {
+  test('during the import the zone\'s size gives way to the step\'s detail', () => {
+    assert.match(ui, /\$\('realPlaceSizeLabel'\)\.hidden = \$\('realPlaceSize'\)\.hidden = true;\n  \$\('realPlaceDetail'\)\.hidden = false;/);
+  });
+  test('a search field with its clear button; « Try again » after a failure; closing forgets the search', () => {
     const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
-    assert.match(html, /<div class="champ-recherche">\s*<input id="realPlaceQuery"[^>]*>\s*<button id="realPlaceClearBtn" class="champ-recherche-effacer"[^>]*hidden>[\s\S]*?<button id="realPlaceSearchBtn" class="champ-recherche-lancer" type="submit" title="Chercher"/);
+    assert.match(html, /<div class="champ-recherche">\s*<input id="realPlaceQuery"[^>]*>\s*<button id="realPlaceClearBtn" class="champ-recherche-effacer"[^>]*hidden>[\s\S]*?<\/button>\s*<\/div>/);
+    assert.doesNotMatch(html, /id="realPlaceSearchBtn"/, 'no search button: the suggestions come while typing, Enter still searches');
     assert.match(ui, /\$\('realPlaceQuery'\)\.value = p\.name;\n      _rafraichirRecherche\(\);\n      choisirLieu\(p\);/, 'a suggestion fills the field and finds the place');
     assert.match(ui, /V && V\.echec \? tr\('Try again', 'Réessayer'\)/);
     assert.match(ui, /\$\('realPlaceQuery'\)\.value = '';/);

@@ -159,8 +159,6 @@ export const I18N_TEXT = [
   ['#realPlaceExisting', 'From an existing place', 'Depuis un lieu existant'],
   ['#realPlaceExistingText', 'The buildings, streets and relief of a real place.', 'Les bâtiments, les rues et le relief d\'un lieu réel.'],
   ['#realPlaceQuery', null, null, 'placeholder', 'A town, a street, an address…', 'Une ville, une rue, une adresse…'],
-  ['#realPlaceSearchBtn', null, null, 'title', 'Search', 'Chercher'],
-  ['#realPlaceSearchBtn', null, null, 'aria-label', 'Search', 'Chercher'],
   ['#realPlaceClearBtn', null, null, 'title', 'Clear', 'Effacer'],
   ['#realPlaceClearBtn', null, null, 'aria-label', 'Clear', 'Effacer'],
   ['#realPlaceSizeLabel', 'Zone size', 'Taille de la zone'],
