@@ -41,7 +41,10 @@ Des champs ajoutés : un fichier ancien se lit tel quel.
   est drapée par son axe (`profilFranchissant`), donc de niveau sur sa largeur : `cutUnderRoads` descend
   chaque point de la grille à moins d'une demi-largeur (plus 0,5 m et une case et demie) à 10 cm sous la
   route, et le drapé reprend le même profil. L'entaille est gardée par Case tant que ni le relief ni les
-  lignes ne changent. Il prend la matière même du Sol ; le Sol plat est
+  lignes ne changent, et tout le relief effectif est gardé par Case tant que relief, Zones, rivières, routes
+  et bâtiments sont inchangés (`_reliefsEffectifs3D`, clé faite de leurs réglages et de leur `world` /
+  `batiment` par identité, jamais de la caméra) : aplanir sous des centaines de bâtiments à chaque image
+  coûtait environ 1 s par image sur un centre-ville. Il prend la matière même du Sol ; le Sol plat est
   percé dessous par un masque au pochoir sans test de profondeur (avec, il lutterait avec le relief
   presque plat : moiré).
 - **Le relief et les dessins drapés ne projettent jamais d'ombre** : `marquerProjectionDOmbre3D` les

@@ -147,3 +147,34 @@ describe('a pavement Path, rendered', () => {
     assert.ok(Math.abs(box.max.y - (GROUND_Y_DEFAULT_3D + 0.145)) < 0.02);
   });
 });
+
+describe('the effective relief, kept between frames', () => {
+  test('a camera move reuses it; a building moved flattens the ground at its new place', () => {
+    const scene = createScene();
+    const nx = 2 * HALF + 1, altitudes = [];
+    for (let j = 0; j < nx; j++) for (let i = 0; i < nx; i++) altitudes.push(200 + 0.2 * i);
+    const { relief } = reliefDepuisAltitudes({ x0: -HALF, z0: -HALF, pas: 1, nx, nz: nx, altitudes });
+    const one = { ...content, relief, traces: [], elements: [], buildings: content.buildings.slice(0, 1) };
+    const { page, panel } = layRealPlace(scene, one, { halfSize: HALF, newObject });
+    const pg = { ...page, w: scene.w, h: scene.h, objects: page.objects };
+    const b = page.objects.find(o => o.objType === 'batiment');
+    const draw = () => drawPanelScene3D(document.createElement('canvas').getContext('2d'), panel, pg, scene.style3d);
+    const heightAt = (x, z) => {
+      let mesh = null;
+      rig.personaScene3D.traverse(m => { if (m.isMesh && m.userData.relief && m.parent && m.parent.visible !== false) mesh = m; });
+      const pos = mesh.geometry.attributes.position, k = Math.round(z + HALF) * nx + Math.round(x + HALF);
+      return pos.getY(k);
+    };
+    draw();
+    const flatHere = heightAt(b.wxFloor + 1, b.wzFloor), flatThere = heightAt(b.wxFloor - 1, b.wzFloor);
+    assert.ok(Math.abs(flatHere - flatThere) < 1e-6, 'flattened under the building');
+    panel.camRotY = 0.4; panel.camRotYTarget = 0.4;
+    draw();
+    assert.ok(heightAt(b.wxFloor + 1, b.wzFloor) === flatHere, 'the same after a camera move');
+    const x0 = b.wxFloor;
+    b.wxFloor += 30;
+    draw();
+    assert.ok(Math.abs(heightAt(x0 + 1, b.wzFloor) - heightAt(x0 - 1, b.wzFloor)) > 0.3, 'the old place: the slope again');
+    assert.ok(Math.abs(heightAt(b.wxFloor + 1, b.wzFloor) - heightAt(b.wxFloor - 1, b.wzFloor)) < 1e-6, 'the new place: flattened');
+  });
+});

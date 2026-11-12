@@ -40,7 +40,10 @@ Added fields: an old file reads as it is.
   under roads and paths** (`reliefEffectif3D`), recomputed at each render. A road is draped by its axis
   (`profilFranchissant`), so it stays level across its width: `cutUnderRoads` brings every grid point
   within half its width (plus 0.5 m and a cell and a half) down to 10 cm under the road, and the drape
-  reuses the same profile. The cut is kept per Panel while neither the relief nor the lines change. It uses the Ground's very material; the flat Ground
+  reuses the same profile. The cut is kept per Panel while neither the relief nor the lines change, and the whole effective relief
+  is kept per Panel while the relief, the Zones, rivers, roads and buildings are unchanged (`_reliefsEffectifs3D`,
+  keyed by their settings and their `world` / `batiment` by identity, never by the camera): flattening
+  under hundreds of buildings again on every frame took about 1 s per frame on a city centre. It uses the Ground's very material; the flat Ground
   is pierced under it by a stencil mask without depth test (with it, the mask would fight the near-flat
   relief: moiré).
 - **Relief and draped drawings never cast shadows**: `marquerProjectionDOmbre3D` recognises them by

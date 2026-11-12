@@ -2545,8 +2545,45 @@ function poserRelief3D(panel, visible, r){
 /**
  * #462c-2 : le relief tel qu'il est RENDU : celui du canevas, aplani sous chaque bâtiment placé à la
  * hauteur du relief en son centre (décidé : le terrain s'aplanit sous un bâtiment), ou null sans relief.
+ *
+ * ⚠️ KEPT WHILE WHAT IT IS MADE OF IS UNCHANGED (measured: the Écusson, 300 buildings, about 1 s of every
+ * frame of a camera move went into flattening the relief again under every building, the same each time).
+ * The key reads the relief (its memoised signature), the Zones and rivers (their settings, their `world`
+ * by identity: an edit replaces it), the buildings (their `batiment` by identity, also replaced by an edit,
+ * and their placement) and the roads. Nothing of the camera.
  */
 function reliefEffectif3D(panel, page){
+  if (!panel) return null;
+  const parts = [signatureDuRelief(panel.relief)];
+  for (const o of (page && page.objects) || []) {
+    if (o.type === 'tracé' && o.panelId === panel.id) {
+      if (o.tracéType === 'terrain' || o.tracéType === 'riviere' || o.tracéType === 'route' || o.tracéType === 'chemin') {
+        parts.push(`${o.id}:${o.tracéType}:${identite3D(o.world)}:${o.hauteurZone}:${o.penteZone}:${o.sensPente}:${o.profondeur}`);
+      }
+    } else if (estUnBatimentPlace(o)) {
+      parts.push(`${o.id}:${identite3D(o.batiment)}:${o.homePanelId}:${o.wxFloor}:${o.wyFloor}:${o.wzFloor}:${o.x}:${o.y}:${o.w}:${o.h}:${o.z}`
+        + `:${o.rotX}:${o.rotY}:${o.rotZ}:${o.realHeightFloor}:${o.roomFloatY}`);
+    }
+  }
+  const key = parts.join('|');
+  const kept = _reliefsEffectifs3D.get(panel.id);
+  if (kept && kept.key === key) return kept.relief;
+  const relief = reliefEffectifCalcule3D(panel, page);
+  _reliefsEffectifs3D.set(panel.id, { key, relief });
+  return relief;
+}
+/** The last effective relief per Panel, with its key (reliefEffectif3D). */
+const _reliefsEffectifs3D = new Map();
+/** A number per object, for keys: the same object, the same number; a replaced one, a new number. */
+const _identites3D = new WeakMap();
+let _identiteSuivante3D = 0;
+function identite3D(objet){
+  if (!objet || typeof objet !== 'object') return String(objet);
+  let n = _identites3D.get(objet);
+  if (n === undefined) { n = ++_identiteSuivante3D; _identites3D.set(objet, n); }
+  return n;
+}
+function reliefEffectifCalcule3D(panel, page){
   // #462d : les rivières creusent leur lit (une Scène plate reçoit alors un relief à cet endroit).
   const rivieres = ((page && page.objects) || []).filter(o => o.type === 'tracé' && o.panelId === panel.id && o.tracéType === 'riviere'
     && o.world && Array.isArray(o.world.pts) && o.world.pts.length >= 2)
