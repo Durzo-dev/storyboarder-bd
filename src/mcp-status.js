@@ -24,42 +24,53 @@ function ago(ms, tr){
 }
 
 /**
- * The tab's texts: { general, claude, antigravity, gemini }, each client { level, text }. `level`: 'off', 'none',
- * 'offered', 'installed', 'connected' or 'missing' (Gemini CLI not on this computer). `tr(en, fr)`.
+ * The tab's texts: { general, claude, antigravity, gemini, lmstudio }, each client { level, text }. `level`:
+ * 'none' (never set up), 'offered' (Claude Desktop's installation window opened), 'installed', 'connected',
+ * 'outdated' (Claude Desktop's extension made with an older bridge: to install again) or 'missing' (the client
+ * is not on this computer: its card opens its download page). `tr(en, fr)`.
+ *
+ * There is no switch: installing a client connects Storyboarder; « Disconnect » stops it, and clicking a card
+ * connects again.
  */
 export function connectionTexts(state, tr){
   const s = state || {};
   const now = s.now || Date.now();
   const clients = s.clients || {};
-  let general = tr('Off: no AI can reach Storyboarder.', 'Désactivée : aucune IA ne peut joindre Storyboarder.');
-  if (s.enabled && s.listening) general = tr('On: an AI on this computer can read and create your scenes.', 'Activée : une IA de cet ordinateur peut lire et créer vos scènes.');
+  const on = !!(s.enabled && s.listening);
+  let general = tr('Disconnected: click an AI to connect it.', 'Déconnectée : cliquez sur une IA pour la brancher.');
+  if (on) general = tr('Connected: the AIs installed here can read and create your scenes.', 'Connectée : les IA installées ici peuvent lire et créer vos scènes.');
   else if (s.enabled && s.error === 'port-in-use') general = tr(`Port ${s.port} is used by another program: the connection could not start.`, `Le port ${s.port} est pris par un autre logiciel : la connexion n'a pas pu démarrer.`);
   else if (s.enabled) general = tr('The connection could not start.', 'La connexion n\'a pas pu démarrer.');
-  const on = !!(s.enabled && s.listening);
 
   const seen = (k) => (clients[k] && Number(clients[k].lastSeen)) || 0;
-  const claudeSeen = seen('claude');
-  let claude;
-  if (on && claudeSeen && now - claudeSeen < CONNECTED_MS) claude = { level: 'connected', text: tr('Connected', 'Connecté') };
-  else if (claudeSeen) claude = { level: 'installed', text: on
-    ? tr(`Installed. Last seen ${ago(now - claudeSeen, tr)}: open Claude Desktop to connect it.`, `Installé. Vu ${ago(now - claudeSeen, tr)} : ouvrez Claude Desktop pour le connecter.`)
-    : tr('Installed. Turn the connection on to use it.', 'Installé. Activez la connexion pour vous en servir.') };
-  else if (s.claudeOffered) claude = { level: 'offered', text: tr('Installation offered: click « Install » in Claude Desktop, then restart it.', 'Installation proposée : cliquez sur « Installer » dans Claude Desktop, puis relancez-le.') };
-  else claude = { level: 'none', text: tr('Not installed yet: click the card.', 'Pas encore installé : cliquez sur la carte.') };
+  const connected = { level: 'connected', text: tr('Connected', 'Connecté') };
+  const off = { level: 'installed', text: tr('Disconnected: click to connect it again.', 'Déconnecté : cliquez pour le rebrancher.') };
+  const missing = { level: 'missing', text: tr('Not on this computer: click to download it.', 'Absent de cet ordinateur : cliquez pour le télécharger.') };
 
-  // The clients written in a file (Gemini CLI, Google Antigravity): connected while used, otherwise added.
-  const fileClient = (k, missing) => {
+  const claudeSeen = seen('claude');
+  const claudeBridge = (clients.claude && Number(clients.claude.bridge)) || 0;
+  let claude;
+  if (claudeSeen && s.bridgeVersion && claudeBridge < s.bridgeVersion) claude = { level: 'outdated', text: tr('To update: click to install it again.', 'À mettre à jour : cliquez pour le réinstaller.') };
+  else if (on && claudeSeen && now - claudeSeen < CONNECTED_MS) claude = connected;
+  else if (claudeSeen) claude = on
+    ? { level: 'installed', text: tr(`Installed. Last seen ${ago(now - claudeSeen, tr)}: open Claude Desktop.`, `Installé. Vu ${ago(now - claudeSeen, tr)} : ouvrez Claude Desktop.`) }
+    : off;
+  else if (s.claudeOffered) claude = { level: 'offered', text: tr('Click « Install » in Claude Desktop, then restart it.', 'Cliquez sur « Installer » dans Claude Desktop, puis relancez-le.') };
+  else claude = { level: 'none', text: tr('Click to install.', 'Cliquez pour installer.') };
+
+  // The other clients: connected while used, otherwise added (their file holds Storyboarder, or seen before).
+  const other = (k) => {
     const g = s[k] || {};
     const at = seen(k);
-    if (on && at && now - at < CONNECTED_MS) return { level: 'connected', text: tr('Connected', 'Connecté') };
-    if (g.configured || at) return { level: 'installed', text: at
-      ? tr(`Added. Last used ${ago(now - at, tr)}.`, `Ajouté. Utilisé ${ago(now - at, tr)}.`)
-      : tr('Added: restart it if it was open.', 'Ajouté : relancez-le s\'il était ouvert.') };
-    if (g.installed === false) return { level: 'missing', text: missing };
-    return { level: 'none', text: tr('Not added yet: click the card.', 'Pas encore ajouté : cliquez sur la carte.') };
+    if (on && at && now - at < CONNECTED_MS) return connected;
+    if (g.configured || at) {
+      if (!on) return off;
+      return { level: 'installed', text: at
+        ? tr(`Added. Last used ${ago(now - at, tr)}.`, `Ajouté. Utilisé ${ago(now - at, tr)}.`)
+        : tr('Added: restart it if it was open.', 'Ajouté : relancez-le s\'il était ouvert.') };
+    }
+    if (g.installed === false) return missing;
+    return { level: 'none', text: tr('Click to add.', 'Cliquez pour ajouter.') };
   };
-  const gemini = fileClient('gemini', tr('Gemini CLI does not seem to be installed on this computer.', 'Gemini CLI ne semble pas installé sur cet ordinateur.'));
-  const antigravity = fileClient('antigravity', tr('Antigravity does not seem to be installed on this computer.', 'Antigravity ne semble pas installé sur cet ordinateur.'));
-
-  return { general, claude, gemini, antigravity };
+  return { general, claude, antigravity: other('antigravity'), gemini: other('gemini'), lmstudio: other('lmstudio') };
 }

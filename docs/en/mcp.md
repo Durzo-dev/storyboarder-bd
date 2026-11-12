@@ -23,8 +23,16 @@ Scenes, import a real place, and see a Scene as an image.
 
 ## Turning it on
 
-Settings > « AI » tab (`mcp-link.js`): a switch, off by default (`mcpEnabled` in `settings.json`), and one
-card per client; the whole card installs. Installing a client turns the connection on.
+Settings > « AI » tab (`mcp-link.js`): one card per client, two per row; the whole card installs. There is
+no switch: installing a client connects Storyboarder (`mcpEnabled` in `settings.json`, off by default);
+« Disconnect », left of « Close » and shown on this tab only, turns it off; a click on a card connects again.
+A client not on this computer (`installed: false`): its card opens its official download page
+(`mcp:openDownload`, the addresses are in `main.js`).
+
+- **LM Studio** (`mcp:installLmStudio`) opens its « Add to LM Studio » link
+  (`lmstudio://add_mcp?name=storyboarder&config=<base64>`, `lmStudioLink`), entry `url` and `headers`
+  (Cursor's notation): LM Studio shows the server and asks to install it. Installed when
+  `~/.lmstudio/mcp.json` holds Storyboarder; on this computer when `~/.lmstudio` exists.
 
 - **Claude Desktop** (`mcp:installClaude`) writes `Storyboarder.mcpb` in the user's data folder and opens
   it: Claude Desktop shows its installation window, one click on « Install ». The manifest starts the
@@ -56,7 +64,8 @@ bridge), for a client that has no extensions.
   `X-Mcp-Client`, and pings every 30 s while its client runs; a client over HTTP gives its name at
   `initialize` (`clientKind`: « claude », then « antigravity », then « gemini », else `other`);
 - **connected**: heard within 75 s; **installed**: heard before, or the client's file holds Storyboarder;
-  **offered**: Claude Desktop's installation window was opened (`mcpClaudeOffered`) but Claude Desktop was
+  **outdated**: Claude Desktop heard through a bridge older than `BRIDGE_VERSION` (`X-Mcp-Bridge`, none for
+  the first one): its card installs the extension again; **offered**: Claude Desktop's installation window was opened (`mcpClaudeOffered`) but Claude Desktop was
   never heard; **missing**: the client is not on this computer (no `~/.gemini/settings.json` for Gemini
   CLI; no `~/.gemini/antigravity*` folder nor `mcp_config.json` for Antigravity); **none** otherwise.
 

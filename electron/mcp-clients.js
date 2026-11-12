@@ -9,6 +9,18 @@ const path = require('path');
 const geminiSettingsPath = (home) => path.join(home, '.gemini', 'settings.json');
 /** Where Google Antigravity keeps its global MCP servers. */
 const antigravityConfigPath = (home) => path.join(home, '.gemini', 'config', 'mcp_config.json');
+/** Where LM Studio keeps its MCP servers (Cursor's notation), and its folder: it is on this computer. */
+const lmStudioConfigPath = (home) => path.join(home, '.lmstudio', 'mcp.json');
+const lmStudioFolder = (home) => path.join(home, '.lmstudio');
+
+/**
+ * LM Studio's « Add to LM Studio » link: LM Studio opens, shows the server and asks to install it (its own
+ * consent). `entry`: httpEntry('lmstudio', …).
+ */
+function lmStudioLink(entry){
+  return `lmstudio://add_mcp?name=storyboarder&config=${encodeURIComponent(Buffer.from(JSON.stringify(entry), 'utf-8').toString('base64'))}`;
+}
+
 /** Folders that only Google Antigravity makes (its app, its CLI): it is on this computer. */
 const antigravityFolders = (home) => [path.join(home, '.gemini', 'antigravity'), path.join(home, '.gemini', 'antigravity-cli')];
 
@@ -19,6 +31,7 @@ const antigravityFolders = (home) => [path.join(home, '.gemini', 'antigravity'),
 function httpEntry(kind, { url, token }){
   const headers = { Authorization: `Bearer ${token}` };
   if (kind === 'antigravity') return { serverUrl: url, headers, timeoutSeconds: 600 };
+  if (kind === 'lmstudio') return { url, headers };   // Cursor's notation
   return { httpUrl: url, headers, timeout: 600000 };
 }
 
@@ -50,4 +63,5 @@ function hasStoryboarder(text){
   return /"storyboarder"\s*:/.test(String(text || ''));   // a file with comments: its key, at least
 }
 
-module.exports = { geminiSettingsPath, antigravityConfigPath, antigravityFolders, httpEntry, withStoryboarder, hasStoryboarder };
+module.exports = { geminiSettingsPath, antigravityConfigPath, antigravityFolders, lmStudioConfigPath, lmStudioFolder, lmStudioLink, httpEntry,
+  withStoryboarder, hasStoryboarder };

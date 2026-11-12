@@ -60,22 +60,36 @@ export function cablerConnexionIA(rappels){
 
 // ── The AI tab of Settings ───────────────────────────────────────────────────────────────────────
 
-/** A message under a card, said after a click (it stays until the next state that changes the card). */
-const _messages = { claude: null, antigravity: null, gemini: null };
+/** The clients, in the tab's order: their card's ids. */
+const CLIENTS = [
+  ['claude', 'mcpInstallClaude', 'mcpClaudeEtat'],
+  ['lmstudio', 'mcpInstallLmStudio', 'mcpLmStudioEtat'],
+  ['antigravity', 'mcpInstallAntigravity', 'mcpAntigravityEtat'],
+  ['gemini', 'mcpInstallGemini', 'mcpGeminiEtat'],
+];
+/** A message under a card, said after a click (it holds until the client is connected). */
+const _messages = {};
+let _etat = null;
+
+/** Is the AI tab the one shown? (« Disconnect » lives in the modal's buttons, shown on this tab only.) */
+const ongletIaAffiche = () => {
+  const page = document.querySelector('#settingsModal .config-page[data-onglet="ia"]');
+  return !!page && !page.hidden;
+};
 
 /** The tab from the connection's state (mcp-status.js decides the words). */
 function montrerEtat(etat){
   if (!etat) return;
+  _etat = etat;
   const t = connectionTexts(etat, tr);
-  $('mcpEnabledCheckbox').checked = !!etat.enabled;
   $('mcpStatus').textContent = t.general;
-  for (const [k, id] of [['claude', 'mcpClaudeEtat'], ['antigravity', 'mcpAntigravityEtat'], ['gemini', 'mcpGeminiEtat']]) {
+  for (const [k, , id] of CLIENTS) {
     const el = $(id);
-    // A click's message holds until the client is seen.
     const message = _messages[k] && t[k].level !== 'connected' ? _messages[k] : null;
     el.textContent = message || t[k].text;
     el.dataset.niveau = t[k].level;
   }
+  $('mcpDisconnect').hidden = !(etat.enabled && ongletIaAffiche());
 }
 
 /** While the AI tab is shown, its state is read again every few seconds (a client connects meanwhile). */
@@ -84,33 +98,60 @@ function suivreEtat(){
   const api = window.storyboarderAPI;
   setInterval(() => {
     const modale = $('settingsModal');
-    const page = document.querySelector('#settingsModal .config-page[data-onglet="ia"]');
-    if (modale && !modale.classList.contains('hidden') && page && !page.hidden) api.mcpStatus().then(montrerEtat);
+    if (modale && !modale.classList.contains('hidden') && ongletIaAffiche()) api.mcpStatus().then(montrerEtat);
   }, REFRESH_MS);
+}
+
+/** An official logo that is not there: the card's generic illustration instead. */
+function logosDeSecours(){
+  document.querySelectorAll('#settingsModal .ia-client .ia-logo').forEach(img => {
+    const secours = () => { img.hidden = true; const ill = img.parentElement.querySelector('.ia-illustration'); if (ill) ill.hidden = false; };
+    img.addEventListener('error', secours);
+    if (img.complete && !img.naturalWidth) secours();
+  });
 }
 
 function cablerReglage(){
   const api = window.storyboarderAPI;
-  const box = $('mcpEnabledCheckbox');
-  if (!box) return;
+  if (!$('mcpStatus')) return;
+  logosDeSecours();
   api.mcpStatus().then(montrerEtat);
   suivreEtat();
-  $('configOngletIa').addEventListener('click', () => api.mcpStatus().then(montrerEtat));
-  box.onchange = async () => montrerEtat(await api.mcpSetEnabled(box.checked));
-  // Claude Desktop: an extension made for this computer, which Claude Desktop offers to install in one click.
-  // Installing turns the connection on (main.js).
-  const installerClaude = async () => {
-    const r = await api.mcpInstallClaude();
-    _messages.claude = r && r.ok
-      ? tr('Claude Desktop shows its installation window: click « Install », then restart Claude Desktop.',
-        'Claude Desktop affiche sa fenêtre d\'installation : cliquez sur « Installer », puis relancez Claude Desktop.')
-      : tr('Claude Desktop does not seem to be installed. The extension file is shown in its folder: drag it into Claude Desktop\'s window.',
-        'Claude Desktop ne semble pas installé. Le fichier de l\'extension est montré dans son dossier : glissez-le dans la fenêtre de Claude Desktop.');
-    montrerEtat(r && r.state);
+  // Settings opened again (on the AI tab, kept from last time): its state at once.
+  new MutationObserver(() => { if (!$('settingsModal').classList.contains('hidden')) api.mcpStatus().then(montrerEtat); })
+    .observe($('settingsModal'), { attributes: true, attributeFilter: ['class'] });
+  // « Disconnect » shows on the AI tab only: the tabs' clicks are watched (events.js switches them).
+  document.querySelectorAll('#configOnglets .onglet').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.onglet === 'ia') api.mcpStatus().then(montrerEtat);
+    else $('mcpDisconnect').hidden = true;
+  }));
+  $('mcpDisconnect').onclick = async () => {
+    for (const k of Object.keys(_messages)) delete _messages[k];
+    montrerEtat(await api.mcpSetEnabled(false));
+  };
+  // Every install connects Storyboarder (main.js). A client not on this computer: its download page.
+  const absent = (k) => _etat && _etat[k] && _etat[k].installed === false;
+  const installer = {
+    claude: async () => {
+      const r = await api.mcpInstallClaude();
+      _messages.claude = r && r.ok
+        ? tr('Click « Install » in Claude Desktop, then restart it.', 'Cliquez sur « Installer » dans Claude Desktop, puis relancez-le.')
+        : tr('Claude Desktop is not installed: its download page is open. Then click this card again.', 'Claude Desktop n\'est pas installé : sa page de téléchargement est ouverte. Recliquez ensuite sur cette carte.');
+      montrerEtat(r && r.state);
+    },
+    lmstudio: async () => {
+      if (absent('lmstudio')) { api.mcpOpenDownload('lmstudio'); return; }
+      const r = await api.mcpInstallLmStudio();
+      _messages.lmstudio = r && r.ok ? tr('Confirm in LM Studio.', 'Confirmez dans LM Studio.') : tr('LM Studio could not be opened.', 'LM Studio n\'a pas pu s\'ouvrir.');
+      montrerEtat(r && r.state);
+    },
+    antigravity: () => ajouter('antigravity'),
+    gemini: () => ajouter('gemini'),
   };
   // Google Antigravity and Gemini CLI: Storyboarder added to the client's file; a file it cannot rewrite: the
   // configuration copied, to paste in it.
-  const ajouter = async (kind) => {
+  async function ajouter(kind){
+    if (absent(kind)) { api.mcpOpenDownload(kind); return; }
     const r = await (kind === 'antigravity' ? api.mcpInstallAntigravity() : api.mcpInstallGemini());
     if (r && r.ok) _messages[kind] = tr('Added. Restart it if it was open.', 'Ajouté. Relancez-le s\'il était ouvert.');
     else {
@@ -122,12 +163,9 @@ function cablerReglage(){
         : tr('Its settings could not be changed.', 'Ses réglages n\'ont pas pu être modifiés.');
     }
     montrerEtat(r && r.state);
-  };
-  const installer = { claude: installerClaude, antigravity: () => ajouter('antigravity'), gemini: () => ajouter('gemini') };
-  // The whole card answers, not only its title (the button keeps the keyboard), as a new Scene's choice.
-  for (const [kind, id] of [['claude', 'mcpInstallClaude'], ['antigravity', 'mcpInstallAntigravity'], ['gemini', 'mcpInstallGemini']]) {
-    $(id).onclick = (e) => { e.stopPropagation(); installer[kind](); };
   }
+  // The whole card answers, not only its title (the button keeps the keyboard), as a new Scene's choice.
+  for (const [kind, id] of CLIENTS) $(id).onclick = (e) => { e.stopPropagation(); installer[kind](); };
   document.querySelectorAll('#settingsModal .ia-client').forEach(c => {
     c.addEventListener('click', () => installer[c.dataset.client]());
   });

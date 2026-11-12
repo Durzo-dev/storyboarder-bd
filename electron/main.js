@@ -1307,6 +1307,10 @@ const etatMcp = () => {
       installed: fs.existsSync(mcpClients.geminiSettingsPath(app.getPath('home'))),
       configured: mcpClients.hasStoryboarder(lireSiExiste(mcpClients.geminiSettingsPath(app.getPath('home')))),
     },
+    lmstudio: {
+      installed: fs.existsSync(mcpClients.lmStudioFolder(app.getPath('home'))),
+      configured: mcpClients.hasStoryboarder(lireSiExiste(mcpClients.lmStudioConfigPath(app.getPath('home')))),
+    },
     antigravity: {
       installed: mcpClients.antigravityFolders(app.getPath('home')).some(d => fs.existsSync(d))
         || fs.existsSync(mcpClients.antigravityConfigPath(app.getPath('home'))),
@@ -1335,7 +1339,8 @@ ipcMain.handle('mcp:installClaude', async () => {
   fs.writeFileSync(fichier, buildBundle({ version: app.getVersion(), mcpJsonPath: mcp.status().file, bridgePath: path.join(__dirname, 'mcp-bridge.js'),
     iconPath: path.join(RACINE, 'assets', 'icone', 'storyboarder-bd-512.png'), tools: Array.isArray(c.tools) ? c.tools : [] }));
   const erreur = await shell.openPath(fichier);
-  if (erreur) { shell.showItemInFolder(fichier); return { ok: false, file: fichier, state: etatMcp() }; }
+  // No program opens .mcpb: Claude Desktop is not installed; its download page, and the file shown for later.
+  if (erreur) { shell.showItemInFolder(fichier); await shell.openExternal('https://claude.ai/download'); return { ok: false, file: fichier, state: etatMcp() }; }
   const reglages = readSettings();
   reglages.mcpClaudeOffered = Date.now();
   fs.writeFileSync(settingsFilePath, JSON.stringify(reglages), 'utf-8');
@@ -1364,6 +1369,26 @@ async function ajouterAuFichierDuClient(kind){
 }
 ipcMain.handle('mcp:installGemini', async () => ajouterAuFichierDuClient('gemini'));
 ipcMain.handle('mcp:installAntigravity', async () => ajouterAuFichierDuClient('antigravity'));
+// LM Studio: its « Add to LM Studio » link, which opens LM Studio on its own installation window.
+ipcMain.handle('mcp:installLmStudio', async () => {
+  await activerMcp(true);
+  try { await shell.openExternal(mcpClients.lmStudioLink(mcp.clientConfig('lmstudio', {}).mcpServers.storyboarder)); }
+  catch (e) { return { ok: false, state: etatMcp() }; }
+  return { ok: true, state: etatMcp() };
+});
+// A client not on this computer: its official download page (the addresses are here, never the window's).
+const PAGES_DE_TELECHARGEMENT = {
+  claude: 'https://claude.ai/download',
+  antigravity: 'https://antigravity.google/download',
+  gemini: 'https://geminicli.com/',
+  lmstudio: 'https://lmstudio.ai/download',
+};
+ipcMain.handle('mcp:openDownload', async (event, kind) => {
+  const url = PAGES_DE_TELECHARGEMENT[kind];
+  if (!url) return false;
+  await shell.openExternal(url);
+  return true;
+});
 // An image of a part of the window (a Scene's view), for the AI: JPEG, at most 1280 px wide, base64.
 ipcMain.handle('mcp:capture', async (event, rect) => {
   const win = BrowserWindow.fromWebContents(event.sender);

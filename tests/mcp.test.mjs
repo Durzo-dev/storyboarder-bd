@@ -237,6 +237,7 @@ describe('MCP, the local endpoint', () => {
     ]);
     const c = server.status().clients.claude;
     assert.equal(c.name, 'claude-ai');
+    assert.equal(c.bridge, 2, 'the bridge says its version');
     assert.ok(Date.now() - c.lastSeen < 5000);
     await post(port, { jsonrpc: '2.0', id: 1, method: 'initialize', params: { clientInfo: { name: 'gemini-cli-mcp-client' } } }, { Authorization: `Bearer ${token}` });
     await post(port, { jsonrpc: '2.0', id: 2, method: 'tools/list' }, { Authorization: `Bearer ${token}` });
@@ -263,7 +264,23 @@ describe('MCP, Gemini CLI\'s and Antigravity\'s settings', () => {
     assert.equal(clientKind('claude-ai'), 'claude');
     assert.equal(clientKind('Antigravity CLI (gemini)'), 'antigravity', 'Antigravity before Gemini');
     assert.equal(clientKind('gemini-cli-mcp-client'), 'gemini');
+    assert.equal(clientKind('LM Studio'), 'lmstudio');
+    assert.equal(clientKind('lmstudio-mcp-host'), 'lmstudio');
     assert.equal(clientKind('cursor'), 'other');
+  });
+  test('LM Studio: its « Add to LM Studio » link carries the entry, in Cursor\'s notation', () => {
+    const { lmStudioLink } = require('../electron/mcp-clients.js');
+    const entry = httpEntry('lmstudio', { url: 'http://127.0.0.1:1/mcp', token: 'k' });
+    assert.deepEqual(entry, { url: 'http://127.0.0.1:1/mcp', headers: { Authorization: 'Bearer k' } });
+    const u = new URL(lmStudioLink(entry));
+    assert.equal(u.protocol, 'lmstudio:');
+    assert.equal(u.searchParams.get('name'), 'storyboarder');
+    assert.deepEqual(JSON.parse(Buffer.from(u.searchParams.get('config'), 'base64').toString('utf8')), entry);
+  });
+  test('the bridge and the endpoint agree on the bridge\'s version', () => {
+    const { BRIDGE_VERSION } = require('../electron/mcp-server.js');
+    const source = readFileSync(new URL('../electron/mcp-bridge.js', import.meta.url), 'utf8');
+    assert.equal(Number(/const BRIDGE_VERSION = (\d+);/.exec(source)[1]), BRIDGE_VERSION);
   });
   const entry = { httpUrl: 'http://127.0.0.1:47615/mcp', headers: { Authorization: 'Bearer t' } };
   test('no file yet: the settings with Storyboarder alone', () => {
@@ -295,9 +312,9 @@ describe('MCP, what the AI tab says', async () => {
   const tr = (en) => en;
   const now = 1e12;
   const base = { enabled: true, listening: true, port: 47615, now, clients: {}, gemini: { installed: true, configured: false } };
-  test('off, on, port taken', () => {
-    assert.match(connectionTexts({ ...base, enabled: false, listening: false }, tr).general, /^Off/);
-    assert.match(connectionTexts(base, tr).general, /^On/);
+  test('disconnected, connected, port taken', () => {
+    assert.match(connectionTexts({ ...base, enabled: false, listening: false }, tr).general, /^Disconnected/);
+    assert.match(connectionTexts(base, tr).general, /^Connected/);
     assert.match(connectionTexts({ ...base, listening: false, error: 'port-in-use' }, tr).general, /Port 47615/);
   });
   test('Claude Desktop: never seen, offered, connected (heartbeat), installed but closed', () => {
@@ -308,6 +325,25 @@ describe('MCP, what the AI tab says', async () => {
     assert.equal(lvl({ clients: { claude: { lastSeen: now - CONNECTED_MS - 1 } } }), 'installed');
     assert.equal(lvl({ enabled: false, listening: false, clients: { claude: { lastSeen: now - 1000 } } }), 'installed', 'connection off: not connected');
     assert.match(connectionTexts({ ...base, clients: { claude: { lastSeen: now - 3 * 3600e3 } } }, tr).claude.text, /3 h ago/);
+  });
+  test('Claude Desktop\'s extension made with an older bridge: to install again', () => {
+    const t = (bridge) => connectionTexts({ ...base, bridgeVersion: 2, clients: { claude: { lastSeen: now - 1000, bridge } } }, tr).claude.level;
+    assert.equal(t(null), 'outdated', 'the first extension said no version');
+    assert.equal(t(1), 'outdated');
+    assert.equal(t(2), 'connected');
+  });
+  test('disconnected: an installed client says so, and a click connects it again', () => {
+    const t = connectionTexts({ ...base, enabled: false, listening: false, antigravity: { installed: true, configured: true } }, tr);
+    assert.equal(t.antigravity.level, 'installed');
+    assert.match(t.antigravity.text, /^Disconnected/);
+  });
+  test('LM Studio: missing (download), not added, added, connected', () => {
+    const lvl = (g, clients = {}) => connectionTexts({ ...base, lmstudio: g, clients }, tr).lmstudio.level;
+    assert.equal(lvl({ installed: false, configured: false }), 'missing');
+    assert.match(connectionTexts({ ...base, lmstudio: { installed: false } }, tr).lmstudio.text, /download/);
+    assert.equal(lvl({ installed: true, configured: false }), 'none');
+    assert.equal(lvl({ installed: true, configured: true }), 'installed');
+    assert.equal(lvl({ installed: true, configured: true }, { lmstudio: { lastSeen: now - 1000 } }), 'connected');
   });
   test('Google Antigravity: the same states, its own client kind', () => {
     const lvl = (g, clients = {}) => connectionTexts({ ...base, antigravity: g, clients }, tr).antigravity.level;

@@ -2057,22 +2057,45 @@
          scène) : toute la carte installe ; sous son nom, son état (jamais vu, installé, connecté), tenu à
          jour pendant que l'onglet est ouvert. Les logos sont les fichiers officiels (assets/logos/LISEZMOI.md) ;
          un client sans logo garde une illustration générique. -->
+    <!-- La connexion d'une IA (MCP, docs/fr/mcp.md, src/mcp-link.js), un onglet à elle (demandé). Pas
+         d'interrupteur : cliquer une IA l'installe et branche Storyboarder ; « Déconnecter », à gauche de
+         « Fermer », coupe tout. Une CARTE par IA, deux par rangée : toute la carte installe (ou ouvre la page
+         de téléchargement d'une IA absente) ; sous son nom, son état, tenu à jour pendant que l'onglet est
+         ouvert. Les logos sont les fichiers officiels (assets/logos/LISEZMOI.md) ; un logo absent laisse place
+         à l'illustration générique (mcp-link.js). -->
     <div class="config-page" data-onglet="ia" role="tabpanel" hidden>
       <p id="mcpIntro" class="ia-intro">Branchez votre propre IA sur Storyboarder : elle pourra lire vos scènes, en créer depuis un lieu réel et les regarder.</p>
-      <label class="ia-interrupteur">
-        <input type="checkbox" id="mcpEnabledCheckbox"> <span id="mcpEnabledLabel">Activer la connexion</span>
-      </label>
       <p id="mcpStatus" class="ia-etat-general"></p>
       <div class="ia-clients">
         <div class="real-place-choice-card ia-client" data-client="claude">
           <img class="ia-logo" src="../assets/logos/claude.svg" alt="" aria-hidden="true">
+          <svg class="ia-illustration" viewBox="0 0 240 120" aria-hidden="true" hidden>
+            <rect class="ia-fenetre" x="40" y="14" width="160" height="96" rx="8"/>
+            <rect class="ia-barre" x="40" y="14" width="160" height="16" rx="8"/>
+            <rect class="ia-bulle-b" x="56" y="42" width="54" height="6" rx="3"/>
+            <rect class="ia-ligne" x="70" y="56" width="84" height="6" rx="3"/>
+            <rect class="ia-ligne" x="70" y="70" width="62" height="6" rx="3"/>
+            <rect class="ia-bulle-a" x="56" y="84" width="40" height="6" rx="3"/>
+          </svg>
           <button id="mcpInstallClaude" class="real-place-choice-btn" type="button">Claude Desktop</button>
           <p id="mcpClaudeText">L'application de bureau de Claude.</p>
           <p class="ia-client-etat" id="mcpClaudeEtat"></p>
         </div>
+        <div class="real-place-choice-card ia-client" data-client="lmstudio">
+          <svg class="ia-illustration" viewBox="0 0 240 120" aria-hidden="true">
+            <rect class="ia-fenetre" x="40" y="14" width="160" height="96" rx="8"/>
+            <rect class="ia-barre" x="40" y="14" width="160" height="16" rx="8"/>
+            <rect class="ia-bulle-b" x="56" y="42" width="54" height="6" rx="3"/>
+            <rect class="ia-ligne" x="70" y="56" width="84" height="6" rx="3"/>
+            <rect class="ia-ligne" x="70" y="70" width="62" height="6" rx="3"/>
+            <rect class="ia-bulle-a" x="56" y="84" width="40" height="6" rx="3"/>
+          </svg>
+          <button id="mcpInstallLmStudio" class="real-place-choice-btn" type="button">LM Studio</button>
+          <p id="mcpLmStudioText">Des IA gratuites, sur votre ordinateur.</p>
+          <p class="ia-client-etat" id="mcpLmStudioEtat"></p>
+        </div>
         <div class="real-place-choice-card ia-client" data-client="antigravity">
           <svg class="ia-illustration" viewBox="0 0 240 120" aria-hidden="true">
-            <!-- Générique, en attendant son logo : une fenêtre d'éditeur et ses lignes de code. -->
             <rect class="ia-fenetre" x="40" y="14" width="160" height="96" rx="8"/>
             <rect class="ia-barre" x="40" y="14" width="160" height="16" rx="8"/>
             <rect class="ia-bulle-b" x="56" y="42" width="54" height="6" rx="3"/>
@@ -2086,6 +2109,14 @@
         </div>
         <div class="real-place-choice-card ia-client" data-client="gemini">
           <img class="ia-logo" src="../assets/logos/gemini-cli.svg" alt="" aria-hidden="true">
+          <svg class="ia-illustration" viewBox="0 0 240 120" aria-hidden="true" hidden>
+            <rect class="ia-fenetre" x="40" y="14" width="160" height="96" rx="8"/>
+            <rect class="ia-barre" x="40" y="14" width="160" height="16" rx="8"/>
+            <rect class="ia-bulle-b" x="56" y="42" width="54" height="6" rx="3"/>
+            <rect class="ia-ligne" x="70" y="56" width="84" height="6" rx="3"/>
+            <rect class="ia-ligne" x="70" y="70" width="62" height="6" rx="3"/>
+            <rect class="ia-bulle-a" x="56" y="84" width="40" height="6" rx="3"/>
+          </svg>
           <button id="mcpInstallGemini" class="real-place-choice-btn" type="button">Gemini CLI</button>
           <p id="mcpGeminiText">Gemini dans un terminal (clé d'API ou compte d'entreprise).</p>
           <p class="ia-client-etat" id="mcpGeminiEtat"></p>
@@ -2094,6 +2125,7 @@
     </div>
     </div>
     <div class="modal-actions">
+      <button class="nav-btn" id="mcpDisconnect" type="button" hidden>Déconnecter</button>
       <button class="nav-btn" id="settingsModalClose" type="button">Fermer</button>
     </div>
   </div>

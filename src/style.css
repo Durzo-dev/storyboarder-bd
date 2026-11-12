@@ -3209,10 +3209,10 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 /* The AI tab of Settings (mcp-link.js): the switch, the state, one card per client (the cards of a new
    Scene's choice), its generic illustration in the interface's colours, its state under its name. */
 .ia-intro{ margin:0 0 12px; font-size:var(--texte-courant); color:var(--ink-mid); }
-.ia-interrupteur{ display:flex; align-items:center; gap:6px; font-size:var(--texte-courant); cursor:pointer; }
-.ia-etat-general{ margin:4px 0 12px; font-size:var(--texte-libelle); color:var(--ink-soft); }
-.ia-clients{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+.ia-etat-general{ margin:0 0 12px; font-size:var(--texte-libelle); color:var(--ink-soft); }
+.ia-clients{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .ia-client{ min-width:0; }   /* a long state wraps inside its card */
+.ia-illustration[hidden], .ia-logo[hidden], #mcpDisconnect[hidden]{ display:none; }
 .ia-illustration{ display:block; height:56px; width:auto; margin:8px auto 14px; }
 /* An official logo, as given (never recoloured): the same box as an illustration, the titles aligned. */
 .ia-logo{ display:block; height:56px; width:auto; margin:8px auto 14px; }
@@ -3227,7 +3227,8 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 .ia-client-etat{ display:flex; align-items:center; gap:6px; }
 .ia-client-etat::before{ content:''; width:8px; height:8px; border-radius:50%; background:var(--ink-soft); flex:none; }
 .ia-client-etat[data-niveau="connected"]::before{ background:var(--succes); }
-.ia-client-etat[data-niveau="installed"]::before, .ia-client-etat[data-niveau="offered"]::before{ background:var(--accent); }
+.ia-client-etat[data-niveau="installed"]::before, .ia-client-etat[data-niveau="offered"]::before,
+.ia-client-etat[data-niveau="outdated"]::before{ background:var(--accent); }
 /* The import's progress: a bar, then the steps (done, under way, to come). */
 .real-place-progress{ display:flex; flex-direction:column; gap:8px; }
 .real-place-bar{ height:8px; background:var(--line); border-radius:var(--rayon-pilule); overflow:hidden; }

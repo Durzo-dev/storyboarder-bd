@@ -13,6 +13,11 @@ const path = require('path');
 const { httpEntry } = require('./mcp-clients');
 
 const DEFAULT_PORT = 47615;
+/**
+ * The stdio bridge's version (mcp-bridge.js says it in `X-Mcp-Bridge`; a test keeps both equal). A Claude
+ * Desktop extension made with an older bridge (none said) is to be installed again: Settings says so.
+ */
+const BRIDGE_VERSION = 2;
 const ENDPOINT = '/mcp';
 /** The largest message accepted (bytes): a tool's arguments, never a file. */
 const MAX_BODY = 1024 * 1024;
@@ -37,10 +42,10 @@ function createMcpServer({ userData, window, log = console }){
   const clients = (readFile().clients && typeof readFile().clients === 'object') ? readFile().clients : {};
   const written = {};
   let lastHttpClient = null;
-  function seen(name){
+  function seen(name, bridge = null){
     const kind = clientKind(name);
     const now = Date.now();
-    clients[kind] = { name: String(name).slice(0, 80), lastSeen: now };
+    clients[kind] = { name: String(name).slice(0, 80), lastSeen: now, bridge: Number(bridge) || null };
     if (!written[kind] || now - written[kind] > 60000) { written[kind] = now; try { writeFile({ clients }); } catch (e) { log.warn('[mcp] clients', e); } }
   }
 
@@ -114,7 +119,7 @@ function createMcpServer({ userData, window, log = console }){
       const init = list.find(m => m && m.method === 'initialize' && m.params && m.params.clientInfo);
       const viaBridge = req.headers['x-mcp-client'];
       if (!viaBridge && init) lastHttpClient = String(init.params.clientInfo.name || 'HTTP client');
-      seen(viaBridge || lastHttpClient || 'HTTP client');
+      seen(viaBridge || lastHttpClient || 'HTTP client', req.headers['x-mcp-bridge']);
       const answers = (await Promise.all(list.map(ask))).filter(Boolean);
       if (!answers.length) { res.writeHead(202); return res.end(); }
       res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -152,13 +157,13 @@ function createMcpServer({ userData, window, log = console }){
       pending.clear();
     });
   }
-  function status(){ return { ...state, file, clients: { ...clients } }; }
+  function status(){ return { ...state, file, clients: { ...clients }, bridgeVersion: BRIDGE_VERSION }; }
   /** The window's tool list, kept for the bridge (it answers tools/list while Storyboarder is closed). */
   function rememberTools(tools){ try { writeFile({ tools: Array.isArray(tools) ? tools : [] }); } catch (e) { log.warn('[mcp] tools', e); } }
   /** The configuration of a client: Claude Desktop (through the bridge) or Gemini CLI (HTTP). */
   function clientConfig(kind, { execPath, bridgePath }){
     const c = config();
-    if (kind === 'gemini' || kind === 'antigravity') {
+    if (kind === 'gemini' || kind === 'antigravity' || kind === 'lmstudio') {
       return { mcpServers: { storyboarder: httpEntry(kind, { url: `http://127.0.0.1:${c.port}${ENDPOINT}`, token: c.token }) } };
     }
     return { mcpServers: { storyboarder: { command: execPath, args: [bridgePath, file], env: { ELECTRON_RUN_AS_NODE: '1' } } } };
@@ -172,8 +177,9 @@ function clientKind(name){
   const n = String(name || '');
   if (/claude/i.test(n)) return 'claude';
   if (/antigravity/i.test(n)) return 'antigravity';
+  if (/lm.?studio/i.test(n)) return 'lmstudio';
   if (/gemini/i.test(n)) return 'gemini';
   return 'other';
 }
 
-module.exports = { createMcpServer, clientKind, DEFAULT_PORT, ENDPOINT };
+module.exports = { createMcpServer, clientKind, DEFAULT_PORT, ENDPOINT, BRIDGE_VERSION };

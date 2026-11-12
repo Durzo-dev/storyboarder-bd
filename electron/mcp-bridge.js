@@ -13,7 +13,9 @@ const fs = require('fs');
 const readline = require('readline');
 
 const file = process.argv[2];
-const CLOSED = 'Storyboarder is not open, or its AI connection is off. Ask the user to open Storyboarder and turn on the AI connection (Settings > AI), then try again.';
+/** This bridge's version, told to the application (mcp-server.js BRIDGE_VERSION: the same number). */
+const BRIDGE_VERSION = 2;
+const CLOSED = 'Storyboarder is not open, or its AI connection is off. Ask the user to open Storyboarder and install an AI in Settings > AI, then try again.';
 
 /** The client's name, from its `initialize` (Claude Desktop: « claude-ai »), told to the application. */
 let clientName = null;
@@ -32,7 +34,7 @@ function post(message, { port, token }){
     const body = Buffer.from(JSON.stringify(message), 'utf-8');
     const req = http.request({ host: '127.0.0.1', port, path: '/mcp', method: 'POST', headers: {
       'Content-Type': 'application/json', 'Content-Length': body.length, Accept: 'application/json, text/event-stream',
-      Authorization: `Bearer ${token}`, 'X-Mcp-Client': clientName || 'stdio client',
+      Authorization: `Bearer ${token}`, 'X-Mcp-Client': clientName || 'stdio client', 'X-Mcp-Bridge': String(BRIDGE_VERSION),
     } }, (res) => {
       const chunks = [];
       res.on('data', (c) => chunks.push(c));

@@ -30,7 +30,7 @@ describe('Configuration : trois onglets', () => {
       general: ['languageSelect', 'themeSelect', 'contrastCheckbox', 'uiScaleSelect', 'cacheMoRange'],
       projets: ['autosaveIntervalSelect', 'projectsDirBrowse', 'projectsDirReset', 'exportShowPanelBadgesCheckbox', 'exportShowPanelDescriptionsCheckbox'],
       '3d': ['gestesRotationRange', 'gestesDeplacementRange', 'gestesResetBtn', 'restoreBuiltinPosesBtn'],
-      ia: ['mcpEnabledCheckbox', 'mcpStatus', 'mcpInstallClaude', 'mcpClaudeEtat', 'mcpInstallGemini', 'mcpGeminiEtat', 'mcpInstallAntigravity', 'mcpAntigravityEtat'],
+      ia: ['mcpStatus', 'mcpInstallLmStudio', 'mcpLmStudioEtat', 'mcpInstallClaude', 'mcpClaudeEtat', 'mcpInstallGemini', 'mcpGeminiEtat', 'mcpInstallAntigravity', 'mcpAntigravityEtat'],
     };
     for (const [nom, ids] of Object.entries(attendus)) {
       const p = page(nom);
