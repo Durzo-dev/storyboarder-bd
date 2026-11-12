@@ -78,3 +78,12 @@ describe('the colour of what is left', () => {
     assert.equal(wallColour([[20, 20, 20], [30, 30, 30], [200, 190, 170]]), null);
   });
 });
+
+describe('what is not a wall\'s colour', () => {
+  const flat = (c, n = 20) => Array.from({ length: n }, () => c.slice());
+  test('a vivid colour (a sign, an awning) or a dark one (deep shade) is not taken', () => {
+    assert.equal(wallColour(flat([134, 39, 180])), null, 'purple');
+    assert.equal(wallColour(flat([63, 60, 55])), null, 'near black');
+    assert.ok(wallColour(flat([214, 196, 160])), 'a light stone is');
+  });
+});

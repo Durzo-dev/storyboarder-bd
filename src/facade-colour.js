@@ -134,6 +134,12 @@ export function wallColour(pixels){
   });
   if (kept.length < 10 || kept.length < pixels.length * 0.3) return null;
   const median = (k) => { const s = kept.map(p => p[k]).sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
+  const [r, g, b] = [median(0), median(1), median(2)];
+  // ⚠️ NOT A WALL'S COLOUR, NOT TAKEN (seen in Montpellier: a purple, a facade near black): a shop's sign, an
+  // awning, a wall in deep shade or the wrong part of the photo. A facade is muted (saturation under 0.45) and
+  // not dark (lightness 80 or more); otherwise the facade keeps the style's colour.
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  if ((max - min) / Math.max(1, max) > 0.45 || 0.299 * r + 0.587 * g + 0.114 * b < 80) return null;
   const hex = (x) => Math.round(x).toString(16).padStart(2, '0');
-  return { colour: `#${hex(median(0))}${hex(median(1))}${hex(median(2))}`, kept: kept.length / pixels.length };
+  return { colour: `#${hex(r)}${hex(g)}${hex(b)}`, kept: kept.length / pixels.length };
 }
