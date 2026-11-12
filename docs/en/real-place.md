@@ -61,7 +61,9 @@ The ground under buildings needs nothing: the rendered relief is already flatten
 
 1. The window: "New scene" (`ouvrirNouvelleScene`) shows the choice; "Manual creation" calls
    `creerSceneManuelle` (events.js: an empty Scene, opened). "From an existing place" shows search (Enter: Nominatim, `realplace:search`; while typing, from three letters after a 350 ms pause, suggestions from the IGN's completion service and Photon asked at once, `realplace:suggest`, merged as they come; Nominatim forbids auto-complete) or a click on the map (tiles `realplace:tile`, cached for
-   the session), the zone's size (100 to 400 m), "Create the scene". During the import, the zone's options give way
+   the session), the zone's size (100 to 400 m), the level of detail (`DETAIL_LEVELS`: « Simple », the volumes from OSM,
+   default roofs, roads, paths, grounds, relief, trees and lamps; « Detailed », also the IGN survey in France,
+   the materials, pavements, road signs, shrubs and benches; what it brings is said under the row), "Create the scene". During the import, the zone's options give way
    to the progress: the step under way (« step n/7 ») centred, its detail (server, bytes) centred under it
    (fading out when there is none), the bar; only « Cancel » remains; after a failure
    the main button reads « Try again »; closing the window empties the search field. The steps (`IMPORT_STEPS`, `importProgress`: map data, country, buildings, relief, scene, then the Scene's

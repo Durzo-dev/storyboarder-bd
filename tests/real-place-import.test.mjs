@@ -178,7 +178,7 @@ describe('real place, the window', () => {
       && html2.indexOf('id="realPlaceDetail"') < html2.indexOf('id="realPlaceBar"'), 'the step, its detail under it, then the bar');
   });
   test('during the import the progress takes the options\' place; an empty detail fades out', () => {
-    assert.match(ui, /\$\('realPlaceOptions'\)\.hidden = true;/);
+    assert.match(ui, /\$\('realPlaceOptions'\)\.hidden = \$\('realPlaceDetailInfo'\)\.hidden = true;/);
     assert.match(ui, /d\.classList\.toggle\('vide', !texte\);/);
     assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /\.real-place-detail\.vide\{ opacity:0; max-height:0; \}/);
   });
@@ -195,5 +195,15 @@ describe('real place, the window', () => {
     assert.match(ui, /\$\('realPlaceQuery'\)\.value = p\.name;\n      _rafraichirRecherche\(\);\n      choisirLieu\(p\);/, 'a suggestion fills the field and finds the place');
     assert.match(ui, /V && V\.echec \? tr\('Try again', 'Réessayer'\)/);
     assert.match(ui, /\$\('realPlaceQuery'\)\.value = '';/);
+  });
+});
+
+describe('real place, the level of detail in the window', () => {
+  test('a choice next to the zone\'s size, what it brings said under the row; simple asks no IGN survey', () => {
+    const ui = readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8');
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+    assert.match(html, /<select id="realPlaceDetailLevel">\s*<option value="simple">Simple<\/option>\s*<option value="detailed" selected>Détaillé<\/option>/);
+    assert.match(ui, /if \(country === 'fr' && niveau === 'detailed' && api\.realPlaceBdTopo\)/);
+    assert.match(ui, /translate: tr, survey, detail: niveau \}\);/);
   });
 });

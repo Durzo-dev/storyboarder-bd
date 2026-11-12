@@ -112,3 +112,32 @@ describe('BD TOPO, what it decides', () => {
     assert.match(net, /TYPENAMES=BDTOPO_V3:batiment/);
   });
 });
+
+describe('the level of detail', async () => {
+  const { DETAIL_LEVELS } = await import('../src/osm-scene.js');
+  test('simple: OSM\'s volumes and default roofs, no survey, no materials; detailed: all of it', () => {
+    assert.deepEqual(DETAIL_LEVELS, ['simple', 'detailed']);
+    const simple = translateOsm(osm, { centre, halfSize: 100, survey, detail: 'simple' });
+    const detailed = translateOsm(osm, { centre, halfSize: 100, survey });
+    assert.ok(simple.buildings.every(b => !b.surveyId && !b.building.facade), 'no survey, no facade');
+    assert.ok(simple.buildings.every(b => b.building.niveaux.every(n => !n.toit || !n.toit.revetement || n.toit.revetement.couleur === '#8f8b84')),
+      'roofs: only the grey of a flat roof');
+    assert.equal(simple.surveyAttribution, undefined);
+    assert.ok(simple.buildings.length < detailed.buildings.length, 'the survey\'s own buildings are not added');
+    assert.ok(detailed.buildings.some(b => b.building.facade));
+  });
+  test('simple: no pavements beside the roads, a mapped one is a path; trees and lamps only', () => {
+    const data = { elements: [
+      { type: 'way', id: 1, tags: { highway: 'residential', sidewalk: 'both' }, geometry: [[48, 7], [48, 7.001]] },
+      { type: 'way', id: 2, tags: { highway: 'footway', footway: 'sidewalk' }, geometry: [[48.0002, 7], [48.0002, 7.001]] },
+      { type: 'node', id: 3, lat: 48, lon: 7.0002, tags: { amenity: 'bench' } },
+      { type: 'node', id: 4, lat: 48, lon: 7.0003, tags: { natural: 'tree' } },
+    ] };
+    const opts = { centre: { lat: 48, lon: 7.0005 }, halfSize: 100 };
+    const s = translateOsm(data, { ...opts, detail: 'simple' }), d = translateOsm(data, opts);
+    assert.deepEqual(s.paths.map(p => p.kind).sort(), ['chemin', 'route']);
+    assert.deepEqual(s.elements.map(e => e.objType), ['arbre']);
+    assert.equal(d.paths.filter(p => p.kind === 'trottoir').length, 3);
+    assert.deepEqual(d.elements.map(e => e.objType), ['banc', 'arbre']);
+  });
+});

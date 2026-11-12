@@ -67,7 +67,10 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
 
 1. La fenêtre : « Nouvelle scène » (`ouvrirNouvelleScene`) montre le choix ; « Création manuelle » appelle
    `creerSceneManuelle` (events.js : une Scène vide, ouverte). « Depuis un lieu existant » montre une recherche (Entrée : Nominatim, `realplace:search` ; pendant la frappe, dès 3 lettres après 350 ms de pause, les suggestions du service de complétion de l'IGN et de Photon interrogés ensemble, `realplace:suggest`, fusionnées à mesure ; Nominatim interdit l'autocomplétion) ou un clic sur la carte (tuiles `realplace:tile`,
-   gardées pendant la session), la taille de la zone (100 à 400 m), « Créer la scène ». Pendant l'import, les options de la zone
+   gardées pendant la session), la taille de la zone (100 à 400 m), le niveau de détail (`DETAIL_LEVELS` : « Simple », les volumes d'OSM,
+   toits par défaut, routes, chemins, sols, relief, arbres et lampadaires ; « Détaillé », en plus le relevé
+   de l'IGN en France, les matériaux, trottoirs, panneaux, buissons et bancs ; ce qu'il apporte est dit sous
+   la ligne), « Créer la scène ». Pendant l'import, les options de la zone
    laissent la place à la progression : l'étape en cours (« étape n/7 ») centrée, son détail (serveur,
    octets) centré dessous (en fondu quand il n'y en a pas), la barre ; seul « Annuler » reste ;
    après un échec le bouton principal devient « Réessayer » ; fermer la fenêtre vide le champ de recherche.

@@ -117,6 +117,14 @@ export function offsetPolyline(pts, d){
   return out;
 }
 
+/**
+ * THE LEVELS OF DETAIL of an import (asked: richer is heavier, so one chooses), in order:
+ *   - 'simple': the volumes from OSM, default roofs, roads, paths, Zones, trees and lamps;
+ *   - 'detailed': and the IGN survey in France (heights, roofs, materials), materials from OSM, pavements,
+ *     road signs, shrubs and benches.
+ */
+export const DETAIL_LEVELS = Object.freeze(['simple', 'detailed']);
+
 const DIRT_PATHS = { footway: 1.5, path: 1.2, track: 3, cycleway: 2, bridleway: 2, steps: 1.5 };
 const BARRIERS = { wall: 'muret', retaining_wall: 'muret', city_wall: 'muret', fence: 'cloture', hedge: 'haie',
   guard_rail: 'barriere', railing: 'barriere' };
@@ -283,7 +291,7 @@ function generateOpenings(b, doorWallId){
  * surveyed building it is (building-survey.js), for its heights, roof and materials where OSM says nothing.
  * Returns the building, or null if the editor refuses its walls (a footprint that crosses itself).
  */
-export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor('fr'), translate = null, survey = null){
+export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor('fr'), translate = null, survey = null, finishes = true){
   const t = translate || ((en, fr) => fr);
   const name = tags.name || (tags['addr:housenumber'] && tags['addr:street'] ? `${tags['addr:housenumber']} ${tags['addr:street']}` : t('Building', 'Bâtiment'));
   const b = creerBatiment(name, t);
@@ -299,10 +307,10 @@ export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor
   const surveyed = surveyedRoof(survey, footprint);
   const roof = { type: roofOf(tags, rules, surveyed), pente: surveyed && !surveyed.flat ? surveyed.pitch : rules.roofPitch };
   // A flat roof with no known covering: the grey of a gravel or bitumen roof, not the walls' colour.
-  const roofFinish = roofFinishOf(tags, survey) || (roof.type === 'plat' ? { texture: null, couleur: FLAT_ROOF } : null);
+  const roofFinish = (finishes && roofFinishOf(tags, survey)) || (roof.type === 'plat' ? { texture: null, couleur: FLAT_ROOF } : null);
   if (roofFinish) roof.revetement = roofFinish;
   fixerToit(b, top.id, roof);
-  const facade = wallFinishOf(tags, survey);
+  const facade = finishes ? wallFinishOf(tags, survey) : null;
   if (facade) b.facade = facade;
   // The door: on the ground-floor wall whose middle is the nearest to a road.
   let doorWallId = null, best = Infinity;
@@ -350,10 +358,11 @@ export function zoneTypeOf(tags){
  * Translates an Overpass extract. `centre`: {lat, lon}; `halfSize`: half the side of the zone (metres, at
  * most ZONE_SIDE_MAX / 2); `country` (ISO code, `fr` by default: France first) picks the default values
  * (real-place-sources.js), unless `rules` are given; `survey` (building-survey.js, readBdTopo) completes the
- * buildings. Returns { buildings, paths, zones, elements, skipped, attribution, surveyAttribution?, builtShare,
+ * buildings; `detail` (DETAIL_LEVELS) what is made. Returns { buildings, paths, zones, elements, skipped, attribution, surveyAttribution?, builtShare,
  * ground? } (`ground`: the paved Ground of a built-up zone).
  */
-export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, country = 'fr', rules = rulesFor(country), translate = null, survey = null } = {}){
+export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, country = 'fr', rules = rulesFor(country), translate = null, survey = null, detail = 'detailed' } = {}){
+  const detailed = detail !== 'simple';
   const h = Math.min(Math.max(1, halfSize), ZONE_SIDE_MAX / 2);
   const { toLocal } = projector(centre);
   const out = { buildings: [], paths: [], zones: [], elements: [], skipped: { outside: 0, invalid: 0, tunnels: 0, relations: 0 }, attribution: OSM_ATTRIBUTION };
@@ -367,6 +376,8 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       const objType = tags.natural === 'tree' ? 'arbre' : tags.highway === 'street_lamp' ? 'lampadaire'
         : (tags.traffic_sign || tags.highway === 'stop' || tags.highway === 'give_way') ? 'panneau_signalisation'
           : tags.natural === 'shrub' ? 'buisson' : tags.amenity === 'bench' ? 'banc' : null;
+      // Simple: the trees and lamps only.
+      if (!detailed && objType !== 'arbre' && objType !== 'lampadaire') continue;
       if (objType) out.elements.push({ objType, x: round(p.x), z: round(p.z), osmId: e.id });
       continue;
     }
@@ -378,7 +389,9 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
   const roads = [];
   for (const w of ways) {
     if (w.tags.building) continue;
-    const kind = pathKindOf(w.tags);
+    const found = pathKindOf(w.tags);
+    // Simple: a mapped pavement is a plain path.
+    const kind = found && !detailed && found.kind === 'trottoir' ? { kind: 'chemin', width: found.width } : found;
     if (!kind) { if (w.tags.tunnel && w.tags.tunnel !== 'no') out.skipped.tunnels++; continue; }
     for (const piece of clipPolyline(w.pts, h)) {
       const world = { pts: piece.map(roundPoint) };
@@ -389,7 +402,7 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       out.paths.push(path);
       if (kind.kind === 'route' || kind.kind === 'chemin') roads.push(piece);
       // The pavements drawn with the road: a Path each, beside it (just past its edge).
-      if (kind.kind === 'route') {
+      if (kind.kind === 'route' && detailed) {
         const sides = sidewalkSides(w.tags);
         const sw = parseFloat(w.tags['sidewalk:width'] || w.tags['sidewalk:both:width']) > 0 ? parseFloat(w.tags['sidewalk:width'] || w.tags['sidewalk:both:width']) : SIDEWALK_WIDTH;
         for (const [side, sign] of [['left', 1], ['right', -1]]) {
@@ -400,7 +413,7 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
     }
   }
   // The survey (building-survey.js, readBdTopo): each OSM building takes the surveyed building it is.
-  const surveys = Array.isArray(survey) ? survey : [];
+  const surveys = detailed && Array.isArray(survey) ? survey : [];
   const taken = new Set(), osmFootprints = [];
   for (const w of ways) {
     const closed = w.pts.length >= 4 && Math.hypot(w.pts[0].x - w.pts[w.pts.length - 1].x, w.pts[0].z - w.pts[w.pts.length - 1].z) < 0.01;
@@ -414,7 +427,7 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       if (Math.abs(centreOf.x) > h || Math.abs(centreOf.z) > h) { out.skipped.outside++; continue; }
       const local = fp.map(p => roundPoint({ x: p.x - centreOf.x, z: p.z - centreOf.z }));
       const surveyed = surveys.length ? matchSurvey(fp, surveys, taken) : null;
-      const building = buildingOf(local, w.tags, centreOf, roads, rules, translate, surveyed);
+      const building = buildingOf(local, w.tags, centreOf, roads, rules, translate, surveyed, detailed);
       if (!building) { out.skipped.invalid++; continue; }
       const entry = { building, x: round(centreOf.x), z: round(centreOf.z), osmId: w.id };
       if (surveyed) entry.surveyId = surveyed.id;
@@ -440,7 +453,7 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
     const centreOf = { x: (x0 + x1) / 2, z: (z0 + z1) / 2 };
     if (Math.abs(centreOf.x) > h || Math.abs(centreOf.z) > h) continue;
     const local = fp.map(p => roundPoint({ x: p.x - centreOf.x, z: p.z - centreOf.z }));
-    const building = buildingOf(local, { building: buildingTypeOf(s) }, centreOf, roads, rules, translate, s);
+    const building = buildingOf(local, { building: buildingTypeOf(s) }, centreOf, roads, rules, translate, s, detailed);
     if (!building) continue;
     taken.add(s.id);
     out.buildings.push({ building, x: round(centreOf.x), z: round(centreOf.z), surveyId: s.id });

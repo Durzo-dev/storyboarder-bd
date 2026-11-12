@@ -8,7 +8,7 @@
  */
 
 import { S, tr, newId } from './state.js';
-import { translateOsm, ZONE_SIDE_MAX } from './osm-scene.js';
+import { translateOsm, ZONE_SIDE_MAX, DETAIL_LEVELS } from './osm-scene.js';
 import { planRelief } from './real-place-sources.js';
 import { readBdTopo } from './building-survey.js';
 import { buildStepLabel } from './scene-loading.js';
@@ -57,6 +57,8 @@ export function cablerLieuReel(rappels){
     onClear: () => { $('realPlaceResults').hidden = true; } });
   $('realPlaceImport').onclick = importer;
   $('realPlaceSize').onchange = () => { if (V) { V.halfSize = Number($('realPlaceSize').value) / 2; dessiner(); } };
+  // The level of detail: kept for the session (the select keeps it), and what it brings said under the row.
+  $('realPlaceDetailLevel').onchange = direLeNiveau;
   cablerLaCarte($('realPlaceMap'));
   // Esc and a click outside close it, as its neighbours (modal-stack.js).
   enregistrerFermeture('realPlaceModal', annulerOuFermer);
@@ -98,13 +100,14 @@ function montrerLaProgression(step, sub = 0, detail = null){
   $('realPlaceBar').style.width = `${Math.round((step ? importProgress(step, sub) : 0) * 100)}%`;
   $('realPlaceStep').textContent = i < 0 ? '' : `${labels[step]} · ${tr('step', 'étape')} ${i + 1}/${IMPORT_STEPS.length}`;
   // The zone's options are set: the progress takes their place (asked).
-  $('realPlaceOptions').hidden = true;
+  $('realPlaceOptions').hidden = $('realPlaceDetailInfo').hidden = true;
 }
 
 /** Back to the instructions, the progress put away (an import failed or cancelled, or the window opened). */
 function rendreLaConsigne(){
   $('realPlaceProgress').hidden = true;
-  $('realPlaceOptions').hidden = false;
+  $('realPlaceOptions').hidden = $('realPlaceDetailInfo').hidden = false;
+  direLeNiveau();
   montrerLeDetail('');
 }
 
@@ -113,6 +116,16 @@ function montrerLeDetail(texte){
   const d = $('realPlaceDetail');
   if (texte) d.textContent = texte;
   d.classList.toggle('vide', !texte);
+}
+
+/** What the chosen level of detail brings (osm-scene.js, DETAIL_LEVELS): what is made, not a duration (asked). */
+function direLeNiveau(){
+  const simple = $('realPlaceDetailLevel').value === 'simple';
+  $('realPlaceDetailInfo').textContent = simple
+    ? tr('Simple: the buildings\' volumes, default roofs, roads, paths, grounds, relief, trees and lamps.',
+      'Simple : volumes des bâtiments, toits par défaut, routes, chemins, sols, relief, arbres et lampadaires.')
+    : tr('Detailed: also the real heights, roofs and materials (IGN, in France), pavements, road signs, shrubs and benches.',
+      'Détaillé : en plus, hauteurs, toits et matériaux réels (IGN, en France), trottoirs, panneaux, buissons et bancs.');
 }
 
 /** The detail line of the map data: the server, the seconds spent on it, the bytes received. */
@@ -375,6 +388,7 @@ async function importer(){
   const moi = V;
   const arrete = () => V !== moi || moi.cancelled;
   const centre = { ...V.zone }, halfSize = Math.min(V.halfSize, ZONE_SIDE_MAX / 2);
+  const niveau = DETAIL_LEVELS.includes($('realPlaceDetailLevel').value) ? $('realPlaceDetailLevel').value : 'detailed';
   // Each step shows on the list before its work: an await lets the window draw it.
   const etape = async (step, sub = 0) => { montrerLaProgression(step, sub); await new Promise(ok => setTimeout(ok, 0)); };
   try {
@@ -399,12 +413,12 @@ async function importer(){
     // France: the IGN's surveyed buildings (heights, roofs, materials), matched to OSM's. Without them (no
     // answer, another country) OSM alone, as before.
     let survey = null;
-    if (country === 'fr' && api.realPlaceBdTopo) {
+    if (country === 'fr' && niveau === 'detailed' && api.realPlaceBdTopo) {
       const s = await api.realPlaceBdTopo(bbox);
       if (arrete()) return;
       if (s && s.json) survey = readBdTopo(s.json, centre);
     }
-    const translated = translateOsm(extrait.json, { centre, halfSize, country: country || 'world', translate: tr, survey });
+    const translated = translateOsm(extrait.json, { centre, halfSize, country: country || 'world', translate: tr, survey, detail: niveau });
     await etape('relief');
     const relief = await reliefDuLieu(centre, halfSize, country, (sub) => montrerLaProgression('relief', sub), arrete);
     if (arrete()) return;

@@ -3213,7 +3213,8 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 /* No detail: the line fades out and gives its height back (asked). */
 .real-place-detail.vide{ opacity:0; max-height:0; }
 @media (prefers-reduced-motion: reduce){ .real-place-detail{ transition:none; } }
-.real-place-options[hidden]{ display:none; }
+.real-place-options[hidden], .real-place-detail-info[hidden]{ display:none; }
+.real-place-detail-info{ margin:0; font-size:var(--texte-libelle); color:var(--ink-soft); }
 .real-place-options [hidden]{ display:none; }
 
 /* A large Scene being opened (scene-loading.js): a translucent veil over it (asked: see it being built), the

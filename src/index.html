@@ -1548,8 +1548,15 @@
         <option value="300">300 m</option>
         <option value="400">400 m</option>
       </select>
+      <!-- The level of detail (asked: richer is heavier, so one chooses); what it brings is said under the row. -->
+      <label id="realPlaceDetailLevelLabel" for="realPlaceDetailLevel">Détail</label>
+      <select id="realPlaceDetailLevel">
+        <option value="simple">Simple</option>
+        <option value="detailed" selected>Détaillé</option>
+      </select>
       <span id="realPlaceHint" class="real-place-hint"></span>
     </div>
+    <p id="realPlaceDetailInfo" class="real-place-detail-info"></p>
     <p id="realPlaceStatus" class="maj-message"></p>
     <!-- The import's progress, in the place of the zone's options (hidden meanwhile, asked): the step under way,
          centred, its detail centred under it (fading out when there is none), the bar. -->
