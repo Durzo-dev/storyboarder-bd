@@ -189,3 +189,22 @@ describe('le menu de l\'éditeur de bâtiment (demandé)', () => {
     assert.match(readFileSync(new URL('../src/batiment-editeur-ui.js', import.meta.url), 'utf8'), /document\.querySelectorAll\('#batimentPanneau \.side-section > h2'\)/);
   });
 });
+
+describe('a flat roof wears its covering', async () => {
+  const { fixerToit } = await import('../src/batiment-toits.js');
+  const { ajouterEtage } = await import('../src/batiment-niveaux.js');
+  const couleurs = (b) => { const s = new Set(); construireBatiment3D(THREE, b, materiauxBatiment3D(THREE)).traverse(o => { if (o.isMesh) s.add('#' + o.material.color.getHexString()); }); return s; };
+  test('the slab over the highest level takes the roof\'s covering (seen: a white roof among tiled ones)', () => {
+    const b = unePiece();
+    fixerToit(b, 'n0', { type: 'plat', revetement: { texture: null, couleur: '#8f8b84' } });
+    assert.ok(couleurs(b).has('#8f8b84'));
+  });
+  test('without a covering, or under another level, nothing changes', () => {
+    const b = unePiece();
+    assert.ok(!couleurs(b).has('#8f8b84'));
+    const c = unePiece();
+    ajouterEtage(c, (en, fr) => fr);
+    fixerToit(c, 'n0', { type: 'plat', revetement: { texture: null, couleur: '#8f8b84' } });
+    assert.ok(!couleurs(c).has('#8f8b84'), 'the ground floor slab is a floor, not a roof');
+  });
+});

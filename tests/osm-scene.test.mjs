@@ -176,3 +176,37 @@ describe('#457b-2, the pieces', () => {
     assert.equal(r.elements.length, 0, '278 m north: outside a 400 m zone');
   });
 });
+
+describe('OSM translator, streets and grounds (#468b)', async () => {
+  const { markingOf } = await import('../src/osm-scene.js');
+  test('a centre line on main two-way roads, or 2 lanes and more; none on a residential street or a one-way', () => {
+    assert.equal(markingOf({ highway: 'residential' }), false);
+    assert.equal(markingOf({ highway: 'unclassified' }), false);
+    assert.equal(markingOf({ highway: 'secondary' }), true);
+    assert.equal(markingOf({ highway: 'secondary', oneway: 'yes' }), false);
+    assert.equal(markingOf({ highway: 'residential', lanes: '2' }), true);
+    assert.equal(markingOf({ highway: 'primary', lanes: '1' }), false);
+  });
+  test('a built-up zone stands on a paved Ground; flat roofs without covering are grey', () => {
+    const v = JSON.parse(readFileSync(new URL('./fixtures/osm-eguisheim.json', import.meta.url), 'utf8'));
+    const b = v.bbox, centre = { lat: (b.sud + b.nord) / 2, lon: (b.ouest + b.est) / 2 };
+    const old = translateOsm(v, { centre, halfSize: 45 });
+    assert.ok(old.builtShare > 0.3, `the old town: ${old.builtShare}`);
+    assert.equal(old.ground, 'béton');
+    const wide = translateOsm(v, { centre, halfSize: 150 });
+    assert.ok(wide.builtShare < 0.1 && wide.ground === undefined, 'the same buildings in a wide zone: not built up');
+    const flat = { elements: [{ type: 'way', id: 9, tags: { building: 'retail', 'roof:shape': 'flat' }, geometry: [[48, 7], [48, 7.0002], [48.0002, 7.0002], [48.0002, 7], [48, 7]] }] };
+    const t = translateOsm(flat, { centre: { lat: 48.0001, lon: 7.0001 }, halfSize: 50 });
+    const top = t.buildings[0].building.niveaux.reduce((p, q) => (q.elevation > p.elevation ? q : p));
+    assert.deepEqual(top.toit.revetement, { texture: null, couleur: '#8f8b84' });
+  });
+  test('road signs and shrubs become Elements', () => {
+    const nodes = { elements: [
+      { type: 'node', id: 1, lat: 48, lon: 7, tags: { traffic_sign: 'FR:B1' } },
+      { type: 'node', id: 2, lat: 48, lon: 7.0001, tags: { highway: 'stop' } },
+      { type: 'node', id: 3, lat: 48.0001, lon: 7, tags: { natural: 'shrub' } },
+    ] };
+    const t = translateOsm(nodes, { centre: { lat: 48, lon: 7 }, halfSize: 50 });
+    assert.deepEqual(t.elements.map(e => e.objType), ['panneau_signalisation', 'panneau_signalisation', 'buisson']);
+  });
+});

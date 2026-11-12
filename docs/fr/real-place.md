@@ -32,12 +32,15 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
   `ajouterContour` et `actualiserPieces` par niveau, `fixerToit` sur le niveau du haut,
   `ajouterOuverture`. Niveaux d'après `building:levels`, sinon `height` / la hauteur d'un niveau, sinon une
   valeur par type (les règles du pays, `rulesFor`). Toit d'après `roof:shape`, sinon plat pour les commerces et bâtiments
-  publics, à deux pans sinon. Des fenêtres sur chaque mur de 2 m ou plus (une tous les 2,6 m) ; une
+  publics, à deux pans sinon ; un toit plat sans couverture connue est gris (`#8f8b84`, gravillons ou
+  bitume), et le rendu dessine la dalle du niveau le plus haut dans la couverture du toit plat
+  (batiment-3d.js). Des fenêtres sur chaque mur de 2 m ou plus (une tous les 2,6 m) ; une
   porte sur le mur du rez-de-chaussée (1,5 m ou plus) le plus proche d'une route ou d'un chemin. Une
   emprise que l'éditeur refuse (qui se croise) est écartée. Chaque bâtiment vient avec son centre (`x`,
   `z`) : l'import le pose en Élément bâtiment (`creerElementBatiment`, `wxFloor`/`wzFloor`).
-- **Tracés** (`pathKindOf`) : les routes `highway` → `route` (largeur selon le type, sans marquage pour
-  les rues piétonnes, de service et de rencontre), trottoirs, sentiers, pistes, escaliers → `chemin` ;
+- **Tracés** (`pathKindOf`) : les routes `highway` → `route` (largeur selon le type ; une ligne centrale
+  (`markingOf`) à partir de 2 voies, aucune à 1 voie ou en sens unique, sinon seulement sur les grands
+  axes : autoroute à tertiaire et leurs bretelles), trottoirs, sentiers, pistes, escaliers → `chemin` ;
   `barrier` → `muret`, `cloture`, `haie`, `barriere` ; `waterway` → `riviere`. Une balise `width` l'emporte.
   Les tunnels sont écartés. Découpés à la zone (`clipPolyline`). `world` est celui d'un Tracé (`pts`,
   `width`).
@@ -46,7 +49,11 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
   piétonnes → `bitume`. `landuse=residential` et ses pareils sont trop vastes : ce n'est pas un sol. Le
   polygone devient un masque de Zone peinte en cases de 1 m (`maskOfPolygon`), `world` par
   `mondeDuMasque`.
-- **Éléments** : `natural=tree` → `arbre`, `highway=street_lamp` → `lampadaire`.
+- **Éléments** : `natural=tree` → `arbre`, `highway=street_lamp` → `lampadaire`, `traffic_sign` et
+  `highway=stop|give_way` → `panneau_signalisation`, `natural=shrub` → `buisson`.
+- **Sol** : `builtShare`, l'emprise des bâtiments sur celle de la zone ; à partir de 25 % (`BUILT_UP`), la
+  zone est bâtie et le Sol de la Scène est `béton` (`ground`, posé en `panel.groundType`), sinon l'herbe
+  par défaut. Parcs, jardins et autres Zones sont peints par-dessus.
 - **Écartés** : les relations (multipolygones), comptées dans `skipped.relations` ; les chemins illisibles
   ou hors zone.
 - **Attribution** : `OSM_ATTRIBUTION` (« © OpenStreetMap contributors, ODbL »), à montrer dans les crédits

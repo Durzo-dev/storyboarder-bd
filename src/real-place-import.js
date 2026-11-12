@@ -51,6 +51,7 @@ export function sceneContentOf(translated, { panelId, newId, nameOf, altitudes =
     buildings: translated.buildings,
     elements: translated.elements,
     relief: r ? r.relief : null,
+    ground: translated.ground || null,
     bornee: !!(r && r.bornee),
     credits,
     counts: { buildings: translated.buildings.length, paths: paths.length, zones: zones.length, elements: translated.elements.length },

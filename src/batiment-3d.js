@@ -17,7 +17,7 @@ import { formeDeLEscalier, tremieDeLEscalier } from './batiment-escaliers.js';
 import { niveauxTries, hauteurDesMursDuNiveau, epaisseurDuDessus, niveauDessous } from './batiment-niveaux.js';
 import { fabriqueDeRevetements, revetementDeLaFace, revetementDeLaPiece, pieceDevantLaFace } from './batiment-revetements.js';
 import { meublesDuNiveau, hauteurAuSol, basDuMeuble, empreinteDuMeuble } from './batiment-mobilier.js';
-import { toitsDuNiveau, decaler, ACROTERE, GARDE_CORPS, EPAISSEUR_TOIT, estUneTerrasse, baseSurLeToit, empriseDesSousSols } from './batiment-toits.js';
+import { toitsDuNiveau, toitDuNiveau, decaler, ACROTERE, GARDE_CORPS, EPAISSEUR_TOIT, estUneTerrasse, baseSurLeToit, empriseDesSousSols } from './batiment-toits.js';
 
 /** Les matières d'un bâtiment, à créer une fois par renderer. */
 export function materiauxBatiment3D(T){
@@ -219,15 +219,24 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, 
   // Une trémie n'est retenue que dans la pièce qui la contient tout entière (un trou qui déborderait
   // de sa forme casserait la triangulation).
   const percees = (f, tremies) => tremies.filter(t => t.every(p => dansLaFace(p, f)));
-  const dalle = (f, y, epaisseur, tremies = []) => {
+  const dalle = (f, y, epaisseur, tremies = [], matiere = mats.mur) => {
     if (!(epaisseur > 0)) return;
     const forme = new T.Shape(f.points.map(p => new T.Vector2(p.x, -p.z)));
     [...(f.trous || []), ...percees(f, tremies)].forEach(t => forme.holes.push(new T.Path(t.map(p => new T.Vector2(p.x, -p.z)))));
     const geo = new T.ExtrudeGeometry(forme, { depth: epaisseur, bevelEnabled: false });
     geo.rotateX(-Math.PI / 2);
-    const m = new T.Mesh(geo, mats.mur);
+    const m = new T.Mesh(geo, matiere);
     m.position.y = y;
     groupe.add(m);
+  };
+  // A FLAT ROOF TAKES ITS COVERING: on the highest level, the slab over each room IS the flat roof, and
+  // it wore the walls' colour (seen: a large white roof among tiled ones). With a covering set on the
+  // roof, the slab wears it; without one, nothing changes.
+  const auDessus = (n) => {
+    const t = toitDuNiveau(n);
+    if (!mats.revetement || t.type !== 'plat' || !t.revetement) return mats.mur;
+    if (b.niveaux.some(m => m.elevation > n.elevation + 1e-9)) return mats.mur;
+    return mats.revetement(t.revetement, 'toit');
   };
   // Le Sol n'est percé que quand on doit VOIR le sous-sol : le bâtiment coupé à un sous-sol, ou un sol
   // masqué (#464). Sinon le Sol est entier, et couvre le dessus des sous-sols hors du rez-de-chaussée.
@@ -287,7 +296,7 @@ export function construireBatiment3D(T, b, mats, { jusquA = null, rouge = null, 
       // du plancher du dessus : sous une pièce de l'étage, elle se confond avec son plancher ;
       // ailleurs, c'est un toit plat (en attendant les toits de #458). Le dernier niveau montré par
       // une coupe reste ouvert, pour voir dedans.
-      if (!(coupe && n.id === dernier) && !cache.plafonds.has(pieceId) && !sansDalleDuDessus(n)) dalle(f, n.elevation + n.hauteur, epaisseurDuDessus(b, n.id), tremiesPlafond);
+      if (!(coupe && n.id === dernier) && !cache.plafonds.has(pieceId) && !sansDalleDuDessus(n)) dalle(f, n.elevation + n.hauteur, epaisseurDuDessus(b, n.id), tremiesPlafond, auDessus(n));
     }
     const murs = b.murs.filter(m => m.niveauId === n.id && !cache.murs.has(m.id));
     const formes = polygonesDesMurs(murs);

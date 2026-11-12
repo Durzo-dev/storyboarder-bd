@@ -95,7 +95,8 @@ function overpassQuery({ south, west, north, east }){
   const b = `(${south},${west},${north},${east})`;
   return `[out:json][timeout:60];(way["building"]${b};way["highway"]${b};way["barrier"]${b};way["waterway"]${b};`
     + `way["landuse"]${b};way["natural"]${b};way["leisure"]${b};way["amenity"="parking"]${b};`
-    + `node["natural"="tree"]${b};node["highway"="street_lamp"]${b};);out geom;`;
+    + `node["natural"="tree"]${b};node["highway"="street_lamp"]${b};node["traffic_sign"]${b};node["highway"~"^(stop|give_way)$"]${b};`
+    + `node["natural"="shrub"]${b};);out geom;`;
 }
 
 const extracts = sources.memoireBornee(4, 40 * 1024 * 1024);

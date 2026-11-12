@@ -31,19 +31,25 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
   the building editor's own functions: `creerBatiment`, `ajouterEtage` per level, `ajouterContour` and
   `actualiserPieces` per level, `fixerToit` on the top level, `ajouterOuverture`. Levels from
   `building:levels`, else `height` / the level height, else a default per type (the country's rules, `rulesFor`). Roof from
-  `roof:shape`, else flat for commercial and public types, gabled otherwise. Windows on every wall of
+  `roof:shape`, else flat for commercial and public types, gabled otherwise; a flat roof with no known
+  covering is grey (`#8f8b84`, gravel or bitumen), and the renderer draws the highest level's slab in the
+  flat roof's covering (batiment-3d.js). Windows on every wall of
   2 m or more (one per 2.6 m); a door on the ground-floor wall (1.5 m or more) nearest a road or path.
   A footprint the editor refuses (crossing itself) is skipped. Each building comes with its centre
   (`x`, `z`): the importer places it as a building Element (`creerElementBatiment`, `wxFloor`/`wzFloor`).
-- **Paths** (`pathKindOf`): `highway` roads → `route` (width by type, no marking on pedestrian, service
-  and living streets), footways, paths, tracks, steps → `chemin`; `barrier` → `muret`, `cloture`,
+- **Paths** (`pathKindOf`): `highway` roads → `route` (width by type; a centre line (`markingOf`) with 2
+  lanes or more, none with 1 or one-way, else only on main roads: motorway to tertiary and their links), footways, paths, tracks, steps → `chemin`; `barrier` → `muret`, `cloture`,
   `haie`, `barriere`; `waterway` → `riviere`. A `width` tag wins. Tunnels are skipped. Clipped to the zone
   (`clipPolyline`). `world` is the Path's own (`pts`, `width`).
 - **Zones** (`zoneTypeOf`): grass, meadow, forest… → `herbe`; park, garden, pitch → `gazon`; farmland,
   vineyard… → `terre`; sand, beach → `sable`; water → `eau`; parking and pedestrian squares → `bitume`.
   `landuse=residential` and the like are too wide: not a ground. The polygon becomes a painted Zone mask
   of 1 m cells (`maskOfPolygon`), `world` from `mondeDuMasque`.
-- **Elements**: `natural=tree` → `arbre`, `highway=street_lamp` → `lampadaire`.
+- **Elements**: `natural=tree` → `arbre`, `highway=street_lamp` → `lampadaire`, `traffic_sign` and
+  `highway=stop|give_way` → `panneau_signalisation`, `natural=shrub` → `buisson`.
+- **Ground**: `builtShare`, the buildings' ground area over the zone's; from 25 % (`BUILT_UP`) the zone is
+  built up and the Scene's Ground is `béton` (`ground`, laid as `panel.groundType`), otherwise the default
+  grass. Parks, gardens and other Zones are painted over it.
 - **Skipped**: relations (multipolygons), counted in `skipped.relations`; invalid or outside ways.
 - **Attribution**: `OSM_ATTRIBUTION` ("© OpenStreetMap contributors, ODbL"), to show in the export credits.
 

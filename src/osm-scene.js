@@ -54,6 +54,29 @@ const ROOF_SHAPES = { flat: 'plat', gabled: 'deux-pans', hipped: 'quatre-pans', 
 const ROADS = { motorway: 10, trunk: 9, primary: 8, secondary: 7, tertiary: 6.5, unclassified: 5, residential: 5,
   living_street: 4.5, service: 3.5, road: 5, pedestrian: 5,
   motorway_link: 5, trunk_link: 5, primary_link: 5, secondary_link: 5, tertiary_link: 5 };
+/**
+ * The roads that wear a centre line when OSM gives no lane count: the main roads, two-way. A residential
+ * street, a lane, a service road have none in France (seen: dashes down every village street).
+ */
+const MARKED_ROADS = ['motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'motorway_link', 'trunk_link',
+  'primary_link', 'secondary_link', 'tertiary_link'];
+
+/** Does this road wear a centre line? `lanes` first (2 or more: yes; 1: no), else its type, never one-way. */
+export function markingOf(tags){
+  const lanes = parseInt(tags.lanes, 10);
+  if (lanes >= 2) return true;
+  if (lanes === 1 || tags.oneway === 'yes' || tags.oneway === '-1') return false;
+  return MARKED_ROADS.includes(tags.highway);
+}
+
+/**
+ * A built-up zone (buildings over this share of its ground) stands on a paved Ground, not on grass (seen:
+ * grass between the blocks of a city centre). Under it (a suburb, a village with gardens): grass, as before.
+ */
+const BUILT_UP = 0.25;
+/** The paved Ground of a built-up zone, and the covering of a flat roof OSM and the survey say nothing of. */
+const URBAN_GROUND = 'béton', FLAT_ROOF = '#8f8b84';
+
 const DIRT_PATHS = { footway: 1.5, path: 1.2, track: 3, cycleway: 2, bridleway: 2, steps: 1.5 };
 const BARRIERS = { wall: 'muret', retaining_wall: 'muret', city_wall: 'muret', fence: 'cloture', hedge: 'haie',
   guard_rail: 'barriere', railing: 'barriere' };
@@ -235,7 +258,8 @@ export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor
   const top = b.niveaux.reduce((p, q) => (q.elevation > p.elevation ? q : p));
   const surveyed = surveyedRoof(survey, footprint);
   const roof = { type: roofOf(tags, rules, surveyed), pente: surveyed && !surveyed.flat ? surveyed.pitch : rules.roofPitch };
-  const roofFinish = roofFinishOf(tags, survey);
+  // A flat roof with no known covering: the grey of a gravel or bitumen roof, not the walls' colour.
+  const roofFinish = roofFinishOf(tags, survey) || (roof.type === 'plat' ? { texture: null, couleur: FLAT_ROOF } : null);
   if (roofFinish) roof.revetement = roofFinish;
   fixerToit(b, top.id, roof);
   const facade = wallFinishOf(tags, survey);
@@ -251,6 +275,14 @@ export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor
   return b;
 }
 
+/** The ground area of a building's level (its outer walls' outline), square metres. */
+function areaOfLevel(b, levelId){
+  const walls = b.murs.filter(m => m.niveauId === levelId);
+  let a = 0;
+  for (const m of walls) a += m.a.x * m.b.z - m.b.x * m.a.z;
+  return Math.abs(a / 2);
+}
+
 // ── The extract ─────────────────────────────────────────────────────────────────────────────────
 
 /** The `kind` and width of a way that is a path (road, dirt path, wall, river), or null. */
@@ -258,7 +290,7 @@ export function pathKindOf(tags){
   if (tags.tunnel && tags.tunnel !== 'no') return null;   // under the ground: not drawn
   const width = parseFloat(tags.width);
   if (tags.highway && tags.area !== 'yes') {
-    if (ROADS[tags.highway]) return { kind: 'route', width: width > 0 ? width : ROADS[tags.highway], marking: !['pedestrian', 'service', 'living_street'].includes(tags.highway) };
+    if (ROADS[tags.highway]) return { kind: 'route', width: width > 0 ? width : ROADS[tags.highway], marking: markingOf(tags) };
     if (DIRT_PATHS[tags.highway]) return { kind: 'chemin', width: width > 0 ? width : DIRT_PATHS[tags.highway] };
   }
   if (BARRIERS[tags.barrier]) return { kind: BARRIERS[tags.barrier] };
@@ -276,7 +308,9 @@ export function zoneTypeOf(tags){
 /**
  * Translates an Overpass extract. `centre`: {lat, lon}; `halfSize`: half the side of the zone (metres, at
  * most ZONE_SIDE_MAX / 2); `country` (ISO code, `fr` by default: France first) picks the default values
- * (real-place-sources.js), unless `rules` are given. Returns { buildings, paths, zones, elements, skipped, attribution }.
+ * (real-place-sources.js), unless `rules` are given; `survey` (building-survey.js, readBdTopo) completes the
+ * buildings. Returns { buildings, paths, zones, elements, skipped, attribution, surveyAttribution?, builtShare,
+ * ground? } (`ground`: the paved Ground of a built-up zone).
  */
 export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, country = 'fr', rules = rulesFor(country), translate = null, survey = null } = {}){
   const h = Math.min(Math.max(1, halfSize), ZONE_SIDE_MAX / 2);
@@ -289,7 +323,9 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
     if (e.type === 'node') {
       const g = geoPoint(e), p = g && toLocal(g);
       if (!p || Math.abs(p.x) > h || Math.abs(p.z) > h) continue;
-      const objType = tags.natural === 'tree' ? 'arbre' : tags.highway === 'street_lamp' ? 'lampadaire' : null;
+      const objType = tags.natural === 'tree' ? 'arbre' : tags.highway === 'street_lamp' ? 'lampadaire'
+        : (tags.traffic_sign || tags.highway === 'stop' || tags.highway === 'give_way') ? 'panneau_signalisation'
+          : tags.natural === 'shrub' ? 'buisson' : null;
       if (objType) out.elements.push({ objType, x: round(p.x), z: round(p.z), osmId: e.id });
       continue;
     }
@@ -360,5 +396,13 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
     out.buildings.push({ building, x: round(centreOf.x), z: round(centreOf.z), surveyId: s.id });
   }
   if (taken.size) out.surveyAttribution = BDTOPO_ATTRIBUTION;
+  // The Ground: paved when the zone is built up (BUILT_UP), else left to the Scene's default (grass).
+  let built = 0;
+  for (const b of out.buildings) {
+    const level = b.building.niveaux.reduce((p, q) => (q.elevation < p.elevation ? q : p));
+    built += areaOfLevel(b.building, level.id);
+  }
+  out.builtShare = Math.round(built / (4 * h * h) * 1000) / 1000;
+  if (out.builtShare >= BUILT_UP) out.ground = URBAN_GROUND;
   return out;
 }

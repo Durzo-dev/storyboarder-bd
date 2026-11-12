@@ -33,6 +33,7 @@ export function layRealPlace(scene, content, { halfSize, newObject }){
   // everywhere, and not one building or object drawn (seen). The view below is what currentPage() gives.
   const view = { w: scene.w, h: scene.h, scale: scene.scale, format: scene.format, style3d: scene.style3d, objects: page.objects };
   if (content.relief) panel.relief = content.relief;
+  if (content.ground) panel.groundType = content.ground;
   panel.creditsDuLieu = content.credits.slice();
   // ⚠️ THE DEPTH `o.z` STAYS 0. An Element's size is its 2D size seen at the depth `o.z`, a perspective made
   // for a few metres in front of the camera (30 m): put at the place's north-south position (up to ±200 m),
