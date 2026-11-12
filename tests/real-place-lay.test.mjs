@@ -6,7 +6,7 @@
  */
 import './helpers/dom-stub.mjs';
 import './helpers/render-stub.mjs';
-import { test, describe } from 'node:test';
+import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
@@ -17,6 +17,7 @@ const { createScene } = await import('../src/scenes.js');
 const { drawPanelScene3D } = await import('../src/scene3d.js');
 const rig = await import('../src/rig3d.js');
 const { GROUND_Y_DEFAULT_3D } = await import('../src/constants.js');
+const { reliefDepuisAltitudes, hauteurDuRelief } = await import('../src/terrain-relief.js');
 
 const village = JSON.parse(readFileSync(new URL('./fixtures/osm-eguisheim.json', import.meta.url), 'utf8'));
 const centre = { lat: (village.bbox.sud + village.bbox.nord) / 2, lon: (village.bbox.ouest + village.bbox.est) / 2 };
@@ -28,13 +29,17 @@ const newObject = (panel, view, objType) => ({ id: `rp${++n}`, type: 'objet3d', 
   z: 0, realHeightFloor: 1, magnetGround: true, homePanelId: panel.id, rotX: 0, rotY: 0, rotZ: 0 });
 
 describe('real place, laid in a new Scene and rendered', () => {
-  const scene = createScene();
-  const { page, panel } = layRealPlace(scene, { ...content, elements: [] }, { halfSize: HALF, newObject });
-  const buildings = page.objects.filter(o => o.objType === 'batiment');
-  drawPanelScene3D(document.createElement('canvas').getContext('2d'), panel, { ...page, w: scene.w, h: scene.h, objects: page.objects }, scene.style3d);
-  const T = globalThis.THREE, cam = rig.personaCamera3D;
-  cam.updateMatrixWorld();
-  const frustum = new T.Frustum().setFromProjectionMatrix(new T.Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse));
+  let panel, buildings, cam, frustum, T;
+  before(() => {
+    const scene = createScene();
+    let page;
+    ({ page, panel } = layRealPlace(scene, { ...content, elements: [] }, { halfSize: HALF, newObject }));
+    buildings = page.objects.filter(o => o.objType === 'batiment');
+    drawPanelScene3D(document.createElement('canvas').getContext('2d'), panel, { ...page, w: scene.w, h: scene.h, objects: page.objects }, scene.style3d);
+    T = globalThis.THREE; cam = rig.personaCamera3D;
+    cam.updateMatrixWorld();
+    frustum = new T.Frustum().setFromProjectionMatrix(new T.Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse));
+  });
 
   test('every building is drawn, at its place, standing on the Ground (seen: none drawn, their 2D frame NaN)', () => {
     assert.equal(buildings.length, content.buildings.length);
@@ -65,5 +70,44 @@ describe('real place, laid in a new Scene and rendered', () => {
     assert.deepEqual([seen[0].w, seen[0].h], [s2.w, s2.h]);
     const tree = p2.objects.find(o => o.objType === 'arbre');
     assert.deepEqual([tree.wxFloor, tree.wzFloor, tree.z], [12, -40, 0]);
+  });
+});
+
+describe('real place on a slope: the roads stay above the relief', () => {
+  // A hillside: 12 % up towards the north-east, over the whole zone (the village's real lie, steepened).
+  const nx = 2 * HALF + 1, altitudes = new Array(nx * nx);
+  for (let j = 0; j < nx; j++) for (let i = 0; i < nx; i++) altitudes[j * nx + i] = 200 + 0.12 * (i - (nx - 1 - j));
+  let mesh = null;
+  before(() => {
+    const { relief } = reliefDepuisAltitudes({ x0: -HALF, z0: -HALF, pas: 1, nx, nz: nx, altitudes });
+    const scene = createScene();
+    const { page, panel } = layRealPlace(scene, { ...content, relief, elements: [] }, { halfSize: HALF, newObject });
+    drawPanelScene3D(document.createElement('canvas').getContext('2d'), panel, { ...page, w: scene.w, h: scene.h, objects: page.objects }, scene.style3d);
+    // The rendered relief: its mesh, read back as a height field.
+    rig.personaScene3D.traverse(m => { if (m.isMesh && m.userData.relief && m.parent) mesh = m; });
+  });
+  test('the relief is rendered', () => assert.ok(mesh));
+  test('the roads and paths stay on the relief (seen: streets half buried)', () => {
+    const pos = mesh.geometry.attributes.position, field = { x0: -HALF, z0: -HALF, pas: 1, nx, nz: nx, h: new Array(nx * nx) };
+    for (let k = 0; k < pos.count; k++) field.h[k] = pos.getY(k) - GROUND_Y_DEFAULT_3D;
+    let meshes = 0, vertices = 0, under = 0, worst = 0;
+    rig.personaScene3D.traverse(m => {
+      if (!m.isMesh || !m.userData.dessinAuSol || m.userData.relief) return;
+      meshes++;
+      m.updateMatrixWorld();
+      const p = m.geometry.attributes.position, v = new globalThis.THREE.Vector3();
+      for (let k = 0; k < p.count; k++) {
+        v.fromBufferAttribute(p, k).applyMatrix4(m.matrixWorld);
+        const depth = hauteurDuRelief(field, v.x, v.z) - (v.y - GROUND_Y_DEFAULT_3D);
+        vertices++;
+        if (depth > 0.01) under++;
+        worst = Math.max(worst, depth);
+      }
+    });
+    assert.ok(meshes > 20 && vertices > 50000);
+    // Measured before the cut: 31,985 vertices of 93,186 under the relief, down to 1.6 m. What is left (24) is a
+    // few vertices where a path turns sharply (its profile bends between two grid points), a few centimetres.
+    assert.ok(under / vertices < 0.001, `${under} of ${vertices} vertices under the relief`);
+    assert.ok(worst < 0.1, `a vertex ${worst.toFixed(2)} m under the relief`);
   });
 });

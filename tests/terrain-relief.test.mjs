@@ -4,7 +4,7 @@
  */
 import './helpers/dom-stub.mjs';
 import './helpers/render-stub.mjs';
-import { test } from 'node:test';
+import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as R from '../src/terrain-relief.js';
@@ -349,4 +349,26 @@ test('#457b-1 : l\'altitude de base survit au pinceau, Ã  l\'agrandissement et Ã
   r = R.aplanirSousLesEmprises(r, [{ polys: [[{ x: 0, z: 0 }, { x: 2, z: 0 }, { x: 2, z: 2 }, { x: 0, z: 2 }]], base: 0 }]);
   assert.equal(r.altitude, 105);
   assert.equal(R.etendreLeRelief(null, 0, 0, 2, 2).altitude, undefined, 'sans lieu : pas d\'altitude');
+});
+
+describe('the relief cut under roads (cutUnderRoads)', () => {
+  // A 20 m grid, rising 0.5 m per metre towards +z (a road along x, on a cross slope).
+  const nx = 21, h = [];
+  for (let j = 0; j < nx; j++) for (let i = 0; i < nx; i++) h.push((j - 10) * 0.5);
+  const r = { pas: 1, x0: -10, z0: -10, nx, nz: nx, h, v: 0 };
+  const road = { pts: [{ x: -10, z: 0 }, { x: 10, z: 0 }], width: 4, profile: () => 0 };
+  test('within reach of the axis the relief comes down under the road; farther, untouched; nothing raised', () => {
+    const c = R.cutUnderRoads(r, [road]);
+    assert.notEqual(c, r);
+    const at = (x, z) => c.h[(z + 10) * nx + (x + 10)];
+    assert.equal(at(0, 2), -0.1, 'the uphill edge: under the road');
+    assert.equal(at(0, 4), -0.1, 'half the width, the margin and a cell and a half (2 + 0.5 + 1.5)');
+    assert.equal(at(0, 5), 2.5, 'beyond: untouched');
+    assert.equal(at(0, -3), -1.5, 'downhill: lower already, not raised');
+  });
+  test('nothing to cut: the same relief', () => {
+    assert.equal(R.cutUnderRoads(r, []), r);
+    assert.equal(R.cutUnderRoads(r, [{ ...road, profile: () => 100 }]), r);
+    assert.equal(R.cutUnderRoads(null, [road]), null);
+  });
 });

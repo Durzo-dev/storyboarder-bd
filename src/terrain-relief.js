@@ -197,6 +197,42 @@ export function densifierLaLigne(pts, pas = 1){
 }
 
 /**
+ * The relief CUT under roads and paths. A line is draped by its axis (profilFranchissant reads the nearest
+ * point of the axis), so it stays level across its width: on a slope its uphill edge went under the relief,
+ * and so did a building's plateau along it (seen: the streets of an imported village half buried). Every
+ * grid point within half the width (plus `margin` and a cell and a half) of the axis comes down to the road's height, `below`
+ * metres under it; nothing is raised (filling a dip is the profile's job). `roads`: [{ pts, width, profile }],
+ * `profile(x, z)` the road's height at that point. Returns a new relief, or the same if nothing is cut. PURE.
+ */
+export function cutUnderRoads(r, roads, margin = 0.5, below = 0.1){
+  if (!reliefValide(r) || !Array.isArray(roads) || !roads.length) return r;
+  let h = null;
+  for (const { pts, width, profile } of roads) {
+    if (!Array.isArray(pts) || pts.length < 2 || typeof profile !== 'function' || !(width > 0)) continue;
+    // Plus one and a half cells: the relief between grid points is interpolated, so a road edge is under a
+    // triangle whose corners stand up to a diagonal away; each one has to come down.
+    const reach = width / 2 + margin + r.pas * 1.5, seen = new Set();
+    for (let s = 0; s + 1 < pts.length; s++) {
+      const a = pts[s], b = pts[s + 1], dx = b.x - a.x, dz = b.z - a.z, l2 = dx * dx + dz * dz;
+      const i0 = Math.max(0, Math.floor((Math.min(a.x, b.x) - reach - r.x0) / r.pas)), i1 = Math.min(r.nx - 1, Math.ceil((Math.max(a.x, b.x) + reach - r.x0) / r.pas));
+      const j0 = Math.max(0, Math.floor((Math.min(a.z, b.z) - reach - r.z0) / r.pas)), j1 = Math.min(r.nz - 1, Math.ceil((Math.max(a.z, b.z) + reach - r.z0) / r.pas));
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+        const k = j * r.nx + i;
+        if (seen.has(k)) continue;
+        const x = r.x0 + i * r.pas, z = r.z0 + j * r.pas;
+        const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / l2)) : 0;
+        if (Math.hypot(x - (a.x + t * dx), z - (a.z + t * dz)) > reach) continue;
+        seen.add(k);
+        const v = profile(x, z) - below;
+        const cur = (h || r.h)[k] || 0;
+        if (v < cur) { if (!h) h = r.h.slice(); h[k] = v; }
+      }
+    }
+  }
+  return h ? { ...r, h } : r;
+}
+
+/**
  * #462c-2 : le relief APLANI sous les bâtiments (décidé) : chaque point de la grille dans une emprise
  * (ou à moins de `marge` mètres de son bord) prend la hauteur `base` de ce bâtiment. `emprises` :
  * [{ polys: [[{x, z}…]…], base }]. Rend un relief neuf, ou le même s'il n'y a rien à aplanir. PUR.

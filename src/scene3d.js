@@ -14,7 +14,7 @@
 import { mursDevantMasques, mursDeDevant, versLaCameraDansLeBatiment, retenirMursDevant } from './batiment-murs-devant.js';
 import { estUnBatimentPlace } from './batiment-element.js';
 import { MARQUE_SOL_PERCE } from './batiment-3d.js';
-import { reliefPlat, signatureDuRelief, hauteurDuRelief, densifierLaLigne, aplanirSousLesEmprises,
+import { reliefPlat, signatureDuRelief, hauteurDuRelief, densifierLaLigne, aplanirSousLesEmprises, cutUnderRoads,
   creuserLesRivieres, releverLesZones, profilFranchissant, hauteurDeLaZone, PROFONDEUR_RIVIERE, EAU_SOUS_LA_BERGE, NIVEAU_EAU_PAR_DEFAUT } from './terrain-relief.js';
 import { installerEau3D } from './ground-water-3d.js';
 import { casesDuMasque, dansLeMasque, caseLaPlusProche } from './terrain-zone-pinceau.js';
@@ -2601,8 +2601,33 @@ function reliefEffectif3D(panel, page){
       if (polys.length) emprises.push({ polys, base: hauteurDuRelief(r, o.wxFloor ?? 0, o.wzFloor ?? 0) });
     } catch (e) { /* un bâtiment illisible n'aplanit rien */ }
   }
-  return aplanirSousLesEmprises(r, emprises);
+  const flattened = aplanirSousLesEmprises(r, emprises);
+  // Roads and paths: their profile is read on the relief as it stands (buildings' plateaus included), then
+  // the relief is cut under them (cutUnderRoads); the drape keeps that same profile (_roadProfiles3D).
+  // Kept while neither the relief nor the lines change: the cut costs about 15 ms per kilometre of road,
+  // and this runs on every render (every frame of a camera move).
+  const lines = page.objects.filter(o => o.type === 'tracé' && o.panelId === panel.id && (o.tracéType === 'route' || o.tracéType === 'chemin')
+    && o.world && Array.isArray(o.world.pts) && o.world.pts.length >= 2);
+  const key = `${signatureDuRelief(flattened)}|${JSON.stringify(lines.map(o => [o.id, o.world.width, o.world.pts]))}`;
+  const kept = _cutReliefs3D.get(panel.id);
+  if (kept && kept.key === key) return kept.cut;
+  const profiles = new Map(), roads = [];
+  for (const o of lines) {
+    const profile = profilFranchissant(flattened, densifierLaLigne(o.world.pts, 0.5));
+    profiles.set(o.id, profile);
+    // The cut walks the line's own points: the profile, densified, gives the height (a walk over the
+    // densified points visited every cell a dozen times).
+    roads.push({ pts: o.world.pts, width: o.world.width || 4, profile });
+  }
+  const cut = cutUnderRoads(flattened, roads);
+  _roadProfiles3D.set(cut, profiles);
+  _cutReliefs3D.set(panel.id, { key, cut });
+  return cut;
 }
+/** The profile of each road and path, per effective relief (reliefEffectif3D): o.id → (x, z) → height. */
+const _roadProfiles3D = new WeakMap();
+/** The last relief cut under the roads, per Panel, with what it was made from. */
+const _cutReliefs3D = new Map();
 /**
  * #462c-2 : un groupe de Tracé (route, chemin, Zone, muret…) DRAPÉ sur le relief : chaque sommet monte
  * de la hauteur du relief sous lui (un mur garde sa hauteur : sa base et son sommet ont les mêmes x, z).
@@ -3519,7 +3544,10 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       // relief d'AVANT son lit (sinon elle coulerait au fond, sous la berge).
       if (o.tracéType === 'riviere') { draperSurLeRelief3D(group, panel.relief); group.position.y = -EAU_SOUS_LA_BERGE; }
       // Une route ou un chemin franchit les creux au lieu de s'y enfoncer (demandé) : son profil est rempli.
-      else if (o.tracéType === 'route' || o.tracéType === 'chemin') draperSurLeRelief3D(group, _relief, reliefPlat(_relief) ? null : profilFranchissant(_relief, w.pts));
+      else if (o.tracéType === 'route' || o.tracéType === 'chemin') {
+        const _profiles = _roadProfiles3D.get(_relief);
+        draperSurLeRelief3D(group, _relief, reliefPlat(_relief) ? null : ((_profiles && _profiles.get(o.id)) || profilFranchissant(_relief, w.pts)));
+      }
       else if (!(o.tracéType === 'terrain' && o.terrainType === 'eau')) draperSurLeRelief3D(group, _relief);
       // #462c : un dessin à plat (route, chemin, Zone) reste un dessin au sol même drapé sur une
       // colline : il ne projette pas d'ombre (marquerProjectionDOmbre3D lit cette marque).

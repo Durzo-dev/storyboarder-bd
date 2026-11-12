@@ -35,8 +35,11 @@ Added fields: an old file reads as it is.
   settings need it) but keeps its starting state; leaving without validating restores it; validating
   makes ONE application undo step. While editing, `snapshot()` feeds the editor's own history, and
   autosave waits.
-- **Rendered relief = painted relief, raised by Zones, dug by rivers, flattened under buildings**
-  (`reliefEffectif3D`), recomputed at each render. It uses the Ground's very material; the flat Ground
+- **Rendered relief = painted relief, raised by Zones, dug by rivers, flattened under buildings, cut
+  under roads and paths** (`reliefEffectif3D`), recomputed at each render. A road is draped by its axis
+  (`profilFranchissant`), so it stays level across its width: `cutUnderRoads` brings every grid point
+  within half its width (plus 0.5 m and a cell and a half) down to 10 cm under the road, and the drape
+  reuses the same profile. The cut is kept per Panel while neither the relief nor the lines change. It uses the Ground's very material; the flat Ground
   is pierced under it by a stencil mask without depth test (with it, the mask would fight the near-flat
   relief: moiré).
 - **Relief and draped drawings never cast shadows**: `marquerProjectionDOmbre3D` recognises them by

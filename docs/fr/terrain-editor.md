@@ -36,7 +36,11 @@ Des champs ajoutés : un fichier ancien se lit tel quel.
   UNE annulation de l'application. Pendant l'édition, `snapshot()` alimente l'historique de l'éditeur,
   et la sauvegarde automatique attend.
 - **Le relief rendu = le relief peint, relevé par les Zones, creusé par les rivières, aplani sous les
-  bâtiments** (`reliefEffectif3D`), recalculé à chaque rendu. Il prend la matière même du Sol ; le Sol plat est
+  bâtiments, entaillé sous les routes et chemins** (`reliefEffectif3D`), recalculé à chaque rendu. Une route
+  est drapée par son axe (`profilFranchissant`), donc de niveau sur sa largeur : `cutUnderRoads` descend
+  chaque point de la grille à moins d'une demi-largeur (plus 0,5 m et une case et demie) à 10 cm sous la
+  route, et le drapé reprend le même profil. L'entaille est gardée par Case tant que ni le relief ni les
+  lignes ne changent. Il prend la matière même du Sol ; le Sol plat est
   percé dessous par un masque au pochoir sans test de profondeur (avec, il lutterait avec le relief
   presque plat : moiré).
 - **Le relief et les dessins drapés ne projettent jamais d'ombre** : `marquerProjectionDOmbre3D` les
