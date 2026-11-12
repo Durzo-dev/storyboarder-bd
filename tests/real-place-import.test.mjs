@@ -170,10 +170,21 @@ describe('real place, the window', () => {
     assert.equal((html.match(/class="real-place-illustration"/g) || []).length, 2);
     const i = html.indexOf('id="realPlaceProgress"');
     assert.ok(i > html.indexOf('id="realPlaceStatus"') && i < html.indexOf('class="real-place-actions"'), 'just above the buttons');
-    assert.match(ui, /hint\.textContent = i < 0 \? '' : `\$\{labels\[step\]\} · \$\{tr\('step', 'étape'\)\}/, 'the step in the instructions\' place');
+    const html2 = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+    const p = html2.indexOf('id="realPlaceProgress"');
+    assert.ok(p < html2.indexOf('id="realPlaceStep"') && html2.indexOf('id="realPlaceStep"') < html2.indexOf('id="realPlaceDetail"')
+      && html2.indexOf('id="realPlaceDetail"') < html2.indexOf('id="realPlaceBar"'), 'the step, its detail under it, then the bar');
   });
-  test('during the import the zone\'s size gives way to the step\'s detail', () => {
-    assert.match(ui, /\$\('realPlaceSizeLabel'\)\.hidden = \$\('realPlaceSize'\)\.hidden = true;\n  \$\('realPlaceDetail'\)\.hidden = false;/);
+  test('during the import the progress takes the options\' place; an empty detail fades out', () => {
+    assert.match(ui, /\$\('realPlaceOptions'\)\.hidden = true;/);
+    assert.match(ui, /d\.classList\.toggle\('vide', !texte\);/);
+    assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /\.real-place-detail\.vide\{ opacity:0; max-height:0; \}/);
+  });
+  test('« Cancel » during the import: the requests stopped in the main process, the window closed at once', () => {
+    assert.match(ui, /if \(api && api\.realPlaceAbort\) api\.realPlaceAbort\(\);\n    V\.busy = false;\n    fermer\(\);/);
+    assert.match(ui, /const arrete = \(\) => V !== moi \|\| moi\.cancelled;/, 'a reopened window is not the old import\'s');
+    const net = readFileSync(new URL('../electron/bibliotheque/real-place.js', import.meta.url), 'utf8');
+    assert.match(net, /for \(const a of _enCours\) \{ a\.annule = true; a\.abort\(\); \}/);
   });
   test('a search field with its clear button; « Try again » after a failure; closing forgets the search', () => {
     const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');

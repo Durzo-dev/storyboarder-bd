@@ -67,15 +67,16 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
 
 1. La fenêtre : « Nouvelle scène » (`ouvrirNouvelleScene`) montre le choix ; « Création manuelle » appelle
    `creerSceneManuelle` (events.js : une Scène vide, ouverte). « Depuis un lieu existant » montre une recherche (Nominatim, `realplace:search`) ou un clic sur la carte (tuiles `realplace:tile`,
-   gardées pendant la session), la taille de la zone (100 à 400 m), « Créer la scène ». Pendant l'import, l'étape en cours
-   (« étape n/7 ») prend la place de la consigne à droite, son détail (serveur, octets) celle de la taille
-   de la zone à gauche, et la barre est en bas au-dessus des boutons ; seul « Annuler » reste ;
+   gardées pendant la session), la taille de la zone (100 à 400 m), « Créer la scène ». Pendant l'import, les options de la zone
+   laissent la place à la progression : l'étape en cours (« étape n/7 ») centrée, son détail (serveur,
+   octets) centré dessous (en fondu quand il n'y en a pas), la barre ; seul « Annuler » reste ;
    après un échec le bouton principal devient « Réessayer » ; fermer la fenêtre vide le champ de recherche.
    Les étapes (`IMPORT_STEPS`, `importProgress` : données de la carte, pays, bâtiments,
    relief, scène, puis la construction de la Scène : bâtiments n / N, relief, routes et sols) ; les requêtes
    du relief partent une à une pour que la barre les suive. « Annuler », la croix ou Échap pendant l'import
-   (`annulerOuFermer`) l'arrêtent à l'étape suivante (une requête en cours se termine) et retirent la Scène
-   en cours de création.
+   (`annulerOuFermer`) ferment la fenêtre aussitôt : les requêtes en cours sont interrompues dans le
+   processus principal (`realplace:abort`, `abortImport`), chaque étape vérifie qu'elle est encore celle de
+   sa fenêtre (`moi`), et une Scène en construction est retirée.
 2. L'extrait : `realplace:osm` avec l'emprise de la zone ; les serveurs Overpass dans l'ordre (`OVERPASS` : les
    instances publiques sans clé ni limite d'abord, l'instance principale, surchargée, en dernier), le premier
    qui répond en entier (une réponse finie par une `remark` d'erreur d'exécution est incomplète, et le

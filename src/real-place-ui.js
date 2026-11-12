@@ -96,28 +96,29 @@ function montrerLaProgression(step, sub = 0, detail = null){
   const i = step ? IMPORT_STEPS.indexOf(step) : -1;
   $('realPlaceProgress').hidden = false;
   $('realPlaceBar').style.width = `${Math.round((step ? importProgress(step, sub) : 0) * 100)}%`;
-  const hint = $('realPlaceHint');
-  hint.textContent = i < 0 ? '' : `${labels[step]} · ${tr('step', 'étape')} ${i + 1}/${IMPORT_STEPS.length}`;
-  hint.classList.add('encours');
-  // The zone's size is set: its place goes to the step's detail (asked).
-  $('realPlaceSizeLabel').hidden = $('realPlaceSize').hidden = true;
-  $('realPlaceDetail').hidden = false;
+  $('realPlaceStep').textContent = i < 0 ? '' : `${labels[step]} · ${tr('step', 'étape')} ${i + 1}/${IMPORT_STEPS.length}`;
+  // The zone's options are set: the progress takes their place (asked).
+  $('realPlaceOptions').hidden = true;
 }
 
 /** Back to the instructions, the progress put away (an import failed or cancelled, or the window opened). */
 function rendreLaConsigne(){
-  const hint = $('realPlaceHint');
-  hint.textContent = tr('Click on the map to place the zone.', 'Cliquez sur la carte pour placer la zone.');
-  hint.classList.remove('encours');
   $('realPlaceProgress').hidden = true;
-  $('realPlaceSizeLabel').hidden = $('realPlaceSize').hidden = false;
-  $('realPlaceDetail').hidden = true;
+  $('realPlaceOptions').hidden = false;
+  montrerLeDetail('');
+}
+
+/** The step's detail line: shown when there is one, faded out (its height given back) when there is none. */
+function montrerLeDetail(texte){
+  const d = $('realPlaceDetail');
+  if (texte) d.textContent = texte;
+  d.classList.toggle('vide', !texte);
 }
 
 /** The detail line of the map data: the server, the seconds spent on it, the bytes received. */
 function montrerLeTelechargement(){
   const d = V && V.download;
-  $('realPlaceDetail').textContent = d ? downloadDetail(d.p, (Date.now() - d.since) / 1000, S.appLang === 'en' ? 'en' : 'fr') : '';
+  montrerLeDetail(d ? downloadDetail(d.p, (Date.now() - d.since) / 1000, S.appLang === 'en' ? 'en' : 'fr') : '');
 }
 
 /**
@@ -126,8 +127,14 @@ function montrerLeTelechargement(){
  */
 function annulerOuFermer(){
   if (V && V.busy) {
+    // At once (asked: a cancel waited for the request under way, up to 90 s): the requests are stopped in the
+    // main process, and the window closes now. The import, when its await returns, finds no window (V null)
+    // and stops; a Scene being built is removed by construireScene (cancelled() reads V).
     V.cancelled = true;
-    dire(tr('Cancelling…', 'Annulation…'), 'chargement');
+    const api = window.storyboarderAPI;
+    if (api && api.realPlaceAbort) api.realPlaceAbort();
+    V.busy = false;
+    fermer();
     return;
   }
   fermer();
@@ -353,13 +360,10 @@ async function importer(){
   V.busy = true; V.cancelled = false; V.echec = false;
   majBoutons();
   dire('');
-  // Stopped by « Cancel »: the window closes at the next step (a request under way is let finish).
-  const arrete = () => {
-    if (!V || !V.cancelled) return false;
-    V.busy = false;
-    fermer();
-    return true;
-  };
+  // THIS import's window: cancelled, it is closed at once (annulerOuFermer) and V becomes null, or another
+  // window's state if the window is opened again meanwhile. Every step checks that it is still its own.
+  const moi = V;
+  const arrete = () => V !== moi || moi.cancelled;
   const centre = { ...V.zone }, halfSize = Math.min(V.halfSize, ZONE_SIDE_MAX / 2);
   // Each step shows on the list before its work: an await lets the window draw it.
   const etape = async (step, sub = 0) => { montrerLaProgression(step, sub); await new Promise(ok => setTimeout(ok, 0)); };
@@ -374,8 +378,8 @@ async function importer(){
     let extrait;
     const bbox = { south: se.lat, west: nw.lon, north: nw.lat, east: se.lon };
     try { extrait = await api.realPlaceOsm(bbox); }
-    finally { clearInterval(tick); if (V) { V.download = null; montrerLeTelechargement(); } }
-    if (!V || arrete()) return;
+    finally { clearInterval(tick); if (V === moi) { V.download = null; montrerLeTelechargement(); } }
+    if (arrete()) return;
     if (extrait.error) { V.echec = true; dire(erreur(extrait.error), true); return; }
     await etape('country');
     let country = V.country;
@@ -387,13 +391,13 @@ async function importer(){
     let survey = null;
     if (country === 'fr' && api.realPlaceBdTopo) {
       const s = await api.realPlaceBdTopo(bbox);
-      if (!V || arrete()) return;
+      if (arrete()) return;
       if (s && s.json) survey = readBdTopo(s.json, centre);
     }
     const translated = translateOsm(extrait.json, { centre, halfSize, country: country || 'world', translate: tr, survey });
     await etape('relief');
-    const relief = await reliefDuLieu(centre, halfSize, country, (sub) => montrerLaProgression('relief', sub));
-    if (!V || arrete()) return;
+    const relief = await reliefDuLieu(centre, halfSize, country, (sub) => montrerLaProgression('relief', sub), arrete);
+    if (arrete()) return;
     await etape('scene');
     const contenu = sceneContentOf(translated, { panelId: null, newId, nameOf: nomDuTrace,
       altitudes: relief && relief.altitudes, reliefCredit: relief && relief.credit });
@@ -403,19 +407,20 @@ async function importer(){
     // Cancelled: the Scene is removed (construireScene).
     const fini = await _rappels.construireScene(scene, {
       onProgress: (step, sub, detail) => montrerLaProgression(step === 'buildings' ? 'construction' : 'ground', sub, detail),
-      cancelled: () => !V || V.cancelled,
+      cancelled: arrete,
     });
-    if (!V) return;
+    if (V !== moi) return;
     V.busy = false;
     fermer();
     if (!fini) return;
   } catch (e) {
     console.error('[real-place]', e);
-    if (V) V.echec = true;
+    if (V !== moi) return;
+    V.echec = true;
     dire(erreur('response'), true);
   } finally {
-    // Still open (failed or stopped before the Scene): the instructions come back; the error stays said.
-    if (V) { V.busy = false; rendreLaConsigne(); majBoutons(); }
+    // Still open (failed): the instructions come back; the error stays said.
+    if (V === moi) { V.busy = false; rendreLaConsigne(); majBoutons(); }
   }
 }
 
@@ -424,13 +429,14 @@ async function importer(){
  * flat, and the Scene still comes). Its requests one by one, at the provider's rate, so `avance(sub)` can
  * follow them.
  */
-async function reliefDuLieu(centre, halfSize, country, avance = () => {}){
+async function reliefDuLieu(centre, halfSize, country, avance = () => {}, arrete = () => false){
   for (let i = 0; ; i++) {
     const plan = planRelief({ centre, halfSize, country, providerIndex: i });
-    if (!plan) return null;
+    if (!plan || arrete()) return null;
     const answers = [];
     for (let k = 0; k < plan.requests.length; k++) {
       if (k) await new Promise(ok => setTimeout(ok, 1000 / plan.provider.perSecond));
+      if (arrete()) return null;
       const r = await window.storyboarderAPI.realPlaceAltitudes([plan.requests[k]], plan.provider.perSecond);
       if (!r || !r.answers) break;
       answers.push(r.answers[0]);

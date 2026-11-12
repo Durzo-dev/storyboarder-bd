@@ -61,13 +61,14 @@ The ground under buildings needs nothing: the rendered relief is already flatten
 
 1. The window: "New scene" (`ouvrirNouvelleScene`) shows the choice; "Manual creation" calls
    `creerSceneManuelle` (events.js: an empty Scene, opened). "From an existing place" shows search (Nominatim, `realplace:search`) or a click on the map (tiles `realplace:tile`, cached for
-   the session), the zone's size (100 to 400 m), "Create the scene". During the import, the step under way (« step
-   n/7 ») takes the instructions' place on the right, its detail (server, bytes) the zone's size's on the
-   left, and the bar sits at the bottom above the buttons; only « Cancel » remains; after a failure
+   the session), the zone's size (100 to 400 m), "Create the scene". During the import, the zone's options give way
+   to the progress: the step under way (« step n/7 ») centred, its detail (server, bytes) centred under it
+   (fading out when there is none), the bar; only « Cancel » remains; after a failure
    the main button reads « Try again »; closing the window empties the search field. The steps (`IMPORT_STEPS`, `importProgress`: map data, country, buildings, relief, scene, then the Scene's
    building: buildings n / N, relief roads and grounds); the relief's requests are sent one by one so the bar
-   follows them. « Cancel », the cross or Esc during the import (`annulerOuFermer`) stop it at its next step
-   (a request under way finishes) and remove the Scene being made.
+   follows them. « Cancel », the cross or Esc during the import (`annulerOuFermer`) close the window at once:
+   the requests under way are aborted in the main process (`realplace:abort`, `abortImport`), each step
+   checks it is still its window's (`moi`), and a Scene being built is removed.
 2. The extract: `realplace:osm` with the zone's bounding box; Overpass servers in order (`OVERPASS`: the
    public instances without key or limit first, the overloaded main instance last), the first that answers
    completely (an answer ending with a runtime-error `remark` is incomplete, and the next server is asked);

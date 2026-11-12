@@ -103,6 +103,7 @@ interface StoryboarderAPI {
   realPlaceCountry(lat: number, lon: number): Promise<{ country?: string | null; error?: string }>;
   realPlaceOsm(bbox: { south: number; west: number; north: number; east: number }): Promise<{ json?: any; server?: string; error?: string }>;
   onRealPlaceOsmProgress(callback: (p: { server: number; servers: number; bytes: number }) => void): void;
+  realPlaceAbort(): Promise<boolean>;
   realPlaceBdTopo(bbox: { south: number; west: number; north: number; east: number }): Promise<{ json?: any; error?: string }>;
   realPlaceAltitudes(requests: any[], perSecond?: number): Promise<{ answers?: any[]; error?: string }>;
   realPlaceTile(z: number, x: number, y: number): Promise<{ data?: Uint8Array; error?: string }>;

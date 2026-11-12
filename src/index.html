@@ -1540,9 +1540,7 @@
       <canvas id="realPlaceMap" class="real-place-map"></canvas>
       <p id="realPlaceMapCredit" class="real-place-credit"></p>
     </div>
-    <div class="real-place-options">
-      <!-- During the import (asked): the zone's size gives way to the step's detail, on the left. -->
-      <p id="realPlaceDetail" class="real-place-detail" hidden></p>
+    <div id="realPlaceOptions" class="real-place-options">
       <label id="realPlaceSizeLabel" for="realPlaceSize">Taille de la zone</label>
       <select id="realPlaceSize">
         <option value="100">100 m</option>
@@ -1553,9 +1551,11 @@
       <span id="realPlaceHint" class="real-place-hint"></span>
     </div>
     <p id="realPlaceStatus" class="maj-message"></p>
-    <!-- The import's progress, at the bottom above the buttons (asked): the bar. The step under way takes the
-         instructions' place (#realPlaceHint), its detail the zone's size's (#realPlaceDetail). -->
+    <!-- The import's progress, in the place of the zone's options (hidden meanwhile, asked): the step under way,
+         centred, its detail centred under it (fading out when there is none), the bar. -->
     <div id="realPlaceProgress" class="real-place-progress" hidden>
+      <p id="realPlaceStep" class="real-place-current"></p>
+      <p id="realPlaceDetail" class="real-place-detail vide"></p>
       <div class="real-place-bar"><span id="realPlaceBar"></span></div>
     </div>
     <div class="real-place-actions">

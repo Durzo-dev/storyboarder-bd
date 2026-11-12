@@ -220,7 +220,7 @@ or a **text** keep their label above, full-width field.
 clear button (a cross, shown only with text: it empties the field and gives it the focus back) and, when the
 search is not made while typing, the search button (a magnifier, its name in the tooltip). With live
 suggestions there is no search button: Enter still searches. The input is a TEXT field (`type="text"`,
-`enterkeyhint="search"`): a `type="search"` field adds the browser's own cross, a second one. The frame is the container's (its border turns to the focus colour); at the keyboard the field keeps its ring. Suggestions,
+`enterkeyhint="search"`): a `type="search"` field adds the browser's own cross, a second one. The frame is the container's, and so is the focus ring (on the input inside, it drew a box in the box). Suggestions,
 when there are any, unfold under it (an 0.18 s animation, none with reduced motion); choosing one fills the
 field and acts as its search.
 

@@ -224,7 +224,7 @@ un bouton d'effacement (une croix, seulement quand il y a du texte : il vide le 
 quand la recherche ne se fait pas pendant la frappe, le bouton de recherche (une loupe, son nom en
 infobulle). Avec des suggestions en direct, pas de bouton de recherche : Entrée cherche toujours.
 Le champ est un champ TEXTE (`type="text"`, `enterkeyhint="search"`) : un champ `type="search"` ajoute la
-croix du navigateur, une seconde. Le cadre est celui du conteneur (sa bordure prend la couleur du focus) ; au clavier, le champ garde sa bague.
+croix du navigateur, une seconde. Le cadre est celui du conteneur, la bague de focus aussi (sur le champ intérieur, elle dessinait une boîte dans la boîte).
 Les suggestions, s'il y en a, se déroulent dessous (une animation de 0,18 s, aucune en mouvement
 réduit) ; en choisir une remplit le champ et vaut sa recherche.
 

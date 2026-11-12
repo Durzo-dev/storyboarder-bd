@@ -33,9 +33,23 @@ const ALTITUDE_HOSTS = /^https:\/\/(data\.geopf\.fr\/altimetrie\/|api\.open-mete
  * One request. `onBytes(received)`: the answer is read as a stream and every chunk reported (a long answer
  * then shows that it is coming); the JSON is parsed at the end. The result carries `size` (bytes).
  */
+/**
+ * The import's requests under way, so « Cancel » stops them at once (abortImport): a request waited for
+ * (Overpass, up to 90 s) made a cancel take as long (seen).
+ */
+const _enCours = new Set();
+function abortImport(){
+  for (const a of _enCours) { a.annule = true; a.abort(); }
+  _enCours.clear();
+  _importAnnule = true;
+}
+/** Set by abortImport, reset by the next import's first request (osm): the loops stop asking. */
+let _importAnnule = false;
+
 async function request(url, { method = 'GET', body = null, json = true, timeout = TIMEOUT_MS, headers = {}, onBytes = null } = {}){
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), timeout);
+  _enCours.add(abort);
   try {
     const rep = await net.fetch(url, { method, body, signal: abort.signal,
       headers: { 'User-Agent': agent(), Accept: json ? 'application/json' : '*/*', ...headers } });
@@ -58,10 +72,12 @@ async function request(url, { method = 'GET', body = null, json = true, timeout 
     if (json) return { json: await rep.json() };
     return { bytes: new Uint8Array(await rep.arrayBuffer()) };
   } catch (e) {
+    if (abort.annule) return { error: 'cancelled' };
     const late = abort.signal.aborted;
     console.warn(`[real-place] ${new URL(url).host}: ${late ? 'timeout' : `${e.name}: ${e.message}`}`);
     return { error: late ? 'timeout' : 'network' };
   } finally {
+    _enCours.delete(abort);
     clearTimeout(timer);
   }
 }
@@ -140,6 +156,7 @@ async function osm(bbox, progress = null){
   const cached = extracts.get(key);
   if (cached) return { json: cached };
   const failures = [];
+  _importAnnule = false;
   if (progress) progress({ server: 0, servers: OVERPASS.length, bytes: 0, probing: true });
   const order = await overpassOrder();
   for (let k = 0; k < order.length; k++) {
@@ -158,6 +175,7 @@ async function osm(bbox, progress = null){
     console.info(`[real-place] overpass ${host}: ${good ? 'ok' : (remark ? 'incomplete' : (r.error || 'response'))}${r.status ? ` (HTTP ${r.status})` : ''}`
       + ` in ${Date.now() - started} ms, ${r.size || 0} bytes${remark ? ` (${remark.slice(0, 120)})` : ''}`);
     if (good) { tell(r.size || 0); extracts.set(key, r.json); return { json: r.json, server: host }; }
+    if (r.error === 'cancelled' || _importAnnule) return { error: 'cancelled' };
     failures.push(remark ? 'incomplete' : (r.error || 'response'));
   }
   return { error: overpassFailure(failures) };
@@ -252,4 +270,4 @@ async function tile(z, x, y){
   return { data: r.bytes };
 }
 
-module.exports = { search, suggest, country, osm, bdtopo, bdTopoUrl, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };
+module.exports = { search, suggest, abortImport, country, osm, bdtopo, bdTopoUrl, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };
