@@ -210,6 +210,7 @@ function suggerer(){
     const api = window.storyboarderAPI;
     if (!api || !api.realPlaceSuggest) return;
     const r = await api.realPlaceSuggest(q, tr('en', 'fr'));
+    console.info('[real-place] suggestions', JSON.stringify(q), r && (r.error || `${(r.places || []).length} places`), n === _suggestion.n ? '' : '(superseded)');
     if (!V || n !== _suggestion.n || !r) return;
     // The suggestion service unreachable: said, gently (Enter still searches), rather than a field that seems dead.
     if (r.error) { dire(tr('Suggestions are unavailable for now: press Enter to search.', 'Suggestions indisponibles pour le moment : Entrée lance la recherche.')); return; }

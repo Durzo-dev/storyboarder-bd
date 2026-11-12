@@ -105,10 +105,13 @@ async function search(query, lang){
 async function suggest(query, lang){
   const q = String(query || '').trim().slice(0, 200);
   if (q.length < 3) return { places: [] };
+  const started = Date.now();
   const r = await request(`https://photon.komoot.io/api/?limit=6&lang=${lang === 'en' ? 'en' : 'fr'}&q=${encodeURIComponent(q)}`, { timeout: 8000 });
-  // Written to the log, as Overpass is: a silent suggestion service looks like a broken field.
-  if (r.error) { console.warn(`[real-place] photon: ${r.error}${r.status ? ` (HTTP ${r.status})` : ''}`); return r; }
-  return { places: placesOfPhoton(r.json) };
+  // Every answer written to the log, as Overpass's are: a silent suggestion service looks like a broken field.
+  if (r.error) { console.warn(`[real-place] photon "${q}": ${r.error}${r.status ? ` (HTTP ${r.status})` : ''} in ${Date.now() - started} ms`); return r; }
+  const places = placesOfPhoton(r.json);
+  console.info(`[real-place] photon "${q}": ${places.length} places (${(r.json && Array.isArray(r.json.features)) ? r.json.features.length : 'no'} features) in ${Date.now() - started} ms`);
+  return { places };
 }
 /** Photon's GeoJSON answer as places: a readable name (name, street, town, region, country), lat, lon, country code. */
 function placesOfPhoton(json){
