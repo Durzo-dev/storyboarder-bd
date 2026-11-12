@@ -124,6 +124,8 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   realPlaceOsm: (bbox) => ipcRenderer.invoke('realplace:osm', bbox),
   onRealPlaceOsmProgress: (callback) => ipcRenderer.on('realplace:osmProgress', (e, p) => callback(p)),
   realPlaceAbort: () => ipcRenderer.invoke('realplace:abort'),
+  realPlaceStreetPhotos: (bbox) => ipcRenderer.invoke('realplace:streetPhotos', bbox),
+  realPlaceStreetPhoto: (url) => ipcRenderer.invoke('realplace:streetPhoto', url),
   realPlaceBdTopo: (bbox) => ipcRenderer.invoke('realplace:bdtopo', bbox),
   realPlaceAltitudes: (requests, perSecond) => ipcRenderer.invoke('realplace:altitudes', requests, perSecond),
   realPlaceTile: (z, x, y) => ipcRenderer.invoke('realplace:tile', z, x, y),

@@ -94,7 +94,16 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    (`surveyedRoof`), the facade and roof finishes from the land-registry material codes (`wallFinishOf`,
    `roofFinishOf`: dressed stone (the stone grain tinted pale), wood, tiles (barrel tiles south of 46° N, flat
    tiles north of it), slate, metal, concrete; half-timbered and rendered walls keep the
-   plain render). Without an answer: OSM alone. Then the relief: `planRelief` for the country, its requests sent by
+   plain render). Without an answer: OSM alone. At the « Realistic » level, the facades' colours from street
+   photos (`couleursDesFacades`, facade-colour.js): Panoramax's photos of the zone (`realplace:streetPhotos`,
+   no key, at most 500), for each building the photo that best sees one of its ground-floor walls (`bestView`:
+   4 to 35 m, at most 60° from facing it, the wall in a flat photo's field, no other outline across the sight
+   line), each photo fetched once (`realplace:streetPhoto`, only from the hosts the search gave; 60 at most, the
+   most useful first), 35 points of the wall's middle part projected into it (`samplePoints`: equirectangular
+   for a 360°, perspective otherwise, camera at 2.5 m), the mean of 5 × 5 pixels at each, and the median of
+   what is left once dark, sky, green and glare are set aside (`wallColour`; none under 10 points or 30 %): the
+   building's facade takes it, its texture kept. The credit names the instance and the licence, never the
+   contributor. Then the relief: `planRelief` for the country, its requests sent by
    `realplace:altitudes` (only to `ALTITUDE_HOSTS`, at the provider's rate), `assemble`; on failure the next
    provider, and with none a flat Ground.
 4. `sceneContentOf`: Zones and Paths (`pathObject`, `zoneObject`, named by `nomDuTrace`), the relief

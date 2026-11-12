@@ -104,7 +104,17 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    hauteur à l'égout (`hauteur`, du sol au point le plus bas du toit), le toit plat sous 0,5 m de montée,
    sinon sa pente sur la demi-largeur étroite (`surveyedRoof`), les revêtements de façade et de toit d'après
    les codes de matériaux du cadastre (`wallFinishOf`, `roofFinishOf` : pierre de taille (le grain de pierre teinté clair), bois, tuiles
-   (canal au sud de 46° N, plates au nord), ardoise, métal, béton ; colombages et murs enduits gardent l'enduit uni). Sans réponse : OSM seul. Puis le relief : `planRelief` pour le pays, ses requêtes envoyées
+   (canal au sud de 46° N, plates au nord), ardoise, métal, béton ; colombages et murs enduits gardent l'enduit uni). Sans réponse : OSM seul. Au niveau
+   « Réaliste », la couleur des façades d'après les photos de rue (`couleursDesFacades`, facade-colour.js) :
+   les photos Panoramax de la zone (`realplace:streetPhotos`, sans clé, 500 au plus), pour chaque bâtiment la
+   photo qui voit le mieux un de ses murs du rez-de-chaussée (`bestView` : de 4 à 35 m, à moins de 60° de face,
+   le mur dans le champ d'une photo plate, aucune autre emprise sur la ligne de vue), chaque photo téléchargée
+   une fois (`realplace:streetPhoto`, seulement depuis les hôtes donnés par la recherche ; 60 au plus, les plus
+   utiles d'abord), 35 points de la partie centrale du mur projetés dedans (`samplePoints` : équirectangulaire
+   pour un 360°, perspective sinon, caméra à 2,5 m), la moyenne de 5 × 5 pixels en chacun, et la médiane de ce
+   qui reste une fois écartés le sombre, le ciel, le vert et les reflets (`wallColour` ; rien sous 10 points ou
+   30 %) : la façade du bâtiment la prend, sa texture gardée. Le crédit nomme l'instance et la licence, jamais
+   le contributeur. Puis le relief : `planRelief` pour le pays, ses requêtes envoyées
    par `realplace:altitudes` (seulement vers `ALTITUDE_HOSTS`, au rythme du fournisseur), `assemble` ; en cas
    d'échec le fournisseur suivant, et sans aucun un Sol plat.
 4. `sceneContentOf` : Zones et Tracés (`pathObject`, `zoneObject`, nommés par `nomDuTrace`), le relief

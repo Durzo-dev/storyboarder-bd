@@ -259,6 +259,44 @@ async function bdtopo(bbox){
 }
 
 /**
+ * STREET PHOTOS (#474c): Panoramax's federated catalogue (no key; study: durzo-docs facades-photos.md). The
+ * photos of a zone, reduced to what choosing one needs: place, bearing of its centre, field, the URL of its
+ * standard picture (2 048 px wide), licence and instance (the credit; never the contributor's account, which
+ * can be an e-mail address). Their picture hosts are remembered: streetPhoto only fetches from them.
+ */
+const PANORAMAX_SEARCH = 'https://api.panoramax.xyz/api/search';
+const _photoHosts = new Set();
+async function streetPhotos(bbox){
+  const ok = bbox && ['south', 'west', 'north', 'east'].every(k => Number.isFinite(bbox[k]));
+  if (!ok || bbox.north - bbox.south > 0.01 || bbox.east - bbox.west > 0.02) return { error: 'zone' };
+  const started = Date.now();
+  const r = await request(`${PANORAMAX_SEARCH}?bbox=${bbox.west},${bbox.south},${bbox.east},${bbox.north}&limit=500`, { timeout: 20000 });
+  if (r.error) { console.warn(`[real-place] panoramax: ${r.error} in ${Date.now() - started} ms`); return r; }
+  const photos = [];
+  for (const f of (r.json && Array.isArray(r.json.features)) ? r.json.features : []) {
+    const p = f.properties || {}, c = f.geometry && f.geometry.coordinates;
+    const sd = f.assets && f.assets.sd && f.assets.sd.href;
+    const yaw = Number(p['view:azimuth'] ?? p['pers:yaw']);
+    const fov = Number((p['pers:interior_orientation'] || {}).field_of_view);
+    if (!Array.isArray(c) || typeof sd !== 'string' || !sd.startsWith('https://') || !Number.isFinite(yaw)) continue;
+    const via = (f.links || []).find(l => l.rel === 'via');
+    _photoHosts.add(new URL(sd).host);
+    photos.push({ id: String(f.id), lon: Number(c[0]), lat: Number(c[1]), yaw, fov: Number.isFinite(fov) && fov > 0 ? fov : 360,
+      url: sd, license: String(p.license || ''), instance: (via && via.instance_name) || new URL(sd).host, date: String(p.datetime || '') });
+  }
+  console.info(`[real-place] panoramax: ${photos.length} photos in ${Date.now() - started} ms`);
+  return { photos };
+}
+/** A street photo's standard picture (JPEG bytes), from a host streetPhotos gave; or { error }. */
+async function streetPhoto(url){
+  let host = null;
+  try { host = new URL(String(url)).host; } catch { /* not a URL */ }
+  if (!host || !String(url).startsWith('https://') || !_photoHosts.has(host)) return { error: 'response' };
+  const r = await request(url, { json: false, timeout: 20000 });
+  return r.error ? r : { data: r.bytes };
+}
+
+/**
  * The altitude requests planned by the renderer (planRelief): sent in order, `perSecond` at most, each
  * checked against ALTITUDE_HOSTS. Returns { answers } (one JSON per request) or { error }.
  */
@@ -292,4 +330,4 @@ async function tile(z, x, y){
   return { data: r.bytes };
 }
 
-module.exports = { search, suggest, abortImport, country, osm, bdtopo, bdTopoUrl, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };
+module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, country, osm, bdtopo, bdTopoUrl, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };

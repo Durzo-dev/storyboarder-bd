@@ -104,6 +104,8 @@ interface StoryboarderAPI {
   realPlaceOsm(bbox: { south: number; west: number; north: number; east: number }): Promise<{ json?: any; server?: string; error?: string }>;
   onRealPlaceOsmProgress(callback: (p: { server: number; servers: number; bytes: number }) => void): void;
   realPlaceAbort(): Promise<boolean>;
+  realPlaceStreetPhotos(bbox: { south: number; west: number; north: number; east: number }): Promise<{ photos?: { id: string; lon: number; lat: number; yaw: number; fov: number; url: string; license: string; instance: string; date: string }[]; error?: string }>;
+  realPlaceStreetPhoto(url: string): Promise<{ data?: Uint8Array; error?: string }>;
   realPlaceBdTopo(bbox: { south: number; west: number; north: number; east: number }): Promise<{ json?: any; error?: string }>;
   realPlaceAltitudes(requests: any[], perSecond?: number): Promise<{ answers?: any[]; error?: string }>;
   realPlaceTile(z: number, x: number, y: number): Promise<{ data?: Uint8Array; error?: string }>;

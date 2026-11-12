@@ -94,7 +94,7 @@ describe('the relief from real altitudes', () => {
 describe('the import\'s progress and placement', async () => {
   const { IMPORT_STEPS, importProgress } = await import('../src/real-place-import.js');
   test('the steps in order; the bar grows through them, each step\'s share filled by its own progress', () => {
-    assert.deepEqual(IMPORT_STEPS, ['map', 'country', 'buildings', 'relief', 'scene', 'construction', 'ground']);
+    assert.deepEqual(IMPORT_STEPS, ['map', 'country', 'buildings', 'facades', 'relief', 'scene', 'construction', 'ground']);
     assert.equal(importProgress('map'), 0);
     let last = -1;
     for (const s of IMPORT_STEPS) for (const sub of [0, 0.5, 1]) { const p = importProgress(s, sub); assert.ok(p >= last); last = p; }
@@ -205,5 +205,16 @@ describe('real place, the level of detail in the window', () => {
     assert.match(html, /<select id="realPlaceDetailLevel">\s*<option value="simple">Simple<\/option>\s*<option value="detailed" selected>Détaillé<\/option>/);
     assert.match(ui, /if \(country === 'fr' && niveau !== 'simple' && api\.realPlaceBdTopo\)/);
     assert.match(ui, /translate: tr, survey, detail: niveau \}\);/);
+  });
+});
+
+describe('real place, the facades\' colours from street photos (#474c)', () => {
+  test('realistic only, never blocking; each photo read once; its credit added', () => {
+    const ui = readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8');
+    const net = readFileSync(new URL('../electron/bibliotheque/real-place.js', import.meta.url), 'utf8');
+    assert.match(ui, /if \(niveau === 'realistic'\) \{\n      await etape\('facades'\);/);
+    assert.match(ui, /contenu\.credits\.push\(\.\.\.photoCredits\);/);
+    assert.match(net, /if \(!host \|\| !String\(url\)\.startsWith\('https:\/\/'\) \|\| !_photoHosts\.has\(host\)\) return \{ error: 'response' \};/, 'only the hosts the search gave');
+    assert.doesNotMatch(net, /providers\[0\]/, 'never the contributor\'s account (an e-mail address at times)');
   });
 });

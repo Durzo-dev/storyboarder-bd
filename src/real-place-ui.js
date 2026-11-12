@@ -11,6 +11,7 @@ import { S, tr, newId } from './state.js';
 import { translateOsm, ZONE_SIDE_MAX, DETAIL_LEVELS } from './osm-scene.js';
 import { planRelief } from './real-place-sources.js';
 import { readBdTopo } from './building-survey.js';
+import { facadesOf, bestView, samplePoints, wallColour } from './facade-colour.js';
 import { buildStepLabel } from './scene-loading.js';
 import { wireSearchField } from './search-field.js';
 import { sceneContentOf, IMPORT_STEPS, importProgress, downloadDetail } from './real-place-import.js';
@@ -93,7 +94,8 @@ function montrerLeLieu(){
  */
 function montrerLaProgression(step, sub = 0, detail = null){
   const labels = { map: tr('Map data (OpenStreetMap)', 'Données de la carte (OpenStreetMap)'), country: tr('Country of the place', 'Pays du lieu'),
-    buildings: tr('Buildings, streets and grounds', 'Bâtiments, rues et sols'), relief: tr('Relief', 'Relief'), scene: tr('Creating the scene', 'Création de la scène'),
+    buildings: tr('Buildings, streets and grounds', 'Bâtiments, rues et sols'),
+    facades: tr('Facade colours (street photos)', 'Couleurs des façades (photos de rue)'), relief: tr('Relief', 'Relief'), scene: tr('Creating the scene', 'Création de la scène'),
     construction: buildStepLabel('buildings', step === 'construction' ? detail : null), ground: buildStepLabel('ground') };
   const i = step ? IMPORT_STEPS.indexOf(step) : -1;
   $('realPlaceProgress').hidden = false;
@@ -125,8 +127,8 @@ function direLeNiveau(){
     ? tr('Simple: the buildings\' volumes, default roofs, roads, paths, grounds, relief, trees and lamps.',
       'Simple : volumes des bâtiments, toits par défaut, routes, chemins, sols, relief, arbres et lampadaires.')
     : niveau === 'realistic'
-      ? tr('Realistic: all of Detailed, and the facades: shutters, stone surrounds and shop windows, in the region\'s colours.',
-        'Réaliste : tout le niveau Détaillé, et les façades : volets, encadrements de pierre et vitrines, aux couleurs de la région.')
+      ? tr('Realistic: all of Detailed, and the facades: shutters, stone surrounds and shop windows, in the region\'s colours; their colour read on street photos (Panoramax) where there are some.',
+        'Réaliste : tout le niveau Détaillé, et les façades : volets, encadrements de pierre et vitrines, aux couleurs de la région ; leur teinte lue sur les photos de rue (Panoramax) quand il y en a.')
       : tr('Detailed: also the real heights, roofs and materials (IGN, in France), pavements, road signs, shrubs and benches.',
         'Détaillé : en plus, hauteurs, toits et matériaux réels (IGN, en France), trottoirs, panneaux, buissons et bancs.');
 }
@@ -423,12 +425,20 @@ async function importer(){
     }
     const translated = translateOsm(extrait.json, { centre, halfSize, country: country || 'world', translate: tr, survey, detail: niveau });
     console.info(`[real-place] ${translated.buildings.length} buildings, ${translated.entrances} OSM entrances`);
+    // Realistic: the facades' colours read on street photos (#474c). Never blocking: without photos, as before.
+    let photoCredits = [];
+    if (niveau === 'realistic') {
+      await etape('facades');
+      photoCredits = await couleursDesFacades(translated, bbox, centre, (sub) => montrerLaProgression('facades', sub), arrete);
+      if (arrete()) return;
+    }
     await etape('relief');
     const relief = await reliefDuLieu(centre, halfSize, country, (sub) => montrerLaProgression('relief', sub), arrete);
     if (arrete()) return;
     await etape('scene');
     const contenu = sceneContentOf(translated, { panelId: null, newId, nameOf: nomDuTrace,
       altitudes: relief && relief.altitudes, reliefCredit: relief && relief.credit });
+    contenu.credits.push(...photoCredits);
     // The Paths' canvas is the new Scene's: creerScene attaches them to it.
     const scene = _rappels.creerScene(contenu, { nom: V.name || tr('Real place', 'Lieu réel'), demiCote: halfSize });
     // Then built behind this window, which shows it to the end (scene-loading.js): one bar, start to end.
@@ -450,6 +460,78 @@ async function importer(){
     // Still open (failed): the instructions come back; the error stays said.
     if (V === moi) { V.busy = false; rendreLaConsigne(); majBoutons(); }
   }
+}
+
+/** The most street photos read for one import: each is ~300-500 KB, and a 360° one serves many buildings. */
+const PHOTOS_MAX = 60;
+
+/**
+ * THE FACADES' COLOURS FROM STREET PHOTOS (#474c; facade-colour.js decides, here the network and the pixels).
+ * The zone's Panoramax photos; for each building the photo that best sees one of its facades; each photo
+ * fetched once (the most useful first, PHOTOS_MAX at most), its pixels read at the facade's points; the
+ * colour set on the building's facade (its texture kept, tinted). Returns the credit lines of the photos used.
+ */
+async function couleursDesFacades(translated, bbox, centre, avance, arrete){
+  const api = window.storyboarderAPI;
+  if (!api || !api.realPlaceStreetPhotos || typeof createImageBitmap !== 'function') return [];
+  const r = await api.realPlaceStreetPhotos(bbox);
+  if (arrete() || !r || !r.photos || !r.photos.length) return [];
+  const { toLocal } = projector(centre);
+  const photos = r.photos.map(p => ({ ...p, ...toLocal({ lat: p.lat, lon: p.lon }) }));
+  const data = translated.buildings.map(e => facadesOf(e));
+  // Each building's view; the outlines within 60 m may stand in between.
+  const vues = new Map();
+  data.forEach((d, i) => {
+    if (!d.facades.length) return;
+    const c = d.outline[0];
+    const autres = data.filter((o, k) => k !== i && o.outline.some(q => Math.hypot(q.x - c.x, q.z - c.z) < 60)).map(o => o.outline);
+    const v = bestView(d, photos, autres);
+    if (!v) return;
+    if (!vues.has(v.photo.id)) vues.set(v.photo.id, { photo: v.photo, items: [] });
+    vues.get(v.photo.id).items.push({ entry: translated.buildings[i], view: v, eaves: d.eaves });
+  });
+  const parPhoto = [...vues.values()].sort((a, b) => b.items.length - a.items.length).slice(0, PHOTOS_MAX);
+  const credits = new Set();
+  let colores = 0;
+  for (let k = 0; k < parPhoto.length; k++) {
+    if (arrete()) return [];
+    avance(k / parPhoto.length);
+    const { photo, items } = parPhoto[k];
+    const img = await api.realPlaceStreetPhoto(photo.url);
+    if (arrete()) return [];
+    if (!img || !img.data) continue;
+    let pixels;
+    try {
+      const bmp = await createImageBitmap(new Blob([img.data], { type: 'image/jpeg' }));
+      const canvas = document.createElement('canvas');
+      canvas.width = bmp.width; canvas.height = bmp.height;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(bmp, 0, 0);
+      pixels = { ctx, width: bmp.width, height: bmp.height };
+      bmp.close();
+    } catch (e) { console.warn('[real-place] photo', e); continue; }
+    for (const it of items) {
+      const pts = samplePoints(it.view, it.eaves, { width: pixels.width, height: pixels.height });
+      // Each point: the mean of a 5 × 5 pixel square (a single pixel is noise: a joint, a leaf).
+      const lus = pts.map(({ u, v }) => {
+        const x = Math.max(0, Math.min(pixels.width - 5, Math.round(u * pixels.width) - 2));
+        const y = Math.max(0, Math.min(pixels.height - 5, Math.round(v * pixels.height) - 2));
+        const d = pixels.ctx.getImageData(x, y, 5, 5).data;
+        let r0 = 0, g0 = 0, b0 = 0;
+        for (let i = 0; i < d.length; i += 4) { r0 += d[i]; g0 += d[i + 1]; b0 += d[i + 2]; }
+        return [r0 / 25, g0 / 25, b0 / 25];
+      });
+      const c = wallColour(lus);
+      if (!c) continue;
+      const b = it.entry.building;
+      b.facade = { texture: (b.facade && b.facade.texture) || null, couleur: c.colour };
+      colores++;
+      credits.add(tr(`Street photos: Panoramax (${photo.instance}, ${photo.license})`, `Photos de rue : Panoramax (${photo.instance}, ${photo.license})`));
+    }
+  }
+  avance(1);
+  console.info(`[real-place] facades coloured from street photos: ${colores} of ${translated.buildings.length} buildings, ${parPhoto.length} photos read`);
+  return [...credits];
 }
 
 /**
