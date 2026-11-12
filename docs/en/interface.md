@@ -214,6 +214,14 @@ Page is not enlarged**, nor the modals' veil: only what is read.
 field on the right (`.modal-field-ligne`, `.batiment-champ`). A **list**, a **slider**, a **colour**
 or a **text** keep their label above, full-width field.
 
+### Search field
+
+**A search** is one field (`.champ-recherche`, src/search-field.js): the text, then INSIDE it on the right a
+clear button (a cross, shown only with text: it empties the field and gives it the focus back) and the search
+button (a magnifier, its name in the tooltip). The frame is the container's (its border turns to the focus colour); at the keyboard the field keeps its ring. Suggestions,
+when there are any, unfold under it (an 0.18 s animation, none with reduced motion); choosing one fills the
+field and acts as its search.
+
 ## Choices and icons
 
 ### Pictograms rather than words

@@ -1530,8 +1530,11 @@
     </div>
     <div id="realPlacePlace" class="real-place-step" hidden>
     <form id="realPlaceSearchForm" class="real-place-search">
-      <input id="realPlaceQuery" class="modal-input" type="search" autocomplete="off">
-      <button id="realPlaceSearchBtn" class="nav-btn real-place-search-btn" type="submit" title="Chercher" aria-label="Chercher"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
+      <div class="champ-recherche">
+        <input id="realPlaceQuery" type="search" autocomplete="off">
+        <button id="realPlaceClearBtn" class="champ-recherche-effacer" type="button" title="Effacer" aria-label="Effacer" hidden><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        <button id="realPlaceSearchBtn" class="champ-recherche-lancer" type="submit" title="Chercher" aria-label="Chercher"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
+      </div>
     </form>
     <div id="realPlaceResults" class="real-place-results" hidden></div>
     <div class="real-place-map-wrap">
@@ -1549,9 +1552,9 @@
       <span id="realPlaceHint" class="real-place-hint"></span>
     </div>
     <p id="realPlaceStatus" class="maj-message"></p>
-    <!-- The import's progress, at the bottom above the buttons (asked): the step under way, centred, then the bar. -->
+    <!-- The import's progress, at the bottom above the buttons (asked): its detail line, then the bar. The step under
+         way takes the instructions' place (#realPlaceHint). -->
     <div id="realPlaceProgress" class="real-place-progress" hidden>
-      <p id="realPlaceStep" class="real-place-current"></p>
       <p id="realPlaceDetail" class="real-place-detail"></p>
       <div class="real-place-bar"><span id="realPlaceBar"></span></div>
     </div>

@@ -161,6 +161,8 @@ export const I18N_TEXT = [
   ['#realPlaceQuery', null, null, 'placeholder', 'A town, a street, an address…', 'Une ville, une rue, une adresse…'],
   ['#realPlaceSearchBtn', null, null, 'title', 'Search', 'Chercher'],
   ['#realPlaceSearchBtn', null, null, 'aria-label', 'Search', 'Chercher'],
+  ['#realPlaceClearBtn', null, null, 'title', 'Clear', 'Effacer'],
+  ['#realPlaceClearBtn', null, null, 'aria-label', 'Clear', 'Effacer'],
   ['#realPlaceSizeLabel', 'Zone size', 'Taille de la zone'],
   ['#realPlaceHint', 'Click on the map to place the zone.', 'Cliquez sur la carte pour placer la zone.'],
   ['#realPlaceCancel', 'Cancel', 'Annuler'],

@@ -20,6 +20,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import * as ICONES from '../src/batiment-icones.js';
+import { ICONES as ICONES_APP } from '../src/icones.js';
 import { icone, ICONE_EMOTION } from '../src/icones.js';
 import * as LI from '../src/lecteur-icones.js';
 import { EMOTIONS } from '../src/constants.js';
@@ -376,6 +377,9 @@ const CONTROLES = `
     <div class="tome-format"><label>${L('Curseur (Zoom 1,5×)', 'Slider (Zoom 1.5×)')}</label><input type="range" min="1" max="4" step="0.1" value="1.5"></div>
     <div class="tome-format side-border-color"><label>${L('Couleur', 'Colour')}</label><input type="color" value="#ff7a45"></div>
     <label class="side-bulle-tail"><input type="checkbox" checked> ${L('Case à cocher', 'Checkbox')}</label>
+  </section>
+  <section class="side-section"><h2>${L('Recherche', 'Search')}</h2>
+    <div class="champ-recherche"><input type="search" value="Montpellier"><button type="button" class="champ-recherche-effacer" title="${L('Effacer', 'Clear')}"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true">${ICONES_APP.effacer}</svg></button><button type="submit" class="champ-recherche-lancer" title="${L('Chercher', 'Search')}"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true">${ICONES_APP.chercher}</svg></button></div>
   </section>
   <section class="side-section"><h2>${L('Indications', 'Hints')}</h2>
     <span class="dim-chip">${L('Largeur', 'Width')} <b>182</b> mm</span>

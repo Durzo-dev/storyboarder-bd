@@ -61,8 +61,9 @@ The ground under buildings needs nothing: the rendered relief is already flatten
 
 1. The window: "New scene" (`ouvrirNouvelleScene`) shows the choice; "Manual creation" calls
    `creerSceneManuelle` (events.js: an empty Scene, opened). "From an existing place" shows search (Nominatim, `realplace:search`) or a click on the map (tiles `realplace:tile`, cached for
-   the session), the zone's size (100 to 400 m), "Create the scene". During the import, at the bottom above the
-   buttons, the step under way (centred, « step n/7 ») and the bar; only « Cancel » remains; after a failure
+   the session), the zone's size (100 to 400 m), "Create the scene". During the import, the step under way (« step
+   n/7 ») takes the instructions' place next to the zone's size, and at the bottom above the buttons come
+   the detail line and the bar; only « Cancel » remains; after a failure
    the main button reads « Try again »; closing the window empties the search field. The steps (`IMPORT_STEPS`, `importProgress`: map data, country, buildings, relief, scene, then the Scene's
    building: buildings n / N, relief roads and grounds); the relief's requests are sent one by one so the bar
    follows them. « Cancel », the cross or Esc during the import (`annulerOuFermer`) stop it at its next step

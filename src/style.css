@@ -3159,13 +3159,16 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 
 /* ── A Scene from a real place (src/real-place-ui.js) ─────────────────────────────────────────── */
 .real-place-box{ width:min(820px, 94vw); display:flex; flex-direction:column; gap:10px; }
-.real-place-search{ display:flex; gap:8px; }
-.real-place-search .modal-input{ flex:1 1 auto; margin:0; }
-.real-place-search .nav-btn{ width:auto; margin:0; }
-.real-place-search-btn{ display:flex; align-items:center; justify-content:center; padding:0 12px; }
-.real-place-search-btn svg.icone{ width:18px; height:18px; }
+.real-place-search{ display:flex; }
 .real-place-results{ display:flex; flex-direction:column; max-height:150px; overflow-y:auto; border:1px solid var(--line); border-radius:var(--rayon-moyen); }
 .real-place-results[hidden]{ display:none; }
+/* The suggestions unfold (asked: more fluid than appearing at once). */
+.real-place-results:not([hidden]){ animation:deroule-liste .18s ease-out; transform-origin:top; }
+@keyframes deroule-liste{ from{ opacity:0; transform:scaleY(.85) translateY(-4px); } to{ opacity:1; transform:none; } }
+@media (prefers-reduced-motion: reduce){ .real-place-results:not([hidden]){ animation:none; } }
+/* During the import the step under way takes the instructions' place (asked). */
+.real-place-hint.encours{ color:var(--ink); font-weight:600; }
+#realPlaceStatus:empty{ display:none; }
 .real-place-result{ text-align:left; background:none; border:0; border-bottom:1px solid var(--line); color:var(--ink); padding:6px 10px; font-size:var(--texte-courant); cursor:pointer; }
 .real-place-result:hover{ background:var(--accent-soft); }
 .real-place-map-wrap{ position:relative; }
@@ -3216,3 +3219,20 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 .scene-loading-card{ width:min(420px, 90%); display:flex; flex-direction:column; gap:10px; padding:16px 18px; background:var(--paper-dark); border:1px solid var(--line); border-radius:var(--rayon-grand); }
 .scene-loading-title{ margin:0; font-size:var(--texte-titre-modale); font-weight:600; color:var(--ink); }
 .scene-loading-card .nav-btn{ margin:0; align-self:flex-end; width:auto; }
+
+/* THE SEARCH FIELD (design system, docs/en/interface.md): the field, then INSIDE it on the right the clear button
+   (only with text) and the search button. The frame is the container's, its border taking the focus colour; at
+   the keyboard the field keeps its own ring. */
+.champ-recherche{ display:flex; align-items:center; flex:1 1 auto; min-width:0; gap:2px; padding:0 4px 0 0;
+  border:1px solid var(--line); border-radius:var(--rayon-petit); background:var(--white); }
+.champ-recherche:focus-within{ border-color:var(--focus); }
+.champ-recherche input{ flex:1 1 auto; min-width:0; border:0; background:none; color:var(--ink); padding:7px 8px;
+  font-family:'Inter',sans-serif; font-size:var(--texte-titre-modale); font-weight:700; }
+.champ-recherche input:focus-visible{ outline-offset:0; border-radius:var(--rayon-petit); }
+.champ-recherche input::-webkit-search-cancel-button{ -webkit-appearance:none; appearance:none; }
+.champ-recherche-effacer, .champ-recherche-lancer{ display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+  width:30px; height:30px; padding:0; border:0; border-radius:var(--rayon-petit); background:none; color:var(--ink-soft); cursor:pointer; }
+.champ-recherche-effacer[hidden]{ display:none; }
+.champ-recherche-effacer:hover, .champ-recherche-lancer:hover{ background:var(--accent-soft); color:var(--ink); }
+.champ-recherche-lancer:disabled{ opacity:.5; cursor:default; background:none; }
+.champ-recherche svg.icone{ width:18px; height:18px; }

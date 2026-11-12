@@ -12,6 +12,7 @@ import { translateOsm, ZONE_SIDE_MAX } from './osm-scene.js';
 import { planRelief } from './real-place-sources.js';
 import { readBdTopo } from './building-survey.js';
 import { buildStepLabel } from './scene-loading.js';
+import { wireSearchField } from './search-field.js';
 import { sceneContentOf, IMPORT_STEPS, importProgress, downloadDetail } from './real-place-import.js';
 import { projector } from './geo-local.js';
 import { nomDuTrace } from './canvas-tools.js';
@@ -26,6 +27,8 @@ const DEFAULT_VIEW = { lat: 46.6, lon: 2.4, z: 6 };
 let _rappels = { creerScene: () => null, creerSceneManuelle: () => null, construireScene: async () => true };
 /** The screen's state: the view, the chosen zone, the chosen place's name and country. */
 let V = null;
+/** The search field's clear button follows a value written by the screen (search-field.js). */
+let _rafraichirRecherche = () => {};
 
 /** The callbacks (injected: the screen does not import events.js). */
 export function cablerLieuReel(rappels){
@@ -50,6 +53,8 @@ export function cablerLieuReel(rappels){
   $('realPlaceCancel').onclick = annulerOuFermer;
   $('realPlaceSearchForm').onsubmit = (e) => { e.preventDefault(); chercher(); };
   $('realPlaceQuery').addEventListener('input', suggerer);
+  _rafraichirRecherche = wireSearchField(document.querySelector('#realPlaceSearchForm .champ-recherche'), {
+    onClear: () => { $('realPlaceResults').hidden = true; } });
   $('realPlaceImport').onclick = importer;
   $('realPlaceSize').onchange = () => { if (V) { V.halfSize = Number($('realPlaceSize').value) / 2; dessiner(); } };
   cablerLaCarte($('realPlaceMap'));
@@ -66,7 +71,7 @@ export function ouvrirNouvelleScene(){
   $('realPlacePlace').hidden = true;
   $('realPlaceResults').hidden = true;
   $('realPlaceResults').replaceChildren();
-  $('realPlaceProgress').hidden = true;
+  rendreLaConsigne();
   dire('');
   majBoutons();
   $('realPlaceModal').classList.remove('hidden');
@@ -80,7 +85,10 @@ function montrerLeLieu(){
   requestAnimationFrame(() => { taillerLaCarte(); dessiner(); $('realPlaceQuery').focus(); });
 }
 
-/** The import's steps as a list (done, under way, to come) and the bar. `step` null: all to come. */
+/**
+ * The import's progress: the step under way in the instructions' place, next to the zone's size (asked), and
+ * at the bottom the bar (with the detail line above it). `step` null: nothing done yet.
+ */
 function montrerLaProgression(step, sub = 0, detail = null){
   const labels = { map: tr('Map data (OpenStreetMap)', 'Données de la carte (OpenStreetMap)'), country: tr('Country of the place', 'Pays du lieu'),
     buildings: tr('Buildings, streets and grounds', 'Bâtiments, rues et sols'), relief: tr('Relief', 'Relief'), scene: tr('Creating the scene', 'Création de la scène'),
@@ -88,8 +96,17 @@ function montrerLaProgression(step, sub = 0, detail = null){
   const i = step ? IMPORT_STEPS.indexOf(step) : -1;
   $('realPlaceProgress').hidden = false;
   $('realPlaceBar').style.width = `${Math.round((step ? importProgress(step, sub) : 0) * 100)}%`;
-  // The step under way only, with where it stands (asked: above the bar, centred).
-  $('realPlaceStep').textContent = i < 0 ? '' : `${labels[step]} · ${tr('step', 'étape')} ${i + 1}/${IMPORT_STEPS.length}`;
+  const hint = $('realPlaceHint');
+  hint.textContent = i < 0 ? '' : `${labels[step]} · ${tr('step', 'étape')} ${i + 1}/${IMPORT_STEPS.length}`;
+  hint.classList.add('encours');
+}
+
+/** Back to the instructions, the progress put away (an import failed or cancelled, or the window opened). */
+function rendreLaConsigne(){
+  const hint = $('realPlaceHint');
+  hint.textContent = tr('Click on the map to place the zone.', 'Cliquez sur la carte pour placer la zone.');
+  hint.classList.remove('encours');
+  $('realPlaceProgress').hidden = true;
 }
 
 /** The detail line of the map data: the server, the seconds spent on it, the bytes received. */
@@ -116,6 +133,7 @@ function fermer(){
   $('realPlaceModal').classList.add('hidden');
   // Closed, it forgets the search (asked): the next opening starts from an empty field.
   $('realPlaceQuery').value = '';
+  _rafraichirRecherche();
   $('realPlaceResults').hidden = true;
   $('realPlaceResults').replaceChildren();
   clearTimeout(_suggestion.minuteur); _suggestion.n++;
@@ -195,7 +213,13 @@ function montrerLesLieux(places){
     b.type = 'button';
     b.className = 'real-place-result';
     b.textContent = p.name;
-    b.onclick = () => choisirLieu(p);
+    // Chosen: the field takes its name and the place is found (asked: as if it had been searched).
+    b.onclick = () => {
+      clearTimeout(_suggestion.minuteur); _suggestion.n++;
+      $('realPlaceQuery').value = p.name;
+      _rafraichirRecherche();
+      choisirLieu(p);
+    };
     return b;
   }));
   liste.hidden = !r.places.length;
@@ -383,7 +407,8 @@ async function importer(){
     if (V) V.echec = true;
     dire(erreur('response'), true);
   } finally {
-    if (V) { V.busy = false; majBoutons(); }
+    // Still open (failed or stopped before the Scene): the instructions come back; the error stays said.
+    if (V) { V.busy = false; rendreLaConsigne(); majBoutons(); }
   }
 }
 
