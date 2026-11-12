@@ -42,7 +42,7 @@ function manifestOf({ version, mcpJsonPath, tools = [] }){
     display_name: 'Storyboarder',
     version: /^\d+\.\d+\.\d+/.test(version || '') ? version : '1.0.0',
     description: 'Lets Claude read and create the Scenes of Storyboarder, open on this computer.',
-    long_description: 'Storyboarder must be open, with Settings > General > AI connection turned on. Claude can then list and read the Scenes, import a real place as a new Scene, and see a Scene as an image.',
+    long_description: 'Storyboarder must be open, with its AI connection turned on (Settings > AI). Claude can then list and read the Scenes, import a real place as a new Scene, and see a Scene as an image.',
     author: { name: 'Durzo' },
     icon: 'icon.png',
     server: {

@@ -27,6 +27,20 @@ function createMcpServer({ userData, window, log = console }){
   let server = null, state = { listening: false, port: null, error: null };
   let next = 1;
   const pending = new Map();
+  /**
+   * THE CLIENTS SEEN, for the connection's state in Settings: { claude | gemini | other: { name, lastSeen } },
+   * kept in mcp.json (written at most once a minute per client). The bridge says its client's name in
+   * `X-Mcp-Client` and pings every 30 s while its client runs; a client over HTTP gives it at `initialize`.
+   */
+  const clients = (readFile().clients && typeof readFile().clients === 'object') ? readFile().clients : {};
+  const written = {};
+  let lastHttpClient = null;
+  function seen(name){
+    const kind = clientKind(name);
+    const now = Date.now();
+    clients[kind] = { name: String(name).slice(0, 80), lastSeen: now };
+    if (!written[kind] || now - written[kind] > 60000) { written[kind] = now; try { writeFile({ clients }); } catch (e) { log.warn('[mcp] clients', e); } }
+  }
 
   /** mcp.json: { port, token, tools } (`tools`: the last list the window gave, for the bridge alone). */
   function readFile(){
@@ -95,6 +109,10 @@ function createMcpServer({ userData, window, log = console }){
         return res.end(JSON.stringify({ jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } }));
       }
       const list = Array.isArray(message) ? message : [message];
+      const init = list.find(m => m && m.method === 'initialize' && m.params && m.params.clientInfo);
+      const viaBridge = req.headers['x-mcp-client'];
+      if (!viaBridge && init) lastHttpClient = String(init.params.clientInfo.name || 'HTTP client');
+      seen(viaBridge || lastHttpClient || 'HTTP client');
       const answers = (await Promise.all(list.map(ask))).filter(Boolean);
       if (!answers.length) { res.writeHead(202); return res.end(); }
       res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -132,7 +150,7 @@ function createMcpServer({ userData, window, log = console }){
       pending.clear();
     });
   }
-  function status(){ return { ...state, file }; }
+  function status(){ return { ...state, file, clients: { ...clients } }; }
   /** The window's tool list, kept for the bridge (it answers tools/list while Storyboarder is closed). */
   function rememberTools(tools){ try { writeFile({ tools: Array.isArray(tools) ? tools : [] }); } catch (e) { log.warn('[mcp] tools', e); } }
   /** The configuration of a client: Claude Desktop (through the bridge) or Gemini CLI (HTTP). */
@@ -147,4 +165,12 @@ function createMcpServer({ userData, window, log = console }){
   return { start, stop, status, answer, rememberTools, clientConfig, config };
 }
 
-module.exports = { createMcpServer, DEFAULT_PORT, ENDPOINT };
+/** Which client a name is: Claude Desktop (« claude-ai »), Gemini CLI, or another. */
+function clientKind(name){
+  const n = String(name || '');
+  if (/claude/i.test(n)) return 'claude';
+  if (/gemini/i.test(n)) return 'gemini';
+  return 'other';
+}
+
+module.exports = { createMcpServer, clientKind, DEFAULT_PORT, ENDPOINT };

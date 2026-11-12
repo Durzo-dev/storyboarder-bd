@@ -1293,32 +1293,66 @@ ipcMain.handle('maj:reessayer', async () => {
 // until the user turns it on in Settings (`mcpEnabled`).
 const { createMcpServer } = require('./mcp-server');
 const mcp = createMcpServer({ userData: app.getPath('userData'), window: () => fenetreApp });
-/** The bridge's path as the client must start it: outside the archive once packaged (asarUnpack). */
-const cheminDuPont = () => path.join(__dirname, 'mcp-bridge.js').replace(/app\.asar([\\/])/, 'app.asar.unpacked$1');
-const etatMcp = () => ({ ...mcp.status(), enabled: readSettings().mcpEnabled === true });
-ipcMain.handle('mcp:status', async () => etatMcp());
-ipcMain.handle('mcp:setEnabled', async (event, on) => {
+const mcpClients = require('./mcp-clients');
+const lireSiExiste = (f) => { try { return fs.readFileSync(f, 'utf-8'); } catch { return null; } };
+/** The connection's state for Settings: on or off, listening, the clients seen, Gemini CLI configured. */
+const etatMcp = () => {
+  const reglages = readSettings();
+  return {
+    ...mcp.status(),
+    enabled: reglages.mcpEnabled === true,
+    now: Date.now(),
+    claudeOffered: Number(reglages.mcpClaudeOffered) || null,
+    gemini: {
+      installed: fs.existsSync(path.dirname(mcpClients.geminiSettingsPath(app.getPath('home')))),
+      configured: mcpClients.hasStoryboarder(lireSiExiste(mcpClients.geminiSettingsPath(app.getPath('home')))),
+    },
+  };
+};
+async function activerMcp(on){
   const settings = readSettings();
   settings.mcpEnabled = on === true;
   fs.writeFileSync(settingsFilePath, JSON.stringify(settings), 'utf-8');
   if (on === true) await mcp.start(); else await mcp.stop();
-  return etatMcp();
-});
+}
+ipcMain.handle('mcp:status', async () => etatMcp());
+ipcMain.handle('mcp:setEnabled', async (event, on) => { await activerMcp(on === true); return etatMcp(); });
 ipcMain.handle('mcp:response', async (event, n, response) => { mcp.answer(n, response); return true; });
 ipcMain.handle('mcp:tools', async (event, tools) => { mcp.rememberTools(tools); return true; });
-ipcMain.handle('mcp:clientConfig', async (event, kind) => JSON.stringify(
-  mcp.clientConfig(kind === 'gemini' ? 'gemini' : 'claude', { execPath: process.execPath, bridgePath: cheminDuPont() }), null, 2));
 // Claude Desktop: an extension (.mcpb) made for this computer, opened so that Claude Desktop offers to install
 // it (mcp-bundle.js). Without Claude Desktop (no program opens .mcpb), the file is shown in its folder.
 ipcMain.handle('mcp:installClaude', async () => {
+  // Installing a client turns the connection on: that is what it is for.
+  await activerMcp(true);
   const { buildBundle } = require('./mcp-bundle');
   const c = mcp.config();
   const fichier = path.join(app.getPath('userData'), 'Storyboarder.mcpb');
   fs.writeFileSync(fichier, buildBundle({ version: app.getVersion(), mcpJsonPath: mcp.status().file, bridgePath: path.join(__dirname, 'mcp-bridge.js'),
     iconPath: path.join(RACINE, 'assets', 'icone', 'storyboarder-bd-512.png'), tools: Array.isArray(c.tools) ? c.tools : [] }));
   const erreur = await shell.openPath(fichier);
-  if (erreur) { shell.showItemInFolder(fichier); return { ok: false, file: fichier }; }
-  return { ok: true, file: fichier };
+  if (erreur) { shell.showItemInFolder(fichier); return { ok: false, file: fichier, state: etatMcp() }; }
+  const reglages = readSettings();
+  reglages.mcpClaudeOffered = Date.now();
+  fs.writeFileSync(settingsFilePath, JSON.stringify(reglages), 'utf-8');
+  return { ok: true, file: fichier, state: etatMcp() };
+});
+// Gemini CLI: Storyboarder's entry written in ~/.gemini/settings.json (the rest kept, a copy of the file made
+// first). A file it cannot rewrite (comments): the configuration is given back, to paste.
+ipcMain.handle('mcp:installGemini', async () => {
+  await activerMcp(true);
+  const fichier = mcpClients.geminiSettingsPath(app.getPath('home'));
+  const entree = mcp.clientConfig('gemini', {}).mcpServers.storyboarder;
+  const avant = lireSiExiste(fichier);
+  const r = mcpClients.withStoryboarder(avant, entree);
+  if (r.error) return { ok: false, reason: r.error, config: JSON.stringify({ mcpServers: { storyboarder: entree } }, null, 2), state: etatMcp() };
+  try {
+    fs.mkdirSync(path.dirname(fichier), { recursive: true });
+    if (avant !== null) fs.writeFileSync(`${fichier}.storyboarder-backup`, avant, 'utf-8');
+    fs.writeFileSync(fichier, r.text, 'utf-8');
+  } catch (e) {
+    return { ok: false, reason: 'write', config: JSON.stringify({ mcpServers: { storyboarder: entree } }, null, 2), state: etatMcp() };
+  }
+  return { ok: true, state: etatMcp() };
 });
 // An image of a part of the window (a Scene's view), for the AI: JPEG, at most 1280 px wide, base64.
 ipcMain.handle('mcp:capture', async (event, rect) => {

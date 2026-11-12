@@ -51,6 +51,7 @@
   /* Les deux couleurs de la convention des boutons (#398). Des jetons plutôt que des littéraux,
      comme tout le reste ici : le thème Clair les redéfinit sans toucher à une seule règle. */
   --danger:#D9534F;
+  --succes:#3FA34D;   /* a working state (the AI connection's « connected ») */
   --warn:#E8B84B;
   /* ⚠️ LE NORD DU DÔME DE LUMIÈRE (#414k), ET POURQUOI C'EST UN JETON ET NON UN ROUGE ÉCRIT EN DUR.
      La lettre « N » se distingue des trois autres par sa couleur, sur un fond qui change avec le
@@ -125,6 +126,7 @@ body.theme-light{
   /* Un rouge et un jaune un peu plus soutenus qu'en thème Sombre : sur fond clair, les mêmes
      valeurs passaient pour des pastels et ne se distinguaient plus l'une de l'autre. */
   --danger:#C9302C;
+  --succes:#3FA34D;   /* a working state (the AI connection's « connected ») */
   --warn:#D9A21B;
   /* Sur papier clair le rouge du thème Sombre tombe à 2,49 : il faut le foncer, pas l'éclaircir. */
   --nord-boussole:#B62C16;
@@ -197,6 +199,7 @@ body.theme-contraste{
   --accent:#FF8C3D;
   --accent-soft:rgba(255,140,61,.22);
   --danger:#FF6B7A;
+  --succes:#3FA34D;   /* a working state (the AI connection's « connected ») */
   --warn:#FFE9A8;
   --nord-boussole:#EC7B69;
   --sur-accent:#000000;
@@ -226,6 +229,7 @@ body.theme-light.theme-contraste{
   --accent:#8F3A00;
   --accent-soft:rgba(143,58,0,.16);
   --danger:#6E0B08;
+  --succes:#3FA34D;   /* a working state (the AI connection's « connected ») */
   --warn:#3A3E00;
   --nord-boussole:#962413;
   --sur-accent:#FFFFFF;
@@ -3202,6 +3206,26 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 .real-place-illustration .ill-mur-ombre{ fill:var(--ink-soft); }
 .real-place-illustration .ill-epingle path{ fill:var(--danger); }
 .real-place-illustration .ill-epingle-coeur{ fill:var(--sur-danger); }
+/* The AI tab of Settings (mcp-link.js): the switch, the state, one card per client (the cards of a new
+   Scene's choice), its generic illustration in the interface's colours, its state under its name. */
+.ia-intro{ margin:0 0 12px; font-size:var(--texte-courant); color:var(--ink-mid); }
+.ia-interrupteur{ display:flex; align-items:center; gap:6px; font-size:var(--texte-courant); cursor:pointer; }
+.ia-etat-general{ margin:4px 0 12px; font-size:var(--texte-libelle); color:var(--ink-soft); }
+.ia-clients{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.ia-client{ min-width:0; }   /* a long state wraps inside its card */
+.ia-illustration{ display:block; width:100%; height:auto; max-height:110px; margin-bottom:6px; }
+.ia-illustration .ia-fenetre, .ia-illustration .ia-terminal{ fill:var(--paper); stroke:var(--line-strong); stroke-width:1.5; }
+.ia-illustration .ia-terminal{ fill:var(--nav-bg); }
+.ia-illustration .ia-barre{ fill:var(--line); }
+.ia-illustration .ia-point{ fill:var(--ink-soft); }
+.ia-illustration .ia-bulle-a{ fill:var(--line-strong); }
+.ia-illustration .ia-bulle-b, .ia-illustration .ia-curseur{ fill:var(--accent); }
+.ia-illustration .ia-invite{ fill:none; stroke:var(--accent); stroke-width:4; stroke-linecap:round; stroke-linejoin:round; }
+.ia-illustration .ia-ligne{ fill:var(--ink-soft); }
+.ia-client-etat{ display:flex; align-items:center; gap:6px; }
+.ia-client-etat::before{ content:''; width:8px; height:8px; border-radius:50%; background:var(--ink-soft); flex:none; }
+.ia-client-etat[data-niveau="connected"]::before{ background:var(--succes); }
+.ia-client-etat[data-niveau="installed"]::before, .ia-client-etat[data-niveau="offered"]::before{ background:var(--accent); }
 /* The import's progress: a bar, then the steps (done, under way, to come). */
 .real-place-progress{ display:flex; flex-direction:column; gap:8px; }
 .real-place-bar{ height:8px; background:var(--line); border-radius:var(--rayon-pilule); overflow:hidden; }

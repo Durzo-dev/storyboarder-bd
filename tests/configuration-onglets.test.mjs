@@ -18,8 +18,8 @@ const page = (nom) => {
 };
 
 describe('Configuration : trois onglets', () => {
-  test('les trois onglets, Général actif par défaut', () => {
-    for (const [id, nom] of [['configOngletGeneral', 'general'], ['configOngletProjets', 'projets'], ['configOnglet3d', '3d']]) {
+  test('les quatre onglets, Général actif par défaut', () => {
+    for (const [id, nom] of [['configOngletGeneral', 'general'], ['configOngletProjets', 'projets'], ['configOnglet3d', '3d'], ['configOngletIa', 'ia']]) {
       assert.match(MODALE, new RegExp(`data-onglet="${nom}" id="${id}"`));
     }
     assert.match(MODALE, /class="onglet actif" role="tab" data-onglet="general"/);
@@ -30,6 +30,7 @@ describe('Configuration : trois onglets', () => {
       general: ['languageSelect', 'themeSelect', 'contrastCheckbox', 'uiScaleSelect', 'cacheMoRange'],
       projets: ['autosaveIntervalSelect', 'projectsDirBrowse', 'projectsDirReset', 'exportShowPanelBadgesCheckbox', 'exportShowPanelDescriptionsCheckbox'],
       '3d': ['gestesRotationRange', 'gestesDeplacementRange', 'gestesResetBtn', 'restoreBuiltinPosesBtn'],
+      ia: ['mcpEnabledCheckbox', 'mcpStatus', 'mcpInstallClaude', 'mcpClaudeEtat', 'mcpInstallGemini', 'mcpGeminiEtat'],
     };
     for (const [nom, ids] of Object.entries(attendus)) {
       const p = page(nom);

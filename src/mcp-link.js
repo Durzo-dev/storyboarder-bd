@@ -2,13 +2,14 @@
  * @file mcp-link.js
  * THE AI CONNECTION, the window's side (docs/en/mcp.md): the messages an AI's client sends to the local
  * endpoint (electron/mcp-server.js) arrive here, are answered by mcp-protocol.js with the tools of
- * mcp-tools.js, bound here to the application's gestures; and the « AI connection » row of Settings.
+ * mcp-tools.js, bound here to the application's gestures; and the AI tab of Settings.
  */
 
 import { S, tr } from './state.js';
 import { handleMessage, describeTool } from './mcp-protocol.js';
 import { makeTools, INSTRUCTIONS } from './mcp-tools.js';
 import { importerPourIA } from './real-place-ui.js';
+import { connectionTexts } from './mcp-status.js';
 
 const $ = (id) => document.getElementById(id);
 const frames = (n = 2) => new Promise(ok => { const step = (k) => (k ? requestAnimationFrame(() => step(k - 1)) : ok()); step(n); });
@@ -57,17 +58,35 @@ export function cablerConnexionIA(rappels){
   cablerReglage();
 }
 
-// ── The Settings row ─────────────────────────────────────────────────────────────────────────────
+// ── The AI tab of Settings ───────────────────────────────────────────────────────────────────────
 
-/** The row's state: on or off, and what the endpoint does (listening, port taken). */
+/** A message under a card, said after a click (it stays until the next state that changes the card). */
+const _messages = { claude: null, gemini: null };
+
+/** The tab from the connection's state (mcp-status.js decides the words). */
 function montrerEtat(etat){
+  if (!etat) return;
+  const t = connectionTexts(etat, tr);
   $('mcpEnabledCheckbox').checked = !!etat.enabled;
-  $('mcpConfigButtons').hidden = !etat.enabled;
-  let texte = tr('Off: no AI can reach Storyboarder.', 'Désactivée : aucune IA ne peut joindre Storyboarder.');
-  if (etat.enabled && etat.listening) texte = tr(`On: an AI connected to this computer can read and create your Scenes (port ${etat.port}).`, `Activée : une IA branchée sur cet ordinateur peut lire et créer vos Scènes (port ${etat.port}).`);
-  else if (etat.enabled && etat.error === 'port-in-use') texte = tr(`Port ${etat.port} is used by another program: the connection could not start.`, `Le port ${etat.port} est pris par un autre logiciel : la connexion n'a pas pu démarrer.`);
-  else if (etat.enabled) texte = tr('The connection could not start.', 'La connexion n\'a pas pu démarrer.');
-  $('mcpStatus').textContent = texte;
+  $('mcpStatus').textContent = t.general;
+  for (const [k, id] of [['claude', 'mcpClaudeEtat'], ['gemini', 'mcpGeminiEtat']]) {
+    const el = $(id);
+    // A click's message holds until the client is seen.
+    const message = _messages[k] && t[k].level !== 'connected' ? _messages[k] : null;
+    el.textContent = message || t[k].text;
+    el.dataset.niveau = t[k].level;
+  }
+}
+
+/** While the AI tab is shown, its state is read again every few seconds (a client connects meanwhile). */
+const REFRESH_MS = 3000;
+function suivreEtat(){
+  const api = window.storyboarderAPI;
+  setInterval(() => {
+    const modale = $('settingsModal');
+    const page = document.querySelector('#settingsModal .config-page[data-onglet="ia"]');
+    if (modale && !modale.classList.contains('hidden') && page && !page.hidden) api.mcpStatus().then(montrerEtat);
+  }, REFRESH_MS);
 }
 
 function cablerReglage(){
@@ -75,23 +94,38 @@ function cablerReglage(){
   const box = $('mcpEnabledCheckbox');
   if (!box) return;
   api.mcpStatus().then(montrerEtat);
+  suivreEtat();
+  $('configOngletIa').addEventListener('click', () => api.mcpStatus().then(montrerEtat));
   box.onchange = async () => montrerEtat(await api.mcpSetEnabled(box.checked));
-  // Gemini CLI: its configuration copied, to paste in its settings (docs/en/mcp.md).
-  const copier = (kind, bouton) => async () => {
-    const texte = await api.mcpClientConfig(kind);
-    try { await navigator.clipboard.writeText(texte); } catch { return; }
-    const avant = bouton.textContent;
-    bouton.textContent = tr('Copied', 'Copiée');
-    setTimeout(() => { bouton.textContent = avant; }, 1500);
-  };
   // Claude Desktop: an extension made for this computer, which Claude Desktop offers to install in one click.
-  $('mcpInstallClaude').onclick = async () => {
+  // Installing turns the connection on (main.js).
+  const installerClaude = async () => {
     const r = await api.mcpInstallClaude();
-    $('mcpStatus').textContent = r && r.ok
-      ? tr('Claude Desktop opens its installation window: click « Install ». Then, in a new chat, ask for example « list my Storyboarder scenes ».',
-        'Claude Desktop ouvre sa fenêtre d\'installation : cliquez sur « Installer ». Puis, dans une nouvelle conversation, demandez par exemple « liste mes scènes Storyboarder ».')
+    _messages.claude = r && r.ok
+      ? tr('Claude Desktop shows its installation window: click « Install », then restart Claude Desktop.',
+        'Claude Desktop affiche sa fenêtre d\'installation : cliquez sur « Installer », puis relancez Claude Desktop.')
       : tr('Claude Desktop does not seem to be installed. The extension file is shown in its folder: drag it into Claude Desktop\'s window.',
         'Claude Desktop ne semble pas installé. Le fichier de l\'extension est montré dans son dossier : glissez-le dans la fenêtre de Claude Desktop.');
+    montrerEtat(r && r.state);
   };
-  $('mcpCopyGemini').onclick = copier('gemini', $('mcpCopyGemini'));
+  // Gemini CLI: Storyboarder added to its settings file; a file it cannot rewrite: the configuration copied.
+  const installerGemini = async () => {
+    const r = await api.mcpInstallGemini();
+    if (r && r.ok) _messages.gemini = tr('Added. Start gemini in a terminal (restart it if it was open).', 'Ajouté. Lancez gemini dans un terminal (relancez-le s\'il était ouvert).');
+    else {
+      let copie = false;
+      try { await navigator.clipboard.writeText(r.config); copie = true; } catch { /* the message says so */ }
+      _messages.gemini = copie
+        ? tr('Gemini CLI\'s settings could not be changed (comments in the file?). The configuration is copied: paste it in ~/.gemini/settings.json.',
+          'Les réglages de Gemini CLI n\'ont pas pu être modifiés (commentaires dans le fichier ?). La configuration est copiée : collez-la dans ~/.gemini/settings.json.')
+        : tr('Gemini CLI\'s settings could not be changed.', 'Les réglages de Gemini CLI n\'ont pas pu être modifiés.');
+    }
+    montrerEtat(r && r.state);
+  };
+  // The whole card answers, not only its title (the button keeps the keyboard), as a new Scene's choice.
+  $('mcpInstallClaude').onclick = (e) => { e.stopPropagation(); installerClaude(); };
+  $('mcpInstallGemini').onclick = (e) => { e.stopPropagation(); installerGemini(); };
+  document.querySelectorAll('#settingsModal .ia-client').forEach(c => {
+    c.addEventListener('click', () => (c.dataset.client === 'claude' ? installerClaude() : installerGemini()));
+  });
 }

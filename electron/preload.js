@@ -134,8 +134,8 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   onMcpRequest: (callback) => ipcRenderer.on('mcp:request', (e, n, message) => callback(n, message)),
   mcpRespond: (n, response) => ipcRenderer.invoke('mcp:response', n, response),
   mcpTools: (tools) => ipcRenderer.invoke('mcp:tools', tools),
-  mcpClientConfig: (kind) => ipcRenderer.invoke('mcp:clientConfig', kind),
   mcpInstallClaude: () => ipcRenderer.invoke('mcp:installClaude'),
+  mcpInstallGemini: () => ipcRenderer.invoke('mcp:installGemini'),
   mcpCapture: (rect) => ipcRenderer.invoke('mcp:capture', rect),
   onStoreApercuProgression: (callback) => ipcRenderer.on('store:apercuProgression', (e, s, id, recus, total) => callback(s, id, recus, total)),
 });

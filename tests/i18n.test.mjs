@@ -976,8 +976,8 @@ describe('#403n : un libellé porte UNE majuscule, la première', () => {
   // Celles de DaFont (#423) sont lues dans leur table générée : toutes, sans en recopier aucune.
   const NOMS_PROPRES = new Set(['Comic Neue', 'Shantell Sans', 'Chakra Petch', 'EB Garamond',
     'Courier Prime', ...POLICES_DAFONT.map(p => p.nom)]);
-  // Les noms des clients d'IA (Configuration, « Connexion d'une IA ») : des noms de logiciels.
-  const LOGICIELS = new Set(['Claude', 'Desktop', 'Gemini']);
+  // Les noms de logiciels : les clients d'IA (Configuration, onglet IA) et l'application elle-même.
+  const LOGICIELS = new Set(['Claude', 'Desktop', 'Gemini', 'Storyboarder']);
   const AVEC_LETTRE = /[A-Za-zÀ-ÿ]/;
   const nu = (mot) => mot.replace(/^[^A-Za-zÀ-ÿ0-9]+|[^A-Za-zÀ-ÿ0-9]+$/g, '');
 

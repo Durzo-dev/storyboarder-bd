@@ -1,6 +1,6 @@
 {
   "name": "storyboard-bd",
-  "version": "1.17.39",
+  "version": "1.17.40",
   "engines": {
     "node": ">=22"
   },
@@ -36,9 +36,6 @@
   "build": {
     "appId": "com.valentin.storyboardbd",
     "productName": "Storyboarder BD",
-    "asarUnpack": [
-      "electron/mcp-bridge.js"
-    ],
     "files": [
       "electron/**/*",
       "assets/**/*",

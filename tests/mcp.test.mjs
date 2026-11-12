@@ -230,6 +230,79 @@ describe('MCP, the local endpoint', () => {
     assert.equal(lines.length, 2, 'no answer to the notification');
     assert.equal(lines.find(l => l.id === 1).result.content[0].text, 'from the app');
   });
+  test('the clients seen: the bridge says its client\'s name (Claude Desktop), an HTTP client at initialize', async () => {
+    await runBridge(join(dir, 'mcp.json'), [
+      { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', clientInfo: { name: 'claude-ai', version: '1' } } },
+      { jsonrpc: '2.0', id: 2, method: 'ping' },
+    ]);
+    const c = server.status().clients.claude;
+    assert.equal(c.name, 'claude-ai');
+    assert.ok(Date.now() - c.lastSeen < 5000);
+    await post(port, { jsonrpc: '2.0', id: 1, method: 'initialize', params: { clientInfo: { name: 'gemini-cli-mcp-client' } } }, { Authorization: `Bearer ${token}` });
+    await post(port, { jsonrpc: '2.0', id: 2, method: 'tools/list' }, { Authorization: `Bearer ${token}` });
+    assert.equal(server.status().clients.gemini.name, 'gemini-cli-mcp-client', 'later messages keep the HTTP client\'s name');
+    assert.ok(JSON.parse(readFileSync(join(dir, 'mcp.json'), 'utf8')).clients.claude, 'kept in mcp.json');
+  });
+  test('a refused message is not a client seen', async () => {
+    const avant = JSON.stringify(server.status().clients);
+    await post(port, { jsonrpc: '2.0', id: 1, method: 'ping' }, { Authorization: 'Bearer nope', 'X-Mcp-Client': 'other-ai' });
+    assert.equal(JSON.stringify(server.status().clients), avant);
+  });
+});
+
+describe('MCP, Gemini CLI\'s settings', () => {
+  const { withStoryboarder, hasStoryboarder, geminiSettingsPath } = require('../electron/mcp-clients.js');
+  const entry = { httpUrl: 'http://127.0.0.1:47615/mcp', headers: { Authorization: 'Bearer t' } };
+  test('no file yet: the settings with Storyboarder alone', () => {
+    assert.deepEqual(JSON.parse(withStoryboarder(null, entry).text), { mcpServers: { storyboarder: entry } });
+    assert.deepEqual(JSON.parse(withStoryboarder('', entry).text), { mcpServers: { storyboarder: entry } });
+  });
+  test('the other settings and servers are kept; ours is replaced', () => {
+    const before = JSON.stringify({ theme: 'Dracula', mcpServers: { other: { command: 'x' }, storyboarder: { httpUrl: 'old' } } });
+    const after = JSON.parse(withStoryboarder(before, entry).text);
+    assert.equal(after.theme, 'Dracula');
+    assert.deepEqual(after.mcpServers.other, { command: 'x' });
+    assert.deepEqual(after.mcpServers.storyboarder, entry);
+  });
+  test('a file with comments or broken is not rewritten', () => {
+    assert.deepEqual(withStoryboarder('{ // mine\n "theme": "x" }', entry), { error: 'unreadable' });
+    assert.deepEqual(withStoryboarder('[1]', entry), { error: 'unreadable' });
+  });
+  test('is Storyboarder there? plain JSON, or its key in a file with comments', () => {
+    assert.equal(hasStoryboarder(withStoryboarder(null, entry).text), true);
+    assert.equal(hasStoryboarder('{"mcpServers":{"other":{}}}'), false);
+    assert.equal(hasStoryboarder(null), false);
+    assert.equal(hasStoryboarder('{ // c\n "mcpServers": { "storyboarder": {} } }'), true);
+    assert.equal(geminiSettingsPath('/home/u'), join('/home/u', '.gemini', 'settings.json'));
+  });
+});
+
+describe('MCP, what the AI tab says', async () => {
+  const { connectionTexts, CONNECTED_MS } = await import('../src/mcp-status.js');
+  const tr = (en) => en;
+  const now = 1e12;
+  const base = { enabled: true, listening: true, port: 47615, now, clients: {}, gemini: { installed: true, configured: false } };
+  test('off, on, port taken', () => {
+    assert.match(connectionTexts({ ...base, enabled: false, listening: false }, tr).general, /^Off/);
+    assert.match(connectionTexts(base, tr).general, /^On/);
+    assert.match(connectionTexts({ ...base, listening: false, error: 'port-in-use' }, tr).general, /Port 47615/);
+  });
+  test('Claude Desktop: never seen, offered, connected (heartbeat), installed but closed', () => {
+    const lvl = (s) => connectionTexts({ ...base, ...s }, tr).claude.level;
+    assert.equal(lvl({}), 'none');
+    assert.equal(lvl({ claudeOffered: now - 1000 }), 'offered');
+    assert.equal(lvl({ clients: { claude: { lastSeen: now - 30000 } } }), 'connected');
+    assert.equal(lvl({ clients: { claude: { lastSeen: now - CONNECTED_MS - 1 } } }), 'installed');
+    assert.equal(lvl({ enabled: false, listening: false, clients: { claude: { lastSeen: now - 1000 } } }), 'installed', 'connection off: not connected');
+    assert.match(connectionTexts({ ...base, clients: { claude: { lastSeen: now - 3 * 3600e3 } } }, tr).claude.text, /3 h ago/);
+  });
+  test('Gemini CLI: missing, not added, added, connected', () => {
+    const lvl = (g, clients = {}) => connectionTexts({ ...base, gemini: g, clients }, tr).gemini.level;
+    assert.equal(lvl({ installed: false, configured: false }), 'missing');
+    assert.equal(lvl({ installed: true, configured: false }), 'none');
+    assert.equal(lvl({ installed: true, configured: true }), 'installed');
+    assert.equal(lvl({ installed: true, configured: true }, { gemini: { lastSeen: now - 1000 } }), 'connected');
+  });
 });
 
 /** Runs the bridge with `messages` on stdin; resolves to the JSON lines it wrote on stdout. */
