@@ -240,3 +240,39 @@ describe('OSM translator, pavements', async () => {
     assert.equal(pavements.find(p => p.osmId === 2).world.width, 1.8);
   });
 });
+
+describe('OSM translator, the doors at the entrances (#474a)', () => {
+  // A 20 × 10 m building along a road to its south; its entrances mapped on its outline.
+  const box = [[48.0001, 7.0001], [48.0001, 7.000368], [48.00019, 7.000368], [48.00019, 7.0001], [48.0001, 7.0001]];
+  const road = { type: 'way', id: 1, tags: { highway: 'residential' }, geometry: [[48.00005, 7], [48.00005, 7.0006]] };
+  const centre = { lat: 48.0001, lon: 7.0003 };
+  const doors = (b) => b.ouvertures.filter(o => o.type === 'porte');
+  test('without entrance: one door, in the middle of the wall nearest the road', () => {
+    const t = translateOsm({ elements: [road, { type: 'way', id: 2, tags: { building: 'house' }, geometry: box }] }, { centre, halfSize: 100 });
+    const b = t.buildings[0].building;
+    assert.equal(doors(b).length, 1);
+    assert.ok(Math.abs(doors(b)[0].le - 0.5) < 1e-9);
+  });
+  test('with entrances: a door at each, on the wall it stands on, where it stands; a garage door is wide', () => {
+    const t = translateOsm({ elements: [road, { type: 'way', id: 2, tags: { building: 'house' }, geometry: box },
+      // On the NORTH wall (away from the road), near its west end; and a garage on the west wall.
+      { type: 'node', id: 3, lat: 48.00019, lon: 7.00015, tags: { entrance: 'main' } },
+      { type: 'node', id: 4, lat: 48.000145, lon: 7.0001, tags: { entrance: 'garage' } }] }, { centre, halfSize: 100 });
+    const b = t.buildings[0].building, d = doors(b);
+    assert.equal(d.length, 2);
+    const main = d.find(o => o.largeur === 1), garage = d.find(o => o.largeur === 2.4);
+    assert.ok(main && garage, 'a main door and a garage door');
+    const wallOf = (o) => b.murs.find(m => m.id === o.murId);
+    const mw = wallOf(main), mz = (mw.a.z + mw.b.z) / 2, cz = b.murs.reduce((s, m) => s + m.a.z, 0) / b.murs.length;
+    assert.ok(mz < cz, 'the main door on the north wall (z to the south), not the road side');
+    const x = mw.a.x + (mw.b.x - mw.a.x) * main.le, xs = mw.a.x < mw.b.x ? mw.a.x : mw.b.x;
+    assert.ok(x - xs < 6, `near the west end of its wall (${(x - xs).toFixed(1)} m from it)`);
+  });
+  test('an entrance far from any building is nobody\'s', () => {
+    const t = translateOsm({ elements: [road, { type: 'way', id: 2, tags: { building: 'house' }, geometry: box },
+      { type: 'node', id: 3, lat: 48.0005, lon: 7.0005, tags: { entrance: 'yes' } }] }, { centre, halfSize: 100 });
+    const d = doors(t.buildings[0].building);
+    assert.equal(d.length, 1);
+    assert.ok(Math.abs(d[0].le - 0.5) < 1e-9, 'the road-side door, as without entrance');
+  });
+});

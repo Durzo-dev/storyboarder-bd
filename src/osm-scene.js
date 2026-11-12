@@ -127,6 +127,9 @@ export function offsetPolyline(pts, d){
  */
 export const DETAIL_LEVELS = Object.freeze(['simple', 'detailed', 'realistic']);
 
+/** How far from a building's outline an OSM entrance still belongs to it (metres): on it, give or take. */
+const ENTRANCE_REACH = 1.5;
+
 const DIRT_PATHS = { footway: 1.5, path: 1.2, track: 3, cycleway: 2, bridleway: 2, steps: 1.5 };
 const BARRIERS = { wall: 'muret', retaining_wall: 'muret', city_wall: 'muret', fence: 'cloture', hedge: 'haie',
   guard_rail: 'barriere', railing: 'barriere' };
@@ -176,6 +179,11 @@ function insidePolygon(p, q){
     if ((q[i].z > p.z) !== (q[j].z > p.z) && p.x < (q[j].x - q[i].x) * (p.z - q[i].z) / (q[j].z - q[i].z) + q[i].x) inside = !inside;
   }
   return inside;
+}
+
+/** The distance from p to a closed ring (its edges, last to first included). */
+function distanceToRing(p, ring){
+  return distanceToPolyline(p, ring.concat([ring[0]]));
 }
 
 function distanceToPolyline(p, pts){
@@ -270,7 +278,39 @@ export function roofOf(tags, rules = rulesFor('fr'), surveyed = null){
  * the middle of the wall (1.5 m or more) that faces the nearest road (`doorWallId`). An opening the editor refuses (too
  * wide, overlapping) is skipped: a facade "inspired by".
  */
-function generateOpenings(b, doorWallId, style = null){
+/** A door by the kind of its OSM entrance (`entrance=*`): a garage's is wide, the others a house door. */
+function doorOf(kind){
+  if (kind === 'garage') return { type: 'porte', largeur: 2.4, hauteur: 2.2, y: 0, battants: 2, vitre: false };
+  return { type: 'porte', largeur: kind === 'main' ? 1 : 0.9, hauteur: 2.1, y: 0 };
+}
+
+/**
+ * The doors of a building: one per OSM entrance on its outline (`entrances`, local metres, with `kind`), on
+ * the ground-floor wall it stands on, where it stands (asked: the doors where they really are); without any,
+ * one door in the middle of the ground-floor wall nearest a road (`fallbackWallId`). [{ wallId, le, kind }].
+ */
+function doorsOf(b, entrances, fallbackWallId){
+  const ground = b.niveaux.reduce((p, q) => (q.elevation < p.elevation ? q : p)).id;
+  const walls = b.murs.filter(m => m.niveauId === ground && Math.hypot(m.b.x - m.a.x, m.b.z - m.a.z) >= 1.2);
+  const doors = [];
+  for (const e of entrances) {
+    let best = null;
+    for (const w of walls) {
+      const dx = w.b.x - w.a.x, dz = w.b.z - w.a.z, l2 = dx * dx + dz * dz;
+      const t = Math.max(0, Math.min(1, ((e.x - w.a.x) * dx + (e.z - w.a.z) * dz) / l2));
+      const d = Math.hypot(e.x - (w.a.x + t * dx), e.z - (w.a.z + t * dz));
+      if (d <= ENTRANCE_REACH && (!best || d < best.d)) best = { wallId: w.id, le: t, d, length: Math.sqrt(l2) };
+    }
+    if (!best) continue;
+    // Two entrances on the same spot of a wall (a node mapped twice, a double door): one door.
+    if (doors.some(o => o.wallId === best.wallId && Math.abs(o.le - best.le) * best.length < 1.2)) continue;
+    doors.push({ wallId: best.wallId, le: best.le, kind: e.kind });
+  }
+  if (!doors.length && fallbackWallId) doors.push({ wallId: fallbackWallId, le: 0.5, kind: 'main' });
+  return doors;
+}
+
+function generateOpenings(b, doors, style = null){
   const levels = b.niveaux.slice().sort((p, q) => p.elevation - q.elevation);
   const ground = levels[0] && levels[0].id;
   // The facade's details (realistic level, facade-style.js): a surround on every opening, shutters on the windows.
@@ -283,15 +323,21 @@ function generateOpenings(b, doorWallId, style = null){
   };
   for (const wall of b.murs.slice()) {
     const length = Math.hypot(wall.b.x - wall.a.x, wall.b.z - wall.a.z);
-    const isDoorWall = wall.id === doorWallId && wall.niveauId === ground;
-    if (isDoorWall) ajouterOuverture(b, wall.id, 0.5, { type: 'porte', largeur: 0.9, hauteur: 2.1, y: 0, ...details('porte') });
+    const onWall = wall.niveauId === ground ? doors.filter(d => d.wallId === wall.id) : [];
+    // A door the editor refuses where it stands (too near a corner): moved towards the middle until it fits.
+    for (const d of onWall) {
+      const door = { ...doorOf(d.kind), ...details('porte') };
+      for (let k = 0, le = d.le; k < 6; k++, le += (0.5 - le) * 0.35) {
+        if (ajouterOuverture(b, wall.id, le, door).ouverture) { d.le = le; break; }
+      }
+    }
     if (length < 2) continue;
     // A shop's street side, on the ground floor: shop windows instead of windows.
-    const shopFront = isDoorWall && style && style.shopWindows;
+    const shopFront = onWall.length > 0 && style && style.shopWindows;
     const n = Math.max(1, Math.floor((length - 0.8) / 2.6));
     for (let i = 0; i < n; i++) {
       const le = (i + 0.5) / n;
-      if (isDoorWall && Math.abs(le - 0.5) * length < 1.2) continue;
+      if (onWall.some(d => Math.abs(le - d.le) * length < 1.2 + (d.kind === 'garage' ? 0.8 : 0))) continue;
       if (shopFront) ajouterOuverture(b, wall.id, le, { type: 'baie', largeur: 1.8, hauteur: 2.2, y: 0, coulissant: false, battants: 1 });
       else ajouterOuverture(b, wall.id, le, { type: 'fenetre', largeur: 1, hauteur: 1.3, y: 0.9, ...details('fenetre') });
     }
@@ -304,7 +350,7 @@ function generateOpenings(b, doorWallId, style = null){
  * surveyed building it is (building-survey.js), for its heights, roof and materials where OSM says nothing.
  * Returns the building, or null if the editor refuses its walls (a footprint that crosses itself).
  */
-export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor('fr'), translate = null, survey = null, finishes = true, place = null){
+export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor('fr'), translate = null, survey = null, finishes = true, place = null, entrances = []){
   const t = translate || ((en, fr) => fr);
   const name = tags.name || (tags['addr:housenumber'] && tags['addr:street'] ? `${tags['addr:housenumber']} ${tags['addr:street']}` : t('Building', 'Bâtiment'));
   const b = creerBatiment(name, t);
@@ -325,7 +371,8 @@ export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor
   fixerToit(b, top.id, roof);
   const facade = finishes ? wallFinishOf(tags, survey) : null;
   if (facade) b.facade = facade;
-  // The door: on the ground-floor wall whose middle is the nearest to a road.
+  // The doors: at the OSM entrances on its outline; without any, on the ground-floor wall whose middle is the
+  // nearest to a road.
   let doorWallId = null, best = Infinity;
   // Only a wall wide enough for a door (1.5 m: 0.9 m and its jambs).
   for (const wall of b.murs.filter(m => m.niveauId === b.niveaux[0].id && Math.hypot(m.b.x - m.a.x, m.b.z - m.a.z) >= 1.5)) {
@@ -334,7 +381,8 @@ export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor
   }
   // Realistic (`place`: { lat, lon, seed, shop }): the facade of the building's type, height and region.
   const style = place ? facadeStyleOf({ type: tags.building, levels: count, lat: place.lat, lon: place.lon, seed: place.seed, shop: place.shop }) : null;
-  generateOpenings(b, doorWallId, style);
+  const local = entrances.map(e => ({ x: e.x - centre.x, z: e.z - centre.z, kind: e.kind }));
+  generateOpenings(b, doorsOf(b, local, doorWallId), style);
   return b;
 }
 
@@ -378,7 +426,7 @@ export function zoneTypeOf(tags){
  */
 export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, country = 'fr', rules = rulesFor(country), translate = null, survey = null, detail = 'detailed' } = {}){
   const detailed = detail !== 'simple', realistic = detail === 'realistic';
-  const shops = [];
+  const shops = [], entrances = [];
   const h = Math.min(Math.max(1, halfSize), ZONE_SIDE_MAX / 2);
   const { toLocal } = projector(centre);
   const out = { buildings: [], paths: [], zones: [], elements: [], skipped: { outside: 0, invalid: 0, tunnels: 0, relations: 0 }, attribution: OSM_ATTRIBUTION };
@@ -392,6 +440,8 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       const objType = tags.natural === 'tree' ? 'arbre' : tags.highway === 'street_lamp' ? 'lampadaire'
         : (tags.traffic_sign || tags.highway === 'stop' || tags.highway === 'give_way') ? 'panneau_signalisation'
           : tags.natural === 'shrub' ? 'buisson' : tags.amenity === 'bench' ? 'banc' : null;
+      // An entrance (`entrance=*`, a node on a building's outline): its door goes where it is.
+      if (tags.entrance && tags.entrance !== 'no') entrances.push({ x: p.x, z: p.z, kind: tags.entrance });
       // Realistic: a shop or a café is a point inside its building (shop windows on its ground floor).
       if (realistic && (tags.shop || ['restaurant', 'cafe', 'bar', 'pharmacy', 'bank', 'fast_food'].includes(tags.amenity))) shops.push(p);
       // Simple: the trees and lamps only.
@@ -446,7 +496,8 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       const local = fp.map(p => roundPoint({ x: p.x - centreOf.x, z: p.z - centreOf.z }));
       const surveyed = surveys.length ? matchSurvey(fp, surveys, taken) : null;
       const building = buildingOf(local, w.tags, centreOf, roads, rules, translate, surveyed, detailed,
-        realistic ? { lat: centre.lat, lon: centre.lon, seed: w.id, shop: shops.some(p => insidePolygon(p, fp)) || (surveyed && surveyed.use === 'Commercial et services') } : null);
+        realistic ? { lat: centre.lat, lon: centre.lon, seed: w.id, shop: shops.some(p => insidePolygon(p, fp)) || (surveyed && surveyed.use === 'Commercial et services') } : null,
+        entrances.filter(e => distanceToRing(e, fp) <= ENTRANCE_REACH));
       if (!building) { out.skipped.invalid++; continue; }
       const entry = { building, x: round(centreOf.x), z: round(centreOf.z), osmId: w.id };
       if (surveyed) entry.surveyId = surveyed.id;
@@ -473,12 +524,15 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
     if (Math.abs(centreOf.x) > h || Math.abs(centreOf.z) > h) continue;
     const local = fp.map(p => roundPoint({ x: p.x - centreOf.x, z: p.z - centreOf.z }));
     const building = buildingOf(local, { building: buildingTypeOf(s) }, centreOf, roads, rules, translate, s, detailed,
-      realistic ? { lat: centre.lat, lon: centre.lon, seed: s.id, shop: s.use === 'Commercial et services' } : null);
+      realistic ? { lat: centre.lat, lon: centre.lon, seed: s.id, shop: s.use === 'Commercial et services' } : null,
+      entrances.filter(e => distanceToRing(e, fp) <= ENTRANCE_REACH));
     if (!building) continue;
     taken.add(s.id);
     out.buildings.push({ building, x: round(centreOf.x), z: round(centreOf.z), surveyId: s.id });
   }
   if (taken.size) out.surveyAttribution = BDTOPO_ATTRIBUTION;
+  // How many entrances OSM maps here (#474a: their coverage is measured on real imports, in the log).
+  out.entrances = entrances.length;
   // The Ground: paved when the zone is built up (BUILT_UP), else left to the Scene's default (grass).
   let built = 0;
   for (const b of out.buildings) {

@@ -422,6 +422,7 @@ async function importer(){
       if (s && s.json) survey = readBdTopo(s.json, centre);
     }
     const translated = translateOsm(extrait.json, { centre, halfSize, country: country || 'world', translate: tr, survey, detail: niveau });
+    console.info(`[real-place] ${translated.buildings.length} buildings, ${translated.entrances} OSM entrances`);
     await etape('relief');
     const relief = await reliefDuLieu(centre, halfSize, country, (sub) => montrerLaProgression('relief', sub), arrete);
     if (arrete()) return;

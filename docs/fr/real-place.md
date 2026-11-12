@@ -35,7 +35,9 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
   publics, à deux pans sinon ; un toit plat sans couverture connue est gris (`#8f8b84`, gravillons ou
   bitume), et le rendu dessine la dalle du niveau le plus haut dans la couverture du toit plat
   (batiment-3d.js). Des fenêtres sur chaque mur de 2 m ou plus (une tous les 2,6 m) ; une
-  porte sur le mur du rez-de-chaussée (1,5 m ou plus) le plus proche d'une route ou d'un chemin. Une
+  porte à chaque entrée cartographiée dans OSM sur le contour (nœuds `entrance=*` à moins de 1,5 m,
+  `doorsOf` : sur le mur du rez-de-chaussée où elle se trouve, à sa place, une porte de garage de 2,4 m), sinon
+  une porte sur le mur du rez-de-chaussée (1,5 m ou plus) le plus proche d'une route ou d'un chemin. Une
   emprise que l'éditeur refuse (qui se croise) est écartée. Chaque bâtiment vient avec son centre (`x`,
   `z`) : l'import le pose en Élément bâtiment (`creerElementBatiment`, `wxFloor`/`wzFloor`).
 - **Tracés** (`pathKindOf`) : les routes `highway` → `route` (largeur selon le type ; une ligne centrale

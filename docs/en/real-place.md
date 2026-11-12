@@ -34,7 +34,9 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
   `roof:shape`, else flat for commercial and public types, gabled otherwise; a flat roof with no known
   covering is grey (`#8f8b84`, gravel or bitumen), and the renderer draws the highest level's slab in the
   flat roof's covering (batiment-3d.js). Windows on every wall of
-  2 m or more (one per 2.6 m); a door on the ground-floor wall (1.5 m or more) nearest a road or path.
+  2 m or more (one per 2.6 m); doors at the OSM entrances on the outline (`entrance=*` nodes within 1.5 m,
+  `doorsOf`: on the ground-floor wall they stand on, where they stand, a garage door 2.4 m wide), else one on
+  the ground-floor wall (1.5 m or more) nearest a road or path.
   A footprint the editor refuses (crossing itself) is skipped. Each building comes with its centre
   (`x`, `z`): the importer places it as a building Element (`creerElementBatiment`, `wxFloor`/`wzFloor`).
 - **Paths** (`pathKindOf`): `highway` roads → `route` (width by type; a centre line (`markingOf`) with 2
