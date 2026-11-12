@@ -41,6 +41,19 @@ jamais évincée : 0 garde seulement celle-là.
 Les compilations GLSL sont payées **une fois par configuration et par session** : le nombre de lumières
 et d'ombres entre dans la clé du programme. Déplacer ou recolorer ne recompile rien.
 
+## Beaucoup de bâtiments (un lieu réel)
+
+- **Un bâtiment placé est regroupé par matière** (`mergeByMaterial3D`, merge-meshes-3d.js, appelé par
+  `buildPropRig3D`) : ses maillages simples deviennent un maillage par matière, dans le repère du
+  bâtiment ; un bâtiment coûte quelques appels de dessin au lieu d'environ 300. Mêmes triangles, matières
+  et boîte. Gardés à part : maillages articulés, instanciés ou multi-matières, maillages ou ancêtres
+  porteurs de userData (masque du Sol, mobilier), un ordre de rendu, une couche, un ancêtre masqué. Un
+  bâtiment coupé à un niveau, avec des parties masquées ou ses murs de devant retirés reste en morceaux
+  (ces réglages le reconstruisent souvent). Les groupes vides sont retirés.
+- **Le relief effectif est gardé d'une image à l'autre** (`reliefEffectif3D`, voir terrain-editor.md).
+- Mesuré sur l'Écusson de Montpellier (300 bâtiments, avant les deux) : 78 000 appels de dessin et
+  1,6 M de triangles par image ; 1,6 à 2,3 s par image en bougeant la caméra, 11,9 s à l'ouverture.
+
 ## Mesurer
 
 **La sonde de l'application** (`src/perf-probe.js`), dans la console (F12) : `sonde.demarrer()`,

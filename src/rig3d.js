@@ -49,6 +49,7 @@ import { isImportedModel } from './model-store.js';
 // #454a-4 : le bâtiment placé, dessiné par le MÊME constructeur que l'aperçu de l'éditeur.
 import { construireBatiment3D, materiauxBatiment3D, MARQUE_SOL_PERCE } from './batiment-3d.js';
 import { OBJ_TYPE_BATIMENT, signatureDuBatiment, niveauDeCoupe, masquesDe } from './batiment-element.js';
+import { mergeByMaterial3D } from './merge-meshes-3d.js';
 // cf. son en-tête : Object3D.clone() casse le lien SkinnedMesh↔Skeleton, faussant l'échelle
 // appliquée par placeRigCentered3D pour tout modèle importé articulé.
 import { cloneSkinned } from './vendor/SkeletonUtils.js';
@@ -4384,6 +4385,10 @@ export function buildPropRig3D(objType, colorHex, o){
     const devant = mursDevantRetenus(o);
     // #454g : un bâtiment placé PERCE le Sol sur l'emprise de ses sous-sols.
     const groupe = construireBatiment3D(THREE, b, _materiauxBatiment3D, { jusquA, masques, percerLeSol: true, devant });
+    // Shown whole (no cut, no hidden part, no front walls taken away): its pieces merged by material, a few
+    // draw calls instead of about 300 (merge-meshes-3d.js). Cut or masked, it stays in pieces: those
+    // settings change often and rebuild it.
+    if (!(jusquA || masques || devant)) mergeByMaterial3D(THREE, groupe);
     // #459a : COUPÉ, il garde la place et la taille du bâtiment entier. Le rendu centre la BOÎTE du
     // rig et la met à la hauteur réelle : une boîte rétrécie par la coupe le grandirait et le
     // déplacerait. Le bâtiment entier est donc joint, INVISIBLE et hors de la couche des rayons

@@ -39,6 +39,18 @@ interface size. The displayed Page is never evicted: 0 keeps only that one.
 GLSL compilations are paid **once per configuration and per session**: the number of lights and shadows
 enters the program key. Moving or recolouring recompiles nothing.
 
+## Many buildings (a real place)
+
+- **A placed building is merged by material** (`mergeByMaterial3D`, merge-meshes-3d.js, called by
+  `buildPropRig3D`): its plain meshes become one mesh per material, in the building's frame, so a
+  building costs a few draw calls instead of about 300. Same triangles, materials and box. Kept apart:
+  skinned, instanced or multi-material meshes, meshes or ancestors with userData (ground mask,
+  furniture), a render order, a layer, a hidden ancestor. A building cut at a level, with hidden parts or
+  its front walls taken away stays in pieces (those settings rebuild it often). Empty groups are removed.
+- **The effective relief is kept between frames** (`reliefEffectif3D`, see terrain-editor.md).
+- Measured on Montpellier's Écusson (300 buildings, before both): 78 000 draw calls and 1.6 M triangles
+  per frame; 1.6 to 2.3 s per frame while moving the camera, 11.9 s to open.
+
 ## Measuring
 
 **The application's probe** (`src/perf-probe.js`), in the console (F12): `sonde.demarrer()`,
