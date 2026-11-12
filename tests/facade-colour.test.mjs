@@ -71,7 +71,7 @@ describe('the colour of what is left', () => {
     for (let i = 0; i < 4; i++) pixels.push([130, 170, 225]);     // sky
     for (let i = 0; i < 4; i++) pixels.push([70, 110, 60]);       // a tree
     const c = wallColour(pixels);
-    assert.equal(c.colour, '#d6c4a1', 'the median of each channel of the wall');
+    assert.equal(c.colour, '#ebe0c4', 'the median of the wall (a light sand), brought to the nearest facade colour (a cream)');
     assert.ok(c.kept > 0.55 && c.kept < 0.6);
   });
   test('too little wall: no colour', () => {
@@ -85,5 +85,19 @@ describe('what is not a wall\'s colour', () => {
     assert.equal(wallColour(flat([134, 39, 180])), null, 'purple');
     assert.equal(wallColour(flat([63, 60, 55])), null, 'near black');
     assert.ok(wallColour(flat([214, 196, 160])), 'a light stone is');
+  });
+});
+
+describe('the facade colours a reading is brought to', async () => {
+  const { FACADE_COLOURS } = await import('../src/facade-colour.js');
+  const flat = (c, n = 20) => Array.from({ length: n }, () => c.slice());
+  test('a grey-blue reading (a facade in the shade, lit by the sky) becomes a grey, not lavender', () => {
+    const c = wallColour(flat([141, 137, 143])).colour;
+    assert.ok(FACADE_COLOURS.includes(c));
+    assert.ok(['#a9a49b', '#c9c4bb', '#8f8a82', '#d7d2c3'].includes(c), c);
+  });
+  test('a warm reading becomes an ochre or a pink', () => {
+    const c = wallColour(flat([200, 150, 110])).colour;
+    assert.ok(['#d6a77a', '#e3c690', '#d9c39a', '#c98f7a', '#d9b3a0'].includes(c), c);
   });
 });

@@ -89,9 +89,10 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    instances publiques sans clé ni limite d'abord, l'instance principale, surchargée, en dernier), le premier
    qui répond en entier (une réponse finie par une `remark` d'erreur d'exécution est incomplète, et le
    serveur suivant est interrogé) ; gardé en mémoire. Tous en échec : `busy`, ou `network` quand aucun n'a
-   pu être joint. Avant l'extrait, chaque serveur reçoit en même temps la plus petite requête (`overpassOrder`,
-   `probeOverpass`, 6 s au plus) : l'extrait leur est demandé dans l'ordre où ils ont répondu (Overpass ne
-   publie aucune charge lisible par une application). La réponse est lue en flux : `realplace:osmProgress` envoie le
+   pu être joint. Les serveurs font la course, en décalé (`overpassRace`) : le premier est interrogé ; après 20 s sans
+   bonne réponse (`HEDGE_AFTER_MS`), ou dès qu'il échoue, le suivant aussi ; la première réponse complète
+   l'emporte et les autres sont arrêtés ; un serveur en échec dans la session passe en dernier
+   (`overpassOrder`). La réponse est lue en flux : `realplace:osmProgress` envoie le
    serveur interrogé et les octets reçus (toutes les 200 ms au plus), et la fenêtre les montre sous les
    étapes avec les secondes écoulées (`downloadDetail`). Chaque tentative est journalisée
    (`[real-place] overpass <hôte>` : résultat, durée, taille). Le pays : celui du lieu choisi, sinon `realplace:country` (Nominatim
@@ -107,13 +108,15 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    (canal au sud de 46° N, plates au nord), ardoise, métal, béton ; colombages et murs enduits gardent l'enduit uni). Sans réponse : OSM seul. Au niveau
    « Réaliste », la couleur des façades d'après les photos de rue (`couleursDesFacades`, facade-colour.js) :
    les photos Panoramax de la zone (`realplace:streetPhotos`, sans clé, 500 au plus), pour chaque bâtiment la
-   photo qui voit le mieux un de ses murs du rez-de-chaussée (`bestView` : de 4 à 35 m, à moins de 60° de face,
+   photo qui voit le mieux un de ses murs du rez-de-chaussée (`bestView` : de 4 à 35 m, à moins de 75° de face (les photos d'une rue en voient les façades de biais),
    le mur dans le champ d'une photo plate, aucune autre emprise sur la ligne de vue), chaque photo téléchargée
    une fois (`realplace:streetPhoto`, seulement depuis les hôtes donnés par la recherche ; 60 au plus, les plus
    utiles d'abord), 35 points de la partie centrale du mur projetés dedans (`samplePoints` : équirectangulaire
    pour un 360°, perspective sinon, caméra à 2,5 m), la moyenne de 5 × 5 pixels en chacun, et la médiane de ce
    qui reste une fois écartés le sombre, le ciel, le vert et les reflets (`wallColour` ; rien sous 10 points ou
-   30 %) : la façade du bâtiment la prend, sa texture gardée. Le crédit nomme l'instance et la licence, jamais
+   30 %, ni un résultat vif ou sombre), ramenée à la plus proche des couleurs de façade d'une rue
+   (`FACADE_COLOURS` : enduits, pierres, briques, d'abord par la teinte : le bleu d'une façade à l'ombre devient
+   un gris) : la façade du bâtiment la prend, sa texture gardée. Le crédit nomme l'instance et la licence, jamais
    le contributeur. Puis le relief : `planRelief` pour le pays, ses requêtes envoyées
    par `realplace:altitudes` (seulement vers `ALTITUDE_HOSTS`, au rythme du fournisseur), `assemble` ; en cas
    d'échec le fournisseur suivant, et sans aucun un Sol plat.

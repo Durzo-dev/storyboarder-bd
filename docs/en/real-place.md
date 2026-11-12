@@ -79,8 +79,9 @@ The ground under buildings needs nothing: the rendered relief is already flatten
 2. The extract: `realplace:osm` with the zone's bounding box; Overpass servers in order (`OVERPASS`: the
    public instances without key or limit first, the overloaded main instance last), the first that answers
    completely (an answer ending with a runtime-error `remark` is incomplete, and the next server is asked);
-   cached. Before the extract, every server is asked the smallest query at once (`overpassOrder`, `probeOverpass`, 6 s at most):
-   the extract goes to them in the order they answered (Overpass publishes no load an application can read). All failed:
+   cached. The servers race, staggered (`overpassRace`): the first is asked; after 20 s without a good answer
+   (`HEDGE_AFTER_MS`), or as soon as it fails, the next one too; the first complete answer wins and the others
+   are stopped; a server that failed in the session is asked last (`overpassOrder`). All failed:
    `busy`, or `network` when none could be reached. The answer is read as a stream: `realplace:osmProgress` sends the server
    asked and the bytes received (every 200 ms at most), and the window shows them under the steps with the
    seconds spent (`downloadDetail`). Each attempt is logged (`[real-place] overpass <host>`: outcome,
@@ -97,12 +98,13 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    plain render). Without an answer: OSM alone. At the « Realistic » level, the facades' colours from street
    photos (`couleursDesFacades`, facade-colour.js): Panoramax's photos of the zone (`realplace:streetPhotos`,
    no key, at most 500), for each building the photo that best sees one of its ground-floor walls (`bestView`:
-   4 to 35 m, at most 60° from facing it, the wall in a flat photo's field, no other outline across the sight
+   4 to 35 m, at most 75° from facing it (a street's photos see its facades at a slant), the wall in a flat photo's field, no other outline across the sight
    line), each photo fetched once (`realplace:streetPhoto`, only from the hosts the search gave; 60 at most, the
    most useful first), 35 points of the wall's middle part projected into it (`samplePoints`: equirectangular
    for a 360°, perspective otherwise, camera at 2.5 m), the mean of 5 × 5 pixels at each, and the median of
-   what is left once dark, sky, green and glare are set aside (`wallColour`; none under 10 points or 30 %): the
-   building's facade takes it, its texture kept. The credit names the instance and the licence, never the
+   what is left once dark, sky, green and glare are set aside (`wallColour`; none under 10 points or 30 %, nor a
+   vivid or dark result), brought to the nearest of the street's facade colours (`FACADE_COLOURS`: renders,
+   stones, bricks, by hue first: a shaded facade's blue cast becomes a grey): the building's facade takes it, its texture kept. The credit names the instance and the licence, never the
    contributor. Then the relief: `planRelief` for the country, its requests sent by
    `realplace:altitudes` (only to `ALTITUDE_HOSTS`, at the provider's rate), `assemble`; on failure the next
    provider, and with none a flat Ground.

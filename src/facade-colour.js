@@ -14,8 +14,12 @@
 const DEG = Math.PI / 180;
 /** A photo sees a wall from this far to this far (metres): closer, the wall overflows it; farther, too small. */
 const NEAREST = 4, FARTHEST = 35;
-/** The most a wall may be turned away from the camera and still be read (degrees from facing it). */
-const MOST_OBLIQUE = 60;
+/**
+ * The most a wall may be turned away from the camera and still be read (degrees from facing it). A street's
+ * photos are mostly taken along it, so its facades are seen at a slant (seen: at 60°, 14 buildings of 207 read
+ * in the Écusson, from 18 photos of 486).
+ */
+const MOST_OBLIQUE = 75;
 /** The camera's height above the street (metres): a car's roof or a raised hand. */
 const CAMERA_HEIGHT = 2.5;
 
@@ -76,7 +80,7 @@ export function bestView(building, photos, others = []){
       if (angle > MOST_OBLIQUE) continue;
       // In the field: a flat photo must look towards the wall's middle; a 360° sees everything.
       const off = Math.abs(wrap180(bearing(p, f.mid) - p.yaw));
-      if (p.fov < 360 && off > p.fov / 2 * 0.85) continue;
+      if (p.fov < 360 && off > p.fov / 2 * 0.95) continue;
       // Nothing in between: no other building's outline crosses the sight line.
       const blocked = others.some(o => o.some((q, i) => segmentsCross(p, f.mid, q, o[(i + 1) % o.length])));
       if (blocked) continue;
@@ -140,6 +144,27 @@ export function wallColour(pixels){
   // not dark (lightness 80 or more); otherwise the facade keeps the style's colour.
   const max = Math.max(r, g, b), min = Math.min(r, g, b);
   if ((max - min) / Math.max(1, max) > 0.45 || 0.299 * r + 0.587 * g + 0.114 * b < 80) return null;
-  const hex = (x) => Math.round(x).toString(16).padStart(2, '0');
-  return { colour: `#${hex(r)}${hex(g)}${hex(b)}`, kept: kept.length / pixels.length };
+  return { colour: nearestFacadeColour([r, g, b]), kept: kept.length / pixels.length };
+}
+
+/**
+ * THE FACADE COLOURS a reading is brought to: the renders, stones and bricks of a street (seen: read as is,
+ * the photos' colours came out lavender or grey-blue, a facade in the shade lit by the sky). A reading takes
+ * the nearest by its HUE (its share of red, green and blue), then by its lightness raised for the photo's
+ * shade; a blue cast falls to a grey, a warm reading to its ochre or pink.
+ */
+export const FACADE_COLOURS = Object.freeze(['#efe9dc', '#ebe0c4', '#e6dccb', '#ddd0b5', '#d9c39a', '#e3c690', '#d6a77a',
+  '#d9b3a0', '#c98f7a', '#b06a52', '#d7d2c3', '#c9c4bb', '#a9a49b', '#8f8a82']);
+function nearestFacadeColour([r, g, b]){
+  const rgb = (h) => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const share = ([x, y, z]) => { const s = Math.max(1, x + y + z); return [x / s, y / s, z / s]; };
+  const light = ([x, y, z]) => 0.299 * x + 0.587 * y + 0.114 * z;
+  const ps = share([r, g, b]), pl = Math.min(255, light([r, g, b]) * 1.25 + 20);
+  let best = FACADE_COLOURS[0], d0 = Infinity;
+  for (const c of FACADE_COLOURS) {
+    const v = rgb(c), s = share(v);
+    const d = Math.hypot(ps[0] - s[0], ps[1] - s[1], ps[2] - s[2]) + 0.12 * Math.abs(pl - light(v)) / 255;
+    if (d < d0) { d0 = d; best = c; }
+  }
+  return best;
 }

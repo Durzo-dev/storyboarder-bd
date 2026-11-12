@@ -177,52 +177,66 @@ async function osm(bbox, progress = null){
   const key = JSON.stringify(bbox);
   const cached = extracts.get(key);
   if (cached) return { json: cached };
-  const failures = [];
   _importAnnule = false;
-  if (progress) progress({ server: 0, servers: OVERPASS.length, bytes: 0, probing: true });
-  const order = await overpassOrder();
-  for (let k = 0; k < order.length; k++) {
-    const url = order[k], host = new URL(url).host, started = Date.now();
-    const tell = (bytes) => { if (progress) progress({ server: k + 1, servers: OVERPASS.length, bytes }); };
-    let told = 0;
-    tell(0);
-    const r = await request(url, { method: 'POST', body: `data=${encodeURIComponent(overpassQuery(bbox))}`, timeout: OVERPASS_TIMEOUT_MS,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      onBytes: (bytes) => { const now = Date.now(); if (now - told >= PROGRESS_EVERY_MS) { told = now; tell(bytes); } } });
-    // ⚠️ AN OVERPASS ANSWER CAN BE « 200 OK » AND INCOMPLETE: a query that ran out of time or memory ends with
-    // a `remark` (« runtime error: … ») after the elements it had. Taken, it would make a Scene with
-    // holes; it is a failure, and the next server is asked.
-    const remark = r.json && typeof r.json.remark === 'string' && /error/i.test(r.json.remark) ? r.json.remark : null;
-    const good = r.json && Array.isArray(r.json.elements) && !remark;
-    console.info(`[real-place] overpass ${host}: ${good ? 'ok' : (remark ? 'incomplete' : (r.error || 'response'))}${r.status ? ` (HTTP ${r.status})` : ''}`
-      + ` in ${Date.now() - started} ms, ${r.size || 0} bytes${remark ? ` (${remark.slice(0, 120)})` : ''}`);
-    if (good) { tell(r.size || 0); extracts.set(key, r.json); return { json: r.json, server: host }; }
-    if (r.error === 'cancelled' || _importAnnule) return { error: 'cancelled' };
-    failures.push(remark ? 'incomplete' : (r.error || 'response'));
-  }
-  return { error: overpassFailure(failures) };
+  return overpassRace(bbox, key, progress);
 }
 
 /**
- * THE MOST AVAILABLE SERVER, ASKED FIRST. Overpass publishes no load an application can read (an instance's
- * /api/status only speaks of the caller's own slots), so each server is asked the smallest query there is,
- * all at once, and the extract goes to them in the order they answered (seen: the first of the list silent
- * for 90 s while the second answered in 18 s; on average 80 s per import). One that does not answer within
- * PROBE_TIMEOUT_MS comes last; it is still tried.
+ * ⚠️ THE SERVERS RACE, STAGGERED (« hedged » requests). Asked one after the other, a silent server cost its
+ * whole timeout before the next was asked (seen: 90 s, twice, on one import; probing them first with a tiny
+ * query told nothing, all three silent at 6 s while one of them then answered in 37 s). The first server is
+ * asked; if it has given nothing good after HEDGE_AFTER_MS, or as soon as it fails, the next one too, and so
+ * on; the first complete answer wins and the others are stopped. Never more than one request per server.
+ * A server that failed in this session is asked last (`_overpassFailures`).
  */
-const PROBE_QUERY = '[out:json][timeout:5];node(1);out ids;';
-const PROBE_TIMEOUT_MS = 6000;
-async function probeOverpass(url){
-  const started = Date.now();
-  const r = await request(url, { method: 'POST', body: `data=${encodeURIComponent(PROBE_QUERY)}`, timeout: PROBE_TIMEOUT_MS,
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
-  return r.json && Array.isArray(r.json.elements) ? Date.now() - started : Infinity;
+const HEDGE_AFTER_MS = 20000;
+const _overpassFailures = new Map();
+function overpassOrder(){
+  return OVERPASS.map((url, i) => ({ url, i, f: _overpassFailures.get(url) || 0 })).sort((a, b) => (a.f - b.f) || (a.i - b.i)).map(x => x.url);
 }
-/** The servers, the quickest to answer the probe first (a tie keeps the list's order). */
-async function overpassOrder(){
-  const times = await Promise.all(OVERPASS.map(probeOverpass));
-  console.info(`[real-place] overpass probe: ${OVERPASS.map((u, i) => `${new URL(u).host} ${Number.isFinite(times[i]) ? `${times[i]} ms` : 'no answer'}`).join(', ')}`);
-  return OVERPASS.map((url, i) => ({ url, t: times[i], i })).sort((a, b) => (a.t - b.t) || (a.i - b.i)).map(x => x.url);
+function overpassRace(bbox, key, progress){
+  const order = overpassOrder();
+  return new Promise((resolve) => {
+    const failures = [], controllers = [];
+    let started = 0, finished = 0, done = false, timer = null, told = 0, most = 0;
+    const tell = (bytes) => { if (progress) progress({ server: started, servers: OVERPASS.length, bytes }); };
+    const finish = (result) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      for (const c of controllers) { c.annule = true; c.abort(); }
+      resolve(result);
+    };
+    const hedge = () => { clearTimeout(timer); if (started < order.length) timer = setTimeout(() => { launch(); hedge(); }, HEDGE_AFTER_MS); };
+    function launch(){
+      if (done || started >= order.length) return;
+      const url = order[started++], host = new URL(url).host, t0 = Date.now();
+      tell(most);
+      request(url, { method: 'POST', body: `data=${encodeURIComponent(overpassQuery(bbox))}`, timeout: OVERPASS_TIMEOUT_MS,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        onController: (c) => controllers.push(c),
+        onBytes: (bytes) => { most = Math.max(most, bytes); const now = Date.now(); if (now - told >= PROGRESS_EVERY_MS) { told = now; tell(most); } } })
+        .then((r) => {
+          finished++;
+          if (done) return;
+          // ⚠️ AN OVERPASS ANSWER CAN BE « 200 OK » AND INCOMPLETE: a query that ran out of time or memory ends
+          // with a `remark` (« runtime error: … ») after the elements it had. Taken, it would make a Scene with
+          // holes; it is a failure.
+          const remark = r.json && typeof r.json.remark === 'string' && /error/i.test(r.json.remark) ? r.json.remark : null;
+          const good = r.json && Array.isArray(r.json.elements) && !remark;
+          console.info(`[real-place] overpass ${host}: ${good ? 'ok' : (remark ? 'incomplete' : (r.error || 'response'))}${r.status ? ` (HTTP ${r.status})` : ''}`
+            + ` in ${Date.now() - t0} ms, ${r.size || 0} bytes${remark ? ` (${remark.slice(0, 120)})` : ''}`);
+          if (good) { extracts.set(key, r.json); tell(r.size || 0); finish({ json: r.json, server: host }); return; }
+          if (r.error === 'cancelled' || _importAnnule) { finish({ error: 'cancelled' }); return; }
+          _overpassFailures.set(url, (_overpassFailures.get(url) || 0) + 1);
+          failures.push(remark ? 'incomplete' : (r.error || 'response'));
+          if (started < order.length) { launch(); hedge(); }
+          else if (finished === started) finish({ error: overpassFailure(failures) });
+        });
+    }
+    launch();
+    hedge();
+  });
 }
 
 /**

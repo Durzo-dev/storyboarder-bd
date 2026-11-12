@@ -143,16 +143,16 @@ describe('real place, the Overpass servers', () => {
   });
 });
 
-describe('real place, the most available Overpass server', () => {
-  test('all are probed at once with the smallest query; the extract goes to them in the order they answered', () => {
-    const net = readFileSync(new URL('../electron/bibliotheque/real-place.js', import.meta.url), 'utf8');
-    assert.match(net, /const times = await Promise\.all\(OVERPASS\.map\(probeOverpass\)\);/);
-    assert.match(net, /\.sort\(\(a, b\) => \(a\.t - b\.t\) \|\| \(a\.i - b\.i\)\)/);
-    assert.match(net, /const order = await overpassOrder\(\);/);
+describe('real place, the Overpass servers race, staggered', () => {
+  const net = readFileSync(new URL('../electron/bibliotheque/real-place.js', import.meta.url), 'utf8');
+  test('the next server is asked after 20 s without a good answer, or at once when one fails; the first good answer wins', () => {
+    assert.match(net, /const HEDGE_AFTER_MS = 20000;/);
+    assert.match(net, /if \(started < order\.length\) \{ launch\(\); hedge\(\); \}/);
+    assert.match(net, /for \(const c of controllers\) \{ c\.annule = true; c\.abort\(\); \}/, 'the others stopped');
   });
-  test('the window says it is looking for a server', async () => {
-    const { downloadDetail } = await import('../src/real-place-import.js');
-    assert.equal(downloadDetail({ probing: true }, 1), 'Recherche du serveur le plus disponible…');
+  test('a server that failed in the session is asked last; no probe any more', () => {
+    assert.match(net, /_overpassFailures\.set\(url, \(_overpassFailures\.get\(url\) \|\| 0\) \+ 1\);/);
+    assert.doesNotMatch(net, /probeOverpass/);
   });
 });
 
