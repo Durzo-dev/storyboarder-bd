@@ -99,6 +99,11 @@ function overpassQuery({ south, west, north, east }){
 }
 
 const extracts = sources.memoireBornee(4, 40 * 1024 * 1024);
+/**
+ * The server that last gave an extract, asked first next time (seen: the first of the list silent for 90 s,
+ * the second answering in 18 s; every import after that waited the 90 s again).
+ */
+let lastGood = null;
 /** Bytes received are reported at most this often (the window redraws its line each time). */
 const PROGRESS_EVERY_MS = 200;
 /**
@@ -113,8 +118,9 @@ async function osm(bbox, progress = null){
   const cached = extracts.get(key);
   if (cached) return { json: cached };
   const failures = [];
-  for (let k = 0; k < OVERPASS.length; k++) {
-    const url = OVERPASS[k], host = new URL(url).host, started = Date.now();
+  const order = lastGood ? [lastGood, ...OVERPASS.filter(u => u !== lastGood)] : OVERPASS;
+  for (let k = 0; k < order.length; k++) {
+    const url = order[k], host = new URL(url).host, started = Date.now();
     const tell = (bytes) => { if (progress) progress({ server: k + 1, servers: OVERPASS.length, bytes }); };
     let told = 0;
     tell(0);
@@ -128,7 +134,7 @@ async function osm(bbox, progress = null){
     const good = r.json && Array.isArray(r.json.elements) && !remark;
     console.info(`[real-place] overpass ${host}: ${good ? 'ok' : (remark ? 'incomplete' : (r.error || 'response'))}${r.status ? ` (HTTP ${r.status})` : ''}`
       + ` in ${Date.now() - started} ms, ${r.size || 0} bytes${remark ? ` (${remark.slice(0, 120)})` : ''}`);
-    if (good) { tell(r.size || 0); extracts.set(key, r.json); return { json: r.json, server: host }; }
+    if (good) { tell(r.size || 0); extracts.set(key, r.json); lastGood = url; return { json: r.json, server: host }; }
     failures.push(remark ? 'incomplete' : (r.error || 'response'));
   }
   return { error: overpassFailure(failures) };

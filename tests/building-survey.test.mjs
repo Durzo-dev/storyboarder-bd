@@ -85,12 +85,15 @@ describe('BD TOPO, what it decides', () => {
     assert.equal(surveyedRoof(null, square(0, 0, 8)), null);
   });
   test('materials: OSM first, then the survey; mixed or rendered walls keep the plain render', () => {
-    assert.deepEqual(wallFinishOf({}, { walls: [1] }), { texture: 'int:trace:muret', couleur: null });
+    assert.deepEqual(wallFinishOf({}, { walls: [1] }), { texture: 'int:trace:muret', couleur: '#d9ccb0' }, 'dressed stone: the stone grain, pale');
     assert.deepEqual(wallFinishOf({}, { walls: [6] }), { texture: 'int:trace:cloture', couleur: null });
     assert.equal(wallFinishOf({}, { walls: [1, 6] }), null, 'half-timbered: its facade is for later');
     assert.equal(wallFinishOf({}, { walls: [3, 4] }), null);
     assert.deepEqual(wallFinishOf({ 'building:colour': 'yellow' }, { walls: [1] }), { texture: null, couleur: '#e2c46a' });
     assert.deepEqual(roofFinishOf({}, { roof: [1] }), { texture: 'int:toit:tuiles-plates', couleur: null });
+    assert.deepEqual(roofFinishOf({}, { roof: [1], south: true }), { texture: 'int:toit:tuiles-canal', couleur: null }, 'the south: barrel tiles');
+    assert.equal(readBdTopo(bd, { lat: 43.61, lon: 3.877 })[0].south, true, 'Montpellier is in the south');
+    assert.equal(survey[0].south, false, 'Eguisheim is not');
     assert.deepEqual(roofFinishOf({}, { roof: [2] }), { texture: 'int:toit:ardoise', couleur: null });
     assert.deepEqual(roofFinishOf({ 'roof:material': 'slate' }, { roof: [1] }), { texture: 'int:toit:ardoise', couleur: null });
     assert.deepEqual(roofFinishOf({ 'roof:colour': '#AA3322' }, null), { texture: null, couleur: '#aa3322' });

@@ -65,7 +65,8 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    instances publiques sans clé ni limite d'abord, l'instance principale, surchargée, en dernier), le premier
    qui répond en entier (une réponse finie par une `remark` d'erreur d'exécution est incomplète, et le
    serveur suivant est interrogé) ; gardé en mémoire. Tous en échec : `busy`, ou `network` quand aucun n'a
-   pu être joint. La réponse est lue en flux : `realplace:osmProgress` envoie le
+   pu être joint. Le serveur qui a répondu est interrogé en premier la fois suivante (`lastGood`, pour la
+   session). La réponse est lue en flux : `realplace:osmProgress` envoie le
    serveur interrogé et les octets reçus (toutes les 200 ms au plus), et la fenêtre les montre sous les
    étapes avec les secondes écoulées (`downloadDetail`). Chaque tentative est journalisée
    (`[real-place] overpass <hôte>` : résultat, durée, taille). Le pays : celui du lieu choisi, sinon `realplace:country` (Nominatim
@@ -77,8 +78,8 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    (`buildingTypeOf` d'après son usage). Là où OSM ne dit rien, le relevé décide : les niveaux d'après la
    hauteur à l'égout (`hauteur`, du sol au point le plus bas du toit), le toit plat sous 0,5 m de montée,
    sinon sa pente sur la demi-largeur étroite (`surveyedRoof`), les revêtements de façade et de toit d'après
-   les codes de matériaux du cadastre (`wallFinishOf`, `roofFinishOf` : pierre, bois, tuiles plates, ardoise,
-   métal, béton ; colombages et murs enduits gardent l'enduit uni). Sans réponse : OSM seul. Puis le relief : `planRelief` pour le pays, ses requêtes envoyées
+   les codes de matériaux du cadastre (`wallFinishOf`, `roofFinishOf` : pierre de taille (le grain de pierre teinté clair), bois, tuiles
+   (canal au sud de 46° N, plates au nord), ardoise, métal, béton ; colombages et murs enduits gardent l'enduit uni). Sans réponse : OSM seul. Puis le relief : `planRelief` pour le pays, ses requêtes envoyées
    par `realplace:altitudes` (seulement vers `ALTITUDE_HOSTS`, au rythme du fournisseur), `assemble` ; en cas
    d'échec le fournisseur suivant, et sans aucun un Sol plat.
 4. `sceneContentOf` : Zones et Tracés (`pathObject`, `zoneObject`, nommés par `nomDuTrace`), le relief

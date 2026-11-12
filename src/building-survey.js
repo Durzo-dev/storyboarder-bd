@@ -14,6 +14,13 @@
  */
 import { projector } from './geo-local.js';
 
+/**
+ * South of this latitude, a tiled roof is of barrel tiles (the Midi, the Rhône valley, the South-West); north
+ * of it, of flat tiles. Rough: the real limit is a band, not a line (seen: Montpellier drawn with Alsace's
+ * flat tiles).
+ */
+const SOUTH_OF = 46;
+
 /** The attribution the BD TOPO licence (Etalab 2.0) asks for. */
 export const BDTOPO_ATTRIBUTION = '© IGN, BD TOPO®';
 
@@ -80,6 +87,7 @@ export function readBdTopo(geojson, centre){
       walls: digitsOf(p.materiaux_des_murs),
       roof: digitsOf(p.materiaux_de_la_toiture),
       light: p.construction_legere === true,
+      south: centre.lat < SOUTH_OF,
     });
   }
   return out;
@@ -150,7 +158,12 @@ export function surveyedRoof(survey, footprint){
 // ── Finishes: what the walls and the roof are made of ────────────────────────────────────────────
 
 const STONE = 'int:trace:muret', WOOD = 'int:trace:cloture';
-const ROOF_TILES = 'int:toit:tuiles-plates', SLATE = 'int:toit:ardoise';
+/**
+ * A dressed-stone facade is pale (limestone, sandstone): the stone texture is a dry-stone wall, dark; tinted
+ * this colour it keeps its grain (seen: Montpellier's Écusson, its stone facades drawn brown).
+ */
+const STONE_FACADE = '#d9ccb0';
+const FLAT_TILES = 'int:toit:tuiles-plates', BARREL_TILES = 'int:toit:tuiles-canal', SLATE = 'int:toit:ardoise';
 const METAL = '#8d9399', CONCRETE = '#9a948c', BRICK = '#a65a42';
 const COLOURS = { white: '#f2efe8', beige: '#d8c9a8', cream: '#eee3c6', yellow: '#e2c46a', ochre: '#c99a4b', orange: '#d98c4a',
   red: '#a8483a', brown: '#7a5640', grey: '#9a9a96', gray: '#9a9a96', pink: '#d9a5a0', blue: '#7f97b3', green: '#8fa680', black: '#3a3a3a' };
@@ -172,27 +185,31 @@ const finish = (texture, couleur) => (texture || couleur ? { texture: texture ||
 export function wallFinishOf(tags = {}, survey = null){
   const colour = colourOf(tags['building:colour']);
   const m = tags['building:material'];
-  if (m === 'stone' || m === 'sandstone' || m === 'limestone') return finish(STONE, colour);
+  if (m === 'stone' || m === 'sandstone' || m === 'limestone') return finish(STONE, colour || STONE_FACADE);
   if (m === 'wood') return finish(WOOD, colour);
   if (m === 'brick') return finish(null, colour || BRICK);
   if (colour) return finish(null, colour);
   const d = survey ? survey.walls : [];
-  if (d.length && d.every(n => n === 1 || n === 2)) return finish(STONE, null);
+  if (d.length && d.every(n => n === 1 || n === 2)) return finish(STONE, STONE_FACADE);
   if (d.length && d.every(n => n === 6)) return finish(WOOD, null);
   return null;
 }
 
-/** The roof's finish: OSM first (`roof:material`, `roof:colour`), then the survey's first known material. */
+/**
+ * The roof's finish: OSM first (`roof:material`, `roof:colour`), then the survey's first known material.
+ * Tiles: barrel tiles in the south (`survey.south`, SOUTH_OF), flat tiles elsewhere.
+ */
 export function roofFinishOf(tags = {}, survey = null){
   const colour = colourOf(tags['roof:colour']);
   const m = tags['roof:material'];
-  if (m === 'roof_tiles' || m === 'tile' || m === 'tiles') return finish(ROOF_TILES, colour);
+  const tiles = survey && survey.south ? BARREL_TILES : FLAT_TILES;
+  if (m === 'roof_tiles' || m === 'tile' || m === 'tiles') return finish(tiles, colour);
   if (m === 'slate') return finish(SLATE, colour);
   if (m === 'metal' || m === 'zinc' || m === 'copper' || m === 'tin') return finish(null, colour || METAL);
   if (m === 'concrete') return finish(null, colour || CONCRETE);
   if (colour) return finish(null, colour);
   const first = survey && survey.roof.length ? survey.roof[0] : 0;
-  if (first === 1) return finish(ROOF_TILES, null);
+  if (first === 1) return finish(tiles, null);
   if (first === 2) return finish(SLATE, null);
   if (first === 3) return finish(null, METAL);
   if (first === 4) return finish(null, CONCRETE);

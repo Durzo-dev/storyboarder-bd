@@ -142,3 +142,11 @@ describe('real place, the Overpass servers', () => {
     assert.match(readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8'), /busy: tr\('The OpenStreetMap servers are busy/);
   });
 });
+
+describe('real place, the Overpass server that answered', () => {
+  test('is asked first next time', () => {
+    const net = readFileSync(new URL('../electron/bibliotheque/real-place.js', import.meta.url), 'utf8');
+    assert.match(net, /const order = lastGood \? \[lastGood, \.\.\.OVERPASS\.filter\(u => u !== lastGood\)\] : OVERPASS;/);
+    assert.match(net, /lastGood = url; return \{ json: r\.json, server: host \};/);
+  });
+});

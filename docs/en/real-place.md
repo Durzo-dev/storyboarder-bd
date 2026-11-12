@@ -60,7 +60,8 @@ The ground under buildings needs nothing: the rendered relief is already flatten
 2. The extract: `realplace:osm` with the zone's bounding box; Overpass servers in order (`OVERPASS`: the
    public instances without key or limit first, the overloaded main instance last), the first that answers
    completely (an answer ending with a runtime-error `remark` is incomplete, and the next server is asked);
-   cached. All failed: `busy`, or `network` when none could be reached. The answer is read as a stream: `realplace:osmProgress` sends the server
+   cached. The server that answered is asked first next time (`lastGood`, for the session). All failed:
+   `busy`, or `network` when none could be reached. The answer is read as a stream: `realplace:osmProgress` sends the server
    asked and the bytes received (every 200 ms at most), and the window shows them under the steps with the
    seconds spent (`downloadDetail`). Each attempt is logged (`[real-place] overpass <host>`: outcome,
    duration, size). The country: the chosen place's, else `realplace:country` (Nominatim reverse).
@@ -71,7 +72,8 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    its use). Where OSM says nothing, the survey decides: levels from the eaves height (`hauteur`, ground to
    lowest point of the roof), the roof flat under 0.5 m of rise, else its pitch over half the narrow width
    (`surveyedRoof`), the facade and roof finishes from the land-registry material codes (`wallFinishOf`,
-   `roofFinishOf`: stone, wood, flat tiles, slate, metal, concrete; half-timbered and rendered walls keep the
+   `roofFinishOf`: dressed stone (the stone grain tinted pale), wood, tiles (barrel tiles south of 46° N, flat
+   tiles north of it), slate, metal, concrete; half-timbered and rendered walls keep the
    plain render). Without an answer: OSM alone. Then the relief: `planRelief` for the country, its requests sent by
    `realplace:altitudes` (only to `ALTITUDE_HOSTS`, at the provider's rate), `assemble`; on failure the next
    provider, and with none a flat Ground.
