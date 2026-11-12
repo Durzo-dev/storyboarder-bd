@@ -52,7 +52,7 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
   polygone devient un masque de Zone peinte en cases de 1 m (`maskOfPolygon`), `world` par
   `mondeDuMasque`.
 - **Éléments** : `natural=tree` → `arbre`, `highway=street_lamp` → `lampadaire`, `traffic_sign` et
-  `highway=stop|give_way` → `panneau_signalisation`, `natural=shrub` → `buisson`.
+  `highway=stop|give_way` → `panneau_signalisation`, `natural=shrub` → `buisson`, `amenity=bench` → `banc`.
 - **Sol** : `builtShare`, l'emprise des bâtiments sur celle de la zone ; à partir de 25 % (`BUILT_UP`), la
   zone est bâtie et le Sol de la Scène est `béton` (`ground`, posé en `panel.groundType`), sinon l'herbe
   par défaut. Parcs, jardins et autres Zones sont peints par-dessus.

@@ -47,7 +47,7 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
   `landuse=residential` and the like are too wide: not a ground. The polygon becomes a painted Zone mask
   of 1 m cells (`maskOfPolygon`), `world` from `mondeDuMasque`.
 - **Elements**: `natural=tree` → `arbre`, `highway=street_lamp` → `lampadaire`, `traffic_sign` and
-  `highway=stop|give_way` → `panneau_signalisation`, `natural=shrub` → `buisson`.
+  `highway=stop|give_way` → `panneau_signalisation`, `natural=shrub` → `buisson`, `amenity=bench` → `banc`.
 - **Ground**: `builtShare`, the buildings' ground area over the zone's; from 25 % (`BUILT_UP`) the zone is
   built up and the Scene's Ground is `béton` (`ground`, laid as `panel.groundType`), otherwise the default
   grass. Parks, gardens and other Zones are painted over it.

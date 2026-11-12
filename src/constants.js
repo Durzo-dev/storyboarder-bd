@@ -264,7 +264,7 @@ export const OBJECT_TYPE_LABELS = {
   buisson: 'Buisson', arbre: 'Arbre', arbuste: 'Arbuste', fleur: 'Fleur', pot_fleur: 'Pot de fleur',
   oiseau: 'Oiseau', lezard: 'Lézard', loup: 'Loup', griffon: 'Griffon', singe: 'Singe',
   piscine: 'Piscine', barbecue: 'Barbecue',
-  lampadaire: 'Lampadaire', panneau_signalisation: 'Panneau de signalisation',
+  lampadaire: 'Lampadaire', panneau_signalisation: 'Panneau de signalisation', banc: 'Banc',
   tombe: 'Tombe', pierre_tombale: 'Pierre tombale', caveau: 'Caveau',
   banc_eglise: 'Banc d\'église', autel: 'Autel',
 
@@ -294,7 +294,7 @@ export const OBJECT_TYPE_LABELS_EN = {
   buisson: 'Bush', arbre: 'Tree', arbuste: 'Shrub', fleur: 'Flower', pot_fleur: 'Flower pot',
   oiseau: 'Bird', lezard: 'Lizard', loup: 'Wolf', griffon: 'Griffin', singe: 'Monkey',
   piscine: 'Swimming pool', barbecue: 'Barbecue',
-  lampadaire: 'Street lamp', panneau_signalisation: 'Road sign',
+  lampadaire: 'Street lamp', panneau_signalisation: 'Road sign', banc: 'Bench',
   tombe: 'Grave', pierre_tombale: 'Headstone', caveau: 'Vault',
   banc_eglise: 'Pew', autel: 'Altar',
   modele: 'Imported model',
@@ -347,7 +347,7 @@ export const OBJECT_ASPECT_RATIOS = {
   buisson: 1.3 / 1.0, arbre: 1.0 / 1.7, arbuste: 1.1 / 1.3, fleur: 1.0 / 1.5, pot_fleur: 1.0 / 1.3,
   oiseau: 1.4 / 1.0, lezard: 3.5 / 1.0, loup: 1.2 / 1.0, griffon: 2.0 / 1.0, singe: 0.85 / 1.0,
   piscine: 3.5 / 1.0, barbecue: 0.8 / 1.0,
-  lampadaire: 0.6 / 1.0, panneau_signalisation: 0.5 / 1.0,
+  lampadaire: 0.6 / 1.0, panneau_signalisation: 0.5 / 1.0, banc: 1.8 / 0.85,
   tombe: 4.0 / 1.0, pierre_tombale: 0.7 / 1.0, caveau: 1.0 / 1.0,
   banc_eglise: 2.5 / 1.0, autel: 1.8 / 1.0,
   // 1:1 : on ne connaît pas les proportions avant d'avoir lu le fichier (étape 4).
@@ -373,7 +373,7 @@ export const OBJECT_REAL_HEIGHT_M = {
   buisson: 1.0, arbre: 4.5, arbuste: 1.4, fleur: 0.3, pot_fleur: 0.35,
   oiseau: 0.32, lezard: 0.06, loup: 0.9, griffon: 1.6, singe: 0.75,
   piscine: 1.04, barbecue: 0.95,
-  lampadaire: 4.3, panneau_signalisation: 2.6,
+  lampadaire: 4.3, panneau_signalisation: 2.6, banc: 0.85,
   tombe: 0.15, pierre_tombale: 0.68, caveau: 1.8,
   banc_eglise: 0.96, autel: 1.15,
   // Hauteur par défaut d'un modèle importé, en attendant celle que l'utilisateur déclarera. Un

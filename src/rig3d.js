@@ -3527,6 +3527,42 @@ export function buildPanneauSignalisationRig3D(colorHex){
   return group;
 }
 
+/**
+ * A public bench: wooden slats for the seat and the back (the colour tints them), on two metal frames
+ * (feet, arm, the back's support). 1.8 m long, seat at 0.45 m, back up to 0.85 m.
+ */
+export function buildBancRig3D(colorHex){
+  ensureSharedPropMats3D();
+  const group = new THREE.Group();
+  const wood = ensurePropMatsByType3D('banc', colorHex);
+  const L = 1.8, seatH = 0.45, depth = 0.42, top = 0.85;
+  // Seat: three slats, a small gap between them.
+  [-0.13, 0, 0.13].forEach(z => {
+    const slat = new THREE.Mesh(new THREE.BoxGeometry(L, 0.035, 0.11), wood);
+    slat.position.set(0, seatH, z);
+    group.add(slat);
+  });
+  // Back: two slats, leaning back a little.
+  [0.6, 0.76].forEach(y => {
+    const slat = new THREE.Mesh(new THREE.BoxGeometry(L, 0.1, 0.03), wood);
+    slat.position.set(0, y, -depth / 2 - (y - seatH) * 0.15);
+    slat.rotation.x = -0.15;
+    group.add(slat);
+  });
+  // The two metal frames, at both ends: front and back feet, the arm, the back's support.
+  [-L / 2 + 0.12, L / 2 - 0.12].forEach(x => {
+    const front = new THREE.Mesh(new THREE.BoxGeometry(0.05, seatH, 0.05), METAL_MAT_3D);
+    front.position.set(x, seatH / 2, depth / 2 - 0.03);
+    const back = new THREE.Mesh(new THREE.BoxGeometry(0.05, top, 0.05), METAL_MAT_3D);
+    back.position.set(x, top / 2, -depth / 2 - 0.02);
+    back.rotation.x = -0.08;
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.04, depth), METAL_MAT_3D);
+    arm.position.set(x, seatH + 0.2, 0);
+    group.add(front, back, arm);
+  });
+  return group;
+}
+
 // ─── Cemetery ───────────────────────────────────────────────────────────────
 export function buildTombeRig3D(colorHex){
   ensureSharedPropMats3D();
@@ -4305,7 +4341,7 @@ const PROP_RIG_BUILDERS_3D = {
   fleur: buildFleurRig3D, pot_fleur: buildPotFleurRig3D,
   oiseau: buildOiseauRig3D, lezard: buildLezardRig3D, loup: buildLoupRig3D, griffon: buildGriffonRig3D, singe: buildSingeRig3D,
   piscine: buildPiscineRig3D, barbecue: buildBarbecueRig3D,
-  lampadaire: buildLampadaireRig3D, panneau_signalisation: buildPanneauSignalisationRig3D,
+  lampadaire: buildLampadaireRig3D, panneau_signalisation: buildPanneauSignalisationRig3D, banc: buildBancRig3D,
   tombe: buildTombeRig3D, pierre_tombale: buildPierreTombaleRig3D, caveau: buildCaveauRig3D,
   banc_eglise: buildBancEgliseRig3D, autel: buildAutelRig3D,
   [OBJ_TYPE_LUMIERE]: buildLumiereRig3D,

@@ -129,7 +129,7 @@ export const ICONE_TYPE_OBJET = {
   fenetre_ouverte: 'fenetre', porte_ouverte: 'porte', escalier: 'escalier', baie_vitree: 'baie', mur: 'mur', mur_coin: 'mur_coin',
   buisson: 'buisson', arbre: 'arbre', arbuste: 'arbuste', fleur: 'fleur', pot_fleur: 'pot',
   oiseau: 'oiseau', lezard: 'lezard', loup: 'loup', griffon: 'griffon', singe: 'singe',
-  piscine: 'piscine', barbecue: 'barbecue', lampadaire: 'lampadaire', panneau_signalisation: 'panneau',
+  piscine: 'piscine', barbecue: 'barbecue', lampadaire: 'lampadaire', panneau_signalisation: 'panneau', banc: 'banc',
   tombe: 'tombe', pierre_tombale: 'pierre_tombale', caveau: 'caveau', banc_eglise: 'banc', autel: 'autel',
   modele: 'modele', batiment: 'batiment',
 };

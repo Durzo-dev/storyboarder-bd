@@ -200,14 +200,15 @@ describe('OSM translator, streets and grounds (#468b)', async () => {
     const top = t.buildings[0].building.niveaux.reduce((p, q) => (q.elevation > p.elevation ? q : p));
     assert.deepEqual(top.toit.revetement, { texture: null, couleur: '#8f8b84' });
   });
-  test('road signs and shrubs become Elements', () => {
+  test('road signs, shrubs and benches become Elements', () => {
     const nodes = { elements: [
       { type: 'node', id: 1, lat: 48, lon: 7, tags: { traffic_sign: 'FR:B1' } },
       { type: 'node', id: 2, lat: 48, lon: 7.0001, tags: { highway: 'stop' } },
       { type: 'node', id: 3, lat: 48.0001, lon: 7, tags: { natural: 'shrub' } },
+      { type: 'node', id: 4, lat: 48.0001, lon: 7.0001, tags: { amenity: 'bench' } },
     ] };
     const t = translateOsm(nodes, { centre: { lat: 48, lon: 7 }, halfSize: 50 });
-    assert.deepEqual(t.elements.map(e => e.objType), ['panneau_signalisation', 'panneau_signalisation', 'buisson']);
+    assert.deepEqual(t.elements.map(e => e.objType), ['panneau_signalisation', 'panneau_signalisation', 'buisson', 'banc']);
   });
 });
 

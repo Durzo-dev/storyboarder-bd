@@ -366,7 +366,7 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       if (!p || Math.abs(p.x) > h || Math.abs(p.z) > h) continue;
       const objType = tags.natural === 'tree' ? 'arbre' : tags.highway === 'street_lamp' ? 'lampadaire'
         : (tags.traffic_sign || tags.highway === 'stop' || tags.highway === 'give_way') ? 'panneau_signalisation'
-          : tags.natural === 'shrub' ? 'buisson' : null;
+          : tags.natural === 'shrub' ? 'buisson' : tags.amenity === 'bench' ? 'banc' : null;
       if (objType) out.elements.push({ objType, x: round(p.x), z: round(p.z), osmId: e.id });
       continue;
     }

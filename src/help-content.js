@@ -156,7 +156,7 @@ export const HELP_MANUAL_EN = [
   { id: 'lieu_reel', title: 'Scene from a real place', paragraphs: [
     '"New scene" offers two ways: "Manual creation" (an empty Scene) or "From an existing place", which builds it from OpenStreetMap.',
     'For a place, search a town or an address, or click on the map, choose the zone (100 to 400 m), then "Create the scene". A bar shows the progress and the steps.',
-    'Buildings, roads, paths, walls, grounds, trees and street lamps come with their places, and the relief too (from the IGN in France). The windows are generated: the facades are inspired by the place, not surveyed.',
+    'Buildings, roads, pavements, paths, walls, grounds, trees, street lamps, signs and benches come with their places, and the relief too. In France the IGN also gives the buildings\' heights, roofs and materials. The windows are generated: the facades are inspired by the place, not surveyed.',
     'The map and relief credits (OpenStreetMap, and the relief\'s source) follow the Scene into the panels that load it, and appear in the credits of the export.',
   ]},
   { id: 'camera', title: 'Camera', paragraphs: [
@@ -463,7 +463,7 @@ export const HELP_MANUAL_FR = [
   { id: 'lieu_reel', title: 'Scène depuis un lieu réel', paragraphs: [
     "« Nouvelle scène » propose deux voies : « Création manuelle » (une Scène vide) ou « Depuis un lieu existant », qui la construit d'après OpenStreetMap.",
     "Pour un lieu, cherchez une ville ou une adresse, ou cliquez sur la carte, choisissez la zone (100 à 400 m), puis « Créer la scène ». Une barre montre la progression et les étapes.",
-    "Bâtiments, routes, chemins, murets, sols, arbres et lampadaires arrivent à leur place, et le relief aussi (de l'IGN en France). Les fenêtres sont générées : les façades sont inspirées du lieu, pas relevées.",
+    "Bâtiments, routes, trottoirs, chemins, murets, sols, arbres, lampadaires, panneaux et bancs arrivent à leur place, et le relief aussi. En France, l'IGN donne aussi la hauteur, le toit et les matériaux des bâtiments. Les fenêtres sont générées : les façades sont inspirées du lieu, pas relevées.",
     "Les crédits de la carte et du relief (OpenStreetMap, et la source du relief) suivent la Scène dans les Cases qui la chargent, et figurent dans les crédits de l'export.",
   ]},
   { id: 'camera', title: 'Caméra', paragraphs: [
