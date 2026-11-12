@@ -10,6 +10,7 @@
 import { S, tr, newId } from './state.js';
 import { translateOsm, ZONE_SIDE_MAX } from './osm-scene.js';
 import { planRelief } from './real-place-sources.js';
+import { readBdTopo } from './building-survey.js';
 import { sceneContentOf, IMPORT_STEPS, importProgress, downloadDetail } from './real-place-import.js';
 import { projector } from './geo-local.js';
 import { nomDuTrace } from './canvas-tools.js';
@@ -280,7 +281,8 @@ async function importer(){
     V.download = { p: null, since: Date.now() };
     const tick = setInterval(montrerLeTelechargement, 1000);
     let extrait;
-    try { extrait = await api.realPlaceOsm({ south: se.lat, west: nw.lon, north: nw.lat, east: se.lon }); }
+    const bbox = { south: se.lat, west: nw.lon, north: nw.lat, east: se.lon };
+    try { extrait = await api.realPlaceOsm(bbox); }
     finally { clearInterval(tick); if (V) { V.download = null; montrerLeTelechargement(); } }
     if (!V) return;
     if (extrait.error) { dire(erreur(extrait.error), true); return; }
@@ -288,7 +290,15 @@ async function importer(){
     let country = V.country;
     if (!country) { const c = await api.realPlaceCountry(centre.lat, centre.lon); country = (c && c.country) || null; }
     await etape('buildings');
-    const translated = translateOsm(extrait.json, { centre, halfSize, country: country || 'world', translate: tr });
+    // France: the IGN's surveyed buildings (heights, roofs, materials), matched to OSM's. Without them (no
+    // answer, another country) OSM alone, as before.
+    let survey = null;
+    if (country === 'fr' && api.realPlaceBdTopo) {
+      const s = await api.realPlaceBdTopo(bbox);
+      if (!V) return;
+      if (s && s.json) survey = readBdTopo(s.json, centre);
+    }
+    const translated = translateOsm(extrait.json, { centre, halfSize, country: country || 'world', translate: tr, survey });
     await etape('relief');
     const relief = await reliefDuLieu(centre, halfSize, country, (sub) => montrerLaProgression('relief', sub));
     if (!V) return;

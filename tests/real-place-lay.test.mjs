@@ -18,6 +18,7 @@ const { drawPanelScene3D } = await import('../src/scene3d.js');
 const rig = await import('../src/rig3d.js');
 const { GROUND_Y_DEFAULT_3D } = await import('../src/constants.js');
 const { reliefDepuisAltitudes, hauteurDuRelief } = await import('../src/terrain-relief.js');
+const { readBdTopo } = await import('../src/building-survey.js');
 
 const village = JSON.parse(readFileSync(new URL('./fixtures/osm-eguisheim.json', import.meta.url), 'utf8'));
 const centre = { lat: (village.bbox.sud + village.bbox.nord) / 2, lon: (village.bbox.ouest + village.bbox.est) / 2 };
@@ -109,5 +110,22 @@ describe('real place on a slope: the roads stay above the relief', () => {
     // few vertices where a path turns sharply (its profile bends between two grid points), a few centimetres.
     assert.ok(under / vertices < 0.001, `${under} of ${vertices} vertices under the relief`);
     assert.ok(worst < 0.1, `a vertex ${worst.toFixed(2)} m under the relief`);
+  });
+});
+
+describe('real place with the IGN survey: materials and heights drawn', () => {
+  const bd = JSON.parse(readFileSync(new URL('./fixtures/bdtopo-eguisheim.json', import.meta.url), 'utf8'));
+  const surveyed = sceneContentOf(translateOsm(village, { centre, halfSize: HALF, survey: readBdTopo(bd, centre) }), { panelId: 'P', newId: () => `rp${++n}` });
+  test('every building, stone and tiles included, is drawn standing on the Ground', () => {
+    const scene = createScene();
+    const { page, panel } = layRealPlace(scene, { ...surveyed, elements: [] }, { halfSize: HALF, newObject });
+    drawPanelScene3D(document.createElement('canvas').getContext('2d'), panel, { ...page, w: scene.w, h: scene.h, objects: page.objects }, scene.style3d);
+    const T = globalThis.THREE;
+    const buildings = page.objects.filter(o => o.objType === 'batiment');
+    assert.ok(buildings.some(o => o.batiment.facade), 'some with a facade finish');
+    for (const o of buildings) {
+      const box = new T.Box3().setFromObject(rig.ensureObjectRigEntry3D(o).figureGroup);
+      assert.ok(!box.isEmpty() && Math.abs(box.min.y - GROUND_Y_DEFAULT_3D) < 0.1, `${o.name}: drawn, on the Ground`);
+    }
   });
 });

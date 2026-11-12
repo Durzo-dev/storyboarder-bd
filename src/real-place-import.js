@@ -44,6 +44,7 @@ export function sceneContentOf(translated, { panelId, newId, nameOf, altitudes =
   const paths = translated.paths.map(p => pathObject(p, { panelId, newId, nameOf }));
   const r = altitudes ? reliefDepuisAltitudes(altitudes) : null;
   const credits = [translated.attribution];
+  if (translated.surveyAttribution) credits.push(translated.surveyAttribution);
   if (r && reliefCredit) credits.push(reliefCredit);
   return {
     traces: [...zones, ...paths],

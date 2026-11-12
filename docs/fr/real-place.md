@@ -12,6 +12,7 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
 | `src/osm-scene.js` | PUR. Le traducteur OSM : un extrait Overpass (`out geom`) devient bâtiments, Tracés, Zones et Éléments, en mètres. |
 | `src/real-place-sources.js` | PUR. Les sources par pays : fournisseurs de relief (le meilleur d'abord) et règles des bâtiments, avec un repli mondial. |
 | `src/geo-local.js` | PUR. Des mètres locaux autour d'un centre géographique (`projector`). |
+| `src/building-survey.js` | PUR. La BD TOPO de l'IGN (France) lue et appariée aux bâtiments OSM : hauteurs, pente du toit, matériaux. |
 | `src/real-place-import.js` | PUR. La traduction et les altitudes devenues le contenu d'une Scène (`sceneContentOf` : objets Tracés et Zones, relief, crédits). |
 | `src/real-place-ui.js` | La fenêtre d'une Scène neuve : le choix, puis recherche, carte (tuiles OpenStreetMap), taille de la zone, import avec sa progression. |
 | `electron/bibliotheque/real-place.js` | Le réseau (processus principal) : Nominatim, Overpass (avec miroirs), altitudes, tuiles ; identifié par le User-Agent de l'application. |
@@ -66,7 +67,15 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    étapes avec les secondes écoulées (`downloadDetail`). Chaque tentative est journalisée
    (`[real-place] overpass <hôte>` : résultat, durée, taille). Le pays : celui du lieu choisi, sinon `realplace:country` (Nominatim
    inverse).
-3. `translateOsm` avec les règles du pays, puis le relief : `planRelief` pour le pays, ses requêtes envoyées
+3. En France, les bâtiments relevés par l'IGN : `realplace:bdtopo` (WFS `BDTOPO_V3:batiment`, sans clé, seules
+   les propriétés lues), `readBdTopo`, puis `translateOsm` avec les règles du pays et ce `survey`. Chaque
+   bâtiment OSM prend le bâtiment relevé dont le contour contient son centre de gravité, d'aire comparable
+   (0,4 à 2,5 fois) (`matchSurvey`) ; un bâtiment relevé qu'aucun bâtiment OSM ne contient est ajouté
+   (`buildingTypeOf` d'après son usage). Là où OSM ne dit rien, le relevé décide : les niveaux d'après la
+   hauteur à l'égout (`hauteur`, du sol au point le plus bas du toit), le toit plat sous 0,5 m de montée,
+   sinon sa pente sur la demi-largeur étroite (`surveyedRoof`), les revêtements de façade et de toit d'après
+   les codes de matériaux du cadastre (`wallFinishOf`, `roofFinishOf` : pierre, bois, tuiles plates, ardoise,
+   métal, béton ; colombages et murs enduits gardent l'enduit uni). Sans réponse : OSM seul. Puis le relief : `planRelief` pour le pays, ses requêtes envoyées
    par `realplace:altitudes` (seulement vers `ALTITUDE_HOSTS`, au rythme du fournisseur), `assemble` ; en cas
    d'échec le fournisseur suivant, et sans aucun un Sol plat.
 4. `sceneContentOf` : Zones et Tracés (`pathObject`, `zoneObject`, nommés par `nomDuTrace`), le relief
@@ -81,7 +90,8 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
 
 **Crédits** : `panel.creditsDuLieu` (une liste de lignes) sur le canevas de la Scène ; `loadSceneIntoPanel` la
 recopie dans la Case ; l'export les dessine une fois chacune (`creditsDuLieu`, export-credits.js) après les
-crédits des modèles.
+crédits des modèles. Les lignes : OpenStreetMap, la BD TOPO de l'IGN quand un bâtiment relevé a servi
+(`surveyAttribution`), le fournisseur du relief.
 
 ## Les sources par pays
 

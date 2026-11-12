@@ -1196,6 +1196,7 @@ ipcMain.handle('realplace:country', async (event, lat, lon) => realPlace.country
 ipcMain.handle('realplace:osm', async (event, bbox) => realPlace.osm(bbox, (p) => {
   if (!event.sender.isDestroyed()) event.sender.send('realplace:osmProgress', p);
 }));
+ipcMain.handle('realplace:bdtopo', async (event, bbox) => realPlace.bdtopo(bbox));
 ipcMain.handle('realplace:altitudes', async (event, requests, perSecond) => realPlace.altitudes(requests, perSecond));
 ipcMain.handle('realplace:tile', async (event, z, x, y) => realPlace.tile(z, x, y));
 ipcMain.handle('store:attribuer', async (event, resultat, fichier, resolution) => {

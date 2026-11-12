@@ -28,6 +28,7 @@ import { ajouterOuverture } from './batiment-ouvertures.js';
 import { mondeDuMasque } from './terrain-zone-pinceau.js';
 import { projector } from './geo-local.js';
 import { rulesFor } from './real-place-sources.js';
+import { BDTOPO_ATTRIBUTION, matchSurvey, buildingTypeOf, surveyedRoof, wallFinishOf, roofFinishOf } from './building-survey.js';
 
 /** The attribution OSM data requires near the work (export credits, #457b-4). */
 export const OSM_ATTRIBUTION = '© OpenStreetMap contributors, ODbL';
@@ -161,11 +162,18 @@ export function maskOfPolygon(poly, h, step = ZONE_STEP){
 
 // ── Buildings ───────────────────────────────────────────────────────────────────────────────────
 
-/** How many levels, and how high each: `building:levels`, else `height`, else the type's default. */
-export function levelsOf(tags, rules = rulesFor('fr')){
+/**
+ * How many levels, and how high each: `building:levels`, else `height`, else the surveyed eaves height
+ * (building-survey.js), else the type's default.
+ */
+export function levelsOf(tags, rules = rulesFor('fr'), survey = null){
   const levels = parseInt(tags['building:levels'], 10);
   const height = parseFloat(tags.height);
   const type = tags.building;
+  if (!(levels >= 1) && !(height > 0) && survey && survey.eaves > 0) {
+    const count = Math.max(1, Math.round(survey.eaves / rules.levelHeight));
+    return { count, height: Math.min(10, Math.max(2, survey.eaves / count)) };
+  }
   let n = levels >= 1 ? levels : (height > 0 ? Math.max(1, Math.round(height / rules.levelHeight)) : (rules.levels[type] || rules.levels.default));
   n = Math.min(n, 40);
   let levelHeight = rules.levelHeight;
@@ -173,10 +181,14 @@ export function levelsOf(tags, rules = rulesFor('fr')){
   return { count: n, height: Math.min(10, Math.max(2, levelHeight)) };
 }
 
-/** The roof type: `roof:shape`, else flat for commercial and public types, else gabled (France). */
-export function roofOf(tags, rules = rulesFor('fr')){
+/**
+ * The roof type: `roof:shape`, else flat when the survey measures a flat roof (`surveyed`, surveyedRoof),
+ * else flat for commercial and public types, else gabled (France).
+ */
+export function roofOf(tags, rules = rulesFor('fr'), surveyed = null){
   const shape = ROOF_SHAPES[tags['roof:shape']];
   if (shape) return shape;
+  if (surveyed) return surveyed.flat ? 'plat' : 'deux-pans';
   return rules.flatRoofs.includes(tags.building) ? 'plat' : 'deux-pans';
 }
 
@@ -204,14 +216,15 @@ function generateOpenings(b, doorWallId){
 
 /**
  * A complete building from a cleaned footprint (local metres, centred), its tags and the world position of
- * its centre; `roads` (world polylines) to put the door on the side of the street. Returns the building, or
- * null if the editor refuses its walls (a footprint that crosses itself).
+ * its centre; `roads` (world polylines) to put the door on the side of the street; `survey` (or null): the
+ * surveyed building it is (building-survey.js), for its heights, roof and materials where OSM says nothing.
+ * Returns the building, or null if the editor refuses its walls (a footprint that crosses itself).
  */
-export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor('fr'), translate = null){
+export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor('fr'), translate = null, survey = null){
   const t = translate || ((en, fr) => fr);
   const name = tags.name || (tags['addr:housenumber'] && tags['addr:street'] ? `${tags['addr:housenumber']} ${tags['addr:street']}` : t('Building', 'Bâtiment'));
   const b = creerBatiment(name, t);
-  const { count, height } = levelsOf(tags, rules);
+  const { count, height } = levelsOf(tags, rules, survey);
   b.niveaux[0].hauteur = height;
   for (let k = 1; k < count; k++) ajouterEtage(b, t);
   for (const level of b.niveaux) {
@@ -220,7 +233,13 @@ export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor
     actualiserPieces(b, level.id, t);
   }
   const top = b.niveaux.reduce((p, q) => (q.elevation > p.elevation ? q : p));
-  fixerToit(b, top.id, { type: roofOf(tags, rules), pente: rules.roofPitch });
+  const surveyed = surveyedRoof(survey, footprint);
+  const roof = { type: roofOf(tags, rules, surveyed), pente: surveyed && !surveyed.flat ? surveyed.pitch : rules.roofPitch };
+  const roofFinish = roofFinishOf(tags, survey);
+  if (roofFinish) roof.revetement = roofFinish;
+  fixerToit(b, top.id, roof);
+  const facade = wallFinishOf(tags, survey);
+  if (facade) b.facade = facade;
   // The door: on the ground-floor wall whose middle is the nearest to a road.
   let doorWallId = null, best = Infinity;
   // Only a wall wide enough for a door (1.5 m: 0.9 m and its jambs).
@@ -259,7 +278,7 @@ export function zoneTypeOf(tags){
  * most ZONE_SIDE_MAX / 2); `country` (ISO code, `fr` by default: France first) picks the default values
  * (real-place-sources.js), unless `rules` are given. Returns { buildings, paths, zones, elements, skipped, attribution }.
  */
-export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, country = 'fr', rules = rulesFor(country), translate = null } = {}){
+export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, country = 'fr', rules = rulesFor(country), translate = null, survey = null } = {}){
   const h = Math.min(Math.max(1, halfSize), ZONE_SIDE_MAX / 2);
   const { toLocal } = projector(centre);
   const out = { buildings: [], paths: [], zones: [], elements: [], skipped: { outside: 0, invalid: 0, tunnels: 0, relations: 0 }, attribution: OSM_ATTRIBUTION };
@@ -294,19 +313,26 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       if (kind.kind === 'route' || kind.kind === 'chemin') roads.push(piece);
     }
   }
+  // The survey (building-survey.js, readBdTopo): each OSM building takes the surveyed building it is.
+  const surveys = Array.isArray(survey) ? survey : [];
+  const taken = new Set(), osmFootprints = [];
   for (const w of ways) {
     const closed = w.pts.length >= 4 && Math.hypot(w.pts[0].x - w.pts[w.pts.length - 1].x, w.pts[0].z - w.pts[w.pts.length - 1].z) < 0.01;
     if (w.tags.building && closed) {
       const fp = cleanFootprint(w.pts);
       if (!fp || Math.abs(signedArea(fp)) < 4) { out.skipped.invalid++; continue; }
+      osmFootprints.push(fp);
       let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
       for (const p of fp) { x0 = Math.min(x0, p.x); z0 = Math.min(z0, p.z); x1 = Math.max(x1, p.x); z1 = Math.max(z1, p.z); }
       const centreOf = { x: (x0 + x1) / 2, z: (z0 + z1) / 2 };
       if (Math.abs(centreOf.x) > h || Math.abs(centreOf.z) > h) { out.skipped.outside++; continue; }
       const local = fp.map(p => roundPoint({ x: p.x - centreOf.x, z: p.z - centreOf.z }));
-      const building = buildingOf(local, w.tags, centreOf, roads, rules, translate);
+      const surveyed = surveys.length ? matchSurvey(fp, surveys, taken) : null;
+      const building = buildingOf(local, w.tags, centreOf, roads, rules, translate, surveyed);
       if (!building) { out.skipped.invalid++; continue; }
-      out.buildings.push({ building, x: round(centreOf.x), z: round(centreOf.z), osmId: w.id });
+      const entry = { building, x: round(centreOf.x), z: round(centreOf.z), osmId: w.id };
+      if (surveyed) entry.surveyId = surveyed.id;
+      out.buildings.push(entry);
       continue;
     }
     const ground = closed && zoneTypeOf(w.tags);
@@ -318,5 +344,21 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       out.zones.push(zone);
     }
   }
+  // A surveyed building OSM lacks (none of its buildings holds its centre): added from the survey alone.
+  for (const s of surveys) {
+    if (taken.has(s.id) || osmFootprints.some(fp => insidePolygon(s.centre, fp))) continue;
+    const fp = cleanFootprint(s.footprint.concat([s.footprint[0]]));
+    if (!fp || Math.abs(signedArea(fp)) < 4) continue;
+    let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
+    for (const p of fp) { x0 = Math.min(x0, p.x); z0 = Math.min(z0, p.z); x1 = Math.max(x1, p.x); z1 = Math.max(z1, p.z); }
+    const centreOf = { x: (x0 + x1) / 2, z: (z0 + z1) / 2 };
+    if (Math.abs(centreOf.x) > h || Math.abs(centreOf.z) > h) continue;
+    const local = fp.map(p => roundPoint({ x: p.x - centreOf.x, z: p.z - centreOf.z }));
+    const building = buildingOf(local, { building: buildingTypeOf(s) }, centreOf, roads, rules, translate, s);
+    if (!building) continue;
+    taken.add(s.id);
+    out.buildings.push({ building, x: round(centreOf.x), z: round(centreOf.z), surveyId: s.id });
+  }
+  if (taken.size) out.surveyAttribution = BDTOPO_ATTRIBUTION;
   return out;
 }

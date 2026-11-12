@@ -122,6 +122,7 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   realPlaceCountry: (lat, lon) => ipcRenderer.invoke('realplace:country', lat, lon),
   realPlaceOsm: (bbox) => ipcRenderer.invoke('realplace:osm', bbox),
   onRealPlaceOsmProgress: (callback) => ipcRenderer.on('realplace:osmProgress', (e, p) => callback(p)),
+  realPlaceBdTopo: (bbox) => ipcRenderer.invoke('realplace:bdtopo', bbox),
   realPlaceAltitudes: (requests, perSecond) => ipcRenderer.invoke('realplace:altitudes', requests, perSecond),
   realPlaceTile: (z, x, y) => ipcRenderer.invoke('realplace:tile', z, x, y),
   onStoreApercuProgression: (callback) => ipcRenderer.on('store:apercuProgression', (e, s, id, recus, total) => callback(s, id, recus, total)),

@@ -12,6 +12,7 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
 | `src/osm-scene.js` | PURE. The OSM translator: an Overpass extract (`out geom`) becomes buildings, paths, Zones and Elements, in metres. |
 | `src/real-place-sources.js` | PURE. The sources per country: relief providers (best first) and building rules, with a world fallback. |
 | `src/geo-local.js` | PURE. Local metres around a geographic centre (`projector`). |
+| `src/building-survey.js` | PURE. The IGN BD TOPO (France) read and matched to the OSM buildings: heights, roof pitch, materials. |
 | `src/real-place-import.js` | PURE. The translation and the altitudes turned into a Scene's content (`sceneContentOf`: Path and Zone objects, relief, credits). |
 | `src/real-place-ui.js` | The new Scene's window: the choice, then search, map (OpenStreetMap tiles), zone size, import with its progress. |
 | `electron/bibliotheque/real-place.js` | The network (main process): Nominatim, Overpass (with mirrors), altitudes, tiles; identified by the application's User-Agent. |
@@ -61,7 +62,15 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    asked and the bytes received (every 200 ms at most), and the window shows them under the steps with the
    seconds spent (`downloadDetail`). Each attempt is logged (`[real-place] overpass <host>`: outcome,
    duration, size). The country: the chosen place's, else `realplace:country` (Nominatim reverse).
-3. `translateOsm` with the country's rules, then the relief: `planRelief` for the country, its requests sent by
+3. In France, the IGN's surveyed buildings: `realplace:bdtopo` (WFS `BDTOPO_V3:batiment`, no key, only the
+   properties read), `readBdTopo`, then `translateOsm` with the country's rules and that `survey`. Each OSM
+   building takes the surveyed building whose outline holds its centre of mass, of a comparable area (0.4
+   to 2.5 times) (`matchSurvey`); a surveyed building no OSM building holds is added (`buildingTypeOf` from
+   its use). Where OSM says nothing, the survey decides: levels from the eaves height (`hauteur`, ground to
+   lowest point of the roof), the roof flat under 0.5 m of rise, else its pitch over half the narrow width
+   (`surveyedRoof`), the facade and roof finishes from the land-registry material codes (`wallFinishOf`,
+   `roofFinishOf`: stone, wood, flat tiles, slate, metal, concrete; half-timbered and rendered walls keep the
+   plain render). Without an answer: OSM alone. Then the relief: `planRelief` for the country, its requests sent by
    `realplace:altitudes` (only to `ALTITUDE_HOSTS`, at the provider's rate), `assemble`; on failure the next
    provider, and with none a flat Ground.
 4. `sceneContentOf`: Zones and Paths (`pathObject`, `zoneObject`, named by `nomDuTrace`), the relief
@@ -76,6 +85,8 @@ The ground under buildings needs nothing: the rendered relief is already flatten
 
 **Credits**: `panel.creditsDuLieu` (a list of lines) on the Scene's canvas; `loadSceneIntoPanel` copies it to
 the Panel; the export draws them once each (`creditsDuLieu`, export-credits.js) after the model credits.
+The lines: OpenStreetMap, the IGN BD TOPO when a surveyed building was used (`surveyAttribution`), the
+relief's provider.
 
 ## The sources per country
 

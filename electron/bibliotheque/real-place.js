@@ -125,6 +125,31 @@ async function osm(bbox, progress = null){
   return last;
 }
 
+/** The BD TOPO buildings of a zone (France): the IGN's WFS, no key. Only the properties building-survey.js reads. */
+const BDTOPO_PROPERTIES = ['geometrie', 'hauteur', 'altitude_minimale_toit', 'altitude_maximale_toit', 'usage_1',
+  'materiaux_des_murs', 'materiaux_de_la_toiture', 'construction_legere'];
+function bdTopoUrl({ south, west, north, east }){
+  return 'https://data.geopf.fr/wfs/ows?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=BDTOPO_V3:batiment'
+    + `&BBOX=${south},${west},${north},${east},urn:ogc:def:crs:EPSG::4326&COUNT=5000`
+    + `&PROPERTYNAME=${BDTOPO_PROPERTIES.join(',')}&outputFormat=application/json`;
+}
+const surveys = sources.memoireBornee(4, 20 * 1024 * 1024);
+/** The surveyed buildings of a zone (bbox in degrees, the same as osm's): the WFS answer, or { error }. Cached. */
+async function bdtopo(bbox){
+  const ok = bbox && ['south', 'west', 'north', 'east'].every(k => Number.isFinite(bbox[k]));
+  if (!ok || bbox.north - bbox.south > 0.01 || bbox.east - bbox.west > 0.02) return { error: 'zone' };
+  const key = JSON.stringify(bbox);
+  const cached = surveys.get(key);
+  if (cached) return { json: cached };
+  const started = Date.now();
+  const r = await request(bdTopoUrl(bbox));
+  const good = r.json && Array.isArray(r.json.features);
+  console.info(`[real-place] bdtopo: ${good ? `${r.json.features.length} buildings` : (r.error || 'response')} in ${Date.now() - started} ms`);
+  if (!good) return r.error ? r : { error: 'response' };
+  surveys.set(key, r.json);
+  return { json: r.json };
+}
+
 /**
  * The altitude requests planned by the renderer (planRelief): sent in order, `perSecond` at most, each
  * checked against ALTITUDE_HOSTS. Returns { answers } (one JSON per request) or { error }.
@@ -159,4 +184,4 @@ async function tile(z, x, y){
   return { data: r.bytes };
 }
 
-module.exports = { search, country, osm, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };
+module.exports = { search, country, osm, bdtopo, bdTopoUrl, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };
