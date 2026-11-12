@@ -81,6 +81,31 @@ async function search(query, lang){
   return { places };
 }
 
+/**
+ * SUGGESTIONS WHILE TYPING (Photon, komoot's public demo server). Nominatim forbids auto-complete in its usage
+ * policy; Photon is made for search-as-you-type, its public server welcoming « a reasonable number of
+ * requests » (the window waits for a pause in the typing and asks from three letters). Same shape as search.
+ */
+async function suggest(query, lang){
+  const q = String(query || '').trim().slice(0, 200);
+  if (q.length < 3) return { places: [] };
+  const r = await request(`https://photon.komoot.io/api/?limit=6&lang=${lang === 'en' ? 'en' : 'fr'}&q=${encodeURIComponent(q)}`, { timeout: 8000 });
+  if (r.error) return r;
+  return { places: placesOfPhoton(r.json) };
+}
+/** Photon's GeoJSON answer as places: a readable name (name, street, town, region, country), lat, lon, country code. */
+function placesOfPhoton(json){
+  const seen = new Set();
+  return ((json && Array.isArray(json.features)) ? json.features : []).map(f => {
+    const p = f.properties || {}, c = f.geometry && f.geometry.coordinates;
+    const street = p.street ? (p.housenumber ? `${p.housenumber} ${p.street}` : p.street) : null;
+    const parts = [p.name, street, p.city || p.town || p.village, p.state, p.country].filter(Boolean);
+    const name = [...new Set(parts)].join(', ');
+    return { name, lat: Array.isArray(c) ? Number(c[1]) : NaN, lon: Array.isArray(c) ? Number(c[0]) : NaN,
+      country: typeof p.countrycode === 'string' ? p.countrycode.toLowerCase() : null };
+  }).filter(p => p.name && Number.isFinite(p.lat) && Number.isFinite(p.lon) && !seen.has(p.name) && seen.add(p.name));
+}
+
 /** The country (ISO code) of a point (Nominatim reverse, country level), or null. */
 async function country(lat, lon){
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return { country: null };
@@ -226,4 +251,4 @@ async function tile(z, x, y){
   return { data: r.bytes };
 }
 
-module.exports = { search, country, osm, bdtopo, bdTopoUrl, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };
+module.exports = { search, suggest, country, osm, bdtopo, bdTopoUrl, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };

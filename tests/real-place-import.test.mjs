@@ -155,3 +155,19 @@ describe('real place, the most available Overpass server', () => {
     assert.equal(downloadDetail({ probing: true }, 1), 'Recherche du serveur le plus disponible…');
   });
 });
+
+describe('real place, the window', () => {
+  const ui = readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8');
+  const net = readFileSync(new URL('../electron/bibliotheque/real-place.js', import.meta.url), 'utf8');
+  test('suggestions while typing come from Photon (Nominatim forbids auto-complete), after a pause, from three letters', () => {
+    assert.match(ui, /\$\('realPlaceQuery'\)\.addEventListener\('input', suggerer\);/);
+    assert.match(ui, /if \(q\.length < 3 \|\| !V \|\| V\.busy\)/);
+    assert.match(net, /https:\/\/photon\.komoot\.io\/api\/\?limit=6/);
+    assert.doesNotMatch(ui, /addEventListener\('input', chercher\)/, 'never Nominatim while typing');
+  });
+  test('each choice has its illustration; the steps on two columns', () => {
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+    assert.equal((html.match(/class="real-place-illustration"/g) || []).length, 2);
+    assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /#realPlaceSteps\{ display:grid; grid-template-columns:1fr 1fr;/);
+  });
+});

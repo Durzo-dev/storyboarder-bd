@@ -1192,6 +1192,7 @@ ipcMain.handle('sketchfab:logout', async () => sketchfabSession.logout());
 // A Scene from a real place (src/real-place-ui.js): place search, OSM extract, altitudes, map tiles.
 const realPlace = require('./bibliotheque/real-place');
 ipcMain.handle('realplace:search', async (event, query, lang) => realPlace.search(String(query || ''), lang === 'en' ? 'en' : 'fr'));
+ipcMain.handle('realplace:suggest', async (event, query, lang) => realPlace.suggest(String(query || ''), lang === 'en' ? 'en' : 'fr'));
 ipcMain.handle('realplace:country', async (event, lat, lon) => realPlace.country(Number(lat), Number(lon)));
 ipcMain.handle('realplace:osm', async (event, bbox) => realPlace.osm(bbox, (p) => {
   if (!event.sender.isDestroyed()) event.sender.send('realplace:osmProgress', p);

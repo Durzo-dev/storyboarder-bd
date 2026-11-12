@@ -99,6 +99,7 @@ interface StoryboarderAPI {
   surProgressionTexture(rappel: (sourceId: string, id: string, recus: number | null, total: number | null) => void): () => void;
   storeVignette(url: string): Promise<{ data?: Uint8Array; erreur?: string }>;
   realPlaceSearch(query: string, lang?: string): Promise<{ places?: { name: string; lat: number; lon: number; country: string | null }[]; error?: string }>;
+  realPlaceSuggest(query: string, lang?: string): Promise<{ places?: { name: string; lat: number; lon: number; country: string | null }[]; error?: string }>;
   realPlaceCountry(lat: number, lon: number): Promise<{ country?: string | null; error?: string }>;
   realPlaceOsm(bbox: { south: number; west: number; north: number; east: number }): Promise<{ json?: any; server?: string; error?: string }>;
   onRealPlaceOsmProgress(callback: (p: { server: number; servers: number; bytes: number }) => void): void;

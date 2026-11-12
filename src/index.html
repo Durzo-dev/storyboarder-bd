@@ -1501,10 +1501,29 @@
     <h3 id="realPlaceTitle">Nouvelle scène</h3>
     <div id="realPlaceChoice" class="real-place-choice">
       <div class="real-place-choice-card" data-choix="realPlaceManual">
+        <svg class="real-place-illustration" viewBox="0 0 240 120" aria-hidden="true">
+          <!-- An empty ground seen from above at an angle, its grid, one block drawn with dashes and a pencil:
+               a Scene to compose. -->
+          <polygon class="ill-sol" points="120,18 222,66 120,114 18,66"/>
+          <g class="ill-grille"><path d="M44 54 146 102M69 42 171 90M95 30 197 78M146 30 44 78M171 42 69 90M197 54 95 102"/></g>
+          <g class="ill-pointille"><polygon points="104,52 128,63 128,41 104,30"/><polygon points="128,63 146,54 146,32 128,41"/><polygon points="104,30 122,21 146,32 128,41"/></g>
+          <g class="ill-crayon" transform="rotate(35 176 40)"><rect x="168" y="14" width="14" height="44" rx="2"/><polygon points="168,58 182,58 175,72"/></g>
+        </svg>
         <button id="realPlaceManual" class="real-place-choice-btn" type="button">Création manuelle</button>
         <p id="realPlaceManualText">Une scène vide, à composer soi-même.</p>
       </div>
       <div class="real-place-choice-card" data-choix="realPlaceExisting">
+        <svg class="real-place-illustration" viewBox="0 0 240 120" aria-hidden="true">
+          <!-- A real place: its ground, two streets, built blocks and a pin on the chosen spot. -->
+          <polygon class="ill-sol" points="120,18 222,66 120,114 18,66"/>
+          <g class="ill-rue"><path d="M50 51 172 108M95 30 41 56M172 42 82 84"/></g>
+          <g>
+            <polygon class="ill-toit" points="70,46 92,36 108,44 86,54"/><polygon class="ill-mur" points="86,54 108,44 108,60 86,70"/><polygon class="ill-mur-ombre" points="70,46 86,54 86,70 70,62"/>
+            <polygon class="ill-toit" points="128,52 150,42 168,51 146,61"/><polygon class="ill-mur" points="146,61 168,51 168,64 146,74"/><polygon class="ill-mur-ombre" points="128,52 146,61 146,74 128,65"/>
+            <polygon class="ill-toit" points="112,82 130,74 146,82 128,90"/><polygon class="ill-mur" points="128,90 146,82 146,94 128,102"/><polygon class="ill-mur-ombre" points="112,82 128,90 128,102 112,94"/>
+          </g>
+          <g class="ill-epingle"><path d="M120 22c-8 0-14 6-14 14 0 10 14 24 14 24s14-14 14-24c0-8-6-14-14-14z"/><circle class="ill-epingle-coeur" cx="120" cy="36" r="5"/></g>
+        </svg>
         <button id="realPlaceExisting" class="real-place-choice-btn" type="button">Depuis un lieu existant</button>
         <p id="realPlaceExistingText">Les bâtiments, les rues et le relief d'un lieu réel.</p>
       </div>

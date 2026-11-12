@@ -3190,6 +3190,18 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 .real-place-choice-card:hover, .real-place-choice-card:focus-within{ border-color:var(--accent); }
 .real-place-choice-btn{ text-align:left; padding:0; background:none; border:0; color:var(--ink); font:inherit; font-weight:600; font-size:var(--texte-courant); cursor:pointer; }
 .real-place-choice-card p{ margin:0; font-size:var(--texte-libelle); color:var(--ink-mid); }
+/* The two choices' illustrations (asked): drawn with the interface's colours, so they follow its theme. */
+.real-place-illustration{ display:block; width:100%; height:auto; max-height:130px; margin-bottom:6px; }
+.real-place-illustration .ill-sol{ fill:var(--paper-dark); stroke:var(--line-strong); stroke-width:1.5; }
+.real-place-illustration .ill-grille path{ fill:none; stroke:var(--line); stroke-width:1; }
+.real-place-illustration .ill-pointille polygon{ fill:none; stroke:var(--ink-soft); stroke-width:1.5; stroke-dasharray:4 3; }
+.real-place-illustration .ill-crayon rect, .real-place-illustration .ill-crayon polygon{ fill:var(--accent); }
+.real-place-illustration .ill-rue path{ fill:none; stroke:var(--nav-bg); stroke-width:7; stroke-linecap:round; }
+.real-place-illustration .ill-toit{ fill:var(--accent); }
+.real-place-illustration .ill-mur{ fill:var(--ink-mid); }
+.real-place-illustration .ill-mur-ombre{ fill:var(--ink-soft); }
+.real-place-illustration .ill-epingle path{ fill:var(--danger); }
+.real-place-illustration .ill-epingle-coeur{ fill:var(--sur-danger); }
 /* The import's progress: a bar, then the steps (done, under way, to come). */
 .real-place-progress{ display:flex; flex-direction:column; gap:8px; }
 .real-place-bar{ height:8px; background:var(--line); border-radius:var(--rayon-pilule); overflow:hidden; }
@@ -3200,6 +3212,8 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 .real-place-steps li.fait::before{ content:'✓'; color:var(--accent); }
 .real-place-steps li.encours{ color:var(--ink); font-weight:600; }
 .real-place-steps li.encours::before{ content:'●'; color:var(--accent); }
+/* The import's steps on two columns, top to bottom then the next (asked: the list took too much height). */
+#realPlaceSteps{ display:grid; grid-template-columns:1fr 1fr; grid-template-rows:repeat(4, auto); grid-auto-flow:column; column-gap:16px; }
 .real-place-detail{ margin:0; padding-left:1.4em; font-size:var(--texte-libelle); color:var(--ink-mid); font-variant-numeric:tabular-nums; }
 .real-place-detail:empty{ display:none; }
 

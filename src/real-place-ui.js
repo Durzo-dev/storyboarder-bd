@@ -36,7 +36,7 @@ export function cablerLieuReel(rappels){
   $('realPlaceExisting').onclick = () => montrerLeLieu();
   // The whole card answers, not only its title (the button keeps the keyboard).
   document.querySelectorAll('.real-place-choice-card').forEach(c => {
-    c.addEventListener('click', (e) => { if (e.target === c || e.target.tagName === 'P') $(c.dataset.choix).click(); });
+    c.addEventListener('click', (e) => { if (e.target === c || e.target.tagName === 'P' || e.target.closest('svg')) $(c.dataset.choix).click(); });
   });
   // The map data's progress (main process): the server asked and the bytes received, shown with the time.
   const api = window.storyboarderAPI;
@@ -49,6 +49,7 @@ export function cablerLieuReel(rappels){
   $('realPlaceClose').onclick = annulerOuFermer;
   $('realPlaceCancel').onclick = annulerOuFermer;
   $('realPlaceSearchForm').onsubmit = (e) => { e.preventDefault(); chercher(); };
+  $('realPlaceQuery').addEventListener('input', suggerer);
   $('realPlaceImport').onclick = importer;
   $('realPlaceSize').onchange = () => { if (V) { V.halfSize = Number($('realPlaceSize').value) / 2; dessiner(); } };
   cablerLaCarte($('realPlaceMap'));
@@ -152,12 +153,40 @@ const erreur = (code) => ERREURS()[code] || ERREURS().response;
 async function chercher(){
   const q = $('realPlaceQuery').value.trim();
   if (!q || !V || V.busy) return;
+  clearTimeout(_suggestion.minuteur); _suggestion.n++;
   dire(tr('Searching…', 'Recherche…'), 'chargement');
   const r = await window.storyboarderAPI.realPlaceSearch(q, tr('en', 'fr'));
   if (!V) return;
   if (r.error) { dire(erreur(r.error), true); return; }
   dire(r.places.length ? '' : tr('No place found.', 'Aucun lieu trouvé.'));
+  montrerLesLieux(r.places);
+}
+
+/**
+ * Suggestions while typing (asked): after a pause of SUGGESTION_MS, from three letters, the places Photon
+ * proposes (main process, real-place.js) in the same list as a search. An answer that comes after newer
+ * typing is dropped (`n`). Enter still searches (Nominatim).
+ */
+const SUGGESTION_MS = 350;
+const _suggestion = { minuteur: null, n: 0 };
+function suggerer(){
+  clearTimeout(_suggestion.minuteur);
+  const q = $('realPlaceQuery').value.trim();
+  const n = ++_suggestion.n;
+  if (q.length < 3 || !V || V.busy) { if (q.length < 3) $('realPlaceResults').hidden = true; return; }
+  _suggestion.minuteur = setTimeout(async () => {
+    const api = window.storyboarderAPI;
+    if (!api || !api.realPlaceSuggest) return;
+    const r = await api.realPlaceSuggest(q, tr('en', 'fr'));
+    if (!V || n !== _suggestion.n || !r || r.error) return;
+    montrerLesLieux(r.places);
+  }, SUGGESTION_MS);
+}
+
+/** The list of places under the search field (a search's results, or suggestions). */
+function montrerLesLieux(places){
   const liste = $('realPlaceResults');
+  const r = { places };
   liste.replaceChildren(...r.places.map(p => {
     const b = document.createElement('button');
     b.type = 'button';
