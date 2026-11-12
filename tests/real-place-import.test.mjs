@@ -165,9 +165,17 @@ describe('real place, the window', () => {
     assert.match(net, /https:\/\/photon\.komoot\.io\/api\/\?limit=6/);
     assert.doesNotMatch(ui, /addEventListener\('input', chercher\)/, 'never Nominatim while typing');
   });
-  test('each choice has its illustration; the steps on two columns', () => {
+  test('each choice has its illustration; the progress at the bottom, the step under way above the bar', () => {
     const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
     assert.equal((html.match(/class="real-place-illustration"/g) || []).length, 2);
-    assert.match(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'), /#realPlaceSteps\{ display:grid; grid-template-columns:1fr 1fr;/);
+    const i = html.indexOf('id="realPlaceProgress"');
+    assert.ok(i > html.indexOf('id="realPlaceStatus"') && i < html.indexOf('class="real-place-actions"'), 'just above the buttons');
+    assert.ok(html.indexOf('id="realPlaceStep"') < html.indexOf('id="realPlaceBar"'), 'the step above the bar');
+  });
+  test('an icon search button, its name in the tooltip; « Try again » after a failure; closing forgets the search', () => {
+    const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
+    assert.match(html, /<button id="realPlaceSearchBtn" class="nav-btn real-place-search-btn" type="submit" title="Chercher" aria-label="Chercher"><svg/);
+    assert.match(ui, /V && V\.echec \? tr\('Try again', 'Réessayer'\)/);
+    assert.match(ui, /\$\('realPlaceQuery'\)\.value = '';/);
   });
 });

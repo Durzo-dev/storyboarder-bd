@@ -3162,6 +3162,8 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 .real-place-search{ display:flex; gap:8px; }
 .real-place-search .modal-input{ flex:1 1 auto; margin:0; }
 .real-place-search .nav-btn{ width:auto; margin:0; }
+.real-place-search-btn{ display:flex; align-items:center; justify-content:center; padding:0 12px; }
+.real-place-search-btn svg.icone{ width:18px; height:18px; }
 .real-place-results{ display:flex; flex-direction:column; max-height:150px; overflow-y:auto; border:1px solid var(--line); border-radius:var(--rayon-moyen); }
 .real-place-results[hidden]{ display:none; }
 .real-place-result{ text-align:left; background:none; border:0; border-bottom:1px solid var(--line); color:var(--ink); padding:6px 10px; font-size:var(--texte-courant); cursor:pointer; }
@@ -3202,15 +3204,9 @@ input[type="search"]::-webkit-search-cancel-button:hover{ background-color:var(-
 .real-place-progress{ display:flex; flex-direction:column; gap:8px; }
 .real-place-bar{ height:8px; background:var(--line); border-radius:var(--rayon-pilule); overflow:hidden; }
 .real-place-bar span{ display:block; height:100%; width:0; background:var(--accent); transition:width .25s ease; }
-.real-place-steps{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:3px; font-size:var(--texte-libelle); color:var(--ink-soft); }
-.real-place-steps li::before{ content:'○'; display:inline-block; width:1.4em; }
-.real-place-steps li.fait{ color:var(--ink-mid); }
-.real-place-steps li.fait::before{ content:'✓'; color:var(--accent); }
-.real-place-steps li.encours{ color:var(--ink); font-weight:600; }
-.real-place-steps li.encours::before{ content:'●'; color:var(--accent); }
-/* The import's steps on two columns, top to bottom then the next (asked: the list took too much height). */
-#realPlaceSteps{ display:grid; grid-template-columns:1fr 1fr; grid-template-rows:repeat(4, auto); grid-auto-flow:column; column-gap:16px; }
-.real-place-detail{ margin:0; padding-left:1.4em; font-size:var(--texte-libelle); color:var(--ink-mid); font-variant-numeric:tabular-nums; }
+/* The step under way, centred above the bar (asked), its detail under it. */
+.real-place-current{ margin:0; text-align:center; font-size:var(--texte-courant); font-weight:600; color:var(--ink); }
+.real-place-detail{ margin:0; text-align:center; font-size:var(--texte-libelle); color:var(--ink-mid); font-variant-numeric:tabular-nums; }
 .real-place-detail:empty{ display:none; }
 
 /* A large Scene being opened (scene-loading.js): a translucent veil over it (asked: see it being built), the

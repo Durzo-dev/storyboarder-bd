@@ -19,6 +19,7 @@ export const ICONES = {
   // Un quart de tour (un élément de l'éditeur de bâtiment) : un carré et la flèche courbe qui le fait
   // pivoter. Distinct de « réinitialiser », une flèche seule (signalé : les deux se ressemblaient).
   quartDeTour: '<rect x="3" y="10" width="11" height="11" rx="1.5"/><path d="M8 6h5a6 6 0 0 1 6 6v3"/><path d="m16 12 3 3 3-3"/>',
+  chercher: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
   aide: '<circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
   coche: '<path d="m5 12 5 5 9-10"/>',
   ajouter: '<path d="M12 5v14M5 12h14"/>',

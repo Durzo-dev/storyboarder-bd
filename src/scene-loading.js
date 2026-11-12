@@ -104,15 +104,12 @@ export function cablerChargementDeScene(rappels){
   if (bouton) bouton.onclick = annuler;
 }
 
+/** The card: the step under way, centred above the bar, as in the « New scene » window. */
 function montrerLaCarte(step, sub, detail){
   const i = BUILD_STEPS.indexOf(step);
   document.getElementById('sceneLoadingBar').style.width = `${Math.round(buildProgress(step, sub) * 100)}%`;
-  document.getElementById('sceneLoadingSteps').replaceChildren(...BUILD_STEPS.map((k, n) => {
-    const li = document.createElement('li');
-    li.textContent = buildStepLabel(k, k === step ? detail : null);
-    li.className = n < i ? 'fait' : n === i ? 'encours' : '';
-    return li;
-  }));
+  document.getElementById('sceneLoadingStep').textContent = i < 0 ? ''
+    : `${buildStepLabel(step, detail)} · ${tr('step', 'étape')} ${i + 1}/${BUILD_STEPS.length}`;
 }
 
 /**

@@ -67,8 +67,10 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
 
 1. La fenêtre : « Nouvelle scène » (`ouvrirNouvelleScene`) montre le choix ; « Création manuelle » appelle
    `creerSceneManuelle` (events.js : une Scène vide, ouverte). « Depuis un lieu existant » montre une recherche (Nominatim, `realplace:search`) ou un clic sur la carte (tuiles `realplace:tile`,
-   gardées pendant la session), la taille de la zone (100 à 400 m), « Créer la scène ». Pendant l'import, une
-   barre et la liste des étapes (`IMPORT_STEPS`, `importProgress` : données de la carte, pays, bâtiments,
+   gardées pendant la session), la taille de la zone (100 à 400 m), « Créer la scène ». Pendant l'import, en bas
+   au-dessus des boutons, l'étape en cours (centrée, « étape n/7 ») et la barre ; seul « Annuler » reste ;
+   après un échec le bouton principal devient « Réessayer » ; fermer la fenêtre vide le champ de recherche.
+   Les étapes (`IMPORT_STEPS`, `importProgress` : données de la carte, pays, bâtiments,
    relief, scène, puis la construction de la Scène : bâtiments n / N, relief, routes et sols) ; les requêtes
    du relief partent une à une pour que la barre les suive. « Annuler », la croix ou Échap pendant l'import
    (`annulerOuFermer`) l'arrêtent à l'étape suivante (une requête en cours se termine) et retirent la Scène

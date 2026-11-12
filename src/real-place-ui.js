@@ -88,12 +88,8 @@ function montrerLaProgression(step, sub = 0, detail = null){
   const i = step ? IMPORT_STEPS.indexOf(step) : -1;
   $('realPlaceProgress').hidden = false;
   $('realPlaceBar').style.width = `${Math.round((step ? importProgress(step, sub) : 0) * 100)}%`;
-  $('realPlaceSteps').replaceChildren(...IMPORT_STEPS.map((k, n) => {
-    const li = document.createElement('li');
-    li.textContent = labels[k];
-    li.className = n < i ? 'fait' : n === i ? 'encours' : '';
-    return li;
-  }));
+  // The step under way only, with where it stands (asked: above the bar, centred).
+  $('realPlaceStep').textContent = i < 0 ? '' : `${labels[step]} · ${tr('step', 'étape')} ${i + 1}/${IMPORT_STEPS.length}`;
 }
 
 /** The detail line of the map data: the server, the seconds spent on it, the bytes received. */
@@ -118,6 +114,11 @@ function annulerOuFermer(){
 function fermer(){
   if (V && V.busy) return;   // an import under way finishes first (it creates the Scene)
   $('realPlaceModal').classList.add('hidden');
+  // Closed, it forgets the search (asked): the next opening starts from an empty field.
+  $('realPlaceQuery').value = '';
+  $('realPlaceResults').hidden = true;
+  $('realPlaceResults').replaceChildren();
+  clearTimeout(_suggestion.minuteur); _suggestion.n++;
   V = null;
 }
 
@@ -130,6 +131,8 @@ function dire(texte, genre = false){
 
 function majBoutons(){
   $('realPlaceImport').disabled = !V || !V.zone || V.busy;
+  // After a failed import, the same button tries again (asked).
+  $('realPlaceImport').textContent = V && V.echec ? tr('Try again', 'Réessayer') : tr('Create the scene', 'Créer la scène');
   // During the import, « Create the scene » has nothing left to do (asked): only « Cancel » stays, full width.
   const busy = !!(V && V.busy);
   $('realPlaceImport').hidden = busy;
@@ -200,7 +203,7 @@ function montrerLesLieux(places){
 
 function choisirLieu(p){
   V.view = { lat: p.lat, lon: p.lon, z: 16 };
-  V.zone = { lat: p.lat, lon: p.lon };
+  V.zone = { lat: p.lat, lon: p.lon }; V.echec = false;
   V.name = p.name.split(',')[0].trim() || null;
   V.country = p.country;
   $('realPlaceResults').hidden = true;
@@ -288,7 +291,7 @@ function cablerLaCarte(c){
     if (!geste.bouge && !V.busy) {
       // A click: the zone's centre, here. Its country is asked at import time.
       const r = c.getBoundingClientRect(), z = Math.round(V.view.z), p = monde(V.view.lat, V.view.lon, z);
-      V.zone = geo(p.x + (e.clientX - r.left - r.width / 2), p.y + (e.clientY - r.top - r.height / 2), z);
+      V.zone = geo(p.x + (e.clientX - r.left - r.width / 2), p.y + (e.clientY - r.top - r.height / 2), z); V.echec = false;
       V.country = null;
       majBoutons();
       dessiner();
@@ -316,7 +319,7 @@ function cablerLaCarte(c){
 async function importer(){
   if (!V || !V.zone || V.busy) return;
   const api = window.storyboarderAPI;
-  V.busy = true; V.cancelled = false;
+  V.busy = true; V.cancelled = false; V.echec = false;
   majBoutons();
   dire('');
   // Stopped by « Cancel »: the window closes at the next step (a request under way is let finish).
@@ -342,7 +345,7 @@ async function importer(){
     try { extrait = await api.realPlaceOsm(bbox); }
     finally { clearInterval(tick); if (V) { V.download = null; montrerLeTelechargement(); } }
     if (!V || arrete()) return;
-    if (extrait.error) { dire(erreur(extrait.error), true); return; }
+    if (extrait.error) { V.echec = true; dire(erreur(extrait.error), true); return; }
     await etape('country');
     let country = V.country;
     if (!country) { const c = await api.realPlaceCountry(centre.lat, centre.lon); country = (c && c.country) || null; }
@@ -377,6 +380,7 @@ async function importer(){
     if (!fini) return;
   } catch (e) {
     console.error('[real-place]', e);
+    if (V) V.echec = true;
     dire(erreur('response'), true);
   } finally {
     if (V) { V.busy = false; majBoutons(); }
