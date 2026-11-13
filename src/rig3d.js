@@ -717,11 +717,14 @@ export function buildPalmierRig3D(){
   }
   // The fronds, radiating: each rises from the crown, then bends down at its middle (two thin boxes: a
   // plane would need a double-sided material, one more shader program).
-  for (let k = 0; k < 11; k++) {
+  // Two rings: 14 long fronds below, 9 shorter ones above, rising more (a full, round crown).
+  const fronds = [];
+  for (let k = 0; k < 14; k++) fronds.push({ a: k * 2 * Math.PI / 14, up: 0.1 + (k % 3) * 0.1, inL: 1.5, outL: 1.6 });
+  for (let k = 0; k < 9; k++) fronds.push({ a: (k + 0.5) * 2 * Math.PI / 9, up: 0.55 + (k % 2) * 0.15, inL: 1.1, outL: 1.2 });
+  for (const { a, up, inL, outL } of fronds) {
     const frond = new THREE.Group();
     frond.position.set(x, y, 0);
-    frond.rotation.y = k * 2 * Math.PI / 11;
-    const up = 0.15 + (k % 3) * 0.12, inL = 1.5, outL = 1.6;
+    frond.rotation.y = a;
     const gi = new THREE.BoxGeometry(inL, 0.04, 0.7);
     gi.translate(inL / 2, 0, 0);
     const inner = new THREE.Mesh(gi, PALM_MAT_3D);
