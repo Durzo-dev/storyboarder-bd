@@ -48,6 +48,7 @@ import { verifierRessources, rafraichirApresChangementDeDossier, simulationResso
 import { cablerStore, rafraichirTextesStore, fermerStore, rafraichirBibliothequeLocale, basculerStore, ouvrirStore } from './store-ui.js';
 import { cablerLieuReel } from './real-place-ui.js';
 import { cablerConnexionIA } from './mcp-link.js';
+import { cablerMonuments, proposerMonuments } from './monuments-ui.js';
 import { layRealPlace } from './real-place-lay.js';
 import { buildScene, cablerChargementDeScene, ouvrirSceneProgressivement } from './scene-loading.js';
 import { initLecteur, cablerLecteur, ouvrirLecteur, fermerLecteur, lecteurOuvert } from './lecteur-ui.js';
@@ -9288,6 +9289,7 @@ function retourApresChargement(previous){
   renderAll();
 }
 cablerChargementDeScene({ render: renderAll, retour: retourApresChargement });
+cablerMonuments({ snapshot: () => snapshot(), render: () => renderAll() });
 // The AI connection (MCP): its tools use the application's gestures (mcp-link.js).
 cablerConnexionIA({
   openScene: (id) => openScene(id), version: APP_VERSION,
@@ -9323,6 +9325,8 @@ cablerLieuReel({
       S.scenes = S.scenes.filter(x => x !== s);
       retourApresChargement(previous);
     }
+    // Its known monuments (#475): a model may take their place, the user's choice, once the window is closed.
+    else setTimeout(() => proposerMonuments(s), 0);
     return fini;
   },
 });

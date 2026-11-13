@@ -1497,6 +1497,20 @@
 <!-- #446c : le STORE DE TEXTURES, à part du store de modèles (demandé). Trois onglets (Mes textures,
      Poly Haven, ambientCG), des filtres par matière et par usage ; la fiche REMPLACE la grille, comme
      dans le store de modèles. Écrit par src/textures-store-ui.js. -->
+<!-- The known monuments of an imported place (src/monuments-ui.js, #475): for each, a 3D model to find on
+     Sketchfab (the store, in choice mode), or the generated building kept. -->
+<div class="modal-overlay hidden" id="monumentsModal">
+  <div class="modal-box monuments-box">
+    <button class="modal-close-btn" id="monumentsClose" type="button" title="Fermer (Échap)">×</button>
+    <h3 id="monumentsTitle">Monuments trouvés</h3>
+    <p id="monumentsIntro" class="monuments-intro">Ces bâtiments sont des monuments connus : un modèle 3D peut prendre leur place, posé sur leur emprise et à leur hauteur.</p>
+    <div id="monumentsListe" class="monuments-liste"></div>
+    <div class="modal-actions">
+      <button class="nav-btn" id="monumentsDone" type="button">Terminé</button>
+    </div>
+  </div>
+</div>
+
 <!-- A new Scene (src/real-place-ui.js): manual, or from a real place (search or click a place, choose the
      zone, import with its progress). -->
 <div class="modal-overlay hidden" id="realPlaceModal">

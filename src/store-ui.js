@@ -67,6 +67,8 @@ let choix = null;
 const POSABLE = (e) => !e.batiment && e.os !== 0;
 let accepterChoix = POSABLE;
 let importerChoix = null;
+/** In a choice, the licences a download may have (a monument's model: no ND, #475); null: any. */
+let licenceChoix = null;
 let sourceAvantChoix = null;
 /** La pause de saisie avant de lancer la recherche. */
 export const PAUSE_SAISIE_MS = 450;
@@ -773,6 +775,11 @@ function brancherTelechargement(r, ui){
 export async function telechargerModele(r, ui, resolution = RESOLUTION_DEFAUT){
   if (enTelechargement) return { ok: false };
   const t = textesStore(langue());
+  // A choice that refuses this licence (a monument's model: no ND): said, nothing downloaded.
+  if (choix && licenceChoix && !licenceChoix(r.licence)) {
+    if (ui.note) { ui.note.textContent = t.erreurs.licence; ui.note.classList.add('erreur'); }
+    return { ok: false, erreur: 'licence' };
+  }
   const pont = window.storyboarderAPI;
   const deja = possedes.get(cleDe(r)) || null;
   enTelechargement = { cle: cleDe(r), bouton: ui.bouton, note: ui.note };
@@ -1594,7 +1601,7 @@ export function basculerStore(){
   else fermerStore();
 }
 
-export async function ouvrirStore({ onglet, choisir, accepter, importer } = {}){
+export async function ouvrirStore({ onglet, choisir, accepter, importer, texte, licence } = {}){
   const pont = window.storyboarderAPI;
   if (!pont || !pont.storeChercher) return;
   if (typeof choisir === 'function') {
@@ -1602,7 +1609,9 @@ export async function ouvrirStore({ onglet, choisir, accepter, importer } = {}){
     choix = choisir;
     accepterChoix = typeof accepter === 'function' ? accepter : POSABLE;
     importerChoix = typeof importer === 'function' ? importer : null;
-    onglet = LOCAL;
+    licenceChoix = typeof licence === 'function' ? licence : null;
+    // A choice opens on the user's library, unless asked otherwise (a monument's model: Sketchfab, #475).
+    onglet = onglet && SOURCES_STORE.includes(onglet) ? onglet : LOCAL;
   } else if (choix) {
     // Le bouton du bandeau pendant un choix : on revient à la fenêtre ordinaire.
     quitterModeChoix();
@@ -1628,7 +1637,9 @@ export async function ouvrirStore({ onglet, choisir, accepter, importer } = {}){
   if (!choix) aRouvrir = null;
   // Une première page dès l'ouverture : une fenêtre vide n'apprend rien sur ce qu'on peut y trouver.
   // La bibliothèque locale est TOUJOURS relue : un modèle a pu être placé, renommé ou importé.
-  if (source === LOCAL || !$('storeGrille').children.length) await chercher();
+  // A search asked by the caller (a monument's name): typed in, and run.
+  if (typeof texte === 'string') $('storeTexte').value = texte;
+  if (source === LOCAL || typeof texte === 'string' || !$('storeGrille').children.length) await chercher();
   else $('storeGrille').replaceChildren(...affiches.map(carte));
   if (reprise && reprise.fiche) {
     // La fiche qu'on avait laissée, à jour (ses usages ont pu changer), puis la liste à sa place.
@@ -1644,6 +1655,7 @@ function quitterModeChoix(){
   choix = null;
   accepterChoix = POSABLE;
   importerChoix = null;
+  licenceChoix = null;
   if (sourceAvantChoix && sourceAvantChoix !== source && infosPar[sourceAvantChoix]) {
     source = sourceAvantChoix;
     infos = infosPar[source];

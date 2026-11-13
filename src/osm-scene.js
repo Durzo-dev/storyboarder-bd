@@ -29,6 +29,7 @@ import { mondeDuMasque } from './terrain-zone-pinceau.js';
 import { projector } from './geo-local.js';
 import { rulesFor } from './real-place-sources.js';
 import { facadeStyleOf } from './facade-style.js';
+import { monumentOf } from './monuments.js';
 import { BDTOPO_ATTRIBUTION, matchSurvey, buildingTypeOf, surveyedRoof, wallFinishOf, roofFinishOf } from './building-survey.js';
 
 /** The attribution OSM data requires near the work (export credits, #457b-4). */
@@ -588,6 +589,9 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       if (surveyed) entry.surveyId = surveyed.id;
       // Its roof's material given by a source (OSM, the survey): the aerial photo leaves it (aerial-reading.js).
       if (roofFinishOf(w.tags, surveyed)) entry.roofKnown = true;
+      // A known monument (monuments.js): a model may take its place, the user's choice after the import.
+      const monument = detailed ? monumentOf(w.tags) : null;
+      if (monument) entry.monument = monument;
       out.buildings.push(entry);
       continue;
     }

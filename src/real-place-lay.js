@@ -22,6 +22,18 @@ function topViewDistance(halfSize, view){
 }
 
 /**
+ * Puts an Element at (x, z) of a Scene's ground (metres): its world position, its depth kept at 0 (see
+ * below), on the Ground when it is magnetised. Used for an import's objects, and for a monument's model
+ * (monuments-ui.js).
+ */
+export function placeOnGround(o, panel, x, z){
+  o.z = 0;
+  setElementWorldPos3D(o, panel, x, 0);
+  o.wxFloor = x; o.wzFloor = z;
+  if (groundMagnetEligible(o) && o.magnetGround !== false) applyGroundMagnetY(o, panel);
+}
+
+/**
  * Lays `content` in the new Scene `scene` (createScene, one page, one panel): relief and credits on the
  * panel, Paths and Zones, buildings and objects at their place. `newObject(panel, view, objType)` builds a
  * built-in object (events.js, the same as the "Add" menu). Returns { page, panel }.
@@ -40,15 +52,14 @@ export function layRealPlace(scene, content, { halfSize, newObject }){
   // a building to the south shrank to nothing and one to the north grew out of scale. The position in the
   // world is `wxFloor`/`wzFloor`, which the rendering reads; the height comes from the Ground magnet, as
   // for an Element added by hand (ensureNewElementVisibleInPanel3D), then from the relief at render time.
-  const place = (o, x, z) => {
-    o.z = 0;
-    setElementWorldPos3D(o, panel, x, 0);
-    o.wxFloor = x; o.wzFloor = z;
-    if (groundMagnetEligible(o) && o.magnetGround !== false) applyGroundMagnetY(o, panel);
-    page.objects.push(o);
-  };
+  const place = (o, x, z) => { placeOnGround(o, panel, x, z); page.objects.push(o); };
   for (const t of content.traces) { t.panelId = panel.id; page.objects.push(t); tracéUpdateScreenPts(t, panel, view); }
-  for (const b of content.buildings) place(creerElementBatiment({ panel, page: view, batiment: b.building }), b.x, b.z);
+  for (const b of content.buildings) {
+    const o = creerElementBatiment({ panel, page: view, batiment: b.building });
+    // A known monument (monuments.js): kept on its Element, for the models proposed after the import.
+    if (b.monument) o.monument = { ...b.monument };
+    place(o, b.x, b.z);
+  }
   for (const e of content.elements) {
     const o = newObject(panel, view, e.objType);
     // A known height (an OSM tree's `height`): the object scaled to it, its proportions kept.

@@ -321,7 +321,7 @@ describe('le mode choix (l\'Éditeur de modèle choisit sa figure dans « Mes mo
   const ui = sans(lire('src/store-ui.js'));
   test('ouvrirStore({ choisir }) force l\'onglet local et retient l\'onglet d\'avant', () => {
     const corps = ui.slice(ui.indexOf('export async function ouvrirStore'), ui.indexOf('export function fermerStore'));
-    assert.match(corps, /if \(typeof choisir === 'function'\) \{[\s\S]*?choix = choisir;[\s\S]*?onglet = LOCAL;/);
+    assert.match(corps, /if \(typeof choisir === 'function'\) \{[\s\S]*?choix = choisir;[\s\S]*?onglet = onglet && SOURCES_STORE\.includes\(onglet\) \? onglet : LOCAL;/, 'local unless asked (a monument: Sketchfab)');
     assert.match(corps, /sourceAvantChoix = infos \? source :/);
     // La fiche laissée ouverte n'est pas rouverte en mode choix, ni oubliée.
     assert.match(corps, /const reprise = choix \? null : aRouvrir;/);

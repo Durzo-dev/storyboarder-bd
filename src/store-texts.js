@@ -83,6 +83,7 @@ const T = {
       connexion: 'Session Sketchfab expirée : reconnectez-vous, puis réessayez.',
       interdit: 'L\'auteur ne permet plus de télécharger ce modèle.',
       introuvable: 'Ce modèle n\'existe plus sur Sketchfab.',
+      licence: 'Sa licence interdit de le modifier (ND) : il ne peut pas être posé à la place d\'un monument.',
       formatAbsent: 'Sketchfab ne propose ce modèle ni en .glb ni en glTF.',
     },
     // Short line texts; `tip` (the hover tooltip) gives the full reason when the line would be too long.
@@ -226,6 +227,7 @@ const T = {
       connexion: 'Sketchfab session expired: sign in again, then try again.',
       interdit: 'The author no longer allows downloading this model.',
       introuvable: 'This model no longer exists on Sketchfab.',
+      licence: 'Its licence forbids changing it (ND): it cannot be laid in place of a monument.',
       formatAbsent: 'Sketchfab offers this model neither as .glb nor as glTF.',
     },
     account: {
