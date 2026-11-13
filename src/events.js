@@ -4379,6 +4379,8 @@ document.getElementById('ctxAddVelo').onclick = () => {
 [
   ['ctxAddBuisson', 'buisson'], ['ctxAddArbre', 'arbre'], ['ctxAddArbuste', 'arbuste'],
   ['ctxAddFleur', 'fleur'], ['ctxAddPotFleur', 'pot_fleur'],
+  ['ctxAddBacFleurs', 'bac_fleurs'], ['ctxAddConifere', 'conifere'], ['ctxAddPinParasol', 'pin_parasol'],
+  ['ctxAddCypres', 'cypres'], ['ctxAddOlivier', 'olivier'], ['ctxAddPalmier', 'palmier'],
 ].forEach(([btnId, objType]) => {
   document.getElementById(btnId).onclick = () => {
     const page = currentPage();

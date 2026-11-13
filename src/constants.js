@@ -262,6 +262,7 @@ export const OBJECT_TYPE_LABELS = {
   fenetre_ouverte: 'Fenêtre', porte_ouverte: 'Porte',
   escalier: 'Escalier', baie_vitree: 'Baie vitrée', mur: 'Mur simple', mur_coin: 'Mur en coin',
   buisson: 'Buisson', arbre: 'Arbre', arbuste: 'Arbuste', fleur: 'Fleur', pot_fleur: 'Pot de fleur',
+  bac_fleurs: 'Bac à fleurs', conifere: 'Conifère', pin_parasol: 'Pin parasol', cypres: 'Cyprès', olivier: 'Olivier', palmier: 'Palmier',
   oiseau: 'Oiseau', lezard: 'Lézard', loup: 'Loup', griffon: 'Griffon', singe: 'Singe',
   piscine: 'Piscine', barbecue: 'Barbecue',
   lampadaire: 'Lampadaire', panneau_signalisation: 'Panneau de signalisation', banc: 'Banc',
@@ -293,6 +294,7 @@ export const OBJECT_TYPE_LABELS_EN = {
   fenetre_ouverte: 'Window', porte_ouverte: 'Door',
   escalier: 'Stairs', baie_vitree: 'Patio door', mur: 'Plain wall', mur_coin: 'Corner wall',
   buisson: 'Bush', arbre: 'Tree', arbuste: 'Shrub', fleur: 'Flower', pot_fleur: 'Flower pot',
+  bac_fleurs: 'Planter', conifere: 'Conifer', pin_parasol: 'Stone pine', cypres: 'Cypress', olivier: 'Olive tree', palmier: 'Palm tree',
   oiseau: 'Bird', lezard: 'Lizard', loup: 'Wolf', griffon: 'Griffin', singe: 'Monkey',
   piscine: 'Swimming pool', barbecue: 'Barbecue',
   lampadaire: 'Street lamp', panneau_signalisation: 'Road sign', banc: 'Bench',
@@ -339,6 +341,9 @@ export const WALL_OPENING_MARGIN_FRAC = 0.06;
 // was forced to the same landscape ratio as cars (cf. further down), which stretched their
 // rendering horizontally and made them look skewed/squashed instead of straight and parallel
 // to the Wall.
+/** The tree objects (#480a): any of them is a tree for an import (its height from OSM or the LiDAR, the aerial reading). */
+export const TREE_TYPES = Object.freeze(['arbre', 'conifere', 'pin_parasol', 'cypres', 'olivier', 'palmier']);
+
 export const OBJECT_ASPECT_RATIOS = {
   fenetre_ouverte: 1.0 / 1.16,
   porte_ouverte: 1.04 / 2.07,
@@ -347,6 +352,7 @@ export const OBJECT_ASPECT_RATIOS = {
   mur: 1.8 / 2.0,
   mur_coin: 1.8 / 2.0,
   buisson: 1.3 / 1.0, arbre: 1.0 / 1.7, arbuste: 1.1 / 1.3, fleur: 1.0 / 1.5, pot_fleur: 1.0 / 1.3,
+  bac_fleurs: 1.2 / 0.8, conifere: 3.2 / 8.0, pin_parasol: 9.5 / 10.0, cypres: 1.8 / 10.0, olivier: 5.5 / 5.0, palmier: 5.0 / 7.0,
   oiseau: 1.4 / 1.0, lezard: 3.5 / 1.0, loup: 1.2 / 1.0, griffon: 2.0 / 1.0, singe: 0.85 / 1.0,
   piscine: 3.5 / 1.0, barbecue: 0.8 / 1.0,
   lampadaire: 0.6 / 1.0, panneau_signalisation: 0.5 / 1.0, banc: 1.8 / 0.85,
@@ -374,6 +380,7 @@ export const OBJECT_REAL_HEIGHT_M = {
   table: 0.75, chaise: 0.85, etagere: 1.8, armoire: 2.0, canape: 0.85, bureau: 0.75, lit: 0.55,
   fenetre_ouverte: 1.2, porte_ouverte: 2.05, escalier: 2.4, baie_vitree: 2.2, mur: 2.5, mur_coin: 2.5,
   buisson: 1.0, arbre: 4.5, arbuste: 1.4, fleur: 0.3, pot_fleur: 0.35,
+  bac_fleurs: 0.8, conifere: 8, pin_parasol: 10, cypres: 10, olivier: 5, palmier: 7,
   oiseau: 0.32, lezard: 0.06, loup: 0.9, griffon: 1.6, singe: 0.75,
   piscine: 1.04, barbecue: 0.95,
   lampadaire: 4.3, panneau_signalisation: 2.6, banc: 0.85,
@@ -388,11 +395,11 @@ export const OBJECT_REAL_HEIGHT_M = {
 
 // Au-delà de cette hauteur mesurée dans le fichier, on avertit à l'import (cf. model-import.js) :
 // c'est presque toujours un souci d'échelle côté export (racine mise à l'échelle, unité cm prise
-// pour des mètres) plutôt qu'un modèle réellement gigantesque, les plus grands types intégrés
-// (arbre, lampadaire) plafonnent déjà autour de 4-4,5 m. Le curseur de taille de la modale (10 à
+// pour des mètres) plutôt qu'un modèle réellement gigantesque : les plus grands types intégrés
+// (cyprès, pin parasol) font 10 m, le seuil garde une marge de moitié au-dessus. Le curseur de taille de la modale (10 à
 // 400 %) ne peut pas rattraper une erreur de cet ordre : à 10 % d'un modèle mesuré 100x trop
 // grand, il reste 10x trop grand.
-export const MODEL_HEIGHT_WARN_MAX_M = 10;
+export const MODEL_HEIGHT_WARN_MAX_M = 20;
 
 
 

@@ -13,6 +13,7 @@
  */
 
 import { roofFinishRead } from './building-survey.js';
+import { TREE_TYPES } from './constants.js';
 
 /** What a metre of the photo shows. */
 export const CLASSES = Object.freeze({ SHADOW: 0, TREE: 1, LAWN: 2, TILES: 3, LIGHT: 4, ASPHALT: 5, GREY: 6 });
@@ -261,7 +262,7 @@ export function readAerialPhoto(grid, translated, { south = false } = {}){
     for (const c of cellsOfMask(grid, z.world && z.world.masque)) zoneCells.add(c);
   }
   // The missing trees.
-  const mapped = translated.elements.filter(e => e.objType === 'arbre');
+  const mapped = translated.elements.filter(e => TREE_TYPES.includes(e.objType));
   for (const t of missingTrees(grid, { taken, trees: mapped })) {
     translated.elements.push({ objType: 'arbre', x: Math.round(t.x * 10) / 10, z: Math.round(t.z * 10) / 10, height: READ_TREE_HEIGHT, aerial: true });
     summary.trees++;

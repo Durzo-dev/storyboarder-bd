@@ -30,6 +30,7 @@ import { projector } from './geo-local.js';
 import { rulesFor } from './real-place-sources.js';
 import { facadeStyleOf } from './facade-style.js';
 import { monumentOf } from './monuments.js';
+import { TREE_TYPES } from './constants.js';
 import { roofFromHeights, ridgeSense, partsFromHeights } from './height-reading.js';
 /** A level's floor slab (batiment.js DEFAUTS_BATIMENT.dalle): a measured eaves height is levels and slabs. */
 const LEVEL_SLAB = 0.2;
@@ -218,7 +219,8 @@ function nearestOnPolyline(p, pts){
  * benches. Null for anything else.
  */
 export function furnitureOf(tags = {}){
-  if (tags.natural === 'tree') return 'arbre';
+  if (tags.natural === 'tree') return treeKindOf(tags);
+  if (tags.man_made === 'planter') return 'bac_fleurs';
   if (tags.highway === 'street_lamp') return 'lampadaire';
   if (tags.traffic_sign || tags.highway === 'stop' || tags.highway === 'give_way') return 'panneau_signalisation';
   if (tags.natural === 'shrub') return 'buisson';
@@ -228,6 +230,26 @@ export function furnitureOf(tags = {}){
   if (tags.amenity === 'waste_basket') return 'poubelle';
   if ((tags.highway === 'bus_stop' && tags.shelter === 'yes') || (tags.amenity === 'shelter' && tags.shelter_type === 'public_transport')) return 'abribus';
   return null;
+}
+
+/** Genera (Latin, as OSM's `genus`, `species`, `taxon` give them) and the tree object they look like. */
+const GENUS_TREES = [
+  [/^pinus pinea\b/, 'pin_parasol'],
+  [/^(cupressus|thuja|chamaecyparis|×?\s?cupressocyparis|calocedrus)\b/, 'cypres'],
+  [/^olea\b/, 'olivier'],
+  [/^(phoenix|washingtonia|trachycarpus|chamaerops|butia|syagrus|livistona|sabal|cocos|arecaceae)\b/, 'palmier'],
+  [/^(pinus|abies|picea|cedrus|larix|pseudotsuga|taxus|sequoia|sequoiadendron|tsuga|juniperus|metasequoia|araucaria|cryptomeria)\b/, 'conifere'],
+];
+/**
+ * A tree's object from its OSM tags: its genus or species (`genus`, `species`, `taxon`) when given, else its
+ * leaves (`leaf_type`: needleleaved → a conifer, palm → a palm tree), else a broadleaved tree.
+ */
+export function treeKindOf(tags = {}){
+  const name = String(tags.species || tags.genus || tags.taxon || '').trim().toLowerCase();
+  for (const [re, kind] of GENUS_TREES) if (re.test(name)) return kind;
+  if (tags.leaf_type === 'needleleaved') return 'conifere';
+  if (tags.leaf_type === 'palm') return 'palmier';
+  return 'arbre';
 }
 
 /** A tree's height from OSM (`height`, metres), or undefined: the object's default then. */
@@ -507,10 +529,10 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       // Realistic: a shop or a café is a point inside its building (shop windows on its ground floor).
       if (realistic && (tags.shop || ['restaurant', 'cafe', 'bar', 'pharmacy', 'bank', 'fast_food'].includes(tags.amenity))) shops.push(p);
       // Simple: the trees and lamps only.
-      if (!detailed && objType !== 'arbre' && objType !== 'lampadaire') continue;
+      if (!detailed && !TREE_TYPES.includes(objType) && objType !== 'lampadaire') continue;
       if (objType) {
         const el = { objType, x: round(p.x), z: round(p.z), osmId: e.id };
-        if (objType === 'arbre' && treeHeight(tags)) el.height = treeHeight(tags);
+        if (TREE_TYPES.includes(objType) && treeHeight(tags)) el.height = treeHeight(tags);
         out.elements.push(el);
       }
       continue;
@@ -558,7 +580,7 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
             const a = piece[i], b = piece[i + 1], len = Math.hypot(b.x - a.x, b.z - a.z);
             for (; len > 0 && next <= walked + len; next += TREE_ROW_SPACING) {
               const t = (next - walked) / len;
-              const el = { objType: 'arbre', x: round(a.x + (b.x - a.x) * t), z: round(a.z + (b.z - a.z) * t), osmId: w.id };
+              const el = { objType: treeKindOf(w.tags), x: round(a.x + (b.x - a.x) * t), z: round(a.z + (b.z - a.z) * t), osmId: w.id };
               if (treeHeight(w.tags)) el.height = treeHeight(w.tags);
               out.elements.push(el);
             }

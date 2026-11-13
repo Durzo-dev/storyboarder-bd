@@ -46,6 +46,8 @@ const CONSTRUCTEURS = {
   lit: 'buildBedRig3D', escalier: 'buildStairsRig3D',
   buisson: 'buildBuissonRig3D', arbre: 'buildArbreRig3D', arbuste: 'buildArbusteRig3D',
   fleur: 'buildFleurRig3D', pot_fleur: 'buildPotFleurRig3D',
+  bac_fleurs: 'buildBacFleursRig3D', conifere: 'buildConifereRig3D', pin_parasol: 'buildPinParasolRig3D',
+  cypres: 'buildCypresRig3D', olivier: 'buildOlivierRig3D', palmier: 'buildPalmierRig3D',
   oiseau: 'buildOiseauRig3D', lezard: 'buildLezardRig3D', loup: 'buildLoupRig3D',
   griffon: 'buildGriffonRig3D', singe: 'buildSingeRig3D',
   piscine: 'buildPiscineRig3D', barbecue: 'buildBarbecueRig3D',

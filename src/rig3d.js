@@ -597,6 +597,149 @@ export function _viderTexturesDuSol3D(){
 // ↳ src/constants.js
 // ↳ src/constants.js
 // ↳ src/constants.js
+// ─── Street planter and the trees of a place (#480a) ─────────────────────────────────────────
+// Real metres; fixed natural colours (like the other plants). Their own greens: a conifer is darker, an
+// olive tree grey-green, a palm's fronds yellower.
+let CONIFER_MAT_3D = null, OLIVE_MAT_3D = null, PALM_MAT_3D = null, PALM_TRUNK_MAT_3D = null, PINE_BARK_MAT_3D = null, PLANTER_MAT_3D = null;
+function ensureTreeMats3D(){
+  ensureSharedPropMats3D();
+  if (CONIFER_MAT_3D) return;
+  CONIFER_MAT_3D = new THREE.MeshStandardMaterial({ color: 0x2C5530, roughness: 0.9, metalness: 0 });
+  OLIVE_MAT_3D = new THREE.MeshStandardMaterial({ color: 0x6E7D50, roughness: 0.9, metalness: 0 });
+  PALM_MAT_3D = new THREE.MeshStandardMaterial({ color: 0x4E7A2E, roughness: 0.85, metalness: 0 });
+  PALM_TRUNK_MAT_3D = new THREE.MeshStandardMaterial({ color: 0x8A7558, roughness: 0.95, metalness: 0 });
+  PINE_BARK_MAT_3D = new THREE.MeshStandardMaterial({ color: 0x7A4B33, roughness: 0.95, metalness: 0 });
+  PLANTER_MAT_3D = new THREE.MeshStandardMaterial({ color: 0x8E8A82, roughness: 0.9, metalness: 0 });
+}
+
+/** A street planter: a stone box 1.2 × 0.5 m, 0.45 m high, its plants and flowers above (0.8 m in all). */
+export function buildBacFleursRig3D(){
+  ensureTreeMats3D();
+  const group = new THREE.Group();
+  const L = 1.2, D = 0.5, H = 0.45, t = 0.05;
+  const box = new THREE.Mesh(new THREE.BoxGeometry(L, H, D), PLANTER_MAT_3D);
+  box.position.y = H / 2;
+  const soil = new THREE.Mesh(new THREE.BoxGeometry(L - 2 * t, 0.02, D - 2 * t), TRUNK_MAT_3D);
+  soil.position.y = H - 0.03;
+  group.add(box, soil);
+  for (let k = 0; k < 5; k++) {
+    const x = -L / 2 + 0.16 + k * (L - 0.32) / 4;
+    const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.15 + (k % 2) * 0.03, 9, 7), k % 2 ? FOLIAGE_MAT_LIGHT_3D : FOLIAGE_MAT_3D);
+    leaf.position.set(x, H + 0.1, (k % 2 ? 0.06 : -0.06));
+    leaf.scale.y = 0.9;
+    const bloom = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), FLOWER_BLOOM_MAT_3D);
+    bloom.position.set(x + 0.04, H + 0.27, (k % 2 ? -0.04 : 0.05));
+    group.add(leaf, bloom);
+  }
+  return group;
+}
+
+/** A conifer (a fir, a spruce): a trunk under four stacked cones, 8 m high, 3.2 m across. */
+export function buildConifereRig3D(){
+  ensureTreeMats3D();
+  const group = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.2, 1.6, 8), PINE_BARK_MAT_3D);
+  trunk.position.y = 0.8;
+  group.add(trunk);
+  [[1.6, 2.6, 1.0], [1.35, 2.4, 2.6], [1.05, 2.2, 4.0], [0.7, 2.2, 5.6]].forEach(([r, h, y]) => {
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(r, h, 12), CONIFER_MAT_3D);
+    cone.position.y = y + h / 2;
+    group.add(cone);
+  });
+  return group;
+}
+
+/** A stone pine (Pinus pinea): a tall bare trunk, leaning, under a wide flat umbrella; 10 m high, 9 m across. */
+export function buildPinParasolRig3D(){
+  ensureTreeMats3D();
+  const group = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 7.2, 9), PINE_BARK_MAT_3D);
+  trunk.position.set(0.35, 3.6, 0);
+  trunk.rotation.z = -0.09;
+  group.add(trunk);
+  // The umbrella: a broad flattened mass and four lobes around it.
+  [[0.7, 8.3, 0, 3.6, 2.2], [2.3, 8.6, 0.9, 2.3, 1.6], [-1.0, 8.5, -0.9, 2.4, 1.6], [0.4, 8.9, 1.6, 2.0, 1.4], [1.0, 8.4, -1.9, 2.0, 1.4]].forEach(([cx, cy, cz, r, h], i) => {
+    const crown = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 10), i ? CONIFER_MAT_3D : FOLIAGE_MAT_3D);
+    crown.scale.set(r, h / 2, r);
+    crown.position.set(cx, cy, cz);
+    group.add(crown);
+  });
+  return group;
+}
+
+/** A cypress (Cupressus sempervirens): a narrow dark column, 10 m high, 1.8 m across. */
+export function buildCypresRig3D(){
+  ensureTreeMats3D();
+  const group = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, 0.8, 7), PINE_BARK_MAT_3D);
+  trunk.position.y = 0.4;
+  const column = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 14), CONIFER_MAT_3D);
+  column.scale.set(0.9, 4.7, 0.9);
+  column.position.y = 5.2;
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.45, 1.2, 10), CONIFER_MAT_3D);
+  tip.position.y = 9.4;
+  group.add(trunk, column, tip);
+  return group;
+}
+
+/** An olive tree: a short twisted trunk in two, a broad irregular grey-green crown; 5 m high, 5.5 m across. */
+export function buildOlivierRig3D(){
+  ensureTreeMats3D();
+  const group = new THREE.Group();
+  [[-0.25, 0.25], [0.25, -0.3]].forEach(([x, tilt]) => {
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.28, 2.2, 8), TRUNK_MAT_3D);
+    t.position.set(x, 1.1, 0);
+    t.rotation.z = tilt;
+    group.add(t);
+  });
+  [[0, 3.1, 0, 1.9], [1.4, 2.9, 0.5, 1.3], [-1.4, 3.0, -0.4, 1.4], [0.2, 3.8, -0.9, 1.2], [-0.3, 3.6, 1.0, 1.2]].forEach(([x, y, z, r]) => {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(r, 11, 8), OLIVE_MAT_3D);
+    m.scale.y = 0.7;
+    m.position.set(x, y, z);
+    group.add(m);
+  });
+  return group;
+}
+
+/** A palm tree: a slender curved trunk, a crown of arching fronds; 7 m high, 5 m across. */
+export function buildPalmierRig3D(){
+  ensureTreeMats3D();
+  const group = new THREE.Group();
+  // The trunk: five segments, leaning a little more at each.
+  let x = 0, y = 0;
+  for (let k = 0; k < 5; k++) {
+    const h = 1.3, lean = 0.03 + k * 0.025;
+    const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.17 - k * 0.01, 0.2 - k * 0.01, h, 8), PALM_TRUNK_MAT_3D);
+    seg.position.set(x + Math.sin(lean) * h / 2, y + h / 2, 0);
+    seg.rotation.z = -lean;
+    group.add(seg);
+    x += Math.sin(lean) * h; y += Math.cos(lean) * h;
+  }
+  // The fronds, radiating: each rises from the crown, then bends down at its middle (two thin boxes: a
+  // plane would need a double-sided material, one more shader program).
+  for (let k = 0; k < 11; k++) {
+    const frond = new THREE.Group();
+    frond.position.set(x, y, 0);
+    frond.rotation.y = k * 2 * Math.PI / 11;
+    const up = 0.15 + (k % 3) * 0.12, inL = 1.5, outL = 1.6;
+    const gi = new THREE.BoxGeometry(inL, 0.04, 0.7);
+    gi.translate(inL / 2, 0, 0);
+    const inner = new THREE.Mesh(gi, PALM_MAT_3D);
+    inner.rotation.z = up;
+    const go = new THREE.BoxGeometry(outL, 0.04, 0.5);
+    go.translate(outL / 2, 0, 0);
+    const outer = new THREE.Mesh(go, PALM_MAT_3D);
+    outer.position.set(inL * Math.cos(up), inL * Math.sin(up), 0);
+    outer.rotation.z = up - 0.85;
+    frond.add(inner, outer);
+    group.add(frond);
+  }
+  const heart = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 6), PALM_TRUNK_MAT_3D);
+  heart.position.set(x, y, 0);
+  group.add(heart);
+  return group;
+}
+
 // ↳ src/constants.js
 
 // ↳ src/constants.js
@@ -4433,6 +4576,8 @@ const PROP_RIG_BUILDERS_3D = {
   mur_coin: buildCornerWallRig3D,
   buisson: buildBuissonRig3D, arbre: buildArbreRig3D, arbuste: buildArbusteRig3D,
   fleur: buildFleurRig3D, pot_fleur: buildPotFleurRig3D,
+  bac_fleurs: buildBacFleursRig3D, conifere: buildConifereRig3D, pin_parasol: buildPinParasolRig3D,
+  cypres: buildCypresRig3D, olivier: buildOlivierRig3D, palmier: buildPalmierRig3D,
   oiseau: buildOiseauRig3D, lezard: buildLezardRig3D, loup: buildLoupRig3D, griffon: buildGriffonRig3D, singe: buildSingeRig3D,
   piscine: buildPiscineRig3D, barbecue: buildBarbecueRig3D,
   lampadaire: buildLampadaireRig3D, panneau_signalisation: buildPanneauSignalisationRig3D, banc: buildBancRig3D,

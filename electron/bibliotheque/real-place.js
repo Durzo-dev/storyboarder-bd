@@ -168,7 +168,7 @@ function overpassQuery({ south, west, north, east }){
   return `[out:json][timeout:60];(way["building"]${b};way["highway"]${b};way["barrier"]${b};way["waterway"]${b};`
     + `way["landuse"]${b};way["natural"]${b};way["leisure"]${b};way["amenity"~"^(parking|fountain)$"]${b};`
     + `node["natural"="tree"]${b};node["highway"="street_lamp"]${b};node["traffic_sign"]${b};node["highway"~"^(stop|give_way)$"]${b};`
-    + `node["natural"="shrub"]${b};node["amenity"~"^(bench|fountain|waste_basket|shelter)$"]${b};node["barrier"="bollard"]${b};`
+    + `node["natural"="shrub"]${b};node["man_made"="planter"]${b};node["amenity"~"^(bench|fountain|waste_basket|shelter)$"]${b};node["barrier"="bollard"]${b};`
     + `node["highway"="bus_stop"]${b};node["shop"]${b};node["entrance"]${b};`
     + `node["amenity"~"^(restaurant|cafe|bar|pharmacy|bank|fast_food)$"]${b};);out geom;`;
 }

@@ -9,6 +9,7 @@
 
 import { S, tr, newId } from './state.js';
 import { translateOsm, ZONE_SIDE_MAX, DETAIL_LEVELS } from './osm-scene.js';
+import { TREE_TYPES } from './constants.js';
 import { planRelief } from './real-place-sources.js';
 import { readBdTopo } from './building-survey.js';
 import { facadesOf, bestView, samplePoints, wallColour } from './facade-colour.js';
@@ -454,7 +455,7 @@ async function importer(){
     // The trees' heights (OSM's, and those read on the aerial photo), measured; the LiDAR's credit.
     if (hauteurs) {
       for (const e of translated.elements) {
-        if (e.objType !== 'arbre') continue;
+        if (!TREE_TYPES.includes(e.objType)) continue;
         const h = treeHeightAt(hauteurs, e.x, e.z);
         if (h) e.height = h;
       }

@@ -297,6 +297,20 @@ describe('OSM translator, street furniture and trees (#477c)', async () => {
     assert.equal(furnitureOf({ amenity: 'shelter', shelter_type: 'picnic_shelter' }), null);
     assert.equal(furnitureOf({ amenity: 'bench' }), 'banc');
     assert.equal(furnitureOf({ shop: 'bakery' }), null);
+    assert.equal(furnitureOf({ man_made: 'planter' }), 'bac_fleurs', '#480a');
+  });
+  test('a tree\'s object from its genus, species or leaves (#480a)', async () => {
+    const { treeKindOf } = await import('../src/osm-scene.js');
+    assert.equal(furnitureOf({ natural: 'tree' }), 'arbre');
+    assert.equal(treeKindOf({ species: 'Pinus pinea' }), 'pin_parasol');
+    assert.equal(treeKindOf({ genus: 'Pinus', species: 'Pinus nigra' }), 'conifere');
+    assert.equal(treeKindOf({ genus: 'Cupressus' }), 'cypres');
+    assert.equal(treeKindOf({ taxon: 'Olea europaea' }), 'olivier');
+    assert.equal(treeKindOf({ genus: 'Washingtonia' }), 'palmier');
+    assert.equal(treeKindOf({ genus: 'Platanus', leaf_type: 'broadleaved' }), 'arbre');
+    assert.equal(treeKindOf({ leaf_type: 'needleleaved' }), 'conifere');
+    assert.equal(treeKindOf({ leaf_type: 'palm' }), 'palmier');
+    assert.equal(furnitureOf({ natural: 'tree', genus: 'Picea' }), 'conifere');
   });
   test('a tree keeps its height (2 to 40 m); a row of trees, one every 8 m along it', () => {
     const r = translateOsm({ elements: [
