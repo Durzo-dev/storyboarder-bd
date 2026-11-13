@@ -63,6 +63,18 @@ describe('real place, laid in a new Scene and rendered', () => {
     assert.ok(Math.abs(panel.camDist - HALF * 1.1 / 0.15) < 1e-6);
     assert.ok(cam.far > panel.camDist + 50, 'the far plane reaches the Ground');
   });
+  test('a known height scales the object (proportions kept); a known orientation turns it (#477c)', () => {
+    const s3 = createScene();
+    const { page: p3 } = layRealPlace(s3, { traces: [], buildings: [], credits: [], elements: [
+      { objType: 'arbre', x: 0, z: 0, height: 9 }, { objType: 'abribus', x: 5, z: 5, rotY: 1.2 }, { objType: 'arbre', x: 9, z: 9 }] },
+    { halfSize: HALF, newObject });
+    const [tall, shelter, plain] = p3.objects.filter(o => o.type === 'objet3d');
+    assert.equal(tall.realHeightFloor, 9);
+    assert.equal(tall.w / tall.h, 20 / 40, 'its proportions');
+    assert.equal(shelter.rotY, 1.2);
+    assert.equal(plain.realHeightFloor, 1, 'no height: the default');
+    assert.equal(plain.rotY, 0);
+  });
   test('objects are made against the Scene\'s size, and stand on the Ground', () => {
     const s2 = createScene();
     const seen = [];

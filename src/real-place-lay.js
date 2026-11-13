@@ -49,7 +49,20 @@ export function layRealPlace(scene, content, { halfSize, newObject }){
   };
   for (const t of content.traces) { t.panelId = panel.id; page.objects.push(t); tracéUpdateScreenPts(t, panel, view); }
   for (const b of content.buildings) place(creerElementBatiment({ panel, page: view, batiment: b.building }), b.x, b.z);
-  for (const e of content.elements) place(newObject(panel, view, e.objType), e.x, e.z);
+  for (const e of content.elements) {
+    const o = newObject(panel, view, e.objType);
+    // A known height (an OSM tree's `height`): the object scaled to it, its proportions kept.
+    if (e.height > 0 && o.realHeightFloor > 0) {
+      const k = e.height / o.realHeightFloor;
+      o.realHeightFloor = e.height;
+      o.w *= k; o.h *= k;
+      if (o.baseW) o.baseW *= k;
+      if (o.baseH) o.baseH *= k;
+    }
+    // A known orientation (a bus shelter facing its street), radians.
+    if (Number.isFinite(e.rotY)) o.rotY = e.rotY;
+    place(o, e.x, e.z);
+  }
   // The whole zone in view, from above (createScene's camera), around its centre.
   panel.camDist = panel.camDistTarget = topViewDistance(halfSize, view);
   return { page, panel };

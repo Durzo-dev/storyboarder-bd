@@ -68,7 +68,9 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    `creerSceneManuelle` (events.js: an empty Scene, opened). "From an existing place" shows search (Enter: Nominatim, `realplace:search`; while typing, from three letters after a 350 ms pause, suggestions from the IGN's completion service and Photon asked at once, `realplace:suggest`, merged as they come; Nominatim forbids auto-complete) or a click on the map (tiles `realplace:tile`, cached for
    the session), the zone's size (100 to 400 m), the level of detail (`DETAIL_LEVELS`: « Simple », the volumes from OSM,
    default roofs, roads, paths, grounds, relief, trees and lamps; « Detailed », also the IGN survey in France,
-   the materials, pavements, road signs, shrubs and benches; « Realistic », also the facades
+   the materials, pavements, road signs, shrubs, benches and the street furniture (`furnitureOf`: fountains,
+   bollards, litter bins, bus shelters turned to face their street; the rows of trees, one every 8 m; a
+   tree's `height`, its object scaled to it); « Realistic », also the facades
    (`facadeStyleOf`, facade-style.js: shutters on a house or a block of four levels or fewer, a stone surround
    on a dwelling's openings, shop windows on the street side of a building holding a shop or a café, the
    region's colours (Alsace, the South, elsewhere) drawn by the building's id); what it brings is said under the row), "Create the scene". During the import, the zone's options give way

@@ -3564,6 +3564,99 @@ export function buildBancRig3D(colorHex){
   return group;
 }
 
+/**
+ * A town fountain: a round stone basin (3 m across, its rim 0.5 m high) full of water, and in its middle a
+ * column holding a small bowl. 1.8 m high. Stone and water keep their colours (the tint is unused).
+ */
+export function buildFontaineRig3D(){
+  ensureSharedPropMats3D();
+  const group = new THREE.Group();
+  const R = 1.5, rimH = 0.5, rimT = 0.18;
+  // The basin's rim: a ring of stone (an open cylinder, thick).
+  const rim = new THREE.Mesh(new THREE.CylinderGeometry(R, R, rimH, 28, 1, true), STONE_MAT_3D);
+  rim.position.y = rimH / 2;
+  const inner = new THREE.Mesh(new THREE.CylinderGeometry(R - rimT, R - rimT, rimH, 28, 1, true), STONE_MAT_3D);
+  inner.position.y = rimH / 2;
+  const top = new THREE.Mesh(new THREE.RingGeometry(R - rimT, R, 28), STONE_MAT_3D);
+  top.rotation.x = -Math.PI / 2; top.position.y = rimH;
+  const water = new THREE.Mesh(new THREE.CircleGeometry(R - rimT, 28), WATER_POOL_MAT_3D);
+  water.rotation.x = -Math.PI / 2; water.position.y = rimH - 0.08;
+  group.add(rim, inner, top, water);
+  // The column and its bowl.
+  const column = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.2, 1.4, 12), STONE_MAT_3D);
+  column.position.y = 0.7;
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.2, 0.25, 16), STONE_MAT_3D);
+  bowl.position.y = 1.5;
+  const bowlWater = new THREE.Mesh(new THREE.CircleGeometry(0.44, 16), WATER_POOL_MAT_3D);
+  bowlWater.rotation.x = -Math.PI / 2; bowlWater.position.y = 1.6;
+  const spout = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 8), STONE_MAT_3D);
+  spout.position.y = 1.72;
+  group.add(column, bowl, bowlWater, spout);
+  return group;
+}
+
+/** A bollard: a dark metal post, 0.9 m high, 15 cm across, its head rounded. */
+export function buildBorneRig3D(){
+  ensureSharedPropMats3D();
+  const group = new THREE.Group();
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.08, 0.82, 12), DARK_CHARCOAL_MAT_3D);
+  post.position.y = 0.41;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), DARK_CHARCOAL_MAT_3D);
+  head.position.y = 0.82;
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.078, 0.078, 0.04, 12), METAL_MAT_3D);
+  band.position.y = 0.7;
+  group.add(post, head, band);
+  return group;
+}
+
+/** A street litter bin: a drum on a post, 0.9 m high; the colour tints the drum (dark green by default). */
+export function buildPoubelleRig3D(colorHex){
+  ensureSharedPropMats3D();
+  const group = new THREE.Group();
+  const drumMat = ensurePropMatsByType3D('poubelle', colorHex || '#2f4f3a');
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.9, 8), METAL_MAT_3D);
+  post.position.set(0, 0.45, -0.24);
+  const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.2, 0.55, 16, 1, true), drumMat);
+  drum.position.y = 0.55;
+  const bottom = new THREE.Mesh(new THREE.CircleGeometry(0.2, 16), drumMat);
+  bottom.rotation.x = -Math.PI / 2; bottom.position.y = 0.28;
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.015, 6, 16), METAL_MAT_3D);
+  rim.rotation.x = Math.PI / 2; rim.position.y = 0.83;
+  group.add(post, drum, bottom, rim);
+  return group;
+}
+
+/**
+ * A bus shelter: a flat roof on four posts, a glass back and glass sides, a bench along the back. 4 m long,
+ * 1.5 m deep, 2.5 m high; its open side faces +z (the street, once turned).
+ */
+export function buildAbribusRig3D(colorHex){
+  ensureSharedPropMats3D();
+  const group = new THREE.Group();
+  const frame = ensurePropMatsByType3D('abribus', colorHex || '#3d4a52');
+  const L = 4, D = 1.5, H = 2.5;
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(L + 0.2, 0.12, D + 0.2), frame);
+  roof.position.y = H;
+  group.add(roof);
+  for (const x of [-L / 2, L / 2]) for (const z of [-D / 2, D / 2]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.08, H, 0.08), frame);
+    post.position.set(x, H / 2, z);
+    group.add(post);
+  }
+  const back = new THREE.Mesh(new THREE.BoxGeometry(L, H - 0.3, 0.02), BAY_GLASS_MAT_3D);
+  back.position.set(0, (H - 0.3) / 2 + 0.15, -D / 2);
+  group.add(back);
+  for (const x of [-L / 2, L / 2]) {
+    const side = new THREE.Mesh(new THREE.BoxGeometry(0.02, H - 0.3, D * 0.7), BAY_GLASS_MAT_3D);
+    side.position.set(x, (H - 0.3) / 2 + 0.15, -D * 0.15);
+    group.add(side);
+  }
+  const bench = new THREE.Mesh(new THREE.BoxGeometry(L * 0.6, 0.06, 0.4), METAL_MAT_3D);
+  bench.position.set(0, 0.48, -D / 2 + 0.3);
+  group.add(bench);
+  return group;
+}
+
 // ─── Cemetery ───────────────────────────────────────────────────────────────
 export function buildTombeRig3D(colorHex){
   ensureSharedPropMats3D();
@@ -4343,6 +4436,7 @@ const PROP_RIG_BUILDERS_3D = {
   oiseau: buildOiseauRig3D, lezard: buildLezardRig3D, loup: buildLoupRig3D, griffon: buildGriffonRig3D, singe: buildSingeRig3D,
   piscine: buildPiscineRig3D, barbecue: buildBarbecueRig3D,
   lampadaire: buildLampadaireRig3D, panneau_signalisation: buildPanneauSignalisationRig3D, banc: buildBancRig3D,
+  fontaine: buildFontaineRig3D, borne: buildBorneRig3D, poubelle: buildPoubelleRig3D, abribus: buildAbribusRig3D,
   tombe: buildTombeRig3D, pierre_tombale: buildPierreTombaleRig3D, caveau: buildCaveauRig3D,
   banc_eglise: buildBancEgliseRig3D, autel: buildAutelRig3D,
   [OBJ_TYPE_LUMIERE]: buildLumiereRig3D,

@@ -4413,6 +4413,7 @@ document.getElementById('ctxAddVelo').onclick = () => {
 // "City" submenu : managed via addSubmenuL2Groups (see Vehicles block above).
 [
   ['ctxAddLampadaire', 'lampadaire'], ['ctxAddPanneauSignalisation', 'panneau_signalisation'], ['ctxAddBanc', 'banc'],
+  ['ctxAddFontaine', 'fontaine'], ['ctxAddBorne', 'borne'], ['ctxAddPoubelle', 'poubelle'], ['ctxAddAbribus', 'abribus'],
 ].forEach(([btnId, objType]) => {
   document.getElementById(btnId).onclick = () => {
     const page = currentPage();

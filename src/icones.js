@@ -92,6 +92,10 @@ export const ICONES = {
   pierre_tombale: '<path d="M6 21V9a6 6 0 0 1 12 0v12z"/><path d="M4 21h16M12 10v6M10 12h4"/>',
   caveau: '<path d="m12 3-9 5h18z"/><path d="M4 10h16M3 21h18M6 10v9M10 10v9M14 10v9M18 10v9"/>',
   banc: '<path d="M3 11h18M5 11v8M19 11v8M3 6h18v5"/>',
+  fontaine: '<path d="M3 14h18l-2 6H5z"/><path d="M12 14V7M8 7h8M12 3v2"/>',
+  borne: '<path d="M9 21V7a3 3 0 0 1 6 0v14M7 21h10M9 10h6"/>',
+  poubelle: '<path d="M6 7h12l-1 14H7zM4 7h16M10 3h4v4"/>',
+  abribus: '<path d="M3 5h18M4 5v15M20 5v15M7 8v9M7 14h10"/>',
   autel: '<path d="M12 2v8M9 5h6M4 13h16M6 13v8M18 13v8"/>',
   chemin_terre: '<path d="M7 21c0-5 10-6 10-11S13 4 12 3" stroke-dasharray="2 3"/>',
   muret: '<path d="M3 13h18v6H3zM3 16h18M8 13v3M14 16v3M18 13v3"/>',
@@ -132,6 +136,7 @@ export const ICONE_TYPE_OBJET = {
   buisson: 'buisson', arbre: 'arbre', arbuste: 'arbuste', fleur: 'fleur', pot_fleur: 'pot',
   oiseau: 'oiseau', lezard: 'lezard', loup: 'loup', griffon: 'griffon', singe: 'singe',
   piscine: 'piscine', barbecue: 'barbecue', lampadaire: 'lampadaire', panneau_signalisation: 'panneau', banc: 'banc',
+  fontaine: 'fontaine', borne: 'borne', poubelle: 'poubelle', abribus: 'abribus',
   tombe: 'tombe', pierre_tombale: 'pierre_tombale', caveau: 'caveau', banc_eglise: 'banc', autel: 'autel',
   modele: 'modele', batiment: 'batiment',
 };

@@ -74,7 +74,9 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    `creerSceneManuelle` (events.js : une Scène vide, ouverte). « Depuis un lieu existant » montre une recherche (Entrée : Nominatim, `realplace:search` ; pendant la frappe, dès 3 lettres après 350 ms de pause, les suggestions du service de complétion de l'IGN et de Photon interrogés ensemble, `realplace:suggest`, fusionnées à mesure ; Nominatim interdit l'autocomplétion) ou un clic sur la carte (tuiles `realplace:tile`,
    gardées pendant la session), la taille de la zone (100 à 400 m), le niveau de détail (`DETAIL_LEVELS` : « Simple », les volumes d'OSM,
    toits par défaut, routes, chemins, sols, relief, arbres et lampadaires ; « Détaillé », en plus le relevé
-   de l'IGN en France, les matériaux, trottoirs, panneaux, buissons et bancs ; « Réaliste », en plus les
+   de l'IGN en France, les matériaux, trottoirs, panneaux, buissons, bancs et le mobilier urbain (`furnitureOf` : fontaines,
+   bornes, poubelles, abribus tournés vers leur rue ; les alignements d'arbres, un tous les 8 m ; la
+   `height` d'un arbre, son objet mis à cette taille) ; « Réaliste », en plus les
    façades (`facadeStyleOf`, facade-style.js : volets sur une maison ou un immeuble de quatre niveaux au plus,
    encadrement de pierre sur les ouvertures d'un logement, vitrines côté rue d'un bâtiment qui abrite un
    commerce ou un café, couleurs de la région (Alsace, Sud, ailleurs) tirées par l'identifiant du bâtiment) ;

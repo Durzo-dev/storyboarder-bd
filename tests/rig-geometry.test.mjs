@@ -50,6 +50,7 @@ const CONSTRUCTEURS = {
   griffon: 'buildGriffonRig3D', singe: 'buildSingeRig3D',
   piscine: 'buildPiscineRig3D', barbecue: 'buildBarbecueRig3D',
   lampadaire: 'buildLampadaireRig3D', panneau_signalisation: 'buildPanneauSignalisationRig3D', banc: 'buildBancRig3D',
+  fontaine: 'buildFontaineRig3D', borne: 'buildBorneRig3D', poubelle: 'buildPoubelleRig3D', abribus: 'buildAbribusRig3D',
   tombe: 'buildTombeRig3D', pierre_tombale: 'buildPierreTombaleRig3D', caveau: 'buildCaveauRig3D',
   banc_eglise: 'buildBancEgliseRig3D',
 };

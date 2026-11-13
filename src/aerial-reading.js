@@ -175,6 +175,8 @@ function groups(grid, keep){
 export const CROWN_AREA = 35;
 /** The smallest canopy read as a tree (m²): smaller, a bush or noise. */
 export const SMALLEST_CANOPY = 8;
+/** A read tree's height (m): a crown of 35 m² is a street or park tree of about 8 m. */
+export const READ_TREE_HEIGHT = 8;
 /** The most trees a reading adds. */
 export const MOST_TREES = 300;
 
@@ -261,7 +263,7 @@ export function readAerialPhoto(grid, translated, { south = false } = {}){
   // The missing trees.
   const mapped = translated.elements.filter(e => e.objType === 'arbre');
   for (const t of missingTrees(grid, { taken, trees: mapped })) {
-    translated.elements.push({ objType: 'arbre', x: Math.round(t.x * 10) / 10, z: Math.round(t.z * 10) / 10, aerial: true });
+    translated.elements.push({ objType: 'arbre', x: Math.round(t.x * 10) / 10, z: Math.round(t.z * 10) / 10, height: READ_TREE_HEIGHT, aerial: true });
     summary.trees++;
   }
   // The lawns no Zone covers.

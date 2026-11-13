@@ -281,3 +281,67 @@ describe('OSM translator, the doors at the entrances (#474a)', () => {
     assert.ok(Math.abs(d[0].le - 0.5) < 1e-9, 'the road-side door, as without entrance');
   });
 });
+
+describe('OSM translator, street furniture and trees (#477c)', async () => {
+  const { furnitureOf, TREE_ROW_SPACING } = await import('../src/osm-scene.js');
+  const centre = { lat: 48, lon: 7 };
+  const dLat = 1 / 111320, dLon = 1 / (111320 * Math.cos(48 * Math.PI / 180));   // a metre, in degrees
+  const at = (x, z) => [48 - z * dLat, 7 + x * dLon];
+  test('each kind of furniture to its built-in object; a bus stop without a shelter: none', () => {
+    assert.equal(furnitureOf({ amenity: 'fountain' }), 'fontaine');
+    assert.equal(furnitureOf({ barrier: 'bollard' }), 'borne');
+    assert.equal(furnitureOf({ amenity: 'waste_basket' }), 'poubelle');
+    assert.equal(furnitureOf({ highway: 'bus_stop', shelter: 'yes' }), 'abribus');
+    assert.equal(furnitureOf({ amenity: 'shelter', shelter_type: 'public_transport' }), 'abribus');
+    assert.equal(furnitureOf({ highway: 'bus_stop' }), null, 'a pole only');
+    assert.equal(furnitureOf({ amenity: 'shelter', shelter_type: 'picnic_shelter' }), null);
+    assert.equal(furnitureOf({ amenity: 'bench' }), 'banc');
+    assert.equal(furnitureOf({ shop: 'bakery' }), null);
+  });
+  test('a tree keeps its height (2 to 40 m); a row of trees, one every 8 m along it', () => {
+    const r = translateOsm({ elements: [
+      { type: 'node', id: 1, lat: at(0, 0)[0], lon: at(0, 0)[1], tags: { natural: 'tree', height: '12' } },
+      { type: 'node', id: 2, lat: at(5, 0)[0], lon: at(5, 0)[1], tags: { natural: 'tree', height: '300' } },
+      { type: 'way', id: 3, tags: { natural: 'tree_row', height: '9' }, geometry: [at(-40, 20), at(0, 20), at(0, 40)] },
+    ] }, { centre, halfSize: 100 });
+    const [t1, t2, ...row] = r.elements;
+    assert.equal(t1.height, 12); assert.equal(t2.height, undefined, 'an absurd height is ignored');
+    assert.equal(row.length, Math.floor(60 / TREE_ROW_SPACING) + 1, '60 m of line');
+    assert.ok(row.every(e => e.objType === 'arbre' && e.height === 9));
+    for (let k = 1; k < row.length; k++) {
+      const d = Math.hypot(row[k].x - row[k - 1].x, row[k].z - row[k - 1].z);
+      assert.ok(d <= TREE_ROW_SPACING + 0.05 && d > 5, `spacing ${d.toFixed(2)} (the corner cuts one short)`);
+    }
+  });
+  test('a small fountain mapped as an area: a fountain at its middle; a large one: none (its water is a Zone)', () => {
+    const square = (x0, z0, s) => [at(x0, z0), at(x0 + s, z0), at(x0 + s, z0 + s), at(x0, z0 + s), at(x0, z0)];
+    const r = translateOsm({ elements: [
+      { type: 'way', id: 1, tags: { amenity: 'fountain' }, geometry: square(10, 10, 4) },
+      { type: 'way', id: 2, tags: { amenity: 'fountain' }, geometry: square(-60, -60, 20) },
+    ] }, { centre, halfSize: 100 });
+    assert.equal(r.elements.length, 1);
+    assert.equal(r.elements[0].objType, 'fontaine');
+    assert.ok(Math.abs(r.elements[0].x - 12) < 0.2 && Math.abs(r.elements[0].z - 12) < 0.2);
+  });
+  test('a bus shelter faces its street (its open side, +z, towards the nearest road)', () => {
+    const r = translateOsm({ elements: [
+      { type: 'node', id: 1, lat: at(0, -4)[0], lon: at(0, -4)[1], tags: { highway: 'bus_stop', shelter: 'yes' } },
+      { type: 'way', id: 2, tags: { highway: 'primary' }, geometry: [at(-50, 0), at(50, 0)] },
+    ] }, { centre, halfSize: 100 });
+    const s = r.elements.find(e => e.objType === 'abribus');
+    // The road is 4 m south (+z) of it: no turn.
+    assert.ok(Math.abs(s.rotY) < 0.02, `rotY ${s.rotY}`);
+    const r2 = translateOsm({ elements: [
+      { type: 'node', id: 1, lat: at(-4, 0)[0], lon: at(-4, 0)[1], tags: { highway: 'bus_stop', shelter: 'yes' } },
+      { type: 'way', id: 2, tags: { highway: 'primary' }, geometry: [at(0, -50), at(0, 50)] },
+    ] }, { centre, halfSize: 100 });
+    assert.ok(Math.abs(r2.elements.find(e => e.objType === 'abribus').rotY - Math.PI / 2) < 0.02, 'the road to the east: a quarter turn');
+  });
+  test('Simple: only the trees and the lamps', () => {
+    const r = translateOsm({ elements: [
+      { type: 'node', id: 1, lat: 48, lon: 7, tags: { amenity: 'fountain' } },
+      { type: 'node', id: 2, lat: 48, lon: 7, tags: { natural: 'tree' } },
+    ] }, { centre, halfSize: 100, detail: 'simple' });
+    assert.deepEqual(r.elements.map(e => e.objType), ['arbre']);
+  });
+});

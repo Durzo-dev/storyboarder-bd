@@ -196,6 +196,46 @@ function distanceToPolyline(p, pts){
   return d;
 }
 
+/** The point of a polyline nearest to `p`. */
+function nearestOnPolyline(p, pts){
+  let best = null, d0 = Infinity;
+  for (let i = 0; i + 1 < pts.length; i++) {
+    const a = pts[i], b = pts[i + 1], dx = b.x - a.x, dz = b.z - a.z, l2 = dx * dx + dz * dz;
+    const t = l2 > 0 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / l2)) : 0;
+    const q = { x: a.x + t * dx, z: a.z + t * dz }, d = Math.hypot(p.x - q.x, p.z - q.z);
+    if (d < d0) { d0 = d; best = q; }
+  }
+  return best;
+}
+
+/**
+ * STREET FURNITURE FROM OSM (a node's tags → a built-in object), at the « Detailed » level: fountains,
+ * bollards, litter bins, bus shelters (a stop with a shelter), with the trees, lamps, signs, shrubs and
+ * benches. Null for anything else.
+ */
+export function furnitureOf(tags = {}){
+  if (tags.natural === 'tree') return 'arbre';
+  if (tags.highway === 'street_lamp') return 'lampadaire';
+  if (tags.traffic_sign || tags.highway === 'stop' || tags.highway === 'give_way') return 'panneau_signalisation';
+  if (tags.natural === 'shrub') return 'buisson';
+  if (tags.amenity === 'bench') return 'banc';
+  if (tags.amenity === 'fountain') return 'fontaine';
+  if (tags.barrier === 'bollard') return 'borne';
+  if (tags.amenity === 'waste_basket') return 'poubelle';
+  if ((tags.highway === 'bus_stop' && tags.shelter === 'yes') || (tags.amenity === 'shelter' && tags.shelter_type === 'public_transport')) return 'abribus';
+  return null;
+}
+
+/** A tree's height from OSM (`height`, metres), or undefined: the object's default then. */
+function treeHeight(tags){
+  const v = parseFloat(tags.height);
+  return v >= 2 && v <= 40 ? v : undefined;
+}
+/** The spacing of the trees of a row (`natural=tree_row`), metres. */
+export const TREE_ROW_SPACING = 8;
+/** The largest fountain mapped as an area that is drawn as a fountain object (m²): larger, its water is a Zone. */
+const FOUNTAIN_AREA_MAX = 80;
+
 /**
  * A polyline clipped to the square |x|, |z| ≤ h: the pieces that lie inside (Liang–Barsky per segment,
  * consecutive pieces joined). Each piece has at least two points.
@@ -447,16 +487,18 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
     if (e.type === 'node') {
       const g = geoPoint(e), p = g && toLocal(g);
       if (!p || Math.abs(p.x) > h || Math.abs(p.z) > h) continue;
-      const objType = tags.natural === 'tree' ? 'arbre' : tags.highway === 'street_lamp' ? 'lampadaire'
-        : (tags.traffic_sign || tags.highway === 'stop' || tags.highway === 'give_way') ? 'panneau_signalisation'
-          : tags.natural === 'shrub' ? 'buisson' : tags.amenity === 'bench' ? 'banc' : null;
+      const objType = furnitureOf(tags);
       // An entrance (`entrance=*`, a node on a building's outline): its door goes where it is.
       if (tags.entrance && tags.entrance !== 'no') entrances.push({ x: p.x, z: p.z, kind: tags.entrance });
       // Realistic: a shop or a café is a point inside its building (shop windows on its ground floor).
       if (realistic && (tags.shop || ['restaurant', 'cafe', 'bar', 'pharmacy', 'bank', 'fast_food'].includes(tags.amenity))) shops.push(p);
       // Simple: the trees and lamps only.
       if (!detailed && objType !== 'arbre' && objType !== 'lampadaire') continue;
-      if (objType) out.elements.push({ objType, x: round(p.x), z: round(p.z), osmId: e.id });
+      if (objType) {
+        const el = { objType, x: round(p.x), z: round(p.z), osmId: e.id };
+        if (objType === 'arbre' && treeHeight(tags)) el.height = treeHeight(tags);
+        out.elements.push(el);
+      }
       continue;
     }
     if (e.type !== 'way' || !Array.isArray(e.geometry)) continue;
@@ -488,6 +530,39 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
           out.paths.push({ kind: 'trottoir', world: { pts: offsetPolyline(piece, sign * (kind.width / 2 + sw / 2)).map(roundPoint), width: sw }, osmId: w.id });
         }
       }
+    }
+  }
+  // Detailed: the rows of trees (a tree every TREE_ROW_SPACING m along the line) and the small fountains
+  // mapped as areas (a fountain object at their middle).
+  if (detailed) {
+    for (const w of ways) {
+      if (w.tags.natural === 'tree_row') {
+        for (const piece of clipPolyline(w.pts, h)) {
+          // `next`: the distance along the line of the next tree; `walked`: the distance at the segment's start.
+          let next = 0, walked = 0;
+          for (let i = 0; i + 1 < piece.length; i++) {
+            const a = piece[i], b = piece[i + 1], len = Math.hypot(b.x - a.x, b.z - a.z);
+            for (; len > 0 && next <= walked + len; next += TREE_ROW_SPACING) {
+              const t = (next - walked) / len;
+              const el = { objType: 'arbre', x: round(a.x + (b.x - a.x) * t), z: round(a.z + (b.z - a.z) * t), osmId: w.id };
+              if (treeHeight(w.tags)) el.height = treeHeight(w.tags);
+              out.elements.push(el);
+            }
+            walked += len;
+          }
+        }
+      }
+      if (w.tags.amenity === 'fountain' && w.pts.length >= 4 && Math.abs(signedArea(w.pts)) <= FOUNTAIN_AREA_MAX) {
+        const c = w.pts.slice(0, -1).reduce((m, p, _, all) => ({ x: m.x + p.x / all.length, z: m.z + p.z / all.length }), { x: 0, z: 0 });
+        if (Math.abs(c.x) <= h && Math.abs(c.z) <= h) out.elements.push({ objType: 'fontaine', x: round(c.x), z: round(c.z), osmId: w.id });
+      }
+    }
+    // A bus shelter faces its street: its open side (+z) turned towards the nearest road.
+    for (const el of out.elements) {
+      if (el.objType !== 'abribus' || !roads.length) continue;
+      let q = null, d0 = Infinity;
+      for (const r of roads) { const n2 = nearestOnPolyline(el, r); const d = n2 ? Math.hypot(n2.x - el.x, n2.z - el.z) : Infinity; if (d < d0) { d0 = d; q = n2; } }
+      if (q && d0 > 0.01 && d0 < 30) el.rotY = round(Math.atan2(q.x - el.x, q.z - el.z));
     }
   }
   // The survey (building-survey.js, readBdTopo): each OSM building takes the surveyed building it is.
