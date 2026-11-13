@@ -252,6 +252,11 @@ export function treeKindOf(tags = {}){
   return 'arbre';
 }
 
+/** Whether OSM says a tree's form (its genus, species or leaves): else the place's flora draws it (#480b). */
+export function treeKindKnown(tags = {}){
+  return !!(tags.species || tags.genus || tags.taxon || ['needleleaved', 'broadleaved', 'palm'].includes(tags.leaf_type));
+}
+
 /** A tree's height from OSM (`height`, metres), or undefined: the object's default then. */
 function treeHeight(tags){
   const v = parseFloat(tags.height);
@@ -533,6 +538,8 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       if (objType) {
         const el = { objType, x: round(p.x), z: round(p.z), osmId: e.id };
         if (TREE_TYPES.includes(objType) && treeHeight(tags)) el.height = treeHeight(tags);
+        // Its form said by OSM: the place's flora leaves it (flora.js applyFlora).
+        if (TREE_TYPES.includes(objType) && treeKindKnown(tags)) el.kindKnown = true;
         out.elements.push(el);
       }
       continue;
@@ -581,6 +588,7 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
             for (; len > 0 && next <= walked + len; next += TREE_ROW_SPACING) {
               const t = (next - walked) / len;
               const el = { objType: treeKindOf(w.tags), x: round(a.x + (b.x - a.x) * t), z: round(a.z + (b.z - a.z) * t), osmId: w.id };
+              if (treeKindKnown(w.tags)) el.kindKnown = true;
               if (treeHeight(w.tags)) el.height = treeHeight(w.tags);
               out.elements.push(el);
             }

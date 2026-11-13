@@ -21,6 +21,7 @@ import { aerialPhotoPlan, AERIAL_CREDIT } from './aerial-photo.js';
 import { classGrid, readAerialPhoto } from './aerial-reading.js';
 import { monumentsOf } from './monuments.js';
 import { heightPlan, heightGrid, treeHeightAt, LIDAR_CREDIT } from './height-reading.js';
+import { floraOf, applyFlora, FLORA_CREDIT, FLORA_RADIUS_KM } from './flora.js';
 import { chercherUnModele, remplacerLeBatiment } from './monuments-ui.js';
 import { nomDuTrace } from './canvas-tools.js';
 import { enregistrerFermeture } from './modal-stack.js';
@@ -435,6 +436,8 @@ async function importer(){
       if (arrete()) return annule;
       if (s && s.json) survey = readBdTopo(s.json, centre);
     }
+    // The plants of the place (flora.js, GBIF), asked now, read once the trees are known (any country).
+    const flore = niveau !== 'simple' ? lireLaFlore(centre) : null;
     // France: the LiDAR's heights (height-reading.js): the real eaves and roofs, the trees' heights.
     const hauteurs = country === 'fr' && niveau !== 'simple' ? await lireLesHauteurs({ toGeo, halfSize, country }) : null;
     if (arrete()) return annule;
@@ -451,6 +454,13 @@ async function importer(){
       const lu = await lireLaVueAerienne(translated, { toGeo, halfSize, country, south: centre.lat < 46 });
       if (arrete()) return annule;
       if (lu) photoCredits.push(tr(AERIAL_CREDIT.en, AERIAL_CREDIT.fr));
+    }
+    // The trees and shrubs OSM says nothing of (and those read on the aerial photo) take the place's forms.
+    const flora = flore ? await flore : null;
+    if (arrete()) return annule;
+    if (flora) {
+      console.info(`[real-place] flora: ${applyFlora(translated.elements, flora)} trees and shrubs drawn`, flora.trees);
+      photoCredits.push(tr(FLORA_CREDIT.en, FLORA_CREDIT.fr));
     }
     // The trees' heights (OSM's, and those read on the aerial photo), measured; the LiDAR's credit.
     if (hauteurs) {
@@ -470,7 +480,7 @@ async function importer(){
     contenu.credits.push(...photoCredits);
     // The Paths' canvas is the new Scene's: creerScene attaches them to it.
     const scene = _rappels.creerScene(contenu, { nom: V.name || tr('Real place', 'Lieu réel'), demiCote: halfSize,
-      lieu: { lat: centre.lat, lon: centre.lon, size_m: halfSize * 2, detail: niveau, country: country || null } });
+      lieu: { lat: centre.lat, lon: centre.lon, size_m: halfSize * 2, detail: niveau, country: country || null, ...(flora ? { flora } : {}) } });
     // Then built behind this window, which shows it to the end (scene-loading.js): one bar, start to end.
     // Cancelled: the Scene is removed (construireScene).
     const fini = await _rappels.construireScene(scene, {
@@ -527,6 +537,18 @@ export async function importerPourIA({ query = null, lat, lon, sideM = 200, deta
  * THE LIDAR'S HEIGHTS (height-reading.js reads them; here the network): the MNH of the zone as floats, or null
  * (outside France, no answer: the heights come from the survey and OSM, as before). Never kept.
  */
+/** The flora of the place (flora.js), or null (no answer: the trees stay as OSM says, broadleaved by default). */
+async function lireLaFlore(centre){
+  const api = window.storyboarderAPI;
+  if (!api || !api.realPlaceFlora) return null;
+  try {
+    const r = await api.realPlaceFlora(centre.lat, centre.lon, FLORA_RADIUS_KM);
+    const f = r && r.json ? floraOf(r.json) : null;
+    if (!f) console.warn('[real-place] flora: none', r && r.error);
+    return f;
+  } catch (e) { console.warn('[real-place] flora:', e.message); return null; }
+}
+
 async function lireLesHauteurs({ toGeo, halfSize, country }){
   const api = window.storyboarderAPI;
   const plan = heightPlan({ toGeo, halfSize, country });

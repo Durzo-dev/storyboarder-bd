@@ -369,6 +369,25 @@ async function heightGrid(bbox, width, height){
 }
 
 /**
+ * THE PLANTS OBSERVED AROUND A PLACE (src/flora.js reads them, #480b): GBIF's vascular plants (phylum
+ * Tracheophyta, key 7707728) within `km` of it, counted by genus and by species, no key. Returns { json } or
+ * { error }.
+ */
+async function flora(lat, lon, km = 5){
+  const la = Number(lat), lo = Number(lon), r = Math.max(1, Math.min(20, Number(km) || 5));
+  if (!(Math.abs(la) <= 85) || !(Math.abs(lo) <= 180)) return { error: 'response' };
+  const d = r / 111, dl = r / (111 * Math.cos(la * Math.PI / 180));
+  const f = (v) => v.toFixed(5);
+  const url = 'https://api.gbif.org/v1/occurrence/search?phylumKey=7707728&limit=0'
+    + `&decimalLatitude=${f(la - d)},${f(la + d)}&decimalLongitude=${f(lo - dl)},${f(lo + dl)}`
+    + '&facet=genusKey&facet=speciesKey&facetLimit=1000&speciesKey.facetLimit=2000';
+  const started = Date.now();
+  const r2 = await request(url, { timeout: 20000 });
+  console.info(`[real-place] flora (GBIF): ${r2.json ? `${r2.json.count} observations` : r2.error} in ${Date.now() - started} ms`);
+  return r2.json ? { json: r2.json } : { error: r2.error || 'response' };
+}
+
+/**
  * The altitude requests planned by the renderer (planRelief): sent in order, `perSecond` at most, each
  * checked against ALTITUDE_HOSTS. Returns { answers } (one JSON per request) or { error }.
  */
@@ -402,4 +421,4 @@ async function tile(z, x, y){
   return { data: r.bytes };
 }
 
-module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, aerialPhoto, heightGrid, country, osm, bdtopo, bdTopoUrl, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };
+module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, aerialPhoto, heightGrid, flora, country, osm, bdtopo, bdTopoUrl, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };
