@@ -2,7 +2,8 @@
  * @file monuments-ui.js
  * THE « MONUMENTS FOUND » WINDOW (#475): after a real place's import, its known monuments (monuments.js),
  * each with « Find a 3D model » (the store, on Sketchfab, its name searched, in choice mode: the model chosen
- * and downloaded comes back here) and « Keep the building ». A chosen model takes the monument's place: on
+ * and downloaded comes back here) and « Keep the building » (closing it keeps them all). A chosen model takes
+ * the monument's place: on
  * its footprint, as high as its building, turned along it; the generated building is hidden, not deleted
  * (Ctrl+Z undoes the whole). Nothing is put in place without the user's choice (decided by Durzo).
  */
@@ -25,7 +26,9 @@ let _scene = null;
 export function cablerMonuments(rappels){
   _rappels = { ..._rappels, ...rappels };
   $('monumentsClose').onclick = fermer;
-  $('monumentsDone').onclick = fermer;
+  // A monument's model, from its Element's sheet (#475, asked): changed, or the building restored.
+  $('objectMonumentChange').onclick = () => depuisLaFiche(changerLeModele);
+  $('objectMonumentRestore').onclick = () => depuisLaFiche(retablirLeBatiment);
   enregistrerFermeture('monumentsModal', fermer);
   const monumentsModal = $('monumentsModal');
   monumentsModal.addEventListener('mousedown', (e) => { if (e.target === monumentsModal) fermer(); });
@@ -111,10 +114,63 @@ export async function remplacerLeBatiment(scene, o, fichier){
   const el = createModelElement({ panel, page: view, modelFile: fichier, name: o.monument.name,
     realHeightM: encombrementDuBatiment(o.batiment).hauteur, ratioLargeur: m ? m.ratioLargeur : undefined });
   el.rotY = alongFootprint(contour(o.batiment));
+  // Its monument and building: its sheet changes the model, or restores the building.
+  el.monument = { ...o.monument };
+  el.monumentDe = o.id;
   placeOnGround(el, panel, o.wxFloor || 0, o.wzFloor || 0);
   page.objects.push(el);
   o.hidden3d = true;
   S.projectDirty = true;
   _rappels.render();
   return el;
+}
+
+// ── From a monument's model, in the Scene (its sheet) ────────────────────────────────────────────
+
+/** The Scene page holding an object, and the object, from its id. */
+function trouver(id){
+  for (const sc of S.scenes || []) {
+    const page = pageOf(sc);
+    const o = page && page.objects.find(x => x.id === id);
+    if (o) return { scene: sc, page, o };
+  }
+  return null;
+}
+
+/** The sheet's object (modals.js sets the field's `data-id`), the sheet closed, then `faire`. */
+function depuisLaFiche(faire){
+  const id = $('objectMonumentField').dataset.id;
+  const t = id && trouver(id);
+  if (!t) return;
+  $('objectModalCancel').click();
+  faire(t);
+}
+
+/** Another model for the monument: the store on Sketchfab again; the Element keeps its place, turn and height. */
+function changerLeModele({ o }){
+  ouvrirStore({
+    onglet: 'sketchfab',
+    texte: searchFor(o.monument),
+    choisir: async (fichier) => {
+      await preloadModels([fichier]);
+      const m = getLoadedModel(fichier);
+      _rappels.snapshot();
+      o.modelFile = fichier;
+      if (m && m.ratioLargeur > 0) { o.w = o.h * m.ratioLargeur; o.baseW = o.w; }
+      S.projectDirty = true;
+      _rappels.render();
+    },
+    accepter: (e) => !e.batiment && !e.introuvable,
+    licence: licenceAccepted,
+  });
+}
+
+/** The generated building back, the model removed (one undo step). */
+function retablirLeBatiment({ page, o }){
+  const b = page.objects.find(x => x.id === o.monumentDe);
+  _rappels.snapshot();
+  page.objects.splice(page.objects.indexOf(o), 1);
+  if (b) delete b.hidden3d;
+  S.projectDirty = true;
+  _rappels.render();
 }

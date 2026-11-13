@@ -15,6 +15,7 @@ const { translateOsm } = await import('../src/osm-scene.js');
 const { sceneContentOf } = await import('../src/real-place-import.js');
 const { layRealPlace } = await import('../src/real-place-lay.js');
 const { createScene } = await import('../src/scenes.js');
+const { S } = await import('../src/state.js');
 
 describe('monuments, which buildings are', () => {
   test('a named building linked to Wikidata, heritage, historic, a sight, a museum, or a church or castle', () => {
@@ -71,7 +72,7 @@ describe('monuments, a model taking a monument\'s place in a laid Scene', async 
     const church = monumentsOf(page.objects).find(o => o.monument.name === 'Église Saints-Pierre-et-Paul');
     assert.ok(church, 'the monument kept on its Element');
     let snapshots = 0;
-    for (const id of ['monumentsClose', 'monumentsDone']) if (!document.getElementById(id)) { const b = document.createElement('button'); b.id = id; document.body.appendChild(b); }
+    for (const id of ['monumentsClose', 'objectMonumentChange', 'objectMonumentRestore', 'objectModalCancel', 'objectMonumentField']) if (!document.getElementById(id)) { const b = document.createElement('button'); b.id = id; document.body.appendChild(b); }
     cablerMonuments({ snapshot: () => { snapshots++; }, render: () => {} });
     const el = await remplacerLeBatiment(scene, church, 'eglise.glb');
     assert.equal(el.objType, 'modele'); assert.equal(el.modelFile, 'eglise.glb');
@@ -83,5 +84,13 @@ describe('monuments, a model taking a monument\'s place in a laid Scene', async 
     assert.ok(page.objects.includes(church) && page.objects.includes(el));
     assert.equal(snapshots, 1);
     assert.equal(monumentsOf(page.objects).length, 1, 'the chapel is left');
+    // Its sheet: « Restore the building » removes the model and shows the building again (one more step).
+    assert.equal(el.monumentDe, church.id);
+    S.scenes.push(scene);
+    document.getElementById('objectMonumentField').dataset.id = el.id;
+    document.getElementById('objectMonumentRestore').onclick();
+    assert.ok(!page.objects.includes(el), 'the model removed');
+    assert.equal(church.hidden3d, undefined, 'the building shown again');
+    assert.equal(snapshots, 2);
   });
 });

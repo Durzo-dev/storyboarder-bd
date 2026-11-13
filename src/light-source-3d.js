@@ -302,6 +302,7 @@ export const SECTIONS_FICHE_LUMIERE = {
  */
 export const CHAMPS_FICHE_LUMIERE = {
   // — Caractéristiques principales —
+  objectMonumentField: false,      // a monument's model (#475): a light is none
   objectPoseField: false,          // la pose : une sphère n'en a pas
   objectStrayMeshField: false,     // les maillages parasites d'un modèle importé
   objectMagnetWallField: false,    // les quatre champs de Mur et d'ouverture, sans objet ici

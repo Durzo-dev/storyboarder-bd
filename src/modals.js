@@ -1220,6 +1220,9 @@ export function openObjectModal(obj, isNew){
   // fichier. Le nom du fichier, son état et sa hauteur vivent désormais ailleurs, respectivement
   // dans le champ « Modèle » (cf. buildFigureFieldUI) et le champ « Hauteur ».
   const _estModele = isImportedModel(obj);
+  // #475 : a monument's model: « Change the model », « Restore the building » (monuments-ui.js).
+  const _monument = document.getElementById('objectMonumentField');
+  if (_monument) { _monument.style.display = _estModele && obj.monumentDe ? '' : 'none'; _monument.dataset.id = obj.id; }
   if (objectTypeSelect && objectTypeSelect.parentElement) {
     objectTypeSelect.style.display = _estModele ? 'none' : '';
     // ET SON LIBELLÉ AVEC. Seul le <select> était masqué : devant un modèle importé, « TYPE »

@@ -1505,9 +1505,6 @@
     <h3 id="monumentsTitle">Monuments trouvés</h3>
     <p id="monumentsIntro" class="monuments-intro">Ces bâtiments sont des monuments connus : un modèle 3D peut prendre leur place, posé sur leur emprise et à leur hauteur.</p>
     <div id="monumentsListe" class="monuments-liste"></div>
-    <div class="modal-actions">
-      <button class="nav-btn" id="monumentsDone" type="button">Terminé</button>
-    </div>
   </div>
 </div>
 
@@ -2351,6 +2348,16 @@
         <!-- Le champ « Modèle » a été RETIRÉ (demandé) : on ne change pas le modèle d'un Élément, et
              l'aperçu montre déjà lequel il porte. « Type » (chaise, voiture…) ne s'applique qu'aux
              objets intégrés et reste masqué pour un modèle importé. -->
+        <!-- #475 : le modèle 3D posé À LA PLACE D'UN MONUMENT (monuments-ui.js) : la seule exception au
+             « on ne change pas le modèle d'un Élément » ci-dessus (demandé : un modèle choisi qui ne
+             convient pas se change depuis la Scène) ; et le bâtiment généré se rétablit. -->
+        <div id="objectMonumentField" style="display:none">
+          <label class="modal-field-label" id="objectMonumentLabel">Monument</label>
+          <div class="monument-actions">
+            <button type="button" class="nav-btn" id="objectMonumentChange">Changer de modèle</button>
+            <button type="button" class="nav-btn" id="objectMonumentRestore">Rétablir le bâtiment</button>
+          </div>
+        </div>
         <div id="objectPoseField" style="display:none">
           <label class="modal-field-label" id="objectPoseLabel">Position</label>
           <select id="objectPositionSelect"></select>
