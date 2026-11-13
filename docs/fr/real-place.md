@@ -13,6 +13,7 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
 | `src/real-place-sources.js` | PUR. Les sources par pays : fournisseurs de relief (le meilleur d'abord) et règles des bâtiments, avec un repli mondial. |
 | `src/geo-local.js` | PUR. Des mètres locaux autour d'un centre géographique (`projector`). |
 | `src/building-survey.js` | PUR. La BD TOPO de l'IGN (France) lue et appariée aux bâtiments OSM : hauteurs, pente du toit, matériaux. |
+| `src/height-reading.js` | PUR. Les hauteurs du LiDAR de l'IGN (MNH, 50 cm) : l'égout et le toit réels de chaque bâtiment (plat ou en pente, pente, faîtage, deux ou quatre pans), la hauteur de chaque arbre. |
 | `src/aerial-reading.js` | PUR. La vue aérienne lue mètre par mètre : la classe d'un pixel, le vrai sol des Zones, les arbres manquants, les pelouses des cours, le matériau des toits. |
 | `src/aerial-photo.js` | PUR. La vue aérienne d'une zone (France), à LIRE pendant l'import, jamais montrée ni gardée : la photo à demander (`aerialPhotoPlan`), son crédit. La requête : `realplace:aerialPhoto` (le WMS de la Géoplateforme, `ORTHOIMAGERY.ORTHOPHOTOS`, un JPEG ; une réponse qui n'est pas un JPEG est une erreur). |
 | `src/real-place-import.js` | PUR. La traduction et les altitudes devenues le contenu d'une Scène (`sceneContentOf` : objets Tracés et Zones, relief, crédits). |
@@ -122,7 +123,19 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    30 %, ni un résultat vif ou sombre), ramenée à la plus proche des couleurs de façade d'une rue
    (`FACADE_COLOURS` : enduits, pierres, briques, d'abord par la teinte : le bleu d'une façade à l'ombre devient
    un gris) : la façade du bâtiment la prend, sa texture gardée. Le crédit nomme l'instance et la licence, jamais
-   le contributeur. Toujours en « Réaliste », en France, la vue aérienne LUE (`lireLaVueAerienne`,
+   le contributeur. En France (Détaillé et Réaliste), avant la traduction, les hauteurs du LiDAR
+   (`lireLesHauteurs`, height-reading.js ; `realplace:heightGrid` : le WMS de la Géoplateforme, couche
+   `IGNF_LIDAR-HD_MNH_ELEVATION.ELEVATIONGRIDCOVERAGE.WGS84G`, flottants bruts `image/x-bil;bits=32`, un par
+   50 cm, ligne par ligne depuis le nord ; une grille de la mauvaise taille est une erreur ; jamais gardée),
+   données à `translateOsm` (`heights`) : pour chaque bâtiment `roofFromHeights` (les 10e et 95e centiles de
+   ce qui dépasse 2 m dans son emprise : égout et sommet ; sous 1,2 m d'écart, plat ; sinon la pente médiane
+   de son cœur, son bord de 1 m à part ; l'axe de la pente principale par angles doublés, le faîtage en
+   travers ; quatre pans quand les pentes en travers pèsent 12 % ou plus et que l'emprise est presque
+   convexe, un L ou un U se lisant pareil), passé comme `lidar` du relevé : il passe AVANT les balises et le
+   relevé (`levelsOf` : le nombre de niveaux d'OSM gardé, leur hauteur d'après l'égout mesuré ; `roofOf`,
+   `surveyedRoof` ; le `sens` du faîtage par `ridgeSense`). Après la lecture aérienne, chaque arbre prend sa
+   hauteur mesurée (`treeHeightAt` : le plus haut à 2 m, de 3 à 40 m). Crédit : « © IGN, LiDAR HD ».
+   Toujours en « Réaliste », en France, la vue aérienne LUE (`lireLaVueAerienne`,
    aerial-reading.js ; jamais montrée ni gardée) : téléchargée (`realplace:aerialPhoto`), décodée en mémoire,
    chaque mètre classé (`classGrid` : la classe la plus fréquente de ses pixels, `classOfPixel` : végétation
    par l'excès de vert, une canopée sombre et une pelouse claire, ombre, tuiles, clair, asphalte, gris ;

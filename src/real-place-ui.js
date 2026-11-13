@@ -19,6 +19,7 @@ import { projector } from './geo-local.js';
 import { aerialPhotoPlan, AERIAL_CREDIT } from './aerial-photo.js';
 import { classGrid, readAerialPhoto } from './aerial-reading.js';
 import { monumentsOf } from './monuments.js';
+import { heightPlan, heightGrid, treeHeightAt, LIDAR_CREDIT } from './height-reading.js';
 import { chercherUnModele, remplacerLeBatiment } from './monuments-ui.js';
 import { nomDuTrace } from './canvas-tools.js';
 import { enregistrerFermeture } from './modal-stack.js';
@@ -433,7 +434,10 @@ async function importer(){
       if (arrete()) return annule;
       if (s && s.json) survey = readBdTopo(s.json, centre);
     }
-    const translated = translateOsm(extrait.json, { centre, halfSize, country: country || 'world', translate: tr, survey, detail: niveau });
+    // France: the LiDAR's heights (height-reading.js): the real eaves and roofs, the trees' heights.
+    const hauteurs = country === 'fr' && niveau !== 'simple' ? await lireLesHauteurs({ toGeo, halfSize, country }) : null;
+    if (arrete()) return annule;
+    const translated = translateOsm(extrait.json, { centre, halfSize, country: country || 'world', translate: tr, survey, detail: niveau, heights: hauteurs });
     console.info(`[real-place] ${translated.buildings.length} buildings, ${translated.entrances} OSM entrances`);
     // Realistic: the facades' colours read on street photos (#474c). Never blocking: without photos, as before.
     let photoCredits = [];
@@ -446,6 +450,15 @@ async function importer(){
       const lu = await lireLaVueAerienne(translated, { toGeo, halfSize, country, south: centre.lat < 46 });
       if (arrete()) return annule;
       if (lu) photoCredits.push(tr(AERIAL_CREDIT.en, AERIAL_CREDIT.fr));
+    }
+    // The trees' heights (OSM's, and those read on the aerial photo), measured; the LiDAR's credit.
+    if (hauteurs) {
+      for (const e of translated.elements) {
+        if (e.objType !== 'arbre') continue;
+        const h = treeHeightAt(hauteurs, e.x, e.z);
+        if (h) e.height = h;
+      }
+      photoCredits.push(tr(LIDAR_CREDIT.en, LIDAR_CREDIT.fr));
     }
     await etape('relief');
     const relief = await reliefDuLieu(centre, halfSize, country, (sub) => montrerLaProgression('relief', sub), arrete);
@@ -507,6 +520,22 @@ export async function importerPourIA({ query = null, lat, lon, sideM = 200, deta
   if (DETAIL_LEVELS.includes(detail)) { $('realPlaceDetailLevel').value = detail; direLeNiveau(); }
   dessiner();
   return importer();
+}
+
+/**
+ * THE LIDAR'S HEIGHTS (height-reading.js reads them; here the network): the MNH of the zone as floats, or null
+ * (outside France, no answer: the heights come from the survey and OSM, as before). Never kept.
+ */
+async function lireLesHauteurs({ toGeo, halfSize, country }){
+  const api = window.storyboarderAPI;
+  const plan = heightPlan({ toGeo, halfSize, country });
+  if (!plan || !api || !api.realPlaceHeightGrid) return null;
+  const r = await api.realPlaceHeightGrid(plan.bbox, plan.width, plan.height);
+  if (!r || !r.data) return null;
+  // A copy into an aligned buffer: the bytes may start anywhere in theirs.
+  const octets = new Uint8Array(r.data.length);
+  octets.set(r.data);
+  return heightGrid(new Float32Array(octets.buffer), plan.width, halfSize);
 }
 
 /**

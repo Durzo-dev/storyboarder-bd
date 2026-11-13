@@ -30,6 +30,9 @@ import { projector } from './geo-local.js';
 import { rulesFor } from './real-place-sources.js';
 import { facadeStyleOf } from './facade-style.js';
 import { monumentOf } from './monuments.js';
+import { roofFromHeights, ridgeSense } from './height-reading.js';
+/** A level's floor slab (batiment.js DEFAUTS_BATIMENT.dalle): a measured eaves height is levels and slabs. */
+const LEVEL_SLAB = 0.2;
 import { BDTOPO_ATTRIBUTION, matchSurvey, buildingTypeOf, surveyedRoof, wallFinishOf, roofFinishOf } from './building-survey.js';
 
 /** The attribution OSM data requires near the work (export credits, #457b-4). */
@@ -292,6 +295,12 @@ export function levelsOf(tags, rules = rulesFor('fr'), survey = null){
   const levels = parseInt(tags['building:levels'], 10);
   const height = parseFloat(tags.height);
   const type = tags.building;
+  // The LiDAR's eaves height (height-reading.js), measured: OSM's count of levels kept, their height from it.
+  const measured = survey && survey.lidar && survey.lidar.eaves > 2 ? survey.lidar.eaves : 0;
+  if (measured) {
+    const count = Math.min(40, levels >= 1 ? levels : Math.max(1, Math.round(measured / rules.levelHeight)));
+    return { count, height: Math.min(10, Math.max(2, measured / count - LEVEL_SLAB)) };
+  }
   if (!(levels >= 1) && !(height > 0) && survey && survey.eaves > 0) {
     const count = Math.max(1, Math.round(survey.eaves / rules.levelHeight));
     return { count, height: Math.min(10, Math.max(2, survey.eaves / count)) };
@@ -308,6 +317,8 @@ export function levelsOf(tags, rules = rulesFor('fr'), survey = null){
  * else flat for commercial and public types, else gabled (France).
  */
 export function roofOf(tags, rules = rulesFor('fr'), surveyed = null){
+  // The LiDAR measures the roof itself (height-reading.js): it comes before any tag.
+  if (surveyed && surveyed.lidar) return surveyed.flat ? 'plat' : surveyed.hip ? 'quatre-pans' : 'deux-pans';
   const shape = ROOF_SHAPES[tags['roof:shape']];
   if (shape) return shape;
   if (surveyed) return surveyed.flat ? 'plat' : 'deux-pans';
@@ -406,6 +417,8 @@ export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor
   const top = b.niveaux.reduce((p, q) => (q.elevation > p.elevation ? q : p));
   const surveyed = surveyedRoof(survey, footprint);
   const roof = { type: roofOf(tags, rules, surveyed), pente: surveyed && !surveyed.flat ? surveyed.pitch : rules.roofPitch };
+  // The LiDAR's ridge: along the longest side, or across it.
+  if (surveyed && surveyed.ridge && roof.type === 'deux-pans') roof.sens = ridgeSense(footprint, surveyed.ridge);
   // A flat roof with no known covering: the grey of a gravel or bitumen roof, not the walls' colour.
   const roofFinish = (finishes && roofFinishOf(tags, survey)) || (roof.type === 'plat' ? { texture: null, couleur: FLAT_ROOF } : null);
   if (roofFinish) roof.revetement = roofFinish;
@@ -475,7 +488,7 @@ export function zoneTypeOf(tags){
  * buildings; `detail` (DETAIL_LEVELS) what is made. Returns { buildings, paths, zones, elements, skipped, attribution, surveyAttribution?, builtShare,
  * ground? } (`ground`: the paved Ground of a built-up zone).
  */
-export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, country = 'fr', rules = rulesFor(country), translate = null, survey = null, detail = 'detailed' } = {}){
+export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, country = 'fr', rules = rulesFor(country), translate = null, survey = null, detail = 'detailed', heights = null } = {}){
   const detailed = detail !== 'simple', realistic = detail === 'realistic';
   const shops = [], entrances = [];
   const h = Math.min(Math.max(1, halfSize), ZONE_SIDE_MAX / 2);
@@ -581,7 +594,9 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       if (Math.abs(centreOf.x) > h || Math.abs(centreOf.z) > h) { out.skipped.outside++; continue; }
       const local = fp.map(p => roundPoint({ x: p.x - centreOf.x, z: p.z - centreOf.z }));
       const surveyed = surveys.length ? matchSurvey(fp, surveys, taken) : null;
-      const building = buildingOf(local, w.tags, centreOf, roads, rules, translate, surveyed, detailed,
+      // The LiDAR's reading (height-reading.js): the real eaves and roof, with the survey's other facts.
+      const lidar = detailed && heights ? roofFromHeights(heights, fp) : null;
+      const building = buildingOf(local, w.tags, centreOf, roads, rules, translate, lidar ? { ...(surveyed || {}), lidar } : surveyed, detailed,
         realistic ? { lat: centre.lat, lon: centre.lon, seed: w.id, shop: shops.some(p => insidePolygon(p, fp)) || (surveyed && surveyed.use === 'Commercial et services') } : null,
         entrances.filter(e => distanceToRing(e, fp) <= ENTRANCE_REACH));
       if (!building) { out.skipped.invalid++; continue; }
@@ -614,7 +629,8 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
     const centreOf = { x: (x0 + x1) / 2, z: (z0 + z1) / 2 };
     if (Math.abs(centreOf.x) > h || Math.abs(centreOf.z) > h) continue;
     const local = fp.map(p => roundPoint({ x: p.x - centreOf.x, z: p.z - centreOf.z }));
-    const building = buildingOf(local, { building: buildingTypeOf(s) }, centreOf, roads, rules, translate, s, detailed,
+    const lidar = heights ? roofFromHeights(heights, fp) : null;
+    const building = buildingOf(local, { building: buildingTypeOf(s) }, centreOf, roads, rules, translate, lidar ? { ...s, lidar } : s, detailed,
       realistic ? { lat: centre.lat, lon: centre.lon, seed: s.id, shop: s.use === 'Commercial et services' } : null,
       entrances.filter(e => distanceToRing(e, fp) <= ENTRANCE_REACH));
     if (!building) continue;

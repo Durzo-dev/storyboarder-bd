@@ -204,7 +204,8 @@ describe('real place, the level of detail in the window', () => {
     const html = readFileSync(new URL('../src/index.html', import.meta.url), 'utf8');
     assert.match(html, /<select id="realPlaceDetailLevel">\s*<option value="simple">Simple<\/option>\s*<option value="detailed" selected>Détaillé<\/option>/);
     assert.match(ui, /if \(country === 'fr' && niveau !== 'simple' && api\.realPlaceBdTopo\)/);
-    assert.match(ui, /translate: tr, survey, detail: niveau \}\);/);
+    assert.match(ui, /translate: tr, survey, detail: niveau, heights: hauteurs \}\);/);
+    assert.match(ui, /country === .fr. && niveau !== .simple. \? await lireLesHauteurs/, "simple asks no LiDAR either");
   });
 });
 

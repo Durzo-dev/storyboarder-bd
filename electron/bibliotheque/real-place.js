@@ -335,6 +335,28 @@ async function aerialPhoto(bbox, width, height){
 }
 
 /**
+ * THE HEIGHTS OF A ZONE (src/height-reading.js plans and reads them): the IGN's LiDAR HD MNH (the height above
+ * the ground, 50 cm), from the Géoplateforme's WMS as raw floats (`image/x-bil;bits=32`, row by row from the
+ * north), no key. `bbox`: degrees; `width`, `height`: cells (2048 at most). Returns { data } (the bytes) or
+ * { error }.
+ */
+async function heightGrid(bbox, width, height){
+  const n = (v) => Number(v);
+  const b = bbox || {};
+  if (![b.south, b.west, b.north, b.east].every(v => Number.isFinite(n(v))) || !(n(b.north) > n(b.south)) || !(n(b.east) > n(b.west))) return { error: 'response' };
+  const w = Math.max(16, Math.min(2048, Math.round(n(width) || 0))), h = Math.max(16, Math.min(2048, Math.round(n(height) || 0)));
+  const url = `${AERIAL_WMS}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=IGNF_LIDAR-HD_MNH_ELEVATION.ELEVATIONGRIDCOVERAGE.WGS84G&STYLES=&CRS=EPSG:4326`
+    + `&BBOX=${n(b.south)},${n(b.west)},${n(b.north)},${n(b.east)}&WIDTH=${w}&HEIGHT=${h}&FORMAT=image/x-bil;bits=32`;
+  const started = Date.now();
+  const r = await request(url, { json: false, timeout: 30000 });
+  if (r.error) return r;
+  // Exactly one float per cell: anything else (an XML error with a 200) is no grid.
+  if (!r.bytes || r.bytes.length !== w * h * 4) { console.warn('[real-place] heights: not a grid'); return { error: 'response' }; }
+  console.info(`[real-place] heights (LiDAR HD): ${w}×${h} cells in ${Date.now() - started} ms`);
+  return { data: r.bytes };
+}
+
+/**
  * The altitude requests planned by the renderer (planRelief): sent in order, `perSecond` at most, each
  * checked against ALTITUDE_HOSTS. Returns { answers } (one JSON per request) or { error }.
  */
@@ -368,4 +390,4 @@ async function tile(z, x, y){
   return { data: r.bytes };
 }
 
-module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, aerialPhoto, country, osm, bdtopo, bdTopoUrl, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };
+module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, aerialPhoto, heightGrid, country, osm, bdtopo, bdTopoUrl, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };

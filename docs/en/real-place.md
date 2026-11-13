@@ -13,6 +13,7 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
 | `src/real-place-sources.js` | PURE. The sources per country: relief providers (best first) and building rules, with a world fallback. |
 | `src/geo-local.js` | PURE. Local metres around a geographic centre (`projector`). |
 | `src/building-survey.js` | PURE. The IGN BD TOPO (France) read and matched to the OSM buildings: heights, roof pitch, materials. |
+| `src/height-reading.js` | PURE. The IGN LiDAR's heights (MNH, 50 cm): each building's real eaves and roof (flat or pitched, pitch, ridge, two or four slopes), each tree's height. |
 | `src/aerial-reading.js` | PURE. The aerial photo read metre by metre: the class of a pixel, the Zones' real grounds, the missing trees, the courtyards' lawns, the roofs' materials. |
 | `src/aerial-photo.js` | PURE. The aerial photo of a zone (France), to be READ at the import, never shown nor kept: the photo to ask (`aerialPhotoPlan`), its credit. The request: `realplace:aerialPhoto` (the Géoplateforme's WMS, `ORTHOIMAGERY.ORTHOPHOTOS`, one JPEG; an answer that is not a JPEG is an error). |
 | `src/real-place-import.js` | PURE. The translation and the altitudes turned into a Scene's content (`sceneContentOf`: Path and Zone objects, relief, credits). |
@@ -110,7 +111,18 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    what is left once dark, sky, green and glare are set aside (`wallColour`; none under 10 points or 30 %, nor a
    vivid or dark result), brought to the nearest of the street's facade colours (`FACADE_COLOURS`: renders,
    stones, bricks, by hue first: a shaded facade's blue cast becomes a grey): the building's facade takes it, its texture kept. The credit names the instance and the licence, never the
-   contributor. Still at « Realistic », in France, the aerial photo READ (`lireLaVueAerienne`,
+   contributor. In France (Detailed and Realistic), before the translation, the LiDAR's heights
+   (`lireLesHauteurs`, height-reading.js; `realplace:heightGrid`: the Géoplateforme's WMS, layer
+   `IGNF_LIDAR-HD_MNH_ELEVATION.ELEVATIONGRIDCOVERAGE.WGS84G`, raw floats `image/x-bil;bits=32`, one per 50 cm,
+   row by row from the north; a grid of the wrong size is an error; never kept), given to `translateOsm`
+   (`heights`): for each building `roofFromHeights` (the 10th and 95th percentiles of what stands above 2 m
+   in its footprint: eaves and top; under 1.2 m of rise, flat; otherwise the median slope of its core, its
+   1 m edge aside, as the pitch; the main slope's axis by doubled angles, the ridge across it; hipped when
+   the slopes across it weigh 12 % or more and the footprint is nearly convex, an L or a U reading alike),
+   passed as the survey's `lidar`: it comes BEFORE the tags and the survey (`levelsOf`: OSM's count of levels
+   kept, their height from the measured eaves; `roofOf`, `surveyedRoof`; the ridge's `sens` by `ridgeSense`).
+   After the aerial reading, every tree takes its measured height (`treeHeightAt`: the highest within 2 m,
+   3 to 40 m). Credit: « © IGN, LiDAR HD ». Still at « Realistic », in France, the aerial photo READ (`lireLaVueAerienne`,
    aerial-reading.js; never shown nor kept): fetched (`realplace:aerialPhoto`), decoded in memory, each metre
    classed (`classGrid`: the most frequent class of its pixels, `classOfPixel`: vegetation by green excess, a
    canopy dark and a lawn light, shadow, tiles, light, asphalt, grey; calibrated on the Écusson by painting

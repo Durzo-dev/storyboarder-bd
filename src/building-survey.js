@@ -147,6 +147,9 @@ function narrowWidth(footprint){
  * height over half the footprint's narrow width. null when the survey says nothing of the roof.
  */
 export function surveyedRoof(survey, footprint){
+  // The LiDAR's reading (height-reading.js) first: measured, not deduced.
+  const l = survey && survey.lidar;
+  if (l) return l.flat ? { flat: true, lidar: true } : { flat: false, pitch: l.pitch, hip: !!l.hip, ridge: l.ridge || null, lidar: true };
   if (!survey || !finite(survey.roofRise)) return null;
   if (survey.roofRise < 0.5) return { flat: true };
   const half = narrowWidth(footprint) / 2;
@@ -189,7 +192,7 @@ export function wallFinishOf(tags = {}, survey = null){
   if (m === 'wood') return finish(WOOD, colour);
   if (m === 'brick') return finish(null, colour || BRICK);
   if (colour) return finish(null, colour);
-  const d = survey ? survey.walls : [];
+  const d = (survey && Array.isArray(survey.walls)) ? survey.walls : [];   // a LiDAR-only reading has none
   if (d.length && d.every(n => n === 1 || n === 2)) return finish(STONE, STONE_FACADE);
   if (d.length && d.every(n => n === 6)) return finish(WOOD, null);
   return null;
@@ -218,7 +221,7 @@ export function roofFinishOf(tags = {}, survey = null){
   if (m === 'metal' || m === 'zinc' || m === 'copper' || m === 'tin') return finish(null, colour || METAL);
   if (m === 'concrete') return finish(null, colour || CONCRETE);
   if (colour) return finish(null, colour);
-  const first = survey && survey.roof.length ? survey.roof[0] : 0;
+  const first = survey && Array.isArray(survey.roof) && survey.roof.length ? survey.roof[0] : 0;
   if (first === 1) return finish(tiles, null);
   if (first === 2) return finish(SLATE, null);
   if (first === 3) return finish(null, METAL);
