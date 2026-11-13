@@ -16,6 +16,8 @@ import { buildStepLabel } from './scene-loading.js';
 import { wireSearchField } from './search-field.js';
 import { sceneContentOf, IMPORT_STEPS, importProgress, downloadDetail } from './real-place-import.js';
 import { projector } from './geo-local.js';
+import { aerialPhotoPlan, aerialPhotoZone, zonesKeptUnderPhoto, AERIAL_CREDIT } from './aerial-photo.js';
+import { rangerImageChoisie } from './image-store.js';
 import { nomDuTrace } from './canvas-tools.js';
 import { enregistrerFermeture } from './modal-stack.js';
 
@@ -95,7 +97,8 @@ function montrerLeLieu(){
 function montrerLaProgression(step, sub = 0, detail = null){
   const labels = { map: tr('Map data (OpenStreetMap)', 'Données de la carte (OpenStreetMap)'), country: tr('Country of the place', 'Pays du lieu'),
     buildings: tr('Buildings, streets and grounds', 'Bâtiments, rues et sols'),
-    facades: tr('Facade colours (street photos)', 'Couleurs des façades (photos de rue)'), relief: tr('Relief', 'Relief'), scene: tr('Creating the scene', 'Création de la scène'),
+    facades: tr('Facade colours (street photos)', 'Couleurs des façades (photos de rue)'),
+    aerial: tr('Aerial photo of the ground (IGN)', 'Vue aérienne du sol (IGN)'), relief: tr('Relief', 'Relief'), scene: tr('Creating the scene', 'Création de la scène'),
     construction: buildStepLabel('buildings', step === 'construction' ? detail : null), ground: buildStepLabel('ground') };
   const i = step ? IMPORT_STEPS.indexOf(step) : -1;
   $('realPlaceProgress').hidden = false;
@@ -127,8 +130,8 @@ function direLeNiveau(){
     ? tr('Simple: the buildings\' volumes, default roofs, roads, paths, grounds, relief, trees and lamps.',
       'Simple : volumes des bâtiments, toits par défaut, routes, chemins, sols, relief, arbres et lampadaires.')
     : niveau === 'realistic'
-      ? tr('Realistic: all of Detailed, and the facades: shutters, stone surrounds and shop windows, in the region\'s colours; their colour read on street photos (Panoramax) where there are some.',
-        'Réaliste : tout le niveau Détaillé, et les façades : volets, encadrements de pierre et vitrines, aux couleurs de la région ; leur teinte lue sur les photos de rue (Panoramax) quand il y en a.')
+      ? tr('Realistic: all of Detailed, and the facades: shutters, stone surrounds and shop windows, in the region\'s colours; their colour read on street photos (Panoramax) where there are some; in France, the aerial photo on the ground (squares, courtyards, parks).',
+        'Réaliste : tout le niveau Détaillé, et les façades : volets, encadrements de pierre et vitrines, aux couleurs de la région ; leur teinte lue sur les photos de rue (Panoramax) quand il y en a ; en France, la vue aérienne au sol (places, cours, parcs).')
       : tr('Detailed: also the real heights, roofs and materials (IGN, in France), pavements, road signs, shrubs and benches.',
         'Détaillé : en plus, hauteurs, toits et matériaux réels (IGN, en France), trottoirs, panneaux, buissons et bancs.');
 }
@@ -433,6 +436,14 @@ async function importer(){
       await etape('facades');
       photoCredits = await couleursDesFacades(translated, bbox, centre, (sub) => montrerLaProgression('facades', sub), arrete);
       if (arrete()) return annule;
+      // The aerial photo on the ground (France): a Zone that carries it, in place of the grounds it shows better.
+      await etape('aerial');
+      const vue = await vueAerienne({ toGeo, halfSize, country, name: V.name || tr('Real place', 'Lieu réel') });
+      if (arrete()) return annule;
+      if (vue) {
+        translated.zones = [vue.zone, ...zonesKeptUnderPhoto(translated.zones)];
+        photoCredits.push(vue.credit);
+      }
     }
     await etape('relief');
     const relief = await reliefDuLieu(centre, halfSize, country, (sub) => montrerLaProgression('relief', sub), arrete);
@@ -492,6 +503,22 @@ export async function importerPourIA({ query = null, lat, lon, sideM = 200, deta
   if (DETAIL_LEVELS.includes(detail)) { $('realPlaceDetailLevel').value = detail; direLeNiveau(); }
   dessiner();
   return importer();
+}
+
+/**
+ * THE AERIAL PHOTO (aerial-photo.js decides; here the network and the file): the IGN's orthophoto of the zone,
+ * kept in the Images folder (image-store.js: named after the place, an identical file found again), and the
+ * Zone that carries it. Null without one (outside France, no answer): the grounds stay as they were.
+ */
+async function vueAerienne({ toGeo, halfSize, country, name }){
+  const api = window.storyboarderAPI;
+  const plan = aerialPhotoPlan({ toGeo, halfSize, country });
+  if (!plan || !api || !api.realPlaceAerialPhoto) return null;
+  const r = await api.realPlaceAerialPhoto(plan.bbox, plan.width, plan.height);
+  if (!r || !r.data) return null;
+  const range = await rangerImageChoisie({ name: `${tr('Aerial view', 'Vue aérienne')} - ${name}.jpg`, data: r.data });
+  if (!range || !range.ok) { console.warn('[real-place] aerial photo not kept', range && range.error); return null; }
+  return { zone: aerialPhotoZone({ halfSize, image: range.name, name: tr('Aerial view', 'Vue aérienne') }), credit: tr(AERIAL_CREDIT.en, AERIAL_CREDIT.fr) };
 }
 
 /** The most street photos read for one import: each is ~300-500 KB, and a 360° one serves many buildings. */

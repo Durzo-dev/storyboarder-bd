@@ -13,6 +13,7 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
 | `src/real-place-sources.js` | PUR. Les sources par pays : fournisseurs de relief (le meilleur d'abord) et règles des bâtiments, avec un repli mondial. |
 | `src/geo-local.js` | PUR. Des mètres locaux autour d'un centre géographique (`projector`). |
 | `src/building-survey.js` | PUR. La BD TOPO de l'IGN (France) lue et appariée aux bâtiments OSM : hauteurs, pente du toit, matériaux. |
+| `src/aerial-photo.js` | PUR. La vue aérienne au sol (« Réaliste », France) : la photo à demander, les Zones qu'elle remplace, la Zone qui la porte. |
 | `src/real-place-import.js` | PUR. La traduction et les altitudes devenues le contenu d'une Scène (`sceneContentOf` : objets Tracés et Zones, relief, crédits). |
 | `src/real-place-ui.js` | La fenêtre d'une Scène neuve : le choix, puis recherche, carte (tuiles OpenStreetMap), taille de la zone, import avec sa progression. |
 | `electron/bibliotheque/real-place.js` | Le réseau (processus principal) : Nominatim, Overpass (avec miroirs), altitudes, tuiles ; identifié par le User-Agent de l'application. |
@@ -118,7 +119,19 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    30 %, ni un résultat vif ou sombre), ramenée à la plus proche des couleurs de façade d'une rue
    (`FACADE_COLOURS` : enduits, pierres, briques, d'abord par la teinte : le bleu d'une façade à l'ombre devient
    un gris) : la façade du bâtiment la prend, sa texture gardée. Le crédit nomme l'instance et la licence, jamais
-   le contributeur. Puis le relief : `planRelief` pour le pays, ses requêtes envoyées
+   le contributeur. Toujours en « Réaliste », la vue aérienne au sol (`vueAerienne`, aerial-photo.js), en
+   France : l'orthophoto de l'IGN sur la zone (`aerialPhotoPlan` : les coins de la zone en degrés, 4 px par
+   mètre, 2048 px au plus), demandée en un JPEG au WMS de la Géoplateforme (`realplace:aerialPhoto`,
+   `ORTHOIMAGERY.ORTHOPHOTOS`, EPSG:4326, sans clé ; une réponse qui n'est pas un JPEG est une erreur), rangée
+   dans le dossier Images (`rangerImageChoisie` : « Vue aérienne - <lieu>.jpg », un fichier identique
+   retrouvé), et posée en Zone rectangulaire sur toute la zone (`aerialPhotoZone` : nord en haut,
+   `photoAerienne` = le fichier, sol `béton` le temps qu'elle charge). Elle remplace les Zones pavées et
+   vertes (`zonesKeptUnderPhoto`, `REPLACED_GROUNDS` ; l'eau reste) ; son crédit : « © IGN, BD ORTHO®
+   (Licence Ouverte 2.0) ». Sans réponse, ou hors de France, les Zones restent telles quelles. Dessin
+   (scene3d.js, `texturePhotoAerienne3D`) : le fichier décodé (image-cache.js, qui redessine à son arrivée)
+   copié dans un canevas (WebGL ne retourne pas un ImageBitmap ; un canevas met le haut de la photo au nord),
+   une fois sur la Zone, sans répétition, sous les autres Zones (décalage -1 contre -2) ; la signature des
+   tracés porte l'état du fichier. Puis le relief : `planRelief` pour le pays, ses requêtes envoyées
    par `realplace:altitudes` (seulement vers `ALTITUDE_HOSTS`, au rythme du fournisseur), `assemble` ; en cas
    d'échec le fournisseur suivant, et sans aucun un Sol plat.
 4. `sceneContentOf` : Zones et Tracés (`pathObject`, `zoneObject`, nommés par `nomDuTrace`), le relief

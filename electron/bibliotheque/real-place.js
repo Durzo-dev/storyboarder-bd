@@ -311,6 +311,29 @@ async function streetPhoto(url){
 }
 
 /**
+ * THE AERIAL PHOTO of a zone (src/aerial-photo.js plans it): the IGN's orthophoto, through the Géoplateforme's
+ * WMS (no key, Licence Ouverte 2.0), as one JPEG. `bbox`: { south, west, north, east } (degrees); `width`,
+ * `height`: pixels (2048 at most). Returns { data } or { error }.
+ */
+const AERIAL_WMS = 'https://data.geopf.fr/wms-r';
+async function aerialPhoto(bbox, width, height){
+  const n = (v) => Number(v);
+  const b = bbox || {};
+  if (![b.south, b.west, b.north, b.east].every(v => Number.isFinite(n(v))) || !(n(b.north) > n(b.south)) || !(n(b.east) > n(b.west))) return { error: 'response' };
+  const w = Math.max(16, Math.min(2048, Math.round(n(width) || 0))), h = Math.max(16, Math.min(2048, Math.round(n(height) || 0)));
+  // WMS 1.3.0 in EPSG:4326: the bounding box is latitude first.
+  const url = `${AERIAL_WMS}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=ORTHOIMAGERY.ORTHOPHOTOS&STYLES=&CRS=EPSG:4326`
+    + `&BBOX=${n(b.south)},${n(b.west)},${n(b.north)},${n(b.east)}&WIDTH=${w}&HEIGHT=${h}&FORMAT=image/jpeg`;
+  const started = Date.now();
+  const r = await request(url, { json: false, timeout: 30000 });
+  if (r.error) return r;
+  // A WMS error comes back as XML with a 200: a photo begins with the JPEG mark.
+  if (!r.bytes || r.bytes.length < 1000 || r.bytes[0] !== 0xFF || r.bytes[1] !== 0xD8) { console.warn('[real-place] aerial photo: not a JPEG'); return { error: 'response' }; }
+  console.info(`[real-place] aerial photo: ${w}×${h} px, ${Math.round(r.bytes.length / 1024)} KB in ${Date.now() - started} ms`);
+  return { data: r.bytes };
+}
+
+/**
  * The altitude requests planned by the renderer (planRelief): sent in order, `perSecond` at most, each
  * checked against ALTITUDE_HOSTS. Returns { answers } (one JSON per request) or { error }.
  */
@@ -344,4 +367,4 @@ async function tile(z, x, y){
   return { data: r.bytes };
 }
 
-module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, country, osm, bdtopo, bdTopoUrl, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };
+module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, aerialPhoto, country, osm, bdtopo, bdTopoUrl, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };

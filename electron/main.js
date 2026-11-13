@@ -1203,6 +1203,7 @@ ipcMain.handle('realplace:osm', async (event, bbox) => realPlace.osm(bbox, (p) =
 ipcMain.handle('realplace:abort', async () => { realPlace.abortImport(); return true; });
 ipcMain.handle('realplace:streetPhotos', async (event, bbox) => realPlace.streetPhotos(bbox));
 ipcMain.handle('realplace:streetPhoto', async (event, url) => realPlace.streetPhoto(url));
+ipcMain.handle('realplace:aerialPhoto', async (event, bbox, width, height) => realPlace.aerialPhoto(bbox, width, height));
 ipcMain.handle('realplace:bdtopo', async (event, bbox) => realPlace.bdtopo(bbox));
 ipcMain.handle('realplace:altitudes', async (event, requests, perSecond) => realPlace.altitudes(requests, perSecond));
 ipcMain.handle('realplace:tile', async (event, z, x, y) => realPlace.tile(z, x, y));

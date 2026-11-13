@@ -13,6 +13,7 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
 | `src/real-place-sources.js` | PURE. The sources per country: relief providers (best first) and building rules, with a world fallback. |
 | `src/geo-local.js` | PURE. Local metres around a geographic centre (`projector`). |
 | `src/building-survey.js` | PURE. The IGN BD TOPO (France) read and matched to the OSM buildings: heights, roof pitch, materials. |
+| `src/aerial-photo.js` | PURE. The aerial photo on the ground (« Realistic », France): the photo to ask, the Zones it replaces, the Zone that carries it. |
 | `src/real-place-import.js` | PURE. The translation and the altitudes turned into a Scene's content (`sceneContentOf`: Path and Zone objects, relief, credits). |
 | `src/real-place-ui.js` | The new Scene's window: the choice, then search, map (OpenStreetMap tiles), zone size, import with its progress. |
 | `electron/bibliotheque/real-place.js` | The network (main process): Nominatim, Overpass (with mirrors), altitudes, tiles; identified by the application's User-Agent. |
@@ -106,7 +107,18 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    what is left once dark, sky, green and glare are set aside (`wallColour`; none under 10 points or 30 %, nor a
    vivid or dark result), brought to the nearest of the street's facade colours (`FACADE_COLOURS`: renders,
    stones, bricks, by hue first: a shaded facade's blue cast becomes a grey): the building's facade takes it, its texture kept. The credit names the instance and the licence, never the
-   contributor. Then the relief: `planRelief` for the country, its requests sent by
+   contributor. Still at « Realistic », the aerial photo on the ground (`vueAerienne`, aerial-photo.js), in
+   France: the IGN's orthophoto of the zone (`aerialPhotoPlan`: the zone's corners in degrees, 4 px a metre,
+   2048 px at most), asked as one JPEG from the Géoplateforme's WMS (`realplace:aerialPhoto`,
+   `ORTHOIMAGERY.ORTHOPHOTOS`, EPSG:4326, no key; an answer that is not a JPEG is an error), kept in the
+   Images folder (`rangerImageChoisie`: « Vue aérienne - <place>.jpg », an identical file found again), and
+   laid as a rectangular Zone over the whole zone (`aerialPhotoZone`: north up, `photoAerienne` = the file,
+   ground `béton` while it loads). It replaces the paved and green Zones (`zonesKeptUnderPhoto`,
+   `REPLACED_GROUNDS`; water stays); its credit: « © IGN, BD ORTHO® (Licence Ouverte 2.0) ». Without an
+   answer, or outside France, the Zones stay as they were. Drawing (scene3d.js, `texturePhotoAerienne3D`): the
+   decoded file (image-cache.js, which renders again on arrival) drawn into a canvas (WebGL does not flip an
+   ImageBitmap; a canvas puts the photo's top to the north), once over the Zone, not tiled, under the other
+   Zones (polygon offset -1 against -2); the tracés' signature carries the file's state. Then the relief: `planRelief` for the country, its requests sent by
    `realplace:altitudes` (only to `ALTITUDE_HOSTS`, at the provider's rate), `assemble`; on failure the next
    provider, and with none a flat Ground.
 4. `sceneContentOf`: Zones and Paths (`pathObject`, `zoneObject`, named by `nomDuTrace`), the relief

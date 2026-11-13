@@ -178,3 +178,34 @@ describe('the effective relief, kept between frames', () => {
     assert.ok(Math.abs(heightAt(b.wxFloor + 1, b.wzFloor) - heightAt(b.wxFloor - 1, b.wzFloor)) < 1e-6, 'the new place: flattened');
   });
 });
+
+describe('real place, the aerial photo drawn on the ground (#477a)', async () => {
+  const { aerialPhotoZone } = await import('../src/aerial-photo.js');
+  const { tracéMeshCache3D } = await import('../src/scene3d.js');
+  const { _setImageCacheEntry } = await import('../src/image-cache.js');
+  const render = (name) => {
+    const scene = createScene();
+    const zone = aerialPhotoZone({ halfSize: HALF, image: name, name: 'Vue aérienne' });
+    const c = sceneContentOf({ ...translateOsm(village, { centre, halfSize: HALF }), zones: [zone] }, { panelId: 'P', newId: () => `ph${++n}` });
+    const { page, panel } = layRealPlace(scene, { ...c, elements: [], buildings: [] }, { halfSize: HALF, newObject });
+    drawPanelScene3D(document.createElement('canvas').getContext('2d'), panel, { ...page, w: scene.w, h: scene.h, objects: page.objects }, scene.style3d);
+    const o = page.objects.find(x => x.photoAerienne);
+    let mesh = null;
+    tracéMeshCache3D.get(o.id).group.traverse(m => { if (m.isMesh) mesh = m; });
+    return mesh;
+  };
+  test('loaded: the photo once over the whole Zone (not tiled), under the other Zones', () => {
+    _setImageCacheEntry('vue-test.jpg', { bitmap: {}, w: 64, h: 64 });
+    const mesh = render('vue-test.jpg');
+    const map = mesh.material.map;
+    assert.ok(map.image && map.image.width === 64, 'the photo itself');
+    assert.equal(map.repeat.x, 1); assert.equal(map.repeat.y, 1);
+    assert.equal(map.wrapS, globalThis.THREE.ClampToEdgeWrapping);
+    assert.equal(mesh.material.polygonOffsetFactor, -1, 'a lake or a drawn Zone (-2) comes over it');
+  });
+  test('not there yet: its ground, tiled, meanwhile', () => {
+    _setImageCacheEntry('vue-absente.jpg', 'chargement');
+    const mesh = render('vue-absente.jpg');
+    assert.ok(mesh.material.map.repeat.x > 1, 'the ground\'s tiled texture');
+  });
+});

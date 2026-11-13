@@ -29,8 +29,11 @@ export function pathObject(p, { panelId, newId, nameOf = (k) => k }){
 
 /** A Zone object (a painted mask) from a translated zone. */
 export function zoneObject(z, { panelId, newId, nameOf = () => 'Terrain' }){
-  return { id: newId(), type: 'tracé', tracéType: 'terrain', name: z.name || nameOf('terrain'), panelId, terrainType: z.terrainType, label: '',
+  const o = { id: newId(), type: 'tracé', tracéType: 'terrain', name: z.name || nameOf('terrain'), panelId, terrainType: z.terrainType, label: '',
     world: JSON.parse(JSON.stringify(z.world)) };
+  // The aerial photo's Zone (aerial-photo.js): its image file, drawn instead of its ground.
+  if (z.photoAerienne) o.photoAerienne = z.photoAerienne;
+  return o;
 }
 
 /**
@@ -62,10 +65,11 @@ export function sceneContentOf(translated, { panelId, newId, nameOf, altitudes =
  * THE IMPORT'S STEPS, in order, with their share of the progress bar (what they usually take: the map data
  * and the relief are network, the rest is computing).
  */
-export const IMPORT_STEPS = Object.freeze(['map', 'country', 'buildings', 'facades', 'relief', 'scene', 'construction', 'ground']);
+export const IMPORT_STEPS = Object.freeze(['map', 'country', 'buildings', 'facades', 'aerial', 'relief', 'scene', 'construction', 'ground']);
 // The last two are the Scene's building (scene-loading.js), shown in the same window: one bar, start to end.
-// 'facades': the colours read on street photos (#474c, the « Realistic » level; passed at the others).
-const STEP_WEIGHTS = Object.freeze({ map: 0.28, country: 0.04, buildings: 0.1, facades: 0.08, relief: 0.18, scene: 0.04, construction: 0.23, ground: 0.05 });
+// 'facades': the colours read on street photos; 'aerial': the aerial photo on the ground (aerial-photo.js). Both
+// at the « Realistic » level only, passed at the others.
+const STEP_WEIGHTS = Object.freeze({ map: 0.26, country: 0.04, buildings: 0.1, facades: 0.08, aerial: 0.05, relief: 0.16, scene: 0.04, construction: 0.22, ground: 0.05 });
 
 /** The progress (0 to 1) at `step`, that step itself `sub` done (0 to 1). An unknown step: 0. */
 export function importProgress(step, sub = 0){

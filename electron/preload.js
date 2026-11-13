@@ -126,6 +126,7 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   realPlaceAbort: () => ipcRenderer.invoke('realplace:abort'),
   realPlaceStreetPhotos: (bbox) => ipcRenderer.invoke('realplace:streetPhotos', bbox),
   realPlaceStreetPhoto: (url) => ipcRenderer.invoke('realplace:streetPhoto', url),
+  realPlaceAerialPhoto: (bbox, width, height) => ipcRenderer.invoke('realplace:aerialPhoto', bbox, width, height),
   realPlaceBdTopo: (bbox) => ipcRenderer.invoke('realplace:bdtopo', bbox),
   realPlaceAltitudes: (requests, perSecond) => ipcRenderer.invoke('realplace:altitudes', requests, perSecond),
   realPlaceTile: (z, x, y) => ipcRenderer.invoke('realplace:tile', z, x, y),
