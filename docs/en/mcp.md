@@ -107,7 +107,7 @@ the application opens.
 |---|---|
 | `list_scenes` | The Project's Scenes: id, name, counts, the real place. |
 | `read_scene` | A Scene's place, ground, relief, credits, paths and zones by kind, every building (position, size, levels, roof, facade colour). |
-| `create_scene_from_place` | Imports a place (name or `lat`/`lon`, `size_m`, `detail`) through the « New scene » window, which the user sees and may cancel (`importerPourIA`). |
+| `create_scene_from_place` | Imports a place (name or `lat`/`lon`, `size_m`, `detail`) through the « New scene » window, which the user sees and may cancel (`importerPourIA`). After 40 s it answers that the import goes on (`pending`: a client would time out), the Scene to be found with `list_scenes`. |
 | `scene_preview` | Opens the Scene, waits until it is built, returns a JPEG of its view (`mcp:capture`, at most 1280 px wide). |
 
 A Scene imported from a place keeps where it comes from on its Panel, `panel.lieu` = `{ lat, lon, size_m,

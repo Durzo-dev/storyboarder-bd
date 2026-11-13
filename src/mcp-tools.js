@@ -18,6 +18,8 @@ export const INSTRUCTIONS = [
   'Distances are metres. In a Scene, x points east and z points south, from the centre of the Scene.',
 ].join(' ');
 
+/** How long create_scene_from_place waits for its import before answering that it goes on (milliseconds). */
+const IMPORT_WAIT_MS = 40000;
 /** The smallest zone a real place is imported at (metres a side). */
 const ZONE_SIDE_MIN = 50;
 const round = (v, d = 1) => Math.round(v * 10 ** d) / 10 ** d;
@@ -144,7 +146,13 @@ export function makeTools(deps){
         const coords = lat !== undefined || lon !== undefined;
         if (coords && (lat === undefined || lon === undefined)) throw new ToolError('Give both lat and lon, or a place by name.');
         if (!coords && !place) throw new ToolError('Give a place by name, or its lat and lon.');
-        const r = await deps.importPlace({ query: coords ? null : place, lat, lon, sideM: size_m, detail, name: place || null });
+        const importing = deps.importPlace({ query: coords ? null : place, lat, lon, sideM: size_m, detail, name: place || null });
+        // ⚠️ AN IMPORT OUTLASTS A CLIENT'S PATIENCE (seen: Claude's call timed out while the Scene was being
+        // built, the Scene made all the same). After IMPORT_WAIT_MS the tool answers that it goes on.
+        const r = await Promise.race([importing, new Promise(ok => setTimeout(() => ok({ pending: true }), deps.importWaitMs ?? IMPORT_WAIT_MS))]);
+        if (r && r.pending) {
+          return toolText(`The import goes on in Storyboarder (a large place takes a few minutes; the user sees its progress). Call list_scenes in a minute: the new Scene appears there${place ? ` (« ${place} »)` : ''}, with its place.`, { pending: true });
+        }
         if (!r || r.error) throw new ToolError(r && r.error ? r.error : 'The import failed.');
         const item = sceneListItem(r.scene);
         return toolText(`Scene « ${item.name} » created (id ${item.id}): ${item.buildings} buildings, ${item.paths} paths, ${item.zones} zones. Call scene_preview to see it.`, item);

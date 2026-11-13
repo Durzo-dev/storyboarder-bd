@@ -137,6 +137,13 @@ describe('MCP, the tools on a real Scene', () => {
     assert.match((await call(tools, 'create_scene_from_place', { size_m: 1000, place: 'x' })).result.content[0].text, /size_m: must be at most 400/);
     assert.match((await call(tools, 'create_scene_from_place', { place: 'nowhere' })).result.content[0].text, /No place found/);
   });
+  test('create_scene_from_place: an import longer than a client waits is said to go on (seen: Claude timed out)', async () => {
+    const slow = makeTools({ scenes: () => [scene], importWaitMs: 20, importPlace: () => new Promise(ok => setTimeout(() => ok({ scene }), 200)), preview: async () => null });
+    const r = (await call(slow, 'create_scene_from_place', { place: 'Montpellier' })).result;
+    assert.equal(r.isError, undefined);
+    assert.equal(r.structuredContent.pending, true);
+    assert.match(r.content[0].text, /list_scenes/);
+  });
   test('scene_preview: an image of the Scene', async () => {
     const r = (await call(tools, 'scene_preview', { scene_id: scene.id })).result;
     assert.deepEqual(r.content[0], { type: 'image', data: 'AAAA', mimeType: 'image/jpeg' });

@@ -115,7 +115,7 @@ par le pont seul fonctionne dès que l'application s'ouvre.
 |---|---|
 | `list_scenes` | Les Scènes du Projet : id, nom, nombres, le lieu réel. |
 | `read_scene` | Le lieu d'une Scène, son sol, son relief, ses crédits, tracés et zones par sorte, chaque bâtiment (position, taille, niveaux, toit, couleur de façade). |
-| `create_scene_from_place` | Importe un lieu (nom ou `lat`/`lon`, `size_m`, `detail`) par la fenêtre « Nouvelle scène », que l'utilisateur voit et peut annuler (`importerPourIA`). |
+| `create_scene_from_place` | Importe un lieu (nom ou `lat`/`lon`, `size_m`, `detail`) par la fenêtre « Nouvelle scène », que l'utilisateur voit et peut annuler (`importerPourIA`). Après 40 s, il répond que l'import continue (`pending` : un client abandonnerait), la Scène à retrouver par `list_scenes`. |
 | `scene_preview` | Ouvre la Scène, attend qu'elle soit construite, rend un JPEG de sa vue (`mcp:capture`, 1280 px de large au plus). |
 
 Une Scène importée d'un lieu garde d'où elle vient sur sa Case, `panel.lieu` = `{ lat, lon, size_m,

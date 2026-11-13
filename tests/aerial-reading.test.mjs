@@ -53,10 +53,9 @@ describe('aerial reading, a Zone\'s real ground', () => {
     assert.equal(groundOfZone(grid(20, C.LAWN), zone('bitume')), 'gazon');
     assert.equal(groundOfZone(grid(20, C.TREE), zone('herbe')), null, 'a grass stays its own grass');
   });
-  test('asphalt only when nearly all of it (a shaded paving reads bluish too)', () => {
-    assert.equal(groundOfZone(grid(20, C.ASPHALT), zone('béton')), 'bitume');
-    assert.equal(groundOfZone(grid(20, C.ASPHALT, (i) => (i < 9 ? C.LIGHT : undefined)), zone('gazon')), null, '40 % light, 60 % asphalt: kept');
-    assert.equal(groundOfZone(grid(20, C.ASPHALT, (i) => (i < 7 ? C.LIGHT : undefined)), zone('gazon')), 'bitume', '80 % asphalt');
+  test('never asphalt (seen: a shaded paving read bluish, turned black)', () => {
+    assert.equal(groundOfZone(grid(20, C.ASPHALT), zone('béton')), null);
+    assert.equal(groundOfZone(grid(20, C.ASPHALT), zone('gazon')), null);
   });
   test('too little seen (shadows, roofs): kept; water never read', () => {
     // The Zone covers columns 5 to 14.
@@ -103,12 +102,12 @@ describe('aerial reading, the trees OpenStreetMap lacks', () => {
 });
 
 describe('aerial reading, the lawns no Zone covers', () => {
-  test('one painted mask over the lawns of 12 m² or more, outside what is taken', () => {
-    const g = grid(20, C.LIGHT, (i, j) => ((i < 4 && j < 4) || (i === 15 && j === 15) ? C.LAWN : undefined));
+  test('one painted mask over the lawns of 25 m² or more, outside what is taken', () => {
+    const g = grid(20, C.LIGHT, (i, j) => ((i < 5 && j < 5) || (i >= 15 && j >= 15 && i < 19 && j < 19) ? C.LAWN : undefined));
     const m = lawnMask(g);
-    assert.deepEqual([m.x0, m.z0, m.nx, m.nz, m.pas], [-10, -10, 4, 4, 1]);
-    assert.equal(m.plein, '1'.repeat(16), 'the lone metre left out');
-    const taken = new Set([0, 1, 2, 3, 20, 21, 22, 23, 40, 41, 42, 43, 60, 61, 62, 63]);
+    assert.deepEqual([m.x0, m.z0, m.nx, m.nz, m.pas], [-10, -10, 5, 5, 1]);
+    assert.equal(m.plein, '1'.repeat(25), 'the 16 m² one left out');
+    const taken = new Set(); for (let j = 0; j < 5; j++) for (let i = 0; i < 5; i++) taken.add(j * 20 + i);
     assert.equal(lawnMask(g, { taken }), null);
   });
 });

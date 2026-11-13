@@ -125,10 +125,10 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    chaque mètre classé (`classGrid` : la classe la plus fréquente de ses pixels, `classOfPixel` : végétation
    par l'excès de vert, une canopée sombre et une pelouse claire, ombre, tuiles, clair, asphalte, gris ;
    calibré sur l'Écusson en peignant les classes sur la photo), puis `readAerialPhoto` sur la traduction : le
-   vrai sol de chaque Zone (`groundOfZone` : vert → pelouse, clair → dallage, asphalte seulement à 70 % ;
+   vrai sol de chaque Zone (`groundOfZone` : vert → pelouse, clair → dallage, jamais d'asphalte (un dallage à l'ombre lui ressemble) ;
    ombres et toits à part, 40 % de la Zone vus au moins ; jamais l'eau), les arbres absents d'OSM
    (`missingTrees` : canopées de 8 m² ou plus hors des bâtiments et à 3 m d'un arbre cartographié, un arbre
-   par couronne de 35 m², répartis ; 300 au plus), les pelouses qu'aucune Zone ne couvre (`lawnMask` : une
+   par couronne de 35 m², répartis ; 300 au plus), les pelouses qu'aucune Zone ne couvre (`lawnMask` : 25 m² ou plus, une
    Zone peinte de plus), les toits qu'aucune source ne décrit (`roofOfBuilding` sur le cœur du toit, son bord
    à part : tuiles à 55 %, gris à 65 % → `roofFinishRead` : tuiles, ou le gris du zinc ; un toit plat garde
    son gris ; `roofKnown`, posé par translateOsm, garde un toit qu'OSM ou le relevé décrit). Son crédit

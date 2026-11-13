@@ -113,10 +113,10 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    classed (`classGrid`: the most frequent class of its pixels, `classOfPixel`: vegetation by green excess, a
    canopy dark and a lawn light, shadow, tiles, light, asphalt, grey; calibrated on the Écusson by painting
    the classes over the photo), then `readAerialPhoto` on the translation: each Zone's real ground
-   (`groundOfZone`: green → grass, light → paving, asphalt only at 70 %; shadows and roofs aside, 40 % of the
+   (`groundOfZone`: green → grass, light → paving, never asphalt (a shaded paving looks alike); shadows and roofs aside, 40 % of the
    Zone seen at least; water never), the trees OSM lacks (`missingTrees`: canopies of 8 m² or more outside the
    buildings and 3 m from a mapped tree, one tree per 35 m² crown, spread; 300 at most), the lawns no Zone
-   covers (`lawnMask`: one more painted Zone), the roofs no source describes (`roofOfBuilding` on the roof's
+   covers (`lawnMask`: 25 m² or more, one more painted Zone), the roofs no source describes (`roofOfBuilding` on the roof's
    core, its edge aside: tiles at 55 %, grey at 65 % → `roofFinishRead`: tiles, or zinc's grey; a flat roof
    keeps its grey; `roofKnown`, set by translateOsm, keeps a roof OSM or the survey describes). Its credit
    when something was read. Then the relief: `planRelief` for the country, its requests sent by

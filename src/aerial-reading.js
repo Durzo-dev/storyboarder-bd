@@ -113,8 +113,7 @@ export const READ_GROUNDS = Object.freeze(['béton', 'bitume', 'herbe', 'gazon',
 /**
  * THE REAL GROUND OF A ZONE, or null to keep its own: what most of its metres show, shadows and roofs set
  * aside (they say nothing of the ground), when they are enough (40 % of the Zone). Green: grass ('gazon',
- * unless already a grass); light: paving ('béton'); the bluish grey of asphalt only when nearly all of it
- * (70 %; a shaded paving reads bluish too).
+ * unless already a grass); light: paving ('béton'). Never asphalt (below).
  */
 export function groundOfZone(grid, zone){
   if (!READ_GROUNDS.includes(zone.terrainType)) return null;
@@ -127,7 +126,8 @@ export function groundOfZone(grid, zone){
   let ground = null;
   if (green >= 0.5 * told) ground = ['herbe', 'gazon'].includes(zone.terrainType) ? zone.terrainType : 'gazon';
   else if (light >= 0.5 * told) ground = 'béton';
-  else if (dark >= 0.7 * told && green < 0.1 * told) ground = 'bitume';
+  // ⚠️ NO ASPHALT IS READ (seen at the Comédie: the opera's terrace, a light paving in the opera's shadow,
+  // read bluish and turned black). A shaded paving and an asphalt look alike from above.
   return ground && ground !== zone.terrainType ? ground : null;
 }
 
@@ -217,11 +217,11 @@ export function missingTrees(grid, { taken = new Set(), trees = [] } = {}){
   return out;
 }
 
-/** The smallest lawn read (m²). */
-export const SMALLEST_LAWN = 12;
+/** The smallest lawn read (m²): smaller, a staircase of metres more than a lawn (seen at the Comédie). */
+export const SMALLEST_LAWN = 25;
 
 /**
- * THE LAWNS NO ZONE COVERS (a courtyard's, a garden's): the groups of light-green metres (12 m² or more)
+ * THE LAWNS NO ZONE COVERS (a courtyard's, a garden's): the groups of light-green metres (25 m² or more)
  * outside the buildings and the Zones (`taken`), as ONE painted Zone's mask ({ pas, x0, z0, nx, nz, plein },
  * terrain-zone-pinceau.js), or null.
  */
