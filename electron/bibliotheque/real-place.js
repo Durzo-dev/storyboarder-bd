@@ -46,13 +46,13 @@ function abortImport(){
 /** Set by abortImport, reset by the next import's first request (osm): the loops stop asking. */
 let _importAnnule = false;
 
-async function request(url, { method = 'GET', body = null, json = true, timeout = TIMEOUT_MS, headers = {}, onBytes = null, onController = null } = {}){
+async function request(url, { method = 'GET', body = null, json = true, timeout = TIMEOUT_MS, headers = {}, onBytes = null, onController = null, cache = 'default' } = {}){
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), timeout);
   _enCours.add(abort);
   if (onController) onController(abort);
   try {
-    const rep = await net.fetch(url, { method, body, signal: abort.signal,
+    const rep = await net.fetch(url, { method, body, signal: abort.signal, cache,
       headers: { 'User-Agent': agent(), Accept: json ? 'application/json' : '*/*', ...headers } });
     if (!rep.ok) {
       // What the server says (its first words): a 400 tells which parameter it refuses.
@@ -357,7 +357,10 @@ async function heightGrid(bbox, width, height){
   const url = `${AERIAL_WMS}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=IGNF_LIDAR-HD_MNH_ELEVATION.ELEVATIONGRIDCOVERAGE.WGS84G&STYLES=&CRS=EPSG:4326`
     + `&BBOX=${n(b.south)},${n(b.west)},${n(b.north)},${n(b.east)}&WIDTH=${w}&HEIGHT=${h}&FORMAT=image/x-bil;bits=32`;
   const started = Date.now();
-  const r = await request(url, { json: false, timeout: 30000 });
+  let r = await request(url, { json: false, timeout: 30000 });
+  // ⚠️ A REFUSAL CAN BE KEPT IN THE APP'S HTTP CACHE (seen: a 400 « Layer unknown » given back for days, the same
+  // request answered at once by a fresh profile): once refused, asked again past the cache.
+  if (r.status === 400) r = await request(url, { json: false, timeout: 30000, cache: 'reload' });
   if (r.error) return r;
   // Exactly one float per cell: anything else (an XML error with a 200) is no grid.
   if (!r.bytes || r.bytes.length !== w * h * 4) { console.warn('[real-place] heights: not a grid'); return { error: 'response' }; }
