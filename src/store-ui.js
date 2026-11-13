@@ -191,6 +191,12 @@ function refreshAccountLine(){
   b.dataset.action = s.action;
 }
 
+/** Whether the Sketchfab account is connected (asked of the main process once, then kept; #480c). */
+export async function sketchfabConnecte(){
+  await loadSketchfabStatus();
+  return !!(sketchfabStatus && sketchfabStatus.connected);
+}
+
 async function loadSketchfabStatus(){
   const pont = window.storyboarderAPI;
   if (!pont || !pont.sketchfabStatus || sketchfabStatus) return;
@@ -765,6 +771,38 @@ function brancherTelechargement(r, ui){
     if (ui.fleche.parentElement) ui.fleche.parentElement.classList.toggle('avec-fleche', options.length >= 2);
     appliquer();
   }).catch(() => {});
+}
+
+/** Whether a store result is already in « My models » (rafraichirPossedes first). */
+export function dejaPossede(r){
+  return possedes.get(cleDe(r)) || null;
+}
+
+/**
+ * A MODEL DOWNLOADED WITHOUT THE STORE'S WINDOW (#480c, the Realistic import chooses alone): the same path as
+ * the button (textures shrunk to `resolution`, filed with « My models », its attribution noted), nothing
+ * shown. A model already there is given back as it is. Returns { ok, fichier, deja } or { ok: false, erreur }.
+ */
+export async function telechargerEnSilence(r, resolution = RESOLUTION_DEFAUT){
+  const pont = window.storyboarderAPI;
+  if (!pont || !pont.storeTelecharger) return { ok: false, erreur: 'pont' };
+  const deja = dejaPossede(r);
+  if (deja) return { ok: true, fichier: deja.fichier, deja: true };
+  try {
+    const rep = await pont.storeTelecharger(r.source, r.id, resolution);
+    if (!rep || rep.erreur || !rep.data) return { ok: false, erreur: (rep && rep.erreur) || 'reponse' };
+    let data = rep.data;
+    const px = r.source === 'sketchfab' ? pixelsDe(resolution) : null;
+    if (px) { try { data = await reduireTexturesGlb(data, px, () => {}); } catch (e) { data = rep.data; } }
+    const range = await rangerModele(r.nom + '.glb', data);
+    if (!range.ok) return { ok: false, erreur: 'ecriture' };
+    if (pont.storeAttribuer) await pont.storeAttribuer(r, range.name, rep.resolution || resolution);
+    possedes.set(cleDe(r), { fichier: range.name, resolution: rep.resolution || resolution });
+    if (_rappels.apresTelechargement) _rappels.apresTelechargement(range.name, false);
+    return { ok: true, fichier: range.name, deja: false };
+  } catch (e) {
+    return { ok: false, erreur: 'reseau' };
+  }
 }
 
 /**

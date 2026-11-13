@@ -22,6 +22,9 @@ import { classGrid, readAerialPhoto } from './aerial-reading.js';
 import { monumentsOf } from './monuments.js';
 import { heightPlan, heightGrid, treeHeightAt, LIDAR_CREDIT } from './height-reading.js';
 import { floraOf, applyFlora, FLORA_CREDIT, FLORA_RADIUS_KM } from './flora.js';
+import { MODEL_USAGES, FACES, MAX_DOWNLOADS, queriesFor, candidatesFor, usagesOf, applyModels } from './realistic-models.js';
+import { telechargerEnSilence, dejaPossede, rafraichirPossedes, sketchfabConnecte, signIn } from './store-ui.js';
+import { preloadModels, getLoadedModel } from './model-cache.js';
 import { chercherUnModele, remplacerLeBatiment } from './monuments-ui.js';
 import { nomDuTrace } from './canvas-tools.js';
 import { enregistrerFermeture } from './modal-stack.js';
@@ -63,10 +66,10 @@ export function cablerLieuReel(rappels){
   $('realPlaceQuery').addEventListener('input', suggerer);
   _rafraichirRecherche = wireSearchField(document.querySelector('#realPlaceSearchForm .champ-recherche'), {
     onClear: () => { $('realPlaceResults').hidden = true; } });
-  $('realPlaceImport').onclick = importer;
+  $('realPlaceImport').onclick = creerOuSeConnecter;
   $('realPlaceSize').onchange = () => { if (V) { V.halfSize = Number($('realPlaceSize').value) / 2; dessiner(); } };
   // The level of detail: kept for the session (the select keeps it), and what it brings said under the row.
-  $('realPlaceDetailLevel').onchange = direLeNiveau;
+  $('realPlaceDetailLevel').onchange = () => { direLeNiveau(); verifierLeCompte(); };
   cablerLaCarte($('realPlaceMap'));
   // Esc and a click outside close it, as its neighbours (modal-stack.js).
   enregistrerFermeture('realPlaceModal', annulerOuFermer);
@@ -85,7 +88,35 @@ export function ouvrirNouvelleScene(){
   rendreLaConsigne();
   dire('');
   majBoutons();
+  verifierLeCompte();
   $('realPlaceModal').classList.remove('hidden');
+}
+
+/** Realistic needs the Sketchfab account (#480c): asked once, the button says what it will do. */
+async function verifierLeCompte(){
+  const moi = V;
+  if (!moi || $('realPlaceDetailLevel').value !== 'realistic') { majBoutons(); return; }
+  const ok = await sketchfabConnecte();
+  if (V !== moi) return;
+  moi.sketchfab = ok;
+  majBoutons();
+}
+
+/**
+ * « Create the scene », or at Realistic without a Sketchfab account « Sign in to Sketchfab » (decided with
+ * Durzo): the sign-in opens, and once it is done the creation starts.
+ */
+async function creerOuSeConnecter(){
+  if (V && $('realPlaceDetailLevel').value === 'realistic' && V.sketchfab === false) {
+    const moi = V;
+    $('realPlaceImport').disabled = true;
+    const ok = await signIn();
+    if (V !== moi) return;
+    moi.sketchfab = ok;
+    majBoutons();
+    if (!ok) { dire(tr('The Sketchfab sign-in did not finish.', 'La connexion à Sketchfab n\'a pas abouti.'), true); return; }
+  }
+  return importer();
 }
 
 /** The second step, from an existing place: search, map, zone. */
@@ -104,7 +135,8 @@ function montrerLaProgression(step, sub = 0, detail = null){
   const labels = { map: tr('Map data (OpenStreetMap)', 'Données de la carte (OpenStreetMap)'), country: tr('Country of the place', 'Pays du lieu'),
     buildings: tr('Buildings, streets and grounds', 'Bâtiments, rues et sols'),
     facades: tr('Facade colours (street photos)', 'Couleurs des façades (photos de rue)'),
-    aerial: tr('Reading the aerial photo (IGN)', 'Lecture de la vue aérienne (IGN)'), relief: tr('Relief', 'Relief'), scene: tr('Creating the scene', 'Création de la scène'),
+    aerial: tr('Reading the aerial photo (IGN)', 'Lecture de la vue aérienne (IGN)'),
+    models: tr('3D models (Sketchfab)', 'Modèles 3D (Sketchfab)'), relief: tr('Relief', 'Relief'), scene: tr('Creating the scene', 'Création de la scène'),
     construction: buildStepLabel('buildings', step === 'construction' ? detail : null), ground: buildStepLabel('ground') };
   const i = step ? IMPORT_STEPS.indexOf(step) : -1;
   $('realPlaceProgress').hidden = false;
@@ -136,8 +168,8 @@ function direLeNiveau(){
     ? tr('Simple: the buildings\' volumes, default roofs, roads, paths, grounds, relief, trees and lamps.',
       'Simple : volumes des bâtiments, toits par défaut, routes, chemins, sols, relief, arbres et lampadaires.')
     : niveau === 'realistic'
-      ? tr('Realistic: all of Detailed, and the facades: shutters, stone surrounds and shop windows, in the region\'s colours; their colour read on street photos (Panoramax) where there are some; in France, the aerial photo read for the real grounds, the trees and the roofs.',
-        'Réaliste : tout le niveau Détaillé, et les façades : volets, encadrements de pierre et vitrines, aux couleurs de la région ; leur teinte lue sur les photos de rue (Panoramax) quand il y en a ; en France, la vue aérienne lue pour les vrais sols, les arbres et les toits.')
+      ? tr('Realistic: all of Detailed, and the facades: shutters, stone surrounds and shop windows, in the region\'s colours; their colour read on street photos (Panoramax) where there are some; in France, the aerial photo read for the real grounds, the trees and the roofs; the trees of the place, benches, lamps… as 3D models from Sketchfab (account needed).',
+        'Réaliste : tout le niveau Détaillé, et les façades : volets, encadrements de pierre et vitrines, aux couleurs de la région ; leur teinte lue sur les photos de rue (Panoramax) quand il y en a ; en France, la vue aérienne lue pour les vrais sols, les arbres et les toits ; les arbres du lieu, bancs, lampadaires… en modèles 3D de Sketchfab (compte requis).')
       : tr('Detailed: also the real heights, roofs and materials (IGN, in France), pavements, road signs, shrubs and benches.',
         'Détaillé : en plus, hauteurs, toits et matériaux réels (IGN, en France), trottoirs, panneaux, buissons et bancs.');
 }
@@ -191,7 +223,9 @@ function dire(texte, genre = false){
 function majBoutons(){
   $('realPlaceImport').disabled = !V || !V.zone || V.busy;
   // After a failed import, the same button tries again (asked).
-  $('realPlaceImport').textContent = V && V.echec ? tr('Try again', 'Réessayer') : tr('Create the scene', 'Créer la scène');
+  const seConnecter = !!(V && V.sketchfab === false && $('realPlaceDetailLevel').value === 'realistic');
+  $('realPlaceImport').textContent = V && V.echec ? tr('Try again', 'Réessayer')
+    : seConnecter ? tr('Sign in to Sketchfab', 'Se connecter à Sketchfab') : tr('Create the scene', 'Créer la scène');
   // During the import, « Create the scene » has nothing left to do (asked): only « Cancel » stays, full width.
   const busy = !!(V && V.busy);
   $('realPlaceImport').hidden = busy;
@@ -471,6 +505,14 @@ async function importer(){
       }
       photoCredits.push(tr(LIDAR_CREDIT.en, LIDAR_CREDIT.fr));
     }
+    // Realistic (#480c): the stores' models in the built-in objects' place (trees of the place, benches…).
+    if (niveau === 'realistic') {
+      await etape('models');
+      const credits = await choisirLesModeles(translated, flora, (sub, texte) => { montrerLaProgression('models', sub); montrerLeDetail(texte || ''); }, arrete);
+      if (arrete()) return annule;
+      montrerLeDetail('');
+      photoCredits.push(...credits);
+    }
     await etape('relief');
     const relief = await reliefDuLieu(centre, halfSize, country, (sub) => montrerLaProgression('relief', sub), arrete);
     if (arrete()) return annule;
@@ -537,6 +579,56 @@ export async function importerPourIA({ query = null, lat, lon, sideM = 200, deta
  * THE LIDAR'S HEIGHTS (height-reading.js reads them; here the network): the MNH of the zone as floats, or null
  * (outside France, no answer: the heights come from the survey and OSM, as before). Never kept.
  */
+/**
+ * THE MODELS OF A REALISTIC IMPORT (realistic-models.js decides; here the store): for each use the place holds
+ * (the most present first), its searches on Sketchfab, the first fit results downloaded quietly into « My
+ * models » (or taken there, already downloaded), MAX_DOWNLOADS at most; then given to the elements. Never
+ * blocking: without an account, an answer or a fit result, the built-in objects stay. Returns the credits.
+ */
+async function choisirLesModeles(translated, flora, progression, arrete){
+  const api = window.storyboarderAPI;
+  if (!api || !api.storeChercher || !(await sketchfabConnecte())) { console.warn('[real-place] models: no Sketchfab account'); return []; }
+  await rafraichirPossedes();
+  const usages = usagesOf(translated.elements);
+  const models = {}, credits = [];
+  let downloads = 0;
+  for (const [k, { usage }] of usages.entries()) {
+    const want = MODEL_USAGES[usage].variants, chosen = [];
+    const queries = queriesFor(usage, flora);
+    for (const [qi, q] of queries.entries()) {
+      if (chosen.length >= want) break;
+      progression(k / usages.length, tr(`Searching: ${q}`, `Recherche : ${q}`));
+      let page;
+      try { page = await api.storeChercher('sketchfab', { texte: q, facesMax: FACES.max }); } catch (e) { page = null; }
+      if (arrete()) return [];
+      // A broadleaved tree: one variant per genus of the place, the rest from « tree ».
+      const cap = usage === 'arbre' && qi < queries.length - 1 ? chosen.length + 1 : want;
+      for (const r of candidatesFor(usage, page && page.resultats)) {
+        if (chosen.length >= Math.min(want, cap)) break;
+        if (chosen.some(c => c.id === r.id)) continue;
+        const owned = !!dejaPossede(r);
+        if (!owned && downloads >= MAX_DOWNLOADS) break;
+        progression((k + 0.5) / usages.length, tr(`Downloading: ${r.nom}`, `Téléchargement : ${r.nom}`));
+        const d = await telechargerEnSilence(r);
+        if (arrete()) return [];
+        if (!d.ok) continue;
+        if (!d.deja) downloads++;
+        chosen.push({ id: r.id, fichier: d.fichier, nom: r.nom });
+        credits.push(tr(`"${r.nom}" by ${r.auteur.nom}, ${r.licence.libelle}, Sketchfab`, `« ${r.nom} » par ${r.auteur.nom}, ${r.licence.libelle}, Sketchfab`));
+      }
+    }
+    if (chosen.length) models[usage] = chosen;
+  }
+  const files = Object.values(models).flat().map(m => m.fichier);
+  if (files.length) {
+    try { await preloadModels(files); } catch (e) { /* the box stands in until the file is read */ }
+    for (const list of Object.values(models)) for (const m of list) { const l = getLoadedModel(m.fichier); if (l && l.ratioLargeur > 0) m.ratio = l.ratioLargeur; }
+  }
+  const n = applyModels(translated.elements, models);
+  console.info(`[real-place] models: ${n} elements, ${files.length} models (${downloads} downloaded)`, Object.fromEntries(Object.entries(models).map(([u, l]) => [u, l.map(m => m.nom)])));
+  return [...new Set(credits)];
+}
+
 /** The flora of the place (flora.js), or null (no answer: the trees stay as OSM says, broadleaved by default). */
 async function lireLaFlore(centre){
   const api = window.storyboarderAPI;

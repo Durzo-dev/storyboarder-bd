@@ -9,6 +9,7 @@ import './helpers/render-stub.mjs';
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { OBJECT_REAL_HEIGHT_M } from '../src/constants.js';
 
 const { translateOsm } = await import('../src/osm-scene.js');
 const { sceneContentOf } = await import('../src/real-place-import.js');
@@ -74,6 +75,20 @@ describe('real place, laid in a new Scene and rendered', () => {
     assert.equal(shelter.rotY, 1.2);
     assert.equal(plain.realHeightFloor, 1, 'no height: the default');
     assert.equal(plain.rotY, 0);
+  });
+  test('Realistic: a model from the stores in the built-in object\'s place, as high as it, its use kept (#480c)', () => {
+    const s4 = createScene();
+    const { page: p4 } = layRealPlace(s4, { traces: [], buildings: [], credits: [], elements: [
+      { objType: 'arbre', usage: 'arbre', modelFile: 'Oak tree.glb', modelName: 'Oak tree', modelRatio: 0.9, x: 3, z: 4, height: 11 },
+      { objType: 'banc', usage: 'banc', modelFile: 'Bench.glb', x: 6, z: 4, rotY: 0.5 }] },
+    { halfSize: HALF, newObject });
+    const [oak, bench] = p4.objects.filter(o => o.type === 'objet3d');
+    assert.equal(oak.objType, 'modele'); assert.equal(oak.modelFile, 'Oak tree.glb'); assert.equal(oak.name, 'Oak tree');
+    assert.equal(oak.realHeightFloor, 11, 'the LiDAR\'s height');
+    assert.equal(oak.usage, 'arbre');
+    assert.equal(oak.wxFloor, 3); assert.equal(oak.wzFloor, 4);
+    assert.equal(bench.realHeightFloor, OBJECT_REAL_HEIGHT_M.banc, 'no height: the built-in object\'s');
+    assert.equal(bench.rotY, 0.5);
   });
   test('objects are made against the Scene\'s size, and stand on the Ground', () => {
     const s2 = createScene();

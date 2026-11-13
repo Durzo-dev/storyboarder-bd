@@ -3,7 +3,8 @@
  * (sceneContentOf) becomes the objects of the Scene's page, each one standing on the Ground at its place,
  * and the camera frames the whole zone from above.
  */
-import { WALL_PX_PER_UNIT_3D, PANEL_CAM_DEFAULT_DIST_3D } from './constants.js';
+import { WALL_PX_PER_UNIT_3D, PANEL_CAM_DEFAULT_DIST_3D, OBJECT_REAL_HEIGHT_M } from './constants.js';
+import { createModelElement } from './model-store.js';
 import { creerElementBatiment } from './batiment-element.js';
 import { setElementWorldPos3D, applyGroundMagnetY, groundMagnetEligible, tracéUpdateScreenPts } from './scene3d.js';
 
@@ -61,6 +62,15 @@ export function layRealPlace(scene, content, { halfSize, newObject }){
     place(o, b.x, b.z);
   }
   for (const e of content.elements) {
+    // Realistic (#480c): a model found in the stores in the built-in object's place, as high as it would be.
+    if (e.modelFile) {
+      const o = createModelElement({ panel, page: view, modelFile: e.modelFile, name: e.modelName,
+        realHeightM: e.height > 0 ? e.height : OBJECT_REAL_HEIGHT_M[e.usage], ratioLargeur: e.modelRatio });
+      o.usage = e.usage;
+      if (Number.isFinite(e.rotY)) o.rotY = e.rotY;
+      place(o, e.x, e.z);
+      continue;
+    }
     const o = newObject(panel, view, e.objType);
     // A known height (an OSM tree's `height`): the object scaled to it, its proportions kept.
     if (e.height > 0 && o.realHeightFloor > 0) {
