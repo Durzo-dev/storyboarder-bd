@@ -94,7 +94,7 @@ describe('the relief from real altitudes', () => {
 describe('the import\'s progress and placement', async () => {
   const { IMPORT_STEPS, importProgress } = await import('../src/real-place-import.js');
   test('the steps in order; the bar grows through them, each step\'s share filled by its own progress', () => {
-    assert.deepEqual(IMPORT_STEPS, ['map', 'country', 'buildings', 'facades', 'aerial', 'relief', 'scene', 'construction', 'ground']);
+    assert.deepEqual(IMPORT_STEPS, ['map', 'country', 'buildings', 'facades', 'relief', 'scene', 'construction', 'ground']);
     assert.equal(importProgress('map'), 0);
     let last = -1;
     for (const s of IMPORT_STEPS) for (const sub of [0, 0.5, 1]) { const p = importProgress(s, sub); assert.ok(p >= last); last = p; }
@@ -219,8 +219,8 @@ describe('real place, the facades\' colours from street photos (#474c)', () => {
   });
 });
 
-describe('real place, the aerial photo on the ground (#477a)', async () => {
-  const { aerialPhotoPlan, aerialPhotoZone, zonesKeptUnderPhoto, REPLACED_GROUNDS, MAX_PIXELS } = await import('../src/aerial-photo.js');
+describe('real place, the aerial photo to read (#477a, read in #477f)', async () => {
+  const { aerialPhotoPlan, MAX_PIXELS } = await import('../src/aerial-photo.js');
   const { projector } = await import('../src/geo-local.js');
   const { toGeo, toLocal } = projector(centre);
   test('the photo asked: the zone itself in degrees, 4 px a metre, at most 2048 px; France only', () => {
@@ -233,24 +233,9 @@ describe('real place, the aerial photo on the ground (#477a)', async () => {
     assert.equal(aerialPhotoPlan({ toGeo, halfSize: 100, country: 'de' }), null, 'the IGN covers France');
     assert.equal(aerialPhotoPlan({ toGeo, halfSize: 100, country: null }), null);
   });
-  test('it replaces the paved and green grounds, never the water', () => {
-    const zones = REPLACED_GROUNDS.map(t => ({ terrainType: t })).concat([{ terrainType: 'eau' }]);
-    assert.deepEqual(zonesKeptUnderPhoto(zones), [{ terrainType: 'eau' }]);
-    assert.ok(REPLACED_GROUNDS.includes('béton') && REPLACED_GROUNDS.includes('gazon'));
-  });
-  test('its Zone: the whole zone, north up, its file kept on the Zone object, under the other Zones', () => {
-    const z = aerialPhotoZone({ halfSize: 100, image: 'Vue aérienne - Eguisheim.jpg', name: 'Vue aérienne' });
-    assert.deepEqual(z.world.corners, [{ x: -100, z: -100 }, { x: 100, z: -100 }, { x: 100, z: 100 }, { x: -100, z: 100 }]);
-    assert.equal(z.world.w, 200); assert.equal(z.world.rotY, 0);
-    const c = sceneContentOf({ ...translateOsm(village, { centre, halfSize: 100 }), zones: [z] }, { panelId: 'P', newId: () => 'z1', nameOf: (k) => k });
-    assert.equal(c.traces[0].photoAerienne, 'Vue aérienne - Eguisheim.jpg');
-    assert.equal(c.traces[0].terrainType, 'béton', 'its ground while the photo loads');
-  });
-  test('the import: realistic, after the facades, the replaced Zones dropped, its credit added', () => {
+  test('never shown nor kept: no Zone, no file (decided by Durzo)', () => {
     const ui = readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8');
-    assert.match(ui, /await etape\('aerial'\);/);
-    assert.match(ui, /translated\.zones = \[vue\.zone, \.\.\.zonesKeptUnderPhoto\(translated\.zones\)\];/);
-    assert.match(ui, /photoCredits\.push\(vue\.credit\);/);
+    assert.doesNotMatch(ui, /photoAerienne|rangerImageChoisie/);
     const net = readFileSync(new URL('../electron/bibliotheque/real-place.js', import.meta.url), 'utf8');
     assert.match(net, /LAYERS=ORTHOIMAGERY\.ORTHOPHOTOS/);
     assert.match(net, /r\.bytes\[0\] !== 0xFF \|\| r\.bytes\[1\] !== 0xD8/, 'a WMS error (XML) is not a photo');

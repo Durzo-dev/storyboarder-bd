@@ -44,7 +44,7 @@ import { estUneLumiere3D, planLumieresPosees3D, reglagesLumierePosee3D } from '.
 // changement de Projet doit le VIDER (sinon les géométries du Projet précédent restent sur la
 // carte graphique, invisibles et cumulatives).
 import { clearModelCache, collectModelFiles, modelCacheSignature, modelState } from './model-cache.js';
-import { clearImageCache, getLoadedImage, imageState, preloadImages } from './image-cache.js';
+import { clearImageCache } from './image-cache.js';
 // cf. son en-tête : la boîte englobante d'un modèle importé articulé doit tenir compte du
 // squelette, pas seulement de la géométrie brute, sinon l'échelle réelle et la boîte de sélection
 // 2D divergent de ce que le GPU affiche réellement.
@@ -2213,9 +2213,7 @@ function computePanelSceneSignature3D(panel, page, styleKey){
   // and would needlessly invalidate the cache on every camera rotation.
   const tracéPart = JSON.stringify(
     page.objects.filter(o => o.type === 'tracé' && o.panelId === panel.id)
-      .map(o => ({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, w: o.width, world: o.world, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),
-        // An aerial photo (aerial-photo.js) is drawn once its file is decoded: its arrival renders again.
-        ph: o.photoAerienne ? `${o.photoAerienne}:${imageState(o.photoAerienne)}` : null }))
+      .map(o => ({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, w: o.width, world: o.world, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) }))
   );
   return camPart + '||' + parts.join('|') + '||t:' + tracéPart + '||m:' + modelPart + '||l:' + lumierePart;
 }
@@ -2738,27 +2736,6 @@ function geometrieDuMasque3D(w, y){
   geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
   geo.computeVertexNormals();
   return geo;
-}
-/**
- * The texture of an aerial photo (aerial-photo.js), once its file is decoded (image-cache.js, which renders
- * again when it arrives), or null meanwhile. Drawn into a canvas: an ImageBitmap is not flipped by WebGL, a
- * canvas is, so the photo's top falls to the north as the Zone's texture coordinates expect. One per file.
- */
-const _photosAeriennes3D = new Map();
-function texturePhotoAerienne3D(nom){
-  const deja = _photosAeriennes3D.get(nom);
-  if (deja) return deja;
-  const img = getLoadedImage(nom);
-  if (!img) { if (imageState(nom) === 'absent') preloadImages([nom]); return null; }
-  const c = document.createElement('canvas');
-  c.width = img.w; c.height = img.h;
-  c.getContext('2d').drawImage(img.bitmap, 0, 0);
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
-  t.anisotropy = (personaRenderer3D && personaRenderer3D.capabilities && personaRenderer3D.capabilities.getMaxAnisotropy) ? personaRenderer3D.capabilities.getMaxAnisotropy() : 1;
-  t.needsUpdate = true;
-  _photosAeriennes3D.set(nom, t);
-  return t;
 }
 /** Fige les Tracés le temps d'un coup de pinceau du relief (l'Éditeur de terrain l'allume et l'éteint). */
 let _tracesFiges3D = false;
@@ -3442,30 +3419,21 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         // Logic identical to Building Slabs (floor): covers the Ground without transparency.
         const tType = o.terrainType || 'herbe';
         const tDef  = GROUND_TYPE_DEFS.find(d => d.id === tType) || GROUND_TYPE_DEFS[0];
-        // AN AERIAL PHOTO (aerial-photo.js): the photo once, stretched over the Zone (its top to the north),
-        // instead of its ground's tiled texture; while it loads (or without its file), its ground.
-        const photo = o.photoAerienne ? texturePhotoAerienne3D(o.photoAerienne) : null;
-        let tMapClone;
-        if (photo) tMapClone = photo;
-        else {
-          // Sa couleur (terrainColor) teint la texture, comme le Sol d'une Case.
-          const { map: tMap } = buildGroundTexture(tType, teinteDuSol3D(tDef, o.terrainColor));
-          tMapClone = tMap.clone();
-          tMapClone.wrapS = tMapClone.wrapT = THREE.RepeatWrapping;
-          tMapClone.repeat.set(Math.max(0.5, w.w * (tDef.repeat || 60) / 100),
-                               Math.max(0.5, w.h * (tDef.repeat || 60) / 100));
-          tMapClone.needsUpdate = true;
-        }
+        // Sa couleur (terrainColor) teint la texture, comme le Sol d'une Case.
+        const { map: tMap } = buildGroundTexture(tType, teinteDuSol3D(tDef, o.terrainColor));
+        const tMapClone = tMap.clone();
+        tMapClone.wrapS = tMapClone.wrapT = THREE.RepeatWrapping;
+        tMapClone.repeat.set(Math.max(0.5, w.w * (tDef.repeat || 60) / 100),
+                             Math.max(0.5, w.h * (tDef.repeat || 60) / 100));
+        tMapClone.needsUpdate = true;
         // #462c-2 : sur un relief, la Zone est découpée au mètre pour s'y draper.
         const _decoupe = (d) => (reliefPlat(_relief) ? 1 : Math.max(1, Math.min(400, Math.ceil(d * 2))));
         const geo = new THREE.PlaneGeometry(w.w, w.h, _decoupe(w.w), _decoupe(w.h));
-        // The aerial photo lies UNDER the other Zones (a lake, a Zone drawn on it): a smaller offset.
-        const _sous = !!o.photoAerienne;
         const mat = new THREE.MeshStandardMaterial({
           map: tMapClone, color: new THREE.Color(0xffffff),
-          roughness: photo ? 0.95 : (tDef.roughness || 0.9), metalness: photo ? 0 : (tDef.metalness || 0),
+          roughness: tDef.roughness || 0.9, metalness: tDef.metalness || 0,
           side: THREE.DoubleSide,
-          polygonOffset: true, polygonOffsetFactor: _sous ? -1 : -2, polygonOffsetUnits: _sous ? -1 : -2,
+          polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
         });
         // Une Zone PEINTE (au pinceau) : ses cases, posées dans le monde, avec les coordonnées de texture
         // du rectangle qui l'englobe (la même texture qu'une Zone rectangulaire de cette taille).
@@ -4454,8 +4422,6 @@ export function disposeAllRigs3D(){
   // tient une image décodée HORS du tas JavaScript. Changer de Projet sans les fermer laisserait la
   // mémoire de l'ancien occupée, et rien à l'écran ne le dirait (#403b).
   clearImageCache();
-  // The aerial photos' textures go with their decoded files.
-  _photosAeriennes3D.forEach(t => t.dispose()); _photosAeriennes3D.clear();
   Array.from(personaRigCache3D.keys()).forEach(disposePersonaRig3D);
   Array.from(objectRigCache3D.keys()).forEach(disposeObjectRig3D);
   Array.from(wallRenderRigCache3D.keys()).forEach(disposeWallRenderRig3D);
