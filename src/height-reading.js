@@ -130,6 +130,118 @@ export function roofFromHeights(g, outline){
   };
 }
 
+// ── A building's parts (#477d-2) ─────────────────────────────────────────────────────────────────
+
+/** Between two neighbouring cells, a rise this high or more is a wall (a roof at 60° rises 0.87 m in 50 cm). */
+const WALL_JUMP = 1.5;
+/** The smallest part (m²): a dormer, a chimney, a lift's housing are no part. */
+export const PART_MIN = 20;
+/** Two parts differ by this much at least (metres, at their eaves or their top), else the building stays whole. */
+const PART_STEP = 2;
+/** The line between two parts is a wall: its cells this close to a straight line (RMS, metres). */
+const WALL_FIT = 1;
+/** The most parts a building is cut into. */
+const MAX_PARTS = 6;
+
+/** The regions of a footprint's cells above 2 m, joined where no wall stands between neighbours. */
+function heightRegions(g, cells){
+  const key = (i, j) => j * g.n + i;
+  const ids = new Map();
+  for (const [i, j] of cells) { const v = at(g, i, j); if (ok(v) && v > 2) ids.set(key(i, j), -1); }
+  const regions = [];
+  for (const [i0, j0] of cells) {
+    if (ids.get(key(i0, j0)) !== -1) continue;
+    const id = regions.length, list = [], stack = [[i0, j0]];
+    ids.set(key(i0, j0), id);
+    while (stack.length) {
+      const [i, j] = stack.pop();
+      list.push([i, j]);
+      const v = at(g, i, j);
+      for (const [a, b] of [[i + 1, j], [i - 1, j], [i, j + 1], [i, j - 1]]) {
+        if (ids.get(key(a, b)) !== -1 || Math.abs(at(g, a, b) - v) >= WALL_JUMP) continue;
+        ids.set(key(a, b), id); stack.push([a, b]);
+      }
+    }
+    regions.push(list);
+  }
+  return { regions, ids, key };
+}
+
+/** A polygon cut by the line through `p` along `d`: its two sides, or null when the line crosses it more than twice. */
+function cutPolygon(poly, p, d){
+  const side = (q) => (q.x - p.x) * d.z - (q.z - p.z) * d.x;
+  const left = [], right = [];
+  let crossings = 0;
+  poly.forEach((a, k) => {
+    const b = poly[(k + 1) % poly.length], sa = side(a), sb = side(b);
+    (sa >= 0 ? left : right).push(a);
+    if ((sa >= 0) !== (sb >= 0)) {
+      const t = sa / (sa - sb), q = { x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t };
+      left.push(q); right.push(q); crossings++;
+    }
+  });
+  return crossings === 2 && left.length >= 3 && right.length >= 3 ? [left, right] : null;
+}
+
+/**
+ * A BUILDING'S PARTS FROM THE HEIGHTS (#477d-2): an OSM building is often a whole block, or a low wing against a
+ * high body; one height and one roof for it all is false. Its cells above 2 m are joined into regions where no
+ * wall (WALL_JUMP) stands between them; two large neighbouring regions (PART_MIN) of different heights
+ * (PART_STEP) are parted by the straight line between them (a wall: WALL_FIT, turned along the facade it is
+ * nearly parallel to), each side cut again (MAX_PARTS). MEASURED on Eguisheim (OSM, 192 buildings): 4 cut, the
+ * château (a body to 18 m, a wing to 11 m), the church (nave, tower), two houses with a low annex. Returns the
+ * parts' outlines (zone frame, two or more), or null (one building, or the grid does not tell).
+ */
+export function partsFromHeights(g, outline, room = MAX_PARTS){
+  if (!g || !outline || outline.length < 3 || room < 2) return null;
+  const cells = cellsInside(g, outline);
+  const cellArea = g.step * g.step;
+  if (cells.length * cellArea < 2 * PART_MIN) return null;
+  const { regions, ids, key } = heightRegions(g, cells);
+  const big = regions.map((list, id) => ({ id, list })).filter(r => r.list.length * cellArea >= PART_MIN);
+  if (big.length < 2) return null;
+  const median = new Map(big.map(r => [r.id, quantile(r.list.map(([i, j]) => at(g, i, j)).sort((a, b) => a - b), 0.5)]));
+  // The walls between two large regions: the midpoints of their neighbouring cells, pair by pair.
+  const walls = new Map();
+  for (const r of big) {
+    for (const [i, j] of r.list) {
+      for (const [a, b] of [[i + 1, j], [i, j + 1]]) {
+        const o = ids.get(key(a, b));
+        if (o === undefined || o === r.id || !median.has(o)) continue;
+        const pair = r.id < o ? `${r.id}:${o}` : `${o}:${r.id}`;
+        if (!walls.has(pair)) walls.set(pair, []);
+        walls.get(pair).push({ x: -g.halfSize + ((i + a) / 2 + 0.5) * g.step, z: -g.halfSize + ((j + b) / 2 + 0.5) * g.step });
+      }
+    }
+  }
+  // The longest wall first: a part is a wing, not a crack.
+  const edges = outline.map((a, k) => { const b = outline[(k + 1) % outline.length], L = Math.hypot(b.x - a.x, b.z - a.z); return { x: (b.x - a.x) / (L || 1), z: (b.z - a.z) / (L || 1), L }; });
+  for (const [pair, pts] of [...walls].sort((a, b) => b[1].length - a[1].length)) {
+    const [ra, rb] = pair.split(':').map(Number);
+    if (Math.abs(median.get(ra) - median.get(rb)) < PART_STEP || pts.length * g.step < 3) continue;
+    // The wall's line: its points' mean and main direction, turned along a facade within 15°.
+    const m = pts.reduce((s, p) => ({ x: s.x + p.x / pts.length, z: s.z + p.z / pts.length }), { x: 0, z: 0 });
+    let xx = 0, xz = 0, zz = 0;
+    for (const p of pts) { const dx = p.x - m.x, dz = p.z - m.z; xx += dx * dx; xz += dx * dz; zz += dz * dz; }
+    const th = 0.5 * Math.atan2(2 * xz, xx - zz);
+    let d = { x: Math.cos(th), z: Math.sin(th) };
+    let snap = null;
+    for (const e of edges) { const c = Math.abs(e.x * d.x + e.z * d.z); if (e.L >= 2 && c > Math.cos(Math.PI / 12) && (!snap || c > snap.c)) snap = { c, x: e.x, z: e.z }; }
+    if (snap) d = { x: snap.x, z: snap.z };
+    const rms = Math.sqrt(pts.reduce((s, p) => s + ((p.x - m.x) * d.z - (p.z - m.z) * d.x) ** 2, 0) / pts.length);
+    if (rms > WALL_FIT) continue;
+    const halves = cutPolygon(outline, m, d);
+    if (!halves || halves.some(q => area(q) < PART_MIN)) continue;
+    const roofs = halves.map(q => roofFromHeights(g, q));
+    if (roofs.some(r => !r) || (Math.abs(roofs[0].eaves - roofs[1].eaves) < PART_STEP && Math.abs(roofs[0].top - roofs[1].top) < PART_STEP)) continue;
+    const share = Math.max(2, Math.round(room * area(halves[0]) / area(outline)));
+    const one = partsFromHeights(g, halves[0], Math.min(room - 1, share)) || [halves[0]];
+    const two = partsFromHeights(g, halves[1], room - one.length) || [halves[1]];
+    return one.concat(two);
+  }
+  return null;
+}
+
 /**
  * The `sens` of a gabled roof (batiment-toits.js: its ridge along the longest side, 0, or across it, 1) for a
  * ridge's direction, on a footprint (any frame).

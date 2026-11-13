@@ -30,7 +30,7 @@ import { projector } from './geo-local.js';
 import { rulesFor } from './real-place-sources.js';
 import { facadeStyleOf } from './facade-style.js';
 import { monumentOf } from './monuments.js';
-import { roofFromHeights, ridgeSense } from './height-reading.js';
+import { roofFromHeights, ridgeSense, partsFromHeights } from './height-reading.js';
 /** A level's floor slab (batiment.js DEFAUTS_BATIMENT.dalle): a measured eaves height is levels and slabs. */
 const LEVEL_SLAB = 0.2;
 import { BDTOPO_ATTRIBUTION, matchSurvey, buildingTypeOf, surveyedRoof, wallFinishOf, roofFinishOf } from './building-survey.js';
@@ -585,29 +585,45 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
   for (const w of ways) {
     const closed = w.pts.length >= 4 && Math.hypot(w.pts[0].x - w.pts[w.pts.length - 1].x, w.pts[0].z - w.pts[w.pts.length - 1].z) < 0.01;
     if (w.tags.building && closed) {
-      const fp = cleanFootprint(w.pts);
-      if (!fp || Math.abs(signedArea(fp)) < 4) { out.skipped.invalid++; continue; }
-      osmFootprints.push(fp);
+      const whole = cleanFootprint(w.pts);
+      if (!whole || Math.abs(signedArea(whole)) < 4) { out.skipped.invalid++; continue; }
+      osmFootprints.push(whole);
       let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
-      for (const p of fp) { x0 = Math.min(x0, p.x); z0 = Math.min(z0, p.z); x1 = Math.max(x1, p.x); z1 = Math.max(z1, p.z); }
-      const centreOf = { x: (x0 + x1) / 2, z: (z0 + z1) / 2 };
-      if (Math.abs(centreOf.x) > h || Math.abs(centreOf.z) > h) { out.skipped.outside++; continue; }
-      const local = fp.map(p => roundPoint({ x: p.x - centreOf.x, z: p.z - centreOf.z }));
-      const surveyed = surveys.length ? matchSurvey(fp, surveys, taken) : null;
-      // The LiDAR's reading (height-reading.js): the real eaves and roof, with the survey's other facts.
-      const lidar = detailed && heights ? roofFromHeights(heights, fp) : null;
-      const building = buildingOf(local, w.tags, centreOf, roads, rules, translate, lidar ? { ...(surveyed || {}), lidar } : surveyed, detailed,
-        realistic ? { lat: centre.lat, lon: centre.lon, seed: w.id, shop: shops.some(p => insidePolygon(p, fp)) || (surveyed && surveyed.use === 'Commercial et services') } : null,
-        entrances.filter(e => distanceToRing(e, fp) <= ENTRANCE_REACH));
-      if (!building) { out.skipped.invalid++; continue; }
-      const entry = { building, x: round(centreOf.x), z: round(centreOf.z), osmId: w.id };
-      if (surveyed) entry.surveyId = surveyed.id;
-      // Its roof's material given by a source (OSM, the survey): the aerial photo leaves it (aerial-reading.js).
-      if (roofFinishOf(w.tags, surveyed)) entry.roofKnown = true;
+      for (const p of whole) { x0 = Math.min(x0, p.x); z0 = Math.min(z0, p.z); x1 = Math.max(x1, p.x); z1 = Math.max(z1, p.z); }
+      if (Math.abs((x0 + x1) / 2) > h || Math.abs((z0 + z1) / 2) > h) { out.skipped.outside++; continue; }
+      const surveyed = surveys.length ? matchSurvey(whole, surveys, taken) : null;
       // A known monument (monuments.js): a model may take its place, the user's choice after the import.
       const monument = detailed ? monumentOf(w.tags) : null;
-      if (monument) entry.monument = monument;
-      out.buildings.push(entry);
+      // Its parts of different heights (height-reading.js, #477d-2): a low wing against a high body, each its own
+      // building. A monument stays whole (a model takes its one footprint).
+      const parts = (detailed && heights && !monument && partsFromHeights(heights, whole)) || [whole];
+      const largest = parts.reduce((a, b) => (Math.abs(signedArea(b)) > Math.abs(signedArea(a)) ? b : a));
+      let laid = 0;
+      for (const part of parts) {
+        const fp = part === whole ? whole : cleanFootprint(part);
+        if (!fp || Math.abs(signedArea(fp)) < 4) continue;
+        let px0 = Infinity, pz0 = Infinity, px1 = -Infinity, pz1 = -Infinity;
+        for (const p of fp) { px0 = Math.min(px0, p.x); pz0 = Math.min(pz0, p.z); px1 = Math.max(px1, p.x); pz1 = Math.max(pz1, p.z); }
+        const centreOf = { x: (px0 + px1) / 2, z: (pz0 + pz1) / 2 };
+        const local = fp.map(p => roundPoint({ x: p.x - centreOf.x, z: p.z - centreOf.z }));
+        // The LiDAR's reading (height-reading.js): the real eaves and roof, with the survey's other facts.
+        const lidar = detailed && heights ? roofFromHeights(heights, fp) : null;
+        // The name on the largest part only (one label for one building).
+        const tags = part === largest || !w.tags.name ? w.tags : { ...w.tags, name: undefined };
+        const building = buildingOf(local, tags, centreOf, roads, rules, translate, lidar ? { ...(surveyed || {}), lidar } : surveyed, detailed,
+          realistic ? { lat: centre.lat, lon: centre.lon, seed: w.id + laid, shop: shops.some(p => insidePolygon(p, fp)) || (surveyed && surveyed.use === 'Commercial et services') } : null,
+          entrances.filter(e => distanceToRing(e, fp) <= ENTRANCE_REACH));
+        if (!building) continue;
+        const entry = { building, x: round(centreOf.x), z: round(centreOf.z), osmId: w.id };
+        if (parts.length > 1) entry.part = laid;
+        if (surveyed) entry.surveyId = surveyed.id;
+        // Its roof's material given by a source (OSM, the survey): the aerial photo leaves it (aerial-reading.js).
+        if (roofFinishOf(w.tags, surveyed)) entry.roofKnown = true;
+        if (monument) entry.monument = monument;
+        out.buildings.push(entry);
+        laid++;
+      }
+      if (!laid) out.skipped.invalid++;
       continue;
     }
     const ground = closed && zoneTypeOf(w.tags);

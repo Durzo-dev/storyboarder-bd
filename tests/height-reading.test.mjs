@@ -1,11 +1,11 @@
 /**
  * tests/height-reading.test.mjs: the IGN LiDAR's heights read at the import (src/height-reading.js, #477d):
  * roofs on synthetic height grids (flat, gabled either way, hipped, too small, no data), the ridge's `sens`,
- * a tree's height, the plan asked; and a translation using them (src/osm-scene.js).
+ * a tree's height, the plan asked, a building's parts of different heights (#477d-2); and a translation using them (src/osm-scene.js).
  */
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { heightPlan, heightGrid, roofFromHeights, ridgeSense, treeHeightAt, FLAT_RISE } from '../src/height-reading.js';
+import { heightPlan, heightGrid, roofFromHeights, ridgeSense, treeHeightAt, partsFromHeights, FLAT_RISE } from '../src/height-reading.js';
 import { translateOsm } from '../src/osm-scene.js';
 
 /** A grid of `side` metres at 0.5 m, every cell `fn(x, z)` (zone frame). */
@@ -83,6 +83,29 @@ describe('LiDAR heights, trees and the plan', () => {
   });
 });
 
+describe('LiDAR heights, a building\'s parts (#477d-2)', () => {
+  const long = rect(-15, -5, 15, 5);
+  const gable = (x, z, eaves, d) => eaves + (5 - Math.abs(z)) * deg(d);
+  test('a high body and a low flat wing: two parts, cut along the wall between them', () => {
+    const g = grid(50, (x, z) => (inRect(x, z, [-15, -5, 15, 5]) ? (x < 3 ? gable(x, z, 12, 45) : 4) : 0));
+    const parts = partsFromHeights(g, long);
+    assert.equal(parts.length, 2);
+    const xs = parts.map(q => q.map(p => p.x).sort((a, b) => a - b));
+    assert.ok(xs.some(x => Math.abs(x[0] - 3) < 0.6) && xs.some(x => Math.abs(x[x.length - 1] - 3) < 0.6), JSON.stringify(parts));
+  });
+  test('three heights in a row: three parts', () => {
+    const g = grid(60, (x, z) => (inRect(x, z, [-15, -5, 15, 5]) ? (x < -5 ? gable(x, z, 12, 45) : x < 5 ? 6 : gable(x, z, 9, 40)) : 0));
+    assert.equal(partsFromHeights(g, long).length, 3);
+  });
+  test('one roof, a dormer, a step under 2 m, a small annex: one building', () => {
+    assert.equal(partsFromHeights(grid(50, (x, z) => (inRect(x, z, [-15, -5, 15, 5]) ? gable(x, z, 12, 45) : 0)), long), null, 'one roof');
+    assert.equal(partsFromHeights(grid(50, (x, z) => (inRect(x, z, [-15, -5, 15, 5]) ? (inRect(x, z, [0, 1, 2, 3]) ? 20 : gable(x, z, 12, 45)) : 0)), long), null, 'a dormer');
+    assert.equal(partsFromHeights(grid(50, (x, z) => (inRect(x, z, [-15, -5, 15, 5]) ? (x < 0 ? 10 : 8.8) : 0)), long), null, '1.2 m');
+    assert.equal(partsFromHeights(grid(50, (x, z) => (inRect(x, z, [-15, -5, 15, 5]) ? (x < 13.5 ? gable(x, z, 12, 45) : 4) : 0)), long), null, 'an annex under PART_MIN (1.5 × 10 m)');
+    assert.equal(partsFromHeights(null, long), null);
+  });
+});
+
 describe('LiDAR heights, in a translation', () => {
   test('a building takes the measured eaves (levels from it) and roof (type, pitch, ridge)', () => {
     const centre = { lat: 48, lon: 7 };
@@ -101,5 +124,21 @@ describe('LiDAR heights, in a translation', () => {
     assert.equal(b.niveaux.length, 5, '15 m: five levels');
     const t2 = translateOsm({ elements: [{ type: 'way', id: 1, tags: { building: 'yes', 'roof:shape': 'gabled' }, geometry: ring }] }, { centre, halfSize: 30 });
     assert.equal(t2.buildings[0].building.niveaux.reduce((p, q) => (q.elevation > p.elevation ? q : p)).toit.type, 'deux-pans', 'without heights: the tag');
+  });
+  test('a building of two heights becomes two buildings, the name on the largest', () => {
+    const centre = { lat: 48, lon: 7 };
+    const dLat = 1 / 111320, dLon = 1 / (111320 * Math.cos(48 * Math.PI / 180));
+    const at = (x, z) => [48 - z * dLat, 7 + x * dLon];
+    const ring = [at(-15, -5), at(15, -5), at(15, 5), at(-15, 5), at(-15, -5)];
+    const heights = grid(60, (x, z) => (inRect(x, z, [-15, -5, 15, 5]) ? (x < 3 ? 12 + (5 - Math.abs(z)) * deg(45) : 4) : 0));
+    const el = { type: 'way', id: 1, tags: { building: 'yes', name: 'Maison' }, geometry: ring };
+    const t = translateOsm({ elements: [el] }, { centre, halfSize: 30, heights });
+    assert.equal(t.buildings.length, 2);
+    const tops = t.buildings.map(b => Math.max(...b.building.niveaux.map(n => n.elevation + n.hauteur)));
+    assert.ok(Math.max(...tops) > 10 && Math.min(...tops) < 6, `tops ${tops}`);
+    assert.equal(t.buildings.filter(b => b.building.nom === 'Maison').length, 1);
+    assert.deepEqual(t.buildings.map(b => b.part), [0, 1]);
+    const monument = translateOsm({ elements: [{ ...el, tags: { ...el.tags, wikidata: 'Q1', historic: 'castle' } }] }, { centre, halfSize: 30, heights });
+    assert.equal(monument.buildings.length, 1, 'a monument stays whole');
   });
 });
