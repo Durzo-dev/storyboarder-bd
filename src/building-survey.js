@@ -196,6 +196,16 @@ export function wallFinishOf(tags = {}, survey = null){
 }
 
 /**
+ * A roof's finish read on the aerial photo (aerial-reading.js): 'tiles' (barrel tiles in the south, flat
+ * ones elsewhere, as roofFinishOf) or 'grey' (zinc or metal: the grey of a pitched roof from above).
+ */
+export function roofFinishRead(kind, south = false){
+  if (kind === 'tiles') return finish(south ? BARREL_TILES : FLAT_TILES, null);
+  if (kind === 'grey') return finish(null, METAL);
+  return null;
+}
+
+/**
  * The roof's finish: OSM first (`roof:material`, `roof:colour`), then the survey's first known material.
  * Tiles: barrel tiles in the south (`survey.south`, SOUTH_OF), flat tiles elsewhere.
  */

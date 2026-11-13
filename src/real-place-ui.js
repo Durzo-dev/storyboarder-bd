@@ -16,6 +16,8 @@ import { buildStepLabel } from './scene-loading.js';
 import { wireSearchField } from './search-field.js';
 import { sceneContentOf, IMPORT_STEPS, importProgress, downloadDetail } from './real-place-import.js';
 import { projector } from './geo-local.js';
+import { aerialPhotoPlan, AERIAL_CREDIT } from './aerial-photo.js';
+import { classGrid, readAerialPhoto } from './aerial-reading.js';
 import { nomDuTrace } from './canvas-tools.js';
 import { enregistrerFermeture } from './modal-stack.js';
 
@@ -96,7 +98,7 @@ function montrerLaProgression(step, sub = 0, detail = null){
   const labels = { map: tr('Map data (OpenStreetMap)', 'Données de la carte (OpenStreetMap)'), country: tr('Country of the place', 'Pays du lieu'),
     buildings: tr('Buildings, streets and grounds', 'Bâtiments, rues et sols'),
     facades: tr('Facade colours (street photos)', 'Couleurs des façades (photos de rue)'),
-    relief: tr('Relief', 'Relief'), scene: tr('Creating the scene', 'Création de la scène'),
+    aerial: tr('Reading the aerial photo (IGN)', 'Lecture de la vue aérienne (IGN)'), relief: tr('Relief', 'Relief'), scene: tr('Creating the scene', 'Création de la scène'),
     construction: buildStepLabel('buildings', step === 'construction' ? detail : null), ground: buildStepLabel('ground') };
   const i = step ? IMPORT_STEPS.indexOf(step) : -1;
   $('realPlaceProgress').hidden = false;
@@ -128,8 +130,8 @@ function direLeNiveau(){
     ? tr('Simple: the buildings\' volumes, default roofs, roads, paths, grounds, relief, trees and lamps.',
       'Simple : volumes des bâtiments, toits par défaut, routes, chemins, sols, relief, arbres et lampadaires.')
     : niveau === 'realistic'
-      ? tr('Realistic: all of Detailed, and the facades: shutters, stone surrounds and shop windows, in the region\'s colours; their colour read on street photos (Panoramax) where there are some.',
-        'Réaliste : tout le niveau Détaillé, et les façades : volets, encadrements de pierre et vitrines, aux couleurs de la région ; leur teinte lue sur les photos de rue (Panoramax) quand il y en a.')
+      ? tr('Realistic: all of Detailed, and the facades: shutters, stone surrounds and shop windows, in the region\'s colours; their colour read on street photos (Panoramax) where there are some; in France, the aerial photo read for the real grounds, the trees and the roofs.',
+        'Réaliste : tout le niveau Détaillé, et les façades : volets, encadrements de pierre et vitrines, aux couleurs de la région ; leur teinte lue sur les photos de rue (Panoramax) quand il y en a ; en France, la vue aérienne lue pour les vrais sols, les arbres et les toits.')
       : tr('Detailed: also the real heights, roofs and materials (IGN, in France), pavements, road signs, shrubs and benches.',
         'Détaillé : en plus, hauteurs, toits et matériaux réels (IGN, en France), trottoirs, panneaux, buissons et bancs.');
 }
@@ -434,6 +436,11 @@ async function importer(){
       await etape('facades');
       photoCredits = await couleursDesFacades(translated, bbox, centre, (sub) => montrerLaProgression('facades', sub), arrete);
       if (arrete()) return annule;
+      // The aerial photo, read (France): real grounds, missing trees, lawns, roofs. Never shown nor kept.
+      await etape('aerial');
+      const lu = await lireLaVueAerienne(translated, { toGeo, halfSize, country, south: centre.lat < 46 });
+      if (arrete()) return annule;
+      if (lu) photoCredits.push(tr(AERIAL_CREDIT.en, AERIAL_CREDIT.fr));
     }
     await etape('relief');
     const relief = await reliefDuLieu(centre, halfSize, country, (sub) => montrerLaProgression('relief', sub), arrete);
@@ -493,6 +500,32 @@ export async function importerPourIA({ query = null, lat, lon, sideM = 200, deta
   if (DETAIL_LEVELS.includes(detail)) { $('realPlaceDetailLevel').value = detail; direLeNiveau(); }
   dessiner();
   return importer();
+}
+
+/**
+ * THE AERIAL PHOTO, READ (aerial-reading.js decides; here the network and the pixels): the IGN's orthophoto of
+ * the zone, decoded in memory, read metre by metre, then dropped (never shown nor kept, decided). Changes
+ * `translated` in place; true when something was read from it (its credit is then due), false otherwise.
+ */
+async function lireLaVueAerienne(translated, { toGeo, halfSize, country, south }){
+  const api = window.storyboarderAPI;
+  const plan = aerialPhotoPlan({ toGeo, halfSize, country });
+  if (!plan || !api || !api.realPlaceAerialPhoto || typeof createImageBitmap !== 'function') return false;
+  const r = await api.realPlaceAerialPhoto(plan.bbox, plan.width, plan.height);
+  if (!r || !r.data) return false;
+  let photo;
+  try {
+    const bmp = await createImageBitmap(new Blob([r.data], { type: 'image/jpeg' }));
+    const canvas = document.createElement('canvas');
+    canvas.width = bmp.width; canvas.height = bmp.height;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(bmp, 0, 0);
+    photo = ctx.getImageData(0, 0, bmp.width, bmp.height);
+    bmp.close();
+  } catch (e) { console.warn('[real-place] aerial photo', e); return false; }
+  const lu = readAerialPhoto(classGrid(photo, halfSize), translated, { south });
+  console.info(`[real-place] aerial photo read: ${lu.grounds} grounds corrected, ${lu.trees} trees added, ${lu.lawn} m² of lawn, ${lu.roofs} roofs`);
+  return lu.grounds + lu.trees + lu.lawn + lu.roofs > 0;
 }
 
 /** The most street photos read for one import: each is ~300-500 KB, and a 360° one serves many buildings. */

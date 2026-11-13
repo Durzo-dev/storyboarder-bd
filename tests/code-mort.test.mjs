@@ -64,10 +64,6 @@ const EN_ATTENTE = {
   // `demanderIA`, the gate every action that needs an AI goes through, written before its first caller:
   // the facades read by the AI. Deadline: #474d.
   demanderIA: '#474d',
-  // #477a (decided by Durzo, 13 Nov. 2026): the aerial photo is not shown nor kept, but READ at the import
-  // (#477f: grounds, missing trees, roofs' colours). Its plan and credit wait for that reading. Deadline: #477f.
-  aerialPhotoPlan: '#477f',
-  AERIAL_CREDIT: '#477f',
   // #414a — L'ÉCLAIRAGE : LA DÉCISION EST ARRIVÉE AVANT SON APPLICATION, comme le magasin d'images
   // de #403a en son temps. Ces exports ne sont pas morts, ils sont EN AVANCE, et chaque échéance
   // est un NUMÉRO DE TÂCHE : c'est la leçon que #403 a laissée ici même, « à brancher plus tard »
@@ -419,8 +415,9 @@ describe('Aucun export de src/ ne reste sans appelant', () => {
     // Raised to 2 in #457b-3: `planRelief`, same deadline (#457b-4). Back to 0 in #457b-4, whose import
     // screen calls both: the two deadlines held.
     // Raised to 1 on 12 Nov. 2026 (asked by Durzo): `demanderIA`, ahead of #474d, its first caller.
-    // Raised to 3 on 13 Nov. 2026 (decided by Durzo): the aerial photo's plan and credit, ahead of #477f.
-    assert.equal(Object.keys(EN_ATTENTE).length, 3,
+    // Raised to 3 on 13 Nov. 2026 (decided by Durzo): the aerial photo's plan and credit, ahead of #477f; back to 1
+    // the same day, #477f calling both.
+    assert.equal(Object.keys(EN_ATTENTE).length, 1,
       'une décision de plus a été REPORTÉE au lieu d\'être prise');
   });
 });

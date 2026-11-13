@@ -13,6 +13,7 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
 | `src/real-place-sources.js` | PURE. The sources per country: relief providers (best first) and building rules, with a world fallback. |
 | `src/geo-local.js` | PURE. Local metres around a geographic centre (`projector`). |
 | `src/building-survey.js` | PURE. The IGN BD TOPO (France) read and matched to the OSM buildings: heights, roof pitch, materials. |
+| `src/aerial-reading.js` | PURE. The aerial photo read metre by metre: the class of a pixel, the Zones' real grounds, the missing trees, the courtyards' lawns, the roofs' materials. |
 | `src/aerial-photo.js` | PURE. The aerial photo of a zone (France), to be READ at the import, never shown nor kept: the photo to ask (`aerialPhotoPlan`), its credit. The request: `realplace:aerialPhoto` (the Géoplateforme's WMS, `ORTHOIMAGERY.ORTHOPHOTOS`, one JPEG; an answer that is not a JPEG is an error). |
 | `src/real-place-import.js` | PURE. The translation and the altitudes turned into a Scene's content (`sceneContentOf`: Path and Zone objects, relief, credits). |
 | `src/real-place-ui.js` | The new Scene's window: the choice, then search, map (OpenStreetMap tiles), zone size, import with its progress. |
@@ -107,7 +108,18 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    what is left once dark, sky, green and glare are set aside (`wallColour`; none under 10 points or 30 %, nor a
    vivid or dark result), brought to the nearest of the street's facade colours (`FACADE_COLOURS`: renders,
    stones, bricks, by hue first: a shaded facade's blue cast becomes a grey): the building's facade takes it, its texture kept. The credit names the instance and the licence, never the
-   contributor. Then the relief: `planRelief` for the country, its requests sent by
+   contributor. Still at « Realistic », in France, the aerial photo READ (`lireLaVueAerienne`,
+   aerial-reading.js; never shown nor kept): fetched (`realplace:aerialPhoto`), decoded in memory, each metre
+   classed (`classGrid`: the most frequent class of its pixels, `classOfPixel`: vegetation by green excess, a
+   canopy dark and a lawn light, shadow, tiles, light, asphalt, grey; calibrated on the Écusson by painting
+   the classes over the photo), then `readAerialPhoto` on the translation: each Zone's real ground
+   (`groundOfZone`: green → grass, light → paving, asphalt only at 70 %; shadows and roofs aside, 40 % of the
+   Zone seen at least; water never), the trees OSM lacks (`missingTrees`: canopies of 8 m² or more outside the
+   buildings and 3 m from a mapped tree, one tree per 35 m² crown, spread; 300 at most), the lawns no Zone
+   covers (`lawnMask`: one more painted Zone), the roofs no source describes (`roofOfBuilding` on the roof's
+   core, its edge aside: tiles at 55 %, grey at 65 % → `roofFinishRead`: tiles, or zinc's grey; a flat roof
+   keeps its grey; `roofKnown`, set by translateOsm, keeps a roof OSM or the survey describes). Its credit
+   when something was read. Then the relief: `planRelief` for the country, its requests sent by
    `realplace:altitudes` (only to `ALTITUDE_HOSTS`, at the provider's rate), `assemble`; on failure the next
    provider, and with none a flat Ground.
 4. `sceneContentOf`: Zones and Paths (`pathObject`, `zoneObject`, named by `nomDuTrace`), the relief

@@ -511,6 +511,8 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       if (!building) { out.skipped.invalid++; continue; }
       const entry = { building, x: round(centreOf.x), z: round(centreOf.z), osmId: w.id };
       if (surveyed) entry.surveyId = surveyed.id;
+      // Its roof's material given by a source (OSM, the survey): the aerial photo leaves it (aerial-reading.js).
+      if (roofFinishOf(w.tags, surveyed)) entry.roofKnown = true;
       out.buildings.push(entry);
       continue;
     }
@@ -538,7 +540,7 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       entrances.filter(e => distanceToRing(e, fp) <= ENTRANCE_REACH));
     if (!building) continue;
     taken.add(s.id);
-    out.buildings.push({ building, x: round(centreOf.x), z: round(centreOf.z), surveyId: s.id });
+    out.buildings.push({ building, x: round(centreOf.x), z: round(centreOf.z), surveyId: s.id, ...(roofFinishOf({}, s) ? { roofKnown: true } : {}) });
   }
   if (taken.size) out.surveyAttribution = BDTOPO_ATTRIBUTION;
   // How many entrances OSM maps here (#474a: their coverage is measured on real imports, in the log).

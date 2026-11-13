@@ -94,7 +94,7 @@ describe('the relief from real altitudes', () => {
 describe('the import\'s progress and placement', async () => {
   const { IMPORT_STEPS, importProgress } = await import('../src/real-place-import.js');
   test('the steps in order; the bar grows through them, each step\'s share filled by its own progress', () => {
-    assert.deepEqual(IMPORT_STEPS, ['map', 'country', 'buildings', 'facades', 'relief', 'scene', 'construction', 'ground']);
+    assert.deepEqual(IMPORT_STEPS, ['map', 'country', 'buildings', 'facades', 'aerial', 'relief', 'scene', 'construction', 'ground']);
     assert.equal(importProgress('map'), 0);
     let last = -1;
     for (const s of IMPORT_STEPS) for (const sub of [0, 0.5, 1]) { const p = importProgress(s, sub); assert.ok(p >= last); last = p; }
@@ -233,9 +233,11 @@ describe('real place, the aerial photo to read (#477a, read in #477f)', async ()
     assert.equal(aerialPhotoPlan({ toGeo, halfSize: 100, country: 'de' }), null, 'the IGN covers France');
     assert.equal(aerialPhotoPlan({ toGeo, halfSize: 100, country: null }), null);
   });
-  test('never shown nor kept: no Zone, no file (decided by Durzo)', () => {
+  test('read at the import (realistic), never shown nor kept: no Zone, no file (decided by Durzo)', () => {
     const ui = readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8');
     assert.doesNotMatch(ui, /photoAerienne|rangerImageChoisie/);
+    assert.match(ui, /await etape\('aerial'\);\n      const lu = await lireLaVueAerienne\(translated/);
+    assert.match(ui, /if \(lu\) photoCredits\.push\(tr\(AERIAL_CREDIT\.en, AERIAL_CREDIT\.fr\)\);/);
     const net = readFileSync(new URL('../electron/bibliotheque/real-place.js', import.meta.url), 'utf8');
     assert.match(net, /LAYERS=ORTHOIMAGERY\.ORTHOPHOTOS/);
     assert.match(net, /r\.bytes\[0\] !== 0xFF \|\| r\.bytes\[1\] !== 0xD8/, 'a WMS error (XML) is not a photo');
