@@ -57,8 +57,14 @@ async function request(url, { method = 'GET', body = null, json = true, timeout 
     if (!rep.ok) {
       // What the server says (its first words): a 400 tells which parameter it refuses.
       let why = '';
-      try { why = (await rep.text()).replace(/\s+/g, ' ').slice(0, 200); } catch { /* nothing to read */ }
+      try {
+        const text = await rep.text();
+        // An OGC exception's words, not its XML wrapping (seen: the 200 first characters were all namespaces).
+        const m = /<(?:\w+:)?ServiceException\b[^>]*>([\s\S]*?)<\/(?:\w+:)?ServiceException>/.exec(text);
+        why = (m ? m[1] : text.replace(/<[^>]*>/g, ' ')).replace(/\s+/g, ' ').trim().slice(0, 300);
+      } catch { /* nothing to read */ }
       console.warn(`[real-place] ${new URL(url).host}${new URL(url).pathname}: HTTP ${rep.status}${why ? ` (${why})` : ''}`);
+      if (rep.status === 400) console.warn(`[real-place] refused: ${url}`);
       return { error: rep.status === 429 ? 'quota' : 'response', status: rep.status };
     }
     if (json && onBytes && rep.body) {
