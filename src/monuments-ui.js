@@ -1,93 +1,42 @@
 /**
  * @file monuments-ui.js
- * THE « MONUMENTS FOUND » WINDOW (#475): after a real place's import, its known monuments (monuments.js),
- * each with « Find a 3D model » (the store, on Sketchfab, its name searched, in choice mode: the model chosen
- * and downloaded comes back here) and « Keep the building » (closing it keeps them all). A chosen model takes
- * the monument's place: on
- * its footprint, as high as its building, turned along it; the generated building is hidden, not deleted
- * (Ctrl+Z undoes the whole). Nothing is put in place without the user's choice (decided by Durzo).
+ * A KNOWN MONUMENT'S MODEL (#475): laid in its place (`remplacerLeBatiment`: on the footprint, as high as
+ * the generated building, turned along it; the building hidden, not deleted), as « New scene »'s last step
+ * decides (real-place-ui.js); and, from the model's sheet, another model chosen or the building restored.
+ * Nothing is put in place without the user's choice (decided by Durzo).
  */
 
-import { tr, S } from './state.js';
-import { monumentsOf, searchFor, alongFootprint, licenceAccepted } from './monuments.js';
+import { S } from './state.js';
+import { searchFor, alongFootprint, licenceAccepted } from './monuments.js';
 import { ouvrirStore } from './store-ui.js';
 import { createModelElement } from './model-store.js';
 import { preloadModels, getLoadedModel } from './model-cache.js';
 import { encombrementDuBatiment } from './batiment-element.js';
 import { placeOnGround } from './real-place-lay.js';
-import { enregistrerFermeture } from './modal-stack.js';
 
 const $ = (id) => document.getElementById(id);
 let _rappels = { snapshot: () => {}, render: () => {} };
-/** The Scene whose monuments are shown. */
-let _scene = null;
 
 /** Wired once (events.js): `snapshot()` (an undo step), `render()` (renderAll). */
 export function cablerMonuments(rappels){
   _rappels = { ..._rappels, ...rappels };
-  $('monumentsClose').onclick = fermer;
   // A monument's model, from its Element's sheet (#475, asked): changed, or the building restored.
   $('objectMonumentChange').onclick = () => depuisLaFiche(changerLeModele);
   $('objectMonumentRestore').onclick = () => depuisLaFiche(retablirLeBatiment);
-  enregistrerFermeture('monumentsModal', fermer);
-  const monumentsModal = $('monumentsModal');
-  monumentsModal.addEventListener('mousedown', (e) => { if (e.target === monumentsModal) fermer(); });
-}
-
-function fermer(){
-  $('monumentsModal').classList.add('hidden');
-  _scene = null;
 }
 
 const pageOf = (scene) => scene && scene.pages && scene.pages[0];
 const panelOf = (scene) => (pageOf(scene) ? pageOf(scene).objects.find(o => o.type === 'panel') : null);
 
-/** After an import: the window, when the Scene holds monuments; nothing otherwise. */
-export function proposerMonuments(scene){
-  const page = pageOf(scene);
-  if (!page || !monumentsOf(page.objects).length) return;
-  _scene = scene;
-  dessiner();
-  $('monumentsModal').classList.remove('hidden');
-}
-
-/** One row per monument still shown; the window closes by itself when none is left. */
-function dessiner(){
-  const page = pageOf(_scene);
-  const liste = monumentsOf(page ? page.objects : []);
-  if (!liste.length) { fermer(); return; }
-  $('monumentsListe').replaceChildren(...liste.map(o => {
-    const ligne = document.createElement('div');
-    ligne.className = 'monument-ligne';
-    const nom = document.createElement('span');
-    nom.className = 'monument-nom';
-    nom.textContent = o.monument.name;
-    const chercher = document.createElement('button');
-    chercher.type = 'button'; chercher.className = 'nav-btn';
-    chercher.textContent = tr('Find a 3D model', 'Chercher un modèle 3D');
-    chercher.onclick = () => choisirUnModele(o);
-    const garder = document.createElement('button');
-    garder.type = 'button'; garder.className = 'nav-btn';
-    garder.textContent = tr('Keep the building', 'Garder le bâtiment');
-    garder.onclick = () => { delete o.monument; S.projectDirty = true; dessiner(); };
-    ligne.append(nom, chercher, garder);
-    return ligne;
-  }));
-}
-
-/** The store on Sketchfab, the monument's name searched; the model chosen comes back to replaceBuilding. */
-function choisirUnModele(o){
-  const scene = _scene;
-  $('monumentsModal').classList.add('hidden');
+/**
+ * The store on Sketchfab, a monument's name searched, in choice mode: `quandChoisi(fichier)` once a model is
+ * chosen and downloaded (a « no derivatives » licence refused).
+ */
+export function chercherUnModele(monument, quandChoisi){
   ouvrirStore({
     onglet: 'sketchfab',
-    texte: searchFor(o.monument),
-    choisir: async (fichier) => {
-      await remplacerLeBatiment(scene, o, fichier);
-      _scene = scene;
-      dessiner();
-      if (monumentsOf(pageOf(scene).objects).length) $('monumentsModal').classList.remove('hidden');
-    },
+    texte: searchFor(monument),
+    choisir: quandChoisi,
     accepter: (e) => !e.batiment && !e.introuvable,
     licence: licenceAccepted,
   });
@@ -148,20 +97,14 @@ function depuisLaFiche(faire){
 
 /** Another model for the monument: the store on Sketchfab again; the Element keeps its place, turn and height. */
 function changerLeModele({ o }){
-  ouvrirStore({
-    onglet: 'sketchfab',
-    texte: searchFor(o.monument),
-    choisir: async (fichier) => {
-      await preloadModels([fichier]);
-      const m = getLoadedModel(fichier);
-      _rappels.snapshot();
-      o.modelFile = fichier;
-      if (m && m.ratioLargeur > 0) { o.w = o.h * m.ratioLargeur; o.baseW = o.w; }
-      S.projectDirty = true;
-      _rappels.render();
-    },
-    accepter: (e) => !e.batiment && !e.introuvable,
-    licence: licenceAccepted,
+  chercherUnModele(o.monument, async (fichier) => {
+    await preloadModels([fichier]);
+    const m = getLoadedModel(fichier);
+    _rappels.snapshot();
+    o.modelFile = fichier;
+    if (m && m.ratioLargeur > 0) { o.w = o.h * m.ratioLargeur; o.baseW = o.w; }
+    S.projectDirty = true;
+    _rappels.render();
   });
 }
 

@@ -72,7 +72,7 @@ describe('monuments, a model taking a monument\'s place in a laid Scene', async 
     const church = monumentsOf(page.objects).find(o => o.monument.name === 'Église Saints-Pierre-et-Paul');
     assert.ok(church, 'the monument kept on its Element');
     let snapshots = 0;
-    for (const id of ['monumentsClose', 'objectMonumentChange', 'objectMonumentRestore', 'objectModalCancel', 'objectMonumentField']) if (!document.getElementById(id)) { const b = document.createElement('button'); b.id = id; document.body.appendChild(b); }
+    for (const id of ['objectMonumentChange', 'objectMonumentRestore', 'objectModalCancel', 'objectMonumentField']) if (!document.getElementById(id)) { const b = document.createElement('button'); b.id = id; document.body.appendChild(b); }
     cablerMonuments({ snapshot: () => { snapshots++; }, render: () => {} });
     const el = await remplacerLeBatiment(scene, church, 'eglise.glb');
     assert.equal(el.objType, 'modele'); assert.equal(el.modelFile, 'eglise.glb');
@@ -92,5 +92,21 @@ describe('monuments, a model taking a monument\'s place in a laid Scene', async 
     assert.ok(!page.objects.includes(el), 'the model removed');
     assert.equal(church.hidden3d, undefined, 'the building shown again');
     assert.equal(snapshots, 2);
+  });
+});
+
+describe('monuments, the last step of « New scene » (asked)', () => {
+  const ui = readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8');
+  test('after the Scene is built, in the same window, only when there are monuments', () => {
+    assert.match(ui, /if \(fini && monumentsOf\(scene\.pages\[0\]\.objects\)\.length\) await etapeMonuments\(scene\);\n    fermer\(\);/);
+  });
+  test('« Finish » lays the models chosen; closing keeps the generated buildings', () => {
+    assert.match(ui, /if \(poser\) for \(const \[o, f\] of choisis\) await remplacerLeBatiment\(scene, o, f\);/);
+    assert.match(ui, /\$\('realPlaceMonumentsDone'\)\.onclick = \(\) => finir\(true\);/);
+    assert.match(ui, /if \(V && V\.monuments\) \{ V\.monuments\.finir\(false\); return; \}/);
+  });
+  test('a model chosen turns the button into « Replace with a building », which drops it', () => {
+    assert.match(ui, /fichier \? tr\('Replace with a building', 'Remplacer par un bâtiment'\) : tr\('Find a 3D model', 'Chercher un modèle 3D'\)/);
+    assert.match(ui, /if \(choisis\.has\(o\)\) \{ choisis\.delete\(o\);/);
   });
 });

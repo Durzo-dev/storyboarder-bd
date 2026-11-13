@@ -18,6 +18,8 @@ import { sceneContentOf, IMPORT_STEPS, importProgress, downloadDetail } from './
 import { projector } from './geo-local.js';
 import { aerialPhotoPlan, AERIAL_CREDIT } from './aerial-photo.js';
 import { classGrid, readAerialPhoto } from './aerial-reading.js';
+import { monumentsOf } from './monuments.js';
+import { chercherUnModele, remplacerLeBatiment } from './monuments-ui.js';
 import { nomDuTrace } from './canvas-tools.js';
 import { enregistrerFermeture } from './modal-stack.js';
 
@@ -74,6 +76,7 @@ export function ouvrirNouvelleScene(){
   V = { view: { ...DEFAULT_VIEW }, zone: null, halfSize: Number($('realPlaceSize').value) / 2, name: null, country: null, busy: false };
   $('realPlaceChoice').hidden = false;
   $('realPlacePlace').hidden = true;
+  $('realPlaceMonuments').hidden = true;
   $('realPlaceResults').hidden = true;
   $('realPlaceResults').replaceChildren();
   rendreLaConsigne();
@@ -147,6 +150,8 @@ function montrerLeTelechargement(){
  * being made is removed (importer); otherwise the window closes.
  */
 function annulerOuFermer(){
+  // The monuments' step (#475): closing keeps the generated buildings, the models chosen are dropped.
+  if (V && V.monuments) { V.monuments.finir(false); return; }
   if (V && V.busy) {
     // At once (asked: a cancel waited for the request under way, up to 90 s): the requests are stopped in the
     // main process, and the window closes now. The import, when its await returns, finds no window (V null)
@@ -460,6 +465,8 @@ async function importer(){
     });
     if (V !== moi) return fini ? { scene } : annule;
     V.busy = false;
+    // The last step, when the place holds known monuments (#475): models chosen, laid on « Finish ».
+    if (fini && monumentsOf(scene.pages[0].objects).length) await etapeMonuments(scene);
     fermer();
     return fini ? { scene } : annule;
   } catch (e) {
@@ -526,6 +533,59 @@ async function lireLaVueAerienne(translated, { toGeo, halfSize, country, south }
   const lu = readAerialPhoto(classGrid(photo, halfSize), translated, { south });
   console.info(`[real-place] aerial photo read: ${lu.grounds} grounds corrected, ${lu.trees} trees added, ${lu.lawn} m² of lawn, ${lu.roofs} roofs`);
   return lu.grounds + lu.trees + lu.lawn + lu.roofs > 0;
+}
+
+/**
+ * THE MONUMENTS' STEP (#475, asked: the last of « New scene », in its window). One row per monument, its
+ * name on the left, « Find a 3D model » on the right (the store; the model chosen and downloaded comes back
+ * here, the button then « Replace with a building », which drops it). « Finish » lays the models chosen
+ * (monuments-ui.js); closing (the cross, Esc) keeps the generated buildings. Resolves once done.
+ */
+function etapeMonuments(scene){
+  const liste = monumentsOf(scene.pages[0].objects);
+  const choisis = new Map();   // building → model file
+  $('realPlacePlace').hidden = true;
+  $('realPlaceChoice').hidden = true;
+  $('realPlaceMonuments').hidden = false;
+  const dessinerLigne = (o, ligne) => {
+    const fichier = choisis.get(o);
+    const nom = document.createElement('span');
+    nom.className = 'monument-nom'; nom.textContent = o.monument.name;
+    const texte = document.createElement('span');
+    texte.className = 'monument-texte';
+    texte.append(nom);
+    if (fichier) {
+      const modele = document.createElement('span');
+      modele.className = 'monument-modele'; modele.textContent = fichier;
+      texte.append(modele);
+    }
+    const bouton = document.createElement('button');
+    bouton.type = 'button'; bouton.className = 'nav-btn';
+    bouton.textContent = fichier ? tr('Replace with a building', 'Remplacer par un bâtiment') : tr('Find a 3D model', 'Chercher un modèle 3D');
+    bouton.onclick = () => {
+      if (choisis.has(o)) { choisis.delete(o); dessinerLigne(o, ligne); return; }
+      chercherUnModele(o.monument, (f) => { choisis.set(o, f); dessinerLigne(o, ligne); });
+    };
+    ligne.replaceChildren(texte, bouton);
+  };
+  $('realPlaceMonumentsList').replaceChildren(...liste.map(o => {
+    const ligne = document.createElement('div');
+    ligne.className = 'monument-ligne';
+    dessinerLigne(o, ligne);
+    return ligne;
+  }));
+  return new Promise((resolve) => {
+    const finir = async (poser) => {
+      if (!V || !V.monuments) return;
+      V.monuments = null;
+      $('realPlaceMonumentsDone').onclick = null;
+      if (poser) for (const [o, f] of choisis) await remplacerLeBatiment(scene, o, f);
+      $('realPlaceMonuments').hidden = true;
+      resolve();
+    };
+    V.monuments = { finir };
+    $('realPlaceMonumentsDone').onclick = () => finir(true);
+  });
 }
 
 /** The most street photos read for one import: each is ~300-500 KB, and a 360° one serves many buildings. */
