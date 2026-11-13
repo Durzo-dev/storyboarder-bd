@@ -55,7 +55,10 @@ async function request(url, { method = 'GET', body = null, json = true, timeout 
     const rep = await net.fetch(url, { method, body, signal: abort.signal,
       headers: { 'User-Agent': agent(), Accept: json ? 'application/json' : '*/*', ...headers } });
     if (!rep.ok) {
-      console.warn(`[real-place] ${new URL(url).host}: HTTP ${rep.status}`);
+      // What the server says (its first words): a 400 tells which parameter it refuses.
+      let why = '';
+      try { why = (await rep.text()).replace(/\s+/g, ' ').slice(0, 200); } catch { /* nothing to read */ }
+      console.warn(`[real-place] ${new URL(url).host}${new URL(url).pathname}: HTTP ${rep.status}${why ? ` (${why})` : ''}`);
       return { error: rep.status === 429 ? 'quota' : 'response', status: rep.status };
     }
     if (json && onBytes && rep.body) {

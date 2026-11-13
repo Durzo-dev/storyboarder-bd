@@ -531,7 +531,7 @@ async function lireLesHauteurs({ toGeo, halfSize, country }){
   const plan = heightPlan({ toGeo, halfSize, country });
   if (!plan || !api || !api.realPlaceHeightGrid) return null;
   const r = await api.realPlaceHeightGrid(plan.bbox, plan.width, plan.height);
-  if (!r || !r.data) return null;
+  if (!r || !r.data) { console.warn('[real-place] heights: none', r && r.error); return null; }
   // A copy into an aligned buffer: the bytes may start anywhere in theirs.
   const octets = new Uint8Array(r.data.length);
   octets.set(r.data);
