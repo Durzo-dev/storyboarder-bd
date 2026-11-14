@@ -25,7 +25,7 @@ import { floraOf, applyFlora, FLORA_CREDIT, FLORA_RADIUS_KM } from './flora.js';
 import { MODEL_USAGES, FACES, MAX_DOWNLOADS, queriesFor, candidatesFor, usagesOf, applyModels } from './realistic-models.js';
 import { telechargerEnSilence, dejaPossede, rafraichirPossedes, sketchfabConnecte, signIn } from './store-ui.js';
 import { preloadModels, getLoadedModel } from './model-cache.js';
-import { applyBank, bankCredit } from './model-bank.js';
+import { applyBank, bankCredit, BANK_PREFIX } from './model-bank.js';
 import { chercherUnModele, remplacerLeBatiment } from './monuments-ui.js';
 import { nomDuTrace } from './canvas-tools.js';
 import { enregistrerFermeture } from './modal-stack.js';
@@ -509,6 +509,9 @@ async function importer(){
     // Detailed and Realistic (#480f): the bank's models in the built-in objects' place, a tree of its genus.
     if (niveau !== 'simple') {
       const bank = applyBank(translated.elements, { flora, rural: translated.builtShare < 0.15 });
+      // Loaded before the Scene is laid (seen: without, the models stood as boxes until the Project reopened).
+      if (bank.used.length) { try { await preloadModels(bank.used.map(m => BANK_PREFIX + m.file)); } catch (e) { /* boxes stand in */ } }
+      if (arrete()) return annule;
       console.info(`[real-place] model bank: ${bank.n} elements, ${bank.used.length} models`);
       photoCredits.push(...bank.used.map(m => bankCredit(m, S.appLang === 'en' ? 'en' : 'fr')));
     }
