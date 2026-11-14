@@ -1,6 +1,6 @@
 {
   "name": "storyboard-bd",
-  "version": "1.17.63",
+  "version": "1.17.64",
   "engines": {
     "node": ">=22"
   },
@@ -35,7 +35,6 @@
     "electron-builder": "^26.15.3",
     "eslint": "^9.39.5",
     "meshoptimizer": "^0.22.0",
-    "sharp": "^0.33.0",
     "typescript": "^7.0.2"
   },
   "build": {

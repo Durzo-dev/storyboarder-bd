@@ -5,7 +5,7 @@
  * Sketchfab's download API needs a signed-in account (API Agreement 4.6): the application's own session is
  * used (the token stays in sketchfab-session.js, never printed). Sign in to Sketchfab in Storyboarder first.
  * Each model of model-bank/sources.json goes to model-bank/sources/<uid>.glb (not shipped, not
- * in git); a file already there is kept. Then: `node tools/model-bank-bake.mjs`.
+ * in git); a file already there is kept. Then: `npx electron tools/model-bank-bake.mjs`.
  */
 const path = require('path');
 const fs = require('fs');
@@ -52,6 +52,6 @@ app.whenReady().then(async () => {
     done++;
   }
   console.log(`\nDownloaded ${done}, already there ${kept}, failed ${failed.length}${failed.length ? `: ${failed.join(', ')}` : ''}.`);
-  console.log('Next: node tools/model-bank-bake.mjs');
+  console.log('Next: npx electron tools/model-bank-bake.mjs');
   app.quit();
 });
