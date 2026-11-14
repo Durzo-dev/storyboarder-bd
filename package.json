@@ -1,6 +1,6 @@
 {
   "name": "storyboard-bd",
-  "version": "1.17.60",
+  "version": "1.17.61",
   "engines": {
     "node": ">=22"
   },
@@ -28,9 +28,14 @@
     "three": "0.128.0"
   },
   "devDependencies": {
+    "@gltf-transform/core": "^4.0.0",
+    "@gltf-transform/extensions": "^4.0.0",
+    "@gltf-transform/functions": "^4.0.0",
     "electron": "^42.5.0",
     "electron-builder": "^26.15.3",
     "eslint": "^9.39.5",
+    "meshoptimizer": "^0.22.0",
+    "sharp": "^0.33.0",
     "typescript": "^7.0.2"
   },
   "build": {

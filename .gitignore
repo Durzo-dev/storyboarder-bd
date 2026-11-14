@@ -81,3 +81,6 @@ cuisson.txt
 # pour qu'une copie locale recréée par erreur ne parte jamais dans le dépôt public.
 docs-privees/
 plans-test/
+
+# Model bank sources (#480f): downloaded by tools/model-bank-download.cjs, never shipped
+model-bank/sources/
