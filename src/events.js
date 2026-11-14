@@ -52,7 +52,7 @@ import { cablerMonuments } from './monuments-ui.js';
 import { layRealPlace } from './real-place-lay.js';
 import { buildScene, cablerChargementDeScene, ouvrirSceneProgressivement } from './scene-loading.js';
 import { initLecteur, cablerLecteur, ouvrirLecteur, fermerLecteur, lecteurOuvert } from './lecteur-ui.js';
-import { oublierVignette } from './model-thumbnails.js';
+import { oublierVignette, metasLocales } from './model-thumbnails.js';
 import { definirLumiereDeCase3D, effacerLumiereDeCase3D, directionDepuisDome3D,
   geometrieDome3D } from './lighting-3d.js';
 import { placerMenuFlottant3D } from './ui-scale.js';
@@ -4549,6 +4549,9 @@ function openModelContextMenu(e, nomFichier){
   const banque = typeof nomFichier === 'string' && nomFichier.startsWith(BANK_PREFIX);
   document.getElementById('ctxRenameModel').style.display = banque ? 'none' : '';
   document.getElementById('ctxDeleteModel').style.display = banque ? 'none' : '';
+  // « Skeleton mapping » only for a model with a skeleton, or one not measured yet (asked: none for a static one).
+  const m = metasLocales()[nomFichier];
+  document.getElementById('ctxSkeletonMap').style.display = m && m.os === 0 ? 'none' : '';
   hideContextMenu();
   placerMenu3D(modelContextMenu, e.clientX, e.clientY);
 }

@@ -6,7 +6,7 @@
  *
  * Each source (model-bank/sources/<uid>.glb, as downloaded: up to 3 million faces) becomes a light
  * assets/model-bank/<file>: duplicates and unused data pruned, vertices welded, simplified to MAX_FACES at most
- * (meshoptimizer; above REFUSED_FACES still, left out), textures shrunk (shrinkTextures: Electron's nativeImage,
+ * (meshoptimizer, a tight error, borders locked; above REFUSED_FACES still, left out), textures shrunk (shrinkTextures: Electron's nativeImage,
  * no compressed glTF: the application reads none), its base on the ground at the origin (`sink`: metres pushed under, roots for one oak).
  * Writes src/model-bank-data.js (what the application reads: files, uses, genera, credits, sizes) and
  * model-bank/bake-report.json (faces before and after, weights: to check by eye in the application).
@@ -16,21 +16,25 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
-import { dedup, prune, weld, simplify, quantize, getBounds } from '@gltf-transform/functions';
+import { dedup, prune, weld, simplify, getBounds } from '@gltf-transform/functions';
 import { MeshoptSimplifier } from 'meshoptimizer';
 import { app, nativeImage } from 'electron';
 
-/** The most faces a bank model keeps: a street holds dozens of trees. */
-const MAX_FACES = 30000;
+/**
+ * The faces a bank model is simplified towards: a street holds dozens of trees. SEEN in « My models » after the
+ * third bake (30 000, error loosened up to 0.4, geometry quantised): trees in shards, leaves collapsed into long
+ * triangles. Now: more faces, a tight error, the leaves' borders locked, no quantisation; heavier, but usable.
+ */
+const MAX_FACES = 60000;
+/** The simplification's error bound (fraction of the model's size): tight, the shape first. */
+const ERROR = 0.01;
 /** The largest texture side kept (pixels). */
 const TEXTURE_PX = 1024;
 
 /** The largest side of a texture other than a colour (normals, roughness, occlusion: their detail is not seen). */
 const DETAIL_PX = 512;
-/** A model still above this many faces after the loosest simplification is left out of the bank. */
-const REFUSED_FACES = 2 * MAX_FACES;
-/** The simplification's error bounds tried in turn (fraction of the model's size): looser until MAX_FACES. */
-const ERRORS = [0.02, 0.05, 0.1, 0.2, 0.4];
+/** A model still above this many faces after its simplification is left out of the bank. */
+const REFUSED_FACES = 150000;
 
 /** Whether an image has a pixel not fully opaque. */
 function hasAlpha(img){
@@ -45,11 +49,17 @@ function hasAlpha(img){
  * becomes a JPEG (a leaf's cut-out keeps its PNG).
  */
 function shrinkTextures(doc){
-  const colours = new Set();
-  for (const m of doc.getRoot().listMaterials()) if (m.getBaseColorTexture()) colours.add(m.getBaseColorTexture());
+  const colours = new Set(), cutOut = new Set();
+  for (const m of doc.getRoot().listMaterials()) {
+    const t = m.getBaseColorTexture();
+    if (!t) continue;
+    colours.add(t);
+    // SEEN: a shrub's leaf cards turned into white squares: a cut-out's colour is never re-encoded.
+    if (m.getAlphaMode() !== 'OPAQUE') cutOut.add(t);
+  }
   for (const t of doc.getRoot().listTextures()) {
     const bytes = t.getImage(), mime = t.getMimeType();
-    if (!bytes || !/^image\/(png|jpeg)$/.test(mime)) continue;
+    if (!bytes || !/^image\/(png|jpeg)$/.test(mime) || cutOut.has(t)) continue;
     let img = nativeImage.createFromBuffer(Buffer.from(bytes));
     const { width, height } = img.getSize();
     if (!width) continue;
@@ -98,20 +108,13 @@ async function bake(){
       const doc = await io.read(src);
       const before = facesOf(doc);
       await doc.transform(dedup(), prune(), weld());
-      // Looser and looser until MAX_FACES: a model made of many small parts (leaves) stops early at a tight error.
-      for (const error of ERRORS) {
-        const now = facesOf(doc);
-        if (now <= MAX_FACES) break;
-        await doc.transform(simplify({ simplifier: MeshoptSimplifier, ratio: MAX_FACES / now, error }));
-      }
+      if (before > MAX_FACES) await doc.transform(simplify({ simplifier: MeshoptSimplifier, ratio: MAX_FACES / facesOf(doc), error: ERROR, lockBorder: true }));
       if (facesOf(doc) > REFUSED_FACES) throw new Error(`too heavy: ${facesOf(doc)} faces left`);
       shrinkTextures(doc);
-      // MEASURED on the second bake (120 MB, 70 of geometry): 30 000 faces weighed up to 5 MB, their vertices
-      // carrying tangents, unused texture coordinates, float32 everywhere. Tangents dropped (three computes the
-      // normal maps without them), unused attributes pruned, the rest quantised (KHR_mesh_quantization: three
-      // r128's GLTFLoader reads it; gltf-glb.js refuses only Draco, Meshopt and Basis).
+      // Tangents dropped (three computes the normal maps without them), unused attributes pruned. Not quantised:
+      // seen with the shards above.
       for (const mesh of doc.getRoot().listMeshes()) for (const p of mesh.listPrimitives()) if (p.getAttribute('TANGENT')) p.setAttribute('TANGENT', null);
-      await doc.transform(prune({ keepAttributes: false }), quantize());
+      await doc.transform(prune({ keepAttributes: false }));
       // Its base on the ground, centred: one node above the scene's roots, moved.
       const scene = doc.getRoot().getDefaultScene() || doc.getRoot().listScenes()[0];
       const b = getBounds(scene);
