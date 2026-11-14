@@ -95,14 +95,14 @@ async function bake(){
   }
   fs.writeFileSync(path.join(work, 'bake-report.json'), JSON.stringify(report, null, 1));
   fs.writeFileSync(path.join(root, 'src', 'model-bank-data.js'), `/**
-   * @file model-bank-data.js
-   * THE BUILT-IN MODEL BANK (#480f), WRITTEN BY tools/model-bank-bake.mjs (do not edit by hand): the light .glb
-   * files of assets/model-bank, each with its use (a built-in object it stands for), the genera it shows (OSM's
-   * and GBIF's names), whether it may stand for any of its use (\`generic\`), its width over its height, and its
-   * credit (CC-BY: author, licence, Sketchfab page). PURE.
-   */
-  export const MODEL_BANK = Object.freeze(${JSON.stringify(data, null, 1)});
-  `);
+ * @file model-bank-data.js
+ * THE BUILT-IN MODEL BANK (#480f), WRITTEN BY tools/model-bank-bake.mjs (do not edit by hand): the light .glb
+ * files of assets/model-bank, each with its use (a built-in object it stands for), the genera it shows (OSM's
+ * and GBIF's names), whether it may stand for any of its use (\`generic\`), its width over its height, and its
+ * credit (CC-BY: author, licence, Sketchfab page). PURE.
+ */
+export const MODEL_BANK = Object.freeze(${JSON.stringify(data, null, 1)});
+`);
   const total = report.reduce((s, r) => s + (r.mb || 0), 0);
   console.log(`\n${data.length} models baked, ${report.length - data.length} failed, ${total.toFixed(1)} MB in all. Report: model-bank/bake-report.json`);
 }
