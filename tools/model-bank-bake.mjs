@@ -6,8 +6,8 @@
  *
  * Each source (model-bank/sources/<uid>.glb, as downloaded: up to 3 million faces) becomes a light
  * assets/model-bank/<file>: duplicates and unused data pruned, vertices welded, simplified to MAX_FACES at most
- * (meshoptimizer), textures shrunk to TEXTURE_PX (Electron's nativeImage; JPEG stays JPEG, the rest PNG: the
- * application reads no compressed glTF), its base on the ground at the origin (`sink`: metres pushed under, roots for one oak).
+ * (meshoptimizer; above REFUSED_FACES still, left out), textures shrunk (shrinkTextures: Electron's nativeImage,
+ * no compressed glTF: the application reads none), its base on the ground at the origin (`sink`: metres pushed under, roots for one oak).
  * Writes src/model-bank-data.js (what the application reads: files, uses, genera, credits, sizes) and
  * model-bank/bake-report.json (faces before and after, weights: to check by eye in the application).
  */
@@ -25,21 +25,47 @@ const MAX_FACES = 30000;
 /** The largest texture side kept (pixels). */
 const TEXTURE_PX = 1024;
 
-/** Every texture of a document no larger than TEXTURE_PX a side (its proportions kept). Returns how many shrank. */
+/** The largest side of a texture other than a colour (normals, roughness, occlusion: their detail is not seen). */
+const DETAIL_PX = 512;
+/** A model still above this many faces after the loosest simplification is left out of the bank. */
+const REFUSED_FACES = 2 * MAX_FACES;
+/** The simplification's error bounds tried in turn (fraction of the model's size): looser until MAX_FACES. */
+const ERRORS = [0.02, 0.05, 0.1, 0.2, 0.4];
+
+/** Whether an image has a pixel not fully opaque. */
+function hasAlpha(img){
+  const px = img.toBitmap();   // BGRA
+  for (let i = 3; i < px.length; i += 4) if (px[i] < 250) return true;
+  return false;
+}
+
+/**
+ * Every texture made light. MEASURED on the first bake (14 Nov. 2026: 403 MB for 66 models): the PNGs weighed most
+ * (a palm: 17 images, 13.7 MB). A colour stays TEXTURE_PX a side at most, any other map DETAIL_PX; an opaque PNG
+ * becomes a JPEG (a leaf's cut-out keeps its PNG).
+ */
 function shrinkTextures(doc){
-  let n = 0;
+  const colours = new Set();
+  for (const m of doc.getRoot().listMaterials()) if (m.getBaseColorTexture()) colours.add(m.getBaseColorTexture());
   for (const t of doc.getRoot().listTextures()) {
     const bytes = t.getImage(), mime = t.getMimeType();
     if (!bytes || !/^image\/(png|jpeg)$/.test(mime)) continue;
-    const img = nativeImage.createFromBuffer(Buffer.from(bytes));
+    let img = nativeImage.createFromBuffer(Buffer.from(bytes));
     const { width, height } = img.getSize();
-    if (!width || Math.max(width, height) <= TEXTURE_PX) continue;
-    const k = TEXTURE_PX / Math.max(width, height);
-    const small = img.resize({ width: Math.round(width * k), height: Math.round(height * k), quality: 'best' });
-    t.setImage(new Uint8Array(mime === 'image/jpeg' ? small.toJPEG(88) : small.toPNG()));
-    n++;
+    if (!width) continue;
+    const max = colours.has(t) ? TEXTURE_PX : DETAIL_PX;
+    if (Math.max(width, height) > max) {
+      const k = max / Math.max(width, height);
+      img = img.resize({ width: Math.round(width * k), height: Math.round(height * k), quality: 'best' });
+    }
+    const png = mime === 'image/png' && hasAlpha(img);
+    const out = png ? img.toPNG() : img.toJPEG(85);
+    if (out.length < bytes.length || Math.max(width, height) > max) {
+      t.setImage(new Uint8Array(out));
+      t.setMimeType(png ? 'image/png' : 'image/jpeg');
+      if (t.getURI()) t.setURI(t.getURI().replace(/\.\w+$/, png ? '.png' : '.jpg'));
+    }
   }
-  return n;
 }
 
 function facesOf(doc){
@@ -58,6 +84,8 @@ async function bake(){
   const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
   const work = path.join(root, 'model-bank'), bank = path.join(root, 'assets', 'model-bank');
   fs.mkdirSync(bank, { recursive: true });
+  // Made anew: a model left out must not stay shipped from an earlier bake.
+  for (const f of fs.readdirSync(bank)) if (f.endsWith('.glb')) fs.unlinkSync(path.join(bank, f));
   const { models } = JSON.parse(fs.readFileSync(path.join(work, 'sources.json'), 'utf8'));
   const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
 
@@ -70,7 +98,13 @@ async function bake(){
       const doc = await io.read(src);
       const before = facesOf(doc);
       await doc.transform(dedup(), prune(), weld());
-      if (before > MAX_FACES) await doc.transform(simplify({ simplifier: MeshoptSimplifier, ratio: MAX_FACES / before, error: 0.02 }));
+      // Looser and looser until MAX_FACES: a model made of many small parts (leaves) stops early at a tight error.
+      for (const error of ERRORS) {
+        const now = facesOf(doc);
+        if (now <= MAX_FACES) break;
+        await doc.transform(simplify({ simplifier: MeshoptSimplifier, ratio: MAX_FACES / now, error }));
+      }
+      if (facesOf(doc) > REFUSED_FACES) throw new Error(`too heavy: ${facesOf(doc)} faces left`);
       shrinkTextures(doc);
       await doc.transform(prune());
       // Its base on the ground, centred: one node above the scene's roots, moved.
@@ -87,7 +121,7 @@ async function bake(){
       report.push({ file: m.file, name: m.name, facesBefore: before, faces: after, mb: Math.round(bytes / 1e5) / 10, size });
       data.push({ file: m.file, use: m.use, objType: m.objType, genera: m.genera, generic: !!m.generic, ...(m.rural ? { rural: true } : {}),
         name: m.name, author: m.author, licence: m.licence, url: m.url, ratio: Math.round(Math.max(size[0], size[2]) / size[1] * 100) / 100 });
-      console.log(`${m.file}: ${before} → ${after} faces, ${(bytes / 1e6).toFixed(1)} MB`);
+      console.log(`${m.file}: ${before} -> ${after} faces, ${(bytes / 1e6).toFixed(1)} MB`);
     } catch (e) {
       report.push({ file: m.file, error: e.message });
       console.log(`${m.file}: ${e.message}`);
