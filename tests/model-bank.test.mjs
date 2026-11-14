@@ -42,9 +42,13 @@ describe('the bank, model by model', () => {
   test('a bank file\'s name: its prefix; its credit', () => {
     assert.equal(bankCredit(BANK[0]), '« platane-1.glb » par A, CC BY 4.0, Sketchfab (https://sketchfab.com/3d-models/x-platane-1.glb)');
   });
-  test('the main process reads a bank file from the application\'s assets, by the same prefix', () => {
+  test('the main process reads a bank file from the application\'s assets, by the same prefix; never renames, deletes nor writes one', () => {
     const main = readFileSync(new URL('../electron/main.js', import.meta.url), 'utf8');
-    assert.ok(main.includes(`name.startsWith('${BANK_PREFIX}')`) && main.includes("'assets', 'model-bank'"));
+    assert.ok(main.includes(`const BANK_PREFIX = '${BANK_PREFIX}';`) && main.includes("'assets', 'model-bank'"));
+    for (const canal of ['models:delete', 'models:rename', 'models:write']) {
+      const i = main.indexOf(`ipcMain.handle('${canal}'`);
+      assert.ok(main.slice(i, i + 400).includes('estDeLaBanque('), `${canal} refuses a bank model`);
+    }
   });
 });
 

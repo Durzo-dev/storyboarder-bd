@@ -421,6 +421,18 @@ function ensureModelsDir() {
 // différents : là-bas on NETTOIE ce que l'utilisateur a fourni, ici on n'accepte que du déjà propre.
 // Sans cette garde, un nom comme « ../../../Bureau/quelque-chose » écrirait hors du dossier des
 // modèles. Un process principal ne fait jamais confiance à son renderer, même quand c'est le nôtre.
+// #480f: the MODEL BANK, shipped with the application (assets/model-bank), its files named with this prefix
+// (src/model-bank.js BANK_PREFIX). Read, listed and shown like « My models », never renamed nor deleted.
+const BANK_PREFIX = 'bank--';
+const BANK_DIR = path.join(RACINE, 'assets', 'model-bank');
+const estDeLaBanque = (nom) => typeof nom === 'string' && nom.startsWith(BANK_PREFIX);
+/** Where a model's file is: the bank's in the application, any other in the Projects' Modeles folder. */
+const cheminModele = (nom) => (estDeLaBanque(nom) ? path.join(BANK_DIR, nom.slice(BANK_PREFIX.length)) : path.join(getModelsDir(), nom));
+/** The bank's files, as the application names them. */
+function nomsDeLaBanque(){
+  try { return fs.readdirSync(BANK_DIR).filter(f => /\.glb$/i.test(f)).map(f => BANK_PREFIX + f); } catch (e) { return []; }
+}
+
 function nomDeModeleAcceptable(name) {
   if (typeof name !== 'string' || !name) return false;
   if (name !== path.basename(name)) return false;      // aucun séparateur de chemin
@@ -485,7 +497,7 @@ async function modeleAImporter(chemin){
 }
 
 ipcMain.handle('models:write', async (event, name, data) => {
-  if (!nomDeModeleAcceptable(name)) return { ok: false, error: 'nom de modèle refusé' };
+  if (!nomDeModeleAcceptable(name) || estDeLaBanque(name)) return { ok: false, error: 'nom de modèle refusé' };
   try {
     ensureModelsDir();
     await fs.promises.writeFile(path.join(getModelsDir(), name), Buffer.from(data));
@@ -498,9 +510,7 @@ ipcMain.handle('models:write', async (event, name, data) => {
 ipcMain.handle('models:read', async (event, name) => {
   if (!nomDeModeleAcceptable(name)) return { ok: false, error: 'nom de modèle refusé' };
   try {
-    // A bank model (#480f, src/model-bank.js BANK_PREFIX): shipped with the application, read from its assets.
-    const bank = name.startsWith('bank--') ? name.slice('bank--'.length) : null;
-    const data = await fs.promises.readFile(bank ? path.join(RACINE, 'assets', 'model-bank', bank) : path.join(getModelsDir(), name));
+    const data = await fs.promises.readFile(cheminModele(name));
     return { ok: true, data: new Uint8Array(data) };
   } catch (err) {
     // Cas nominal, pas une panne : le fichier a été déplacé ou supprimé hors de l'application.
@@ -535,7 +545,7 @@ function modifierIndexVignettes(modifier){
   return _fileIndexVignettes;
 }
 async function signatureModele(nom){
-  try { return vignettes.signatureFichier(await fs.promises.stat(path.join(getModelsDir(), nom))); } catch (e) { return null; }
+  try { return vignettes.signatureFichier(await fs.promises.stat(cheminModele(nom))); } catch (e) { return null; }
 }
 /** Écrit la vignette d'un modèle (octets d'image) et la note avec la signature ACTUELLE du fichier. */
 async function ecrireVignette(nom, data, origine, meta){
@@ -550,7 +560,8 @@ async function ecrireVignette(nom, data, origine, meta){
 // Ce qui est à rendre, et ce qui est prêt.
 ipcMain.handle('vignettes:etat', async () => {
   let noms = [];
-  try { noms = fs.readdirSync(getModelsDir()).filter(nomDeModeleAcceptable); } catch (e) { return { aFaire: [], pretes: [] }; }
+  try { noms = fs.readdirSync(getModelsDir()).filter(nomDeModeleAcceptable); } catch (e) { noms = []; }
+  noms = noms.concat(nomsDeLaBanque());
   const fichiers = await Promise.all(noms.map(async nom => ({ nom, signature: await signatureModele(nom) })));
   const index = await lireIndexVignettes();
   const presents = fichiers.filter(f => f.signature);
@@ -568,9 +579,10 @@ ipcMain.handle('vignettes:etat', async () => {
 // Le dossier Modeles avec, pour chaque fichier, sa taille et sa date (tri « récents »).
 ipcMain.handle('models:infos', async () => {
   let noms = [];
-  try { noms = fs.readdirSync(getModelsDir()).filter(nomDeModeleAcceptable); } catch (e) { return []; }
+  try { noms = fs.readdirSync(getModelsDir()).filter(nomDeModeleAcceptable); } catch (e) { noms = []; }
+  noms = noms.concat(nomsDeLaBanque());
   return Promise.all(noms.map(async nom => {
-    try { const s = await fs.promises.stat(path.join(getModelsDir(), nom)); return { nom, taille: s.size, modifie: s.mtimeMs }; }
+    try { const s = await fs.promises.stat(cheminModele(nom)); return { nom, taille: s.size, modifie: s.mtimeMs }; }
     catch (e) { return { nom, taille: null, modifie: null }; }
   }));
 });
@@ -626,7 +638,7 @@ ipcMain.handle('bibliotheque:operation', async (event, op, args) => {
 });
 
 ipcMain.handle('models:delete', async (event, name) => {
-  if (!nomDeModeleAcceptable(name)) return { ok: false, error: 'nom de modèle refusé' };
+  if (!nomDeModeleAcceptable(name) || estDeLaBanque(name)) return { ok: false, error: 'nom de modèle refusé' };
   try {
     await fs.promises.unlink(path.join(getModelsDir(), name));
     await suivreVignette(name, null);
@@ -651,7 +663,7 @@ ipcMain.handle('models:delete', async (event, name) => {
 // l'application renommant vers le même nom à la milliseconde près. Le dossier des modèles est local
 // et mono-utilisateur : cette fenêtre est acceptée, la perte qu'elle éviterait ne l'était pas.
 ipcMain.handle('models:rename', async (event, ancien, nouveau) => {
-  if (!nomDeModeleAcceptable(ancien) || !nomDeModeleAcceptable(nouveau)) {
+  if (!nomDeModeleAcceptable(ancien) || !nomDeModeleAcceptable(nouveau) || estDeLaBanque(ancien) || estDeLaBanque(nouveau)) {
     return { ok: false, error: 'nom de modèle refusé' };
   }
   const dir = getModelsDir();
@@ -674,11 +686,13 @@ ipcMain.handle('models:rename', async (event, ancien, nouveau) => {
 });
 
 ipcMain.handle('models:list', async () => {
+  let noms = [];
   try {
-    return fs.readdirSync(getModelsDir()).filter(nomDeModeleAcceptable);
+    noms = fs.readdirSync(getModelsDir()).filter(nomDeModeleAcceptable);
   } catch (err) {
-    return [];   // dossier pas encore créé : aucun modèle, ce n'est pas une erreur
+    noms = [];   // dossier pas encore créé : aucun modèle, ce n'est pas une erreur
   }
+  return noms.concat(nomsDeLaBanque());
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════

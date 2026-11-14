@@ -81,6 +81,7 @@ import {
   setModelImportCallbacks, importModelIntoPanel, placerModeleExistant,
 } from './model-import.js';
 import { isImportedModel, listModels, renameModel, sanitizeModelName, importModel } from './model-store.js';
+import { BANK_PREFIX } from './model-bank.js';
 import {
   setProjectTreeCallbacks, renderTree, renderSceneList, renderImageList, deleteVolume, deletePage, duplicatePage,
   renameVolume, applyRenameVolume, renameScene, applyRenameScene, deleteScene,
@@ -4544,6 +4545,10 @@ document.getElementById('ctxDeleteFont').onclick = () => {
 
 function openModelContextMenu(e, nomFichier){
   _modelCtxFichier = nomFichier;
+  // A bank model (#480f) is the application's: neither renamed nor deleted, like a built-in texture.
+  const banque = typeof nomFichier === 'string' && nomFichier.startsWith(BANK_PREFIX);
+  document.getElementById('ctxRenameModel').style.display = banque ? 'none' : '';
+  document.getElementById('ctxDeleteModel').style.display = banque ? 'none' : '';
   hideContextMenu();
   placerMenu3D(modelContextMenu, e.clientX, e.clientY);
 }

@@ -26,6 +26,9 @@ import { ouvrirApercu3D } from './store-apercu-3d.js';
 import { recomposer } from './vignette-recadrage.js';
 import { optionsSketchfab, pixelsDe } from './glb-images.js';
 import { reduireTexturesGlb } from './glb-reduction.js';
+import { MODEL_BANK } from './model-bank-data.js';
+import { BANK_PREFIX } from './model-bank.js';
+import { TREE_TYPES } from './constants.js';
 // #454a-4b : les bâtiments, rangés à part (Batiments/) mais listés avec les modèles.
 import { listerBatiments, lireBatimentDuDisque } from './batiment-store.js';
 import { entreesBatiments } from './batiment-bibliotheque.js';
@@ -1089,11 +1092,22 @@ async function lireLesBatiments(){
   }));
 }
 
+/**
+ * The bank's models (#480f) as « My models » shows a store download: their credit (CC-BY, Sketchfab) and a
+ * category, trees in Nature, street furniture in Places.
+ */
+const ATTRIBUTIONS_BANQUE = MODEL_BANK.map(m => ({
+  fichier: BANK_PREFIX + m.file, source: 'sketchfab', nom: m.name, auteur: { nom: m.author, url: null }, url: m.url,
+  categorie: TREE_TYPES.includes(m.objType) || m.objType === 'arbuste' || m.objType === 'buisson' ? 'nature' : 'lieux',
+  licence: { code: 'by', libelle: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/', attribution: true, commercial: true, modification: true },
+}));
+
 /** Les entrées locales, d'après les dernières données lues (disque, attributions, bibliothèque). */
 function toutesLesEntrees(){
   const projet = { tomes: S.tomes, scenes: S.scenes };
   return [
-    ...entreesLocales({ ...donneesLocales, projet, metas: metasLocales(), bibliotheque }),
+    ...entreesLocales({ ...donneesLocales, attributions: [...(donneesLocales.attributions || []), ...ATTRIBUTIONS_BANQUE], projet, metas: metasLocales(), bibliotheque })
+      .map(e => (e.fichier.startsWith(BANK_PREFIX) ? { ...e, integre: true } : e)),
     ...entreesBatiments(donneesLocales.batiments || [], projet),
   ];
 }
@@ -1557,6 +1571,7 @@ function ficheLocale(e){
   const droite = [
     el('h4', { texte: e.titre }),
     a ? el('p', {}, [el('span', { texte: t.par + ' ' }), lien(a.auteur && a.auteur.nom, a.auteur && a.auteur.url)]) : el('p', { texte: t.importeLocal }),
+    e.integre ? el('p', { texte: t.integreBanque, classe: 'store-fiche-texte' }) : null,
     // La catégorie et les tags, SOUS LA SOURCE (demandé), cliquables pour les changer.
     e.introuvable ? null : blocClassement(e.fichier),
     e.introuvable ? el('p', { texte: t.introuvableFiche, classe: 'store-avertissement' }) : null,
@@ -1582,7 +1597,7 @@ function ficheLocale(e){
     b.onclick = () => { if (_rappels[rappel]) _rappels[rappel](e.fichier); };
     return b;
   };
-  const actions = e.introuvable
+  const actions = e.introuvable || e.integre
     ? [retour]
     // Couleurs demandées : Renommer en jaune, Supprimer en rouge, texte blanc sur les deux.
     // « Éditeur » (il remplace « Squelette », demandé) seulement pour un modèle qui a un squelette

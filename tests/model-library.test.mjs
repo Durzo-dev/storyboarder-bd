@@ -268,7 +268,7 @@ describe('Section Modèles : le câblage', () => {
     // Le résultat voulu est atteint. Rapporter un échec ferait afficher un message d'erreur pour
     // une suppression qui a, de fait, réussi.
     const bloc = MAIN.slice(MAIN.indexOf("'models:delete'"));
-    assert.match(bloc.slice(0, 600), /ENOENT.*return \{ ok: true \}/s);
+    assert.match(bloc.slice(0, 700), /ENOENT.*return \{ ok: true \}/s);
   });
 });
 
