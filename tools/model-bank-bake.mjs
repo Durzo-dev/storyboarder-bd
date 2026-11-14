@@ -16,7 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
-import { dedup, prune, weld, simplify, getBounds } from '@gltf-transform/functions';
+import { dedup, prune, weld, simplify, quantize, getBounds } from '@gltf-transform/functions';
 import { MeshoptSimplifier } from 'meshoptimizer';
 import { app, nativeImage } from 'electron';
 
@@ -106,7 +106,12 @@ async function bake(){
       }
       if (facesOf(doc) > REFUSED_FACES) throw new Error(`too heavy: ${facesOf(doc)} faces left`);
       shrinkTextures(doc);
-      await doc.transform(prune());
+      // MEASURED on the second bake (120 MB, 70 of geometry): 30 000 faces weighed up to 5 MB, their vertices
+      // carrying tangents, unused texture coordinates, float32 everywhere. Tangents dropped (three computes the
+      // normal maps without them), unused attributes pruned, the rest quantised (KHR_mesh_quantization: three
+      // r128's GLTFLoader reads it; gltf-glb.js refuses only Draco, Meshopt and Basis).
+      for (const mesh of doc.getRoot().listMeshes()) for (const p of mesh.listPrimitives()) if (p.getAttribute('TANGENT')) p.setAttribute('TANGENT', null);
+      await doc.transform(prune({ keepAttributes: false }), quantize());
       // Its base on the ground, centred: one node above the scene's roots, moved.
       const scene = doc.getRoot().getDefaultScene() || doc.getRoot().listScenes()[0];
       const b = getBounds(scene);
