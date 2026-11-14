@@ -56,6 +56,14 @@ export const GENERA = Object.freeze({
 export const STONE_PINE_KEY = 5285165;
 /** The radius looked at around the place (km): a town's parks and its countryside, enough observations. */
 export const FLORA_RADIUS_KM = 5;
+/**
+ * How much more a genus is planted in streets and squares than GBIF's observations say (they count the wild
+ * flora too: at Montpellier, Prunus first, the blackthorns of the scrubland; seen: a pink Japanese cherry in the
+ * middle of the Comédie). An ASSUMPTION, from what towns plant (planes, limes, nettle trees, maples, horse
+ * chestnuts): 1 for a genus not named.
+ */
+const STREET_WEIGHT = Object.freeze({ Platanus: 3, Tilia: 3, Celtis: 3, Acer: 2, Aesculus: 2, Fraxinus: 1.5, Prunus: 0.4, Salix: 0.7 });
+
 /** A form rarer than this share of its kind is left out (a palm in Paris: a greenhouse, an odd garden). */
 const RARE = 0.01;
 /** The credit of GBIF's data. */
@@ -75,21 +83,29 @@ function shares(counts, forms){
 
 /**
  * THE FLORA OF A PLACE from GBIF's answer (an occurrence search, `facet=genusKey` and `facet=speciesKey`), or
- * null (no answer, nothing known counted). Returns { trees, shrubs, genera }: the shares of the tree forms and
- * of the shrub forms, and the genera most observed (their names, the most first: what to look for in the
- * stores, #480c).
+ * null (no answer, nothing known counted). Returns { trees, shrubs, genusShares, genera }: the shares of the tree
+ * forms and of the shrub forms, each form's genera in shares (weighted by STREET_WEIGHT), and the genera most
+ * observed (their names, the most first: what to look for in the stores, #480c).
  */
 export function floraOf(answer){
   const facets = answer && Array.isArray(answer.facets) ? answer.facets : [];
   const genus = facets.find(f => f.field === 'GENUS_KEY'), species = facets.find(f => f.field === 'SPECIES_KEY');
   if (!genus || !Array.isArray(genus.counts)) return null;
   const byKey = new Map(Object.entries(GENERA).map(([name, [form, key]]) => [String(key), { name, form }]));
-  const counts = {}, seen = [];
+  const counts = {}, seen = [], byForm = {};
   for (const c of genus.counts) {
     const g = byKey.get(String(c.name));
     if (!g || !(c.count > 0)) continue;
     counts[g.form] = (counts[g.form] || 0) + c.count;
     seen.push([g.name, c.count]);
+    const w = c.count * (STREET_WEIGHT[g.name] || 1);
+    (byForm[g.form] = byForm[g.form] || {})[g.name] = w;
+  }
+  // The genera of each form, in shares (a tree OSM names not draws its genus from them: model-bank.js).
+  const genusShares = {};
+  for (const [form, gs] of Object.entries(byForm)) {
+    const sum = Object.values(gs).reduce((a, b) => a + b, 0);
+    genusShares[form] = Object.fromEntries(Object.entries(gs).map(([g, v]) => [g, Math.round(v / sum * 1000) / 1000]).filter(([, v]) => v >= RARE));
   }
   // The stone pines, out of the pines.
   const pinea = species && Array.isArray(species.counts) ? species.counts.find(c => String(c.name) === String(STONE_PINE_KEY)) : null;
@@ -100,7 +116,7 @@ export function floraOf(answer){
   }
   const trees = shares(counts, TREE_FORMS), shrubs = shares(counts, SHRUB_FORMS);
   if (!trees && !shrubs) return null;
-  return { trees, shrubs, genera: seen.sort((a, b) => b[1] - a[1]).slice(0, 12).map(([name]) => name) };
+  return { trees, shrubs, genusShares, genera: seen.sort((a, b) => b[1] - a[1]).slice(0, 12).map(([name]) => name) };
 }
 
 /** A number in [0, 1) from a place (x, z, metres): the same tree draws the same form at each import. */

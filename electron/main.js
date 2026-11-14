@@ -498,7 +498,9 @@ ipcMain.handle('models:write', async (event, name, data) => {
 ipcMain.handle('models:read', async (event, name) => {
   if (!nomDeModeleAcceptable(name)) return { ok: false, error: 'nom de modèle refusé' };
   try {
-    const data = await fs.promises.readFile(path.join(getModelsDir(), name));
+    // A bank model (#480f, src/model-bank.js BANK_PREFIX): shipped with the application, read from its assets.
+    const bank = name.startsWith('bank--') ? name.slice('bank--'.length) : null;
+    const data = await fs.promises.readFile(bank ? path.join(RACINE, 'assets', 'model-bank', bank) : path.join(getModelsDir(), name));
     return { ok: true, data: new Uint8Array(data) };
   } catch (err) {
     // Cas nominal, pas une panne : le fichier a été déplacé ou supprimé hors de l'application.

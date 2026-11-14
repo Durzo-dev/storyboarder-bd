@@ -31,6 +31,7 @@ import { rulesFor } from './real-place-sources.js';
 import { facadeStyleOf } from './facade-style.js';
 import { monumentOf } from './monuments.js';
 import { TREE_TYPES } from './constants.js';
+import { genusOfTags } from './model-bank.js';
 import { roofFromHeights, ridgeSense, partsFromHeights } from './height-reading.js';
 /** A level's floor slab (batiment.js DEFAUTS_BATIMENT.dalle): a measured eaves height is levels and slabs. */
 const LEVEL_SLAB = 0.2;
@@ -540,6 +541,8 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
         if (TREE_TYPES.includes(objType) && treeHeight(tags)) el.height = treeHeight(tags);
         // Its form said by OSM: the place's flora leaves it (flora.js applyFlora).
         if (TREE_TYPES.includes(objType) && treeKindKnown(tags)) el.kindKnown = true;
+        // Its genus (a bank model of it: model-bank.js, #480f).
+        if (TREE_TYPES.includes(objType) && genusOfTags(tags)) el.genus = genusOfTags(tags);
         out.elements.push(el);
       }
       continue;
@@ -589,6 +592,7 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
               const t = (next - walked) / len;
               const el = { objType: treeKindOf(w.tags), x: round(a.x + (b.x - a.x) * t), z: round(a.z + (b.z - a.z) * t), osmId: w.id };
               if (treeKindKnown(w.tags)) el.kindKnown = true;
+              if (genusOfTags(w.tags)) el.genus = genusOfTags(w.tags);
               if (treeHeight(w.tags)) el.height = treeHeight(w.tags);
               out.elements.push(el);
             }

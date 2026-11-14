@@ -30,6 +30,12 @@ describe('the flora of a place, from GBIF', () => {
     assert.equal(f.trees.palmier, undefined);
     assert.ok(Math.abs(f.trees.pin_parasol - 45 / 995) < 0.002 && Math.abs(f.trees.conifere - 50 / 995) < 0.002, JSON.stringify(f.trees));
   });
+  test('each form\'s genera in shares, weighted towards the street trees (GBIF counts the wild flora too)', () => {
+    const f = floraOf(answer([['Prunus', 500], ['Platanus', 100], ['Pinus', 50]]));
+    assert.ok(f.genusShares.arbre.Platanus > 0.55, JSON.stringify(f.genusShares));
+    assert.ok(f.genusShares.arbre.Prunus < 0.45);
+    assert.deepEqual(f.genusShares.conifere, { Pinus: 1 });
+  });
   test('nothing known counted, no answer: null', () => {
     assert.equal(floraOf(answer([[999999, 10]])), null);
     assert.equal(floraOf(null), null);

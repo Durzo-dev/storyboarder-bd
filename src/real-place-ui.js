@@ -25,6 +25,7 @@ import { floraOf, applyFlora, FLORA_CREDIT, FLORA_RADIUS_KM } from './flora.js';
 import { MODEL_USAGES, FACES, MAX_DOWNLOADS, queriesFor, candidatesFor, usagesOf, applyModels } from './realistic-models.js';
 import { telechargerEnSilence, dejaPossede, rafraichirPossedes, sketchfabConnecte, signIn } from './store-ui.js';
 import { preloadModels, getLoadedModel } from './model-cache.js';
+import { applyBank, bankCredit } from './model-bank.js';
 import { chercherUnModele, remplacerLeBatiment } from './monuments-ui.js';
 import { nomDuTrace } from './canvas-tools.js';
 import { enregistrerFermeture } from './modal-stack.js';
@@ -170,8 +171,8 @@ function direLeNiveau(){
     : niveau === 'realistic'
       ? tr('Realistic: all of Detailed, and the facades: shutters, stone surrounds and shop windows, in the region\'s colours; their colour read on street photos (Panoramax) where there are some; in France, the aerial photo read for the real grounds, the trees and the roofs; the trees of the place, benches, lamps… as 3D models from Sketchfab (account needed).',
         'Réaliste : tout le niveau Détaillé, et les façades : volets, encadrements de pierre et vitrines, aux couleurs de la région ; leur teinte lue sur les photos de rue (Panoramax) quand il y en a ; en France, la vue aérienne lue pour les vrais sols, les arbres et les toits ; les arbres du lieu, bancs, lampadaires… en modèles 3D de Sketchfab (compte requis).')
-      : tr('Detailed: also the real heights, roofs and materials (IGN, in France), pavements, road signs, shrubs and benches.',
-        'Détaillé : en plus, hauteurs, toits et matériaux réels (IGN, en France), trottoirs, panneaux, buissons et bancs.');
+      : tr('Detailed: also the real heights, roofs and materials (IGN, in France), pavements, road signs, shrubs and benches; trees of their species and street furniture as 3D models.',
+        'Détaillé : en plus, hauteurs, toits et matériaux réels (IGN, en France), trottoirs, panneaux, buissons et bancs ; arbres de leur essence et mobilier en modèles 3D.');
 }
 
 /** The detail line of the map data: the server, the seconds spent on it, the bytes received. */
@@ -505,7 +506,13 @@ async function importer(){
       }
       photoCredits.push(tr(LIDAR_CREDIT.en, LIDAR_CREDIT.fr));
     }
-    // Realistic (#480c): the stores' models in the built-in objects' place (trees of the place, benches…).
+    // Detailed and Realistic (#480f): the bank's models in the built-in objects' place, a tree of its genus.
+    if (niveau !== 'simple') {
+      const bank = applyBank(translated.elements, { flora, rural: translated.builtShare < 0.15 });
+      console.info(`[real-place] model bank: ${bank.n} elements, ${bank.used.length} models`);
+      photoCredits.push(...bank.used.map(m => bankCredit(m, S.appLang === 'en' ? 'en' : 'fr')));
+    }
+    // Realistic (#480c): the stores' models for what the bank has not.
     if (niveau === 'realistic') {
       await etape('models');
       const credits = await choisirLesModeles(translated, flora, (sub, texte) => { montrerLaProgression('models', sub); montrerLeDetail(texte || ''); }, arrete);
