@@ -22,6 +22,7 @@ import { S, tr } from './state.js';
 import { listModels } from './model-store.js';
 import { listImages } from './image-store.js';
 import { collectModelFiles, oublierModelesIntrouvables } from './model-cache.js';
+import { BANK_PREFIX } from './model-bank.js';
 import { collectImageFiles, oublierImagesIntrouvables } from './image-cache.js';
 import { policeDeBulle } from './constants.js';
 import { NOMS_INTEGRES, nomApresRenommages, chargerPolicesUtilisateur } from './polices-utilisateur.js';
@@ -57,7 +58,8 @@ export function ressourcesManquantes({ objets, modelesPresents, imagesPresentes,
   const i = new Set(imagesPresentes || []);
   const tri = (a, b) => a.localeCompare(b);
   return {
-    modeles: collectModelFiles(objets).filter(n => !m.has(n)).sort(tri),
+    // A bank model (#480f) is the application's own, not a file of the Projects folder (seen: 15 « missing »).
+    modeles: collectModelFiles(objets).filter(n => !m.has(n) && !n.startsWith(BANK_PREFIX)).sort(tri),
     images: collectImageFiles(objets).filter(n => !i.has(n)).sort(tri),
     // `policesPresentes` : { importees, renommages } ; absent (hors application), rien n'est signalé.
     polices: policesPresentes ? policesCitees(objets).filter(n => !policeDisponible(n, policesPresentes)).sort(tri) : [],

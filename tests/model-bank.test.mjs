@@ -4,6 +4,7 @@
  * rural model only in a place little built; the same at each import; credits. And the shipped bank itself
  * (src/model-bank-data.js, written by tools/model-bank-bake.mjs): every file there, every credit whole.
  */
+import './helpers/dom-stub.mjs';
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
@@ -44,6 +45,14 @@ describe('the bank, model by model', () => {
   test('the main process reads a bank file from the application\'s assets, by the same prefix', () => {
     const main = readFileSync(new URL('../electron/main.js', import.meta.url), 'utf8');
     assert.ok(main.includes(`name.startsWith('${BANK_PREFIX}')`) && main.includes("'assets', 'model-bank'"));
+  });
+});
+
+describe('a bank model is never « missing »', () => {
+  test('the Projects folder does not hold it: not reported', async () => {
+    const { ressourcesManquantes } = await import('../src/missing-resources.js');
+    const objets = [{ type: 'objet3d', objType: 'modele', modelFile: BANK_PREFIX + 'banc-1.glb' }, { type: 'objet3d', objType: 'modele', modelFile: 'Mine.glb' }];
+    assert.deepEqual(ressourcesManquantes({ objets, modelesPresents: [], imagesPresentes: [] }).modeles, ['Mine.glb']);
   });
 });
 
