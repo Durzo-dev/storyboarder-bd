@@ -11,6 +11,9 @@ const path = require('path');
 const fs = require('fs');
 const { app } = require('electron');
 
+/** The pause between two downloads (ms). */
+const PAUSE_MS = 8000;
+
 // The application's own data (its session): in development, the folder of package.json's `name`.
 app.setPath('userData', path.join(app.getPath('appData'), require('../package.json').name));
 
@@ -32,8 +35,17 @@ app.whenReady().then(async () => {
   for (const m of models) {
     const file = path.join(out, `${m.uid}.glb`);
     if (fs.existsSync(file)) { kept++; continue; }
-    process.stdout.write(`${m.file} (${m.name})… `);
-    const r = await store.telecharger('sketchfab', m.uid, 'origine', null, null, () => session.accessToken());
+    process.stdout.write(`${m.file} (${m.name})... `);
+    // MEASURED (14 Nov. 2026): Sketchfab answers « quota » (HTTP 429) after 15 downloads in a row. A pause
+    // between two, and on « quota » a longer wait, doubled each time, before asking again.
+    let r = null;
+    for (let attempt = 0, wait = 60; attempt < 6; attempt++, wait *= 2) {
+      r = await store.telecharger('sketchfab', m.uid, 'origine', null, null, () => session.accessToken());
+      if (!r || r.erreur !== 'quota') break;
+      process.stdout.write(`quota, waiting ${wait} s... `);
+      await new Promise(ok => setTimeout(ok, wait * 1000));
+    }
+    await new Promise(ok => setTimeout(ok, PAUSE_MS));
     if (!r || r.erreur || !r.data) { console.log(`failed: ${(r && r.erreur) || 'no answer'}`); failed.push(m.file); continue; }
     fs.writeFileSync(file, Buffer.from(r.data));
     console.log(`${(r.data.length / 1e6).toFixed(1)} MB`);
