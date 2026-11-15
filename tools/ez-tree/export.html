@@ -9,6 +9,9 @@ import { GLTFExporter } from 'https://esm.sh/three@0.170.0/examples/jsm/exporter
 import { Tree, TreePreset } from 'https://esm.sh/@dgreenheck/ez-tree@1.1.0?deps=three@0.170.0';
 
 import { SPECIES } from '../../src/tree-species.js';
+// The bark's repeat as the application sets it (src/ez-trees.js reads three as a global).
+globalThis.THREE = THREE;
+const { barkRepeat } = await import('../../src/ez-trees.js');
 
 /** Poly Haven's barks (CC0), 1k colour maps, by their id. */
 const BARK_URL = (id) => `https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/${id}/${id}_diff_1k.jpg`;
@@ -26,7 +29,7 @@ async function speciesTree(sp, seed){
   const bark = await new THREE.TextureLoader().loadAsync(BARK_URL(sp.bark));
   bark.colorSpace = THREE.SRGBColorSpace;
   bark.wrapS = bark.wrapT = THREE.RepeatWrapping;
-  bark.repeat.set(sp.barkScale[0], sp.barkScale[1]);
+  bark.repeat.set(...barkRepeat(tree.options));
   tree.traverse(m => {
     if (!m.isMesh) return;
     const leaves = m.material.alphaTest > 0;

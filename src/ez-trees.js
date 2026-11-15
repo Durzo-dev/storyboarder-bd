@@ -57,6 +57,20 @@ function plainBark(material, sp) {
   material.needsUpdate = true;
 }
 
+/** How many times the bark goes round a branch (EZ-Tree's u runs once round, 0 to 1). */
+const BARK_AROUND = 2;
+
+/**
+ * The bark's repeat, its texels square on the trunk. EZ-Tree's u goes round the branch once, its v from 0 to 1 up
+ * one section: the trunk is 2π·r round and a section length/sections high. A fixed repeat squeezed the bark 17
+ * times on the plane's trunk (21 units round, 3.75 a section): mipmaps then averaged it to a plain brown (seen).
+ */
+export function barkRepeat(options) {
+  const round = 2 * Math.PI * options.branch.radius[0];
+  const section = options.branch.length[0] / options.branch.sections[0];
+  return [BARK_AROUND, BARK_AROUND * section / round];
+}
+
 /** The seed EZ-Tree gets for our variant `n` (1, 2…): spread apart, as in the trial (tools/ez-tree). */
 export const SEED_STEP = 7919;
 
@@ -94,7 +108,9 @@ export function generateSpeciesTree(name, variant = 1, { makeCanvas = domCanvas,
   const branches = tree.branchesMesh.material;
   if (bark) {
     bark.wrapS = bark.wrapT = THREE.RepeatWrapping;
-    bark.repeat.set(sp.barkScale[0], sp.barkScale[1]);
+    bark.repeat.set(...barkRepeat(tree.options));
+    // Seen at a slant on a trunk, a bark blurs without it (three keeps it within what the GPU allows).
+    bark.anisotropy = 8;
     branches.map = bark;
     branches.color.set(sp.barkTint);
     if (!barkMaterials.has(name)) barkMaterials.set(name, []);

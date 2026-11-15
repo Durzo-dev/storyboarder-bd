@@ -11,7 +11,7 @@ import * as THREE from 'three';
 globalThis.THREE = THREE;
 const { Tree, TreeOptions, EZ_TREE_VERSION } = await import('../src/vendor/ez-tree/ez-tree.js');
 const { TREE_PRESETS } = await import('../src/vendor/ez-tree/presets.js');
-const { generateSpeciesTree, speciesTree } = await import('../src/ez-trees.js');
+const { generateSpeciesTree, speciesTree, barkRepeat, speciesOptions } = await import('../src/ez-trees.js');
 const { SPECIES, speciesFor } = await import('../src/tree-species.js');
 
 /** A canvas that draws nothing (Node has none): every method of its context does nothing. */
@@ -81,6 +81,16 @@ test('the bark given is read as it is, its tint applied', () => {
   assert.equal(m.map, bark);
   assert.equal(bark.encoding, THREE.LinearEncoding);
   assert.equal(m.color.getHex(), SPECIES.Tilleul.barkTint);
+});
+
+test('the bark square on the trunk: as many texels round as up (a fixed [1, 6] squeezed it 17 times, seen)', () => {
+  for (const name of Object.keys(SPECIES)) {
+    const o = speciesOptions(name, 1);
+    const [u, v] = barkRepeat(o);
+    const round = 2 * Math.PI * o.branch.radius[0], section = o.branch.length[0] / o.branch.sections[0];
+    assert.ok(Math.abs((round / u) / (section / v) - 1) < 1e-9, name);
+    assert.ok(u >= 1 && u <= 4, `${name}: ${u} round`);
+  }
 });
 
 test('a tree of the height asked, its foot on the ground', () => {
