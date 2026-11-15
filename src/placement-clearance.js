@@ -23,6 +23,12 @@ export function clearanceOf(objType) {
   return TREE_TYPES.includes(objType) ? 1 : 0.4;
 }
 
+/**
+ * What may stand against a building: a street lamp is often on a facade (OSM puts it on the outline). Pushed
+ * out of the footprint, it went into the road and was left out (seen: 2 lamps of the quai de la Tournelle).
+ */
+export const AGAINST_BUILDINGS = Object.freeze(['lampadaire']);
+
 /** How far an object may be moved (m). Beyond, it is left out. */
 export const MAX_SHIFT_M = 4;
 
@@ -87,14 +93,15 @@ export function clearOfObstacles(elements, obstacles) {
   const kept = [];
   for (const e of elements) {
     const r = clearanceOf(e.objType);
+    const own = AGAINST_BUILDINGS.includes(e.objType) ? { rings: [], lines: obstacles.lines } : obstacles;
     const start = { x: e.x, z: e.z };
     let p = { ...start };
-    for (let k = 0; k < PASSES && !clears(p, r, obstacles); k++) {
-      for (const ring of obstacles.rings) p = pushOut(p, r, ring, null) || p;
-      for (const line of obstacles.lines) p = pushOut(p, r, null, line) || p;
+    for (let k = 0; k < PASSES && !clears(p, r, own); k++) {
+      for (const ring of own.rings) p = pushOut(p, r, ring, null) || p;
+      for (const line of own.lines) p = pushOut(p, r, null, line) || p;
     }
     const shift = Math.hypot(p.x - start.x, p.z - start.z);
-    if (!clears(p, r, obstacles) || shift > MAX_SHIFT_M) { removed++; continue; }
+    if (!clears(p, r, own) || shift > MAX_SHIFT_M) { removed++; continue; }
     if (shift > 0) { e.x = Math.round(p.x * 100) / 100; e.z = Math.round(p.z * 100) / 100; moved++; }
     kept.push(e);
   }

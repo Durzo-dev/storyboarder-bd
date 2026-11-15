@@ -139,7 +139,8 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    Before the models, every element stands clear of the buildings and of the paths that bar the way
    (`clearOfObstacles`, placement-clearance.js: footprints kept on the translated buildings as `footprint`;
    roads, rivers, low walls, fences, hedges and barriers, their half width; pavements and footpaths are no
-   obstacle): pushed to the nearest place 1 m clear for a tree, 0.4 m for anything else, and left out when that
+   obstacle): pushed to the nearest place 1 m clear for a tree, 0.4 m for anything else (a street lamp may stand against a
+   facade: `AGAINST_BUILDINGS`), and left out when that
    place is more than 4 m away.
 4. `sceneContentOf`: Zones and Paths (`pathObject`, `zoneObject`, named by `nomDuTrace`), the relief
    (`reliefDepuisAltitudes`: base at the middle of the range, edges blended to 0 over 20 m to meet the flat

@@ -80,3 +80,12 @@ test('the obstacles of a place: footprints, and the paths that bar the way, thei
   assert.equal(o.rings.length, 1);
   assert.deepEqual(o.lines.map(l => l.half), [3.5, 0.25]);
 });
+
+test('a street lamp on a facade stays there (OSM puts it on the outline); off the road all the same', () => {
+  const road = { kind: 'route', world: { pts: [{ x: -20, z: 13 }, { x: 40, z: 13 }], width: 4 } };
+  const els = [{ objType: 'lampadaire', x: 5, z: 10 }, { objType: 'lampadaire', x: 20, z: 13.5 }];
+  const r = clearOfObstacles(els, place([road], [square(0, 0, 10)]));
+  assert.deepEqual(r, { moved: 1, removed: 0 });
+  assert.deepEqual(els[0], { objType: 'lampadaire', x: 5, z: 10 });
+  assert.ok(Math.abs(els[1].z - 15.4) < 0.02, JSON.stringify(els[1]));
+});
