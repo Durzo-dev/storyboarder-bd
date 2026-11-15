@@ -16,6 +16,7 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
 | `src/height-reading.js` | PUR. Les hauteurs du LiDAR de l'IGN (MNH, 50 cm) : l'égout et le toit réels de chaque bâtiment (plat ou en pente, pente, faîtage, deux ou quatre pans), la hauteur de chaque arbre. |
 | `src/aerial-reading.js` | PUR. La vue aérienne lue mètre par mètre : la classe d'un pixel, le vrai sol des Zones, les arbres manquants, les pelouses des cours, le matériau des toits. |
 | `src/aerial-photo.js` | PUR. La vue aérienne d'une zone (France), à LIRE pendant l'import, jamais montrée ni gardée : la photo à demander (`aerialPhotoPlan`), son crédit. La requête : `realplace:aerialPhoto` (le WMS de la Géoplateforme, `ORTHOIMAGERY.ORTHOPHOTOS`, un JPEG ; une réponse qui n'est pas un JPEG est une erreur). |
+| `src/vegetation-zones.js` | PUR. Les bois, vergers, landes et haies relevés par l'IGN (France), remplis d'arbres et d'arbustes intégrés (`readVegetation`, `fillVegetation`). La requête : `realplace:vegetation`. |
 | `src/real-place-import.js` | PUR. La traduction et les altitudes devenues le contenu d'une Scène (`sceneContentOf` : objets Tracés et Zones, relief, crédits). |
 | `src/real-place-ui.js` | La fenêtre d'une Scène neuve : le choix, puis recherche, carte (tuiles OpenStreetMap), taille de la zone, import avec sa progression. |
 | `electron/bibliotheque/real-place.js` | Le réseau (processus principal) : Nominatim, Overpass (avec miroirs), altitudes, tuiles ; identifié par le User-Agent de l'application. |
@@ -173,6 +174,19 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    autre variante générée (8 essayées), tournée et déplacée de même ; aucune ne convient : laissé tel quel. Le rig
    d'un arbre généré est centré sur son tronc (une boîte invisible aussi large de chaque côté) : le tronc est là
    où est l'arbre.
+   En France, aux niveaux « Détaillé » et « Réaliste », les zones plantées : `realplace:vegetation` (la
+   `formation_vegetale` de la BD Forêt v2, son `essence` et sa `tfv`, et la `zone_de_vegetation` de la BD TOPO, sa
+   `nature` ; WFS, sans clé, en longitude et latitude), `readVegetation` (`kindOfEssence` : « Chênes décidus » →
+   feuillus Quercus, « Pin sylvestre » → conifères Pinus, « Sapin, épicéa » → Abies ou Picea, une lande →
+   arbustes, une forêt sans couvert → rien ; `kindOfNature` : forêts, bois, peupleraie, verger (Malus, Prunus,
+   Pyrus), lande, haie ; les vignes laissées à #481), puis `fillVegetation` : chaque zone remplie sur une grille
+   décalée (`AREA_KINDS` : 6 à 13 m d'écart, en rangs pour les vergers et les peupleraies, 2,5 m pour les arbustes
+   d'une haie ; les arbres d'un verger hauts de 4 m sans mesure), pareille à chaque import, à 3 m des arbres déjà
+   là, dans la zone ; une forêt de la BD TOPO dans une forêt de la BD Forêt laissée à celle-ci ; 350 arbres et 150
+   arbustes au plus (répartis quand il y a plus de places). Chacun est un élément comme ceux d'OSM, son type connu
+   (`kindKnown`), son genre quand l'essence le dit, `filled` : l'arbre intégré, jamais un modèle (banque, EZ-Tree,
+   stores : des centaines de modèles noieraient le rendu). Crédit quand une forêt de la BD Forêt a été remplie :
+   « © IGN, BD Forêt® v2 ».
 4. `sceneContentOf` : Zones et Tracés (`pathObject`, `zoneObject`, nommés par `nomDuTrace`), le relief
    (`reliefDepuisAltitudes` : base au milieu de l'étendue, bords ramenés à 0 sur 20 m pour rejoindre le Sol
    plat), les crédits.

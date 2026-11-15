@@ -257,6 +257,37 @@ function overpassFailure(failures){
   return failures.length && failures.every(f => f === 'network') ? 'network' : 'busy';
 }
 
+/**
+ * The planted areas of a zone (France, #482a/b): the BD Forêt v2's forests (their essence) and the BD TOPO's
+ * vegetation (its nature), the IGN's WFS, no key. Only the properties src/vegetation-zones.js reads.
+ */
+function vegetationUrl(layer, properties, { south, west, north, east }){
+  return `https://data.geopf.fr/wfs/ows?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=${layer}`
+    + `&BBOX=${south},${west},${north},${east},urn:ogc:def:crs:EPSG::4326&COUNT=2000`
+    // In longitude, latitude: without it the BD Forêt answers in Lambert-93 (seen on 15 Nov. 2026).
+    + `&PROPERTYNAME=${properties.join(',')}&outputFormat=application/json&SRSNAME=urn:ogc:def:crs:OGC:1.3:CRS84`;
+}
+const plantings = sources.memoireBornee(4, 30 * 1024 * 1024);
+/** { forests, zones } (GeoJSON, either null when its service failed), or { error }. Cached. */
+async function vegetation(bbox){
+  const ok = bbox && ['south', 'west', 'north', 'east'].every(k => Number.isFinite(bbox[k]));
+  if (!ok || bbox.north - bbox.south > 0.01 || bbox.east - bbox.west > 0.02) return { error: 'zone' };
+  const key = JSON.stringify(bbox);
+  const cached = plantings.get(key);
+  if (cached) return cached;
+  const started = Date.now();
+  const [f, z] = await Promise.all([
+    request(vegetationUrl('LANDCOVER.FORESTINVENTORY.V2:formation_vegetale', ['geom', 'essence', 'tfv'], bbox)),
+    request(vegetationUrl('BDTOPO_V3:zone_de_vegetation', ['geometrie', 'nature'], bbox)),
+  ]);
+  const good = (r) => (r.json && Array.isArray(r.json.features) ? r.json : null);
+  const out = { forests: good(f), zones: good(z) };
+  console.info(`[real-place] vegetation: ${out.forests ? out.forests.features.length : (f.error || 'response')} forests, `
+    + `${out.zones ? out.zones.features.length : (z.error || 'response')} planted areas in ${Date.now() - started} ms`);
+  if (out.forests || out.zones) plantings.set(key, out);
+  return out;
+}
+
 /** The BD TOPO buildings of a zone (France): the IGN's WFS, no key. Only the properties building-survey.js reads. */
 const BDTOPO_PROPERTIES = ['geometrie', 'hauteur', 'altitude_minimale_toit', 'altitude_maximale_toit', 'usage_1',
   'materiaux_des_murs', 'materiaux_de_la_toiture', 'construction_legere'];
@@ -421,4 +452,4 @@ async function tile(z, x, y){
   return { data: r.bytes };
 }
 
-module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, aerialPhoto, heightGrid, flora, country, osm, bdtopo, bdTopoUrl, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };
+module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, aerialPhoto, heightGrid, flora, country, osm, bdtopo, bdTopoUrl, vegetation, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };

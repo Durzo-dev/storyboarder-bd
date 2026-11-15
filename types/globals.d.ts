@@ -110,6 +110,7 @@ interface StoryboarderAPI {
   realPlaceFlora(lat: number, lon: number, km?: number): Promise<{ json?: any; error?: string }>;
   realPlaceHeightGrid(bbox: { south: number; west: number; north: number; east: number }, width: number, height: number): Promise<{ data?: Uint8Array; error?: string }>;
   realPlaceBdTopo(bbox: { south: number; west: number; north: number; east: number }): Promise<{ json?: any; error?: string }>;
+  realPlaceVegetation(bbox: { south: number; west: number; north: number; east: number }): Promise<{ forests?: any; zones?: any; error?: string }>;
   realPlaceAltitudes(requests: any[], perSecond?: number): Promise<{ answers?: any[]; error?: string }>;
   realPlaceTile(z: number, x: number, y: number): Promise<{ data?: Uint8Array; error?: string }>;
   mcpStatus(): Promise<any>;

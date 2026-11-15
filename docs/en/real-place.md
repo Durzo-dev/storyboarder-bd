@@ -16,6 +16,7 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
 | `src/height-reading.js` | PURE. The IGN LiDAR's heights (MNH, 50 cm): each building's real eaves and roof (flat or pitched, pitch, ridge, two or four slopes), each tree's height. |
 | `src/aerial-reading.js` | PURE. The aerial photo read metre by metre: the class of a pixel, the Zones' real grounds, the missing trees, the courtyards' lawns, the roofs' materials. |
 | `src/aerial-photo.js` | PURE. The aerial photo of a zone (France), to be READ at the import, never shown nor kept: the photo to ask (`aerialPhotoPlan`), its credit. The request: `realplace:aerialPhoto` (the Géoplateforme's WMS, `ORTHOIMAGERY.ORTHOPHOTOS`, one JPEG; an answer that is not a JPEG is an error). |
+| `src/vegetation-zones.js` | PURE. The woods, orchards, heaths and hedges the IGN surveys (France), filled with built-in trees and shrubs (`readVegetation`, `fillVegetation`). The request: `realplace:vegetation`. |
 | `src/real-place-import.js` | PURE. The translation and the altitudes turned into a Scene's content (`sceneContentOf`: Path and Zone objects, relief, credits). |
 | `src/real-place-ui.js` | The new Scene's window: the choice, then search, map (OpenStreetMap tiles), zone size, import with its progress. |
 | `electron/bibliotheque/real-place.js` | The network (main process): Nominatim, Overpass (with mirrors), altitudes, tiles; identified by the application's User-Agent. |
@@ -158,6 +159,18 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    tree turned (8 turns), else moved up to 4 m (its trunk still clear), else another variant grown (8 tried),
    turned and moved likewise; none fitting, it is left as it was. A generated tree's rig is centred on its trunk
    (an invisible box as wide each side), so the trunk stands where the tree is.
+   In France, at the « Detailed » and « Realistic » levels, the planted areas: `realplace:vegetation` (the
+   BD Forêt v2's `formation_vegetale`, its `essence` and `tfv`, and the BD TOPO's `zone_de_vegetation`, its
+   `nature`; WFS, no key, in longitude and latitude), `readVegetation` (`kindOfEssence`: « Chênes décidus » →
+   broadleaved Quercus, « Pin sylvestre » → conifers Pinus, « Sapin, épicéa » → Abies or Picea, a heath →
+   shrubs, a felled forest → nothing; `kindOfNature`: forests, wood, poplars, orchard (Malus, Prunus, Pyrus),
+   heath, hedge; vines left to #481), then `fillVegetation`: each area filled on a jittered grid (`AREA_KINDS`:
+   6 to 13 m apart, rows for orchards and poplars, 2.5 m for a hedge's shrubs; an orchard's trees 4 m high
+   when nothing measured), the same at each import, 3 m from the trees already there, within the zone; a
+   BD TOPO forest inside a BD Forêt one left to it; 350 trees and 150 shrubs at most (spread when there are
+   more places). Each is an element like OSM's, its kind known (`kindKnown`), its genus when the essence says
+   it, `filled`: the built-in tree, never a model (bank, EZ-Tree, stores: hundreds of models would sink the
+   render). Credit when a BD Forêt forest was filled: « © IGN, BD Forêt® v2 ».
 4. `sceneContentOf`: Zones and Paths (`pathObject`, `zoneObject`, named by `nomDuTrace`), the relief
    (`reliefDepuisAltitudes`: base at the middle of the range, edges blended to 0 over 20 m to meet the flat
    Ground), the credits.

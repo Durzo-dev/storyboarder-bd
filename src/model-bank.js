@@ -63,7 +63,8 @@ export function applyBank(elements, { flora = null, rural = false, bank = MODEL_
   const used = new Map();
   let n = 0, species = 0;
   for (const e of elements || []) {
-    if (e.modelFile) continue;
+    // A tree filling a wood (vegetation-zones.js, `filled`): the built-in tree, light (hundreds of them).
+    if (e.modelFile || e.filled) continue;
     const genus = e.genus || drawFrom(flora && flora.genusShares && flora.genusShares[e.objType], hash(e.x, e.z, 0x5bd1));
     const essence = speciesFor(e.objType, genus);
     if (essence) {

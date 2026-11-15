@@ -89,7 +89,7 @@ export function candidatesFor(usage, results){
 /** The uses an import holds (its elements' built-in objects with no model yet: the bank's first), the most present first. */
 export function usagesOf(elements){
   const n = new Map();
-  for (const e of elements || []) if (MODEL_USAGES[e.objType] && !e.modelFile && !e.essence) n.set(e.objType, (n.get(e.objType) || 0) + 1);
+  for (const e of elements || []) if (MODEL_USAGES[e.objType] && !e.modelFile && !e.essence && !e.filled) n.set(e.objType, (n.get(e.objType) || 0) + 1);
   return [...n].sort((a, b) => b[1] - a[1]).map(([u, count]) => ({ usage: u, count }));
 }
 
@@ -109,7 +109,7 @@ export function applyModels(elements, models){
   let n = 0;
   for (const e of elements || []) {
     const list = models && models[e.objType];
-    if (e.modelFile || e.essence || !Array.isArray(list) || !list.length) continue;
+    if (e.modelFile || e.essence || e.filled || !Array.isArray(list) || !list.length) continue;
     const m = list[Math.floor(hash(e.x, e.z) * list.length)];
     e.usage = e.objType;
     e.modelFile = m.fichier;

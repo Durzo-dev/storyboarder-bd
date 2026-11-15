@@ -10,6 +10,7 @@
 import { S, tr, newId } from './state.js';
 import { translateOsm, ZONE_SIDE_MAX, DETAIL_LEVELS } from './osm-scene.js';
 import { clearOfObstacles, obstaclesOf, fitCrowns } from './placement-clearance.js';
+import { readVegetation, fillVegetation, BD_FORET_CREDIT } from './vegetation-zones.js';
 import { crownOf } from './ez-trees.js';
 import { TREE_TYPES } from './constants.js';
 import { planRelief } from './real-place-sources.js';
@@ -481,10 +482,23 @@ async function importer(){
     const translated = translateOsm(extrait.json, { centre, halfSize, country: country || 'world', translate: tr, survey, detail: niveau, heights: hauteurs });
     console.info(`[real-place] ${translated.buildings.length} buildings, ${translated.entrances} OSM entrances`);
     // Realistic: the facades' colours read on street photos (#474c). Never blocking: without photos, as before.
-    let photoCredits = [];
+    const photoCredits = [];
+    // France, Detailed and Realistic: the woods, orchards, heaths and hedges the IGN surveys, filled with built-in
+    // trees and shrubs (vegetation-zones.js, #482a/b). Never blocking: without an answer, as before.
+    if (country === 'fr' && niveau !== 'simple' && api.realPlaceVegetation) {
+      const v = await api.realPlaceVegetation(bbox);
+      if (arrete()) return annule;
+      if (v && (v.forests || v.zones)) {
+        const existing = translated.elements.filter(e => TREE_TYPES.includes(e.objType) || e.objType === 'buisson');
+        const added = fillVegetation(readVegetation(v, centre), { halfSize, existing });
+        translated.elements.push(...added);
+        console.info(`[real-place] vegetation: ${added.length} trees and shrubs filled`);
+        if (added.some(e => e.source === 'bdforet')) photoCredits.push(tr(BD_FORET_CREDIT.en, BD_FORET_CREDIT.fr));
+      }
+    }
     if (niveau === 'realistic') {
       await etape('facades');
-      photoCredits = await couleursDesFacades(translated, bbox, centre, (sub) => montrerLaProgression('facades', sub), arrete);
+      photoCredits.push(...(await couleursDesFacades(translated, bbox, centre, (sub) => montrerLaProgression('facades', sub), arrete) || []));
       if (arrete()) return annule;
       // The aerial photo, read (France): real grounds, missing trees, lawns, roofs. Never shown nor kept.
       await etape('aerial');
