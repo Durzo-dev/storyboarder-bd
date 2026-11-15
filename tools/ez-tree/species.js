@@ -1,70 +1,128 @@
 /**
  * tools/ez-tree/species.js: OUR SPECIES FOR EZ-TREE (#480f): each one a preset of EZ-Tree to start from, what
- * changes (its silhouette), its bark (Poly Haven, CC0) and its leaf, DRAWN here (a twig and leaves of a shape:
- * no licence). Tuned by eye in the browser on 15 Nov. 2026 (plane, linden, cypress, olive). Browser code.
+ * changes (its silhouette), its bark (Poly Haven, CC0) and its foliage DRAWN here (no licence). Tuned by eye in the
+ * browser on 15 Nov. 2026 against reference photos of Wikimedia Commons (leaves, sprays, whole trees):
+ *   - plane (Platanus × hispanica): 3 to 5 pointed lobes, a tall trunk, a wide crown; Poly Haven's own plane bark;
+ *   - linden (Tilia cordata): a heart, its edge toothed, its tip drawn out; a domed crown; grey ridged bark;
+ *   - cypress (Cupressus sempervirens): NO leaves nor needles: flat sprays of tiny scales, branching again and
+ *     again; a narrow flame-shaped column; fibrous bark;
+ *   - olive (Olea europaea): narrow lances, dark grey-green above, silvery under, in opposite pairs; a short
+ *     twisted trunk under a broad crown.
+ * Browser code (the trial's hidden window).
  */
 
 /** Poly Haven's barks (CC0), 1k colour maps. */
 const BARK = (id) => `https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/${id}/${id}_diff_1k.jpg`;
 
+function rng(seed){
+  let r = seed * 9301 + 49297;
+  return () => (r = (r * 16807) % 2147483647) / 2147483647;
+}
+function shade(hex, k){
+  const n = parseInt(hex.slice(1), 16);
+  return '#' + [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.max(0, Math.min(255, Math.round(v * k))).toString(16).padStart(2, '0')).join('');
+}
+
 /** Leaf shapes, drawn around (0, 0), `s` their half length. */
-const LEAF = {
-  palmate(ctx, s){
+const SHAPES = {
+  plane(ctx, s, rnd){
+    const lobes = [[-1.75, 0.55], [-0.95, 0.85], [0, 1], [0.95, 0.85], [1.75, 0.55]];
+    ctx.beginPath(); ctx.moveTo(0, s * 0.18);
+    lobes.forEach(([a, l], i) => {
+      const tip = [Math.sin(a) * s * l, -Math.cos(a) * s * l];
+      const mid = (a + (i ? lobes[i - 1][0] : a - 0.9)) / 2, sinus = [Math.sin(mid) * s * 0.42, -Math.cos(mid) * s * 0.42];
+      ctx.lineTo(sinus[0], sinus[1]);
+      ctx.lineTo((sinus[0] + tip[0]) / 2 + (rnd() - 0.5) * s * 0.06, (sinus[1] + tip[1]) / 2);
+      ctx.lineTo(tip[0], tip[1]);
+    });
+    ctx.lineTo(Math.sin(2.65) * s * 0.4, -Math.cos(2.65) * s * 0.4);
+    ctx.closePath();
+  },
+  linden(ctx, s){
     ctx.beginPath();
-    for (let i = 0; i <= 200; i++) {
-      const a = i / 200 * Math.PI * 2, r = s * (0.55 + 0.45 * Math.pow(Math.abs(Math.cos(2.5 * a)), 0.6));
-      const x = Math.sin(a) * r, y = -Math.cos(a) * r * 0.95;
-      if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+    for (let i = 0; i <= 90; i++) {
+      const t = i / 90 * Math.PI * 2;
+      let x = 16 * Math.pow(Math.sin(t), 3);
+      const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+      x *= (1 + 0.035 * (i % 2 ? 1 : -1)) * (x > 0 ? 1.05 : 0.95);
+      ctx.lineTo(x * s / 17, -y * s / 17 * 1.05 + s * 0.1);
     }
     ctx.closePath();
   },
-  heart(ctx, s){
+  olive(ctx, s){
     ctx.beginPath(); ctx.moveTo(0, -s);
-    ctx.bezierCurveTo(s * 0.9, -s * 0.7, s * 1.05, s * 0.25, 0, s * 0.85);
-    ctx.bezierCurveTo(-s * 1.05, s * 0.25, -s * 0.9, -s * 0.7, 0, -s); ctx.closePath();
+    ctx.quadraticCurveTo(s * 0.3, 0, 0, s); ctx.quadraticCurveTo(-s * 0.3, 0, 0, -s); ctx.closePath();
   },
-  lance(ctx, s){ ctx.beginPath(); ctx.ellipse(0, 0, s * 0.22, s, 0, 0, Math.PI * 2); },
-  scale(ctx, s){ ctx.beginPath(); ctx.ellipse(0, 0, s * 0.35, s * 0.8, 0, 0, Math.PI * 2); },
 };
 
-/** A leaf cluster on a transparent 512 px canvas: a twig, `n` leaves of a shape, colours varying. */
-export function leafCluster({ shape, colours, n = 7, size = 70, spread = 0.9, seed = 1 }){
+/** A twig with leaves of a shape (in opposite pairs if asked), on a transparent 512 px canvas. */
+function leafTwig({ shape, colours, under = null, n = 7, size = 70, spread = 0.9, opposite = false, seed = 1 }){
   const c = document.createElement('canvas');
   c.width = c.height = 512;
-  const ctx = c.getContext('2d');
-  let r = seed;
-  const rnd = () => (r = (r * 16807) % 2147483647) / 2147483647;
-  ctx.translate(256, 500);
-  ctx.strokeStyle = '#4a3a28'; ctx.lineWidth = 6;
-  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -380); ctx.stroke();
+  const ctx = c.getContext('2d'), rnd = rng(seed);
+  ctx.translate(256, 505);
+  ctx.strokeStyle = '#5a4630'; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(14, -200, 0, -400); ctx.stroke();
   for (let i = 0; i < n; i++) {
-    const t = 0.15 + 0.85 * i / (n - 1), side = i % 2 ? 1 : -1;
-    ctx.save();
-    ctx.translate(0, -380 * t);
-    ctx.rotate(side * (0.5 + rnd() * spread * 0.6) * (i === n - 1 ? 0 : 1));
-    ctx.translate(0, -size * 1.1);
-    ctx.fillStyle = colours[Math.floor(rnd() * colours.length)];
-    LEAF[shape](ctx, size * (0.8 + rnd() * 0.35));
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(0, size * 0.8); ctx.lineTo(0, -size * 0.8); ctx.stroke();
-    ctx.restore();
+    const t = 0.12 + 0.88 * i / (n - 1);
+    for (const side of opposite ? [1, -1] : [i % 2 ? 1 : -1]) {
+      ctx.save();
+      ctx.translate(0, -400 * t);
+      ctx.rotate(side * (0.45 + rnd() * spread * 0.6) * (i === n - 1 && !opposite ? 0.1 : 1));
+      ctx.translate(0, -size * 1.05);
+      const base = under && rnd() < 0.3 ? under : colours[Math.floor(rnd() * colours.length)];
+      const g = ctx.createLinearGradient(-size, 0, size, 0);
+      g.addColorStop(0, shade(base, 0.85)); g.addColorStop(0.5, shade(base, 1.08)); g.addColorStop(1, shade(base, 0.9));
+      ctx.fillStyle = g;
+      SHAPES[shape](ctx, size * (0.8 + rnd() * 0.3), rnd);
+      ctx.fill();
+      ctx.strokeStyle = shade(base, 1.35); ctx.globalAlpha = 0.55; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(0, size * 0.6); ctx.lineTo(0, -size * 0.75);
+      if (shape !== 'olive') for (const k of [-1, 1]) { ctx.moveTo(0, size * 0.1); ctx.lineTo(k * size * 0.55, -size * 0.45); }
+      ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.restore();
+    }
   }
   return c;
 }
 
-/** The species: `from` (an EZ-Tree preset), `set(options)`, the bark and its scale, the leaf drawn. */
+/** A cypress spray: flat fronds branching three times, covered with tiny overlapping scales. */
+function cypressSpray({ colours = ['#2f4f27', '#3a5f2e', '#456d33'], tip = '#7d9a44', seed = 1 } = {}){
+  const c = document.createElement('canvas');
+  c.width = c.height = 512;
+  const ctx = c.getContext('2d'), rnd = rng(seed);
+  function frond(x, y, ang, len, w, depth){
+    const ex = x + Math.sin(ang) * len, ey = y - Math.cos(ang) * len;
+    const steps = Math.max(3, Math.round(len / (w * 1.3)));
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      ctx.fillStyle = depth === 0 && t > 0.6 ? tip : colours[Math.floor(rnd() * colours.length)];
+      ctx.beginPath(); ctx.ellipse(x + (ex - x) * t, y + (ey - y) * t, w * 1.1, w * 1.7, ang, 0, Math.PI * 2); ctx.fill();
+    }
+    if (depth > 0) {
+      const kids = 7 + Math.floor(rnd() * 3);
+      for (let k = 1; k <= kids; k++) {
+        const t = k / (kids + 1);
+        frond(x + (ex - x) * t, y + (ey - y) * t, ang + (k % 2 ? 1 : -1) * (0.7 + rnd() * 0.2), len * (0.5 * (1 - t) + 0.18), w * 0.72, depth - 1);
+      }
+    }
+  }
+  frond(256, 505, 0, 360, 9, 3);
+  return c;
+}
+
+/** The species: `from` (an EZ-Tree preset), `set(options)`, the bark, its scale and tint, the foliage drawn. */
 export const SPECIES = {
-  Platane: { from: 'Oak Large', bark: BARK('bark_platanus'), barkScale: [1, 6],
-    leaf: { shape: 'palmate', colours: ['#4f7a34', '#5c8a3c', '#46702f', '#6a9444'], n: 6, size: 78 },
-    set(o){ o.branch.length[0] = 55; o.branch.angle[1] = 48; o.branch.children[0] = 8; o.branch.radius[0] = 3.2; o.branch.force.strength = 0.01; o.leaves.size = 5.5; o.leaves.count = 9; } },
-  Tilleul: { from: 'Ash Large', bark: BARK('japanese_zelkova_bark'), barkScale: [1, 6],
-    leaf: { shape: 'heart', colours: ['#5b8a3a', '#6b9a44', '#4f7d33'], n: 8, size: 58 },
-    set(o){ o.branch.angle[1] = 52; o.branch.angle[2] = 45; o.branch.force.strength = 0.02; o.leaves.size = 4.5; o.leaves.count = 12; } },
-  Cypres: { from: 'Pine Medium', bark: BARK('chinese_cedar_bark'), barkScale: [1, 6],
-    leaf: { shape: 'scale', colours: ['#2c4a26', '#33552b', '#284222'], n: 12, size: 40, spread: 0.3 },
-    set(o){ o.branch.angle[1] = 20; o.branch.length[1] = 18; o.branch.children[0] = 60; o.branch.start[1] = 0.04; o.branch.force.strength = 0.06; o.leaves.size = 7; o.leaves.count = 22; o.leaves.angle = 10; } },
-  Olivier: { from: 'Oak Small', bark: BARK('tree_bark_03'), barkScale: [1, 3],
-    leaf: { shape: 'lance', colours: ['#6f7d58', '#7f8c66', '#a3ad8e', '#5f6d4a'], n: 16, size: 60, spread: 1.1 },
-    set(o){ o.branch.length[0] = 16; o.branch.radius[0] = 2.6; o.branch.gnarliness[0] = 0.3; o.branch.gnarliness[1] = 0.35; o.branch.twist[0] = 0.5; o.branch.angle[1] = 58; o.branch.length[1] = 20; o.branch.children[0] = 7; o.branch.force.strength = -0.01; o.leaves.size = 5; o.leaves.count = 28; } },
+  Platane: { from: 'Oak Large', bark: BARK('bark_platanus'), barkScale: [1, 6], barkTint: 0xffffff,
+    foliage: (seed) => leafTwig({ shape: 'plane', colours: ['#4f8a3e', '#5a9445', '#467d37'], n: 6, size: 110, seed }),
+    set(o){ o.branch.length[0] = 60; o.branch.angle[1] = 40; o.branch.children[0] = 8; o.branch.radius[0] = 3.4; o.branch.force.strength = 0.015; o.leaves.size = 8; o.leaves.count = 12; } },
+  Tilleul: { from: 'Ash Large', bark: BARK('tree_bark_03'), barkScale: [1, 6], barkTint: 0xd8d4cc,
+    foliage: (seed) => leafTwig({ shape: 'linden', colours: ['#4e8a35', '#5c9a3f', '#447a2f'], n: 7, size: 62, seed }),
+    set(o){ o.branch.angle[1] = 50; o.branch.angle[2] = 45; o.branch.force.strength = 0.025; o.leaves.size = 5; o.leaves.count = 12; } },
+  Cypres: { from: 'Pine Medium', bark: BARK('chinese_cedar_bark'), barkScale: [1, 6], barkTint: 0xffffff,
+    foliage: (seed) => cypressSpray({ seed }),
+    set(o){ o.branch.length[0] = 70; o.branch.angle[1] = 16; o.branch.length[1] = 13; o.branch.children[0] = 80; o.branch.start[1] = 0.03; o.branch.force.strength = 0.08; o.leaves.size = 8; o.leaves.count = 18; o.leaves.angle = 8; } },
+  Olivier: { from: 'Oak Small', bark: BARK('bark_willow_02'), barkScale: [1, 3], barkTint: 0xcfcabd,
+    foliage: (seed) => leafTwig({ shape: 'olive', colours: ['#55634a', '#5f6d50', '#4d5a42'], under: '#b3bba4', n: 11, size: 68, opposite: true, spread: 0.8, seed }),
+    set(o){ o.branch.length[0] = 18; o.branch.radius[0] = 3; o.branch.start[1] = 0.5; o.branch.gnarliness[0] = 0.3; o.branch.gnarliness[1] = 0.35; o.branch.twist[0] = 0.5; o.branch.angle[1] = 58; o.branch.length[1] = 20; o.branch.children[0] = 7; o.branch.force.strength = -0.01; o.leaves.size = 4.5; o.leaves.count = 16; o.leaves.start = 0.3; o.leaves.alphaTest = 0.3; } },
 };

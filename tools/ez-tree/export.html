@@ -8,7 +8,7 @@ import * as THREE from 'https://esm.sh/three@0.170.0';
 import { GLTFExporter } from 'https://esm.sh/three@0.170.0/examples/jsm/exporters/GLTFExporter.js';
 import { Tree, TreePreset } from 'https://esm.sh/@dgreenheck/ez-tree@1.1.0?deps=three@0.170.0';
 
-import { SPECIES, leafCluster } from './species.js';
+import { SPECIES } from './species.js';
 
 /** One of our species: the preset, its changes, our leaf drawn, the Poly Haven bark. */
 async function speciesTree(sp, seed){
@@ -18,7 +18,7 @@ async function speciesTree(sp, seed){
   sp.set(tree.options);
   tree.options.leaves.tint = 0xffffff;
   tree.generate();
-  const leaf = new THREE.CanvasTexture(leafCluster({ ...sp.leaf, seed }));
+  const leaf = new THREE.CanvasTexture(sp.foliage(seed));
   leaf.colorSpace = THREE.SRGBColorSpace;
   const bark = await new THREE.TextureLoader().loadAsync(sp.bark);
   bark.colorSpace = THREE.SRGBColorSpace;
@@ -29,7 +29,7 @@ async function speciesTree(sp, seed){
     const leaves = m.material.alphaTest > 0;
     m.material.map = leaves ? leaf : bark;
     if (!leaves) { m.material.normalMap = null; m.material.aoMap = null; m.material.roughnessMap = null; }
-    if (m.material.color) m.material.color.set(0xffffff);
+    if (m.material.color) m.material.color.set(leaves ? 0xffffff : sp.barkTint);
     m.material.needsUpdate = true;
   });
   return tree;
