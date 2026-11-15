@@ -381,11 +381,24 @@ async function aerialPhoto(bbox, width, height){
  * { error }.
  */
 async function heightGrid(bbox, width, height){
+  return lidarGrid('IGNF_LIDAR-HD_MNH_ELEVATION.ELEVATIONGRIDCOVERAGE.WGS84G', 'heights', bbox, width, height);
+}
+
+/**
+ * THE GROUND'S ALTITUDES OF A ZONE AT 1 M (#482c): the IGN LiDAR HD's terrain model (MNT, 50 cm), the same
+ * service as the heights. Measured on 15 Nov. 2026: a 200 m zone in 0.2 to 0.9 s, one request.
+ */
+async function terrainGrid(bbox, width, height){
+  return lidarGrid('IGNF_LIDAR-HD_MNT_ELEVATION.ELEVATIONGRIDCOVERAGE.WGS84G', 'terrain', bbox, width, height);
+}
+
+/** One of the LiDAR HD's grids (WMS-R, floats): { data } or { error }. */
+async function lidarGrid(layer, what, bbox, width, height){
   const n = (v) => Number(v);
   const b = bbox || {};
   if (![b.south, b.west, b.north, b.east].every(v => Number.isFinite(n(v))) || !(n(b.north) > n(b.south)) || !(n(b.east) > n(b.west))) return { error: 'response' };
   const w = Math.max(16, Math.min(2048, Math.round(n(width) || 0))), h = Math.max(16, Math.min(2048, Math.round(n(height) || 0)));
-  const url = `${AERIAL_WMS}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=IGNF_LIDAR-HD_MNH_ELEVATION.ELEVATIONGRIDCOVERAGE.WGS84G&STYLES=&CRS=EPSG:4326`
+  const url = `${AERIAL_WMS}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=${layer}&STYLES=&CRS=EPSG:4326`
     + `&BBOX=${n(b.south)},${n(b.west)},${n(b.north)},${n(b.east)}&WIDTH=${w}&HEIGHT=${h}&FORMAT=image/x-bil;bits=32`;
   const started = Date.now();
   let r = await request(url, { json: false, timeout: 30000 });
@@ -394,8 +407,8 @@ async function heightGrid(bbox, width, height){
   if (r.status === 400) r = await request(url, { json: false, timeout: 30000, cache: 'reload' });
   if (r.error) return r;
   // Exactly one float per cell: anything else (an XML error with a 200) is no grid.
-  if (!r.bytes || r.bytes.length !== w * h * 4) { console.warn('[real-place] heights: not a grid'); return { error: 'response' }; }
-  console.info(`[real-place] heights (LiDAR HD): ${w}×${h} cells in ${Date.now() - started} ms`);
+  if (!r.bytes || r.bytes.length !== w * h * 4) { console.warn(`[real-place] ${what}: not a grid`); return { error: 'response' }; }
+  console.info(`[real-place] ${what} (LiDAR HD): ${w}×${h} cells in ${Date.now() - started} ms`);
   return { data: r.bytes };
 }
 
@@ -452,4 +465,4 @@ async function tile(z, x, y){
   return { data: r.bytes };
 }
 
-module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, aerialPhoto, heightGrid, flora, country, osm, bdtopo, bdTopoUrl, vegetation, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };
+module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, aerialPhoto, heightGrid, terrainGrid, flora, country, osm, bdtopo, bdTopoUrl, vegetation, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };

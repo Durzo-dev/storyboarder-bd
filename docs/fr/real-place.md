@@ -159,7 +159,10 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    Zone peinte de plus), les toits qu'aucune source ne décrit (`roofOfBuilding` sur le cœur du toit, son bord
    à part : tuiles à 55 %, gris à 65 % → `roofFinishRead` : tuiles, ou le gris du zinc ; un toit plat garde
    son gris ; `roofKnown`, posé par translateOsm, garde un toit qu'OSM ou le relevé décrit). Son crédit
-   quand quelque chose en a été lu. Puis le relief : `planRelief` pour le pays, ses requêtes envoyées
+   quand quelque chose en a été lu. Puis le relief : en France d'abord le modèle de terrain du LiDAR HD à 1 m (`terrainPlan`,
+   une grille `realplace:terrainGrid`, l'`IGNF_LIDAR-HD_MNT_ELEVATION` du WMS-R, chaque cellule centrée sur un
+   mètre ; `reliefFromTerrain` ; plus de 20 % sans donnée, pas couvert : la voie suivante ; crédit « © IGN,
+   LiDAR HD (MNT) »), ses talus et fossés gardés ; sinon `planRelief` pour le pays, ses requêtes envoyées
    par `realplace:altitudes` (seulement vers `ALTITUDE_HOSTS`, au rythme du fournisseur), `assemble` ; en cas
    d'échec le fournisseur suivant, et sans aucun un Sol plat.
    Avant les modèles, chaque élément est écarté des bâtiments et des tracés qui barrent le passage

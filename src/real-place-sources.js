@@ -143,3 +143,41 @@ function resampleToMetre(samples, n, step, h, out, providerId){
   }
   return { x0: -out, z0: -out, nx: side, nz: side, altitudes, provider: providerId, missing: (samples.length - known.length) / samples.length };
 }
+
+// ── The LiDAR HD's terrain (France, #482c) ──────────────────────────────────────────────────────────────
+
+/**
+ * The ground at 1 m from the IGN LiDAR HD's terrain model (MNT, 50 cm): one grid, one request, where the point
+ * service needed thousands of points every 5 m (its banks, ditches and low walls lost between them). Measured
+ * on 15 Nov. 2026 on four places (Fontainebleau, Paris, Eguisheim, Sorède): every cell known, 0.2 to 0.9 s.
+ */
+export const TERRAIN_LIDAR = Object.freeze({ id: 'lidarMnt', name: 'IGN LiDAR HD (MNT)', attribution: '© IGN, LiDAR HD (MNT)' });
+
+/** More than this share of cells without data: the LiDAR does not cover the place yet (the point service then). */
+const TERRAIN_MISSING_MAX = 0.2;
+
+/**
+ * The terrain grid to ask (France): the zone's metres as the relief has them (−out to +out), each cell centred
+ * on a metre, so its bbox reaches half a metre beyond. Null elsewhere.
+ */
+export function terrainPlan({ centre, halfSize, country }){
+  if (country !== 'fr' || !(halfSize > 0)) return null;
+  const out = Math.min(200, Math.round(halfSize)), side = 2 * out + 1, e = out + 0.5;
+  const { toGeo } = projector(centre);
+  const nw = toGeo({ x: -e, z: -e }), se = toGeo({ x: e, z: e });
+  return { out, side, bbox: { south: se.lat, west: nw.lon, north: nw.lat, east: se.lon } };
+}
+
+/**
+ * The relief's altitudes from the terrain grid's floats (row by row from the north, as the relief's), the same
+ * shape as planRelief's assembly; null when it is no grid, or too much of it has no data. A cell without data, or
+ * far from the zone's median (OUTLIER_METRES), takes the mean of the others.
+ */
+export function reliefFromTerrain(floats, plan){
+  if (!plan || !floats || floats.length !== plan.side * plan.side) return null;
+  const samples = Array.from(floats, v => (Number.isFinite(v) && v > -100 && v < 5000 ? v : null));
+  const known = samples.filter(v => v !== null).length;
+  if (known < (1 - TERRAIN_MISSING_MAX) * samples.length) return null;
+  // The grid is the 1 m grid itself: resampled with a step of 1, it is read as it is.
+  return resampleToMetre(samples, plan.side, 1, plan.out, plan.out, TERRAIN_LIDAR.id);
+}

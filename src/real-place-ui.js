@@ -13,7 +13,7 @@ import { clearOfObstacles, obstaclesOf, fitCrowns } from './placement-clearance.
 import { readVegetation, fillVegetation, BD_FORET_CREDIT } from './vegetation-zones.js';
 import { crownOf } from './ez-trees.js';
 import { TREE_TYPES } from './constants.js';
-import { planRelief } from './real-place-sources.js';
+import { planRelief, terrainPlan, reliefFromTerrain, TERRAIN_LIDAR } from './real-place-sources.js';
 import { readBdTopo } from './building-survey.js';
 import { facadesOf, bestView, samplePoints, wallColour } from './facade-colour.js';
 import { buildStepLabel } from './scene-loading.js';
@@ -843,6 +843,24 @@ async function couleursDesFacades(translated, bbox, centre, avance, arrete){
  * follow them.
  */
 async function reliefDuLieu(centre, halfSize, country, avance = () => {}, arrete = () => false){
+  // France: the LiDAR HD's terrain at 1 m, one request (#482c); not covered or no answer, the point service.
+  const terrain = terrainPlan({ centre, halfSize, country });
+  const api = window.storyboarderAPI;
+  if (terrain && api && api.realPlaceTerrainGrid) {
+    const r = await api.realPlaceTerrainGrid(terrain.bbox, terrain.side, terrain.side);
+    if (arrete()) return null;
+    if (r && r.data) {
+      const octets = new Uint8Array(r.data.length);
+      octets.set(r.data);
+      const altitudes = reliefFromTerrain(new Float32Array(octets.buffer), terrain);
+      if (altitudes) {
+        avance(1);
+        console.info(`[real-place] relief: ${TERRAIN_LIDAR.id}, ${Math.round(altitudes.missing * 100)} % without data`);
+        return { altitudes, credit: TERRAIN_LIDAR.attribution };
+      }
+    }
+    console.warn('[real-place] terrain: none, the point service instead', r && r.error);
+  }
   for (let i = 0; ; i++) {
     const plan = planRelief({ centre, halfSize, country, providerIndex: i });
     if (!plan || arrete()) return null;

@@ -145,7 +145,10 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    covers (`lawnMask`: 25 m² or more, one more painted Zone), the roofs no source describes (`roofOfBuilding` on the roof's
    core, its edge aside: tiles at 55 %, grey at 65 % → `roofFinishRead`: tiles, or zinc's grey; a flat roof
    keeps its grey; `roofKnown`, set by translateOsm, keeps a roof OSM or the survey describes). Its credit
-   when something was read. Then the relief: `planRelief` for the country, its requests sent by
+   when something was read. Then the relief: in France first the LiDAR HD's terrain model at 1 m (`terrainPlan`, one
+   grid `realplace:terrainGrid`, the WMS-R's `IGNF_LIDAR-HD_MNT_ELEVATION`, each cell centred on a metre;
+   `reliefFromTerrain`; more than 20 % without data, not covered: the next way; credit « © IGN, LiDAR HD
+   (MNT) »), its banks and ditches kept; otherwise `planRelief` for the country, its requests sent by
    `realplace:altitudes` (only to `ALTITUDE_HOSTS`, at the provider's rate), `assemble`; on failure the next
    provider, and with none a flat Ground.
    Before the models, every element stands clear of the buildings and of the paths that bar the way
