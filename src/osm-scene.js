@@ -35,7 +35,7 @@ import { genusOfTags } from './model-bank.js';
 import { roofFromHeights, ridgeSense, partsFromHeights } from './height-reading.js';
 /** A level's floor slab (batiment.js DEFAUTS_BATIMENT.dalle): a measured eaves height is levels and slabs. */
 const LEVEL_SLAB = 0.2;
-import { BDTOPO_ATTRIBUTION, matchSurvey, buildingTypeOf, surveyedRoof, wallFinishOf, roofFinishOf } from './building-survey.js';
+import { BDTOPO_ATTRIBUTION, matchSurvey, buildingTypeOf, surveyedRoof, wallFinishOf, roofFinishOf, pitchWithin, MAX_GUESSED_RISE } from './building-survey.js';
 
 /** The attribution OSM data requires near the work (export credits, #457b-4). */
 export const OSM_ATTRIBUTION = '© OpenStreetMap contributors, ODbL';
@@ -444,7 +444,8 @@ export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor
   }
   const top = b.niveaux.reduce((p, q) => (q.elevation > p.elevation ? q : p));
   const surveyed = surveyedRoof(survey, footprint);
-  const roof = { type: roofOf(tags, rules, surveyed), pente: surveyed && !surveyed.flat ? surveyed.pitch : rules.roofPitch };
+  // Nothing measured: the country's pitch, lowered on a wide footprint (pitchWithin, MAX_GUESSED_RISE).
+  const roof = { type: roofOf(tags, rules, surveyed), pente: surveyed && !surveyed.flat ? surveyed.pitch : pitchWithin(rules.roofPitch, MAX_GUESSED_RISE, footprint) };
   // The LiDAR's ridge: along the longest side, or across it.
   if (surveyed && surveyed.ridge && roof.type === 'deux-pans') roof.sens = ridgeSense(footprint, surveyed.ridge);
   // A flat roof with no known covering: the grey of a gravel or bitumen roof, not the walls' colour.

@@ -121,6 +121,10 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    the slopes across it weigh 12 % or more and the footprint is nearly convex, an L or a U reading alike),
    passed as the survey's `lidar`: it comes BEFORE the tags and the survey (`levelsOf`: OSM's count of levels
    kept, their height from the measured eaves; `roofOf`, `surveyedRoof`; the ridge's `sens` by `ridgeSense`).
+   The measured pitch is lowered when, over half the footprint's narrow width, it would rise above the
+   measured roof (top over eaves; `pitchWithin`): a block's median slope spread over 48 m made a roof as high
+   as the building. With nothing measured, the country's pitch is lowered likewise so a roof rises 6 m at most
+   (`MAX_GUESSED_RISE`).
    After the aerial reading, every tree takes its measured height (`treeHeightAt`: the highest within 2 m,
    3 to 40 m). Credit: « © IGN, LiDAR HD ». Still at « Realistic », in France, the aerial photo READ (`lireLaVueAerienne`,
    aerial-reading.js; never shown nor kept): fetched (`realplace:aerialPhoto`), decoded in memory, each metre

@@ -8,7 +8,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { readBdTopo, matchSurvey, surveyedRoof, wallFinishOf, roofFinishOf, buildingTypeOf, BDTOPO_ATTRIBUTION } from '../src/building-survey.js';
+import { readBdTopo, matchSurvey, surveyedRoof, wallFinishOf, roofFinishOf, buildingTypeOf, BDTOPO_ATTRIBUTION, pitchWithin, MAX_GUESSED_RISE } from '../src/building-survey.js';
 import { translateOsm, levelsOf } from '../src/osm-scene.js';
 import { sceneContentOf } from '../src/real-place-import.js';
 
@@ -139,5 +139,23 @@ describe('the level of detail', async () => {
     assert.deepEqual(s.elements.map(e => e.objType), ['arbre']);
     assert.equal(d.paths.filter(p => p.kind === 'trottoir').length, 3);
     assert.deepEqual(d.elements.map(e => e.objType), ['banc', 'arbre']);
+  });
+});
+
+describe('a pitched roof no higher than it should be (#484: a 48 × 55 m block, its roof at 35° rising 17 m)', () => {
+  const block = square(0, 0, 48, 55), house = square(0, 0, 8, 12);
+  test('a wide footprint: the pitch lowered so the roof rises no more than asked; a house\'s kept', () => {
+    const p = pitchWithin(35, MAX_GUESSED_RISE, block);
+    assert.ok(Math.abs(Math.tan(p * Math.PI / 180) * 24 - MAX_GUESSED_RISE) < 0.25, `${p}°`);
+    assert.equal(pitchWithin(35, MAX_GUESSED_RISE, house), 35, 'a house of 8 m: 35° rises 2.8 m');
+    assert.equal(pitchWithin(35, 0.2, block), 5, '5° at the least');
+    assert.equal(pitchWithin(35, null, block), 35, 'nothing to bound it by');
+  });
+  test('the LiDAR\'s pitch, no higher than the roof it measured (top over eaves)', () => {
+    const lidar = { flat: false, pitch: 35, hip: true, ridge: null, eaves: 16, top: 21 };
+    const r = surveyedRoof({ lidar }, block);
+    assert.ok(Math.abs(Math.tan(r.pitch * Math.PI / 180) * 24 - 5) < 0.25, `${r.pitch}°`);
+    assert.equal(surveyedRoof({ lidar }, house).pitch, 35);
+    assert.equal(surveyedRoof({ lidar: { ...lidar, top: undefined } }, block).pitch, 35, 'no top measured: as read');
   });
 });

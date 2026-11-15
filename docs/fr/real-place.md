@@ -133,7 +133,11 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    travers ; quatre pans quand les pentes en travers pèsent 12 % ou plus et que l'emprise est presque
    convexe, un L ou un U se lisant pareil), passé comme `lidar` du relevé : il passe AVANT les balises et le
    relevé (`levelsOf` : le nombre de niveaux d'OSM gardé, leur hauteur d'après l'égout mesuré ; `roofOf`,
-   `surveyedRoof` ; le `sens` du faîtage par `ridgeSense`). Après la lecture aérienne, chaque arbre prend sa
+   `surveyedRoof` ; le `sens` du faîtage par `ridgeSense` ; la pente mesurée abaissée quand, sur la
+   demi-largeur étroite de l'emprise, elle monterait plus haut que le toit mesuré, sommet moins égout,
+   `pitchWithin` : la pente médiane d'un îlot étalée sur 48 m faisait un toit aussi haut que l'immeuble ; sans
+   mesure, la pente du pays abaissée de même pour qu'un toit ne monte pas de plus de 6 m, `MAX_GUESSED_RISE`).
+   Après la lecture aérienne, chaque arbre prend sa
    hauteur mesurée (`treeHeightAt` : le plus haut à 2 m, de 3 à 40 m). Crédit : « © IGN, LiDAR HD ».
    Toujours en « Réaliste », en France, la vue aérienne LUE (`lireLaVueAerienne`,
    aerial-reading.js ; jamais montrée ni gardée) : téléchargée (`realplace:aerialPhoto`), décodée en mémoire,

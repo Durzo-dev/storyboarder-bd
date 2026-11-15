@@ -143,13 +143,31 @@ function narrowWidth(footprint){
 }
 
 /**
+ * A pitched roof rises over half its footprint's narrow width: on a wide one, a usual pitch makes it a slope as
+ * high as the building (#484, seen on the quai de la Tournelle: a block of 48 × 55 m, its roof at 35° rising
+ * 17 m, a striped plane taken for a wall). The pitch (degrees) lowered so the roof rises no more than `rise`
+ * metres, 5° at the least; unchanged when it already does.
+ */
+export function pitchWithin(pitch, rise, footprint){
+  const half = narrowWidth(footprint) / 2;
+  if (!(half > 0.5) || !(rise > 0)) return pitch;
+  const most = Math.atan(rise / half) * 180 / Math.PI;
+  return most >= pitch ? pitch : Math.max(5, Math.round(most));
+}
+
+/** How high a roof nothing measured may rise (m): a tall house's roof; a wider footprint gets a lower pitch. */
+export const MAX_GUESSED_RISE = 6;
+
+/**
  * The roof from the survey: flat when it rises less than 0.5 m; else its pitch (degrees, 10 to 60) from its
  * height over half the footprint's narrow width. null when the survey says nothing of the roof.
  */
 export function surveyedRoof(survey, footprint){
   // The LiDAR's reading (height-reading.js) first: measured, not deduced.
   const l = survey && survey.lidar;
-  if (l) return l.flat ? { flat: true, lidar: true } : { flat: false, pitch: l.pitch, hip: !!l.hip, ridge: l.ridge || null, lidar: true };
+  // Its pitch as measured, but no higher than the roof it measured (top over eaves): the median slope of a
+  // mansard or of a few steep parts, spread over a whole block, would raise the roof far above it.
+  if (l) return l.flat ? { flat: true, lidar: true } : { flat: false, pitch: finite(l.top) && finite(l.eaves) ? pitchWithin(l.pitch, l.top - l.eaves, footprint) : l.pitch, hip: !!l.hip, ridge: l.ridge || null, lidar: true };
   if (!survey || !finite(survey.roofRise)) return null;
   if (survey.roofRise < 0.5) return { flat: true };
   const half = narrowWidth(footprint) / 2;
