@@ -22,7 +22,7 @@
 import { creerBatiment } from './batiment.js';
 import { ajouterEtage } from './batiment-niveaux.js';
 import { ajouterContour } from './batiment-trace.js';
-import { actualiserPieces } from './batiment-pieces.js';
+import { actualiserPieces, formesDesPieces, dansLaFace, pointInterieur } from './batiment-pieces.js';
 import { fixerToit } from './batiment-toits.js';
 import { ajouterOuverture } from './batiment-ouvertures.js';
 import { mondeDuMasque } from './terrain-zone-pinceau.js';
@@ -177,6 +177,33 @@ export function cleanFootprint(pts){
     }
   }
   return p.length >= 3 ? p : null;
+}
+
+/**
+ * The closed rings of a multipolygon's member ways (#484b: a Paris block mapped as a relation, its outer ring in
+ * several ways, its courtyards as inner rings): ways joined end to end (either way round) until each ring
+ * closes; what never closes is left out. Points { x, z }; each ring closed (its first point repeated). PURE.
+ */
+export function ringsOf(lines, tolerance = 0.05){
+  const same = (a, b) => Math.hypot(a.x - b.x, a.z - b.z) <= tolerance;
+  const open = lines.filter(l => Array.isArray(l) && l.length >= 2).map(l => l.slice());
+  const rings = [];
+  while (open.length) {
+    let ring = open.shift();
+    let grown = true;
+    while (!same(ring[0], ring[ring.length - 1]) && grown) {
+      grown = false;
+      for (let i = 0; i < open.length; i++) {
+        const l = open[i], end = ring[ring.length - 1];
+        if (same(l[0], end)) ring = ring.concat(l.slice(1));
+        else if (same(l[l.length - 1], end)) ring = ring.concat(l.slice(0, -1).reverse());
+        else continue;
+        open.splice(i, 1); grown = true; break;
+      }
+    }
+    if (ring.length >= 4 && same(ring[0], ring[ring.length - 1])) rings.push(ring);
+  }
+  return rings;
 }
 
 export function insidePolygon(p, q){
@@ -424,13 +451,38 @@ function generateOpenings(b, doors, style = null){
   }
 }
 
+/** A courtyard smaller than this (m²) is a light well: left out. */
+const COURTYARD_MIN = 6;
+/** How far a courtyard keeps from the building's outline (m): closer, its walls would cross the outer ones. */
+const COURTYARD_MARGIN = 0.5;
+
+/**
+ * THE COURTYARDS of a building on one level (#484b, the quai de la Tournelle: a block's courtyard lost, its roof
+ * then spread over the whole block): each hole (local metres) drawn as walls, its room made a void (`vide`, as
+ * the editor's courtyards, batiment-cours.js), the roof going round it. A hole too close to the outline, or
+ * whose walls the editor refuses, is left out (the level as it was).
+ */
+function courtyardsOf(b, levelId, holes, footprint, t){
+  for (const hole of holes) {
+    if (!hole.every(p => insidePolygon(p, footprint) && distanceToRing(p, footprint) >= COURTYARD_MARGIN)) continue;
+    const before = JSON.stringify({ murs: b.murs, pieces: b.pieces });
+    const r = ajouterContour(b, levelId, hole, 0.2);
+    if (r.erreur) { Object.assign(b, JSON.parse(before)); continue; }
+    actualiserPieces(b, levelId, t);
+    const inside = pointInterieur(hole);
+    const [id] = [...formesDesPieces(b, levelId)].find(([, f]) => dansLaFace(inside, f)) || [];
+    const room = id && (b.pieces || []).find(p => p.id === id);
+    if (room) room.vide = true;
+  }
+}
+
 /**
  * A complete building from a cleaned footprint (local metres, centred), its tags and the world position of
  * its centre; `roads` (world polylines) to put the door on the side of the street; `survey` (or null): the
  * surveyed building it is (building-survey.js), for its heights, roof and materials where OSM says nothing.
  * Returns the building, or null if the editor refuses its walls (a footprint that crosses itself).
  */
-export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor('fr'), translate = null, survey = null, finishes = true, place = null, entrances = []){
+export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor('fr'), translate = null, survey = null, finishes = true, place = null, entrances = [], holes = []){
   const t = translate || ((en, fr) => fr);
   const name = tags.name || (tags['addr:housenumber'] && tags['addr:street'] ? `${tags['addr:housenumber']} ${tags['addr:street']}` : t('Building', 'Bâtiment'));
   const b = creerBatiment(name, t);
@@ -441,11 +493,12 @@ export function buildingOf(footprint, tags, centre, roads = [], rules = rulesFor
     const r = ajouterContour(b, level.id, footprint, 0.2);
     if (r.erreur) return null;
     actualiserPieces(b, level.id, t);
+    courtyardsOf(b, level.id, holes, footprint, t);
   }
   const top = b.niveaux.reduce((p, q) => (q.elevation > p.elevation ? q : p));
-  const surveyed = surveyedRoof(survey, footprint);
+  const surveyed = surveyedRoof(survey, footprint, holes);
   // Nothing measured: the country's pitch, lowered on a wide footprint (pitchWithin, MAX_GUESSED_RISE).
-  const roof = { type: roofOf(tags, rules, surveyed), pente: surveyed && !surveyed.flat ? surveyed.pitch : pitchWithin(rules.roofPitch, MAX_GUESSED_RISE, footprint) };
+  const roof = { type: roofOf(tags, rules, surveyed), pente: surveyed && !surveyed.flat ? surveyed.pitch : pitchWithin(rules.roofPitch, MAX_GUESSED_RISE, footprint, holes) };
   // The LiDAR's ridge: along the longest side, or across it.
   if (surveyed && surveyed.ridge && roof.type === 'deux-pans') roof.sens = ridgeSense(footprint, surveyed.ridge);
   // A flat roof with no known covering: the grey of a gravel or bitumen roof, not the walls' colour.
@@ -523,10 +576,22 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
   const h = Math.min(Math.max(1, halfSize), ZONE_SIDE_MAX / 2);
   const { toLocal } = projector(centre);
   const out = { buildings: [], paths: [], zones: [], elements: [], skipped: { outside: 0, invalid: 0, tunnels: 0, relations: 0 }, attribution: OSM_ATTRIBUTION };
-  const ways = [];
+  const ways = [], relationWays = [];
   for (const e of (data && data.elements) || []) {
     const tags = e.tags || {};
-    if (e.type === 'relation') { out.skipped.relations++; continue; }
+    if (e.type === 'relation') {
+      // A building mapped as a multipolygon (#484b): each outer ring a building, its inner rings its courtyards.
+      if (tags.building && tags.type === 'multipolygon' && Array.isArray(e.members)) {
+        const lines = (role) => e.members.filter(m => m && m.type === 'way' && (m.role || 'outer') === role && Array.isArray(m.geometry))
+          .map(m => m.geometry.map(geoPoint)).filter(g => g.every(Boolean)).map(g => g.map(toLocal));
+        const inners = ringsOf(lines('inner'));
+        ringsOf(lines('outer')).forEach((ring, k) => {
+          relationWays.push({ id: e.id, part: k, tags, pts: ring, holes: inners.filter(r => insidePolygon(r[0], ring)) });
+        });
+        continue;
+      }
+      out.skipped.relations++; continue;
+    }
     if (e.type === 'node') {
       const g = geoPoint(e), p = g && toLocal(g);
       if (!p || Math.abs(p.x) > h || Math.abs(p.z) > h) continue;
@@ -553,6 +618,7 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
     if (pts.some(p => !p)) { out.skipped.invalid++; continue; }
     ways.push({ id: e.id, tags, pts: pts.map(toLocal) });
   }
+  ways.push(...relationWays);
   const roads = [];
   for (const w of ways) {
     if (w.tags.building) continue;
@@ -631,7 +697,9 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       const monument = detailed ? monumentOf(w.tags) : null;
       // Its parts of different heights (height-reading.js, #477d-2): a low wing against a high body, each its own
       // building. A monument stays whole (a model takes its one footprint).
-      const parts = (detailed && heights && !monument && partsFromHeights(heights, whole)) || [whole];
+      // Its courtyards (#484b: a multipolygon's inner rings), cleaned; a building with any stays whole.
+      const holes = (w.holes || []).map(cleanFootprint).filter(r => r && Math.abs(signedArea(r)) >= COURTYARD_MIN);
+      const parts = (detailed && heights && !monument && !holes.length && partsFromHeights(heights, whole)) || [whole];
       const largest = parts.reduce((a, b) => (Math.abs(signedArea(b)) > Math.abs(signedArea(a)) ? b : a));
       let laid = 0;
       for (const part of parts) {
@@ -642,12 +710,13 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
         const centreOf = { x: (px0 + px1) / 2, z: (pz0 + pz1) / 2 };
         const local = fp.map(p => roundPoint({ x: p.x - centreOf.x, z: p.z - centreOf.z }));
         // The LiDAR's reading (height-reading.js): the real eaves and roof, with the survey's other facts.
-        const lidar = detailed && heights ? roofFromHeights(heights, fp) : null;
+        const lidar = detailed && heights ? roofFromHeights(heights, fp, part === whole ? holes : []) : null;
         // The name on the largest part only (one label for one building).
         const tags = part === largest || !w.tags.name ? w.tags : { ...w.tags, name: undefined };
         const building = buildingOf(local, tags, centreOf, roads, rules, translate, lidar ? { ...(surveyed || {}), lidar } : surveyed, detailed,
           realistic ? { lat: centre.lat, lon: centre.lon, seed: w.id + laid, shop: shops.some(p => insidePolygon(p, fp)) || (surveyed && surveyed.use === 'Commercial et services') } : null,
-          entrances.filter(e => distanceToRing(e, fp) <= ENTRANCE_REACH));
+          entrances.filter(e => distanceToRing(e, fp) <= ENTRANCE_REACH),
+          (part === whole ? holes : []).map(r => r.map(p => roundPoint({ x: p.x - centreOf.x, z: p.z - centreOf.z }))));
         if (!building) continue;
         const entry = { building, x: round(centreOf.x), z: round(centreOf.z), osmId: w.id, footprint: fp.map(roundPoint) };
         if (parts.length > 1) entry.part = laid;
@@ -680,10 +749,12 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
     const centreOf = { x: (x0 + x1) / 2, z: (z0 + z1) / 2 };
     if (Math.abs(centreOf.x) > h || Math.abs(centreOf.z) > h) continue;
     const local = fp.map(p => roundPoint({ x: p.x - centreOf.x, z: p.z - centreOf.z }));
-    const lidar = heights ? roofFromHeights(heights, fp) : null;
+    const holes = (s.holes || []).map(r => cleanFootprint(r.concat([r[0]]))).filter(r => r && Math.abs(signedArea(r)) >= COURTYARD_MIN);
+    const lidar = heights ? roofFromHeights(heights, fp, holes) : null;
     const building = buildingOf(local, { building: buildingTypeOf(s) }, centreOf, roads, rules, translate, lidar ? { ...s, lidar } : s, detailed,
       realistic ? { lat: centre.lat, lon: centre.lon, seed: s.id, shop: s.use === 'Commercial et services' } : null,
-      entrances.filter(e => distanceToRing(e, fp) <= ENTRANCE_REACH));
+      entrances.filter(e => distanceToRing(e, fp) <= ENTRANCE_REACH),
+      holes.map(r => r.map(p => roundPoint({ x: p.x - centreOf.x, z: p.z - centreOf.z }))));
     if (!building) continue;
     taken.add(s.id);
     out.buildings.push({ building, x: round(centreOf.x), z: round(centreOf.z), surveyId: s.id, footprint: fp.map(roundPoint), ...(roofFinishOf({}, s) ? { roofKnown: true } : {}) });

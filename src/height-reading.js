@@ -46,14 +46,15 @@ function insidePolygon(p, q){
 }
 
 /** The grid's cells inside an outline (zone frame): [[i, j]…]. */
-function cellsInside(g, outline){
+function cellsInside(g, outline, holes = []){
   let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
   for (const p of outline) { x0 = Math.min(x0, p.x); z0 = Math.min(z0, p.z); x1 = Math.max(x1, p.x); z1 = Math.max(z1, p.z); }
   const out = [];
   const i0 = Math.max(0, Math.floor((x0 + g.halfSize) / g.step)), i1 = Math.min(g.n - 1, Math.floor((x1 + g.halfSize) / g.step));
   const j0 = Math.max(0, Math.floor((z0 + g.halfSize) / g.step)), j1 = Math.min(g.n - 1, Math.floor((z1 + g.halfSize) / g.step));
   for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
-    if (insidePolygon({ x: -g.halfSize + (i + 0.5) * g.step, z: -g.halfSize + (j + 0.5) * g.step }, outline)) out.push([i, j]);
+    const p = { x: -g.halfSize + (i + 0.5) * g.step, z: -g.halfSize + (j + 0.5) * g.step };
+    if (insidePolygon(p, outline) && !holes.some(h => insidePolygon(p, h))) out.push([i, j]);
   }
   return out;
 }
@@ -88,9 +89,10 @@ function hull(points){
  * its core: its edge, 1 m wide, aside), hipped or gabled (slopes across the main one), the ridge's
  * direction (unit {x, z}, across the main slope).
  */
-export function roofFromHeights(g, outline){
+export function roofFromHeights(g, outline, holes = []){
   if (!g || !outline || outline.length < 3) return null;
-  const cells = cellsInside(g, outline);
+  // Its courtyards aside (#484b): their ground and low sheds would read as a low eaves.
+  const cells = cellsInside(g, outline, holes);
   if (cells.length * g.step * g.step < 12) return null;
   const hs = cells.map(([i, j]) => at(g, i, j)).filter(v => ok(v) && v > 2).sort((a, b) => a - b);
   if (hs.length < 0.5 * cells.length) return null;

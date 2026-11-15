@@ -62,8 +62,15 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
 - **Sol** : `builtShare`, l'emprise des bâtiments sur celle de la zone ; à partir de 25 % (`BUILT_UP`), la
   zone est bâtie et le Sol de la Scène est `béton` (`ground`, posé en `panel.groundType`), sinon l'herbe
   par défaut. Parcs, jardins et autres Zones sont peints par-dessus.
-- **Écartés** : les relations (multipolygones), comptées dans `skipped.relations` ; les chemins illisibles
-  ou hors zone.
+- **Multipolygones de bâtiments** (relations `building` et `type=multipolygon`, demandées avec leur
+  géométrie) : leurs chemins membres raccordés en anneaux fermés (`ringsOf`) ; chaque anneau extérieur est un
+  bâtiment portant les balises de la relation, ses anneaux intérieurs ses COURS (6 m² ou plus, à 50 cm au moins
+  du contour : `courtyardsOf` en trace les murs à chaque niveau et fait de leur pièce un vide, `vide`, comme
+  les cours de l'éditeur ; le toit en fait le tour). Un bâtiment à cours n'est pas coupé en parties par les
+  hauteurs. Les anneaux intérieurs de la BD TOPO (`holes`, `readBdTopo`) sont les cours d'un bâtiment ajouté
+  d'après le relevé. La lecture du LiDAR les laisse de côté, et un toit monte jusqu'au milieu d'une aile
+  (`roofHalfSpan`), pas de l'îlot.
+- **Écartés** : les autres relations, comptées dans `skipped.relations` ; les chemins illisibles ou hors zone.
 - **Attribution** : `OSM_ATTRIBUTION` (« © OpenStreetMap contributors, ODbL »), à montrer dans les crédits
   de l'export.
 
@@ -133,8 +140,8 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    travers ; quatre pans quand les pentes en travers pèsent 12 % ou plus et que l'emprise est presque
    convexe, un L ou un U se lisant pareil), passé comme `lidar` du relevé : il passe AVANT les balises et le
    relevé (`levelsOf` : le nombre de niveaux d'OSM gardé, leur hauteur d'après l'égout mesuré ; `roofOf`,
-   `surveyedRoof` ; le `sens` du faîtage par `ridgeSense` ; la pente mesurée abaissée quand, sur la
-   demi-largeur étroite de l'emprise, elle monterait plus haut que le toit mesuré, sommet moins égout,
+   `surveyedRoof` ; le `sens` du faîtage par `ridgeSense` ; la pente mesurée abaissée quand,
+   montée jusqu'au milieu de la partie la plus large du toit, elle irait plus haut que le toit mesuré, sommet moins égout,
    `pitchWithin` : la pente médiane d'un îlot étalée sur 48 m faisait un toit aussi haut que l'immeuble ; sans
    mesure, la pente du pays abaissée de même pour qu'un toit ne monte pas de plus de 6 m, `MAX_GUESSED_RISE`).
    Après la lecture aérienne, chaque arbre prend sa

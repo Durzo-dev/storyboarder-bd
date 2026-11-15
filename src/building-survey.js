@@ -58,8 +58,8 @@ const digitsOf = (code) => [...String(code || '')].map(Number).filter(n => n >= 
 
 /**
  * The surveyed buildings of a BD TOPO WFS answer, in local metres around `centre` (x to the east, z to the
- * south): [{ id, footprint, area, centre, eaves, roofRise, use, walls, roof, light }]. `footprint`: the
- * outer ring of the first polygon, without its closing point. A feature without a usable footprint is left
+ * south): [{ id, footprint, holes, area, centre, eaves, roofRise, use, walls, roof, light }]. `footprint`: the
+ * outer ring of the first polygon, without its closing point; `holes`: its inner rings (courtyards), likewise. A feature without a usable footprint is left
  * out.
  */
 export function readBdTopo(geojson, centre){
@@ -76,9 +76,14 @@ export function readBdTopo(geojson, centre){
     const area = Math.abs(signedArea(pts));
     if (pts.length < 3 || area < 1) continue;
     const low = p.altitude_minimale_toit, high = p.altitude_maximale_toit;
+    // Its courtyards (#484b): the polygon's inner rings, without their closing point.
+    const inner = (g.type === 'MultiPolygon' ? g.coordinates?.[0] : g.coordinates || []).slice(1);
+    const holes = inner.map(r => (Array.isArray(r) ? r.map(c => (Array.isArray(c) && finite(c[0]) && finite(c[1]) ? toLocal({ lat: c[1], lon: c[0] }) : null)) : []))
+      .filter(r => r.length >= 4 && r.every(Boolean)).map(r => r.slice(0, -1));
     out.push({
       id: String(f.id || ''),
       footprint: pts,
+      holes,
       area,
       centre: centroidOf(pts),
       eaves: finite(p.hauteur) && p.hauteur > 0 ? p.hauteur : null,
@@ -142,14 +147,43 @@ function narrowWidth(footprint){
   return Number.isFinite(best) ? best : 0;
 }
 
+/** The distance from p to a closed ring's edges. */
+function distanceToRingOf(p, ring){
+  let d = Infinity;
+  for (let i = 0; i < ring.length; i++) {
+    const a = ring[i], b = ring[(i + 1) % ring.length], dx = b.x - a.x, dz = b.z - a.z, l2 = dx * dx + dz * dz;
+    const t = l2 > 0 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / l2)) : 0;
+    d = Math.min(d, Math.hypot(p.x - (a.x + t * dx), p.z - (a.z + t * dz)));
+  }
+  return d;
+}
+
 /**
- * A pitched roof rises over half its footprint's narrow width: on a wide one, a usual pitch makes it a slope as
- * high as the building (#484, seen on the quai de la Tournelle: a block of 48 × 55 m, its roof at 35° rising
- * 17 m, a striped plane taken for a wall). The pitch (degrees) lowered so the roof rises no more than `rise`
- * metres, 5° at the least; unchanged when it already does.
+ * How far a pitched roof climbs (m, flat): the farthest a point of the footprint is from its edges, courtyards
+ * (`holes`) included: a roof rises from every edge, so to the middle of its widest part, half a wing's depth
+ * round a courtyard. Sampled every metre (finer on a small footprint).
  */
-export function pitchWithin(pitch, rise, footprint){
-  const half = narrowWidth(footprint) / 2;
+export function roofHalfSpan(footprint, holes = []){
+  let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
+  for (const p of footprint) { x0 = Math.min(x0, p.x); z0 = Math.min(z0, p.z); x1 = Math.max(x1, p.x); z1 = Math.max(z1, p.z); }
+  const step = Math.max(0.25, Math.min(1, Math.min(x1 - x0, z1 - z0) / 20));
+  let best = 0;
+  for (let x = x0 + step / 2; x < x1; x += step) for (let z = z0 + step / 2; z < z1; z += step) {
+    const p = { x, z };
+    if (!insidePolygon(p, footprint) || holes.some(h => insidePolygon(p, h))) continue;
+    best = Math.max(best, Math.min(distanceToRingOf(p, footprint), ...holes.map(h => distanceToRingOf(p, h))));
+  }
+  return best;
+}
+
+/**
+ * A pitched roof climbs from its edges to the middle of its widest part (roofHalfSpan): on a wide footprint, a
+ * usual pitch makes it a slope as high as the building (#484, seen on the quai de la Tournelle: a block of
+ * 48 × 55 m, its courtyard lost, its roof at 35° rising 17 m, a striped plane taken for a wall). The pitch
+ * (degrees) lowered so the roof rises no more than `rise` metres, 5° at the least; unchanged when it already does.
+ */
+export function pitchWithin(pitch, rise, footprint, holes = []){
+  const half = roofHalfSpan(footprint, holes);
   if (!(half > 0.5) || !(rise > 0)) return pitch;
   const most = Math.atan(rise / half) * 180 / Math.PI;
   return most >= pitch ? pitch : Math.max(5, Math.round(most));
@@ -162,12 +196,12 @@ export const MAX_GUESSED_RISE = 6;
  * The roof from the survey: flat when it rises less than 0.5 m; else its pitch (degrees, 10 to 60) from its
  * height over half the footprint's narrow width. null when the survey says nothing of the roof.
  */
-export function surveyedRoof(survey, footprint){
+export function surveyedRoof(survey, footprint, holes = []){
   // The LiDAR's reading (height-reading.js) first: measured, not deduced.
   const l = survey && survey.lidar;
   // Its pitch as measured, but no higher than the roof it measured (top over eaves): the median slope of a
   // mansard or of a few steep parts, spread over a whole block, would raise the roof far above it.
-  if (l) return l.flat ? { flat: true, lidar: true } : { flat: false, pitch: finite(l.top) && finite(l.eaves) ? pitchWithin(l.pitch, l.top - l.eaves, footprint) : l.pitch, hip: !!l.hip, ridge: l.ridge || null, lidar: true };
+  if (l) return l.flat ? { flat: true, lidar: true } : { flat: false, pitch: finite(l.top) && finite(l.eaves) ? pitchWithin(l.pitch, l.top - l.eaves, footprint, holes) : l.pitch, hip: !!l.hip, ridge: l.ridge || null, lidar: true };
   if (!survey || !finite(survey.roofRise)) return null;
   if (survey.roofRise < 0.5) return { flat: true };
   const half = narrowWidth(footprint) / 2;
