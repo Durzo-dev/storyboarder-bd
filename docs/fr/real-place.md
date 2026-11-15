@@ -150,6 +150,11 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    quand quelque chose en a été lu. Puis le relief : `planRelief` pour le pays, ses requêtes envoyées
    par `realplace:altitudes` (seulement vers `ALTITUDE_HOSTS`, au rythme du fournisseur), `assemble` ; en cas
    d'échec le fournisseur suivant, et sans aucun un Sol plat.
+   Avant les modèles, chaque élément est écarté des bâtiments et des tracés qui barrent le passage
+   (`clearOfObstacles`, placement-clearance.js : emprises gardées sur les bâtiments traduits, `footprint` ; routes,
+   rivières, murets, clôtures, haies et barrières, leur demi-largeur ; trottoirs et chemins ne sont pas des
+   obstacles) : poussé à l'endroit le plus proche, à 1 m d'écart pour un arbre, 0,4 m pour le reste, et retiré
+   quand cet endroit est à plus de 4 m.
 4. `sceneContentOf` : Zones et Tracés (`pathObject`, `zoneObject`, nommés par `nomDuTrace`), le relief
    (`reliefDepuisAltitudes` : base au milieu de l'étendue, bords ramenés à 0 sur 20 m pour rejoindre le Sol
    plat), les crédits.

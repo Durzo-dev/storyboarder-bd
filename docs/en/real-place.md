@@ -136,6 +136,11 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    when something was read. Then the relief: `planRelief` for the country, its requests sent by
    `realplace:altitudes` (only to `ALTITUDE_HOSTS`, at the provider's rate), `assemble`; on failure the next
    provider, and with none a flat Ground.
+   Before the models, every element stands clear of the buildings and of the paths that bar the way
+   (`clearOfObstacles`, placement-clearance.js: footprints kept on the translated buildings as `footprint`;
+   roads, rivers, low walls, fences, hedges and barriers, their half width; pavements and footpaths are no
+   obstacle): pushed to the nearest place 1 m clear for a tree, 0.4 m for anything else, and left out when that
+   place is more than 4 m away.
 4. `sceneContentOf`: Zones and Paths (`pathObject`, `zoneObject`, named by `nomDuTrace`), the relief
    (`reliefDepuisAltitudes`: base at the middle of the range, edges blended to 0 over 20 m to meet the flat
    Ground), the credits.
