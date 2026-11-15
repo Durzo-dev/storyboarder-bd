@@ -1,0 +1,742 @@
+[
+ {
+  "file": "erable-1.glb",
+  "name": "Maple Tree",
+  "facesBefore": 20921,
+  "faces": 20921,
+  "mb": 2.1,
+  "size": [
+   4.95,
+   5.78,
+   4.5
+  ]
+ },
+ {
+  "file": "erable-2.glb",
+  "name": "Maple tree",
+  "facesBefore": 7112,
+  "faces": 7112,
+  "mb": 1.1,
+  "size": [
+   3.79,
+   5.58,
+   3.54
+  ]
+ },
+ {
+  "file": "bouleau-1.glb",
+  "name": "Birch tree",
+  "facesBefore": 7413,
+  "faces": 7413,
+  "mb": 1.5,
+  "size": [
+   5.46,
+   8.16,
+   4.35
+  ]
+ },
+ {
+  "file": "bouleau-2.glb",
+  "name": "Gt 016 Birch 06",
+  "facesBefore": 74121,
+  "faces": 72371,
+  "mb": 1.9,
+  "size": [
+   6.22,
+   10.65,
+   5.6
+  ]
+ },
+ {
+  "file": "bouleau-3.glb",
+  "name": "Gt 016 Birch 05",
+  "facesBefore": 82252,
+  "faces": 80310,
+  "mb": 2.1,
+  "size": [
+   6.16,
+   11.19,
+   5.77
+  ]
+ },
+ {
+  "file": "peuplier-1.glb",
+  "name": "Poplar tree",
+  "facesBefore": 26415,
+  "faces": 26415,
+  "mb": 1.3,
+  "size": [
+   10.32,
+   16.38,
+   10.36
+  ]
+ },
+ {
+  "file": "peuplier-2.glb",
+  "error": "too heavy: 1552416 faces (a plant is never simplified)"
+ },
+ {
+  "file": "peuplier-3.glb",
+  "name": "POPLAR TREE - HIGHT TEXTURE LOW-POLY MODEL",
+  "facesBefore": 5762,
+  "faces": 5762,
+  "mb": 2.1,
+  "size": [
+   300.66,
+   1193.82,
+   338.21
+  ]
+ },
+ {
+  "file": "peuplier-4.glb",
+  "name": "Poplar tree",
+  "facesBefore": 31288,
+  "faces": 31288,
+  "mb": 1.2,
+  "size": [
+   7.22,
+   25.68,
+   7.51
+  ]
+ },
+ {
+  "file": "saule-1.glb",
+  "name": "Willow",
+  "facesBefore": 9082,
+  "faces": 9082,
+  "mb": 1.5,
+  "size": [
+   8.3,
+   7.73,
+   8.1
+  ]
+ },
+ {
+  "file": "saule-2.glb",
+  "name": "Silver willow tree",
+  "facesBefore": 30524,
+  "faces": 30524,
+  "mb": 1.4,
+  "size": [
+   11.58,
+   15.2,
+   14
+  ]
+ },
+ {
+  "file": "cerisier-1.glb",
+  "name": "Japanese Cherry Tree (low-Poly)",
+  "facesBefore": 5036,
+  "faces": 5036,
+  "mb": 3.1,
+  "size": [
+   10.73,
+   9.23,
+   10.69
+  ]
+ },
+ {
+  "file": "cerisier-2.glb",
+  "error": "too heavy: 740596 faces (a plant is never simplified)"
+ },
+ {
+  "file": "cerisier-3.glb",
+  "error": "too heavy: 3153420 faces (a plant is never simplified)"
+ },
+ {
+  "file": "pin-1.glb",
+  "name": "Pine Tree",
+  "facesBefore": 5627,
+  "faces": 5627,
+  "mb": 1.5,
+  "size": [
+   2.18,
+   5.32,
+   2.17
+  ]
+ },
+ {
+  "file": "pin-2.glb",
+  "name": "Pine Tree",
+  "facesBefore": 437500,
+  "faces": 437500,
+  "mb": 5.7,
+  "size": [
+   23.07,
+   47.69,
+   25.03
+  ]
+ },
+ {
+  "file": "pin-3.glb",
+  "name": "Pine Tree",
+  "facesBefore": 64041,
+  "faces": 64041,
+  "mb": 0.7,
+  "size": [
+   333.63,
+   525.95,
+   357.65
+  ]
+ },
+ {
+  "file": "sapin-1.glb",
+  "name": "Fir tree",
+  "facesBefore": 4455,
+  "faces": 4455,
+  "mb": 1.8,
+  "size": [
+   2.39,
+   4.39,
+   2.37
+  ]
+ },
+ {
+  "file": "sapin-2.glb",
+  "name": "Fir Tree",
+  "facesBefore": 111104,
+  "faces": 111104,
+  "mb": 1.9,
+  "size": [
+   2.81,
+   3.59,
+   2.79
+  ]
+ },
+ {
+  "file": "epicea-1.glb",
+  "name": "Spruce",
+  "facesBefore": 7822,
+  "faces": 7822,
+  "mb": 1.9,
+  "size": [
+   3.22,
+   10.52,
+   3.16
+  ]
+ },
+ {
+  "file": "epicea-2.glb",
+  "name": "Spruce tree",
+  "facesBefore": 10387,
+  "faces": 10387,
+  "mb": 1.4,
+  "size": [
+   8.1,
+   17.42,
+   8.42
+  ]
+ },
+ {
+  "file": "palmier-dattier-1.glb",
+  "name": "Date Palm",
+  "facesBefore": 9941,
+  "faces": 9941,
+  "mb": 1.6,
+  "size": [
+   5.46,
+   7.34,
+   5.21
+  ]
+ },
+ {
+  "file": "palmier-dattier-2.glb",
+  "name": "Palm Tree Realistic",
+  "facesBefore": 1812,
+  "faces": 1812,
+  "mb": 1,
+  "size": [
+   3.68,
+   7.16,
+   3.63
+  ]
+ },
+ {
+  "file": "palmier-dattier-3.glb",
+  "name": "Plant Series – Palm Tree",
+  "facesBefore": 3392,
+  "faces": 3280,
+  "mb": 1.1,
+  "size": [
+   4.31,
+   9.27,
+   4.64
+  ]
+ },
+ {
+  "file": "palmier-nain-1.glb",
+  "name": "Realistic HD Mediterranean fan palm (16/30)",
+  "facesBefore": 4842,
+  "faces": 4842,
+  "mb": 2.4,
+  "size": [
+   0.86,
+   0.75,
+   0.87
+  ]
+ },
+ {
+  "file": "palmier-nain-2.glb",
+  "name": "Realistic HD Mediterranean fan palm (19/30)",
+  "facesBefore": 8126,
+  "faces": 8126,
+  "mb": 2.5,
+  "size": [
+   1.44,
+   1.69,
+   1.52
+  ]
+ },
+ {
+  "file": "arbuste-2.glb",
+  "name": "GameReady Bush",
+  "facesBefore": 39600,
+  "faces": 39600,
+  "mb": 1.7,
+  "size": [
+   29.35,
+   28.25,
+   29.49
+  ]
+ },
+ {
+  "file": "banc-1.glb",
+  "name": "Bench_ Park - 4MB",
+  "facesBefore": 19524,
+  "faces": 19524,
+  "mb": 0.5,
+  "size": [
+   2.36,
+   1.32,
+   1.04
+  ]
+ },
+ {
+  "file": "banc-2.glb",
+  "name": "Simple Park Bench",
+  "facesBefore": 2864,
+  "faces": 2864,
+  "mb": 0.1,
+  "size": [
+   7.06,
+   9.62,
+   19.98
+  ]
+ },
+ {
+  "file": "banc-3.glb",
+  "name": "Park Bench",
+  "facesBefore": 4736,
+  "faces": 4736,
+  "mb": 0.4,
+  "size": [
+   0.71,
+   0.91,
+   2.01
+  ]
+ },
+ {
+  "file": "lampadaire-1.glb",
+  "name": "Street Lamp",
+  "facesBefore": 7810,
+  "faces": 7810,
+  "mb": 0.2,
+  "size": [
+   7.11,
+   48.78,
+   3.21
+  ]
+ },
+ {
+  "file": "lampadaire-2.glb",
+  "name": "Street light Lamp spotlight - 10MB",
+  "facesBefore": 14120,
+  "faces": 14120,
+  "mb": 0.4,
+  "size": [
+   0.44,
+   5,
+   1.13
+  ]
+ },
+ {
+  "file": "borne-1.glb",
+  "name": "Street Bollard",
+  "facesBefore": 1504,
+  "faces": 1504,
+  "mb": 0.7,
+  "size": [
+   0.45,
+   2,
+   0.45
+  ]
+ },
+ {
+  "file": "borne-2.glb",
+  "name": "Traffic Bollard",
+  "facesBefore": 94069,
+  "faces": 94067,
+  "mb": 5.1,
+  "size": [
+   0.31,
+   0.63,
+   0.27
+  ]
+ },
+ {
+  "file": "borne-3.glb",
+  "name": "Bollard Pudding Lane",
+  "facesBefore": 98608,
+  "faces": 60070,
+  "mb": 0.4,
+  "size": [
+   3.93,
+   12.65,
+   4.51
+  ]
+ },
+ {
+  "file": "borne-4.glb",
+  "name": "Bollard coated with small stones",
+  "facesBefore": 249000,
+  "faces": 61130,
+  "mb": 0.9,
+  "size": [
+   17.49,
+   25.16,
+   17.33
+  ]
+ },
+ {
+  "file": "poubelle-1.glb",
+  "name": "Litter Bin 1",
+  "facesBefore": 892,
+  "faces": 892,
+  "mb": 0.6,
+  "size": [
+   3.75,
+   7.95,
+   3.75
+  ]
+ },
+ {
+  "file": "poubelle-2.glb",
+  "name": "Litter Bin #3",
+  "facesBefore": 650,
+  "faces": 650,
+  "mb": 0.2,
+  "size": [
+   0.63,
+   1.2,
+   0.63
+  ]
+ },
+ {
+  "file": "fontaine-1.glb",
+  "name": "Fountain",
+  "facesBefore": 2984,
+  "faces": 2836,
+  "mb": 2.4,
+  "size": [
+   682.39,
+   381.16,
+   672.02
+  ]
+ },
+ {
+  "file": "fontaine-2.glb",
+  "name": "Fountain",
+  "facesBefore": 6734,
+  "faces": 6734,
+  "mb": 0.3,
+  "size": [
+   822.07,
+   643.45,
+   822.07
+  ]
+ },
+ {
+  "file": "abribus-1.glb",
+  "name": "Bus stop",
+  "facesBefore": 4036,
+  "faces": 4036,
+  "mb": 0.4,
+  "size": [
+   3.81,
+   2.52,
+   1.61
+  ]
+ },
+ {
+  "file": "abribus-2.glb",
+  "name": "Old Bus Shelter",
+  "facesBefore": 900,
+  "faces": 900,
+  "mb": 0.3,
+  "size": [
+   1.47,
+   3.03,
+   4.63
+  ]
+ },
+ {
+  "file": "abribus-3.glb",
+  "name": "Modern Bus Stop Shelter",
+  "facesBefore": 4840,
+  "faces": 4840,
+  "mb": 0.7,
+  "size": [
+   3.39,
+   2.2,
+   1.28
+  ]
+ },
+ {
+  "file": "abribus-4.glb",
+  "name": "Outdated Soviet Bus Stop",
+  "facesBefore": 3531,
+  "faces": 3531,
+  "mb": 0.3,
+  "size": [
+   2.46,
+   2.01,
+   0.93
+  ]
+ },
+ {
+  "file": "platane-1.glb",
+  "name": "Platano_tree",
+  "facesBefore": 143586,
+  "faces": 143586,
+  "mb": 4.1,
+  "size": [
+   351.55,
+   645.84,
+   364.66
+  ]
+ },
+ {
+  "file": "tilleul-1.glb",
+  "name": "Linden tree",
+  "facesBefore": 46236,
+  "faces": 46236,
+  "mb": 1.8,
+  "size": [
+   10.12,
+   18.04,
+   10.4
+  ]
+ },
+ {
+  "file": "tilleul-2.glb",
+  "name": "Linden Tree (high-Poly)",
+  "facesBefore": 132305,
+  "faces": 132305,
+  "mb": 1.7,
+  "size": [
+   10.59,
+   11.86,
+   10.4
+  ]
+ },
+ {
+  "file": "marronnier-1.glb",
+  "name": "Realistic HD Red horse chestnut (28/30)",
+  "facesBefore": 188581,
+  "faces": 188581,
+  "mb": 7.2,
+  "size": [
+   8.38,
+   8.55,
+   8.24
+  ]
+ },
+ {
+  "file": "marronnier-2.glb",
+  "name": "Realistic HD Red horse chestnut (27/30)",
+  "facesBefore": 105664,
+  "faces": 105664,
+  "mb": 4.3,
+  "size": [
+   6.2,
+   6.26,
+   6.26
+  ]
+ },
+ {
+  "file": "marronnier-3.glb",
+  "name": "Realistic HD Red horse chestnut (30/30)",
+  "facesBefore": 434053,
+  "faces": 434053,
+  "mb": 12.2,
+  "size": [
+   11.54,
+   12.88,
+   11.66
+  ]
+ },
+ {
+  "file": "chene-1.glb",
+  "name": "Old Oak Tree",
+  "facesBefore": 315542,
+  "faces": 315542,
+  "mb": 6.9,
+  "size": [
+   37.98,
+   32.5,
+   36.47
+  ]
+ },
+ {
+  "file": "chene-2.glb",
+  "name": "Petiolate oak tree",
+  "facesBefore": 27352,
+  "faces": 27352,
+  "mb": 1.6,
+  "size": [
+   22.98,
+   24.2,
+   23.31
+  ]
+ },
+ {
+  "file": "cedre-1.glb",
+  "name": "Cedar tree",
+  "facesBefore": 20695,
+  "faces": 20695,
+  "mb": 1.9,
+  "size": [
+   11.03,
+   17.44,
+   10.46
+  ]
+ },
+ {
+  "file": "cedre-2.glb",
+  "name": "cedar",
+  "facesBefore": 84330,
+  "faces": 84330,
+  "mb": 4,
+  "size": [
+   14.58,
+   34.13,
+   14.86
+  ]
+ },
+ {
+  "file": "cypres-1.glb",
+  "name": "Cypress tree",
+  "facesBefore": 29205,
+  "faces": 29205,
+  "mb": 2.5,
+  "size": [
+   1.66,
+   5.31,
+   1.49
+  ]
+ },
+ {
+  "file": "cypres-2.glb",
+  "name": "Italian Cipres",
+  "facesBefore": 428780,
+  "faces": 428780,
+  "mb": 3.6,
+  "size": [
+   1.15,
+   6,
+   1.24
+  ]
+ },
+ {
+  "file": "olivier-1.glb",
+  "name": "Olive Tree Portugal",
+  "facesBefore": 78195,
+  "faces": 78195,
+  "mb": 5.2,
+  "size": [
+   10.75,
+   11.68,
+   11.53
+  ]
+ },
+ {
+  "file": "olivier-2.glb",
+  "error": "too heavy: 935211 faces (a plant is never simplified)"
+ },
+ {
+  "file": "buisson-1.glb",
+  "error": "too heavy: 539134 faces (a plant is never simplified)"
+ },
+ {
+  "file": "buisson-2.glb",
+  "name": "Realistic Bush/Tree (Dwarf Umbrella)",
+  "facesBefore": 388742,
+  "faces": 388742,
+  "mb": 7.7,
+  "size": [
+   7.23,
+   4.1,
+   7.79
+  ]
+ },
+ {
+  "file": "buisson-3.glb",
+  "name": "Photorealistic Bush",
+  "facesBefore": 135433,
+  "faces": 135433,
+  "mb": 5,
+  "size": [
+   1.47,
+   1.5,
+   1.56
+  ]
+ },
+ {
+  "file": "buisson-4.glb",
+  "name": "Realistic HD Yellow bush lupine (1/25)",
+  "facesBefore": 85097,
+  "faces": 85097,
+  "mb": 3,
+  "size": [
+   1.24,
+   0.74,
+   1.18
+  ]
+ },
+ {
+  "file": "buisson-5.glb",
+  "name": "Realistic HD Yellow bush lupine (19/25)",
+  "facesBefore": 131943,
+  "faces": 131943,
+  "mb": 4.5,
+  "size": [
+   2.69,
+   1.21,
+   2.53
+  ]
+ },
+ {
+  "file": "palmier-washingtonia-1.glb",
+  "name": "Washingtonia Robusta Palm_02",
+  "facesBefore": 201622,
+  "faces": 201622,
+  "mb": 9.8,
+  "size": [
+   3.13,
+   7.42,
+   2.98
+  ]
+ },
+ {
+  "file": "palmier-washingtonia-2.glb",
+  "name": "Washingtonia Robusta Palm_03",
+  "facesBefore": 190214,
+  "faces": 190214,
+  "mb": 9.5,
+  "size": [
+   2.9,
+   5.39,
+   2.9
+  ]
+ }
+]
