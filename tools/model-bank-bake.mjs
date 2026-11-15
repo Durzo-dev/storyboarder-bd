@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import { dedup, prune, weld, simplify, meshopt, getBounds } from '@gltf-transform/functions';
-import { MeshoptSimplifier, MeshoptEncoder } from 'meshoptimizer';
+import { MeshoptSimplifier, MeshoptEncoder, MeshoptDecoder } from 'meshoptimizer';
 import { app, nativeImage } from 'electron';
 
 /**
@@ -99,13 +99,15 @@ function facesOf(doc){
 async function bake(){
   await MeshoptSimplifier.ready;
   await MeshoptEncoder.ready;
+  await MeshoptDecoder.ready;
   const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
   const work = path.join(root, 'model-bank'), bank = path.join(root, 'assets', 'model-bank');
   fs.mkdirSync(bank, { recursive: true });
   // Made anew: a model left out must not stay shipped from an earlier bake.
   for (const f of fs.readdirSync(bank)) if (f.endsWith('.glb')) fs.unlinkSync(path.join(bank, f));
   const { models } = JSON.parse(fs.readFileSync(path.join(work, 'sources.json'), 'utf8'));
-  const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
+  // The encoder is the writer's (seen without: « Cannot read properties of undefined (reading 'encodeGltfBuffer') »).
+  const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'meshopt.encoder': MeshoptEncoder, 'meshopt.decoder': MeshoptDecoder });
 
 
   const report = [], data = [];
