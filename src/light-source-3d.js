@@ -313,6 +313,8 @@ export const CHAMPS_FICHE_LUMIERE = {
   objectDoorAngleField: false,
   objectWindowField: false,
   objectWindowAngleField: false,
+  objectEssenceField: false,       // l'essence d'un arbre (EZ-Tree) : une source n'en a pas
+  objectVarianteField: false,
   objectSizeField: true,           // l'enveloppe reste : elle porte la hauteur, ci-dessous
   objectHeightField: true,         // → « Diamètre de la sphère (m) »
   objectSizePercentField: false,   // le pourcentage, doublon de la hauteur : cf. ci-dessus

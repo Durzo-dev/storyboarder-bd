@@ -801,6 +801,8 @@ export const I18N_PREV_LABEL = [
   ['objectWallLengthInput', 'Wall length', 'Longueur du mur'],
   ['objectWallHeightInput', 'Wall height', 'Hauteur du mur'],
   ['objectDoorStateSelect', 'Door opening', 'Ouverture de la porte'],
+  ['objectEssenceSelect', 'Species', 'Essence'],
+  ['objectVarianteSelect', 'Variant', 'Variante'],
   ['objectDoorAngleInput', 'Opening angle', "Angle d'ouverture"],
   ['objectWindowStateSelect', 'Window opening', 'Ouverture de la fenêtre'],
   ['objectWindowAngleInput', 'Opening angle', "Angle d'ouverture"],

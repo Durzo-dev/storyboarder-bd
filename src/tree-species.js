@@ -123,23 +123,23 @@ function cypressSpray({ colours = ['#2f4f27', '#3a5f2e', '#456d33'], tip = '#7d9
   return c;
 }
 
-/** The species: `from` (an EZ-Tree preset), the Element's `type`, its usual `height` in a town (m, its sheet),
+/** The species: `from` (an EZ-Tree preset), its `label` (the sheet's « Essence » list), the Element's `type`, its usual `height` in a town (m, its sheet),
  * its `genus` (OSM, GBIF), `set(options)`, the bark (Poly Haven id), its tint, the foliage drawn
  * (`foliage(seed, makeCanvas)`). */
 export const SPECIES = {
-  Platane: { from: 'Oak Large', type: 'arbre', height: 18, genus: 'Platanus',
+  Platane: { from: 'Oak Large', label: { fr: 'Platane', en: 'Plane' }, type: 'arbre', height: 18, genus: 'Platanus',
     bark: BARK('bark_platanus'), barkTint: 0xffffff,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'plane', colours: ['#4f8a3e', '#5a9445', '#467d37'], n: 6, size: 110, seed }),
     set(o){ o.branch.length[0] = 60; o.branch.angle[1] = 40; o.branch.children[0] = 8; o.branch.radius[0] = 3.4; o.branch.force.strength = 0.015; o.leaves.size = 8; o.leaves.count = 12; } },
-  Tilleul: { from: 'Ash Large', type: 'arbre', height: 14, genus: 'Tilia',
+  Tilleul: { from: 'Ash Large', label: { fr: 'Tilleul', en: 'Linden' }, type: 'arbre', height: 14, genus: 'Tilia',
     bark: BARK('tree_bark_03'), barkTint: 0xd8d4cc,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'linden', colours: ['#4e8a35', '#5c9a3f', '#447a2f'], n: 7, size: 62, seed }),
     set(o){ o.branch.angle[1] = 50; o.branch.angle[2] = 45; o.branch.force.strength = 0.025; o.leaves.size = 5; o.leaves.count = 12; } },
-  Cypres: { from: 'Pine Medium', type: 'cypres', height: 14, genus: 'Cupressus',
+  Cypres: { from: 'Pine Medium', label: { fr: 'Cyprès', en: 'Cypress' }, type: 'cypres', height: 14, genus: 'Cupressus',
     bark: BARK('chinese_cedar_bark'), barkTint: 0xffffff,
     foliage: (seed, makeCanvas) => cypressSpray({ seed, makeCanvas }),
     set(o){ o.branch.length[0] = 70; o.branch.angle[1] = 16; o.branch.length[1] = 13; o.branch.children[0] = 80; o.branch.start[1] = 0.03; o.branch.force.strength = 0.08; o.leaves.size = 8; o.leaves.count = 18; o.leaves.angle = 8; } },
-  Olivier: { from: 'Oak Small', type: 'olivier', height: 6, genus: 'Olea',
+  Olivier: { from: 'Oak Small', label: { fr: 'Olivier', en: 'Olive' }, type: 'olivier', height: 6, genus: 'Olea',
     bark: BARK('bark_willow_02'), barkTint: 0xcfcabd,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'olive', colours: ['#55634a', '#5f6d50', '#4d5a42'], under: '#b3bba4', n: 11, size: 68, opposite: true, spread: 0.8, seed }),
     set(o){ o.branch.length[0] = 18; o.branch.radius[0] = 3; o.branch.start[1] = 0.5; o.branch.gnarliness[0] = 0.3; o.branch.gnarliness[1] = 0.35; o.branch.twist[0] = 0.5; o.branch.angle[1] = 58; o.branch.length[1] = 20; o.branch.children[0] = 7; o.branch.force.strength = -0.01; o.leaves.size = 4.5; o.leaves.count = 16; o.leaves.start = 0.3; o.leaves.alphaTest = 0.3; } },
@@ -155,4 +155,9 @@ export function speciesFor(objType, genus){
   if (byGenus && (byGenus[1].type === objType || objType === 'arbre')) return byGenus[0];
   const byType = objType !== 'arbre' && all.find(([, sp]) => sp.type === objType);
   return byType ? byType[0] : null;
+}
+
+/** The species an Element of `objType` may take (the sheet's « Essence » list): keys of SPECIES. */
+export function speciesOfType(objType){
+  return Object.keys(SPECIES).filter(k => SPECIES[k].type === objType);
 }

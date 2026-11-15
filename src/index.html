@@ -2486,6 +2486,16 @@
             <input type="range" id="objectWindowAngleInput" min="5" max="170" step="1" value="58">
           </div>
         </div>
+        <!-- Un arbre généré par EZ-Tree : son essence (vide = l'arbre simple) et sa variante. Options remplies par
+             events.js selon le Type (src/tree-species.js). -->
+        <div id="objectEssenceField" style="display:none;">
+          <label class="modal-field-label">Essence</label>
+          <select id="objectEssenceSelect"></select>
+          <div id="objectVarianteField">
+            <label class="modal-field-label">Variante</label>
+            <select id="objectVarianteSelect"></select>
+          </div>
+        </div>
         <div id="objectSizeField">
           <!-- LA HAUTEUR D'ABORD, LE CURSEUR ENSUITE. Ordre demandé, et c'est aussi celui des
                données : `realHeightFloor` est la valeur enregistrée, le pourcentage n'en est qu'une

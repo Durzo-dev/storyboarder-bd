@@ -12,7 +12,7 @@ globalThis.THREE = THREE;
 const { Tree, TreeOptions, EZ_TREE_VERSION } = await import('../src/vendor/ez-tree/ez-tree.js');
 const { TREE_PRESETS } = await import('../src/vendor/ez-tree/presets.js');
 const { generateSpeciesTree, speciesTree, barkRepeat, speciesOptions } = await import('../src/ez-trees.js');
-const { SPECIES, speciesFor } = await import('../src/tree-species.js');
+const { SPECIES, speciesFor, speciesOfType } = await import('../src/tree-species.js');
 
 /** A canvas that draws nothing (Node has none): every method of its context does nothing. */
 const fakeCanvas = (size) => {
@@ -110,4 +110,11 @@ test('the species of a tree: its genus first, else its type', () => {
   assert.equal(speciesFor('olivier', null), 'Olivier');
   assert.equal(speciesFor('arbre', 'Olea'), 'Olivier');
   assert.equal(speciesFor('conifere', 'Olea'), null);
+});
+
+test('the sheet\'s « Essence » list: the species of the type, none for another', () => {
+  assert.deepEqual(speciesOfType('arbre'), ['Platane', 'Tilleul']);
+  assert.deepEqual(speciesOfType('olivier'), ['Olivier']);
+  assert.deepEqual(speciesOfType('voiture'), []);
+  for (const k of Object.keys(SPECIES)) assert.ok(SPECIES[k].label.fr && SPECIES[k].label.en, k);
 });

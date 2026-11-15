@@ -22,6 +22,7 @@ import { morceauxSurlignes } from './manuel-recherche.js';
  */
 
 import { S, currentPage, tr } from './state.js';
+import { SPECIES, VARIANTS, speciesOfType } from './tree-species.js';
 import { isImportedModel } from './model-store.js';
 import { getLoadedModel } from './model-cache.js';
 import {
@@ -102,6 +103,10 @@ const objectDoorAngleField = document.getElementById('objectDoorAngleField');
 const objectDoorAngleInput = document.getElementById('objectDoorAngleInput');
 const objectDoorField = document.getElementById('objectDoorField');
 const objectDoorStateSelect = document.getElementById('objectDoorStateSelect');
+const objectEssenceField = document.getElementById('objectEssenceField');
+const objectEssenceSelect = document.getElementById('objectEssenceSelect');
+const objectVarianteField = document.getElementById('objectVarianteField');
+const objectVarianteSelect = document.getElementById('objectVarianteSelect');
 const objectGroundMagnetCheckbox = document.getElementById('objectGroundMagnetCheckbox');
 const objectGroundMagnetField = document.getElementById('objectGroundMagnetField');
 const objectHidden3dCheckbox = document.getElementById('objectHidden3dCheckbox');
@@ -1200,6 +1205,34 @@ export function ecrireChoixEgares(cible, afficher){
   else delete cible.afficherMaillagesEgares;
 }
 
+/**
+ * The « Essence » field of a tree (#480g): shown for a type that has species (src/tree-species.js), its list
+ * remade for that type (first « Simple », the built-in tree), its variant shown only with a species. Called when
+ * the sheet opens and when its Type changes.
+ */
+function option(texte, valeur){
+  const o = document.createElement('option');
+  o.value = valeur; o.textContent = texte;
+  return o;
+}
+
+export function remplirChampEssence(objType, essence, variante){
+  const especes = speciesOfType(objType);
+  objectEssenceField.style.display = especes.length ? '' : 'none';
+  if (!objectVarianteSelect.options.length) {
+    for (let v = 1; v <= VARIANTS; v++) objectVarianteSelect.add(option(String(v), String(v)));
+  }
+  const cle = objType + '|' + S.appLang;
+  if (objectEssenceSelect.dataset.cle !== cle) {
+    objectEssenceSelect.dataset.cle = cle;
+    objectEssenceSelect.replaceChildren(option(tr('Simple', 'Simple'), ''),
+      ...especes.map(k => option(SPECIES[k].label[S.appLang === 'en' ? 'en' : 'fr'], k)));
+  }
+  objectEssenceSelect.value = especes.includes(essence) ? essence : '';
+  objectVarianteSelect.value = String(variante || 1);
+  objectVarianteField.style.display = objectEssenceSelect.value ? '' : 'none';
+}
+
 export function openObjectModal(obj, isNew){
   // #454a-4 : un bâtiment placé n'a pas de fiche d'objet ; tous les chemins qui l'ouvriraient
   // (double-clic, Entrée, menu) mènent à l'Éditeur de bâtiment, sur sa copie.
@@ -1269,6 +1302,7 @@ export function openObjectModal(obj, isNew){
     objectWallSizeField.style.display = 'none';
     objectSizeField.style.display = '';
   }
+  remplirChampEssence(obj.objType, obj.essence, obj.variante);
   // An open Door additionally offers the opening direction (left/right) or closing it again,
   // without having to change the Element Type.
   if (obj.objType === 'porte_ouverte') {
@@ -1437,9 +1471,9 @@ export function refreshObjectPreview(){
     // La figure du BROUILLON : changer de Modèle doit se voir avant d'enregistrer. ⚠️ Aucun test ne
     // couvre cette ligne, l'aperçu passe par WebGL, injoignable sous Node (cf. docs/en/testing-method.md).
     modelFile: _estModele ? (S.modalDraftModelFile || S.modalTarget.modelFile) : undefined,
-    // Un arbre d'EZ-Tree (#480g) : son essence et sa variante (rig3d ne les suit que pour le type de l'essence).
-    essence: S.modalTarget.essence,
-    variante: S.modalTarget.variante,
+    // Un arbre d'EZ-Tree (#480g) : l'essence et la variante du BROUILLON (rig3d ne les suit que pour le type de l'essence).
+    essence: objectEssenceSelect.value || undefined,
+    variante: Number(objectVarianteSelect.value) || 1,
     // ⚠️ LA COULEUR DU BROUILLON POUR UNE LUMIÈRE. Sa couleur EST son réglage principal : l'aperçu
     // doit la montrer AVANT d'enregistrer, comme il montre déjà la pose du brouillon. Lire
     // `S.modalTarget.color` revenait à peindre avec la valeur d'avant le réglage, et l'aperçu

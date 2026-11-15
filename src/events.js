@@ -216,7 +216,7 @@ import {
 
   arrondiCm3D,
 
-  openHelpModal, closeHelpModal, rafraichirManuelOuvert,
+  openHelpModal, closeHelpModal, rafraichirManuelOuvert, remplirChampEssence,
 } from './modals.js';
 setModalsCallbacks({ snapshot, editerBatimentPlace, redessiner: () => drawCurrentPage() });
 // Collapses/expands a section of the Persona/Object modal (cf. .modal-section, per user
@@ -6431,6 +6431,10 @@ const objectMagnetWallField = document.getElementById('objectMagnetWallField');
 const objectMagnetWallSelect = document.getElementById('objectMagnetWallSelect');
 const objectDoorField = document.getElementById('objectDoorField');
 const objectDoorStateSelect = document.getElementById('objectDoorStateSelect');
+const objectEssenceField = document.getElementById('objectEssenceField');
+const objectEssenceSelect = document.getElementById('objectEssenceSelect');
+const objectVarianteField = document.getElementById('objectVarianteField');
+const objectVarianteSelect = document.getElementById('objectVarianteSelect');
 const objectDoorAngleField = document.getElementById('objectDoorAngleField');
 const objectDoorAngleInput = document.getElementById('objectDoorAngleInput');
 const objectWindowField = document.getElementById('objectWindowField');
@@ -6753,6 +6757,7 @@ objectTypeSelect.addEventListener('change', () => {
   objectModalTitle.textContent = libelleTypeObjet3D(objectTypeSelect.value, tr) || tr('Object', 'Objet');
   objectDoorField.style.display = (objectTypeSelect.value === 'porte_ouverte') ? '' : 'none';
   objectWindowField.style.display = (objectTypeSelect.value === 'fenetre_ouverte') ? '' : 'none';
+  remplirChampEssence(objectTypeSelect.value, objectEssenceSelect.value, Number(objectVarianteSelect.value));
   objectTraversantField.style.display = TRAVERSANT_TYPES.includes(objectTypeSelect.value) ? '' : 'none';
   objectGroundMagnetField.style.display = groundMagnetEligible({ type: 'objet3d', objType: objectTypeSelect.value }) ? '' : 'none';
   // ⚠️ LE BROUILLON EST REMIS À NEUF, ET C'EST TOUT CE QUI RESTE À FAIRE ICI (#401c) : il n'y a plus
@@ -6761,6 +6766,11 @@ objectTypeSelect.addEventListener('change', () => {
   S.modalDraftAnimalJoints = {};
   refreshObjectPreview();
 });
+objectEssenceSelect.addEventListener('change', () => {
+  objectVarianteField.style.display = objectEssenceSelect.value ? '' : 'none';
+  refreshObjectPreview();
+});
+objectVarianteSelect.addEventListener('change', refreshObjectPreview);
 objectDoorStateSelect.addEventListener('change', () => {
   objectDoorAngleField.style.display = (objectDoorStateSelect.value === 'fermee') ? 'none' : '';
   refreshObjectPreview();
@@ -6915,6 +6925,14 @@ objectModalSave.onclick = () => {
       S.modalTarget.rotX = Number(objectRotXInput.value) * Math.PI / 180;
       S.modalTarget.rotY = Number(objectRotYInput.value) * Math.PI / 180;
       S.modalTarget.rotZ = Number(objectRotZInput.value) * Math.PI / 180;
+    }
+    // #480g : l'essence d'un arbre (vide : l'arbre simple, les champs retirés).
+    if (objectEssenceField.style.display !== 'none' && objectEssenceSelect.value) {
+      S.modalTarget.essence = objectEssenceSelect.value;
+      S.modalTarget.variante = Number(objectVarianteSelect.value) || 1;
+    } else {
+      delete S.modalTarget.essence;
+      delete S.modalTarget.variante;
     }
     if (S.modalTarget.objType === 'porte_ouverte') {
       S.modalTarget.doorState = objectDoorStateSelect.value;
