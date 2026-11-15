@@ -834,8 +834,11 @@ async function reliefDuLieu(centre, halfSize, country, avance = () => {}, arrete
     }
     const altitudes = answers.length === plan.requests.length ? plan.assemble(answers) : null;
     if (altitudes) {
-      const a = altitudes.altitudes;
-      console.info(`[real-place] relief: ${plan.provider.id}, ${Math.min(...a)} to ${Math.max(...a)} m, ${Math.round(altitudes.missing * 100)} % without data`);
+      // ⚠️ NOT Math.min(...a): a 400 m zone holds hundreds of thousands of altitudes, more arguments than the
+      // stack takes (seen: « Maximum call stack size exceeded », the import stopped at its 7th step).
+      let lo = Infinity, hi = -Infinity;
+      for (const v of altitudes.altitudes) { if (v < lo) lo = v; if (v > hi) hi = v; }
+      console.info(`[real-place] relief: ${plan.provider.id}, ${lo} to ${hi} m, ${Math.round(altitudes.missing * 100)} % without data`);
       return { altitudes, credit: plan.provider.attribution };
     }
   }
