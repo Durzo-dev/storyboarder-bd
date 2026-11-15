@@ -45,7 +45,7 @@ import { propositionDeRoles3D } from './archetype-roles.js';
 import { enregistrerFermeture, pileOuverte } from './modal-stack.js';
 import { initialiserMiseAJour, rafraichirTextesMaj, fermerModaleMaj } from './update-button.js';
 import { verifierRessources, rafraichirApresChangementDeDossier, simulationRessources } from './missing-resources.js';
-import { cablerStore, rafraichirTextesStore, fermerStore, rafraichirBibliothequeLocale, basculerStore, ouvrirStore } from './store-ui.js';
+import { cablerStore, rafraichirTextesStore, fermerStore, rafraichirBibliothequeLocale, basculerStore, ouvrirStore, nomsAffichesModeles } from './store-ui.js';
 import { cablerLieuReel } from './real-place-ui.js';
 import { cablerConnexionIA } from './mcp-link.js';
 import { cablerMonuments } from './monuments-ui.js';
@@ -192,7 +192,7 @@ import {
 import { vueDeRecherche } from './manuel-recherche.js';
 import { policeADessiner, chargerPolicesUtilisateur, policesImportees, NOMS_INTEGRES } from './polices-utilisateur.js';
 import { cablerPolices, fermerPolices, rafraichirTextesPolices, renommerPolice, supprimerPolice } from './polices-ui.js';
-import { cablerTextures, rafraichirTextesTextures, renommerTexture, supprimerTexture, nomAffiche as nomAfficheTexture } from './textures-store-ui.js';
+import { cablerTextures, rafraichirTextesTextures, renommerTexture, supprimerTexture, nomsDesTextures, nomAffiche as nomAfficheTexture } from './textures-store-ui.js';
 import {
   setSidebarCallbacks, isSceneTopDownView, homeOwningPanel, exitCameraMode, elementsInPanel,
   getRoomConnectedComponents, updateSidePanel, refreshCameraSliders, renderSideCameraGizmo,
@@ -4516,7 +4516,7 @@ document.getElementById('ctxRenameTexture').onclick = () => {
   const t = _textureCtx;
   hideContextMenu();
   if (!t) return;
-  openRenameEntityModal('texture', t.cle, nomAfficheTexture(t), { appliquer: (nouveau) => renommerTexture(t.cle, nouveau) });
+  openRenameEntityModal('texture', t.cle, nomAfficheTexture(t), { pris: nomsDesTextures(t.cle), appliquer: (nouveau) => renommerTexture(t.cle, nouveau) });
 };
 document.getElementById('ctxDeleteTexture').onclick = () => {
   const t = _textureCtx;
@@ -4576,6 +4576,7 @@ async function demanderRenommageModele(fichier){
   const biblio = pont && pont.bibliothequeLire ? await pont.bibliothequeLire() : null;
   const actuel = (biblio && biblio.titres && biblio.titres[fichier]) || titreParDefautModele(fichier);
   openRenameEntityModal('nom-modele', fichier, actuel, {
+    pris: nomsAffichesModeles(fichier),
     appliquer: async (nom) => {
       if (pont && pont.bibliothequeOperation) await pont.bibliothequeOperation('titre', { fichier, nom });
       rafraichirBibliothequeLocale();

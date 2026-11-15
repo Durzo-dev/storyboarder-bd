@@ -1337,6 +1337,11 @@ async function operer(op, args){
   return r || { erreur: 'reponse' };
 }
 
+/** The names shown of every model but one (two models may not bear the same name shown, asked). */
+export function nomsAffichesModeles(sauf){
+  return toutesLesEntrees().filter(e => !e.batiment && e.fichier !== sauf).map(e => e.titre);
+}
+
 const tousLesTags = () => ((bibliotheque && bibliotheque.tags) || []).slice().sort((x, y) => x.nom.localeCompare(y.nom, 'fr'));
 const entreeDe = (fichier) => toutesLesEntrees().find(x => x.fichier === fichier) || null;
 

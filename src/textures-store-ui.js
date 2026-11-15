@@ -859,6 +859,11 @@ function ficheIntegree(t){
 }
 
 /** Renomme une texture (clic droit) : de « Mes textures » ou livrée ; un nom vide rend à une livrée le sien. */
+/** The names shown of every texture but one (a name taken: two textures may not bear the same, asked). */
+export function nomsDesTextures(sauf){
+  return [...mes, ...integrees].filter(t => t.cle !== sauf).map(nomAffiche);
+}
+
 export async function renommerTexture(cleTexture, nom){
   const r = await api().texturesRenommer(cleTexture, nom);
   if (r && r.erreur) return r;

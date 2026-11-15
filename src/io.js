@@ -1187,8 +1187,10 @@ function isEntityNameTakenByOther(kind, target, name){
   // Deux chapitres peuvent porter le même nom (deux « Interlude ») : rien ne les confond, chacun a
   // son identifiant, et leur place dans le Tome les distingue.
   if (kind === 'chapitre') return false;
-  // A model's name shown (#480f): two may bear the same, their files tell them apart.
-  if (kind === 'nom-modele') return false;
+  // A model's name shown (#480f), a texture's: two may not bear the same (asked), at the case and spaces near.
+  if (kind === 'nom-modele' || kind === 'texture') {
+    return ((S.renameModalContext && S.renameModalContext.pris) || []).some(n => String(n).trim().toLowerCase() === norm);
+  }
   // Une police (#423) : comparée sans la casse à la liste capturée à l'ouverture, intégrées comprises.
   if (kind === 'police' || kind === 'format' || kind === 'batiment' || kind === 'piece') {
     return ((S.renameModalContext && S.renameModalContext.pris) || [])
@@ -1227,6 +1229,10 @@ function updateRenameEntityConfirmState(){
       ? tr('That name is already used by another volume.', 'Ce nom est déjà utilisé par un autre tome.')
       : quoi === 'modele'
         ? tr('A model file already has that name.', 'Un fichier de modèle porte déjà ce nom.')
+      : quoi === 'nom-modele'
+        ? tr('A model already has that name.', 'Un modèle porte déjà ce nom.')
+      : quoi === 'texture'
+        ? tr('A texture already has that name.', 'Une texture porte déjà ce nom.')
       : quoi === 'police'
         ? tr('A font already has that name.', 'Une police porte déjà ce nom.')
       : quoi === 'format'

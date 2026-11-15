@@ -126,3 +126,13 @@ describe('a model renamed: its name shown, never its file (#480f, asked)', () =>
     assert.equal(e.titre, 'Ma chaise'); assert.equal(e.titreChoisi, true); assert.equal(e.fichier, 'chaise.glb');
   });
 });
+
+describe('two models, two textures, never the same name shown (asked)', () => {
+  test('the rename window refuses a name taken (case and spaces aside), and gives the reason', () => {
+    const io = readFileSync(new URL('../src/io.js', import.meta.url), 'utf8');
+    assert.match(io, /kind === 'nom-modele' \|\| kind === 'texture'\) \{\n\s+return \(\(S\.renameModalContext && S\.renameModalContext\.pris\) \|\| \[\]\)\.some\(n => String\(n\)\.trim\(\)\.toLowerCase\(\) === norm\);/);
+    assert.ok(io.includes("'Un modèle porte déjà ce nom.'") && io.includes("'Une texture porte déjà ce nom.'"));
+    const ev = readFileSync(new URL('../src/events.js', import.meta.url), 'utf8');
+    assert.ok(ev.includes('pris: nomsAffichesModeles(fichier)') && ev.includes('pris: nomsDesTextures(t.cle)'));
+  });
+});
