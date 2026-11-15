@@ -26,18 +26,35 @@ export function setSpeciesTreeCallbacks({ onChange }) {
 }
 
 /**
- * The application's bark of a species: its shipped file, loaded once (a texture whose image comes later, a
- * redraw then). Null where there is no DOM (tests).
+ * The application's bark of a species: its shipped file, loaded once. Read with an <img> as the bubbles' grains
+ * are (bubble-grain.js), not TextureLoader: its `crossOrigin` and a file:// page do not mix, and its error
+ * callback is the fourth argument (passed third, a missing bark went unsaid: seen, plain trunks). The texture
+ * is given at once and gets its image when it arrives (a redraw then); a bark that cannot be read leaves its
+ * trees the plain colour, and says so once. Null where there is no DOM (tests).
  */
 const barks = new Map();
+const barkMaterials = new Map();
 function shippedBark(name) {
-  if (typeof document === 'undefined') return null;
+  if (typeof document === 'undefined' || typeof Image === 'undefined') return null;
   if (!barks.has(name)) {
-    const tex = new THREE.TextureLoader().load(BARK_DIR + barkFile(name), () => onBarkLoaded(),
-      () => console.warn(`[ez-trees] bark missing: ${BARK_DIR}${barkFile(name)}`));
+    const tex = new THREE.Texture();
+    const img = new Image();
+    img.onload = () => { tex.image = img; tex.needsUpdate = true; onBarkLoaded(); };
+    img.onerror = () => {
+      console.warn(`[ez-trees] bark missing: ${BARK_DIR}${barkFile(name)}`);
+      for (const m of barkMaterials.get(name) || []) { m.map = null; plainBark(m, SPECIES[name]); }
+      onBarkLoaded();
+    };
+    img.src = BARK_DIR + barkFile(name);
     barks.set(name, tex);
   }
   return barks.get(name);
+}
+
+/** A bark's plain colour (its texture missing): a grey-brown, tinted by the species. */
+function plainBark(material, sp) {
+  material.color.set(BARK_FALLBACK).multiply(new THREE.Color(sp.barkTint));
+  material.needsUpdate = true;
 }
 
 /** The seed EZ-Tree gets for our variant `n` (1, 2…): spread apart, as in the trial (tools/ez-tree). */
@@ -80,8 +97,10 @@ export function generateSpeciesTree(name, variant = 1, { makeCanvas = domCanvas,
     bark.repeat.set(sp.barkScale[0], sp.barkScale[1]);
     branches.map = bark;
     branches.color.set(sp.barkTint);
+    if (!barkMaterials.has(name)) barkMaterials.set(name, []);
+    barkMaterials.get(name).push(branches);
   } else {
-    branches.color.set(BARK_FALLBACK).multiply(new THREE.Color(sp.barkTint));
+    plainBark(branches, sp);
   }
   leaves.needsUpdate = branches.needsUpdate = true;
   tree.userData.species = name;
