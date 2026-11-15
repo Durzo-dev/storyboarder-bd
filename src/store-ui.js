@@ -1110,7 +1110,7 @@ function toutesLesEntrees(){
       .map(e => {
         if (!e.fichier.startsWith(BANK_PREFIX)) return e;
         const m = MODEL_BANK.find(x => BANK_PREFIX + x.file === e.fichier);
-        return { ...e, integre: true, titre: m ? bankLabel(m, langue()) : e.titre };
+        return { ...e, integre: true, titre: m && !e.titreChoisi ? bankLabel(m, langue()) : e.titre };
       }),
     ...entreesBatiments(donneesLocales.batiments || [], projet),
   ];
@@ -1504,8 +1504,6 @@ function carteLocale(e){
   // Le clic droit garde le menu du reste de l'application (demandé).
   c.addEventListener('contextmenu', (ev) => {
     ev.preventDefault();
-    // A bank model: nothing to rename, delete nor map (asked: no empty menu).
-    if (e.integre) return;
     if (_rappels.menuModele) _rappels.menuModele(ev, e.fichier);
   });
   cartesLocales.set(e.fichier, c);
@@ -1603,8 +1601,10 @@ function ficheLocale(e){
     b.onclick = () => { if (_rappels[rappel]) _rappels[rappel](e.fichier); };
     return b;
   };
-  const actions = e.introuvable || e.integre
+  const actions = e.introuvable
     ? [retour]
+    : e.integre
+      ? [retour, action(t.renommer, 'renommerModele', 'full-btn edit-btn store-action-blanc')]
     // Couleurs demandées : Renommer en jaune, Supprimer en rouge, texte blanc sur les deux.
     // « Éditeur » (il remplace « Squelette », demandé) seulement pour un modèle qui a un squelette
     // (ou dont on ne sait pas encore) : un modèle statique n'a rien à poser.

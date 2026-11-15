@@ -22,7 +22,9 @@
 const FICHIER = 'bibliotheque-modeles.json';
 const LONGUEUR_MAX_TAG = 40;
 
-const vide = () => ({ version: 1, categories: {}, tags: [], tagsParModele: {} });
+const vide = () => ({ version: 1, categories: {}, tags: [], tagsParModele: {}, titres: {} });
+/** The longest display name of a model (asked: renaming a model changes its name shown, never its file). */
+const LONGUEUR_MAX_TITRE = 80;
 const estObjet = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
 const nomPropre = (n) => String(n == null ? '' : n).replace(/\s+/g, ' ').trim().slice(0, LONGUEUR_MAX_TAG);
 /** Deux noms de tag sont les mêmes à la casse et aux accents près. */
@@ -43,12 +45,30 @@ function normaliser(b){
     vus.add(t.id);
     s.tags.push({ id: t.id, nom });
   }
+  if (estObjet(b.titres)) {
+    for (const [f, t] of Object.entries(b.titres)) {
+      const nom = String(t == null ? '' : t).replace(/\s+/g, ' ').trim().slice(0, LONGUEUR_MAX_TITRE);
+      if (nom) s.titres[f] = nom;
+    }
+  }
   if (estObjet(b.tagsParModele)) {
     for (const [f, ids] of Object.entries(b.tagsParModele)) {
       const gardes = [...new Set((Array.isArray(ids) ? ids : []).filter(id => vus.has(id)))];
       if (gardes.length) s.tagsParModele[f] = gardes;
     }
   }
+  return s;
+}
+
+/**
+ * THE NAME SHOWN of a model, chosen by the user (#480f, asked: « renaming » a model changes its name shown, not
+ * its file, the key every Scene cites). An empty name gives back the default (the source's title, the file's).
+ */
+function nommerModele(b, fichier, nom){
+  const s = normaliser(b);
+  const propre = String(nom == null ? '' : nom).replace(/\s+/g, ' ').trim().slice(0, LONGUEUR_MAX_TITRE);
+  if (propre) s.titres[fichier] = propre;
+  else delete s.titres[fichier];
   return s;
 }
 
@@ -126,7 +146,7 @@ function modelesAvecTag(b, id){
 function renommerModele(b, ancien, nouveau){
   const s = normaliser(b);
   const a = String(ancien).toLowerCase();
-  for (const table of [s.categories, s.tagsParModele]) {
+  for (const table of [s.categories, s.tagsParModele, s.titres]) {
     for (const f of Object.keys(table)) {
       if (f.toLowerCase() === a) { const v = table[f]; delete table[f]; table[nouveau] = v; }
     }
@@ -138,7 +158,7 @@ function renommerModele(b, ancien, nouveau){
 function oublierModele(b, fichier){
   const s = normaliser(b);
   const a = String(fichier).toLowerCase();
-  for (const table of [s.categories, s.tagsParModele]) {
+  for (const table of [s.categories, s.tagsParModele, s.titres]) {
     for (const f of Object.keys(table)) if (f.toLowerCase() === a) delete table[f];
   }
   return s;
@@ -155,11 +175,12 @@ function appliquer(b, op, args = {}){
     case 'renommerTag': return renommerTag(b, args.id, args.nom);
     case 'supprimerTag': return { bibliotheque: supprimerTag(b, args.id) };
     case 'tagModele': return { bibliotheque: tagModele(b, args.fichier, args.id, !!args.actif) };
+    case 'titre': return { bibliotheque: nommerModele(b, args.fichier, args.nom) };
     default: return { bibliotheque: normaliser(b), erreur: 'operation' };
   }
 }
 
 module.exports = {
   FICHIER, LONGUEUR_MAX_TAG, normaliser, appliquer,
-  choisirCategorie, creerTag, renommerTag, supprimerTag, tagModele, modelesAvecTag, renommerModele, oublierModele,
+  choisirCategorie, nommerModele, creerTag, renommerTag, supprimerTag, tagModele, modelesAvecTag, renommerModele, oublierModele,
 };

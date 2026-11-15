@@ -107,3 +107,22 @@ describe('the shipped bank (src/model-bank-data.js)', () => {
     }
   });
 });
+
+describe('a model renamed: its name shown, never its file (#480f, asked)', () => {
+  test('the library keeps the name; an empty one gives the default back; it follows the file, and goes with it', async () => {
+    const { createRequire } = await import('node:module');
+    const biblio = createRequire(import.meta.url)('../electron/bibliotheque/bibliotheque-modeles.js');
+    let b = biblio.appliquer(null, 'titre', { fichier: 'bank--erable-1.glb', nom: '  Érable  de la place ' }).bibliotheque;
+    assert.equal(b.titres['bank--erable-1.glb'], 'Érable de la place');
+    assert.equal(biblio.normaliser(JSON.parse(JSON.stringify(b))).titres['bank--erable-1.glb'], 'Érable de la place', 'kept on disk');
+    b = biblio.renommerModele(biblio.appliquer(b, 'titre', { fichier: 'chaise.glb', nom: 'Ma chaise' }).bibliotheque, 'chaise.glb', 'siege.glb');
+    assert.equal(b.titres['siege.glb'], 'Ma chaise');
+    assert.equal(biblio.oublierModele(b, 'siege.glb').titres['siege.glb'], undefined);
+    assert.equal(biblio.appliquer(b, 'titre', { fichier: 'bank--erable-1.glb', nom: '' }).bibliotheque.titres['bank--erable-1.glb'], undefined);
+  });
+  test('« My models » shows it', async () => {
+    const { entreesLocales } = await import('../src/local-library.js');
+    const [e] = entreesLocales({ fichiers: [{ nom: 'chaise.glb', taille: 1 }], bibliotheque: { titres: { 'chaise.glb': 'Ma chaise' } } });
+    assert.equal(e.titre, 'Ma chaise'); assert.equal(e.titreChoisi, true); assert.equal(e.fichier, 'chaise.glb');
+  });
+});

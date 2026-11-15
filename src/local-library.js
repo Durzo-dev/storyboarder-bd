@@ -49,6 +49,7 @@ export function entreesLocales({ fichiers = [], attributions = [], projet = {}, 
   const tagsParModele = (bibliotheque && bibliotheque.tagsParModele) || {};
   const nomsTags = new Map(((bibliotheque && bibliotheque.tags) || []).map(t => [t.id, t.nom]));
   const choisieDe = (nom) => { const k = Object.keys(choisies).find(f => f.toLowerCase() === nom.toLowerCase()); return k ? choisies[k] : null; };
+  const titres = (bibliotheque && bibliotheque.titres) || {};
   const tagsDe = (nom) => { const k = Object.keys(tagsParModele).find(f => f.toLowerCase() === nom.toLowerCase()); return k ? tagsParModele[k] : []; };
   const parFichier = new Map((attributions || []).filter(a => a && a.fichier).map(a => [String(a.fichier).toLowerCase(), a]));
   const surDisque = new Map((fichiers || []).filter(f => f && f.nom).map(f => [f.nom, f]));
@@ -65,7 +66,9 @@ export function entreesLocales({ fichiers = [], attributions = [], projet = {}, 
     const tags = tagsDe(nom).filter(id => nomsTags.has(id));
     return {
       fichier: nom,
-      titre: a && a.nom ? a.nom : nom.replace(/\.glb$/i, ''),
+      // The name the user chose (renaming changes the name shown, not the file: #480f), else the source's, else the file's.
+      titre: titres[nom] || (a && a.nom ? a.nom : nom.replace(/\.glb$/i, '')),
+      titreChoisi: !!titres[nom],
       categorie: choisie || (a && a.categorie) || NON_CLASSE,
       categorieChoisie: !!choisie,
       // Les tags, par identifiant, et leurs noms (triés) pour l'affichage et la recherche.

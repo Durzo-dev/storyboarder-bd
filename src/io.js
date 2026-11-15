@@ -1187,6 +1187,8 @@ function isEntityNameTakenByOther(kind, target, name){
   // Deux chapitres peuvent porter le même nom (deux « Interlude ») : rien ne les confond, chacun a
   // son identifiant, et leur place dans le Tome les distingue.
   if (kind === 'chapitre') return false;
+  // A model's name shown (#480f): two may bear the same, their files tell them apart.
+  if (kind === 'nom-modele') return false;
   // Une police (#423) : comparée sans la casse à la liste capturée à l'ouverture, intégrées comprises.
   if (kind === 'police' || kind === 'format' || kind === 'batiment' || kind === 'piece') {
     return ((S.renameModalContext && S.renameModalContext.pris) || [])
@@ -1248,6 +1250,8 @@ export function openRenameEntityModal(kind, target, currentName, extra){
       ? tr('Rename chapter', 'Renommer le chapitre')
     : kind === 'modele'
       ? tr('Rename the model file', 'Renommer le fichier du modèle')
+    : kind === 'nom-modele'
+      ? tr('Rename the model', 'Renommer le modèle')
     : kind === 'police'
       ? tr('Rename the font', 'Renommer la police')
     : kind === 'format'

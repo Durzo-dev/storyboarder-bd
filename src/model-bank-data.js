@@ -15,6 +15,10 @@ export const MODEL_BANK = Object.freeze([
    "Celtis"
   ],
   "generic": true,
+  "label": {
+   "fr": "Érable",
+   "en": "Maple"
+  },
   "name": "Maple Tree",
   "author": "evolveduk",
   "licence": "CC-BY-4.0",
@@ -30,6 +34,10 @@ export const MODEL_BANK = Object.freeze([
    "Celtis"
   ],
   "generic": true,
+  "label": {
+   "fr": "Érable",
+   "en": "Maple"
+  },
   "name": "Maple tree",
   "author": "MozzarellaARC",
   "licence": "CC-BY-4.0",
@@ -44,6 +52,10 @@ export const MODEL_BANK = Object.freeze([
    "Betula"
   ],
   "generic": false,
+  "label": {
+   "fr": "Bouleau",
+   "en": "Birch"
+  },
   "name": "Birch tree",
   "author": "evolveduk",
   "licence": "CC-BY-4.0",
@@ -58,6 +70,10 @@ export const MODEL_BANK = Object.freeze([
    "Betula"
   ],
   "generic": false,
+  "label": {
+   "fr": "Bouleau",
+   "en": "Birch"
+  },
   "name": "Gt 016 Birch 06",
   "author": "ztrztr",
   "licence": "CC-BY-4.0",
@@ -72,6 +88,10 @@ export const MODEL_BANK = Object.freeze([
    "Betula"
   ],
   "generic": false,
+  "label": {
+   "fr": "Bouleau",
+   "en": "Birch"
+  },
   "name": "Gt 016 Birch 05",
   "author": "ztrztr",
   "licence": "CC-BY-4.0",
@@ -87,6 +107,10 @@ export const MODEL_BANK = Object.freeze([
    "Populus"
   ],
   "generic": false,
+  "label": {
+   "fr": "Peuplier",
+   "en": "Poplar"
+  },
   "name": "Poplar tree",
   "author": "Georgeous",
   "licence": "CC-BY-4.0",
@@ -101,6 +125,10 @@ export const MODEL_BANK = Object.freeze([
    "Populus"
   ],
   "generic": false,
+  "label": {
+   "fr": "Peuplier",
+   "en": "Poplar"
+  },
   "name": "POPLAR TREE - HIGHT TEXTURE LOW-POLY MODEL",
   "author": "T_i_a_D",
   "licence": "CC-BY-4.0",
@@ -115,6 +143,10 @@ export const MODEL_BANK = Object.freeze([
    "Populus"
   ],
   "generic": false,
+  "label": {
+   "fr": "Peuplier",
+   "en": "Poplar"
+  },
   "name": "Poplar tree",
   "author": "Georgeous",
   "licence": "CC-BY-4.0",
@@ -129,6 +161,10 @@ export const MODEL_BANK = Object.freeze([
    "Salix"
   ],
   "generic": false,
+  "label": {
+   "fr": "Saule",
+   "en": "Willow"
+  },
   "name": "Willow",
   "author": "evolveduk",
   "licence": "CC-BY-4.0",
@@ -143,6 +179,10 @@ export const MODEL_BANK = Object.freeze([
    "Salix"
   ],
   "generic": false,
+  "label": {
+   "fr": "Saule",
+   "en": "Willow"
+  },
   "name": "Silver willow tree",
   "author": "Georgeous",
   "licence": "CC-BY-4.0",
@@ -159,6 +199,10 @@ export const MODEL_BANK = Object.freeze([
    "Pyrus"
   ],
   "generic": false,
+  "label": {
+   "fr": "Cerisier",
+   "en": "Cherry tree"
+  },
   "name": "Japanese Cherry Tree (low-Poly)",
   "author": "Sereib",
   "licence": "CC-BY-4.0",
@@ -173,11 +217,33 @@ export const MODEL_BANK = Object.freeze([
    "Pinus"
   ],
   "generic": true,
+  "label": {
+   "fr": "Pin",
+   "en": "Pine"
+  },
   "name": "Pine Tree",
   "author": "evolveduk",
   "licence": "CC-BY-4.0",
   "url": "https://sketchfab.com/3d-models/pine-tree-d45218a3fab349e5b1de040f29e7b6f9",
   "ratio": 0.41
+ },
+ {
+  "file": "pin-2.glb",
+  "use": "pin",
+  "objType": "conifere",
+  "genera": [
+   "Pinus"
+  ],
+  "generic": true,
+  "label": {
+   "fr": "Pin",
+   "en": "Pine"
+  },
+  "name": "Pine Tree",
+  "author": "EmreAlkan",
+  "licence": "CC-BY-4.0",
+  "url": "https://sketchfab.com/3d-models/pine-tree-27ab66bf87fd47bda321efde1d7a6fae",
+  "ratio": 0.52
  },
  {
   "file": "pin-3.glb",
@@ -187,6 +253,10 @@ export const MODEL_BANK = Object.freeze([
    "Pinus"
   ],
   "generic": true,
+  "label": {
+   "fr": "Pin",
+   "en": "Pine"
+  },
   "name": "Pine Tree",
   "author": "onkelg",
   "licence": "CC-BY-4.0",
@@ -202,6 +272,10 @@ export const MODEL_BANK = Object.freeze([
    "Pseudotsuga"
   ],
   "generic": true,
+  "label": {
+   "fr": "Sapin",
+   "en": "Fir"
+  },
   "name": "Fir tree",
   "author": "evolveduk",
   "licence": "CC-BY-4.0",
@@ -217,6 +291,10 @@ export const MODEL_BANK = Object.freeze([
    "Pseudotsuga"
   ],
   "generic": true,
+  "label": {
+   "fr": "Sapin",
+   "en": "Fir"
+  },
   "name": "Fir Tree",
   "author": "Rodri",
   "licence": "CC-BY-4.0",
@@ -231,6 +309,10 @@ export const MODEL_BANK = Object.freeze([
    "Picea"
   ],
   "generic": true,
+  "label": {
+   "fr": "Épicéa",
+   "en": "Spruce"
+  },
   "name": "Spruce",
   "author": "evolveduk",
   "licence": "CC-BY-4.0",
@@ -245,6 +327,10 @@ export const MODEL_BANK = Object.freeze([
    "Picea"
   ],
   "generic": true,
+  "label": {
+   "fr": "Épicéa",
+   "en": "Spruce"
+  },
   "name": "Spruce tree",
   "author": "Georgeous",
   "licence": "CC-BY-4.0",
@@ -259,6 +345,10 @@ export const MODEL_BANK = Object.freeze([
    "Phoenix"
   ],
   "generic": true,
+  "label": {
+   "fr": "Palmier dattier",
+   "en": "Date palm"
+  },
   "name": "Date Palm",
   "author": "evolveduk",
   "licence": "CC-BY-4.0",
@@ -273,6 +363,10 @@ export const MODEL_BANK = Object.freeze([
    "Phoenix"
   ],
   "generic": true,
+  "label": {
+   "fr": "Palmier dattier",
+   "en": "Date palm"
+  },
   "name": "Palm Tree Realistic",
   "author": "00amza",
   "licence": "CC-BY-4.0",
@@ -287,6 +381,10 @@ export const MODEL_BANK = Object.freeze([
    "Phoenix"
   ],
   "generic": true,
+  "label": {
+   "fr": "Palmier dattier",
+   "en": "Date palm"
+  },
   "name": "Plant Series – Palm Tree",
   "author": "UPWARD",
   "licence": "CC-BY-4.0",
@@ -302,6 +400,10 @@ export const MODEL_BANK = Object.freeze([
    "Trachycarpus"
   ],
   "generic": false,
+  "label": {
+   "fr": "Palmier nain",
+   "en": "Dwarf fan palm"
+  },
   "name": "Realistic HD Mediterranean fan palm (16/30)",
   "author": "PlantCatalog",
   "licence": "CC-BY-4.0",
@@ -317,6 +419,10 @@ export const MODEL_BANK = Object.freeze([
    "Trachycarpus"
   ],
   "generic": false,
+  "label": {
+   "fr": "Palmier nain",
+   "en": "Dwarf fan palm"
+  },
   "name": "Realistic HD Mediterranean fan palm (19/30)",
   "author": "PlantCatalog",
   "licence": "CC-BY-4.0",
@@ -324,23 +430,15 @@ export const MODEL_BANK = Object.freeze([
   "ratio": 0.9
  },
  {
-  "file": "arbuste-1.glb",
-  "use": "arbuste",
-  "objType": "arbuste",
-  "genera": [],
-  "generic": true,
-  "name": "Low Poly Shrub - Medium Texture",
-  "author": "Natural_Disbuster",
-  "licence": "CC-BY-4.0",
-  "url": "https://sketchfab.com/3d-models/low-poly-shrub-medium-texture-04e29bcb52194fc9abb7e5bc0bdcb619",
-  "ratio": 1.76
- },
- {
   "file": "arbuste-2.glb",
   "use": "arbuste",
   "objType": "arbuste",
   "genera": [],
   "generic": true,
+  "label": {
+   "fr": "Arbuste",
+   "en": "Shrub"
+  },
   "name": "GameReady Bush",
   "author": "abhayexe",
   "licence": "CC-BY-4.0",
@@ -560,6 +658,10 @@ export const MODEL_BANK = Object.freeze([
    "Platanus"
   ],
   "generic": true,
+  "label": {
+   "fr": "Platane",
+   "en": "Plane tree"
+  },
   "name": "Platano_tree",
   "author": "teacherap123",
   "licence": "CC-BY-4.0",
@@ -575,6 +677,10 @@ export const MODEL_BANK = Object.freeze([
    "Celtis"
   ],
   "generic": true,
+  "label": {
+   "fr": "Tilleul",
+   "en": "Linden"
+  },
   "name": "Linden tree",
   "author": "Georgeous",
   "licence": "CC-BY-4.0",
@@ -590,6 +696,10 @@ export const MODEL_BANK = Object.freeze([
    "Celtis"
   ],
   "generic": true,
+  "label": {
+   "fr": "Tilleul",
+   "en": "Linden"
+  },
   "name": "Linden Tree (high-Poly)",
   "author": "Sereib",
   "licence": "CC-BY-4.0",
@@ -604,6 +714,10 @@ export const MODEL_BANK = Object.freeze([
    "Aesculus"
   ],
   "generic": false,
+  "label": {
+   "fr": "Marronnier",
+   "en": "Horse chestnut"
+  },
   "name": "Realistic HD Red horse chestnut (28/30)",
   "author": "PlantCatalog",
   "licence": "CC-BY-4.0",
@@ -618,11 +732,33 @@ export const MODEL_BANK = Object.freeze([
    "Aesculus"
   ],
   "generic": false,
+  "label": {
+   "fr": "Marronnier",
+   "en": "Horse chestnut"
+  },
   "name": "Realistic HD Red horse chestnut (27/30)",
   "author": "PlantCatalog",
   "licence": "CC-BY-4.0",
   "url": "https://sketchfab.com/3d-models/realistic-hd-red-horse-chestnut-27-30-5b433e8e6b8149faacbc52fbb3b688e4",
   "ratio": 1
+ },
+ {
+  "file": "marronnier-3.glb",
+  "use": "marronnier",
+  "objType": "arbre",
+  "genera": [
+   "Aesculus"
+  ],
+  "generic": false,
+  "label": {
+   "fr": "Marronnier",
+   "en": "Horse chestnut"
+  },
+  "name": "Realistic HD Red horse chestnut (30/30)",
+  "author": "PlantCatalog",
+  "licence": "CC-BY-4.0",
+  "url": "https://sketchfab.com/3d-models/realistic-hd-red-horse-chestnut-30-30-2b12715b0abe4371ba1e6c2403d28d3b",
+  "ratio": 0.91
  },
  {
   "file": "chene-1.glb",
@@ -632,6 +768,10 @@ export const MODEL_BANK = Object.freeze([
    "Quercus"
   ],
   "generic": false,
+  "label": {
+   "fr": "Chêne",
+   "en": "Oak"
+  },
   "name": "Old Oak Tree",
   "author": "BB ARTS",
   "licence": "CC-BY-4.0",
@@ -646,6 +786,10 @@ export const MODEL_BANK = Object.freeze([
    "Quercus"
   ],
   "generic": false,
+  "label": {
+   "fr": "Chêne",
+   "en": "Oak"
+  },
   "name": "Petiolate oak tree",
   "author": "Georgeous",
   "licence": "CC-BY-4.0",
@@ -660,6 +804,10 @@ export const MODEL_BANK = Object.freeze([
    "Cedrus"
   ],
   "generic": false,
+  "label": {
+   "fr": "Cèdre",
+   "en": "Cedar"
+  },
   "name": "Cedar tree",
   "author": "Georgeous",
   "licence": "CC-BY-4.0",
@@ -674,6 +822,10 @@ export const MODEL_BANK = Object.freeze([
    "Cedrus"
   ],
   "generic": false,
+  "label": {
+   "fr": "Cèdre",
+   "en": "Cedar"
+  },
   "name": "cedar",
   "author": "kunkun",
   "licence": "CC-BY-4.0",
@@ -691,6 +843,10 @@ export const MODEL_BANK = Object.freeze([
    "Calocedrus"
   ],
   "generic": true,
+  "label": {
+   "fr": "Cyprès",
+   "en": "Cypress"
+  },
   "name": "Cypress tree",
   "author": "ElectroNick",
   "licence": "CC-BY-4.0",
@@ -708,6 +864,10 @@ export const MODEL_BANK = Object.freeze([
    "Calocedrus"
   ],
   "generic": true,
+  "label": {
+   "fr": "Cyprès",
+   "en": "Cypress"
+  },
   "name": "Italian Cipres",
   "author": "ReyGuitta",
   "licence": "CC-BY-4.0",
@@ -722,6 +882,10 @@ export const MODEL_BANK = Object.freeze([
    "Olea"
   ],
   "generic": true,
+  "label": {
+   "fr": "Olivier",
+   "en": "Olive tree"
+  },
   "name": "Olive Tree Portugal",
   "author": "CeDRI",
   "licence": "CC-BY-4.0",
@@ -734,6 +898,10 @@ export const MODEL_BANK = Object.freeze([
   "objType": "buisson",
   "genera": [],
   "generic": true,
+  "label": {
+   "fr": "Buisson",
+   "en": "Bush"
+  },
   "name": "Realistic Bush/Tree (Dwarf Umbrella)",
   "author": "Garecra",
   "licence": "CC-BY-4.0",
@@ -746,6 +914,10 @@ export const MODEL_BANK = Object.freeze([
   "objType": "buisson",
   "genera": [],
   "generic": true,
+  "label": {
+   "fr": "Buisson",
+   "en": "Bush"
+  },
   "name": "Photorealistic Bush",
   "author": "Adrian Sheremet",
   "licence": "CC-BY-4.0",
@@ -758,6 +930,10 @@ export const MODEL_BANK = Object.freeze([
   "objType": "buisson",
   "genera": [],
   "generic": true,
+  "label": {
+   "fr": "Buisson",
+   "en": "Bush"
+  },
   "name": "Realistic HD Yellow bush lupine (1/25)",
   "author": "PlantCatalog",
   "licence": "CC-BY-4.0",
@@ -770,6 +946,10 @@ export const MODEL_BANK = Object.freeze([
   "objType": "buisson",
   "genera": [],
   "generic": true,
+  "label": {
+   "fr": "Buisson",
+   "en": "Bush"
+  },
   "name": "Realistic HD Yellow bush lupine (19/25)",
   "author": "PlantCatalog",
   "licence": "CC-BY-4.0",
@@ -784,6 +964,10 @@ export const MODEL_BANK = Object.freeze([
    "Washingtonia"
   ],
   "generic": false,
+  "label": {
+   "fr": "Palmier Washingtonia",
+   "en": "Washingtonia palm"
+  },
   "name": "Washingtonia Robusta Palm_02",
   "author": "André Murrugarra",
   "licence": "CC-BY-4.0",
@@ -798,6 +982,10 @@ export const MODEL_BANK = Object.freeze([
    "Washingtonia"
   ],
   "generic": false,
+  "label": {
+   "fr": "Palmier Washingtonia",
+   "en": "Washingtonia palm"
+  },
   "name": "Washingtonia Robusta Palm_03",
   "author": "André Murrugarra",
   "licence": "CC-BY-4.0",

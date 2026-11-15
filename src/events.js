@@ -80,8 +80,9 @@ import {
 import {
   setModelImportCallbacks, importModelIntoPanel, placerModeleExistant,
 } from './model-import.js';
-import { isImportedModel, listModels, renameModel, sanitizeModelName, importModel } from './model-store.js';
-import { BANK_PREFIX } from './model-bank.js';
+import { isImportedModel, renameModel, sanitizeModelName, importModel } from './model-store.js';
+import { BANK_PREFIX, bankLabel } from './model-bank.js';
+import { MODEL_BANK } from './model-bank-data.js';
 import {
   setProjectTreeCallbacks, renderTree, renderSceneList, renderImageList, deleteVolume, deletePage, duplicatePage,
   renameVolume, applyRenameVolume, renameScene, applyRenameScene, deleteScene,
@@ -4544,12 +4545,9 @@ document.getElementById('ctxDeleteFont').onclick = () => {
 };
 
 function openModelContextMenu(e, nomFichier){
-  // A bank model (#480f): every entry would be hidden; no empty menu (asked).
-  if (typeof nomFichier === 'string' && nomFichier.startsWith(BANK_PREFIX)) return;
   _modelCtxFichier = nomFichier;
   // A bank model (#480f) is the application's: neither renamed nor deleted, like a built-in texture.
   const banque = typeof nomFichier === 'string' && nomFichier.startsWith(BANK_PREFIX);
-  document.getElementById('ctxRenameModel').style.display = banque ? 'none' : '';
   document.getElementById('ctxDeleteModel').style.display = banque ? 'none' : '';
   // « Skeleton mapping » only for a model with a skeleton, or one not measured yet (asked: none for a static one).
   const m = metasLocales()[nomFichier];
@@ -4570,12 +4568,24 @@ document.getElementById('ctxRenameModel').onclick = () => {
   demanderRenommageModele(fichier);
 };
 // Partagée avec la bibliothèque « Mes modèles » (bouton « Renommer… » de la fiche).
+// #480f (asked): renaming a model changes its NAME SHOWN (« My models », kept with the library), never its file:
+// the file name is the key every Scene of every Project cites. Any model, the bank's too.
 async function demanderRenommageModele(fichier){
   if (!fichier) return;
-  // La liste des noms pris est capturée MAINTENANT et passée à la modale : c'est elle qui grise le
-  // bouton en cas de collision, et elle ne peut pas relire le disque (elle est synchrone).
-  const pris = await listModels();
-  openRenameEntityModal('modele', fichier, fichier.replace(/\.glb$/i, ''), { pris });
+  const pont = window.storyboarderAPI;
+  const biblio = pont && pont.bibliothequeLire ? await pont.bibliothequeLire() : null;
+  const actuel = (biblio && biblio.titres && biblio.titres[fichier]) || titreParDefautModele(fichier);
+  openRenameEntityModal('nom-modele', fichier, actuel, {
+    appliquer: async (nom) => {
+      if (pont && pont.bibliothequeOperation) await pont.bibliothequeOperation('titre', { fichier, nom });
+      rafraichirBibliothequeLocale();
+    },
+  });
+}
+/** The name a model shows by default: the bank's label, else its file's name. */
+function titreParDefautModele(fichier){
+  const m = fichier.startsWith(BANK_PREFIX) ? MODEL_BANK.find(x => BANK_PREFIX + x.file === fichier) : null;
+  return m ? bankLabel(m, S.appLang === 'en' ? 'en' : 'fr') : fichier.replace(/\.glb$/i, '');
 }
 
 /**
