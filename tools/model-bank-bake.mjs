@@ -19,6 +19,7 @@ import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import { dedup, prune, weld, simplify, meshopt, getBounds } from '@gltf-transform/functions';
 import { MeshoptSimplifier, MeshoptEncoder, MeshoptDecoder } from 'meshoptimizer';
 import { app, nativeImage } from 'electron';
+import { toMetalRough, mattePlant } from './model-bank-materials.mjs';
 
 /**
  * SEEN in « My models » (14-15 Nov. 2026): simplified, the trees broke in shards (leaves collapsed into long
@@ -119,6 +120,11 @@ async function bake(){
       const before = facesOf(doc);
       await doc.transform(dedup(), prune(), weld());
       const plant = VEGETATION.has(m.objType);
+      // #480j: specular-glossiness read as metal-roughness, a plant matte (model-bank-materials.mjs), what no
+      // longer serves pruned (the extension's other maps).
+      toMetalRough(doc);
+      if (plant) mattePlant(doc);
+      await doc.transform(prune());
       if (plant && before > REFUSED_PLANT_FACES) throw new Error(`too heavy: ${before} faces (a plant is never simplified)`);
       if (!plant && before > MAX_FACES) await doc.transform(simplify({ simplifier: MeshoptSimplifier, ratio: MAX_FACES / facesOf(doc), error: ERROR, lockBorder: true }));
       if (!plant && facesOf(doc) > REFUSED_FACES) throw new Error(`too heavy: ${facesOf(doc)} faces left`);
