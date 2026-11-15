@@ -156,6 +156,12 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    obstacles) : poussé à l'endroit le plus proche, à 1 m d'écart pour un arbre, 0,4 m pour le reste (un lampadaire peut être
    contre une façade : `AGAINST_BUILDINGS`), et retiré
    quand cet endroit est à plus de 4 m.
+   Après la banque, la couronne de nos arbres générés (`fitCrowns` ; `crownOf`, ez-trees.js : le contour de ses
+   feuilles vu de dessus et la hauteur où elle commence) est écartée des bâtiments plus hauts que le bas de la
+   couronne : l'arbre tourné (8 orientations), sinon déplacé de 4 m au plus (son tronc toujours dégagé), sinon une
+   autre variante générée (8 essayées), tournée et déplacée de même ; aucune ne convient : laissé tel quel. Le rig
+   d'un arbre généré est centré sur son tronc (une boîte invisible aussi large de chaque côté) : le tronc est là
+   où est l'arbre.
 4. `sceneContentOf` : Zones et Tracés (`pathObject`, `zoneObject`, nommés par `nomDuTrace`), le relief
    (`reliefDepuisAltitudes` : base au milieu de l'étendue, bords ramenés à 0 sur 20 m pour rejoindre le Sol
    plat), les crédits.

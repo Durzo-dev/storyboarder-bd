@@ -124,22 +124,64 @@ export function generateSpeciesTree(name, variant = 1, { makeCanvas = domCanvas,
   return tree;
 }
 
-/** The generated variants, for the session (a few: our species times VARIANTS). */
+/** The generated variants, for the session (a few: our species times their variants). */
 const cache = new Map();
 
-/**
- * A tree of `heightM` metres, its foot at (0, 0, 0): a clone of the variant generated once. Same options as
- * generateSpeciesTree.
- */
-export function speciesTree(name, variant, heightM, options = {}) {
+/** A variant generated once: the tree, its height and its foot (EZ-Tree's units), its crown (plan, unit height). */
+function variantOf(name, variant, options) {
   const key = `${name}|${variant}`;
   let model = cache.get(key);
   if (!model) {
     const tree = generateSpeciesTree(name, variant, options);
     const box = new THREE.Box3().setFromObject(tree);
-    model = { tree, height: box.max.y - box.min.y, foot: box.min.y };
+    model = { tree, box, height: box.max.y - box.min.y, foot: box.min.y };
     cache.set(key, model);
   }
+  return model;
+}
+
+/** The convex hull of points { x, z } (monotone chain), counter-clockwise. */
+function hullOf(points) {
+  const p = [...points].sort((a, b) => a.x - b.x || a.z - b.z);
+  if (p.length < 3) return p;
+  const cross = (o, a, b) => (a.x - o.x) * (b.z - o.z) - (a.z - o.z) * (b.x - o.x);
+  const lower = [], upper = [];
+  for (const q of p) { while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], q) <= 0) lower.pop(); lower.push(q); }
+  for (const q of p.reverse()) { while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], q) <= 0) upper.pop(); upper.push(q); }
+  return lower.slice(0, -1).concat(upper.slice(0, -1));
+}
+
+/**
+ * The CROWN of a species' variant, seen from above, for a tree 1 high: its outline (convex hull of its leaves,
+ * around the trunk at (0, 0), unrotated) and the height its crown starts at (0 to 1). What the import needs to
+ * keep a crown out of the buildings (placement-clearance.js), its trunk where the tree stands.
+ */
+export function crownOf(name, variant = 1, options = {}) {
+  const m = variantOf(name, variant, options);
+  if (!m.crown) {
+    const pos = m.tree.leavesMesh.geometry.attributes.position;
+    const pts = [], ys = [];
+    for (let i = 0; i < pos.count; i++) {
+      pts.push({ x: pos.getX(i) / m.height, z: pos.getZ(i) / m.height });
+      ys.push(pos.getY(i));
+    }
+    // Where the crown starts: its lowest 5 % of leaves aside (a stray drooping leaf is not the crown: the olive's
+    // lowest came at 1 % of its height).
+    ys.sort((a, b) => a - b);
+    const low = ys[Math.floor(ys.length * 0.05)];
+    m.crown = { hull: hullOf(pts), base: Math.max(0, (low - m.foot) / m.height) };
+  }
+  return m.crown;
+}
+
+/**
+ * A tree of `heightM` metres, its foot at (0, 0, 0): a clone of the variant generated once. Same options as
+ * generateSpeciesTree. Its trunk at the centre of its box: the render centres a rig's box on its Element
+ * (scene3d.js), and a crown leaning one way would move the trunk off the tree's place; an invisible box,
+ * as wide each side of the trunk, is counted by the box and seen by nothing.
+ */
+export function speciesTree(name, variant, heightM, options = {}) {
+  const model = variantOf(name, variant, options);
   const k = heightM / model.height;
   const group = new THREE.Group();
   // Its meshes cloned into a plain group: Tree.clone() would build a Tree, two empty meshes more.
@@ -147,6 +189,13 @@ export function speciesTree(name, variant, heightM, options = {}) {
   for (const m of model.tree.children) copy.add(m.clone());
   copy.position.y = -model.foot;
   group.add(copy);
+  const hx = Math.max(-model.box.min.x, model.box.max.x), hz = Math.max(-model.box.min.z, model.box.max.z);
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(2 * hx, model.height, 2 * hz));
+  frame.position.y = model.height / 2;
+  frame.visible = false;
+  frame.layers.set(31);
+  frame.userData.gabarit = true;
+  group.add(frame);
   group.scale.setScalar(k);
   group.userData = { species: name, variant, heightM };
   return group;

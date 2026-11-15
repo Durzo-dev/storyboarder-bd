@@ -11,7 +11,7 @@ import * as THREE from 'three';
 globalThis.THREE = THREE;
 const { Tree, TreeOptions, EZ_TREE_VERSION } = await import('../src/vendor/ez-tree/ez-tree.js');
 const { TREE_PRESETS } = await import('../src/vendor/ez-tree/presets.js');
-const { generateSpeciesTree, speciesTree, barkRepeat, speciesOptions } = await import('../src/ez-trees.js');
+const { generateSpeciesTree, speciesTree, barkRepeat, speciesOptions, crownOf } = await import('../src/ez-trees.js');
 const { SPECIES, speciesFor, speciesOfType } = await import('../src/tree-species.js');
 
 /** A canvas that draws nothing (Node has none): every method of its context does nothing. */
@@ -117,4 +117,24 @@ test('the sheet\'s « Essence » list: the species of the type, none for another
   assert.deepEqual(speciesOfType('olivier'), ['Olivier']);
   assert.deepEqual(speciesOfType('voiture'), []);
   for (const k of Object.keys(SPECIES)) assert.ok(SPECIES[k].label.fr && SPECIES[k].label.en, k);
+});
+
+test('a crown seen from above, for a tree 1 high: around its trunk, starting part way up', () => {
+  for (const name of Object.keys(SPECIES)) {
+    const c = crownOf(name, 1, { makeCanvas: fakeCanvas });
+    const xs = c.hull.map(p => p.x), zs = c.hull.map(p => p.z);
+    assert.ok(c.hull.length >= 3, name);
+    assert.ok(Math.min(...xs) < 0 && Math.max(...xs) > 0 && Math.min(...zs) < 0 && Math.max(...zs) > 0, `${name}: round the trunk`);
+    assert.ok(c.base > 0.02 && c.base < 0.8, `${name}: from ${c.base}`);
+  }
+  const width = (n) => { const c = crownOf(n, 1, { makeCanvas: fakeCanvas }); return Math.max(...c.hull.map(p => p.x)) - Math.min(...c.hull.map(p => p.x)); };
+  assert.ok(width('Olivier') > 2 * width('Cypres'), 'the olive broad, the cypress narrow');
+});
+
+test('the rig\'s box is centred on the trunk (the render centres the box on the tree\'s place)', () => {
+  for (const name of Object.keys(SPECIES)) {
+    const box = new THREE.Box3().setFromObject(speciesTree(name, 2, 10, { makeCanvas: fakeCanvas }));
+    const c = box.getCenter(new THREE.Vector3());
+    assert.ok(Math.abs(c.x) < 1e-6 && Math.abs(c.z) < 1e-6, `${name}: ${c.x}, ${c.z}`);
+  }
 });

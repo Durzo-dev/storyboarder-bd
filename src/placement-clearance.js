@@ -13,6 +13,7 @@
 import { insidePolygon, nearestOnPolyline } from './osm-scene.js';
 import { LARGEUR_PAR_DEFAUT_M } from './terrain-plan.js';
 import { TREE_TYPES } from './constants.js';
+import { encombrementDuBatiment } from './batiment-element.js';
 
 /** The paths an object may not stand on, with their width when the path has none (m). */
 export const OBSTACLE_PATHS = Object.freeze({ route: LARGEUR_PAR_DEFAUT_M.route, riviere: LARGEUR_PAR_DEFAUT_M.riviere,
@@ -34,15 +35,17 @@ export const MAX_SHIFT_M = 4;
 
 const PASSES = 6;
 
-/** The obstacles of a translated place: { rings, lines } (lines with their half width). */
+/** The obstacles of a translated place: { rings, heights, lines } (a ring's building height; lines with their half width). */
 export function obstaclesOf(translated) {
-  const rings = (translated.buildings || []).map(b => b.footprint).filter(f => Array.isArray(f) && f.length >= 3);
+  const built = (translated.buildings || []).filter(b => Array.isArray(b.footprint) && b.footprint.length >= 3);
+  const rings = built.map(b => b.footprint);
+  const heights = built.map(b => (b.building ? encombrementDuBatiment(b.building).hauteur : Infinity));
   const lines = [];
   for (const p of translated.paths || []) {
     if (!(p.kind in OBSTACLE_PATHS) || !p.world || !Array.isArray(p.world.pts) || p.world.pts.length < 2) continue;
     lines.push({ pts: p.world.pts, half: (p.world.width > 0 ? p.world.width : OBSTACLE_PATHS[p.kind]) / 2 });
   }
-  return { rings, lines };
+  return { rings, heights, lines };
 }
 
 /** Where `p` must go to clear one obstacle by `r`, or null if it already does. */
@@ -107,4 +110,75 @@ export function clearOfObstacles(elements, obstacles) {
   }
   elements.splice(0, elements.length, ...kept);
   return { moved, removed };
+}
+
+// ─── The crowns of the generated trees (asked by Durzo: crowns seen through a small house's roof) ─────────────
+
+/** The turns tried for a crown (a crown leans: turned, it may clear the building). */
+export const CROWN_TURNS = 8;
+/** The variants tried for a tree of ours (EZ-Tree grows another tree from another seed). */
+export const CROWN_VARIANTS = 8;
+/** The shifts tried (m), each in 8 directions; the largest is MAX_SHIFT_M. */
+const CROWN_SHIFTS = [1, 2, 3, MAX_SHIFT_M];
+
+/** Points of a crown in the plan: its outline, the middles of its sides, and the outline halved. */
+function crownSamples(crown, heightM, x, z, rotY) {
+  const c = Math.cos(rotY), s = Math.sin(rotY);
+  // three's turn about Y: (x, z) → (x cos + z sin, −x sin + z cos).
+  const at = (q, k) => ({ x: x + (q.x * c + q.z * s) * heightM * k, z: z + (-q.x * s + q.z * c) * heightM * k });
+  const h = crown.hull, out = [];
+  for (let i = 0; i < h.length; i++) {
+    const a = h[i], b = h[(i + 1) % h.length];
+    out.push(at(a, 1), at({ x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 }, 1), at(a, 0.5));
+  }
+  return out;
+}
+
+/** How many of a crown's points are inside a building higher than the crown's foot. */
+function crownHits(points, baseM, { rings, heights }) {
+  let n = 0;
+  for (const p of points) {
+    for (let i = 0; i < rings.length; i++) if (heights[i] > baseM && insidePolygon(p, rings[i])) { n++; break; }
+  }
+  return n;
+}
+
+/**
+ * Keeps the crowns of our generated trees (`essence`) out of the buildings they would cross (a building lower than
+ * where the crown starts is no matter). For each, in this order, the first that clears: turned (CROWN_TURNS),
+ * moved a few metres (CROWN_SHIFTS, its trunk still clear), then another variant (CROWN_VARIANTS), turned and
+ * moved likewise. None: left as it was. `crownOf(essence, variant)`: { hull, base } for a tree 1 high
+ * (ez-trees.js). Changes `rotY`, `x`, `z`, `variante` in place; returns how many were turned, moved, regrown,
+ * and how many still cross.
+ */
+export function fitCrowns(elements, obstacles, crownOf) {
+  const n = { turned: 0, moved: 0, regrown: 0, crossing: 0 };
+  for (const e of elements || []) {
+    if (!e.essence || !(e.height > 0)) continue;
+    const r = clearanceOf(e.objType), rot0 = Number.isFinite(e.rotY) ? e.rotY : 0, v0 = e.variante || 1;
+    const fits = (v, x, z, rot) => {
+      const crown = crownOf(e.essence, v);
+      return crownHits(crownSamples(crown, e.height, x, z, rot), crown.base * e.height, obstacles) === 0;
+    };
+    if (fits(v0, e.x, e.z, rot0)) continue;
+    const variants = [v0, ...Array.from({ length: CROWN_VARIANTS }, (_, i) => i + 1).filter(v => v !== v0)];
+    let found = null;
+    search: for (const v of variants) {
+      for (const d of [0, ...CROWN_SHIFTS]) {
+        for (let a = 0; a < (d ? 8 : 1); a++) {
+          const x = e.x + d * Math.cos(a * Math.PI / 4), z = e.z + d * Math.sin(a * Math.PI / 4);
+          if (d && !clears({ x, z }, r, obstacles)) continue;
+          for (let t = 0; t < CROWN_TURNS; t++) {
+            const rot = rot0 + t * 2 * Math.PI / CROWN_TURNS;
+            if (fits(v, x, z, rot)) { found = { v, x, z, rot, d }; break search; }
+          }
+        }
+      }
+    }
+    if (!found) { n.crossing++; continue; }
+    if (found.v !== v0) { e.variante = found.v; n.regrown++; } else if (found.d) n.moved++; else n.turned++;
+    e.rotY = Math.round(found.rot * 1000) / 1000;
+    e.x = Math.round(found.x * 100) / 100; e.z = Math.round(found.z * 100) / 100;
+  }
+  return n;
 }

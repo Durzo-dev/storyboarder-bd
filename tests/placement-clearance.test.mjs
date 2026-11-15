@@ -6,7 +6,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { clearOfObstacles, obstaclesOf, clearanceOf, MAX_SHIFT_M } from '../src/placement-clearance.js';
+import { clearOfObstacles, obstaclesOf, clearanceOf, MAX_SHIFT_M, fitCrowns } from '../src/placement-clearance.js';
 
 const square = (x0, z0, s) => [{ x: x0, z: z0 }, { x: x0 + s, z: z0 }, { x: x0 + s, z: z0 + s }, { x: x0, z: z0 + s }];
 const place = (paths = [], footprints = []) => obstaclesOf({ buildings: footprints.map(f => ({ footprint: f })), paths });
@@ -88,4 +88,43 @@ test('a street lamp on a facade stays there (OSM puts it on the outline); off th
   assert.deepEqual(r, { moved: 1, removed: 0 });
   assert.deepEqual(els[0], { objType: 'lampadaire', x: 5, z: 10 });
   assert.ok(Math.abs(els[1].z - 15.4) < 0.02, JSON.stringify(els[1]));
+});
+
+// ─── The crowns of our generated trees ─────────────────────────────────────────────────────────────────────
+// A house 10 m square, 5 m high, its west wall at x = 0; a tree 10 m high, its crown starting at 3 m (lower than
+// the roof): crossing it, unless it is turned, moved or regrown.
+const house = (h = 5) => ({ rings: [square(0, -5, 10)], heights: [h], lines: [] });
+const circle = (r) => ({ hull: Array.from({ length: 12 }, (_, i) => ({ x: r * Math.cos(i * Math.PI / 6), z: r * Math.sin(i * Math.PI / 6) })), base: 0.3 });
+const leaning = { hull: [{ x: -0.05, z: -0.1 }, { x: 0.45, z: -0.1 }, { x: 0.45, z: 0.1 }, { x: -0.05, z: 0.1 }], base: 0.3 };
+const tree = (extra = {}) => ({ objType: 'arbre', essence: 'Platane', variante: 1, height: 10, x: -1.5, z: 0, ...extra });
+
+test('a crown leaning into a house: turned away, the tree where it stands', () => {
+  const e = tree();
+  assert.deepEqual(fitCrowns([e], house(), () => leaning), { turned: 1, moved: 0, regrown: 0, crossing: 0 });
+  assert.equal(e.x, -1.5); assert.equal(e.z, 0);
+  assert.ok(Math.cos(e.rotY) < 0, `turned ${e.rotY}`);
+});
+
+test('a round crown: turning is no help, moved away (its trunk clear all the same)', () => {
+  const e = tree();
+  assert.deepEqual(fitCrowns([e], house(), () => circle(0.25)), { turned: 0, moved: 1, regrown: 0, crossing: 0 });
+  assert.ok(e.x <= -2.5 + 0.01 && Math.hypot(e.x + 1.5, e.z) <= MAX_SHIFT_M + 1e-9, JSON.stringify(e));
+});
+
+test('too wide wherever it goes: another variant, narrower', () => {
+  const e = tree();
+  const r = fitCrowns([e], house(), (s, v) => (v === 3 ? circle(0.1) : circle(0.9)));
+  assert.deepEqual(r, { turned: 0, moved: 0, regrown: 1, crossing: 0 });
+  assert.equal(e.variante, 3);
+});
+
+test('a house lower than where the crown starts: nothing to do; no variant fits: left as it was', () => {
+  const low = tree();
+  assert.deepEqual(fitCrowns([low], house(2.5), () => leaning), { turned: 0, moved: 0, regrown: 0, crossing: 0 });
+  assert.deepEqual(low, tree());
+  const big = tree();
+  assert.deepEqual(fitCrowns([big], house(), () => circle(0.9)), { turned: 0, moved: 0, regrown: 0, crossing: 1 });
+  assert.deepEqual(big, tree());
+  const bank = { objType: 'arbre', modelFile: 'bank--erable-1.glb', height: 10, x: -1.5, z: 0 };
+  assert.deepEqual(fitCrowns([bank], house(), () => circle(0.9)).crossing, 0, 'only our generated trees');
 });

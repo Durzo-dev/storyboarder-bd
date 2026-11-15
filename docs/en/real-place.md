@@ -142,6 +142,11 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    obstacle): pushed to the nearest place 1 m clear for a tree, 0.4 m for anything else (a street lamp may stand against a
    facade: `AGAINST_BUILDINGS`), and left out when that
    place is more than 4 m away.
+   After the bank, our generated trees' crowns (`fitCrowns`; `crownOf`, ez-trees.js: the outline of its leaves
+   seen from above and where it starts) are kept out of the buildings taller than where the crown starts: the
+   tree turned (8 turns), else moved up to 4 m (its trunk still clear), else another variant grown (8 tried),
+   turned and moved likewise; none fitting, it is left as it was. A generated tree's rig is centred on its trunk
+   (an invisible box as wide each side), so the trunk stands where the tree is.
 4. `sceneContentOf`: Zones and Paths (`pathObject`, `zoneObject`, named by `nomDuTrace`), the relief
    (`reliefDepuisAltitudes`: base at the middle of the range, edges blended to 0 over 20 m to meet the flat
    Ground), the credits.

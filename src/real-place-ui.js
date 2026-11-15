@@ -9,7 +9,8 @@
 
 import { S, tr, newId } from './state.js';
 import { translateOsm, ZONE_SIDE_MAX, DETAIL_LEVELS } from './osm-scene.js';
-import { clearOfObstacles, obstaclesOf } from './placement-clearance.js';
+import { clearOfObstacles, obstaclesOf, fitCrowns } from './placement-clearance.js';
+import { crownOf } from './ez-trees.js';
 import { TREE_TYPES } from './constants.js';
 import { planRelief } from './real-place-sources.js';
 import { readBdTopo } from './building-survey.js';
@@ -508,7 +509,8 @@ async function importer(){
       photoCredits.push(tr(LIDAR_CREDIT.en, LIDAR_CREDIT.fr));
     }
     // Clear of the buildings, roads and walls (placement-clearance.js): moved a little, or left out.
-    const libre = clearOfObstacles(translated.elements, obstaclesOf(translated));
+    const obstacles = obstaclesOf(translated);
+    const libre = clearOfObstacles(translated.elements, obstacles);
     console.info(`[real-place] clearance: ${libre.moved} objects moved, ${libre.removed} left out`);
     // Detailed and Realistic (#480f): the bank's models in the built-in objects' place, a tree of its genus.
     if (niveau !== 'simple') {
@@ -517,6 +519,9 @@ async function importer(){
       if (bank.used.length) { try { await preloadModels(bank.used.map(m => BANK_PREFIX + m.file)); } catch (e) { /* boxes stand in */ } }
       if (arrete()) return annule;
       console.info(`[real-place] model bank: ${bank.n} elements, ${bank.used.length} models; EZ-Tree: ${bank.species} trees`);
+      // Our generated trees' crowns out of the buildings: turned, moved, or another variant (placement-clearance.js).
+      const couronnes = fitCrowns(translated.elements, obstacles, (essence, variante) => crownOf(essence, variante));
+      console.info(`[real-place] crowns: ${couronnes.turned} turned, ${couronnes.moved} moved, ${couronnes.regrown} regrown, ${couronnes.crossing} still crossing`);
       photoCredits.push(...bank.used.map(m => bankCredit(m, S.appLang === 'en' ? 'en' : 'fr')));
     }
     // Realistic (#480c): the stores' models for what the bank has not.
