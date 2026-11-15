@@ -9,6 +9,7 @@
 
 import { S, tr, newId } from './state.js';
 import { translateOsm, ZONE_SIDE_MAX, DETAIL_LEVELS } from './osm-scene.js';
+import { clearOfObstacles, obstaclesOf } from './placement-clearance.js';
 import { TREE_TYPES } from './constants.js';
 import { planRelief } from './real-place-sources.js';
 import { readBdTopo } from './building-survey.js';
@@ -506,6 +507,9 @@ async function importer(){
       }
       photoCredits.push(tr(LIDAR_CREDIT.en, LIDAR_CREDIT.fr));
     }
+    // Clear of the buildings, roads and walls (placement-clearance.js): moved a little, or left out.
+    const libre = clearOfObstacles(translated.elements, obstaclesOf(translated));
+    console.info(`[real-place] clearance: ${libre.moved} objects moved, ${libre.removed} left out`);
     // Detailed and Realistic (#480f): the bank's models in the built-in objects' place, a tree of its genus.
     if (niveau !== 'simple') {
       const bank = applyBank(translated.elements, { flora, rural: translated.builtShare < 0.15, lang: S.appLang === 'en' ? 'en' : 'fr' });

@@ -179,7 +179,7 @@ export function cleanFootprint(pts){
   return p.length >= 3 ? p : null;
 }
 
-function insidePolygon(p, q){
+export function insidePolygon(p, q){
   let inside = false;
   for (let i = 0, j = q.length - 1; i < q.length; j = i++) {
     if ((q[i].z > p.z) !== (q[j].z > p.z) && p.x < (q[j].x - q[i].x) * (p.z - q[i].z) / (q[j].z - q[i].z) + q[i].x) inside = !inside;
@@ -203,7 +203,7 @@ function distanceToPolyline(p, pts){
 }
 
 /** The point of a polyline nearest to `p`. */
-function nearestOnPolyline(p, pts){
+export function nearestOnPolyline(p, pts){
   let best = null, d0 = Infinity;
   for (let i = 0; i + 1 < pts.length; i++) {
     const a = pts[i], b = pts[i + 1], dx = b.x - a.x, dz = b.z - a.z, l2 = dx * dx + dz * dz;
@@ -648,7 +648,7 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
           realistic ? { lat: centre.lat, lon: centre.lon, seed: w.id + laid, shop: shops.some(p => insidePolygon(p, fp)) || (surveyed && surveyed.use === 'Commercial et services') } : null,
           entrances.filter(e => distanceToRing(e, fp) <= ENTRANCE_REACH));
         if (!building) continue;
-        const entry = { building, x: round(centreOf.x), z: round(centreOf.z), osmId: w.id };
+        const entry = { building, x: round(centreOf.x), z: round(centreOf.z), osmId: w.id, footprint: fp.map(roundPoint) };
         if (parts.length > 1) entry.part = laid;
         if (surveyed) entry.surveyId = surveyed.id;
         // Its roof's material given by a source (OSM, the survey): the aerial photo leaves it (aerial-reading.js).
@@ -685,7 +685,7 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       entrances.filter(e => distanceToRing(e, fp) <= ENTRANCE_REACH));
     if (!building) continue;
     taken.add(s.id);
-    out.buildings.push({ building, x: round(centreOf.x), z: round(centreOf.z), surveyId: s.id, ...(roofFinishOf({}, s) ? { roofKnown: true } : {}) });
+    out.buildings.push({ building, x: round(centreOf.x), z: round(centreOf.z), surveyId: s.id, footprint: fp.map(roundPoint), ...(roofFinishOf({}, s) ? { roofKnown: true } : {}) });
   }
   if (taken.size) out.surveyAttribution = BDTOPO_ATTRIBUTION;
   // How many entrances OSM maps here (#474a: their coverage is measured on real imports, in the log).
