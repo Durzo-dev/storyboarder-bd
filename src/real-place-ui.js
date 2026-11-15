@@ -508,7 +508,7 @@ async function importer(){
     }
     // Detailed and Realistic (#480f): the bank's models in the built-in objects' place, a tree of its genus.
     if (niveau !== 'simple') {
-      const bank = applyBank(translated.elements, { flora, rural: translated.builtShare < 0.15 });
+      const bank = applyBank(translated.elements, { flora, rural: translated.builtShare < 0.15, lang: S.appLang === 'en' ? 'en' : 'fr' });
       // Loaded before the Scene is laid (seen: without, the models stood as boxes until the Project reopened).
       if (bank.used.length) { try { await preloadModels(bank.used.map(m => BANK_PREFIX + m.file)); } catch (e) { /* boxes stand in */ } }
       if (arrete()) return annule;

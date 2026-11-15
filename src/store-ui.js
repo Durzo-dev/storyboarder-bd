@@ -27,7 +27,7 @@ import { recomposer } from './vignette-recadrage.js';
 import { optionsSketchfab, pixelsDe } from './glb-images.js';
 import { reduireTexturesGlb } from './glb-reduction.js';
 import { MODEL_BANK } from './model-bank-data.js';
-import { BANK_PREFIX } from './model-bank.js';
+import { BANK_PREFIX, bankLabel } from './model-bank.js';
 import { TREE_TYPES } from './constants.js';
 // #454a-4b : les bâtiments, rangés à part (Batiments/) mais listés avec les modèles.
 import { listerBatiments, lireBatimentDuDisque } from './batiment-store.js';
@@ -1107,7 +1107,11 @@ function toutesLesEntrees(){
   const projet = { tomes: S.tomes, scenes: S.scenes };
   return [
     ...entreesLocales({ ...donneesLocales, attributions: [...(donneesLocales.attributions || []), ...ATTRIBUTIONS_BANQUE], projet, metas: metasLocales(), bibliotheque })
-      .map(e => (e.fichier.startsWith(BANK_PREFIX) ? { ...e, integre: true } : e)),
+      .map(e => {
+        if (!e.fichier.startsWith(BANK_PREFIX)) return e;
+        const m = MODEL_BANK.find(x => BANK_PREFIX + x.file === e.fichier);
+        return { ...e, integre: true, titre: m ? bankLabel(m, langue()) : e.titre };
+      }),
     ...entreesBatiments(donneesLocales.batiments || [], projet),
   ];
 }
@@ -1500,6 +1504,8 @@ function carteLocale(e){
   // Le clic droit garde le menu du reste de l'application (demandé).
   c.addEventListener('contextmenu', (ev) => {
     ev.preventDefault();
+    // A bank model: nothing to rename, delete nor map (asked: no empty menu).
+    if (e.integre) return;
     if (_rappels.menuModele) _rappels.menuModele(ev, e.fichier);
   });
   cartesLocales.set(e.fichier, c);

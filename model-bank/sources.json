@@ -14,7 +14,11 @@
    "name": "Maple Tree",
    "author": "evolveduk",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/maple-tree-b5e945e7abcc471da6547c04e314774c"
+   "url": "https://sketchfab.com/3d-models/maple-tree-b5e945e7abcc471da6547c04e314774c",
+   "label": {
+    "fr": "Érable",
+    "en": "Maple"
+   }
   },
   {
    "uid": "82383f9fe3eb477b96721adf573a5fcd",
@@ -29,7 +33,11 @@
    "name": "Maple tree",
    "author": "MozzarellaARC",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/maple-tree-82383f9fe3eb477b96721adf573a5fcd"
+   "url": "https://sketchfab.com/3d-models/maple-tree-82383f9fe3eb477b96721adf573a5fcd",
+   "label": {
+    "fr": "Érable",
+    "en": "Maple"
+   }
   },
   {
    "uid": "aa842dffd9654d33b8b91170ce83c172",
@@ -43,7 +51,11 @@
    "name": "Birch tree",
    "author": "evolveduk",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/birch-tree-aa842dffd9654d33b8b91170ce83c172"
+   "url": "https://sketchfab.com/3d-models/birch-tree-aa842dffd9654d33b8b91170ce83c172",
+   "label": {
+    "fr": "Bouleau",
+    "en": "Birch"
+   }
   },
   {
    "uid": "004401bcd30e42d2a6c65788d4818ada",
@@ -57,7 +69,11 @@
    "name": "Gt 016 Birch 06",
    "author": "ztrztr",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/gt-016-birch-06-004401bcd30e42d2a6c65788d4818ada"
+   "url": "https://sketchfab.com/3d-models/gt-016-birch-06-004401bcd30e42d2a6c65788d4818ada",
+   "label": {
+    "fr": "Bouleau",
+    "en": "Birch"
+   }
   },
   {
    "uid": "c80ae9f38332487fb6f96eb87e5d75f8",
@@ -71,7 +87,11 @@
    "name": "Gt 016 Birch 05",
    "author": "ztrztr",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/gt-016-birch-05-c80ae9f38332487fb6f96eb87e5d75f8"
+   "url": "https://sketchfab.com/3d-models/gt-016-birch-05-c80ae9f38332487fb6f96eb87e5d75f8",
+   "label": {
+    "fr": "Bouleau",
+    "en": "Birch"
+   }
   },
   {
    "uid": "b47ff662f35644638cbf4c95eca4772a",
@@ -86,7 +106,11 @@
    "name": "Poplar tree",
    "author": "Georgeous",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/poplar-tree-b47ff662f35644638cbf4c95eca4772a"
+   "url": "https://sketchfab.com/3d-models/poplar-tree-b47ff662f35644638cbf4c95eca4772a",
+   "label": {
+    "fr": "Peuplier",
+    "en": "Poplar"
+   }
   },
   {
    "uid": "c0cfae097dec4fde9d7c20314a0c79aa",
@@ -100,7 +124,11 @@
    "name": "Realistic HD Black poplar (5/105)",
    "author": "PlantCatalog",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/realistic-hd-black-poplar-5-105-c0cfae097dec4fde9d7c20314a0c79aa"
+   "url": "https://sketchfab.com/3d-models/realistic-hd-black-poplar-5-105-c0cfae097dec4fde9d7c20314a0c79aa",
+   "label": {
+    "fr": "Peuplier",
+    "en": "Poplar"
+   }
   },
   {
    "uid": "ec7c1d301bbc43dca5fe5f0650148d13",
@@ -114,7 +142,11 @@
    "name": "POPLAR TREE - HIGHT TEXTURE LOW-POLY MODEL",
    "author": "T_i_a_D",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/poplar-tree-hight-texture-low-poly-model-ec7c1d301bbc43dca5fe5f0650148d13"
+   "url": "https://sketchfab.com/3d-models/poplar-tree-hight-texture-low-poly-model-ec7c1d301bbc43dca5fe5f0650148d13",
+   "label": {
+    "fr": "Peuplier",
+    "en": "Poplar"
+   }
   },
   {
    "uid": "a5b96e45d2a3477ea46be04573abd72e",
@@ -128,7 +160,11 @@
    "name": "Poplar tree",
    "author": "Georgeous",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/poplar-tree-a5b96e45d2a3477ea46be04573abd72e"
+   "url": "https://sketchfab.com/3d-models/poplar-tree-a5b96e45d2a3477ea46be04573abd72e",
+   "label": {
+    "fr": "Peuplier",
+    "en": "Poplar"
+   }
   },
   {
    "uid": "422de2372f3d46dfb314a0cd5da512fe",
@@ -142,7 +178,11 @@
    "name": "Willow",
    "author": "evolveduk",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/willow-422de2372f3d46dfb314a0cd5da512fe"
+   "url": "https://sketchfab.com/3d-models/willow-422de2372f3d46dfb314a0cd5da512fe",
+   "label": {
+    "fr": "Saule",
+    "en": "Willow"
+   }
   },
   {
    "uid": "dc36cac786c34948a5ae2cb41faaecfd",
@@ -156,7 +196,11 @@
    "name": "Silver willow tree",
    "author": "Georgeous",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/silver-willow-tree-dc36cac786c34948a5ae2cb41faaecfd"
+   "url": "https://sketchfab.com/3d-models/silver-willow-tree-dc36cac786c34948a5ae2cb41faaecfd",
+   "label": {
+    "fr": "Saule",
+    "en": "Willow"
+   }
   },
   {
    "uid": "7c9e7c4e971f4953b06faf300cbb1209",
@@ -172,7 +216,11 @@
    "name": "Japanese Cherry Tree (low-Poly)",
    "author": "Sereib",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/japanese-cherry-tree-low-poly-7c9e7c4e971f4953b06faf300cbb1209"
+   "url": "https://sketchfab.com/3d-models/japanese-cherry-tree-low-poly-7c9e7c4e971f4953b06faf300cbb1209",
+   "label": {
+    "fr": "Cerisier",
+    "en": "Cherry tree"
+   }
   },
   {
    "uid": "c83ae1c0438848e99611e26dc5f3c865",
@@ -188,7 +236,11 @@
    "name": "Cherry with leaves",
    "author": "alesya3d",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/cherry-with-leaves-c83ae1c0438848e99611e26dc5f3c865"
+   "url": "https://sketchfab.com/3d-models/cherry-with-leaves-c83ae1c0438848e99611e26dc5f3c865",
+   "label": {
+    "fr": "Cerisier",
+    "en": "Cherry tree"
+   }
   },
   {
    "uid": "9adffbc1461a471ba3d747171069db88",
@@ -204,7 +256,11 @@
    "name": "Cherry Tree",
    "author": "local.yany",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/cherry-tree-9adffbc1461a471ba3d747171069db88"
+   "url": "https://sketchfab.com/3d-models/cherry-tree-9adffbc1461a471ba3d747171069db88",
+   "label": {
+    "fr": "Cerisier",
+    "en": "Cherry tree"
+   }
   },
   {
    "uid": "d45218a3fab349e5b1de040f29e7b6f9",
@@ -218,7 +274,11 @@
    "name": "Pine Tree",
    "author": "evolveduk",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/pine-tree-d45218a3fab349e5b1de040f29e7b6f9"
+   "url": "https://sketchfab.com/3d-models/pine-tree-d45218a3fab349e5b1de040f29e7b6f9",
+   "label": {
+    "fr": "Pin",
+    "en": "Pine"
+   }
   },
   {
    "uid": "27ab66bf87fd47bda321efde1d7a6fae",
@@ -232,7 +292,11 @@
    "name": "Pine Tree",
    "author": "EmreAlkan",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/pine-tree-27ab66bf87fd47bda321efde1d7a6fae"
+   "url": "https://sketchfab.com/3d-models/pine-tree-27ab66bf87fd47bda321efde1d7a6fae",
+   "label": {
+    "fr": "Pin",
+    "en": "Pine"
+   }
   },
   {
    "uid": "85770f3c938b400090b4eee95f592279",
@@ -246,7 +310,11 @@
    "name": "Pine Tree",
    "author": "onkelg",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/pine-tree-85770f3c938b400090b4eee95f592279"
+   "url": "https://sketchfab.com/3d-models/pine-tree-85770f3c938b400090b4eee95f592279",
+   "label": {
+    "fr": "Pin",
+    "en": "Pine"
+   }
   },
   {
    "uid": "3f39aa5485e94477a36b435f7a1a8b54",
@@ -261,7 +329,11 @@
    "name": "Fir tree",
    "author": "evolveduk",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/fir-tree-3f39aa5485e94477a36b435f7a1a8b54"
+   "url": "https://sketchfab.com/3d-models/fir-tree-3f39aa5485e94477a36b435f7a1a8b54",
+   "label": {
+    "fr": "Sapin",
+    "en": "Fir"
+   }
   },
   {
    "uid": "0844c504dca64122a7311b42c4bc19b2",
@@ -276,7 +348,11 @@
    "name": "Fir Tree",
    "author": "Rodri",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/fir-tree-0844c504dca64122a7311b42c4bc19b2"
+   "url": "https://sketchfab.com/3d-models/fir-tree-0844c504dca64122a7311b42c4bc19b2",
+   "label": {
+    "fr": "Sapin",
+    "en": "Fir"
+   }
   },
   {
    "uid": "a50a5df3164246a5af97992cec33a143",
@@ -290,7 +366,11 @@
    "name": "Spruce",
    "author": "evolveduk",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/spruce-a50a5df3164246a5af97992cec33a143"
+   "url": "https://sketchfab.com/3d-models/spruce-a50a5df3164246a5af97992cec33a143",
+   "label": {
+    "fr": "Épicéa",
+    "en": "Spruce"
+   }
   },
   {
    "uid": "7a5db417827244d98827459bce0cc944",
@@ -304,7 +384,11 @@
    "name": "Spruce tree",
    "author": "Georgeous",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/spruce-tree-7a5db417827244d98827459bce0cc944"
+   "url": "https://sketchfab.com/3d-models/spruce-tree-7a5db417827244d98827459bce0cc944",
+   "label": {
+    "fr": "Épicéa",
+    "en": "Spruce"
+   }
   },
   {
    "uid": "11acf710e6c149daa8d6fb8cdc5d087f",
@@ -318,7 +402,11 @@
    "name": "Date Palm",
    "author": "evolveduk",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/date-palm-11acf710e6c149daa8d6fb8cdc5d087f"
+   "url": "https://sketchfab.com/3d-models/date-palm-11acf710e6c149daa8d6fb8cdc5d087f",
+   "label": {
+    "fr": "Palmier dattier",
+    "en": "Date palm"
+   }
   },
   {
    "uid": "ced3b31f14f940d0b7480a83e6f8c9c0",
@@ -332,7 +420,11 @@
    "name": "Palm Tree Realistic",
    "author": "00amza",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/palm-tree-realistic-ced3b31f14f940d0b7480a83e6f8c9c0"
+   "url": "https://sketchfab.com/3d-models/palm-tree-realistic-ced3b31f14f940d0b7480a83e6f8c9c0",
+   "label": {
+    "fr": "Palmier dattier",
+    "en": "Date palm"
+   }
   },
   {
    "uid": "e8c0ea53410947b0b7f20d33702f4098",
@@ -346,7 +438,11 @@
    "name": "Plant Series – Palm Tree",
    "author": "UPWARD",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/plant-series-palm-tree-e8c0ea53410947b0b7f20d33702f4098"
+   "url": "https://sketchfab.com/3d-models/plant-series-palm-tree-e8c0ea53410947b0b7f20d33702f4098",
+   "label": {
+    "fr": "Palmier dattier",
+    "en": "Date palm"
+   }
   },
   {
    "uid": "e38e97f7b3db4f76ac7b42970d51837e",
@@ -361,7 +457,11 @@
    "name": "Realistic HD Mediterranean fan palm (16/30)",
    "author": "PlantCatalog",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/realistic-hd-mediterranean-fan-palm-16-3-e38e97f7b3db4f76ac7b42970d51837e"
+   "url": "https://sketchfab.com/3d-models/realistic-hd-mediterranean-fan-palm-16-3-e38e97f7b3db4f76ac7b42970d51837e",
+   "label": {
+    "fr": "Palmier nain",
+    "en": "Dwarf fan palm"
+   }
   },
   {
    "uid": "db1b8aa7f06b499f9de68460de1eea6b",
@@ -376,19 +476,11 @@
    "name": "Realistic HD Mediterranean fan palm (19/30)",
    "author": "PlantCatalog",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/realistic-hd-mediterranean-fan-palm-19-3-db1b8aa7f06b499f9de68460de1eea6b"
-  },
-  {
-   "uid": "04e29bcb52194fc9abb7e5bc0bdcb619",
-   "file": "arbuste-1.glb",
-   "use": "arbuste",
-   "objType": "arbuste",
-   "genera": [],
-   "generic": true,
-   "name": "Low Poly Shrub - Medium Texture",
-   "author": "Natural_Disbuster",
-   "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/low-poly-shrub-medium-texture-04e29bcb52194fc9abb7e5bc0bdcb619"
+   "url": "https://sketchfab.com/3d-models/realistic-hd-mediterranean-fan-palm-19-3-db1b8aa7f06b499f9de68460de1eea6b",
+   "label": {
+    "fr": "Palmier nain",
+    "en": "Dwarf fan palm"
+   }
   },
   {
    "uid": "bc97c0fdbf6a42cc816dc339eaf3c897",
@@ -400,7 +492,11 @@
    "name": "GameReady Bush",
    "author": "abhayexe",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/gameready-bush-bc97c0fdbf6a42cc816dc339eaf3c897"
+   "url": "https://sketchfab.com/3d-models/gameready-bush-bc97c0fdbf6a42cc816dc339eaf3c897",
+   "label": {
+    "fr": "Arbuste",
+    "en": "Shrub"
+   }
   },
   {
    "uid": "484c75845fb14ae4ba1ab42d18e3038b",
@@ -619,7 +715,11 @@
    "name": "Platano_tree",
    "author": "teacherap123",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/platano-tree-435cee5470b0450b937e13e06b1ae7a8"
+   "url": "https://sketchfab.com/3d-models/platano-tree-435cee5470b0450b937e13e06b1ae7a8",
+   "label": {
+    "fr": "Platane",
+    "en": "Plane tree"
+   }
   },
   {
    "uid": "c0c3aa73cc9945d2a36c01a0d8d6d4bb",
@@ -634,7 +734,11 @@
    "name": "Linden tree",
    "author": "Georgeous",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/linden-tree-c0c3aa73cc9945d2a36c01a0d8d6d4bb"
+   "url": "https://sketchfab.com/3d-models/linden-tree-c0c3aa73cc9945d2a36c01a0d8d6d4bb",
+   "label": {
+    "fr": "Tilleul",
+    "en": "Linden"
+   }
   },
   {
    "uid": "7c2db912e5d846b791bb544921ce2a1c",
@@ -649,7 +753,11 @@
    "name": "Linden Tree (high-Poly)",
    "author": "Sereib",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/linden-tree-high-poly-7c2db912e5d846b791bb544921ce2a1c"
+   "url": "https://sketchfab.com/3d-models/linden-tree-high-poly-7c2db912e5d846b791bb544921ce2a1c",
+   "label": {
+    "fr": "Tilleul",
+    "en": "Linden"
+   }
   },
   {
    "uid": "dcba8b6ad14144f388d5a68002ccd57f",
@@ -663,7 +771,11 @@
    "name": "Realistic HD Red horse chestnut (28/30)",
    "author": "PlantCatalog",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/realistic-hd-red-horse-chestnut-28-30-dcba8b6ad14144f388d5a68002ccd57f"
+   "url": "https://sketchfab.com/3d-models/realistic-hd-red-horse-chestnut-28-30-dcba8b6ad14144f388d5a68002ccd57f",
+   "label": {
+    "fr": "Marronnier",
+    "en": "Horse chestnut"
+   }
   },
   {
    "uid": "5b433e8e6b8149faacbc52fbb3b688e4",
@@ -677,7 +789,11 @@
    "name": "Realistic HD Red horse chestnut (27/30)",
    "author": "PlantCatalog",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/realistic-hd-red-horse-chestnut-27-30-5b433e8e6b8149faacbc52fbb3b688e4"
+   "url": "https://sketchfab.com/3d-models/realistic-hd-red-horse-chestnut-27-30-5b433e8e6b8149faacbc52fbb3b688e4",
+   "label": {
+    "fr": "Marronnier",
+    "en": "Horse chestnut"
+   }
   },
   {
    "uid": "2b12715b0abe4371ba1e6c2403d28d3b",
@@ -691,7 +807,11 @@
    "name": "Realistic HD Red horse chestnut (30/30)",
    "author": "PlantCatalog",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/realistic-hd-red-horse-chestnut-30-30-2b12715b0abe4371ba1e6c2403d28d3b"
+   "url": "https://sketchfab.com/3d-models/realistic-hd-red-horse-chestnut-30-30-2b12715b0abe4371ba1e6c2403d28d3b",
+   "label": {
+    "fr": "Marronnier",
+    "en": "Horse chestnut"
+   }
   },
   {
    "uid": "810208743d0e4cffadb15e77211b3a60",
@@ -705,7 +825,11 @@
    "name": "Old Oak Tree",
    "author": "BB ARTS",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/old-oak-tree-810208743d0e4cffadb15e77211b3a60"
+   "url": "https://sketchfab.com/3d-models/old-oak-tree-810208743d0e4cffadb15e77211b3a60",
+   "label": {
+    "fr": "Chêne",
+    "en": "Oak"
+   }
   },
   {
    "uid": "748ebed1c5f244bb8f470c4ad5557431",
@@ -720,7 +844,11 @@
    "author": "Georgeous",
    "licence": "CC-BY-4.0",
    "url": "https://sketchfab.com/3d-models/petiolate-oak-tree-748ebed1c5f244bb8f470c4ad5557431",
-   "sink": 0.4
+   "sink": 0.4,
+   "label": {
+    "fr": "Chêne",
+    "en": "Oak"
+   }
   },
   {
    "uid": "adf5bdebd05340659dae92219a63f62d",
@@ -734,7 +862,11 @@
    "name": "Cedar tree",
    "author": "Georgeous",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/cedar-tree-adf5bdebd05340659dae92219a63f62d"
+   "url": "https://sketchfab.com/3d-models/cedar-tree-adf5bdebd05340659dae92219a63f62d",
+   "label": {
+    "fr": "Cèdre",
+    "en": "Cedar"
+   }
   },
   {
    "uid": "0b9d28f8dde545a38eb682014f72225f",
@@ -748,7 +880,11 @@
    "name": "cedar",
    "author": "kunkun",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/cedar-0b9d28f8dde545a38eb682014f72225f"
+   "url": "https://sketchfab.com/3d-models/cedar-0b9d28f8dde545a38eb682014f72225f",
+   "label": {
+    "fr": "Cèdre",
+    "en": "Cedar"
+   }
   },
   {
    "uid": "249d8cb553a8469e9d645713f8e96ed1",
@@ -765,7 +901,11 @@
    "name": "Cypress tree",
    "author": "ElectroNick",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/cypress-tree-249d8cb553a8469e9d645713f8e96ed1"
+   "url": "https://sketchfab.com/3d-models/cypress-tree-249d8cb553a8469e9d645713f8e96ed1",
+   "label": {
+    "fr": "Cyprès",
+    "en": "Cypress"
+   }
   },
   {
    "uid": "50efbd3872d844169783e746ebf42dac",
@@ -782,7 +922,11 @@
    "name": "Italian Cipres",
    "author": "ReyGuitta",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/italian-cipres-50efbd3872d844169783e746ebf42dac"
+   "url": "https://sketchfab.com/3d-models/italian-cipres-50efbd3872d844169783e746ebf42dac",
+   "label": {
+    "fr": "Cyprès",
+    "en": "Cypress"
+   }
   },
   {
    "uid": "e0b57e421ac546c6b7e4cb563f524640",
@@ -796,7 +940,11 @@
    "name": "Olive Tree Portugal",
    "author": "CeDRI",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/olive-tree-portugal-e0b57e421ac546c6b7e4cb563f524640"
+   "url": "https://sketchfab.com/3d-models/olive-tree-portugal-e0b57e421ac546c6b7e4cb563f524640",
+   "label": {
+    "fr": "Olivier",
+    "en": "Olive tree"
+   }
   },
   {
    "uid": "9ac2e799b40b4d129074ee04c4e6a57f",
@@ -810,7 +958,11 @@
    "name": "African Olive",
    "author": "Valery.Li",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/african-olive-9ac2e799b40b4d129074ee04c4e6a57f"
+   "url": "https://sketchfab.com/3d-models/african-olive-9ac2e799b40b4d129074ee04c4e6a57f",
+   "label": {
+    "fr": "Olivier",
+    "en": "Olive tree"
+   }
   },
   {
    "uid": "d43e3ef7785540e18a69d35c5035499d",
@@ -822,7 +974,11 @@
    "name": "3D Bush - 01",
    "author": "SanForge Studio",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/3d-bush-01-d43e3ef7785540e18a69d35c5035499d"
+   "url": "https://sketchfab.com/3d-models/3d-bush-01-d43e3ef7785540e18a69d35c5035499d",
+   "label": {
+    "fr": "Buisson",
+    "en": "Bush"
+   }
   },
   {
    "uid": "b39f0e8dd90e4cea92aaf23bbd9ab9ae",
@@ -834,7 +990,11 @@
    "name": "Realistic Bush/Tree (Dwarf Umbrella)",
    "author": "Garecra",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/realistic-bush-tree-dwarf-umbrella-b39f0e8dd90e4cea92aaf23bbd9ab9ae"
+   "url": "https://sketchfab.com/3d-models/realistic-bush-tree-dwarf-umbrella-b39f0e8dd90e4cea92aaf23bbd9ab9ae",
+   "label": {
+    "fr": "Buisson",
+    "en": "Bush"
+   }
   },
   {
    "uid": "8db54bf299954daa9ee29b233e923672",
@@ -846,7 +1006,11 @@
    "name": "Photorealistic Bush",
    "author": "Adrian Sheremet",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/photorealistic-bush-8db54bf299954daa9ee29b233e923672"
+   "url": "https://sketchfab.com/3d-models/photorealistic-bush-8db54bf299954daa9ee29b233e923672",
+   "label": {
+    "fr": "Buisson",
+    "en": "Bush"
+   }
   },
   {
    "uid": "092ab2f534eb494ab0f96cd63820e952",
@@ -858,7 +1022,11 @@
    "name": "Realistic HD Yellow bush lupine (1/25)",
    "author": "PlantCatalog",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/realistic-hd-yellow-bush-lupine-1-25-092ab2f534eb494ab0f96cd63820e952"
+   "url": "https://sketchfab.com/3d-models/realistic-hd-yellow-bush-lupine-1-25-092ab2f534eb494ab0f96cd63820e952",
+   "label": {
+    "fr": "Buisson",
+    "en": "Bush"
+   }
   },
   {
    "uid": "4cf871e517f540ab94ce8b24c0594edf",
@@ -870,7 +1038,11 @@
    "name": "Realistic HD Yellow bush lupine (19/25)",
    "author": "PlantCatalog",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/realistic-hd-yellow-bush-lupine-19-25-4cf871e517f540ab94ce8b24c0594edf"
+   "url": "https://sketchfab.com/3d-models/realistic-hd-yellow-bush-lupine-19-25-4cf871e517f540ab94ce8b24c0594edf",
+   "label": {
+    "fr": "Buisson",
+    "en": "Bush"
+   }
   },
   {
    "uid": "61df9f8be11a45c0b7048790db2569e8",
@@ -884,7 +1056,11 @@
    "name": "Washingtonia Robusta Palm_02",
    "author": "André Murrugarra",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/washingtonia-robusta-palm-02-61df9f8be11a45c0b7048790db2569e8"
+   "url": "https://sketchfab.com/3d-models/washingtonia-robusta-palm-02-61df9f8be11a45c0b7048790db2569e8",
+   "label": {
+    "fr": "Palmier Washingtonia",
+    "en": "Washingtonia palm"
+   }
   },
   {
    "uid": "d63d13e51e1d4925b9eb6b984431762b",
@@ -898,7 +1074,11 @@
    "name": "Washingtonia Robusta Palm_03",
    "author": "André Murrugarra",
    "licence": "CC-BY-4.0",
-   "url": "https://sketchfab.com/3d-models/washingtonia-robusta-palm-03-d63d13e51e1d4925b9eb6b984431762b"
+   "url": "https://sketchfab.com/3d-models/washingtonia-robusta-palm-03-d63d13e51e1d4925b9eb6b984431762b",
+   "label": {
+    "fr": "Palmier Washingtonia",
+    "en": "Washingtonia palm"
+   }
   }
  ]
 }

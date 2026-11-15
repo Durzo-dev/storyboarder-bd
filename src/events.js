@@ -4544,6 +4544,8 @@ document.getElementById('ctxDeleteFont').onclick = () => {
 };
 
 function openModelContextMenu(e, nomFichier){
+  // A bank model (#480f): every entry would be hidden; no empty menu (asked).
+  if (typeof nomFichier === 'string' && nomFichier.startsWith(BANK_PREFIX)) return;
   _modelCtxFichier = nomFichier;
   // A bank model (#480f) is the application's: neither renamed nor deleted, like a built-in texture.
   const banque = typeof nomFichier === 'string' && nomFichier.startsWith(BANK_PREFIX);

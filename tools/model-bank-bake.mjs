@@ -32,7 +32,7 @@ const MAX_FACES = 60000;
 /** The plants: never simplified. */
 const VEGETATION = new Set(['arbre', 'conifere', 'cypres', 'olivier', 'palmier', 'arbuste', 'buisson']);
 /** A plant above this many faces is left out (a street holds dozens: the 3 million-face cherry tree). */
-const REFUSED_PLANT_FACES = 400000;
+const REFUSED_PLANT_FACES = 450000;   // (EmreAlkan's pine, 437 500, asked in)
 /** The simplification's error bound (fraction of the model's size): tight, the shape first. */
 const ERROR = 0.01;
 /** The largest texture side kept (pixels). */
@@ -140,7 +140,7 @@ async function bake(){
       const size = [b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]].map(v => Math.round(v * 100) / 100);
       report.push({ file: m.file, name: m.name, facesBefore: before, faces: after, mb: Math.round(bytes / 1e5) / 10, size });
       data.push({ file: m.file, use: m.use, objType: m.objType, genera: m.genera, generic: !!m.generic, ...(m.rural ? { rural: true } : {}),
-        name: m.name, author: m.author, licence: m.licence, url: m.url, ratio: Math.round(Math.max(size[0], size[2]) / size[1] * 100) / 100 });
+        ...(m.label ? { label: m.label } : {}), name: m.name, author: m.author, licence: m.licence, url: m.url, ratio: Math.round(Math.max(size[0], size[2]) / size[1] * 100) / 100 });
       console.log(`${m.file}: ${before} -> ${after} faces, ${(bytes / 1e6).toFixed(1)} MB`);
     } catch (e) {
       report.push({ file: m.file, error: e.message });

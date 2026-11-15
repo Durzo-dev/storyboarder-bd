@@ -54,7 +54,7 @@ export function bankModelsFor(objType, genus = null, { rural = false, bank = MOD
  * flora's genera of its form, `flora.genera`), the others of their use. Changes `elements` in place; returns
  * { n, used } (the bank entries used: their credits).
  */
-export function applyBank(elements, { flora = null, rural = false, bank = MODEL_BANK } = {}){
+export function applyBank(elements, { flora = null, rural = false, bank = MODEL_BANK, lang = 'fr' } = {}){
   const used = new Map();
   let n = 0;
   for (const e of elements || []) {
@@ -65,12 +65,23 @@ export function applyBank(elements, { flora = null, rural = false, bank = MODEL_
     const m = list[Math.floor(hash(e.x, e.z, 0x9e37) * list.length)];
     e.usage = e.objType;
     e.modelFile = BANK_PREFIX + m.file;
-    e.modelName = m.name;
+    e.modelName = bankLabel(m, lang, bank);
     if (m.ratio > 0) e.modelRatio = m.ratio;
     used.set(m.file, m);
     n++;
   }
   return { n, used: [...used.values()] };
+}
+
+/**
+ * A bank model's name as the application shows it (asked: the tree's real name, in the language, numbered when
+ * the bank has several): « Érable 2 », « Maple 2 ». Its Sketchfab title without a label (street furniture).
+ */
+export function bankLabel(m, lang = 'fr', bank = MODEL_BANK){
+  const name = m && m.label ? (m.label[lang] || m.label.fr) : (m && m.name) || '';
+  if (!m || !m.label) return name;
+  const same = bank.filter(x => x.use === m.use);
+  return same.length > 1 ? `${name} ${same.findIndex(x => x.file === m.file) + 1}` : name;
 }
 
 /** A bank model's credit (CC-BY: its title, author, licence and page). */

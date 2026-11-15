@@ -8,7 +8,7 @@ import './helpers/dom-stub.mjs';
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import { BANK_PREFIX, genusOfTags, bankModelsFor, applyBank, bankCredit } from '../src/model-bank.js';
+import { BANK_PREFIX, bankLabel, genusOfTags, bankModelsFor, applyBank, bankCredit } from '../src/model-bank.js';
 import { MODEL_BANK } from '../src/model-bank-data.js';
 
 const m = (file, objType, genera = [], extra = {}) => ({ file, objType, genera, generic: false, name: file, author: 'A', licence: 'CC-BY-4.0', url: `https://sketchfab.com/3d-models/x-${file}`, ratio: 0.7, ...extra });
@@ -49,6 +49,18 @@ describe('the bank, model by model', () => {
       const i = main.indexOf(`ipcMain.handle('${canal}'`);
       assert.ok(main.slice(i, i + 400).includes('estDeLaBanque('), `${canal} refuses a bank model`);
     }
+  });
+});
+
+describe('a bank model\'s name', () => {
+  test('the tree\'s real name in the language, numbered when the bank has several; the title otherwise', () => {
+    const bank = [m('erable-1.glb', 'arbre', [], { use: 'erable', label: { fr: 'Érable', en: 'Maple' } }),
+      m('erable-2.glb', 'arbre', [], { use: 'erable', label: { fr: 'Érable', en: 'Maple' } }),
+      m('saule-1.glb', 'arbre', [], { use: 'saule', label: { fr: 'Saule', en: 'Willow' } }), m('banc-1.glb', 'banc', [], { use: 'banc', name: 'Park Bench' })];
+    assert.equal(bankLabel(bank[1], 'fr', bank), 'Érable 2');
+    assert.equal(bankLabel(bank[0], 'en', bank), 'Maple 1');
+    assert.equal(bankLabel(bank[2], 'fr', bank), 'Saule');
+    assert.equal(bankLabel(bank[3], 'fr', bank), 'Park Bench');
   });
 });
 
