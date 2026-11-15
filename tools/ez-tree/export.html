@@ -8,20 +8,55 @@ import * as THREE from 'https://esm.sh/three@0.170.0';
 import { GLTFExporter } from 'https://esm.sh/three@0.170.0/examples/jsm/exporters/GLTFExporter.js';
 import { Tree, TreePreset } from 'https://esm.sh/@dgreenheck/ez-tree@1.1.0?deps=three@0.170.0';
 
-// Every preset but the trellis (a frame, not a plant), two seeds each: two variants of one tree.
-const presets = Object.keys(TreePreset).filter(n => n !== 'Trellis');
+import { SPECIES, leafCluster } from './species.js';
+
+/** One of our species: the preset, its changes, our leaf drawn, the Poly Haven bark. */
+async function speciesTree(sp, seed){
+  const tree = new Tree();
+  tree.loadPreset(sp.from);
+  tree.options.seed = seed * 7919;
+  sp.set(tree.options);
+  tree.options.leaves.tint = 0xffffff;
+  tree.generate();
+  const leaf = new THREE.CanvasTexture(leafCluster({ ...sp.leaf, seed }));
+  leaf.colorSpace = THREE.SRGBColorSpace;
+  const bark = await new THREE.TextureLoader().loadAsync(sp.bark);
+  bark.colorSpace = THREE.SRGBColorSpace;
+  bark.wrapS = bark.wrapT = THREE.RepeatWrapping;
+  bark.repeat.set(sp.barkScale[0], sp.barkScale[1]);
+  tree.traverse(m => {
+    if (!m.isMesh) return;
+    const leaves = m.material.alphaTest > 0;
+    m.material.map = leaves ? leaf : bark;
+    if (!leaves) { m.material.normalMap = null; m.material.aoMap = null; m.material.roughnessMap = null; }
+    if (m.material.color) m.material.color.set(0xffffff);
+    m.material.needsUpdate = true;
+  });
+  return tree;
+}
+
+async function save(tree, name){
+  const size = new THREE.Box3().setFromObject(tree).getSize(new THREE.Vector3());
+  const glb = await new GLTFExporter().parseAsync(tree, { binary: true });
+  await window.ez.save(name, new Uint8Array(glb), { triangles: tree.triangleCount, size: [size.x, size.y, size.z].map(v => Math.round(v * 10) / 10) });
+}
+
+// Our species, two seeds each (two variants of one tree). `?presets` in the URL: EZ-Tree's own presets.
 try {
-  for (const name of presets) {
-    for (const seed of [1, 2]) {
-      const tree = new Tree();
-      tree.loadPreset(name);
-      tree.options.seed = seed * 7919;
-      tree.generate();
-      await new Promise(ok => setTimeout(ok, 200));   // its textures decoded
-      const size = new THREE.Box3().setFromObject(tree).getSize(new THREE.Vector3());
-      const glb = await new GLTFExporter().parseAsync(tree, { binary: true });
-      await window.ez.save(`EZ ${name} ${seed}.glb`, new Uint8Array(glb),
-        { triangles: tree.triangleCount, size: [size.x, size.y, size.z].map(v => Math.round(v * 10) / 10) });
+  if (location.search.includes('presets')) {
+    for (const name of Object.keys(TreePreset).filter(n => n !== 'Trellis')) {
+      for (const seed of [1, 2]) {
+        const tree = new Tree();
+        tree.loadPreset(name);
+        tree.options.seed = seed * 7919;
+        tree.generate();
+        await new Promise(ok => setTimeout(ok, 200));
+        await save(tree, `EZ ${name} ${seed}.glb`);
+      }
+    }
+  } else {
+    for (const [name, sp] of Object.entries(SPECIES)) {
+      for (const seed of [1, 2]) await save(await speciesTree(sp, seed), `EZ ${name} ${seed}.glb`);
     }
   }
   await window.ez.done();

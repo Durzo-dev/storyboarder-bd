@@ -3,7 +3,8 @@
  * instead of searched under licences. `npx electron tools/ez-tree/export.cjs` from the project's root (Internet
  * needed). EZ-Tree (Dan Greenheck, MIT; its barks from Poly Haven and TextureCan, CC0) needs three 0.167 or later:
  * a hidden window loads both from esm.sh (the application keeps its three 0.128), generates each preset, exports it as .glb into the Projects' « Modeles » folder (« EZ … »),
- * to be seen in « My models ». A trial: nothing of it is shipped.
+ * to be seen in « My models »: our species (species.js: plane, linden, cypress, olive), or with `--presets`
+ * EZ-Tree's own. A trial: nothing of it is shipped.
  */
 const path = require('path');
 const fs = require('fs');
@@ -30,5 +31,6 @@ app.whenReady().then(() => {
     app.quit();
   });
   const win = new BrowserWindow({ show: false, webPreferences: { preload: path.join(__dirname, 'preload.cjs') } });
-  win.loadFile(path.join(__dirname, 'export.html'));
+  // `--presets`: EZ-Tree's own presets; by default our species (species.js).
+  win.loadFile(path.join(__dirname, 'export.html'), process.argv.includes('--presets') ? { search: 'presets' } : {});
 });
