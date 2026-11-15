@@ -52,6 +52,8 @@ for (const name of Object.keys(SPECIES)) {
     const t = generateSpeciesTree(name, 1, { makeCanvas: fakeCanvas });
     assert.ok(t.triangleCount > 3000 && t.triangleCount < 40000, `${t.triangleCount} triangles`);
     assert.ok(t.leavesMesh.material.map && t.leavesMesh.material.map.image.width === 512);
+    // Read as they are (the application's renderer does not re-encode in sRGB): sRGB gave black trunks, seen.
+    assert.equal(t.leavesMesh.material.map.encoding, THREE.LinearEncoding);
     assert.ok(t.leavesMesh.geometry.index.count > 0 && t.branchesMesh.geometry.index.count > 0);
   });
 }
@@ -70,6 +72,15 @@ test('two variants differ; a variant is generated once, its trees share it', () 
   const mesh = (g) => g.children[0].children[0];
   assert.equal(mesh(a).geometry, mesh(b).geometry);
   assert.notEqual(mesh(a).geometry, mesh(c).geometry);
+});
+
+test('the bark given is read as it is, its tint applied', () => {
+  const bark = new THREE.Texture();
+  const t = generateSpeciesTree('Tilleul', 1, { makeCanvas: fakeCanvas, barkTexture: () => bark });
+  const m = t.branchesMesh.material;
+  assert.equal(m.map, bark);
+  assert.equal(bark.encoding, THREE.LinearEncoding);
+  assert.equal(m.color.getHex(), SPECIES.Tilleul.barkTint);
 });
 
 test('a tree of the height asked, its foot on the ground', () => {

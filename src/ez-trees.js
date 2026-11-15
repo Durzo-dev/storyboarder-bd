@@ -6,6 +6,10 @@
  * that variant is a clone of it (shared geometry and materials), set to its height.
  *
  * THREE is the application's global (r128), as for src/vendor/ez-tree/ez-tree.js.
+ *
+ * The bark and the foliage are read AS THEY ARE (LinearEncoding, three's default): the application's renderer does
+ * not re-encode its output in sRGB (model-cache.js, its colours « telles qu'elles s'affichent »). Marked sRGB, they
+ * were decoded and never re-encoded: seen, dark green crowns and black trunks.
  */
 import { Tree, TreeOptions } from './vendor/ez-tree/ez-tree.js';
 import { TREE_PRESETS } from './vendor/ez-tree/presets.js';
@@ -31,7 +35,6 @@ function shippedBark(name) {
   if (!barks.has(name)) {
     const tex = new THREE.TextureLoader().load(BARK_DIR + barkFile(name), () => onBarkLoaded(),
       () => console.warn(`[ez-trees] bark missing: ${BARK_DIR}${barkFile(name)}`));
-    tex.encoding = THREE.sRGBEncoding;
     barks.set(name, tex);
   }
   return barks.get(name);
@@ -66,7 +69,6 @@ export function generateSpeciesTree(name, variant = 1, { makeCanvas = domCanvas,
   tree.generate();
 
   const leaf = new THREE.CanvasTexture(sp.foliage(variant, makeCanvas));
-  leaf.encoding = THREE.sRGBEncoding;
   const leaves = tree.leavesMesh.material;
   leaves.map = leaf;
   leaves.color.set(0xffffff);
