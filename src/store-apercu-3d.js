@@ -15,7 +15,7 @@
  * fermeture (géométries, matériaux, textures, contexte WebGL) : parcourir vingt fiches ne doit pas
  * en garder vingt.
  */
-import { GLTFLoader } from './vendor/GLTFLoader.js';
+import { chargeurGltf } from './gltf-decoders.js';
 import { CLE_ACTUELLE, AMBIANTE_ACTUELLE } from './lighting-3d.js';
 import { preparerModeleImporte3D } from './model-cache.js';
 import { box3FromObjectSkinAware3D } from './skinned-box-3d.js';
@@ -115,7 +115,7 @@ export function positionCamera3D(centre, distance, { lacet, tangage }){
 function decoder(octets){
   return new Promise((resolve, reject) => {
     const brut = octets.buffer ? octets.buffer.slice(octets.byteOffset, octets.byteOffset + octets.byteLength) : octets;
-    try { new GLTFLoader().parse(brut, '', resolve, reject); } catch (e) { reject(e); }
+    try { chargeurGltf().parse(brut, '', resolve, reject); } catch (e) { reject(e); }
   });
 }
 

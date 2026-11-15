@@ -143,6 +143,7 @@ export default [
   {
     // types/ ne contient que des déclarations ambiantes lues par la vérification de types
     // (jsconfig.json). Ce n'est pas du JavaScript exécutable : ESLint n'a rien à y dire.
-    ignores: ['node_modules/**', 'dist/**', 'src/version.js', 'types/**'],
+    // src/vendor/meshopt_decoder.module.js: meshoptimizer's decoder as published (MIT, #480f), copied untouched.
+    ignores: ['node_modules/**', 'dist/**', 'src/version.js', 'types/**', 'src/vendor/meshopt_decoder.module.js'],
   },
 ];

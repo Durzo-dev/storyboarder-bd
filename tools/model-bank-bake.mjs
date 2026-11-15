@@ -16,16 +16,23 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
-import { dedup, prune, weld, simplify, getBounds } from '@gltf-transform/functions';
-import { MeshoptSimplifier } from 'meshoptimizer';
+import { dedup, prune, weld, simplify, meshopt, getBounds } from '@gltf-transform/functions';
+import { MeshoptSimplifier, MeshoptEncoder } from 'meshoptimizer';
 import { app, nativeImage } from 'electron';
 
 /**
- * The faces a bank model is simplified towards: a street holds dozens of trees. SEEN in « My models » after the
- * third bake (30 000, error loosened up to 0.4, geometry quantised): trees in shards, leaves collapsed into long
- * triangles. Now: more faces, a tight error, the leaves' borders locked, no quantisation; heavier, but usable.
+ * SEEN in « My models » (14-15 Nov. 2026): simplified, the trees broke in shards (leaves collapsed into long
+ * triangles), even at 60 000 faces with a tight error and borders locked. What games do (Simplygon, Valve's
+ * wiki): foliage is NEVER decimated, its leaf cards are non-manifold; it is shipped whole and lightened by
+ * compression (and, far away, by cards or impostors). So: plants (VEGETATION) kept whole, every model's geometry
+ * compressed (EXT_meshopt_compression, quantised then compressed losslessly: three's GLTFLoader decodes it,
+ * src/gltf-decoders.js); only the street furniture, solid, is simplified, towards MAX_FACES.
  */
 const MAX_FACES = 60000;
+/** The plants: never simplified. */
+const VEGETATION = new Set(['arbre', 'conifere', 'cypres', 'olivier', 'palmier', 'arbuste', 'buisson']);
+/** A plant above this many faces is left out (a street holds dozens: the 3 million-face cherry tree). */
+const REFUSED_PLANT_FACES = 400000;
 /** The simplification's error bound (fraction of the model's size): tight, the shape first. */
 const ERROR = 0.01;
 /** The largest texture side kept (pixels). */
@@ -91,6 +98,7 @@ function facesOf(doc){
 // ready, so a module waiting for « ready » waits forever (seen: 10 minutes, nothing written).
 async function bake(){
   await MeshoptSimplifier.ready;
+  await MeshoptEncoder.ready;
   const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
   const work = path.join(root, 'model-bank'), bank = path.join(root, 'assets', 'model-bank');
   fs.mkdirSync(bank, { recursive: true });
@@ -108,13 +116,13 @@ async function bake(){
       const doc = await io.read(src);
       const before = facesOf(doc);
       await doc.transform(dedup(), prune(), weld());
-      if (before > MAX_FACES) await doc.transform(simplify({ simplifier: MeshoptSimplifier, ratio: MAX_FACES / facesOf(doc), error: ERROR, lockBorder: true }));
-      if (facesOf(doc) > REFUSED_FACES) throw new Error(`too heavy: ${facesOf(doc)} faces left`);
+      const plant = VEGETATION.has(m.objType);
+      if (plant && before > REFUSED_PLANT_FACES) throw new Error(`too heavy: ${before} faces (a plant is never simplified)`);
+      if (!plant && before > MAX_FACES) await doc.transform(simplify({ simplifier: MeshoptSimplifier, ratio: MAX_FACES / facesOf(doc), error: ERROR, lockBorder: true }));
+      if (!plant && facesOf(doc) > REFUSED_FACES) throw new Error(`too heavy: ${facesOf(doc)} faces left`);
       shrinkTextures(doc);
-      // Tangents dropped (three computes the normal maps without them), unused attributes pruned. Not quantised:
-      // seen with the shards above.
-      for (const mesh of doc.getRoot().listMeshes()) for (const p of mesh.listPrimitives()) if (p.getAttribute('TANGENT')) p.setAttribute('TANGENT', null);
-      await doc.transform(prune({ keepAttributes: false }));
+      // Every vertex attribute KEPT: SEEN, trees whitened once their vertex colours (COLOR_0, often the leaves'
+      // shading) were pruned as « unused ».
       // Its base on the ground, centred: one node above the scene's roots, moved.
       const scene = doc.getRoot().getDefaultScene() || doc.getRoot().listScenes()[0];
       const b = getBounds(scene);
@@ -122,6 +130,8 @@ async function bake(){
       for (const child of scene.listChildren()) { scene.removeChild(child); holder.addChild(child); }
       scene.addChild(holder);
       holder.setTranslation([-(b.min[0] + b.max[0]) / 2, -b.min[1] - (m.sink || 0), -(b.min[2] + b.max[2]) / 2]);
+      // Compressed last (its quantisation reads the final bounds).
+      await doc.transform(meshopt({ encoder: MeshoptEncoder, level: 'medium' }));
       const out = path.join(bank, m.file);
       await io.write(out, doc);
       const after = facesOf(doc), bytes = fs.statSync(out).size;

@@ -166,22 +166,6 @@ export const MODEL_BANK = Object.freeze([
   "ratio": 1.16
  },
  {
-  "file": "cerisier-2.glb",
-  "use": "cerisier",
-  "objType": "arbre",
-  "genera": [
-   "Prunus",
-   "Malus",
-   "Pyrus"
-  ],
-  "generic": false,
-  "name": "Cherry with leaves",
-  "author": "alesya3d",
-  "licence": "CC-BY-4.0",
-  "url": "https://sketchfab.com/3d-models/cherry-with-leaves-c83ae1c0438848e99611e26dc5f3c865",
-  "ratio": 1.12
- },
- {
   "file": "pin-1.glb",
   "use": "pin",
   "objType": "conifere",
@@ -194,20 +178,6 @@ export const MODEL_BANK = Object.freeze([
   "licence": "CC-BY-4.0",
   "url": "https://sketchfab.com/3d-models/pine-tree-d45218a3fab349e5b1de040f29e7b6f9",
   "ratio": 0.41
- },
- {
-  "file": "pin-2.glb",
-  "use": "pin",
-  "objType": "conifere",
-  "genera": [
-   "Pinus"
-  ],
-  "generic": true,
-  "name": "Pine Tree",
-  "author": "EmreAlkan",
-  "licence": "CC-BY-4.0",
-  "url": "https://sketchfab.com/3d-models/pine-tree-27ab66bf87fd47bda321efde1d7a6fae",
-  "ratio": 0.49
  },
  {
   "file": "pin-3.glb",
@@ -251,7 +221,7 @@ export const MODEL_BANK = Object.freeze([
   "author": "Rodri",
   "licence": "CC-BY-4.0",
   "url": "https://sketchfab.com/3d-models/fir-tree-0844c504dca64122a7311b42c4bc19b2",
-  "ratio": 0.75
+  "ratio": 0.78
  },
  {
   "file": "epicea-1.glb",
@@ -307,7 +277,7 @@ export const MODEL_BANK = Object.freeze([
   "author": "00amza",
   "licence": "CC-BY-4.0",
   "url": "https://sketchfab.com/3d-models/palm-tree-realistic-ced3b31f14f940d0b7480a83e6f8c9c0",
-  "ratio": 0.52
+  "ratio": 0.51
  },
  {
   "file": "palmier-dattier-3.glb",
@@ -450,6 +420,18 @@ export const MODEL_BANK = Object.freeze([
   "ratio": 0.23
  },
  {
+  "file": "borne-2.glb",
+  "use": "borne",
+  "objType": "borne",
+  "genera": [],
+  "generic": true,
+  "name": "Traffic Bollard",
+  "author": "weedlog",
+  "licence": "CC-BY-4.0",
+  "url": "https://sketchfab.com/3d-models/traffic-bollard-851f2be038da40a8b773b1cc1db9ea58",
+  "ratio": 0.49
+ },
+ {
   "file": "borne-3.glb",
   "use": "borne",
   "objType": "borne",
@@ -582,7 +564,7 @@ export const MODEL_BANK = Object.freeze([
   "author": "teacherap123",
   "licence": "CC-BY-4.0",
   "url": "https://sketchfab.com/3d-models/platano-tree-435cee5470b0450b937e13e06b1ae7a8",
-  "ratio": 0.57
+  "ratio": 0.56
  },
  {
   "file": "tilleul-1.glb",
@@ -615,6 +597,20 @@ export const MODEL_BANK = Object.freeze([
   "ratio": 0.89
  },
  {
+  "file": "marronnier-1.glb",
+  "use": "marronnier",
+  "objType": "arbre",
+  "genera": [
+   "Aesculus"
+  ],
+  "generic": false,
+  "name": "Realistic HD Red horse chestnut (28/30)",
+  "author": "PlantCatalog",
+  "licence": "CC-BY-4.0",
+  "url": "https://sketchfab.com/3d-models/realistic-hd-red-horse-chestnut-28-30-dcba8b6ad14144f388d5a68002ccd57f",
+  "ratio": 0.98
+ },
+ {
   "file": "marronnier-2.glb",
   "use": "marronnier",
   "objType": "arbre",
@@ -626,7 +622,21 @@ export const MODEL_BANK = Object.freeze([
   "author": "PlantCatalog",
   "licence": "CC-BY-4.0",
   "url": "https://sketchfab.com/3d-models/realistic-hd-red-horse-chestnut-27-30-5b433e8e6b8149faacbc52fbb3b688e4",
-  "ratio": 0.99
+  "ratio": 1
+ },
+ {
+  "file": "chene-1.glb",
+  "use": "chene",
+  "objType": "arbre",
+  "genera": [
+   "Quercus"
+  ],
+  "generic": false,
+  "name": "Old Oak Tree",
+  "author": "BB ARTS",
+  "licence": "CC-BY-4.0",
+  "url": "https://sketchfab.com/3d-models/old-oak-tree-810208743d0e4cffadb15e77211b3a60",
+  "ratio": 1.17
  },
  {
   "file": "chene-2.glb",
@@ -668,7 +678,7 @@ export const MODEL_BANK = Object.freeze([
   "author": "kunkun",
   "licence": "CC-BY-4.0",
   "url": "https://sketchfab.com/3d-models/cedar-0b9d28f8dde545a38eb682014f72225f",
-  "ratio": 0.43
+  "ratio": 0.44
  },
  {
   "file": "cypres-1.glb",
@@ -716,33 +726,7 @@ export const MODEL_BANK = Object.freeze([
   "author": "CeDRI",
   "licence": "CC-BY-4.0",
   "url": "https://sketchfab.com/3d-models/olive-tree-portugal-e0b57e421ac546c6b7e4cb563f524640",
-  "ratio": 0.97
- },
- {
-  "file": "olivier-2.glb",
-  "use": "olivier",
-  "objType": "olivier",
-  "genera": [
-   "Olea"
-  ],
-  "generic": true,
-  "name": "African Olive",
-  "author": "Valery.Li",
-  "licence": "CC-BY-4.0",
-  "url": "https://sketchfab.com/3d-models/african-olive-9ac2e799b40b4d129074ee04c4e6a57f",
-  "ratio": 0.96
- },
- {
-  "file": "buisson-1.glb",
-  "use": "buisson",
-  "objType": "buisson",
-  "genera": [],
-  "generic": true,
-  "name": "3D Bush - 01",
-  "author": "SanForge Studio",
-  "licence": "CC-BY-4.0",
-  "url": "https://sketchfab.com/3d-models/3d-bush-01-d43e3ef7785540e18a69d35c5035499d",
-  "ratio": 1.94
+  "ratio": 0.99
  },
  {
   "file": "buisson-2.glb",
@@ -766,7 +750,7 @@ export const MODEL_BANK = Object.freeze([
   "author": "Adrian Sheremet",
   "licence": "CC-BY-4.0",
   "url": "https://sketchfab.com/3d-models/photorealistic-bush-8db54bf299954daa9ee29b233e923672",
-  "ratio": 1.02
+  "ratio": 1.04
  },
  {
   "file": "buisson-4.glb",
@@ -790,7 +774,7 @@ export const MODEL_BANK = Object.freeze([
   "author": "PlantCatalog",
   "licence": "CC-BY-4.0",
   "url": "https://sketchfab.com/3d-models/realistic-hd-yellow-bush-lupine-19-25-4cf871e517f540ab94ce8b24c0594edf",
-  "ratio": 2.2
+  "ratio": 2.22
  },
  {
   "file": "palmier-washingtonia-1.glb",

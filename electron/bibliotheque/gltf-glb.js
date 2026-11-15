@@ -128,10 +128,11 @@ function ressourcesExternes(gltf){
 
 /**
  * Les extensions OBLIGATOIRES qu'on ne sait pas décoder. Le GLTFLoader de l'application (three
- * 0.128) n'a ni décodeur Draco, ni Meshopt, ni KTX2 : un fichier qui les exige ne se lit pas. Mieux
+ * 0.128) n'a ni décodeur Draco, ni KTX2 : un fichier qui les exige ne se lit pas. Meshopt, si
+ * (src/gltf-decoders.js, #480f : la banque de modèles). Mieux
  * vaut le dire à l'import que de ranger un fichier qui s'affichera en boîte « introuvable ».
  */
-const SANS_DECODEUR = ['KHR_draco_mesh_compression', 'EXT_meshopt_compression', 'KHR_texture_basisu'];
+const SANS_DECODEUR = ['KHR_draco_mesh_compression', 'KHR_texture_basisu'];
 function extensionsNonPrisesEnCharge(gltf){
   return ((gltf && gltf.extensionsRequired) || []).filter(e => SANS_DECODEUR.includes(e));
 }

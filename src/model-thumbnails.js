@@ -15,7 +15,7 @@
  * Une toile WebGL à part, gardée le temps d'une série puis rendue (forceContextLoss) : rien ne reste
  * sur la carte graphique.
  */
-import { GLTFLoader } from './vendor/GLTFLoader.js';
+import { chargeurGltf } from './gltf-decoders.js';
 import { readModel } from './model-store.js';
 import { preparerModeleImporte3D } from './model-cache.js';
 import { maillagesHorsCorps3D, maillagesParNom3D } from './stray-meshes-3d.js';
@@ -101,7 +101,7 @@ async function decoderEtMesurer(nom){
   const octets = await readModel(nom);
   if (!octets) return null;
   const brut = octets.buffer.slice(octets.byteOffset, octets.byteOffset + octets.byteLength);
-  const gltf = await new Promise((ok, ko) => { try { new GLTFLoader().parse(brut, '', ok, ko); } catch (e) { ko(e); } });
+  const gltf = await new Promise((ok, ko) => { try { chargeurGltf().parse(brut, '', ok, ko); } catch (e) { ko(e); } });
   const modele = preparerModeleImporte3D(gltf);
   maillagesParNom3D(modele, maillagesHorsCorps3D(modele)).forEach(m => { m.visible = false; });
   const noms = [];

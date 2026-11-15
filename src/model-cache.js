@@ -26,9 +26,9 @@
  * redessiner (scene3d.js). Ce module ne connaît que des octets et des scènes Three.
  */
 
+import { chargeurGltf } from './gltf-decoders.js';
 import { sondeDebut, sondeFin, sondeCompter } from './perf-probe.js';
 import { glbSansTexturesEnDouble3D } from './glb-textures.js';
-import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { readModel } from './model-store.js';
 // cf. son en-tête : Box3.setFromObject ignore le squelette d'un modèle articulé (SkinnedMesh), la
 // hauteur mesurée ici doit tenir compte de la pose réellement affichée, pas de la géométrie brute.
@@ -103,7 +103,7 @@ export function modelCacheSignature(noms){
 /** Décode un `.glb` en scène Three. Enveloppe la callback de GLTFLoader dans une promesse. */
 function parseGlb(octets){
   return new Promise((resolve, reject) => {
-    const loader = new GLTFLoader();
+    const loader = chargeurGltf();
     // Le second argument est le chemin de RÉSOLUTION des ressources externes. Il est vide à dessein :
     // un .glb porte ses textures à l'intérieur, et un .gltf qui pointerait vers des fichiers voisins
     // n'a de toute façon pas été copié avec eux (cf. model-store.js, extension imposée).
