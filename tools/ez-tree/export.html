@@ -1,13 +1,12 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>EZ-Tree trial</title>
-<script type="importmap">{ "imports": {
-  "three": "../../node_modules/three-ez/build/three.module.js",
-  "three/addons/": "../../node_modules/three-ez/examples/jsm/"
-} }</script></head>
+</head>
 <body><script type="module">
-import * as THREE from 'three';
-import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
-import { Tree, TreePreset } from '../../node_modules/@dgreenheck/ez-tree/build/ez-tree.es.js';
+// From esm.sh, not npm: EZ-Tree asks three 0.167 or later as a peer, and npm refuses it beside the
+// application's three 0.128 (seen: ERESOLVE). One three for all three imports (?deps=).
+import * as THREE from 'https://esm.sh/three@0.170.0';
+import { GLTFExporter } from 'https://esm.sh/three@0.170.0/examples/jsm/exporters/GLTFExporter.js';
+import { Tree, TreePreset } from 'https://esm.sh/@dgreenheck/ez-tree@1.1.0?deps=three@0.170.0';
 
 // Every preset but the trellis (a frame, not a plant), two seeds each: two variants of one tree.
 const presets = Object.keys(TreePreset).filter(n => n !== 'Trellis');

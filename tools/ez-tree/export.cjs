@@ -1,9 +1,8 @@
 /**
  * tools/ez-tree/export.cjs: A TRIAL OF EZ-TREE (#480f, asked by Durzo on 15 Nov. 2026): trees GENERATED, ours,
- * instead of searched under licences. `npx electron tools/ez-tree/export.cjs` from the project's root (dev
- * dependencies: npm install). EZ-Tree (Dan Greenheck, MIT; its barks from Poly Haven and TextureCan, CC0) needs
- * three 0.167 or later: a hidden window loads it with its own three (`three-ez`, an alias: the application keeps
- * its three 0.128), generates each preset, exports it as .glb into the Projects' « Modeles » folder (« EZ … »),
+ * instead of searched under licences. `npx electron tools/ez-tree/export.cjs` from the project's root (Internet
+ * needed). EZ-Tree (Dan Greenheck, MIT; its barks from Poly Haven and TextureCan, CC0) needs three 0.167 or later:
+ * a hidden window loads both from esm.sh (the application keeps its three 0.128), generates each preset, exports it as .glb into the Projects' « Modeles » folder (« EZ … »),
  * to be seen in « My models ». A trial: nothing of it is shipped.
  */
 const path = require('path');
