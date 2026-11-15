@@ -13,9 +13,10 @@ import { dirname, join } from 'node:path';
 
 const DOSSIER = join(dirname(fileURLToPath(import.meta.url)), '..', 'assets', 'textures');
 const recap = readFileSync(join(DOSSIER, 'LICENSES.md'), 'utf8');
-const lignes = recap.split('\n').filter(l => /^\| `[^`]+\.png` \|/.test(l));
+// The barks of the trees (#480g) are JPEG: Poly Haven's photo, not a baked grain.
+const lignes = recap.split('\n').filter(l => /^\| `[^`]+\.(png|jpg)` \|/.test(l));
 const fichiersDuRecap = lignes.map(l => l.match(/^\| `([^`]+)`/)[1]);
-const livres = readdirSync(DOSSIER).filter(f => f.endsWith('.png'));
+const livres = readdirSync(DOSSIER).filter(f => f.endsWith('.png') || f.endsWith('.jpg'));
 
 describe('Les licences des textures livrées', () => {
   test('⚠️ CHAQUE TEXTURE LIVRÉE A SA LIGNE', () => {

@@ -14,6 +14,7 @@
 import { debutDeRotation3D, angleDeRotation3D, quartDeTour3D, modeSelonLaCamera3D } from './rotation-objet-3d.js';
 import { cablerChampsDOrientation } from './orientation-champs.js';
 import { icone } from './icones.js';
+import { setSpeciesTreeCallbacks } from './ez-trees.js';
 import { demarrer as sondeDemarrer, arreter as sondeArreter, rapport as sondeRapport, synthese as sondeSynthese } from './perf-probe.js';
 import {
   setScenesCallbacks, createScene, openScene, disableSceneCameraMode, loadSceneIntoPanel,
@@ -424,6 +425,8 @@ setCanvasToolsCallbacks({ snapshot });
 // `getMaxAnisotropy` : le filtrage anisotrope des textures dépend du WebGLRenderer (rig3d.js),
 // dont model-cache.js ne doit rien savoir, cf. son en-tête, applyAnisotropy.
 setModelCacheCallbacks({ onChange: () => renderAll(), getMaxAnisotropy: getMaxAnisotropy3D });
+// #480g : une écorce d'arbre EZ-Tree arrivée, on redessine (le tronc était sans texture jusque-là).
+setSpeciesTreeCallbacks({ onChange: () => renderAll() });
 // Une image qui finit d'arriver remplace son signalement par le dessin, sans clic (#403b).
 setImageCacheCallbacks({ onChange: () => renderAll() });
 // « Importer une planche » : même injection que l'import de modèle, pour la même raison.

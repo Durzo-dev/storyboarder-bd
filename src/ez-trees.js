@@ -9,7 +9,33 @@
  */
 import { Tree, TreeOptions } from './vendor/ez-tree/ez-tree.js';
 import { TREE_PRESETS } from './vendor/ez-tree/presets.js';
-import { SPECIES, domCanvas } from './tree-species.js';
+import { SPECIES, domCanvas, barkFile } from './tree-species.js';
+
+/** Where the application's barks are, from src/index.html. */
+const BARK_DIR = '../assets/textures/';
+
+let onBarkLoaded = () => {};
+
+/** What to call when a bark has arrived (a redraw: the trees stood barkless until then). */
+export function setSpeciesTreeCallbacks({ onChange }) {
+  onBarkLoaded = onChange || (() => {});
+}
+
+/**
+ * The application's bark of a species: its shipped file, loaded once (a texture whose image comes later, a
+ * redraw then). Null where there is no DOM (tests).
+ */
+const barks = new Map();
+function shippedBark(name) {
+  if (typeof document === 'undefined') return null;
+  if (!barks.has(name)) {
+    const tex = new THREE.TextureLoader().load(BARK_DIR + barkFile(name), () => onBarkLoaded(),
+      () => console.warn(`[ez-trees] bark missing: ${BARK_DIR}${barkFile(name)}`));
+    tex.encoding = THREE.sRGBEncoding;
+    barks.set(name, tex);
+  }
+  return barks.get(name);
+}
 
 /** The seed EZ-Tree gets for our variant `n` (1, 2…): spread apart, as in the trial (tools/ez-tree). */
 export const SEED_STEP = 7919;
@@ -31,9 +57,10 @@ export function speciesOptions(name, variant = 1) {
 
 /**
  * Generates a species' variant, at EZ-Tree's own scale. `makeCanvas(size)` draws the foliage (a DOM canvas by
- * default); `barkTexture(id)` gives the bark's texture, its Poly Haven id given, or null (a plain colour then).
+ * default); `barkTexture(name)` gives the species' bark texture, or null (a plain colour then): the shipped file
+ * by default.
  */
-export function generateSpeciesTree(name, variant = 1, { makeCanvas = domCanvas, barkTexture = () => null } = {}) {
+export function generateSpeciesTree(name, variant = 1, { makeCanvas = domCanvas, barkTexture = shippedBark } = {}) {
   const sp = SPECIES[name];
   const tree = new Tree(speciesOptions(name, variant));
   tree.generate();
@@ -44,7 +71,7 @@ export function generateSpeciesTree(name, variant = 1, { makeCanvas = domCanvas,
   leaves.map = leaf;
   leaves.color.set(0xffffff);
 
-  const bark = barkTexture(sp.bark);
+  const bark = barkTexture(name);
   const branches = tree.branchesMesh.material;
   if (bark) {
     bark.wrapS = bark.wrapT = THREE.RepeatWrapping;

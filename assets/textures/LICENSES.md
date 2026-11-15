@@ -14,6 +14,9 @@ The source maps themselves are NOT in the repository nor in the installer
 (`assets/textures/sources/`, ignored and excluded from packaging): only the baked files below
 are distributed.
 
+The tree barks (`ecorce-*.jpg`, #480g) are not baked: Poly Haven's colour map itself, brought to 512 px
+JPEG by `tools/ez-tree/fetch-barks.cjs`, for the trees generated with EZ-Tree (`src/tree-species.js`).
+
 ⚠️ EVERY BAKED FILE MUST HAVE ITS ROW. `tests/texture-licences.test.mjs` fails on a file without
 a row, and on a row without a file. Add the row when you bake a new texture.
 
@@ -44,3 +47,7 @@ a row, and on a row without a file. Add the row when you bake a new texture.
 | `toit-ardoise.couleur.png` | Roof: slate | grey_roof_tiles_02 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/grey_roof_tiles_02 |
 | `toit-tuiles-canal.png` | Roof: barrel tiles | RoofingTiles014A | ambientCG | CC0 1.0 | https://ambientcg.com/view?id=RoofingTiles014A |
 | `toit-tuiles-plates.couleur.png` | Roof: old flat tiles | roof_09 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/roof_09 |
+| `ecorce-cypres.jpg` | Tree bark: cypress | chinese_cedar_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/chinese_cedar_bark |
+| `ecorce-olivier.jpg` | Tree bark: olive | bark_willow_02 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/bark_willow_02 |
+| `ecorce-platane.jpg` | Tree bark: plane | bark_platanus | Poly Haven | CC0 1.0 | https://polyhaven.com/a/bark_platanus |
+| `ecorce-tilleul.jpg` | Tree bark: linden | tree_bark_03 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/tree_bark_03 |

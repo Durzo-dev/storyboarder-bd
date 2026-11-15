@@ -15,6 +15,12 @@
 /** Poly Haven's barks (CC0): the asset's identifier (https://polyhaven.com/a/<id>). */
 const BARK = (id) => id;
 
+/**
+ * The file of a species' bark, shipped in assets/textures/ (tools/ez-tree/fetch-barks.cjs: Poly Haven's colour map,
+ * 512 px, JPEG): `ecorce-platane.jpg`.
+ */
+export const barkFile = (name) => `ecorce-${name.toLowerCase()}.jpg`;
+
 /** A DOM canvas of `size` px (the application's); tests replace it. */
 export const domCanvas = (size) => {
   const c = document.createElement('canvas');
