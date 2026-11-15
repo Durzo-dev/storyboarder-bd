@@ -1,0 +1,30 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>EZ-Tree trial</title>
+<script type="importmap">{ "imports": {
+  "three": "../../node_modules/three-ez/build/three.module.js",
+  "three/addons/": "../../node_modules/three-ez/examples/jsm/"
+} }</script></head>
+<body><script type="module">
+import * as THREE from 'three';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { Tree, TreePreset } from '../../node_modules/@dgreenheck/ez-tree/build/ez-tree.es.js';
+
+// Every preset but the trellis (a frame, not a plant), two seeds each: two variants of one tree.
+const presets = Object.keys(TreePreset).filter(n => n !== 'Trellis');
+try {
+  for (const name of presets) {
+    for (const seed of [1, 2]) {
+      const tree = new Tree();
+      tree.loadPreset(name);
+      tree.options.seed = seed * 7919;
+      tree.generate();
+      await new Promise(ok => setTimeout(ok, 200));   // its textures decoded
+      const size = new THREE.Box3().setFromObject(tree).getSize(new THREE.Vector3());
+      const glb = await new GLTFExporter().parseAsync(tree, { binary: true });
+      await window.ez.save(`EZ ${name} ${seed}.glb`, new Uint8Array(glb),
+        { triangles: tree.triangleCount, size: [size.x, size.y, size.z].map(v => Math.round(v * 10) / 10) });
+    }
+  }
+  await window.ez.done();
+} catch (e) { await window.ez.done(String(e && e.stack || e)); }
+</script></body></html>
