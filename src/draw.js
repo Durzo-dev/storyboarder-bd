@@ -1984,6 +1984,9 @@ export function drawObjectPreview(targetCanvas, spec){
     // Modèle importé : buildImportedModelRig3D lit modelFile pour retrouver le fichier décodé dans
     // le cache (cf. model-cache.js), sans lui, l'aperçu tombe sur sa boîte de remplacement.
     modelFile: spec.modelFile,
+    // Un arbre d'EZ-Tree (#480g) : son essence et sa variante, sans quoi l'aperçu montrerait l'arbre simple.
+    essence: spec.essence,
+    variante: spec.variante,
     color: spec.color || FIXED_COLOR,
     rotX: spec.rotX || 0,
     rotY: spec.rotY || 0,

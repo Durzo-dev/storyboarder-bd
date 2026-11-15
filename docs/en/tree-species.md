@@ -1,6 +1,6 @@
 # Tree species
 
-The sheet of each tree species the application generates with EZ-Tree (`tools/ez-tree/species.js`). It says
+The sheet of each tree species the application generates with EZ-Tree (`src/tree-species.js`). It says
 what the tree must look like, from reference photos, and how it is obtained: the EZ-Tree preset to start from,
 the settings, the bark and the drawn foliage.
 
@@ -17,6 +17,27 @@ What each sheet holds:
 - **In EZ-Tree**: the preset to start from, the settings that matter, the bark (Poly Haven, CC0), the foliage
   drawn (`species.js`).
 - **References**: the photos (Wikimedia Commons) the tuning used.
+
+## How the application uses them
+
+EZ-Tree (Dan Greenheck, MIT) is copied into the application, in `src/vendor/ez-tree/`, adapted to its three r128
+(no wind, no trellis, no textures of its own). `src/ez-trees.js` generates a species' variant once (3 variants a
+species, `VARIANTS`) and every tree of that variant is a clone of it, set to its height.
+
+When a Scene is created from a place (Detailed and Realistic levels), a tree whose genus is one of a species (OSM
+tags, else drawn from the flora) is given that species (`essence`), a variant drawn from its place and, without a
+measured height, the species' usual one (±15 %). It takes no model of the bank nor of the stores.
+
+## EZ-Tree updates
+
+`node tools/ez-tree/check-update.mjs` says whether a newer EZ-Tree is out. A new version is proposed to Durzo,
+then, if accepted:
+
+1. Copy its `src/lib/` changes into `src/vendor/ez-tree/ez-tree.js` (and `presets.js`), keeping the adaptations
+   listed at the top of the file, and set `EZ_TREE_VERSION`.
+2. Measure the fingerprints of its presets with the new version, in a browser, and update them in
+   `tests/ez-tree.test.mjs`: the test checks the copy grows the very trees of EZ-Tree.
+3. Look at our species again: a change of growth changes their silhouettes.
 
 ## Platane — London plane (*Platanus × hispanica*)
 

@@ -512,7 +512,7 @@ async function importer(){
       // Loaded before the Scene is laid (seen: without, the models stood as boxes until the Project reopened).
       if (bank.used.length) { try { await preloadModels(bank.used.map(m => BANK_PREFIX + m.file)); } catch (e) { /* boxes stand in */ } }
       if (arrete()) return annule;
-      console.info(`[real-place] model bank: ${bank.n} elements, ${bank.used.length} models`);
+      console.info(`[real-place] model bank: ${bank.n} elements, ${bank.used.length} models; EZ-Tree: ${bank.species} trees`);
       photoCredits.push(...bank.used.map(m => bankCredit(m, S.appLang === 'en' ? 'en' : 'fr')));
     }
     // Realistic (#480c): the stores' models for what the bank has not.

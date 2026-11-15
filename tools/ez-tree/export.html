@@ -8,7 +8,10 @@ import * as THREE from 'https://esm.sh/three@0.170.0';
 import { GLTFExporter } from 'https://esm.sh/three@0.170.0/examples/jsm/exporters/GLTFExporter.js';
 import { Tree, TreePreset } from 'https://esm.sh/@dgreenheck/ez-tree@1.1.0?deps=three@0.170.0';
 
-import { SPECIES } from './species.js';
+import { SPECIES } from '../../src/tree-species.js';
+
+/** Poly Haven's barks (CC0), 1k colour maps, by their id. */
+const BARK_URL = (id) => `https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/${id}/${id}_diff_1k.jpg`;
 
 /** One of our species: the preset, its changes, our leaf drawn, the Poly Haven bark. */
 async function speciesTree(sp, seed){
@@ -18,9 +21,9 @@ async function speciesTree(sp, seed){
   sp.set(tree.options);
   tree.options.leaves.tint = 0xffffff;
   tree.generate();
-  const leaf = new THREE.CanvasTexture(sp.foliage(seed));
+  const leaf = new THREE.CanvasTexture(sp.foliage(seed, (n) => Object.assign(document.createElement('canvas'), { width: n, height: n })));
   leaf.colorSpace = THREE.SRGBColorSpace;
-  const bark = await new THREE.TextureLoader().loadAsync(sp.bark);
+  const bark = await new THREE.TextureLoader().loadAsync(BARK_URL(sp.bark));
   bark.colorSpace = THREE.SRGBColorSpace;
   bark.wrapS = bark.wrapT = THREE.RepeatWrapping;
   bark.repeat.set(sp.barkScale[0], sp.barkScale[1]);

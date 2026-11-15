@@ -80,21 +80,35 @@ describe('the bank given to an import', () => {
     { objType: 'arbre', modelFile: 'Oak.glb', x: 9, z: 9 },
   ];
   test('a tree of its genus; the others drawn from the flora\'s genera of their form; the same at each import', () => {
-    const flora = { genusShares: { arbre: { Platanus: 0.5, Tilia: 0.5 } } };
+    const flora = { genusShares: { arbre: { Platanus: 0.5, Celtis: 0.5 } } };
     const a = els(), b = els();
     const r = applyBank(a, { flora, bank: BANK });
     applyBank(b, { flora, bank: BANK });
-    assert.deepEqual(a.map(e => e.modelFile), b.map(e => e.modelFile));
+    assert.deepEqual(a.map(e => [e.modelFile, e.essence, e.variante]), b.map(e => [e.modelFile, e.essence, e.variante]));
     assert.equal(a[0].modelFile, BANK_PREFIX + 'cerisier-1.glb');
-    const drawn = a.slice(1, 41).map(e => e.modelFile);
-    assert.ok(drawn.includes(BANK_PREFIX + 'platane-1.glb') && drawn.includes(BANK_PREFIX + 'tilleul-1.glb'));
-    assert.ok(!drawn.includes(BANK_PREFIX + 'cerisier-1.glb'), 'a cherry only where OSM says so');
+    const drawn = a.slice(1, 41);
+    assert.ok(drawn.some(e => e.modelFile === BANK_PREFIX + 'tilleul-1.glb'), 'a hackberry: the bank');
+    assert.ok(!drawn.some(e => e.modelFile === BANK_PREFIX + 'cerisier-1.glb'), 'a cherry only where OSM says so');
     assert.equal(a[0].usage, 'arbre'); assert.equal(a[0].modelRatio, 0.7);
     assert.equal(a.find(e => e.objType === 'banc').modelFile.startsWith(BANK_PREFIX + 'banc-'), true);
     assert.equal(a.find(e => e.objType === 'palmier').modelFile, undefined, 'no palm in the bank: the built-in object');
     assert.equal(a[a.length - 1].modelFile, 'Oak.glb', 'a model already given kept');
-    assert.equal(r.n, 42);
-    assert.ok(['cerisier-1.glb', 'platane-1.glb', 'tilleul-1.glb'].every(f => r.used.some(x => x.file === f)), 'the models used, for their credits');
+    const planes = drawn.filter(e => e.essence);
+    assert.equal(r.n + r.species, 42);
+    assert.equal(r.species, planes.length);
+    assert.ok(['cerisier-1.glb', 'tilleul-1.glb'].every(f => r.used.some(x => x.file === f)), 'the models used, for their credits');
+  });
+  test('a tree of our species: no model, EZ-Tree\'s (#480g), its variant and height drawn from its place', () => {
+    const a = els();
+    applyBank(a, { flora: { genusShares: { arbre: { Platanus: 1 } } }, bank: BANK });
+    const planes = a.slice(1, 41);
+    assert.ok(planes.every(e => e.essence === 'Platane' && !e.modelFile && e.objType === 'arbre'));
+    assert.deepEqual([...new Set(planes.map(e => e.variante))].sort(), [1, 2, 3]);
+    assert.ok(planes.every(e => e.height >= 15.3 && e.height <= 20.7), 'the plane\'s 18 m, ±15 %');
+    const known = [{ objType: 'arbre', genus: 'Platanus', height: 9, x: 0, z: 0 }, { objType: 'olivier', x: 2, z: 0 }];
+    applyBank(known, { bank: BANK });
+    assert.equal(known[0].height, 9, 'a measured height kept');
+    assert.equal(known[1].essence, 'Olivier');
   });
 });
 

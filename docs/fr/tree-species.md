@@ -1,6 +1,6 @@
 # Les essences d'arbres
 
-La fiche de chaque essence d'arbre que l'application génère avec EZ-Tree (`tools/ez-tree/species.js`). Elle
+La fiche de chaque essence d'arbre que l'application génère avec EZ-Tree (`src/tree-species.js`). Elle
 dit à quoi l'arbre doit ressembler, d'après des photos de référence, et comment on l'obtient : le modèle EZ-Tree
 de départ, les réglages, l'écorce et le feuillage dessiné.
 
@@ -17,6 +17,28 @@ Ce que contient chaque fiche :
 - **Dans EZ-Tree** : le modèle de départ, les réglages qui comptent, l'écorce (Poly Haven, CC0), le feuillage
   dessiné (`species.js`).
 - **Références** : les photos (Wikimedia Commons) qui ont servi au réglage.
+
+## Comment l'application s'en sert
+
+EZ-Tree (Dan Greenheck, MIT) est copié dans l'application, dans `src/vendor/ez-tree/`, adapté à son three r128
+(sans vent, sans treillis, sans textures à lui). `src/ez-trees.js` génère une variante d'une essence une fois
+(3 variantes par essence, `VARIANTS`) et chaque arbre de cette variante en est une copie, mise à sa hauteur.
+
+À la création d'une Scène depuis un lieu (niveaux Détaillé et Réaliste), un arbre dont le genre est celui d'une
+essence (étiquettes OSM, sinon tiré de la flore) reçoit cette essence (`essence`), une variante tirée de sa place
+et, sans hauteur mesurée, la hauteur habituelle de l'essence (±15 %). Il ne prend aucun modèle de la banque ni des
+stores.
+
+## Les mises à jour d'EZ-Tree
+
+`node tools/ez-tree/check-update.mjs` dit si une version plus récente d'EZ-Tree est sortie. Elle est proposée à
+Durzo, puis, si elle est acceptée :
+
+1. Reporter les changements de son `src/lib/` dans `src/vendor/ez-tree/ez-tree.js` (et `presets.js`), en gardant
+   les adaptations listées en tête du fichier, et mettre à jour `EZ_TREE_VERSION`.
+2. Mesurer les empreintes de ses modèles avec la nouvelle version, dans un navigateur, et les reporter dans
+   `tests/ez-tree.test.mjs` : le test vérifie que la copie fait pousser les mêmes arbres qu'EZ-Tree.
+3. Revoir nos essences : un changement de croissance change leurs silhouettes.
 
 ## Platane commun (*Platanus × hispanica*)
 

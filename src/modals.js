@@ -1437,6 +1437,9 @@ export function refreshObjectPreview(){
     // La figure du BROUILLON : changer de Modèle doit se voir avant d'enregistrer. ⚠️ Aucun test ne
     // couvre cette ligne, l'aperçu passe par WebGL, injoignable sous Node (cf. docs/en/testing-method.md).
     modelFile: _estModele ? (S.modalDraftModelFile || S.modalTarget.modelFile) : undefined,
+    // Un arbre d'EZ-Tree (#480g) : son essence et sa variante (rig3d ne les suit que pour le type de l'essence).
+    essence: S.modalTarget.essence,
+    variante: S.modalTarget.variante,
     // ⚠️ LA COULEUR DU BROUILLON POUR UNE LUMIÈRE. Sa couleur EST son réglage principal : l'aperçu
     // doit la montrer AVANT d'enregistrer, comme il montre déjà la pose du brouillon. Lire
     // `S.modalTarget.color` revenait à peindre avec la valeur d'avant le réglage, et l'aperçu

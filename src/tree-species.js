@@ -1,5 +1,5 @@
 /**
- * tools/ez-tree/species.js: OUR SPECIES FOR EZ-TREE (#480f): each one a preset of EZ-Tree to start from, what
+ * src/tree-species.js: OUR SPECIES FOR EZ-TREE (#480f, in the application since #480g): each one a preset of EZ-Tree to start from, what
  * changes (its silhouette), its bark (Poly Haven, CC0) and its foliage DRAWN here (no licence). Tuned by eye in the
  * browser on 15 Nov. 2026 against reference photos of Wikimedia Commons (leaves, sprays, whole trees):
  *   - plane (Platanus × hispanica): 3 to 5 pointed lobes, a tall trunk, a wide crown; Poly Haven's own plane bark;
@@ -8,11 +8,19 @@
  *     again; a narrow flame-shaped column; fibrous bark;
  *   - olive (Olea europaea): narrow lances, dark grey-green above, silvery under, in opposite pairs; a short
  *     twisted trunk under a broad crown.
- * Browser code (the trial's hidden window).
+ * Each species has its sheet in docs/en/tree-species.md (tests/tree-species.test.mjs). The canvases come from
+ * `makeCanvas(size)` (a DOM canvas in the application; tests give their own), so this module runs anywhere.
  */
 
-/** Poly Haven's barks (CC0), 1k colour maps. */
-const BARK = (id) => `https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/${id}/${id}_diff_1k.jpg`;
+/** Poly Haven's barks (CC0): the asset's identifier (https://polyhaven.com/a/<id>). */
+const BARK = (id) => id;
+
+/** A DOM canvas of `size` px (the application's); tests replace it. */
+export const domCanvas = (size) => {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  return c;
+};
 
 function rng(seed){
   let r = seed * 9301 + 49297;
@@ -56,9 +64,8 @@ const SHAPES = {
 };
 
 /** A twig with leaves of a shape (in opposite pairs if asked), on a transparent 512 px canvas. */
-function leafTwig({ shape, colours, under = null, n = 7, size = 70, spread = 0.9, opposite = false, seed = 1 }){
-  const c = document.createElement('canvas');
-  c.width = c.height = 512;
+function leafTwig({ shape, colours, under = null, n = 7, size = 70, spread = 0.9, opposite = false, seed = 1, makeCanvas = domCanvas }){
+  const c = makeCanvas(512);
   const ctx = c.getContext('2d'), rnd = rng(seed);
   ctx.translate(256, 505);
   ctx.strokeStyle = '#5a4630'; ctx.lineWidth = 5;
@@ -87,9 +94,8 @@ function leafTwig({ shape, colours, under = null, n = 7, size = 70, spread = 0.9
 }
 
 /** A cypress spray: flat fronds branching three times, covered with tiny overlapping scales. */
-function cypressSpray({ colours = ['#2f4f27', '#3a5f2e', '#456d33'], tip = '#7d9a44', seed = 1 } = {}){
-  const c = document.createElement('canvas');
-  c.width = c.height = 512;
+function cypressSpray({ colours = ['#2f4f27', '#3a5f2e', '#456d33'], tip = '#7d9a44', seed = 1, makeCanvas = domCanvas } = {}){
+  const c = makeCanvas(512);
   const ctx = c.getContext('2d'), rnd = rng(seed);
   function frond(x, y, ang, len, w, depth){
     const ex = x + Math.sin(ang) * len, ey = y - Math.cos(ang) * len;
@@ -111,18 +117,36 @@ function cypressSpray({ colours = ['#2f4f27', '#3a5f2e', '#456d33'], tip = '#7d9
   return c;
 }
 
-/** The species: `from` (an EZ-Tree preset), `set(options)`, the bark, its scale and tint, the foliage drawn. */
+/** The species: `from` (an EZ-Tree preset), the Element's `type`, its usual `height` in a town (m, its sheet),
+ * its `genus` (OSM, GBIF), `set(options)`, the bark (Poly Haven id), its scale and tint, the foliage drawn
+ * (`foliage(seed, makeCanvas)`). */
 export const SPECIES = {
-  Platane: { from: 'Oak Large', bark: BARK('bark_platanus'), barkScale: [1, 6], barkTint: 0xffffff,
-    foliage: (seed) => leafTwig({ shape: 'plane', colours: ['#4f8a3e', '#5a9445', '#467d37'], n: 6, size: 110, seed }),
+  Platane: { from: 'Oak Large', type: 'arbre', height: 18, genus: 'Platanus',
+    bark: BARK('bark_platanus'), barkScale: [1, 6], barkTint: 0xffffff,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'plane', colours: ['#4f8a3e', '#5a9445', '#467d37'], n: 6, size: 110, seed }),
     set(o){ o.branch.length[0] = 60; o.branch.angle[1] = 40; o.branch.children[0] = 8; o.branch.radius[0] = 3.4; o.branch.force.strength = 0.015; o.leaves.size = 8; o.leaves.count = 12; } },
-  Tilleul: { from: 'Ash Large', bark: BARK('tree_bark_03'), barkScale: [1, 6], barkTint: 0xd8d4cc,
-    foliage: (seed) => leafTwig({ shape: 'linden', colours: ['#4e8a35', '#5c9a3f', '#447a2f'], n: 7, size: 62, seed }),
+  Tilleul: { from: 'Ash Large', type: 'arbre', height: 14, genus: 'Tilia',
+    bark: BARK('tree_bark_03'), barkScale: [1, 6], barkTint: 0xd8d4cc,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'linden', colours: ['#4e8a35', '#5c9a3f', '#447a2f'], n: 7, size: 62, seed }),
     set(o){ o.branch.angle[1] = 50; o.branch.angle[2] = 45; o.branch.force.strength = 0.025; o.leaves.size = 5; o.leaves.count = 12; } },
-  Cypres: { from: 'Pine Medium', bark: BARK('chinese_cedar_bark'), barkScale: [1, 6], barkTint: 0xffffff,
-    foliage: (seed) => cypressSpray({ seed }),
+  Cypres: { from: 'Pine Medium', type: 'cypres', height: 14, genus: 'Cupressus',
+    bark: BARK('chinese_cedar_bark'), barkScale: [1, 6], barkTint: 0xffffff,
+    foliage: (seed, makeCanvas) => cypressSpray({ seed, makeCanvas }),
     set(o){ o.branch.length[0] = 70; o.branch.angle[1] = 16; o.branch.length[1] = 13; o.branch.children[0] = 80; o.branch.start[1] = 0.03; o.branch.force.strength = 0.08; o.leaves.size = 8; o.leaves.count = 18; o.leaves.angle = 8; } },
-  Olivier: { from: 'Oak Small', bark: BARK('bark_willow_02'), barkScale: [1, 3], barkTint: 0xcfcabd,
-    foliage: (seed) => leafTwig({ shape: 'olive', colours: ['#55634a', '#5f6d50', '#4d5a42'], under: '#b3bba4', n: 11, size: 68, opposite: true, spread: 0.8, seed }),
+  Olivier: { from: 'Oak Small', type: 'olivier', height: 6, genus: 'Olea',
+    bark: BARK('bark_willow_02'), barkScale: [1, 3], barkTint: 0xcfcabd,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'olive', colours: ['#55634a', '#5f6d50', '#4d5a42'], under: '#b3bba4', n: 11, size: 68, opposite: true, spread: 0.8, seed }),
     set(o){ o.branch.length[0] = 18; o.branch.radius[0] = 3; o.branch.start[1] = 0.5; o.branch.gnarliness[0] = 0.3; o.branch.gnarliness[1] = 0.35; o.branch.twist[0] = 0.5; o.branch.angle[1] = 58; o.branch.length[1] = 20; o.branch.children[0] = 7; o.branch.force.strength = -0.01; o.leaves.size = 4.5; o.leaves.count = 16; o.leaves.start = 0.3; o.leaves.alphaTest = 0.3; } },
 };
+
+/** The variants of each species (seeds 1 to VARIANTS): enough for a row of trees not to look cloned. */
+export const VARIANTS = 3;
+
+/** Our species of a tree, by its genus first (OSM tags, the flora's draw), else by its type: a key of SPECIES or null. */
+export function speciesFor(objType, genus){
+  const all = Object.entries(SPECIES);
+  const byGenus = genus && all.find(([, sp]) => sp.genus === genus);
+  if (byGenus && (byGenus[1].type === objType || objType === 'arbre')) return byGenus[0];
+  const byType = objType !== 'arbre' && all.find(([, sp]) => sp.type === objType);
+  return byType ? byType[0] : null;
+}
