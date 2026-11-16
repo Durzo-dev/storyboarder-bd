@@ -19,6 +19,7 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
 | `src/vegetation-zones.js` | PUR. Les bois, vergers, landes et haies relevés par l'IGN (France), remplis d'arbres et d'arbustes intégrés (`readVegetation`, `fillVegetation`). La requête : `realplace:vegetation`. |
 | `src/landmarks.js` | PUR. Les croix, calvaires, éoliennes, antennes-relais et clochers relevés par l'IGN (France, BD TOPO `construction_ponctuelle`) : `readLandmarks`. La requête : `realplace:landmarks`. |
 | `src/soils.js` | PUR. La couleur de la terre nue (et, au niveau Réaliste, sa texture) d'après la carte des sols de l'INRAE (France) : `soilKindOf`, `readSoils`, `applySoils`. La requête : `realplace:soils`. |
+| `src/bdtopo-extras.js` | PUR. Ce que la BD TOPO relève encore (France) : haies en ligne, terrains de sport, cimetières et leurs tombes, plans d'eau (`addExtras`). La requête : `realplace:extras`. |
 | `src/real-place-import.js` | PUR. La traduction et les altitudes devenues le contenu d'une Scène (`sceneContentOf` : objets Tracés et Zones, relief, crédits). |
 | `src/real-place-ui.js` | La fenêtre d'une Scène neuve : le choix, puis recherche, carte (tuiles OpenStreetMap), taille de la zone, import avec sa progression. |
 | `electron/bibliotheque/real-place.js` | Le réseau (processus principal) : Nominatim, Overpass (avec miroirs), altitudes, tuiles ; identifié par le User-Agent de l'application. |
@@ -201,6 +202,15 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    texture Poly Haven de chaque sorte (choisie à la main, `SOIL_KINDS.polyhaven`, CC0) est prise dans « Mes
    textures », ou téléchargée (1k), et posée sur ces Zones à la place de la teinte (`textureDeLaTerre`) ;
    crédit « Terre nue : textures Poly Haven (CC0) ».
+   Puis le reste de la BD TOPO (France, « Détaillé » et « Réaliste ») : `realplace:extras` (WFS `haie`,
+   `terrain_de_sport`, `cimetiere`, `surface_hydrographique` ; `HAIES.BOCAGES:haie` porte les mêmes haies et
+   `detail_orographique` seulement des noms, tous deux laissés), `addExtras` : une haie en Tracé `haie` (coupée à
+   la zone, sa `hauteur` relevée en `wallHeight`, sa `largeur`), sauf si une haie OSM passe à 3 m ou que la
+   végétation l'a déjà remplie d'arbustes ; un terrain de sport en Zone (`SPORTS_GROUNDS` : tennis et
+   multisports en béton, grand terrain en gazon, piste en terre rouge, teinte que la carte des sols laisse), un
+   cimetière en gravier avec des rangées de tombes (`gravesOf` : 3 m entre rangées, 1,6 m le long d'une rangée,
+   dans le sens de son plus long côté, à 1,5 m de son mur, 200 au plus, aucune là où OSM a des tombes), un plan
+   d'eau en eau ; une zone dont le milieu est déjà dans une Zone OSM du même sol est celle d'OSM.
    Puis les petits ouvrages : `realplace:landmarks` (WFS `BDTOPO_V3:construction_ponctuelle`), `readLandmarks` :
    Croix → `croix`, Calvaire → `calvaire`, Eolienne → `eolienne`, Antenne → `antenne`, Clocher → `clocher` (les
    autres laissés de côté), leur `hauteur` relevée gardée quand elle est vraisemblable, un ouvrage qu'OSM a déjà

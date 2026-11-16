@@ -22,6 +22,8 @@ export function pathObject(p, { panelId, newId, nameOf = (k) => k }){
   // The plan's stroke keeps its proportion to the 3D width, as the terrain editor's settings do.
   if (p.world.width && def.width && LARGEUR_PAR_DEFAUT_M[p.kind]) o.width = def.width * p.world.width / LARGEUR_PAR_DEFAUT_M[p.kind];
   if (def.wallHeight !== undefined) o.wallHeight = def.wallHeight;
+  // A surveyed height (a BD TOPO hedge's, bdtopo-extras.js) before the kind's.
+  if (p.wallHeight > 0 && def.wallHeight !== undefined) o.wallHeight = p.wallHeight;
   if (p.kind === 'riviere') o.profondeur = PROFONDEUR_RIVIERE;
   if (p.marking === false) o.marquage = false;
   return o;

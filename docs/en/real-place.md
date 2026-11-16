@@ -19,6 +19,7 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
 | `src/vegetation-zones.js` | PURE. The woods, orchards, heaths and hedges the IGN surveys (France), filled with built-in trees and shrubs (`readVegetation`, `fillVegetation`). The request: `realplace:vegetation`. |
 | `src/landmarks.js` | PURE. The crosses, calvaries, wind turbines, relay masts and bell towers the IGN surveys (France, BD TOPO `construction_ponctuelle`): `readLandmarks`. The request: `realplace:landmarks`. |
 | `src/soils.js` | PURE. The bare earth's colour (and, « Realistic », its texture) from the INRAE's soil map (France): `soilKindOf`, `readSoils`, `applySoils`. The request: `realplace:soils`. |
+| `src/bdtopo-extras.js` | PURE. What else the BD TOPO surveys (France): hedges as lines, sports grounds, cemeteries and their graves, water surfaces (`addExtras`). The request: `realplace:extras`. |
 | `src/real-place-import.js` | PURE. The translation and the altitudes turned into a Scene's content (`sceneContentOf`: Path and Zone objects, relief, credits). |
 | `src/real-place-ui.js` | The new Scene's window: the choice, then search, map (OpenStreetMap tiles), zone size, import with its progress. |
 | `electron/bibliotheque/real-place.js` | The network (main process): Nominatim, Overpass (with mirrors), altitudes, tiles; identified by the application's User-Agent. |
@@ -184,6 +185,15 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    most of its cells stand on. At « Realistic », each kind's Poly Haven texture (chosen by hand,
    `SOIL_KINDS.polyhaven`, CC0) is taken from « My textures », or downloaded there (1k), and laid on those
    Zones instead of the tint (`textureDeLaTerre`); credit « Bare earth: Poly Haven textures (CC0) ».
+   Then the BD TOPO's extras (France, « Detailed » and « Realistic »): `realplace:extras` (WFS `haie`,
+   `terrain_de_sport`, `cimetiere`, `surface_hydrographique`; `HAIES.BOCAGES:haie` holds the same hedges and
+   `detail_orographique` only names, both left out), `addExtras`: a hedge as a `haie` Path (clipped to the zone,
+   its surveyed `hauteur` as its `wallHeight` and its `largeur`), unless an OSM hedge runs within 3 m or the
+   vegetation filled it as shrubs; a sports ground as a Zone (`SPORTS_GROUNDS`: tennis and multi-sports concrete,
+   a large ground lawn, a running track red earth, a tint the soil map leaves), a cemetery as gravel with rows
+   of graves (`gravesOf`: 3 m apart, 1.6 m along a row, as its longest side, 1.5 m inside its wall, 200 at most,
+   none where OSM has graves), a water surface as water; an area whose middle an OSM Zone of the same ground
+   holds is OSM's.
    Then the landmarks: `realplace:landmarks` (WFS `BDTOPO_V3:construction_ponctuelle`), `readLandmarks`:
    Croix → `croix`, Calvaire → `calvaire`, Eolienne → `eolienne`, Antenne → `antenne`, Clocher → `clocher`
    (the others left out), their surveyed `hauteur` kept within reason, one OSM already maps (the same object

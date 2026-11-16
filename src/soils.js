@@ -110,7 +110,8 @@ export function soilUnder(world, soils) {
 export function applySoils(zones, soils) {
   const used = new Map();
   for (const z of zones || []) {
-    if (z.terrainType !== 'terre') continue;
+    // A Zone already tinted (a running track's red, bdtopo-extras.js) keeps its colour.
+    if (z.terrainType !== 'terre' || z.terrainColor) continue;
     const kind = soilUnder(z.world, soils);
     if (!kind) continue;
     z.terrainColor = SOIL_KINDS[kind].colour;

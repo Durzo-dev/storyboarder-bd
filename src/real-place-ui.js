@@ -12,6 +12,7 @@ import { translateOsm, ZONE_SIDE_MAX, DETAIL_LEVELS } from './osm-scene.js';
 import { clearOfObstacles, obstaclesOf, fitCrowns } from './placement-clearance.js';
 import { readVegetation, fillVegetation, BD_FORET_CREDIT } from './vegetation-zones.js';
 import { readLandmarks } from './landmarks.js';
+import { addExtras } from './bdtopo-extras.js';
 import { readSoils, applySoils, SOIL_KINDS } from './soils.js';
 import { chargerTexturesUtilisateur, idDe as idDeTexture } from './textures-utilisateur.js';
 import { crownOf } from './ez-trees.js';
@@ -497,6 +498,16 @@ async function importer(){
         translated.elements.push(...added);
         console.info(`[real-place] vegetation: ${added.length} trees and shrubs filled`);
         if (added.some(e => e.source === 'bdforet')) photoCredits.push(tr(BD_FORET_CREDIT.en, BD_FORET_CREDIT.fr));
+      }
+    }
+    // France, Detailed and Realistic: the hedges, sports grounds, cemeteries (their graves) and waters the BD TOPO
+    // surveys and OSM has not (bdtopo-extras.js, #482f).
+    if (country === 'fr' && niveau !== 'simple' && api.realPlaceExtras) {
+      const x = await api.realPlaceExtras(bbox);
+      if (arrete()) return annule;
+      if (x && !x.error) {
+        const n = addExtras(translated, x, centre, halfSize);
+        console.info(`[real-place] extras: ${n.hedges} hedges, ${n.sports} sports grounds, ${n.cemeteries} cemeteries (${n.graves} graves), ${n.waters} waters`);
       }
     }
     // France, Detailed and Realistic: the crosses, calvaries, wind turbines, masts and bell towers the IGN surveys
