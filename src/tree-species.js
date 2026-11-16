@@ -409,7 +409,7 @@ Object.assign(SPECIES, {
   Saule: { from: 'Aspen Large', label: { fr: 'Saule pleureur', en: 'Weeping willow' }, type: 'arbre', height: 12, genus: 'Salix',
     bark: BARK('bark_willow'), barkTint: 0xd4d0c4, barkGain: 1.8,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'lance', colours: ['#8fb25a', '#9bbd63', '#82a650'], under: '#b6c99a', n: 13, size: 40, spread: 0.3, seed }),
-    set(o){ o.branch.length[0] = 35; o.branch.start[1] = 0.35; o.branch.angle[1] = 55; o.branch.length[1] = 26; o.branch.force.strength = -0.05; o.branch.children[1] = 9; o.leaves.size = 5.5; o.leaves.count = 30; } },
+    set(o){ o.branch.levels = 3; o.branch.length[0] = 30; o.branch.radius[0] = 2.6; o.branch.start[1] = 0.4; o.branch.angle[1] = 55; o.branch.length[1] = 30; o.branch.radius[1] = 0.7; o.branch.children[0] = 10; o.branch.gnarliness[0] = 0.02; o.branch.force.strength = -0.05; o.branch.children[1] = 12; o.branch.angle[2] = 35; o.branch.length[2] = 28; o.branch.start[2] = 0.3; o.branch.radius[2] = 0.4; o.branch.children[2] = 0; o.leaves.size = 5.5; o.leaves.count = 24; o.leaves.start = 0; } },
   Yeuse: { from: 'Oak Small', label: { fr: 'Chêne vert', en: 'Holm oak' }, type: 'arbre', height: 10, genus: 'Quercus', taxa: ['quercus ilex', 'quercus suber', 'quercus coccifera'],
     bark: BARK('chinese_hackberry_bark'), barkTint: 0x8a8682,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#34502c', '#3c5a32', '#2f4828'], under: '#8c9a80', n: 10, size: 30, seed }),
@@ -418,10 +418,12 @@ Object.assign(SPECIES, {
     bark: BARK('pine_bark'), barkTint: 0xffffff, barkGain: 1.2,
     foliage: (seed, makeCanvas) => needleTuft({ seed, makeCanvas, colours: ['#4f7a3c', '#5a8646', '#669250'] }),
     set(o){
-      o.branch.levels = 2; o.branch.start[1] = 0.66; o.branch.children[0] = 12; o.branch.angle[1] = 72; o.branch.length[1] = 60;
-      o.branch.radius[1] = 0.6; o.branch.gnarliness[0] = 0.08; o.branch.gnarliness[1] = 0.1; o.branch.force.strength = 0;
-      o.branch.children[1] = 8; o.branch.angle[2] = 35; o.branch.length[2] = 14; o.branch.start[2] = 0.45; o.branch.radius[2] = 0.6;
-      o.leaves.size = 5; o.leaves.count = 26; o.leaves.start = 0.4;
+      // An evergreen's branch is as long as `length` times the share of trunk above it (EZ-Tree): long branches
+      // low in the crown, short ones at its top, an umbrella; no terminal branch (a deciduous' would rise above it).
+      o.branch.levels = 2; o.branch.start[1] = 0.72; o.branch.children[0] = 16; o.branch.angle[1] = 74; o.branch.length[1] = 170;
+      o.branch.radius[1] = 0.55; o.branch.gnarliness[0] = 0.03; o.branch.gnarliness[1] = 0.05; o.branch.force.strength = 0;
+      o.branch.children[1] = 12; o.branch.angle[2] = 40; o.branch.length[2] = 10; o.branch.start[2] = 0.35; o.branch.radius[2] = 0.6;
+      o.leaves.size = 5; o.leaves.count = 30; o.leaves.start = 0.2; o.leaves.angle = 70;
     } },
   Douglas: { from: 'Pine Large', label: { fr: 'Douglas', en: 'Douglas fir' }, type: 'conifere', height: 30, genus: 'Pseudotsuga',
     bark: BARK('knotted_pine_bark'), barkTint: 0xb0a090,

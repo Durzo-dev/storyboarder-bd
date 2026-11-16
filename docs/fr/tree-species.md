@@ -382,8 +382,10 @@ Durzo, puis, si elle est acceptée :
 - **Branches** : montantes, puis retombant en arc ; de longs rameaux fins pendant droit.
 - **Feuilles** : lances étroites de 8 à 15 cm, finement dentées ; vert-jaune clair dessus, gris-blanc dessous.
   Caduques, parmi les premières à sortir et les dernières à tomber.
-- **Dans EZ-Tree** : départ « Aspen Large » ; tronc 35, branches dès 35 %, angle 55, longues de 26, 9 rameaux
-  chacune, tirées vers le BAS (force −0,05) ; feuilles taille 5,5, 30. Écorce `bark_willow` teintée (`#d4d0c4`),
+- **Dans EZ-Tree** : départ « Aspen Large », trois niveaux : un tronc épais (30, épais de 2,6) pour que la traction vers
+  le BAS (force −0,05) ne courbe que les parties fines (EZ-Tree courbe une section selon la force divisée par son
+  rayon) : 10 branches dès 40 %, angle 55, longues de 30, 12 rameaux chacune, longs de 28, pendants ; feuilles
+  taille 5,5, 24. Écorce `bark_willow` teintée (`#d4d0c4`),
   éclaircie (gain 1,8). Feuillage forme `lance`, `#8fb25a` à `#9bbd63`, revers `#b6c99a`.
 - **Références** : Commons, catégories « Salix babylonica » et « Salix × sepulcralis » (port, feuilles).
 
@@ -407,8 +409,10 @@ Durzo, puis, si elle est acceptée :
 - **Tronc** : droit ou penché, 0,5 à 1 m. Écorce brun-rouge en crevasses profondes entre de longues plaques plates.
 - **Branches** : seulement en haut, montant à 40-50° du tronc puis s'étalant à l'horizontale.
 - **Feuilles** : aiguilles par deux, 10 à 20 cm, raides ; vert vif à vert-gris. Gros cônes ronds. Persistantes.
-- **Dans EZ-Tree** : départ « Pine Large », branches sur deux niveaux : 12 branches dès 66 %, angle 72, longues de
-  60, sans poussée, 8 rameaux chacune ; feuilles taille 5, 26, dès 40 %. Écorce `pine_bark`, éclaircie (gain
+- **Dans EZ-Tree** : départ « Pine Large », branches sur deux niveaux : 16 branches dès 72 %, angle 74, longueur 170 :
+  la branche d'un conifère vaut cela fois la part de tronc au-dessus d'elle (EZ-Tree), d'où des branches longues en
+  bas de la couronne et courtes en haut, un parasol, sans branche terminale qui le dépasse ; 12 rameaux chacune ;
+  feuilles taille 5, 30, dès 20 %. Écorce `pine_bark`, éclaircie (gain
   1,2). Feuillage `needleTuft`, `#4f7a3c` à `#669250`. Son propre type (`pin_parasol`, « Pinus pinea » d'OSM).
 - **Références** : Commons, catégorie « Pinus pinea » (port, aiguilles, écorce).
 

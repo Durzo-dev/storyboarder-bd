@@ -370,8 +370,9 @@ then, if accepted:
 - **Branches**: rising, then arching down; long thin twigs hanging straight.
 - **Leaves**: narrow lances 8 to 15 cm, finely toothed; light yellow-green above, grey-white under. Deciduous,
   among the first out and last to fall.
-- **In EZ-Tree**: from « Aspen Large »; trunk 35, branches from 35 %, angle 55, 26 long, 9 twigs each, pulled
-  DOWN (force −0.05); leaves size 5.5, 30. Bark `bark_willow` tinted (`#d4d0c4`), lightened (gain 1.8). Foliage shape
+- **In EZ-Tree**: from « Aspen Large », three levels: a thick trunk (30, 2.6 thick) so the pull DOWN (force −0.05) bends
+  only the thin parts (EZ-Tree bends a section by the force over its radius): 10 branches from 40 %, angle 55, 30
+  long, 12 twigs each, 28 long, hanging; leaves size 5.5, 24. Bark `bark_willow` tinted (`#d4d0c4`), lightened (gain 1.8). Foliage shape
   `lance`, `#8fb25a` to `#9bbd63`, under `#b6c99a`.
 - **References**: Commons, categories « Salix babylonica » and « Salix × sepulcralis » (habit, leaves).
 
@@ -395,8 +396,9 @@ then, if accepted:
 - **Trunk**: straight or leaning, 0.5 to 1 m. Bark red-brown in deep fissures between long flat plates.
 - **Branches**: only at the top, rising at 40 to 50° from the trunk then spreading level.
 - **Leaves**: needles in pairs, 10 to 20 cm, stiff; bright to grey green. Big round cones. Evergreen.
-- **In EZ-Tree**: from « Pine Large », branches on two levels: 12 branches from 66 %, angle 72, 60 long, no
-  push, 8 twigs each; leaves size 5, 26, from 40 %. Bark `pine_bark`, lightened (gain 1.2). Foliage
+- **In EZ-Tree**: from « Pine Large », branches on two levels: 16 branches from 72 %, angle 74, length 170: an
+  evergreen's branch is that times the share of trunk above it (EZ-Tree), so the low ones are long and the top
+  ones short, an umbrella, with no terminal branch rising above it; 12 twigs each; leaves size 5, 30, from 20 %. Bark `pine_bark`, lightened (gain 1.2). Foliage
   `needleTuft`, `#4f7a3c` to `#669250`. Its own type (`pin_parasol`, OSM's « Pinus pinea »).
 - **References**: Commons, category « Pinus pinea » (habit, needles, bark).
 
