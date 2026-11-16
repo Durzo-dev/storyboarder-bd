@@ -600,9 +600,11 @@ then, if accepted:
 - **Trunk**: straight, cylindrical, grey bark ringed by old branch scars.
 - **Branches**: in whorls of 5 to 7, level, long, upturned at their tips, few side twigs (« ropes »).
 - **Leaves**: stiff overlapping triangles, sharp, dark glossy green, covering the branches entirely. Evergreen.
-- **In EZ-Tree**: from « Pine Medium », two levels: 20 branches from 35 %, level (84°), 22 long, a straight trunk,
-  no growth force; 4 short twigs each; leaves size 4, 10. Bark `knotted_pine_bark` tinted grey (`#9a948c`). Foliage
-  `needleTuft`, dark `#2f5228` to `#3f6634`.
+- **In EZ-Tree**: from « Pine Medium », two levels: 28 branches from 45 % (a bare trunk below), level (84°), 48
+  long, thin and tapering; a growth force upward (0.012) lifts their thin ends: the tips turn up, a candelabra;
+  3 short twigs each; leaves size 3.4, 10, from a quarter of the branch out. Bark `knotted_pine_bark` tinted grey
+  (`#9a948c`). Foliage DRAWN (`scaleRope`): thick shoots covered with overlapping triangular scales, `#2c4a26` to
+  `#3c6036`.
 - **References**: Commons, categories « Araucaria araucana » and « Araucaria heterophylla » (habit).
 
 ## Laurier — Evergreen shrubs (*Laurus*, *Ilex*, *Ligustrum*, *Buxus*, *Euonymus*, *Phillyrea*, *Photinia*, *Pittosporum*, *Myrtus*, *Nerium*, *Pistacia*, *Arbutus*, *Viburnum*)

@@ -626,9 +626,11 @@ Durzo, puis, si elle est acceptée :
 - **Branches** : en verticilles de 5 à 7, horizontales, longues, relevées au bout, peu de rameaux (des « cordes »).
 - **Feuilles** : des triangles raides imbriqués, piquants, vert foncé luisant, couvrant entièrement les branches.
   Persistantes.
-- **Dans EZ-Tree** : départ « Pine Medium », deux niveaux : 20 branches dès 35 %, horizontales (84°), longueur 22, un
-  tronc droit, sans force de croissance ; 4 rameaux courts chacune ; feuilles taille 4, 10. Écorce
-  `knotted_pine_bark` teintée grise (`#9a948c`). Feuillage `needleTuft`, foncé `#2f5228` à `#3f6634`.
+- **Dans EZ-Tree** : départ « Pine Medium », deux niveaux : 28 branches dès 45 % (un tronc nu dessous),
+  horizontales (84°), longueur 48, fines et effilées ; une force de croissance vers le haut (0,012) relève leurs bouts
+  fins : les pointes se redressent, en candélabre ; 3 rameaux courts chacune ; feuilles taille 3,4, 10, à partir du
+  quart de la branche. Écorce `knotted_pine_bark` teintée grise (`#9a948c`). Feuillage DESSINÉ (`scaleRope`) : des
+  rameaux épais couverts d'écailles triangulaires imbriquées, `#2c4a26` à `#3c6036`.
 - **Références** : Commons, catégories « Araucaria araucana » et « Araucaria heterophylla » (port).
 
 ## Laurier — arbuste persistant : laurier, houx, troène… (*Laurus*, *Ilex*, *Ligustrum*, *Buxus*, *Euonymus*, *Phillyrea*, *Photinia*, *Pittosporum*, *Myrtus*, *Nerium*, *Pistacia*, *Arbutus*, *Viburnum*)

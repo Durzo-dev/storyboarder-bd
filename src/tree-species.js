@@ -364,6 +364,28 @@ function bushSprig({ stem = '#5e7a44', leaf = null, flower = null, spike = false
   return c;
 }
 
+/** A monkey puzzle's « rope »: thick shoots covered all round with stiff overlapping triangular scales (Araucaria). */
+function scaleRope({ colours = ['#2c4a26', '#345630', '#3c6036'], seed = 1, makeCanvas = domCanvas } = {}){
+  const c = makeCanvas(512);
+  const ctx = c.getContext('2d'), rnd = rng(seed);
+  const ropes = [[256, 505, 0, 470, 30], [256, 330, -0.6, 220, 22], [256, 250, 0.65, 200, 22]];
+  for (const [x, y, ang, len, w] of ropes) {
+    const steps = Math.round(len / (w * 0.42));
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps, px = x + Math.sin(ang) * len * t, py = y - Math.cos(ang) * len * t, ww = w * (1 - 0.35 * t);
+      for (const k of [-1, 0, 1]) {
+        ctx.fillStyle = colours[Math.floor(rnd() * colours.length)];
+        ctx.save(); ctx.translate(px + Math.cos(ang) * k * ww * 0.55, py + Math.sin(ang) * k * ww * 0.55); ctx.rotate(ang + k * 0.5);
+        ctx.beginPath(); ctx.moveTo(-ww * 0.45, ww * 0.35); ctx.lineTo(0, -ww * 0.75); ctx.lineTo(ww * 0.45, ww * 0.35); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = shade(colours[0], 1.5); ctx.globalAlpha = 0.5;
+        ctx.beginPath(); ctx.moveTo(-ww * 0.08, ww * 0.2); ctx.lineTo(0, -ww * 0.7); ctx.lineTo(ww * 0.08, ww * 0.2); ctx.closePath(); ctx.fill();
+        ctx.globalAlpha = 1; ctx.restore();
+      }
+    }
+  }
+  return c;
+}
+
 /** A pine's shoot: needles in pairs, long, in tufts at the twigs' ends (Pinus sylvestris, pinaster). */
 function needleTuft({ colours = ['#5a8442', '#66904c', '#73a056'], seed = 1, makeCanvas = domCanvas } = {}){
   const c = makeCanvas(512);
@@ -650,12 +672,15 @@ Object.assign(SPECIES, {
     set(o){ o.branch.radius[0] = o.branch.radius[0] * 1.6; o.branch.gnarliness[0] = 0.005; o.branch.length[1] = o.branch.length[1] * 0.6; o.branch.force.strength = 0; o.leaves.size = 3.5; o.leaves.count = Math.round(o.leaves.count * 1.2); } },
   Araucaria: { from: 'Pine Medium', label: { fr: 'Araucaria', en: 'Monkey puzzle' }, type: 'conifere', height: 15, genus: 'Araucaria',
     bark: BARK('knotted_pine_bark'), barkTint: 0x9a948c,
-    foliage: (seed, makeCanvas) => needleTuft({ seed, makeCanvas, colours: ['#2f5228', '#365c2e', '#3f6634'] }),
+    foliage: (seed, makeCanvas) => scaleRope({ seed, makeCanvas }),
     set(o){
-      o.branch.levels = 2; o.branch.start[1] = 0.35; o.branch.children[0] = 20; o.branch.angle[1] = 84; o.branch.length[1] = 22;
-      o.branch.gnarliness[0] = 0.005; o.branch.gnarliness[1] = 0.02; o.branch.force.strength = 0; o.branch.radius[1] = 0.4;
-      o.branch.children[1] = 4; o.branch.angle[2] = 70; o.branch.length[2] = 6; o.branch.start[2] = 0.5;
-      o.leaves.size = 4; o.leaves.count = 10; o.leaves.start = 0.3;
+      // A bare trunk, then tiers of long level branches whose tips turn up (the growth force lifts the thin ends),
+      // few twigs, the scaled « ropes » covering them all along.
+      o.branch.levels = 2; o.branch.start[1] = 0.45; o.branch.children[0] = 28; o.branch.angle[1] = 84; o.branch.length[1] = 48;
+      o.branch.gnarliness[0] = 0.004; o.branch.gnarliness[1] = 0.01; o.branch.radius[1] = 0.32; o.branch.taper[1] = 0.6;
+      o.branch.force.direction = { x: 0, y: 1, z: 0 }; o.branch.force.strength = 0.012;
+      o.branch.children[1] = 3; o.branch.angle[2] = 55; o.branch.length[2] = 9; o.branch.start[2] = 0.45; o.branch.radius[2] = 0.5;
+      o.leaves.size = 3.4; o.leaves.count = 10; o.leaves.start = 0.25; o.leaves.angle = 20;
     } },
   Laurier: { from: 'Bush 1', label: { fr: 'Arbuste persistant (laurier, houx, troène…)', en: 'Evergreen shrub (bay, holly, privet…)' }, type: 'arbuste', height: 4, typeDefault: true,
     genus: ['Laurus', 'Ilex', 'Ligustrum', 'Buxus', 'Euonymus', 'Phillyrea', 'Photinia', 'Pittosporum', 'Myrtus', 'Nerium', 'Pistacia', 'Arbutus', 'Viburnum'],
