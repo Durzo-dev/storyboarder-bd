@@ -67,7 +67,9 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
   walls on every level and makes their room a void, `vide`, as the editor's courtyards; the roof goes round
   them). A building with courtyards is not cut into parts by height. The BD TOPO's inner rings (`holes`,
   `readBdTopo`) are the courtyards of a building added from the survey. The LiDAR's reading leaves them aside,
-  and a roof climbs to the middle of a wing (`roofHalfSpan`), not of the block.
+  and a roof climbs to the middle of a wing (`roofHalfSpan`), not of the block. A ground mapped as a
+  multipolygon (`landuse` relations: Eguisheim's vineyards) becomes a Zone per outer ring, its inner rings'
+  cells cleared.
 - **Skipped**: other relations, counted in `skipped.relations`; invalid or outside ways.
 - **Attribution**: `OSM_ATTRIBUTION` ("© OpenStreetMap contributors, ODbL"), to show in the export credits.
 

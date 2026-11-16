@@ -165,7 +165,7 @@ async function country(lat, lon){
 /** The Overpass query of a zone: what the translator reads (src/osm-scene.js), with geometry. */
 function overpassQuery({ south, west, north, east }){
   const b = `(${south},${west},${north},${east})`;
-  return `[out:json][timeout:60];(way["building"]${b};relation["building"]["type"="multipolygon"]${b};way["highway"]${b};way["barrier"]${b};way["waterway"]${b};`
+  return `[out:json][timeout:60];(way["building"]${b};relation["building"]["type"="multipolygon"]${b};relation["landuse"]["type"="multipolygon"]${b};way["highway"]${b};way["barrier"]${b};way["waterway"]${b};`
     + `way["landuse"]${b};way["natural"]${b};way["leisure"]${b};way["amenity"~"^(parking|fountain)$"]${b};`
     + `node["natural"="tree"]${b};node["highway"="street_lamp"]${b};node["traffic_sign"]${b};node["highway"~"^(stop|give_way)$"]${b};`
     + `node["natural"="shrub"]${b};node["man_made"="planter"]${b};node["amenity"~"^(bench|fountain|waste_basket|shelter)$"]${b};node["barrier"="bollard"]${b};`

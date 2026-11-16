@@ -73,7 +73,8 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
   les cours de l'éditeur ; le toit en fait le tour). Un bâtiment à cours n'est pas coupé en parties par les
   hauteurs. Les anneaux intérieurs de la BD TOPO (`holes`, `readBdTopo`) sont les cours d'un bâtiment ajouté
   d'après le relevé. La lecture du LiDAR les laisse de côté, et un toit monte jusqu'au milieu d'une aile
-  (`roofHalfSpan`), pas de l'îlot.
+  (`roofHalfSpan`), pas de l'îlot. Un sol mappé en multipolygone (relations `landuse` : les vignes d'Eguisheim)
+  devient une Zone par anneau extérieur, les cases de ses anneaux intérieurs vidées.
 - **Écartés** : les autres relations, comptées dans `skipped.relations` ; les chemins illisibles ou hors zone.
 - **Attribution** : `OSM_ATTRIBUTION` (« © OpenStreetMap contributors, ODbL »), à montrer dans les crédits
   de l'export.

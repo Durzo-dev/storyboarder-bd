@@ -32,6 +32,9 @@ test('not twice where OSM maps it; not outside the zone', () => {
   const out = readLandmarks({ features: [point('Eolienne', 50, 50), point('Croix', 10, 0), point('Croix', 500, 0)] },
     centre, { halfSize: 100, existing });
   assert.deepEqual(out.map(e => e.objType), ['croix'], 'the turbine 20 m from OSM\'s is the same; the far cross out');
+  const osm = [{ objType: 'eolienne', x: 0, z: 0 }];
+  readLandmarks({ features: [point('Eolienne', 10, 0, 214.8)] }, centre, { existing: osm });
+  assert.equal(osm[0].height, 214.8, 'OSM\'s turbine takes the surveyed height');
 });
 
 test('OSM: wayside crosses and calvaries, wind turbines, relay masts', () => {

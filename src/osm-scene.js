@@ -587,7 +587,9 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
     const tags = e.tags || {};
     if (e.type === 'relation') {
       // A building mapped as a multipolygon (#484b): each outer ring a building, its inner rings its courtyards.
-      if (tags.building && tags.type === 'multipolygon' && Array.isArray(e.members)) {
+      // A ground mapped so (#482e, seen: Eguisheim's vineyards, one relation): each outer ring a Zone, its inner
+      // rings left out of it.
+      if ((tags.building || zoneTypeOf(tags)) && tags.type === 'multipolygon' && Array.isArray(e.members)) {
         const lines = (role) => e.members.filter(m => m && m.type === 'way' && (m.role || 'outer') === role && Array.isArray(m.geometry))
           .map(m => m.geometry.map(geoPoint)).filter(g => g.every(Boolean)).map(g => g.map(toLocal));
         const inners = ringsOf(lines('inner'));
@@ -740,6 +742,16 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
     if (ground) {
       const mask = maskOfPolygon(w.pts, h);
       if (!mask) { out.skipped.outside++; continue; }
+      // A multipolygon's inner rings: their cells cleared (a farmyard in its fields, a clearing in its wood).
+      if (w.holes && w.holes.length) {
+        const cells = [...mask.plein];
+        for (let j = 0; j < mask.nz; j++) for (let i = 0; i < mask.nx; i++) {
+          const p = { x: mask.x0 + (i + 0.5) * mask.pas, z: mask.z0 + (j + 0.5) * mask.pas };
+          if (cells[j * mask.nx + i] === '1' && w.holes.some(r => insidePolygon(p, r))) cells[j * mask.nx + i] = '0';
+        }
+        mask.plein = cells.join('');
+        if (!mask.plein.includes('1')) { out.skipped.outside++; continue; }
+      }
       const zone = { terrainType: ground, world: mondeDuMasque(mask), osmId: w.id };
       if (w.tags.name) zone.name = w.tags.name;
       out.zones.push(zone);

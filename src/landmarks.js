@@ -8,7 +8,8 @@
  * Cheminée, Phare, Minaret, Transformateur, « Autre construction élevée », left out (no object for them).
  *
  * Each becomes an element `{ objType, x, z, height?, source }` like OSM's furniture, its surveyed height when
- * the survey gives one. One OSM already maps (the same object within SAME_PLACE metres) is not added twice.
+ * the survey gives one. One OSM already maps (the same object within SAME_PLACE metres) is not added twice, but
+ * takes the surveyed height when it has none.
  */
 import { projector } from './geo-local.js';
 
@@ -38,10 +39,14 @@ export function readLandmarks(geojson, centre, { halfSize = Infinity, existing =
     const q = toLocal({ lat: c[1], lon: c[0] });
     if (Math.abs(q.x) > halfSize || Math.abs(q.z) > halfSize) continue;
     const near = SAME_PLACE[objType];
-    if ([...existing, ...out].some(e => e.objType === objType && Math.hypot(e.x - q.x, e.z - q.z) < near)) continue;
-    const e = { objType, x: Math.round(q.x * 100) / 100, z: Math.round(q.z * 100) / 100, source: 'bdtopo' };
     const [lo, hi] = HEIGHTS[objType];
-    if (Number.isFinite(p.hauteur) && p.hauteur >= lo && p.hauteur <= hi) e.height = p.hauteur;
+    const height = Number.isFinite(p.hauteur) && p.hauteur >= lo && p.hauteur <= hi ? p.hauteur : null;
+    const same = [...existing, ...out].find(e => e.objType === objType && Math.hypot(e.x - q.x, e.z - q.z) < near);
+    // The same landmark OSM maps: its surveyed height given to it when it has none (seen: a 215 m wind turbine
+    // standing at the object's 150).
+    if (same) { if (height && !(same.height > 0)) same.height = height; continue; }
+    const e = { objType, x: Math.round(q.x * 100) / 100, z: Math.round(q.z * 100) / 100, source: 'bdtopo' };
+    if (height) e.height = height;
     out.push(e);
   }
   return out;

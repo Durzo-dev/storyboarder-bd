@@ -76,3 +76,20 @@ test('OSM: a building multipolygon becomes a building, its tags and its courtyar
   assert.equal(b.nom, 'Hôtel Montmien');
   assert.ok(b.pieces.some(p => p.vide), 'its courtyard');
 });
+
+test('OSM: a ground multipolygon (Eguisheim\'s vineyards) becomes a Zone, its inner rings left out', () => {
+  const centre = { lat: 48.04, lon: 7.3 };
+  const k = 1 / 111320, kx = 1 / (111320 * Math.cos(48.04 * Math.PI / 180));
+  const way = (pts) => pts.map(([x, z]) => ({ lat: 48.04 - z * k, lon: 7.3 + x * kx }));
+  const data = { elements: [{ type: 'relation', id: 1020508, tags: { type: 'multipolygon', landuse: 'vineyard' }, members: [
+    { type: 'way', role: 'outer', geometry: way([[-40, -40], [40, -40], [40, 40], [-40, 40], [-40, -40]]) },
+    { type: 'way', role: 'inner', geometry: way([[-10, -10], [10, -10], [10, 10], [-10, 10], [-10, -10]]) },
+  ] }] };
+  const out = translateOsm(data, { centre, halfSize: 60 });
+  assert.equal(out.zones.length, 1);
+  assert.equal(out.zones[0].terrainType, 'terre');
+  const m = out.zones[0].world.masque;
+  const at = (x, z) => m.plein[Math.floor((z - m.z0) / m.pas) * m.nx + Math.floor((x - m.x0) / m.pas)];
+  assert.equal(at(30, 30), '1');
+  assert.equal(at(0, 0), '0', 'the hole');
+});
