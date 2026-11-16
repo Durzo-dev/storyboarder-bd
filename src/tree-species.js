@@ -67,6 +67,55 @@ const SHAPES = {
     ctx.beginPath(); ctx.moveTo(0, -s);
     ctx.quadraticCurveTo(s * 0.3, 0, 0, s); ctx.quadraticCurveTo(-s * 0.3, 0, 0, -s); ctx.closePath();
   },
+  // A maple's: five pointed lobes, the sinuses rounded and deep, a few large teeth (Acer platanoides).
+  maple(ctx, s, rnd){
+    const lobes = [[-1.5, 0.72], [-0.8, 0.95], [0, 1], [0.8, 0.95], [1.5, 0.72]];
+    ctx.beginPath(); ctx.moveTo(0, s * 0.2);
+    lobes.forEach(([a, l], i) => {
+      const tip = [Math.sin(a) * s * l, -Math.cos(a) * s * l];
+      const mid = (a + (i ? lobes[i - 1][0] : a - 0.9)) / 2, sinus = [Math.sin(mid) * s * 0.36, -Math.cos(mid) * s * 0.36];
+      ctx.quadraticCurveTo(sinus[0] * 0.8, sinus[1] * 0.8, sinus[0], sinus[1]);
+      ctx.lineTo((sinus[0] + tip[0]) / 2 + Math.cos(a) * s * 0.12 + (rnd() - 0.5) * s * 0.04, (sinus[1] + tip[1]) / 2 + Math.sin(a) * s * 0.12);
+      ctx.lineTo(tip[0], tip[1]);
+    });
+    ctx.lineTo(Math.sin(2.4) * s * 0.36, -Math.cos(2.4) * s * 0.36);
+    ctx.closePath();
+  },
+  // An oak's: obovate, four or five rounded lobes a side, short-stalked (Quercus robur).
+  oak(ctx, s){
+    ctx.beginPath();
+    const side = (k) => {
+      for (let i = 0; i <= 40; i++) {
+        const t = i / 40, y = s - 2 * s * t;
+        const w = s * 0.42 * Math.sin(Math.PI * Math.min(1, t * 1.15)) * (0.75 + 0.25 * Math.abs(Math.sin(t * Math.PI * 4.5)));
+        ctx.lineTo(k * w, y);
+      }
+    };
+    ctx.moveTo(0, s); side(1); side(-1);
+    ctx.closePath();
+  },
+  // A horse chestnut's: seven obovate leaflets spread like a hand from one point (Aesculus hippocastanum).
+  chestnut(ctx, s){
+    ctx.beginPath();
+    for (let k = -3; k <= 3; k++) {
+      const a = k * 0.42, l = s * (1 - Math.abs(k) * 0.12);
+      ctx.save(); ctx.rotate(a);
+      ctx.moveTo(0, s * 0.35);
+      ctx.ellipse(0, s * 0.35 - l * 0.6, l * 0.2, l * 0.6, 0, Math.PI / 2, Math.PI * 2.5);
+      ctx.restore();
+    }
+  },
+  // An ash's leaflet, or a cherry's leaf: a pointed oval, toothed, broader (`w`) or narrower.
+  ovate(ctx, s){
+    ctx.beginPath(); ctx.moveTo(0, -s);
+    ctx.bezierCurveTo(s * 0.55, -s * 0.45, s * 0.5, s * 0.55, 0, s);
+    ctx.bezierCurveTo(-s * 0.5, s * 0.55, -s * 0.55, -s * 0.45, 0, -s);
+    ctx.closePath();
+  },
+  lance(ctx, s){
+    ctx.beginPath(); ctx.moveTo(0, -s);
+    ctx.quadraticCurveTo(s * 0.42, 0, 0, s); ctx.quadraticCurveTo(-s * 0.42, 0, 0, -s); ctx.closePath();
+  },
 };
 
 /** A twig with leaves of a shape (in opposite pairs if asked), on a transparent 512 px canvas. */
@@ -143,6 +192,27 @@ export const SPECIES = {
     bark: BARK('bark_willow_02'), barkTint: 0xcfcabd,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'olive', colours: ['#55634a', '#5f6d50', '#4d5a42'], under: '#b3bba4', n: 11, size: 68, opposite: true, spread: 0.8, seed }),
     set(o){ o.branch.length[0] = 18; o.branch.radius[0] = 3; o.branch.start[1] = 0.5; o.branch.gnarliness[0] = 0.3; o.branch.gnarliness[1] = 0.35; o.branch.twist[0] = 0.5; o.branch.angle[1] = 58; o.branch.length[1] = 20; o.branch.children[0] = 7; o.branch.force.strength = -0.01; o.leaves.size = 4.5; o.leaves.count = 16; o.leaves.start = 0.3; o.leaves.alphaTest = 0.3; } },
+  // ── Wave 1 (#480h): the streets' and the forests' trees ──
+  Erable: { from: 'Ash Medium', label: { fr: 'Érable', en: 'Maple' }, type: 'arbre', height: 15, genus: 'Acer',
+    bark: BARK('trident_maple_bark'), barkTint: 0xd6d0c6,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'maple', colours: ['#4f8b3b', '#5d9a44', '#46803a'], n: 6, opposite: true, size: 78, seed }),
+    set(o){ o.branch.angle[1] = 55; o.branch.children[0] = 8; o.branch.children[1] = 5; o.branch.gnarliness[1] = 0.12; o.branch.start[1] = 0.3; o.leaves.size = 4.5; o.leaves.count = 18; } },
+  Chene: { from: 'Oak Large', label: { fr: 'Chêne', en: 'Oak' }, type: 'arbre', height: 20, genus: 'Quercus',
+    bark: BARK('jolcham_oak_bark_01'), barkTint: 0xffffff,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'oak', colours: ['#3f6f2f', '#4a7a35', '#3a652c'], n: 8, size: 62, seed }),
+    set(o){ o.branch.radius[0] = 3.6; o.branch.gnarliness[1] = 0.25; o.branch.angle[1] = 65; o.branch.length[0] = 40; o.leaves.size = 6; o.leaves.count = 14; } },
+  Marronnier: { from: 'Oak Large', label: { fr: 'Marronnier', en: 'Horse chestnut' }, type: 'arbre', height: 18, genus: 'Aesculus',
+    bark: BARK('bark_brown_02'), barkTint: 0xe0d8cc,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'chestnut', colours: ['#3f7a33', '#4b8a3a', '#386f2e'], n: 4, opposite: true, size: 95, spread: 0.6, seed }),
+    set(o){ o.branch.angle[1] = 45; o.branch.force.strength = -0.02; o.branch.length[0] = 45; o.leaves.size = 7; o.leaves.count = 16; } },
+  Frene: { from: 'Ash Large', label: { fr: 'Frêne', en: 'Ash' }, type: 'arbre', height: 20, genus: 'Fraxinus',
+    bark: BARK('bark_brown_01'), barkTint: 0xcfcfc8,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'lance', colours: ['#5a9445', '#66a04d', '#528a3e'], n: 11, opposite: true, size: 46, spread: 0.7, seed }),
+    set(o){ o.branch.angle[1] = 35; o.branch.start[1] = 0.45; o.leaves.size = 4; o.leaves.count = 8; } },
+  Cerisier: { from: 'Oak Small', label: { fr: 'Cerisier', en: 'Cherry' }, type: 'arbre', height: 8, genus: 'Prunus',
+    bark: BARK('sakura_bark'), barkTint: 0xffffff,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#4c7f37', '#578c3f', '#447332'], n: 9, size: 52, seed }),
+    set(o){ o.branch.angle[1] = 40; o.branch.length[1] = 12; o.leaves.size = 2.2; o.leaves.count = 22; } },
 };
 
 /** The variants of each species (seeds 1 to VARIANTS): enough for a row of trees not to look cloned. */
@@ -151,10 +221,13 @@ export const VARIANTS = 3;
 /** Our species of a tree, by its genus first (OSM tags, the flora's draw), else by its type: a key of SPECIES or null. */
 export function speciesFor(objType, genus){
   const all = Object.entries(SPECIES);
-  const byGenus = genus && all.find(([, sp]) => sp.genus === genus);
+  const genera = (sp) => (Array.isArray(sp.genus) ? sp.genus : [sp.genus]);
+  const byGenus = genus && all.find(([, sp]) => genera(sp).includes(genus));
   if (byGenus && (byGenus[1].type === objType || objType === 'arbre')) return byGenus[0];
-  const byType = objType !== 'arbre' && all.find(([, sp]) => sp.type === objType);
-  return byType ? byType[0] : null;
+  // Without its genus, a type our one species stands for whole (a cypress, an olive): not a tree nor a conifer,
+  // whose genera differ too much (a cedar is no pine).
+  const ofType = all.filter(([, sp]) => sp.type === objType);
+  return !['arbre', 'conifere'].includes(objType) && ofType.length === 1 ? ofType[0][0] : null;
 }
 
 /** The species an Element of `objType` may take (the sheet's « Essence » list): keys of SPECIES. */

@@ -15,7 +15,7 @@ const m = (file, objType, genera = [], extra = {}) => ({ file, objType, genera, 
 const BANK = [
   m('platane-1.glb', 'arbre', ['Platanus'], { generic: true }),
   m('tilleul-1.glb', 'arbre', ['Tilia', 'Celtis'], { generic: true }),
-  m('cerisier-1.glb', 'arbre', ['Prunus']),
+  m('noyer-1.glb', 'arbre', ['Juglans']),
   m('pin-1.glb', 'conifere', ['Pinus'], { generic: true }),
   m('banc-1.glb', 'banc', [], { generic: true }), m('banc-2.glb', 'banc', [], { generic: true }),
   m('borne-1.glb', 'borne', [], { generic: true }), m('borne-rurale.glb', 'borne', [], { generic: true, rural: true }),
@@ -29,7 +29,7 @@ describe('the bank, model by model', () => {
     assert.equal(genusOfTags({ natural: 'tree' }), null);
   });
   test('the models of a genus; none of it: the generic ones of its form; a cherry is no generic tree', () => {
-    assert.deepEqual(bankModelsFor('arbre', 'Prunus', { bank: BANK }).map(x => x.file), ['cerisier-1.glb']);
+    assert.deepEqual(bankModelsFor('arbre', 'Juglans', { bank: BANK }).map(x => x.file), ['noyer-1.glb']);
     assert.deepEqual(bankModelsFor('arbre', 'Celtis', { bank: BANK }).map(x => x.file), ['tilleul-1.glb']);
     assert.deepEqual(bankModelsFor('arbre', 'Ginkgo', { bank: BANK }).map(x => x.file), ['platane-1.glb', 'tilleul-1.glb']);
     assert.deepEqual(bankModelsFor('arbre', null, { bank: BANK }).map(x => x.file), ['platane-1.glb', 'tilleul-1.glb']);
@@ -74,7 +74,7 @@ describe('a bank model is never « missing »', () => {
 
 describe('the bank given to an import', () => {
   const els = () => [
-    { objType: 'arbre', genus: 'Prunus', x: 1, z: 1 },
+    { objType: 'arbre', genus: 'Juglans', x: 1, z: 1 },
     ...Array.from({ length: 40 }, (_, i) => ({ objType: 'arbre', x: i * 4.1, z: 7 })),
     { objType: 'banc', x: 3, z: 3 }, { objType: 'palmier', x: 5, z: 5 },
     { objType: 'arbre', modelFile: 'Oak.glb', x: 9, z: 9 },
@@ -85,10 +85,10 @@ describe('the bank given to an import', () => {
     const r = applyBank(a, { flora, bank: BANK });
     applyBank(b, { flora, bank: BANK });
     assert.deepEqual(a.map(e => [e.modelFile, e.essence, e.variante]), b.map(e => [e.modelFile, e.essence, e.variante]));
-    assert.equal(a[0].modelFile, BANK_PREFIX + 'cerisier-1.glb');
+    assert.equal(a[0].modelFile, BANK_PREFIX + 'noyer-1.glb');
     const drawn = a.slice(1, 41);
     assert.ok(drawn.some(e => e.modelFile === BANK_PREFIX + 'tilleul-1.glb'), 'a hackberry: the bank');
-    assert.ok(!drawn.some(e => e.modelFile === BANK_PREFIX + 'cerisier-1.glb'), 'a cherry only where OSM says so');
+    assert.ok(!drawn.some(e => e.modelFile === BANK_PREFIX + 'noyer-1.glb'), 'a walnut only where OSM says so');
     assert.equal(a[0].usage, 'arbre'); assert.equal(a[0].modelRatio, 0.7);
     assert.equal(a.find(e => e.objType === 'banc').modelFile.startsWith(BANK_PREFIX + 'banc-'), true);
     assert.equal(a.find(e => e.objType === 'palmier').modelFile, undefined, 'no palm in the bank: the built-in object');
@@ -96,7 +96,7 @@ describe('the bank given to an import', () => {
     const planes = drawn.filter(e => e.essence);
     assert.equal(r.n + r.species, 42);
     assert.equal(r.species, planes.length);
-    assert.ok(['cerisier-1.glb', 'tilleul-1.glb'].every(f => r.used.some(x => x.file === f)), 'the models used, for their credits');
+    assert.ok(['noyer-1.glb', 'tilleul-1.glb'].every(f => r.used.some(x => x.file === f)), 'the models used, for their credits');
   });
   test('a tree of our species: no model, EZ-Tree\'s (#480g), its variant and height drawn from its place', () => {
     const a = els();

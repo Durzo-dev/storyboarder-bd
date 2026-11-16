@@ -94,3 +94,62 @@ Durzo, puis, si elle est acceptée :
   `#55634a` à `#5f6d50`, dessous `#b3bba4`.
 - **Références** : Commons, « Olea europaea FruitsandLeaves 2009December13 DehesaBoyalPuertollano »,
   « Portuguese Olive Grove - Apr 2011.jpg », « Old olive tree (Olea europaea) ».
+
+## Érable plane (*Acer platanoides*, et les érables des villes)
+
+- **Silhouette** : 12 à 20 m, couronne dense, ronde à ovale, souvent large des deux tiers de sa hauteur.
+- **Tronc** : droit, court sous la couronne (2 à 3 m), 0,4 à 0,8 m. Écorce gris-brun, fines crêtes régulières.
+- **Branches** : nombreuses, montant à 50-60°, la couronne commençant bas.
+- **Feuilles** : palmées, cinq lobes pointus à quelques grandes dents, sinus arrondis ; 10 à 18 cm ; opposées ; vert
+  moyen ; jaunes à orange à l'automne. Caduques.
+- **Dans EZ-Tree** : départ « Ash Medium » ; angle 55, 8 branches de 5, peu noueuses (0,12), départ à 30 % ;
+  feuillage dense (taille 4,5, 18). Écorce `trident_maple_bark` teintée gris (`#d6d0c6`). Feuillage forme `maple`,
+  opposé, `#4f8b3b` à `#5d9a44`.
+- **Références** : Commons, catégorie « Acer platanoides » (port, feuilles, écorce).
+
+## Chêne pédonculé (*Quercus robur*, *Q. petraea*)
+
+- **Silhouette** : 20 à 30 m, couronne large et irrégulière, plus large que haute quand il pousse seul.
+- **Tronc** : épais (0,8 à 1,5 m), court, souvent fourchu. Écorce grise, profondément crevassée en longues plaques.
+- **Branches** : grosses charpentières tortueuses, presque à l'horizontale (60 à 70°).
+- **Feuilles** : obovales, quatre ou cinq lobes arrondis de chaque côté, pétiole court ; 7 à 14 cm ; alternes,
+  groupées au bout des rameaux ; vert sombre ; brunes à l'automne, souvent gardées l'hiver. Caduques.
+- **Dans EZ-Tree** : départ « Oak Large » ; tronc épais (3,6), angle 65, branches noueuses (0,25), tronc 40 ;
+  feuilles taille 6, 14. Écorce `jolcham_oak_bark_01`. Feuillage forme `oak`, `#3f6f2f` à `#4a7a35`.
+- **Références** : Commons, catégories « Quercus robur » (port, feuilles) et « Quercus robur (bark) ».
+
+## Marronnier d'Inde (*Aesculus hippocastanum*)
+
+- **Silhouette** : 15 à 25 m, grand dôme dense, les branches basses retombant puis remontant à leur pointe.
+- **Tronc** : droit, 0,6 à 1 m. Écorce brun-rouge à grise, s'écaillant en fines plaques.
+- **Branches** : fortes, montant à 45°, puis retombantes.
+- **Feuilles** : composées palmées, cinq à sept folioles obovales dentées partant d'un point ; 20 à 30 cm ; opposées ;
+  vert sombre ; brunissant tôt à l'automne. Fleurs blanches en chandelles en mai. Caduques.
+- **Dans EZ-Tree** : départ « Oak Large » ; angle 45, branches alourdies (force −0,02), tronc 45 ; feuilles taille
+  7, 16. Écorce `bark_brown_02` teintée (`#e0d8cc`). Feuillage forme `chestnut` (sept folioles), opposé, `#3f7a33`
+  à `#4b8a3a`.
+- **Références** : Commons, catégorie « Aesculus hippocastanum » (port, feuilles, fleurs).
+
+## Frêne commun (*Fraxinus excelsior*)
+
+- **Silhouette** : 20 à 30 m, haut, couronne légère et ouverte où passe le ciel.
+- **Tronc** : haut et droit, 0,5 à 1 m. Écorce gris pâle, lisse jeune, puis en fin réseau de losanges.
+- **Branches** : montantes (30 à 40°), leurs pointes relevées, dès mi-hauteur.
+- **Feuilles** : composées pennées, 9 à 13 folioles lancéolées dentées ; 20 à 35 cm ; opposées ; vert clair ; tombant
+  vertes ou jaune pâle. Bourgeons noirs. Caduques.
+- **Dans EZ-Tree** : départ « Ash Large » ; angle 35, branches à partir de 45 % ; feuillage léger (taille 4, 8).
+  Écorce `bark_brown_01` teintée gris (`#cfcfc8`). Feuillage : folioles forme `lance` par paires opposées,
+  `#5a9445` à `#66a04d`.
+- **Références** : Commons, catégorie « Fraxinus excelsior » (port, feuilles, écorce).
+
+## Cerisier (*Prunus avium*, *P. serrulata*, et les pruniers)
+
+- **Silhouette** : 6 à 12 m en ville, ronde à évasée, ouverte.
+- **Tronc** : court, 0,2 à 0,5 m. Écorce brun-rouge luisante, barrée de lenticelles horizontales, se détachant en
+  anneaux.
+- **Branches** : peu nombreuses, montantes (40°), puis étalées.
+- **Feuilles** : ovales, pointe effilée, finement dentées ; 6 à 15 cm ; alternes ; vert moyen ; orange-rouge à
+  l'automne. Floraison blanche ou rose au printemps (pour #483). Caduques.
+- **Dans EZ-Tree** : départ « Oak Small » ; angle 40, branches 12 ; feuilles taille 2,2, 22. Écorce `sakura_bark`.
+  Feuillage forme `ovate`, `#4c7f37` à `#578c3f`.
+- **Références** : Commons, catégories « Prunus avium » et « Prunus serrulata » (port, écorce).

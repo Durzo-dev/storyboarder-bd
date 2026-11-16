@@ -92,3 +92,60 @@ then, if accepted:
   `#b3bba4`.
 - **References**: Commons, « Olea europaea FruitsandLeaves 2009December13 DehesaBoyalPuertollano »,
   « Portuguese Olive Grove - Apr 2011.jpg », « Old olive tree (Olea europaea) ».
+
+## Erable — Norway maple (*Acer platanoides*, and the town maples)
+
+- **Silhouette**: 12 to 20 m, dense rounded to oval crown, often as wide as two thirds of its height.
+- **Trunk**: straight, short under the crown (2 to 3 m), 0.4 to 0.8 m. Grey-brown bark, fine regular ridges.
+- **Branches**: many, rising at 50 to 60°, the crown starting low.
+- **Leaves**: palmate, five pointed lobes with a few large teeth, rounded sinuses; 10 to 18 cm; opposite; mid
+  green; yellow to orange in autumn. Deciduous.
+- **In EZ-Tree**: from « Ash Medium »; angle 55, 8 branches of 5, little gnarl (0.12), branches from 30 %; dense
+  foliage (size 4.5, 18). Bark `trident_maple_bark` tinted grey (`#d6d0c6`). Foliage shape `maple`, opposite,
+  `#4f8b3b` to `#5d9a44`.
+- **References**: Commons, category « Acer platanoides » (habit, leaves, bark).
+
+## Chene — Pedunculate oak (*Quercus robur*, *Q. petraea*)
+
+- **Silhouette**: 20 to 30 m, broad irregular crown, wider than high when free-standing.
+- **Trunk**: thick (0.8 to 1.5 m), short, often forked. Grey bark, deeply furrowed in long plates.
+- **Branches**: big tortuous limbs, spreading nearly level (60 to 70°).
+- **Leaves**: obovate, four or five rounded lobes a side, short stalk; 7 to 14 cm; alternate, clustered at the
+  tips; dark green; brown in autumn, often held through winter. Deciduous.
+- **In EZ-Tree**: from « Oak Large »; thick trunk (3.6), angle 65, gnarled branches (0.25), trunk 40; leaves size
+  6, 14. Bark `jolcham_oak_bark_01`. Foliage shape `oak`, `#3f6f2f` to `#4a7a35`.
+- **References**: Commons, categories « Quercus robur » (habit, leaves) and « Quercus robur (bark) ».
+
+## Marronnier — Horse chestnut (*Aesculus hippocastanum*)
+
+- **Silhouette**: 15 to 25 m, tall dense dome, the lower branches sweeping down then up at their tips.
+- **Trunk**: straight, 0.6 to 1 m. Red-brown to grey bark, scaling in thin plates.
+- **Branches**: strong, rising at 45°, then drooping.
+- **Leaves**: palmately compound, five to seven obovate toothed leaflets from one point; 20 to 30 cm across;
+  opposite; dark green; early brown in autumn. White flower candles in May. Deciduous.
+- **In EZ-Tree**: from « Oak Large »; angle 45, branches weighed down (force −0.02), trunk 45; leaves size 7, 16.
+  Bark `bark_brown_02` tinted (`#e0d8cc`). Foliage shape `chestnut` (seven leaflets), opposite, `#3f7a33` to
+  `#4b8a3a`.
+- **References**: Commons, category « Aesculus hippocastanum » (habit, leaves, flowers).
+
+## Frene — Ash (*Fraxinus excelsior*)
+
+- **Silhouette**: 20 to 30 m, tall, light and open crown, the sky showing through.
+- **Trunk**: tall and straight, 0.5 to 1 m. Pale grey bark, smooth when young, then in a fine diamond mesh.
+- **Branches**: ascending (30 to 40°), their tips upturned, from mid-height.
+- **Leaves**: pinnate, 9 to 13 lance-shaped toothed leaflets; 20 to 35 cm; opposite; light green; falling green or
+  pale yellow. Black buds. Deciduous.
+- **In EZ-Tree**: from « Ash Large »; angle 35, branches from 45 %; light foliage (size 4, 8). Bark `bark_brown_01`
+  tinted grey (`#cfcfc8`). Foliage: leaflets shape `lance` in opposite pairs, `#5a9445` to `#66a04d`.
+- **References**: Commons, category « Fraxinus excelsior » (habit, leaves, bark).
+
+## Cerisier — Cherry (*Prunus avium*, *P. serrulata*, and the plums)
+
+- **Silhouette**: 6 to 12 m in a town, rounded to vase-shaped, open.
+- **Trunk**: short, 0.2 to 0.5 m. Shiny red-brown bark with horizontal bands of lenticels, peeling in rings.
+- **Branches**: few, ascending (40°), then spreading.
+- **Leaves**: ovate, pointed tip, finely toothed; 6 to 15 cm; alternate; mid green; orange-red in autumn. White or
+  pink blossom in spring (for #483). Deciduous.
+- **In EZ-Tree**: from « Oak Small »; angle 40, branches 12; leaves size 2.2, 22. Bark `sakura_bark`. Foliage shape
+  `ovate`, `#4c7f37` to `#578c3f`.
+- **References**: Commons, categories « Prunus avium » and « Prunus serrulata » (habit, bark).

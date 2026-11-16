@@ -104,7 +104,9 @@ test('a tree of the height asked, its foot on the ground', () => {
 test('the species of a tree: its genus first, else its type', () => {
   assert.equal(speciesFor('arbre', 'Platanus'), 'Platane');
   assert.equal(speciesFor('arbre', 'Tilia'), 'Tilleul');
-  assert.equal(speciesFor('arbre', 'Acer'), null);
+  assert.equal(speciesFor('arbre', 'Acer'), 'Erable');
+  assert.equal(speciesFor('arbre', 'Ginkgo'), null);
+  assert.equal(speciesFor('conifere', 'Cedrus'), null, 'a cedar is no pine');
   assert.equal(speciesFor('arbre', null), null);
   assert.equal(speciesFor('cypres', 'Thuja'), 'Cypres');
   assert.equal(speciesFor('olivier', null), 'Olivier');
@@ -113,7 +115,7 @@ test('the species of a tree: its genus first, else its type', () => {
 });
 
 test('the sheet\'s « Essence » list: the species of the type, none for another', () => {
-  assert.deepEqual(speciesOfType('arbre'), ['Platane', 'Tilleul']);
+  assert.ok(['Platane', 'Tilleul', 'Erable', 'Chene'].every(k => speciesOfType('arbre').includes(k)));
   assert.deepEqual(speciesOfType('olivier'), ['Olivier']);
   assert.deepEqual(speciesOfType('voiture'), []);
   for (const k of Object.keys(SPECIES)) assert.ok(SPECIES[k].label.fr && SPECIES[k].label.en, k);
