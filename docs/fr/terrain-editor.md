@@ -40,7 +40,9 @@ Des champs ajoutés : un fichier ancien se lit tel quel.
   bâtiments, entaillé sous les routes et chemins** (`reliefEffectif3D`), recalculé à chaque rendu. Une route
   est drapée par son axe (`profilFranchissant`), donc de niveau sur sa largeur : `cutUnderRoads` descend
   chaque point de la grille à moins d'une demi-largeur (plus 0,5 m et une case et demie) à 10 cm sous la
-  route, et le drapé reprend le même profil. L'entaille est gardée par Case tant que ni le relief ni les
+  route, et le drapé reprend le même profil. Un chemin dans la largeur d'une route (plus 1 m) est ramené 5 cm
+  sous cette route (`hauteurSousLesRoutes`) : chaque ligne lit sa hauteur sur son axe, un chemin qui longe une
+  route sur une pente la traverserait et serait coupé en son milieu ; ainsi c'est le bord de la route qui le coupe. L'entaille est gardée par Case tant que ni le relief ni les
   lignes ne changent, et tout le relief effectif est gardé par Case tant que relief, Zones, rivières, routes
   et bâtiments sont inchangés (`_reliefsEffectifs3D`, clé faite de leurs réglages et de leur `world` /
   `batiment` par identité, jamais de la caméra) : aplanir sous des centaines de bâtiments à chaque image

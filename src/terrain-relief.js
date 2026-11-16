@@ -417,6 +417,33 @@ export function profilFranchissant(r, pts){
 }
 
 /**
+ * UN CHEMIN PASSE SOUS LA ROUTE QU'IL CROISE OU LONGE (signalé par Durzo le 16 nov. 2026 : des tracés coupés au milieu,
+ * place de la Bastille). Chaque ligne lit sa hauteur sur SA ligne centrale : un chemin parallèle à une route, décalé de
+ * quelques mètres sur une pente, lisait 0,31 m là où la route lisait 0,73 m ; les deux rubans se croisaient en 3D et la
+ * coupure suivait leur intersection, au milieu de la route. Ici, dans l'emprise d'une route (sa demi-largeur, plus
+ * `marge` : un sommet de chemin juste hors du bord, relié à un sommet dedans, ferait pointer son triangle au-dessus),
+ * le chemin est ramené SOUS la route de `sous` : la route, opaque, le couvre jusqu'à son bord. `routes` :
+ * [{ pts, demi, profil }]. Rend (x, z) → hauteur. PUR.
+ */
+export function hauteurSousLesRoutes(profil, routes, { marge = 1, sous = 0.05 } = {}){
+  if (!Array.isArray(routes) || !routes.length) return profil;
+  const loin = (r, x, z) => {
+    let d = Infinity;
+    for (let i = 0; i + 1 < r.pts.length; i++) {
+      const a = r.pts[i], b = r.pts[i + 1], dx = b.x - a.x, dz = b.z - a.z, l2 = dx * dx + dz * dz;
+      const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / l2)) : 0;
+      d = Math.min(d, Math.hypot(x - (a.x + t * dx), z - (a.z + t * dz)));
+    }
+    return d;
+  };
+  return (x, z) => {
+    let h = profil(x, z);
+    for (const r of routes) if (loin(r, x, z) <= r.demi + marge) h = Math.min(h, r.profil(x, z) - sous);
+    return h;
+  };
+}
+
+/**
  * Demandé (3 novembre 2026) : la PENTE d'une Zone. Sa hauteur en un point : `hauteur` (au centre), plus
  * la pente `penteDeg` (degrés) le long du sens `sensDeg` (degrés : 0 vers la droite du plan, 90 vers le
  * bas), tourné avec la Zone (`rotY`). Le centre garde sa hauteur ; un côté monte, l'autre descend. PUR.

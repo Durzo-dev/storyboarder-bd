@@ -166,7 +166,10 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    seen from above and where it starts) are kept out of the buildings taller than where the crown starts: the
    tree turned (8 turns), else moved up to 4 m (its trunk still clear), else another variant grown (8 tried),
    turned and moved likewise; none fitting, it is left as it was. A generated tree's rig is centred on its trunk
-   (an invisible box as wide each side), so the trunk stands where the tree is.
+   (an invisible box as wide each side), so the trunk stands where the tree is. A move never brings a tree
+   closer than 2.5 m (`TREE_GAP_M`) to another, and once the trees are placed, `spaceTrees` leaves out any
+   tree closer than that to one already kept (in the order of the elements): two trees mapped twice, or a
+   tree row sampled over mapped trees, no longer share a trunk.
    In France, at the « Detailed » and « Realistic » levels, the planted areas: `realplace:vegetation` (the
    BD Forêt v2's `formation_vegetale`, its `essence` and `tfv`, and the BD TOPO's `zone_de_vegetation`, its
    `nature`; WFS, no key, in longitude and latitude), `readVegetation` (`kindOfEssence`: « Chênes décidus » →

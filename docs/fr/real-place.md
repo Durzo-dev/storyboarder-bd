@@ -180,7 +180,10 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    couronne : l'arbre tourné (8 orientations), sinon déplacé de 4 m au plus (son tronc toujours dégagé), sinon une
    autre variante générée (8 essayées), tournée et déplacée de même ; aucune ne convient : laissé tel quel. Le rig
    d'un arbre généré est centré sur son tronc (une boîte invisible aussi large de chaque côté) : le tronc est là
-   où est l'arbre.
+   où est l'arbre. Un déplacement n'amène jamais un arbre à moins de 2,5 m (`TREE_GAP_M`) d'un autre, et une
+   fois les arbres placés, `spaceTrees` retire tout arbre à moins de cette distance d'un arbre déjà gardé (dans
+   l'ordre des éléments) : deux arbres cartographiés deux fois, ou une rangée d'arbres échantillonnée sur des
+   arbres cartographiés, ne partagent plus un tronc.
    En France, aux niveaux « Détaillé » et « Réaliste », les zones plantées : `realplace:vegetation` (la
    `formation_vegetale` de la BD Forêt v2, son `essence` et sa `tfv`, et la `zone_de_vegetation` de la BD TOPO, sa
    `nature` ; WFS, sans clé, en longitude et latitude), `readVegetation` (`kindOfEssence` : « Chênes décidus » →

@@ -15,7 +15,7 @@ import { mursDevantMasques, mursDeDevant, versLaCameraDansLeBatiment, retenirMur
 import { estUnBatimentPlace } from './batiment-element.js';
 import { MARQUE_SOL_PERCE } from './batiment-3d.js';
 import { reliefPlat, signatureDuRelief, hauteurDuRelief, densifierLaLigne, aplanirSousLesEmprises, cutUnderRoads,
-  creuserLesRivieres, releverLesZones, profilFranchissant, hauteurDeLaZone, PROFONDEUR_RIVIERE, EAU_SOUS_LA_BERGE, NIVEAU_EAU_PAR_DEFAUT } from './terrain-relief.js';
+  creuserLesRivieres, releverLesZones, profilFranchissant, hauteurSousLesRoutes, hauteurDeLaZone, PROFONDEUR_RIVIERE, EAU_SOUS_LA_BERGE, NIVEAU_EAU_PAR_DEFAUT } from './terrain-relief.js';
 import { installerEau3D } from './ground-water-3d.js';
 import { casesDuMasque, dansLeMasque, caseLaPlusProche } from './terrain-zone-pinceau.js';
 import { niveauxTries } from './batiment-niveaux.js';
@@ -2655,15 +2655,18 @@ function reliefEffectifCalcule3D(panel, page, sousLesBatiments = true){
   const key = `${signatureDuRelief(flattened)}|${JSON.stringify(lines.map(o => [o.id, o.world.width, o.world.pts]))}`;
   const kept = _cutReliefs3D.get(panel.id);
   if (kept && kept.key === key) return kept.cut;
-  const profiles = new Map(), roads = [];
+  const profiles = new Map(), roads = [], routes = [];
   for (const o of lines) {
     const profile = profilFranchissant(flattened, densifierLaLigne(o.world.pts, 0.5));
     profiles.set(o.id, profile);
+    if (o.tracéType === 'route') routes.push({ pts: o.world.pts, demi: (o.world.width || 4) / 2, profil: profile });
     // The cut walks the line's own points: the profile, densified, gives the height (a walk over the
     // densified points visited every cell a dozen times).
     roads.push({ pts: o.world.pts, width: o.world.width || 4, profile });
   }
   const cut = cutUnderRoads(flattened, roads);
+  // A path passes UNDER the roads it crosses or runs along (hauteurSousLesRoutes): the road's edge cuts it.
+  for (const o of lines) if (o.tracéType === 'chemin') profiles.set(o.id, hauteurSousLesRoutes(profiles.get(o.id), routes));
   _roadProfiles3D.set(cut, profiles);
   _cutReliefs3D.set(panel.id, { key, cut });
   return cut;

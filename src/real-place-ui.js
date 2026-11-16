@@ -9,7 +9,7 @@
 
 import { S, tr, newId } from './state.js';
 import { translateOsm, ZONE_SIDE_MAX, DETAIL_LEVELS } from './osm-scene.js';
-import { clearOfObstacles, obstaclesOf, fitCrowns } from './placement-clearance.js';
+import { clearOfObstacles, obstaclesOf, fitCrowns, spaceTrees } from './placement-clearance.js';
 import { readVegetation, fillVegetation, BD_FORET_CREDIT } from './vegetation-zones.js';
 import { readLandmarks } from './landmarks.js';
 import { addExtras } from './bdtopo-extras.js';
@@ -581,6 +581,8 @@ async function importer(){
       console.info(`[real-place] crowns: ${couronnes.turned} turned, ${couronnes.moved} moved, ${couronnes.regrown} regrown, ${couronnes.crossing} still crossing`);
       photoCredits.push(...bank.used.map(m => bankCredit(m, S.appLang === 'en' ? 'en' : 'fr')));
     }
+    // No two trunks against each other, whatever put them there (sources, moves): placement-clearance.js.
+    console.info(`[real-place] trees apart: ${spaceTrees(translated.elements)} left out`);
     // Realistic (#480c): the stores' models for what the bank has not.
     if (niveau === 'realistic') {
       await etape('models');

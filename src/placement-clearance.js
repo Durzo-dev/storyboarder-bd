@@ -113,6 +113,39 @@ export function clearOfObstacles(elements, obstacles) {
   return { moved, removed };
 }
 
+// ─── Trees apart (asked by Durzo on 16 Nov. 2026: trunks seen in each other) ─────────────────────────────────
+
+/**
+ * How close two tree trunks may stand (m). Measured in imports: pairs 0.45 to 1.5 m apart (sc16366, sc15727), from
+ * several sources at once and from the moves above; real street trees stand 5 to 10 m apart, a tree row's 8.
+ */
+export const TREE_GAP_M = 2.5;
+
+/** Is `p` at least TREE_GAP_M from every tree of `others` but `self`? */
+function apartFromTrees(p, others, self) {
+  return others.every(o => o === self || Math.hypot(o.x - p.x, o.z - p.z) >= TREE_GAP_M);
+}
+
+/**
+ * Keeps the trees TREE_GAP_M apart, in place: walking the elements in their order (OSM's first, then the rows, the
+ * filled areas, the aerial photo's), a tree closer than that to one already kept is left out. Shrubs and the rest are
+ * not trees. Returns how many were left out.
+ */
+export function spaceTrees(elements) {
+  if (!Array.isArray(elements)) return 0;
+  const kept = [], trees = [];
+  let removed = 0;
+  for (const e of elements) {
+    if (TREE_TYPES.includes(e.objType)) {
+      if (!apartFromTrees(e, trees, null)) { removed++; continue; }
+      trees.push(e);
+    }
+    kept.push(e);
+  }
+  elements.splice(0, elements.length, ...kept);
+  return removed;
+}
+
 // ─── The crowns of the generated trees (asked by Durzo: crowns seen through a small house's roof) ─────────────
 
 /** The turns tried for a crown (a crown leans: turned, it may clear the building). */
@@ -157,6 +190,7 @@ export function fitCrowns(elements, obstacles, crownOf) {
   for (const e of elements || []) {
     if (!e.essence || !(e.height > 0)) continue;
     const r = clearanceOf(e.objType), rot0 = Number.isFinite(e.rotY) ? e.rotY : 0, v0 = e.variante || 1;
+    const trees = (elements || []).filter(o => TREE_TYPES.includes(o.objType));
     const fits = (v, x, z, rot) => {
       const crown = crownOf(e.essence, v);
       return crownHits(crownSamples(crown, e.height, x, z, rot), crown.base * e.height, obstacles) === 0;
@@ -168,7 +202,8 @@ export function fitCrowns(elements, obstacles, crownOf) {
       for (const d of [0, ...CROWN_SHIFTS]) {
         for (let a = 0; a < (d ? 8 : 1); a++) {
           const x = e.x + d * Math.cos(a * Math.PI / 4), z = e.z + d * Math.sin(a * Math.PI / 4);
-          if (d && !clears({ x, z }, r, obstacles)) continue;
+          // Moved: its trunk still clear, and not against another tree's.
+          if (d && (!clears({ x, z }, r, obstacles) || !apartFromTrees({ x, z }, trees, e))) continue;
           for (let t = 0; t < CROWN_TURNS; t++) {
             const rot = rot0 + t * 2 * Math.PI / CROWN_TURNS;
             if (fits(v, x, z, rot)) { found = { v, x, z, rot, d }; break search; }

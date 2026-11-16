@@ -4,9 +4,9 @@
  * place, never moved when already clear, left out when it cannot be cleared within MAX_SHIFT_M; pavements are no
  * obstacle (street trees stand on them).
  */
-import { test } from 'node:test';
+import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { clearOfObstacles, obstaclesOf, clearanceOf, MAX_SHIFT_M, fitCrowns } from '../src/placement-clearance.js';
+import { clearOfObstacles, obstaclesOf, clearanceOf, MAX_SHIFT_M, fitCrowns, spaceTrees, TREE_GAP_M } from '../src/placement-clearance.js';
 
 const square = (x0, z0, s) => [{ x: x0, z: z0 }, { x: x0 + s, z: z0 }, { x: x0 + s, z: z0 + s }, { x: x0, z: z0 + s }];
 const place = (paths = [], footprints = []) => obstaclesOf({ buildings: footprints.map(f => ({ footprint: f })), paths });
@@ -127,4 +127,31 @@ test('a house lower than where the crown starts: nothing to do; no variant fits:
   assert.deepEqual(big, tree());
   const bank = { objType: 'arbre', modelFile: 'bank--erable-1.glb', height: 10, x: -1.5, z: 0 };
   assert.deepEqual(fitCrowns([bank], house(), () => circle(0.9)).crossing, 0, 'only our generated trees');
+});
+
+describe('trees apart (asked by Durzo on 16 Nov. 2026: trunks in each other)', () => {
+  test('a tree closer than TREE_GAP_M to one kept before it is left out; shrubs and furniture are not trees', () => {
+    const els = [
+      { objType: 'arbre', x: 0, z: 0 }, { objType: 'arbre', x: 0.91, z: 0.91 },   // sc15727's pairs
+      { objType: 'conifere', x: 1.46, z: 0.38 },                                  // sc16366's, another type
+      { objType: 'arbre', x: TREE_GAP_M, z: 0 },                                  // just far enough
+      { objType: 'buisson', x: 0.5, z: 0 }, { objType: 'banc', x: 0.2, z: 0.2 },
+    ];
+    assert.equal(spaceTrees(els), 2);
+    assert.deepEqual(els.map(e => [e.objType, e.x]), [['arbre', 0], ['arbre', TREE_GAP_M], ['buisson', 0.5], ['banc', 0.2]]);
+    assert.equal(TREE_GAP_M, 2.5);
+  });
+  test('a crown is not moved against another tree\'s trunk', () => {
+    // A tree whose crown crosses a building on its east; moving it 1 m west would put it 0.5 m from a neighbour.
+    const ring = [{ x: 1, z: -5 }, { x: 10, z: -5 }, { x: 10, z: 5 }, { x: 1, z: 5 }];
+    const obstacles = { rings: [ring], heights: [20], lines: [] };
+    // A crown 2.5 m round its trunk: at x −1 it reaches 1.5, inside the building; 1 m west would clear it.
+    const crown = { hull: [{ x: -0.25, z: -0.25 }, { x: 0.25, z: -0.25 }, { x: 0.25, z: 0.25 }, { x: -0.25, z: 0.25 }], base: 0 };
+    const e = { objType: 'arbre', essence: 'X', height: 10, x: -1, z: 0, rotY: 0, variante: 1 };
+    const neighbour = { objType: 'arbre', x: -2.5, z: 0 };
+    fitCrowns([e, neighbour], obstacles, () => crown);
+    const gap = Math.hypot(e.x - neighbour.x, e.z - neighbour.z);
+    assert.ok(e.x !== -1 || e.z !== 0, 'moved');
+    assert.ok(gap >= TREE_GAP_M - 1e-9, `moved to (${e.x}, ${e.z}), ${gap.toFixed(2)} m from its neighbour`);
+  });
 });

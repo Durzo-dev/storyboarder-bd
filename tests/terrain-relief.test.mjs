@@ -372,3 +372,23 @@ describe('the relief cut under roads (cutUnderRoads)', () => {
     assert.equal(R.cutUnderRoads(null, [road]), null);
   });
 });
+
+describe('hauteurSousLesRoutes: a path passes under the road it runs along', () => {
+  // A road at 0.73 m, a path beside it reading 0.31 m on its own centre line (the case of the report).
+  const road = { pts: [{ x: 0, z: 0 }, { x: 0, z: 20 }], demi: 3.5, profil: () => 0.73 };
+  const pathProfile = () => 0.31;
+  test('inside the road (and its margin) the path sits under the road', () => {
+    const h = R.hauteurSousLesRoutes(() => 1.5, [road]);
+    assert.ok(Math.abs(h(1, 10) - 0.68) < 1e-9);      // 0.73 − 0.05
+    assert.ok(Math.abs(h(4.4, 10) - 0.68) < 1e-9);    // within demi + 1 m margin
+  });
+  test('a path already lower stays where it is', () => {
+    assert.equal(R.hauteurSousLesRoutes(pathProfile, [road])(1, 10), 0.31);
+  });
+  test('away from the road the path keeps its own height', () => {
+    assert.equal(R.hauteurSousLesRoutes(() => 1.5, [road])(6, 10), 1.5);
+  });
+  test('without roads the profile is returned as is', () => {
+    assert.equal(R.hauteurSousLesRoutes(pathProfile, []), pathProfile);
+  });
+});
