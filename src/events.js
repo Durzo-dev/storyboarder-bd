@@ -4422,6 +4422,7 @@ document.getElementById('ctxAddVelo').onclick = () => {
 [
   ['ctxAddLampadaire', 'lampadaire'], ['ctxAddPanneauSignalisation', 'panneau_signalisation'], ['ctxAddBanc', 'banc'],
   ['ctxAddFontaine', 'fontaine'], ['ctxAddBorne', 'borne'], ['ctxAddPoubelle', 'poubelle'], ['ctxAddAbribus', 'abribus'],
+  ['ctxAddCroix', 'croix'], ['ctxAddCalvaire', 'calvaire'], ['ctxAddEolienne', 'eolienne'], ['ctxAddAntenne', 'antenne'], ['ctxAddClocher', 'clocher'],
 ].forEach(([btnId, objType]) => {
   document.getElementById(btnId).onclick = () => {
     const page = currentPage();

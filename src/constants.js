@@ -267,6 +267,7 @@ export const OBJECT_TYPE_LABELS = {
   piscine: 'Piscine', barbecue: 'Barbecue',
   lampadaire: 'Lampadaire', panneau_signalisation: 'Panneau de signalisation', banc: 'Banc',
   fontaine: 'Fontaine', borne: 'Borne', poubelle: 'Poubelle', abribus: 'Abribus',
+  croix: 'Croix', calvaire: 'Calvaire', eolienne: 'Éolienne', antenne: 'Antenne-relais', clocher: 'Clocher',
   tombe: 'Tombe', pierre_tombale: 'Pierre tombale', caveau: 'Caveau',
   banc_eglise: 'Banc d\'église', autel: 'Autel',
 
@@ -299,6 +300,7 @@ export const OBJECT_TYPE_LABELS_EN = {
   piscine: 'Swimming pool', barbecue: 'Barbecue',
   lampadaire: 'Street lamp', panneau_signalisation: 'Road sign', banc: 'Bench',
   fontaine: 'Fountain', borne: 'Bollard', poubelle: 'Litter bin', abribus: 'Bus shelter',
+  croix: 'Wayside cross', calvaire: 'Calvary', eolienne: 'Wind turbine', antenne: 'Relay mast', clocher: 'Bell tower',
   tombe: 'Grave', pierre_tombale: 'Headstone', caveau: 'Vault',
   banc_eglise: 'Pew', autel: 'Altar',
   modele: 'Imported model',
@@ -357,6 +359,7 @@ export const OBJECT_ASPECT_RATIOS = {
   piscine: 3.5 / 1.0, barbecue: 0.8 / 1.0,
   lampadaire: 0.6 / 1.0, panneau_signalisation: 0.5 / 1.0, banc: 1.8 / 0.85,
   fontaine: 3.0 / 1.8, borne: 0.16 / 0.9, poubelle: 0.5 / 0.9, abribus: 4.2 / 2.56,
+  croix: 0.9 / 2.8, calvaire: 2.4 / 5.0, eolienne: 96 / 150, antenne: 2.8 / 30, clocher: 6.2 / 31.4,
   tombe: 4.0 / 1.0, pierre_tombale: 0.7 / 1.0, caveau: 1.0 / 1.0,
   banc_eglise: 2.5 / 1.0, autel: 1.8 / 1.0,
   // 1:1 : on ne connaît pas les proportions avant d'avoir lu le fichier (étape 4).
@@ -385,6 +388,7 @@ export const OBJECT_REAL_HEIGHT_M = {
   piscine: 1.04, barbecue: 0.95,
   lampadaire: 4.3, panneau_signalisation: 2.6, banc: 0.85,
   fontaine: 1.8, borne: 0.9, poubelle: 0.9, abribus: 2.56,
+  croix: 2.8, calvaire: 5, eolienne: 150, antenne: 30, clocher: 31.4,
   tombe: 0.15, pierre_tombale: 0.68, caveau: 1.8,
   banc_eglise: 0.96, autel: 1.15,
   // Hauteur par défaut d'un modèle importé, en attendant celle que l'utilisateur déclarera. Un

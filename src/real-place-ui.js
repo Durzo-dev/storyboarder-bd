@@ -11,6 +11,7 @@ import { S, tr, newId } from './state.js';
 import { translateOsm, ZONE_SIDE_MAX, DETAIL_LEVELS } from './osm-scene.js';
 import { clearOfObstacles, obstaclesOf, fitCrowns } from './placement-clearance.js';
 import { readVegetation, fillVegetation, BD_FORET_CREDIT } from './vegetation-zones.js';
+import { readLandmarks } from './landmarks.js';
 import { crownOf } from './ez-trees.js';
 import { TREE_TYPES } from './constants.js';
 import { planRelief, terrainPlan, reliefFromTerrain, TERRAIN_LIDAR } from './real-place-sources.js';
@@ -494,6 +495,17 @@ async function importer(){
         translated.elements.push(...added);
         console.info(`[real-place] vegetation: ${added.length} trees and shrubs filled`);
         if (added.some(e => e.source === 'bdforet')) photoCredits.push(tr(BD_FORET_CREDIT.en, BD_FORET_CREDIT.fr));
+      }
+    }
+    // France, Detailed and Realistic: the crosses, calvaries, wind turbines, masts and bell towers the IGN surveys
+    // (landmarks.js, #482d), those OSM has not already.
+    if (country === 'fr' && niveau !== 'simple' && api.realPlaceLandmarks) {
+      const l = await api.realPlaceLandmarks(bbox);
+      if (arrete()) return annule;
+      if (l && l.json) {
+        const added = readLandmarks(l.json, centre, { halfSize, existing: translated.elements });
+        translated.elements.push(...added);
+        console.info(`[real-place] landmarks: ${added.length} added`);
       }
     }
     if (niveau === 'realistic') {

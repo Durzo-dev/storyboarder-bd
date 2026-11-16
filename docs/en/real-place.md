@@ -17,6 +17,7 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
 | `src/aerial-reading.js` | PURE. The aerial photo read metre by metre: the class of a pixel, the Zones' real grounds, the missing trees, the courtyards' lawns, the roofs' materials. |
 | `src/aerial-photo.js` | PURE. The aerial photo of a zone (France), to be READ at the import, never shown nor kept: the photo to ask (`aerialPhotoPlan`), its credit. The request: `realplace:aerialPhoto` (the Géoplateforme's WMS, `ORTHOIMAGERY.ORTHOPHOTOS`, one JPEG; an answer that is not a JPEG is an error). |
 | `src/vegetation-zones.js` | PURE. The woods, orchards, heaths and hedges the IGN surveys (France), filled with built-in trees and shrubs (`readVegetation`, `fillVegetation`). The request: `realplace:vegetation`. |
+| `src/landmarks.js` | PURE. The crosses, calvaries, wind turbines, relay masts and bell towers the IGN surveys (France, BD TOPO `construction_ponctuelle`): `readLandmarks`. The request: `realplace:landmarks`. |
 | `src/real-place-import.js` | PURE. The translation and the altitudes turned into a Scene's content (`sceneContentOf`: Path and Zone objects, relief, credits). |
 | `src/real-place-ui.js` | The new Scene's window: the choice, then search, map (OpenStreetMap tiles), zone size, import with its progress. |
 | `electron/bibliotheque/real-place.js` | The network (main process): Nominatim, Overpass (with mirrors), altitudes, tiles; identified by the application's User-Agent. |
@@ -174,6 +175,12 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    more places). Each is an element like OSM's, its kind known (`kindKnown`), its genus when the essence says
    it, `filled`: the built-in tree, never a model (bank, EZ-Tree, stores: hundreds of models would sink the
    render). Credit when a BD Forêt forest was filled: « © IGN, BD Forêt® v2 ».
+   Then the landmarks: `realplace:landmarks` (WFS `BDTOPO_V3:construction_ponctuelle`), `readLandmarks`:
+   Croix → `croix`, Calvaire → `calvaire`, Eolienne → `eolienne`, Antenne → `antenne`, Clocher → `clocher`
+   (the others left out), their surveyed `hauteur` kept within reason, one OSM already maps (the same object
+   within 10 to 40 m) not added twice. OSM's own: `historic=wayside_cross` and `man_made=cross` (a calvary
+   when its name says so), `generator:source=wind`, a communication `mast` or `tower` (`furnitureOf`). A bell
+   tower stands within its church, rising out of its roof (the clearance leaves it there, `AGAINST_BUILDINGS`).
 4. `sceneContentOf`: Zones and Paths (`pathObject`, `zoneObject`, named by `nomDuTrace`), the relief
    (`reliefDepuisAltitudes`: base at the middle of the range, edges blended to 0 over 20 m to meet the flat
    Ground), the credits.

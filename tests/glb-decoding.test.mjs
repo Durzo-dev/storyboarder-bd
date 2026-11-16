@@ -157,7 +157,10 @@ describe('Le seuil d\'alerte de taille, confronté à un vrai décodage', () => 
     // qu'on peut vérifier, c'est qu'il reste cohérent avec les hauteurs réelles du dépôt : s'il
     // passait sous le plus grand type intégré, l'avertissement se déclencherait sur des tailles
     // parfaitement légitimes.
-    const plusGrand = Math.max(...Object.values(OBJECT_REAL_HEIGHT_M).filter(Number.isFinite));
+    // Hors les grands ouvrages du paysage (#482d : éolienne 150 m, antenne-relais 30 m, clocher 31 m) : un modèle
+    // importé ne les remplace pas, et un modèle de cette taille reste à signaler.
+    const OUVRAGES = ['eolienne', 'antenne', 'clocher'];
+    const plusGrand = Math.max(...Object.entries(OBJECT_REAL_HEIGHT_M).filter(([t, v]) => Number.isFinite(v) && !OUVRAGES.includes(t)).map(([, v]) => v));
     assert.ok(MODEL_HEIGHT_WARN_MAX_M > plusGrand * 1.5,
       `seuil ${MODEL_HEIGHT_WARN_MAX_M} m contre ${plusGrand} m pour le plus grand type intégré`);
   });

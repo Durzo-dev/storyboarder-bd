@@ -170,6 +170,7 @@ function overpassQuery({ south, west, north, east }){
     + `node["natural"="tree"]${b};node["highway"="street_lamp"]${b};node["traffic_sign"]${b};node["highway"~"^(stop|give_way)$"]${b};`
     + `node["natural"="shrub"]${b};node["man_made"="planter"]${b};node["amenity"~"^(bench|fountain|waste_basket|shelter)$"]${b};node["barrier"="bollard"]${b};`
     + `node["highway"="bus_stop"]${b};node["shop"]${b};node["entrance"]${b};`
+    + `node["historic"="wayside_cross"]${b};node["man_made"~"^(cross|mast|tower)$"]${b};node["generator:source"="wind"]${b};`
     + `node["amenity"~"^(restaurant|cafe|bar|pharmacy|bank|fast_food)$"]${b};);out geom;`;
 }
 
@@ -286,6 +287,23 @@ async function vegetation(bbox){
     + `${out.zones ? out.zones.features.length : (z.error || 'response')} planted areas in ${Date.now() - started} ms`);
   if (out.forests || out.zones) plantings.set(key, out);
   return out;
+}
+
+/** The BD TOPO's landmarks of a zone (France, #482d): crosses, calvaries, wind turbines, masts, bell towers. */
+const landmarkAnswers = sources.memoireBornee(4, 5 * 1024 * 1024);
+async function landmarks(bbox){
+  const ok = bbox && ['south', 'west', 'north', 'east'].every(k => Number.isFinite(bbox[k]));
+  if (!ok || bbox.north - bbox.south > 0.01 || bbox.east - bbox.west > 0.02) return { error: 'zone' };
+  const key = JSON.stringify(bbox);
+  const cached = landmarkAnswers.get(key);
+  if (cached) return { json: cached };
+  const started = Date.now();
+  const r = await request(vegetationUrl('BDTOPO_V3:construction_ponctuelle', ['geometrie', 'nature', 'hauteur'], bbox));
+  const good = r.json && Array.isArray(r.json.features);
+  console.info(`[real-place] landmarks: ${good ? `${r.json.features.length} points` : (r.error || 'response')} in ${Date.now() - started} ms`);
+  if (!good) return r.error ? r : { error: 'response' };
+  landmarkAnswers.set(key, r.json);
+  return { json: r.json };
 }
 
 /** The BD TOPO buildings of a zone (France): the IGN's WFS, no key. Only the properties building-survey.js reads. */
@@ -465,4 +483,4 @@ async function tile(z, x, y){
   return { data: r.bytes };
 }
 
-module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, aerialPhoto, heightGrid, terrainGrid, flora, country, osm, bdtopo, bdTopoUrl, vegetation, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };
+module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, aerialPhoto, heightGrid, terrainGrid, flora, country, osm, bdtopo, bdTopoUrl, vegetation, landmarks, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };

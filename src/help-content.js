@@ -156,7 +156,8 @@ export const HELP_MANUAL_EN = [
   { id: 'lieu_reel', title: 'Scene from a real place', paragraphs: [
     '"New scene" offers two ways: "Manual creation" (an empty Scene) or "From an existing place", which builds it from OpenStreetMap.',
     'For a place, search a town or an address, or click on the map, choose the zone (100 to 400 m), then "Create the scene". A bar shows the progress and the steps.',
-    'Buildings, roads, pavements, paths, walls, grounds, trees, street lamps, signs, benches, fountains, bollards, litter bins and bus shelters come with their places, and the relief too. In France the IGN also gives the buildings\' heights, roofs and materials. The windows are generated: the facades are inspired by the place, not surveyed.',
+    'Buildings, roads, pavements, paths, walls, grounds, trees, street lamps, signs, benches, fountains, bollards, litter bins, bus shelters, crosses, calvaries, wind turbines, relay masts and bell towers come with their places, and the relief too. The windows are generated: the facades are inspired by the place, not surveyed.',
+    'In France the IGN also gives the buildings\' heights, roofs and materials, the woods with their species, the orchards, heaths and hedges, and the ground to the metre.',
     'The map and relief credits (OpenStreetMap, and the relief\'s source) follow the Scene into the panels that load it, and appear in the credits of the export.',
   ]},
   { id: 'camera', title: 'Camera', paragraphs: [
@@ -463,7 +464,8 @@ export const HELP_MANUAL_FR = [
   { id: 'lieu_reel', title: 'Scène depuis un lieu réel', paragraphs: [
     "« Nouvelle scène » propose deux voies : « Création manuelle » (une Scène vide) ou « Depuis un lieu existant », qui la construit d'après OpenStreetMap.",
     "Pour un lieu, cherchez une ville ou une adresse, ou cliquez sur la carte, choisissez la zone (100 à 400 m), puis « Créer la scène ». Une barre montre la progression et les étapes.",
-    "Bâtiments, routes, trottoirs, chemins, murets, sols, arbres, lampadaires, panneaux, bancs, fontaines, bornes, poubelles et abribus arrivent à leur place, et le relief aussi. En France, l'IGN donne aussi la hauteur, le toit et les matériaux des bâtiments. Les fenêtres sont générées : les façades sont inspirées du lieu, pas relevées.",
+    "Bâtiments, routes, trottoirs, chemins, murets, sols, arbres, lampadaires, panneaux, bancs, fontaines, bornes, poubelles, abribus, croix, calvaires, éoliennes, antennes-relais et clochers arrivent à leur place, et le relief aussi. Les fenêtres sont générées : les façades sont inspirées du lieu, pas relevées.",
+    "En France, l'IGN donne aussi la hauteur, le toit et les matériaux des bâtiments, les bois avec leur essence, les vergers, landes et haies, et le relief au mètre près.",
     "Les crédits de la carte et du relief (OpenStreetMap, et la source du relief) suivent la Scène dans les Cases qui la chargent, et figurent dans les crédits de l'export.",
   ]},
   { id: 'camera', title: 'Caméra', paragraphs: [

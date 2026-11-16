@@ -3805,6 +3805,141 @@ export function buildAbribusRig3D(colorHex){
   return group;
 }
 
+// ─── Landmarks of the countryside and the skyline (#482d) ─────────────────────────────────────
+// Real metres, natural colours (stone, white, grey metal): what the IGN surveys as « constructions
+// ponctuelles » (BD TOPO) and OSM as crosses, masts and wind turbines.
+let LANDMARK_WHITE_MAT_3D = null, LANDMARK_IRON_MAT_3D = null, SLATE_MAT_3D = null;
+function ensureLandmarkMats3D(){
+  ensureSharedPropMats3D();
+  if (LANDMARK_WHITE_MAT_3D) return;
+  LANDMARK_WHITE_MAT_3D = new THREE.MeshStandardMaterial({ color: 0xF2F2EE, roughness: 0.6, metalness: 0 });
+  LANDMARK_IRON_MAT_3D = new THREE.MeshStandardMaterial({ color: 0x3A3A3C, roughness: 0.7, metalness: 0.3 });
+  SLATE_MAT_3D = new THREE.MeshStandardMaterial({ color: 0x5B6068, roughness: 0.85, metalness: 0 });
+}
+
+/** A cross of two beams standing at `y`, its shaft `h` high and `t` thick, its arms `w` wide. */
+function crossOf3D(group, y, h, w, t, mat){
+  const shaft = new THREE.Mesh(new THREE.BoxGeometry(t, h, t), mat);
+  shaft.position.y = y + h / 2;
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(w, t, t), mat);
+  arm.position.y = y + h * 0.72;
+  group.add(shaft, arm);
+}
+
+/** A wayside cross: a stone base, a stone cross; 2.8 m high. */
+export function buildCroixRig3D(){
+  ensureLandmarkMats3D();
+  const group = new THREE.Group();
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 0.8), STONE_MAT_3D);
+  base.position.y = 0.3;
+  group.add(base);
+  crossOf3D(group, 0.6, 2.2, 0.9, 0.18, STONE_MAT_3D);
+  return group;
+}
+
+/** A calvary: three stone steps, a plinth, a tall iron cross; 5 m high. */
+export function buildCalvaireRig3D(){
+  ensureLandmarkMats3D();
+  const group = new THREE.Group();
+  [2.4, 1.8, 1.2].forEach((w, i) => {
+    const step = new THREE.Mesh(new THREE.BoxGeometry(w, 0.25, w), STONE_MAT_3D);
+    step.position.y = 0.125 + i * 0.25;
+    group.add(step);
+  });
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.2, 0.7), STONE_MAT_3D);
+  plinth.position.y = 0.75 + 0.6;
+  group.add(plinth);
+  crossOf3D(group, 1.95, 3.05, 1.4, 0.14, LANDMARK_IRON_MAT_3D);
+  return group;
+}
+
+/**
+ * A wind turbine: a tapering white tower, its nacelle, a hub and three blades (one straight up); 150 m to the
+ * tip of the top blade (drawn at a tenth), the hub at 100 m (the surveyed ones: 126 to 178 m, measured on 15 Nov. 2026).
+ */
+export function buildEolienneRig3D(){
+  ensureLandmarkMats3D();
+  const group = new THREE.Group();
+  const hubY = 100, blade = 48;
+  const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.4, hubY, 20), LANDMARK_WHITE_MAT_3D);
+  tower.position.y = hubY / 2;
+  const nacelle = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 12), LANDMARK_WHITE_MAT_3D);
+  nacelle.position.set(0, hubY + 1, -3);
+  const hub = new THREE.Mesh(new THREE.SphereGeometry(2, 16, 12), LANDMARK_WHITE_MAT_3D);
+  hub.position.set(0, hubY + 1, 3.5);
+  group.add(tower, nacelle, hub);
+  for (let k = 0; k < 3; k++) {
+    // Each blade wide at the hub, narrow at its tip: a box tapered along its length.
+    const g = new THREE.BoxGeometry(3, blade, 0.6);
+    const pos = g.attributes.position;
+    for (let i = 0; i < pos.count; i++) if (pos.getY(i) > 0) pos.setX(i, pos.getX(i) * 0.3);
+    g.computeVertexNormals();
+    const b = new THREE.Mesh(g, LANDMARK_WHITE_MAT_3D);
+    const pivot = new THREE.Group();
+    pivot.position.set(0, hubY + 1, 4.2);
+    pivot.rotation.z = k * 2 * Math.PI / 3;
+    b.position.y = blade / 2 + 1.5;
+    pivot.add(b);
+    group.add(pivot);
+  }
+  // Drawn at a tenth (a rig stays under 100 units, tests/rig-geometry.test.mjs): the render sets it to its real
+  // height anyway (OBJECT_REAL_HEIGHT_M), and resets the scale of the group it is given, not of this one inside.
+  group.scale.setScalar(0.1);
+  const outer = new THREE.Group();
+  outer.add(group);
+  return outer;
+}
+
+/** A relay mast: a grey tapering pole, a platform, three panel antennas and a dish; 30 m high. */
+export function buildAntenneRig3D(){
+  ensureLandmarkMats3D();
+  const group = new THREE.Group();
+  const H = 30;
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.9, H, 12), METAL_MAT_3D);
+  pole.position.y = H / 2;
+  const deck = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.4, 0.15, 12), METAL_MAT_3D);
+  deck.position.y = H - 3;
+  group.add(pole, deck);
+  for (let k = 0; k < 3; k++) {
+    const a = k * 2 * Math.PI / 3;
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(0.35, 2.4, 0.15), LANDMARK_WHITE_MAT_3D);
+    panel.position.set(Math.sin(a) * 1.1, H - 1.4, Math.cos(a) * 1.1);
+    panel.rotation.y = a;
+    group.add(panel);
+  }
+  const dish = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.25, 16), LANDMARK_WHITE_MAT_3D);
+  dish.rotation.x = Math.PI / 2;
+  dish.position.set(0, H - 6, 0.8);
+  group.add(dish);
+  return group;
+}
+
+/**
+ * A bell tower: a square stone tower, its belfry openings, an octagonal slate spire; 30 m high, 5 m wide. It
+ * stands where the IGN surveys a « Clocher », within its church: the tower rises out of the nave's roof.
+ */
+export function buildClocherRig3D(){
+  ensureLandmarkMats3D();
+  const group = new THREE.Group();
+  const W = 5, towerH = 18, spireH = 12;
+  const tower = new THREE.Mesh(new THREE.BoxGeometry(W, towerH, W), STONE_MAT_3D);
+  tower.position.y = towerH / 2;
+  group.add(tower);
+  for (let k = 0; k < 4; k++) {
+    const opening = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.6, 0.12), LANDMARK_IRON_MAT_3D);
+    const a = k * Math.PI / 2;
+    opening.position.set(Math.sin(a) * (W / 2 + 0.01), towerH - 2.4, Math.cos(a) * (W / 2 + 0.01));
+    opening.rotation.y = a;
+    group.add(opening);
+  }
+  const spire = new THREE.Mesh(new THREE.ConeGeometry(W * 0.62, spireH, 8), SLATE_MAT_3D);
+  spire.position.y = towerH + spireH / 2;
+  spire.rotation.y = Math.PI / 8;
+  group.add(spire);
+  crossOf3D(group, towerH + spireH, 1.4, 0.7, 0.08, LANDMARK_IRON_MAT_3D);
+  return group;
+}
+
 // ─── Cemetery ───────────────────────────────────────────────────────────────
 export function buildTombeRig3D(colorHex){
   ensureSharedPropMats3D();
@@ -4587,6 +4722,7 @@ const PROP_RIG_BUILDERS_3D = {
   piscine: buildPiscineRig3D, barbecue: buildBarbecueRig3D,
   lampadaire: buildLampadaireRig3D, panneau_signalisation: buildPanneauSignalisationRig3D, banc: buildBancRig3D,
   fontaine: buildFontaineRig3D, borne: buildBorneRig3D, poubelle: buildPoubelleRig3D, abribus: buildAbribusRig3D,
+  croix: buildCroixRig3D, calvaire: buildCalvaireRig3D, eolienne: buildEolienneRig3D, antenne: buildAntenneRig3D, clocher: buildClocherRig3D,
   tombe: buildTombeRig3D, pierre_tombale: buildPierreTombaleRig3D, caveau: buildCaveauRig3D,
   banc_eglise: buildBancEgliseRig3D, autel: buildAutelRig3D,
   [OBJ_TYPE_LUMIERE]: buildLumiereRig3D,

@@ -25,10 +25,11 @@ export function clearanceOf(objType) {
 }
 
 /**
- * What may stand against a building: a street lamp is often on a facade (OSM puts it on the outline). Pushed
- * out of the footprint, it went into the road and was left out (seen: 2 lamps of the quai de la Tournelle).
+ * What may stand against a building, or in it: a street lamp is often on a facade (OSM puts it on the outline;
+ * pushed out of the footprint, it went into the road and was left out: seen, 2 lamps of the quai de la
+ * Tournelle); a bell tower stands within its church (#482d), rising out of its roof.
  */
-export const AGAINST_BUILDINGS = Object.freeze(['lampadaire']);
+export const AGAINST_BUILDINGS = Object.freeze(['lampadaire', 'clocher']);
 
 /** How far an object may be moved (m). Beyond, it is left out. */
 export const MAX_SHIFT_M = 4;

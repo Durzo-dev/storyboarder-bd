@@ -244,7 +244,7 @@ export function nearestOnPolyline(p, pts){
 /**
  * STREET FURNITURE FROM OSM (a node's tags → a built-in object), at the « Detailed » level: fountains,
  * bollards, litter bins, bus shelters (a stop with a shelter), with the trees, lamps, signs, shrubs and
- * benches. Null for anything else.
+ * benches; wayside crosses and calvaries, wind turbines, relay masts (#482d). Null for anything else.
  */
 export function furnitureOf(tags = {}){
   if (tags.natural === 'tree') return treeKindOf(tags);
@@ -257,6 +257,12 @@ export function furnitureOf(tags = {}){
   if (tags.barrier === 'bollard') return 'borne';
   if (tags.amenity === 'waste_basket') return 'poubelle';
   if ((tags.highway === 'bus_stop' && tags.shelter === 'yes') || (tags.amenity === 'shelter' && tags.shelter_type === 'public_transport')) return 'abribus';
+  // The countryside's and the skyline's landmarks (#482d): a calvary is a wayside cross mapped as one, or a large cross.
+  if (tags.historic === 'wayside_cross' || tags.man_made === 'cross' || tags.summit_cross === 'yes') {
+    return /calvaire|calvary/i.test(`${tags.name || ''} ${tags.description || ''}`) || tags.wayside_cross === 'calvary' ? 'calvaire' : 'croix';
+  }
+  if (tags.power === 'generator' && tags['generator:source'] === 'wind') return 'eolienne';
+  if ((tags.man_made === 'mast' || tags.man_made === 'tower') && /communication|telecom/.test(`${tags['tower:type'] || ''} ${tags['communication:mobile_phone'] ? 'communication' : ''}`)) return 'antenne';
   return null;
 }
 
