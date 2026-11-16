@@ -21,8 +21,11 @@ Ce que contient chaque fiche :
 ## Comment l'application s'en sert
 
 EZ-Tree (Dan Greenheck, MIT) est copié dans l'application, dans `src/vendor/ez-tree/`, adapté à son three r128
-(sans vent, sans treillis, sans textures à lui). `src/ez-trees.js` génère une variante d'une essence une fois
-(3 variantes par essence, `VARIANTS`) et chaque arbre de cette variante en est une copie, mise à sa hauteur.
+(sans vent, sans treillis). `src/ez-trees.js` génère une variante d'une essence une fois (3 variantes par essence,
+`VARIANTS`) et chaque arbre de cette variante en est une copie, mise à sa hauteur. Chaque variante a trois niveaux de
+détail (`SPECIES_LODS`, `generateLODs` d'EZ-Tree : l'arbre entier, puis environ 40 % de ses triangles à partir de
+60 m, 20 % à partir de 150 m), tous maillés d'un même squelette (la même silhouette) et partageant ses deux matériaux ;
+three passe de l'un à l'autre selon la distance de la caméra.
 
 À la création d'une Scène depuis un lieu (niveaux Détaillé et Réaliste), un arbre dont le genre est celui d'une
 essence (étiquettes OSM, sinon tiré de la flore) reçoit cette essence (`essence`), une variante tirée de sa place
@@ -44,9 +47,12 @@ Durzo, puis, si elle est acceptée :
 
 1. Reporter les changements de son `src/lib/` dans `src/vendor/ez-tree/ez-tree.js` (et `presets.js`), en gardant
    les adaptations listées en tête du fichier, et mettre à jour `EZ_TREE_VERSION`.
-2. Mesurer les empreintes de ses modèles avec la nouvelle version, dans un navigateur, et les reporter dans
-   `tests/ez-tree.test.mjs` : le test vérifie que la copie fait pousser les mêmes arbres qu'EZ-Tree.
-3. Revoir nos essences : un changement de croissance change leurs silhouettes.
+2. Mesurer les empreintes de ses modèles avec la nouvelle version (son propre `src/lib/`, assemblé avec esbuild et
+   lancé sous Node avec le three qu'il demande), et les reporter dans `tests/ez-tree.test.mjs` : le test vérifie que
+   la copie fait pousser les mêmes arbres qu'EZ-Tree, au bit près. Une version d'EZ-Tree paraît dans les étiquettes
+   GitHub avant npm (la 2.0.0 : pas sur npm), que `check-update.mjs` lit aussi.
+3. Revoir nos essences : un changement de croissance change leurs silhouettes (2.0.0 : sa force de croissance tire
+   désormais vraiment vers le ciel, nos petites forces ont donc été mises à 0 sur le pin, le cèdre et le mélèze).
 4. Reporter NOS AJOUTS (listés en tête du fichier, marqués « Ours (#485) » dans le code) : `branch.droop`,
    `branch.terminal`, `leaves.hang` et `fronds` (la couronne d'un palmier : rubans pliés, bases de palmes, un stipe
    sans pointe), neutres par défaut (les empreintes se mesurent sans eux), et testés dans `tests/ez-tree.test.mjs`.
@@ -187,7 +193,8 @@ Durzo, puis, si elle est acceptée :
 - **Feuilles** : aiguilles par deux, 4 à 7 cm (sylvestre, vert bleuté) ou 10 à 25 cm (maritime, plus sombre), en
   touffes au bout des rameaux. Persistantes.
 - **Dans EZ-Tree** : départ « Pine Large », mais avec des branches sur deux niveaux (le modèle est un cône
-  d'épicéa) : 14 branches dès 60 %, horizontales (88°), longues de 34, à peine relevées (force 0,004), 5 rameaux
+  d'épicéa) : 14 branches dès 60 %, horizontales (88°), longues de 34, un tronc droit (tortuosité 0,01), sans force de croissance (celle d'EZ-Tree 2 tire vraiment vers le
+  ciel : 0,004 redressait les branches fines), 5 rameaux
   chacune ; feuilles taille 4,5, 24. Écorce `pine_bark`. Feuillage `needleTuft` (aiguilles par deux, en touffes),
   `#5a8442` à `#73a056`.
 - **Références** : Commons, catégories « Pinus sylvestris » et « Pinus pinaster » (port, aiguilles, écorce).
@@ -348,8 +355,9 @@ Durzo, puis, si elle est acceptée :
 - **Branches** : dès le bas, HORIZONTALES et longues, en étages, les rameaux étalés à plat.
 - **Feuilles** : aiguilles de 2 à 3 cm en touffes de 20 à 40 sur des rameaux courts ; vert bleuté à vert sombre.
   Persistantes.
-- **Dans EZ-Tree** : départ « Pine Large », branches sur deux niveaux : 22 branches dès 12 %, horizontales (88°),
-  longues de 40, un peu retombantes (−0,004), 10 rameaux horizontaux chacune (88°) ; feuilles taille 4, 22, à plat (80°). Écorce `chinese_cedar_bark`
+- **Dans EZ-Tree** : départ « Pine Large », branches sur deux niveaux : 18 branches dès 12 %, horizontales (88°),
+  longues de 40, un tronc droit (tortuosité 0,005), sans force de croissance, 7 rameaux horizontaux chacune (88°) ;
+  feuilles taille 4,5, 12, à plat (80°) : une couronne plus légère, ses étages visibles. Écorce `chinese_cedar_bark`
   teintée gris (`#a8a49c`). Feuillage `needleTuft`, vert bleuté `#4c6a5a` à `#62806c`.
 - **Références** : Commons, catégories « Cedrus atlantica », « Cedrus libani » et « Cedrus deodara » (port,
   aiguilles, écorce).
@@ -441,7 +449,7 @@ Durzo, puis, si elle est acceptée :
 - **Branches** : horizontales, les rameaux un peu pendants.
 - **Feuilles** : aiguilles souples de 2 à 4 cm en touffes de 30 à 40, vert clair VIF ; jaune d'or à l'automne, puis
   NUES (le seul de nos conifères à les perdre).
-- **Dans EZ-Tree** : départ « Pine Medium » ; droit, un peu retombant (−0,01), 50 branches ; feuillage léger
+- **Dans EZ-Tree** : départ « Pine Medium » ; droit, sans force de croissance (−0,01 courbait son tronc avec EZ-Tree 2), 50 branches ; feuillage léger
   (taille 3, 14). Écorce `pine_bark` teintée (`#c0a898`). Feuillage `needleTuft`, clair `#7aa858` à `#86b462`.
 - **Références** : Commons, catégories « Larix decidua » et « Larix kaempferi » (port, aiguilles, écorce).
 

@@ -426,7 +426,7 @@ export const SPECIES = {
     foliage: (seed, makeCanvas) => needleTuft({ seed, makeCanvas }),
     set(o){
       o.branch.levels = 2; o.branch.start[1] = 0.6; o.branch.children[0] = 14; o.branch.angle[1] = 88; o.branch.length[1] = 34;
-      o.branch.radius[1] = 0.5; o.branch.gnarliness[0] = 0.06; o.branch.gnarliness[1] = 0.2; o.branch.force.strength = 0.004;
+      o.branch.radius[1] = 0.5; o.branch.gnarliness[0] = 0.01; o.branch.gnarliness[1] = 0.08; o.branch.force.strength = 0;
       o.branch.children[1] = 5; o.branch.angle[2] = 55; o.branch.length[2] = 12; o.branch.start[2] = 0.3; o.branch.radius[2] = 0.6;
       o.leaves.size = 4.5; o.leaves.count = 24; o.leaves.start = 0.2;
     } },
@@ -487,10 +487,10 @@ Object.assign(SPECIES, {
     bark: BARK('chinese_cedar_bark'), barkTint: 0xa8a49c,
     foliage: (seed, makeCanvas) => needleTuft({ seed, makeCanvas, colours: ['#4c6a5a', '#577563', '#62806c'] }),
     set(o){
-      o.branch.levels = 2; o.branch.start[1] = 0.12; o.branch.children[0] = 22; o.branch.angle[1] = 88; o.branch.length[1] = 40;
-      o.branch.radius[1] = 0.45; o.branch.gnarliness[0] = 0.02; o.branch.gnarliness[1] = 0.05; o.branch.force.strength = -0.004;
-      o.branch.children[1] = 10; o.branch.angle[2] = 88; o.branch.length[2] = 12; o.branch.start[2] = 0.15; o.branch.radius[2] = 0.6;
-      o.leaves.size = 4; o.leaves.count = 22; o.leaves.start = 0.2; o.leaves.angle = 80;
+      o.branch.levels = 2; o.branch.start[1] = 0.12; o.branch.children[0] = 18; o.branch.angle[1] = 88; o.branch.length[1] = 40;
+      o.branch.radius[1] = 0.45; o.branch.gnarliness[0] = 0.005; o.branch.gnarliness[1] = 0.03; o.branch.force.strength = 0;
+      o.branch.children[1] = 7; o.branch.angle[2] = 88; o.branch.length[2] = 12; o.branch.start[2] = 0.15; o.branch.radius[2] = 0.6;
+      o.leaves.size = 4.5; o.leaves.count = 12; o.leaves.start = 0.2; o.leaves.angle = 80;
     } },
   Fevier: { from: 'Ash Medium', label: { fr: 'Févier', en: 'Honey locust' }, type: 'arbre', height: 15, genus: 'Gleditsia',
     bark: BARK('japanese_camphor_bark'), barkTint: 0x9c9890,
@@ -534,7 +534,7 @@ Object.assign(SPECIES, {
   Meleze: { from: 'Pine Medium', label: { fr: 'Mélèze', en: 'Larch' }, type: 'conifere', height: 25, genus: 'Larix',
     bark: BARK('pine_bark'), barkTint: 0xc0a898,
     foliage: (seed, makeCanvas) => needleTuft({ seed, makeCanvas, colours: ['#7aa858', '#86b462', '#6e9b4e'] }),
-    set(o){ o.branch.gnarliness[0] = 0.01; o.branch.force.strength = -0.01; o.branch.children[0] = 50; o.leaves.size = 3; o.leaves.count = 14; } },
+    set(o){ o.branch.gnarliness[0] = 0.01; o.branch.force.strength = 0; o.branch.children[0] = 50; o.leaves.size = 3; o.leaves.count = 14; } },
   Noyer: { from: 'Oak Large', label: { fr: 'Noyer', en: 'Walnut' }, type: 'arbre', height: 18, genus: 'Juglans',
     bark: BARK('tree_bark_03'), barkTint: 0xc8c4bc,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#5a8a3e', '#659647', '#517e37'], n: 7, size: 62, opposite: true, spread: 0.6, seed }),

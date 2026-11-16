@@ -1,7 +1,7 @@
 /**
  * tests/ez-tree.test.mjs: EZ-TREE IN THE APPLICATION (#480g). The copy in src/vendor/ez-tree/, run with the
- * application's three r128, grows the very trees of EZ-Tree v1.1.0 (run with three 0.170 in a browser, 15 Nov.
- * 2026: the fingerprints below); and our species (src/tree-species.js) come out of src/ez-trees.js whole, at the
+ * application's three r128, grows the very trees of EZ-Tree v2.0.0 (its own code run with three 0.170 under Node,
+ * 16 Nov. 2026: the fingerprints below, bit for bit); and our species (src/tree-species.js) come out of src/ez-trees.js whole, at the
  * height asked, generated once a variant.
  */
 import { test } from 'node:test';
@@ -21,18 +21,19 @@ const fakeCanvas = (size) => {
 };
 
 /** [triangles, a weighted sum of the branches' vertices, the same of the leaves'], seed 7919. */
-const EZ_TREE_1_1_0 = {
-  'Oak Large': [22566, 1870463.72, 3307346.384],
-  'Ash Large': [21512, 1897799.356, 3205758.855],
-  'Pine Medium': [19872, 684652.78, 1557039.086],
-  'Oak Small': [6806, 203233.541, 466205.891],
-  'Bush 3': [16170, 411512.573, 152308.221],
+const EZ_TREE_2_0_0 = {
+  'Oak Large': [22566, 2209237.891, 4092194.651],
+  'Ash Large': [21512, 1779395.51, 3018994.939],
+  'Pine Medium': [19872, 706246.556, 1610244.522],
+  'Oak Small': [6806, 253226.679, 630760.89],
+  'Bush 3': [16170, 312775.233, 114456.868],
+  'Aspen Large': [13668, 1311704.559, 2715624.197],
 };
 
-test('the copy is of EZ-Tree 1.1.0', () => assert.equal(EZ_TREE_VERSION, '1.1.0'));
+test('the copy is of EZ-Tree 2.0.0', () => assert.equal(EZ_TREE_VERSION, '2.0.0'));
 
-for (const [preset, expected] of Object.entries(EZ_TREE_1_1_0)) {
-  test(`« ${preset} »: the tree EZ-Tree 1.1.0 grows, with three r128`, () => {
+for (const [preset, expected] of Object.entries(EZ_TREE_2_0_0)) {
+  test(`« ${preset} »: the tree EZ-Tree 2.0.0 grows, with three r128`, () => {
     const t = new Tree(new TreeOptions());
     t.options.copy(structuredClone(TREE_PRESETS[preset]));
     t.options.seed = 7919;
@@ -70,7 +71,8 @@ test('two variants differ; a variant is generated once, its trees share it', () 
   const a = speciesTree('Platane', 1, 12, { makeCanvas: fakeCanvas });
   const b = speciesTree('Platane', 1, 20, { makeCanvas: fakeCanvas });
   const c = speciesTree('Platane', 2, 12, { makeCanvas: fakeCanvas });
-  const mesh = (g) => g.children[0].children[0];
+  // Its first mesh (within its levels of detail since EZ-Tree 2).
+  const mesh = (g) => { let m = null; g.traverse(o => { if (!m && o.isMesh && o.geometry.index) m = o; }); return m; };
   assert.equal(mesh(a).geometry, mesh(b).geometry);
   assert.notEqual(mesh(a).geometry, mesh(c).geometry);
 });
@@ -88,9 +90,11 @@ test('the bark square on the trunk: as many texels round as up (a fixed [1, 6] s
   for (const name of Object.keys(SPECIES)) {
     const o = speciesOptions(name, 1);
     const [u, v] = barkRepeat(o);
+    // EZ-Tree 2 puts the turns round a branch in u: round(radius × textureScale.x), at least 1.
+    const turns = Math.max(1, Math.round(o.branch.radius[0] * o.bark.textureScale.x)) * u;
     const round = 2 * Math.PI * o.branch.radius[0], section = o.branch.length[0] / o.branch.sections[0];
-    assert.ok(Math.abs((round / u) / (section / v) - 1) < 1e-9, name);
-    assert.ok(u >= 1 && u <= 4, `${name}: ${u} round`);
+    assert.ok(Math.abs((round / turns) / (section / v) - 1) < 1e-9, name);
+    assert.equal(turns, 2, `${name}: ${turns} round`);
   }
 });
 
@@ -196,7 +200,8 @@ test('our additions to EZ-Tree (#485): a level\'s droop bends it down, hanging l
   // A leaf is a quad from its stalk (vertices 1, 2) to its tip (0, 3): hanging, its tip is below its stalk.
   const tipsBelow = (t) => { const v = t.leaves.verts; let n = 0, all = 0; for (let q = 0; q + 12 <= v.length; q += 12) { all++; if (v[q + 1] < v[q + 4]) n++; } return n / all; };
   const hanging = grow(o => { o.leaves.hang = 0.95; });
-  assert.ok(tipsBelow(hanging) > 0.95 && tipsBelow(plain) < 0.7, `${tipsBelow(hanging)} of hanging leaves point down, ${tipsBelow(plain)} of the others`);
+  // Measured with EZ-Tree 2.0.0: 0.947 of hanging leaves, 0.307 of the others (1.1.0: 0.973, 0.601).
+  assert.ok(tipsBelow(hanging) > 0.9 && tipsBelow(plain) < 0.5, `${tipsBelow(hanging)} of hanging leaves point down, ${tipsBelow(plain)} of the others`);
 });
 
 test('our palms (#485): fronds only at the top of a bare trunk, none by default; a fan palm and a date palm by genus', () => {

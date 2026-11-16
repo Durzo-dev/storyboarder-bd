@@ -21,8 +21,11 @@ What each sheet holds:
 ## How the application uses them
 
 EZ-Tree (Dan Greenheck, MIT) is copied into the application, in `src/vendor/ez-tree/`, adapted to its three r128
-(no wind, no trellis, no textures of its own). `src/ez-trees.js` generates a species' variant once (3 variants a
-species, `VARIANTS`) and every tree of that variant is a clone of it, set to its height.
+(no wind, no trellis). `src/ez-trees.js` generates a species' variant once (3 variants a species, `VARIANTS`) and
+every tree of that variant is a clone of it, set to its height. Each variant has three levels of detail
+(`SPECIES_LODS`, EZ-Tree's `generateLODs`: the full tree, then about 40 % of its triangles from 60 m away, 20 % from
+150 m), all meshed from one skeleton (the same silhouette) and sharing its two materials; three switches them by the
+camera's distance.
 
 When a Scene is created from a place (Detailed and Realistic levels), a tree whose genus is one of a species (OSM
 tags, else drawn from the flora) is given that species (`essence`), a variant drawn from its place and, without a
@@ -42,9 +45,12 @@ then, if accepted:
 
 1. Copy its `src/lib/` changes into `src/vendor/ez-tree/ez-tree.js` (and `presets.js`), keeping the adaptations
    listed at the top of the file, and set `EZ_TREE_VERSION`.
-2. Measure the fingerprints of its presets with the new version, in a browser, and update them in
-   `tests/ez-tree.test.mjs`: the test checks the copy grows the very trees of EZ-Tree.
-3. Look at our species again: a change of growth changes their silhouettes.
+2. Measure the fingerprints of its presets with the new version (its own `src/lib/`, bundled with esbuild and run
+   under Node with the three it asks for), and update them in `tests/ez-tree.test.mjs`: the test checks the copy
+   grows the very trees of EZ-Tree, bit for bit. EZ-Tree's version is on GitHub's tags before npm (2.0.0: not on
+   npm), which `check-update.mjs` reads too.
+3. Look at our species again: a change of growth changes their silhouettes (2.0.0: its growth force now pulls
+   toward the sky for good, so our small forces were set to 0 on the pine, the cedar and the larch).
 4. Carry over OUR ADDITIONS (listed at the top of the file, marked « Ours (#485) » in the code): `branch.droop`,
    `branch.terminal`, `leaves.hang` and `fronds` (a palm's crown: folded strips, leaf bases, a trunk with no
    point), neutral by default (the fingerprints are measured without them), and tested in
@@ -181,7 +187,8 @@ then, if accepted:
 - **Leaves**: needles in pairs, 4 to 7 cm (Scots, blue-green) or 10 to 25 cm (maritime, darker), in tufts at the
   twigs' ends. Evergreen.
 - **In EZ-Tree**: from « Pine Large », but with branches of two levels (the preset is a spruce's cone): 14 branches
-  from 60 %, level (88°), 34 long, hardly lifted (force 0.004), 5 twigs each; leaves size 4.5, 24. Bark
+  from 60 %, level (88°), 34 long, a straight trunk (gnarliness 0.01), no growth force (EZ-Tree 2's force really pulls
+  toward the sky: 0.004 raised the thin branches), 5 twigs each; leaves size 4.5, 24. Bark
   `pine_bark`. Foliage `needleTuft` (needles in pairs, in tufts), `#5a8442` to `#73a056`.
 - **References**: Commons, categories « Pinus sylvestris » and « Pinus pinaster » (habit, needles, bark).
 
@@ -336,8 +343,9 @@ then, if accepted:
 - **Trunk**: massive, 1 to 2 m, often forked. Dark grey bark, cracked in small square plates.
 - **Branches**: from low down, LEVEL and long, in layers, the twigs fanning out flat.
 - **Leaves**: needles 2 to 3 cm in tufts of 20 to 40 on short shoots; blue-green to dark green. Evergreen.
-- **In EZ-Tree**: from « Pine Large », branches on two levels: 22 branches from 12 %, level (88°), 40 long,
-  slightly drooping (−0.004), 10 level twigs each (88°); leaves size 4, 22, flat (80°). Bark `chinese_cedar_bark` tinted grey (`#a8a49c`).
+- **In EZ-Tree**: from « Pine Large », branches on two levels: 18 branches from 12 %, level (88°), 40 long,
+  a straight trunk (gnarliness 0.005), no growth force, 7 level twigs each (88°); leaves size 4.5, 12, flat (80°): a
+  lighter crown, its tiers seen. Bark `chinese_cedar_bark` tinted grey (`#a8a49c`).
   Foliage `needleTuft`, blue-green `#4c6a5a` to `#62806c`.
 - **References**: Commons, categories « Cedrus atlantica », « Cedrus libani » and « Cedrus deodara » (habit,
   needles, bark).
@@ -427,7 +435,7 @@ then, if accepted:
 - **Branches**: level, the twigs hanging slightly.
 - **Leaves**: soft needles 2 to 4 cm in tufts of 30 to 40, BRIGHT light green; golden yellow in autumn, then BARE
   (the only conifer of ours that loses them).
-- **In EZ-Tree**: from « Pine Medium »; straight, slightly drooping (−0.01), 50 branches; light foliage (size 3,
+- **In EZ-Tree**: from « Pine Medium »; straight, no growth force (−0.01 bent its trunk with EZ-Tree 2), 50 branches; light foliage (size 3,
   14). Bark `pine_bark` tinted (`#c0a898`). Foliage `needleTuft`, light `#7aa858` to `#86b462`.
 - **References**: Commons, categories « Larix decidua » and « Larix kaempferi » (habit, needles, bark).
 

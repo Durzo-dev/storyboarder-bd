@@ -80,19 +80,34 @@ export function barkColour(sp) {
   return new THREE.Color(sp.barkTint).multiplyScalar(sp.barkGain || 1);
 }
 
-/** How many times the bark goes round a branch (EZ-Tree's u runs once round, 0 to 1). */
+/**
+ * How many times the bark goes round the TRUNK. EZ-Tree 2 puts the turns in the u coordinate itself: round(radius ×
+ * `bark.textureScale.x`) for each branch, at least 1 (its bark as large on a twig as on the trunk); `speciesOptions`
+ * sets that scale so the trunk gets these turns.
+ */
 const BARK_AROUND = 2;
 
 /**
- * The bark's repeat, its texels square on the trunk. EZ-Tree's u goes round the branch once, its v from 0 to 1 up
- * one section: the trunk is 2π·r round and a section length/sections high. A fixed repeat squeezed the bark 17
- * times on the plane's trunk (21 units round, 3.75 a section): mipmaps then averaged it to a plain brown (seen).
+ * The bark's repeat, its texels square on the trunk: u already goes BARK_AROUND times round it (EZ-Tree 2), v from 0
+ * to 1 up one section; the trunk is 2π·r round and a section length/sections high. A fixed repeat squeezed the bark
+ * 17 times on the plane's trunk (21 units round, 3.75 a section): mipmaps then averaged it to a plain brown (seen).
  */
 export function barkRepeat(options) {
   const round = 2 * Math.PI * options.branch.radius[0];
   const section = options.branch.length[0] / options.branch.sections[0];
-  return [BARK_AROUND, BARK_AROUND * section / round];
+  return [1, BARK_AROUND * section / round];
 }
+
+/**
+ * The levels of detail of our trees (EZ-Tree 2's `generateLODs`), their distances in METRES from the camera (a
+ * tree is set to its height in metres: the levels switch on the world's distance): EZ-Tree's own details (about 40 %
+ * of the triangles, then 20 %), nearer than its units because our trees are 7 to 30 m, its own 40 to 70 units.
+ */
+export const SPECIES_LODS = [
+  { distance: 0, detail: {} },
+  { distance: 60, detail: { sectionStride: 3, segmentFactor: 0.75, leafStride: 2, leafScale: 1.25 } },
+  { distance: 150, detail: { sectionStride: 6, segmentFactor: 0.4, leafStride: 2, leafScale: 1.3, billboard: 'single' } },
+];
 
 /** The seed EZ-Tree gets for our variant `n` (1, 2…): spread apart, as in the trial (tools/ez-tree). */
 export const SEED_STEP = 7919;
@@ -107,6 +122,8 @@ export function speciesOptions(name, variant = 1) {
   const options = new TreeOptions();
   options.copy(JSON.parse(JSON.stringify(TREE_PRESETS[sp.from])));
   sp.set(options);
+  // EZ-Tree 2: the bark's turns round a branch are round(radius × this); the trunk's, BARK_AROUND.
+  options.bark.textureScale.x = BARK_AROUND / options.branch.radius[0];
   options.seed = variant * SEED_STEP;
   options.leaves.tint = 0xffffff;
   return options;
@@ -117,10 +134,13 @@ export function speciesOptions(name, variant = 1) {
  * default); `barkTexture(name)` gives the species' bark texture, or null (a plain colour then): the shipped file
  * by default.
  */
-export function generateSpeciesTree(name, variant = 1, { makeCanvas = domCanvas, barkTexture = shippedBark } = {}) {
+export function generateSpeciesTree(name, variant = 1, { makeCanvas = domCanvas, barkTexture = shippedBark, lods = SPECIES_LODS } = {}) {
   const sp = SPECIES[name];
   const tree = new Tree(speciesOptions(name, variant));
-  tree.generate();
+  // Its levels of detail (EZ-Tree 2): all on one skeleton and sharing the two materials set below; `lods: null`,
+  // the full tree only.
+  if (lods) tree.generateLODs(lods);
+  else tree.generate();
 
   const leaf = new THREE.CanvasTexture(sp.foliage(variant, makeCanvas));
   const leaves = tree.leavesMesh.material;
