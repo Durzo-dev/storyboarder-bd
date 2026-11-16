@@ -47,6 +47,11 @@ a row, and on a row without a file. Add the row when you bake a new texture.
 | `toit-ardoise.couleur.png` | Roof: slate | grey_roof_tiles_02 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/grey_roof_tiles_02 |
 | `toit-tuiles-canal.png` | Roof: barrel tiles | RoofingTiles014A | ambientCG | CC0 1.0 | https://ambientcg.com/view?id=RoofingTiles014A |
 | `toit-tuiles-plates.couleur.png` | Roof: old flat tiles | roof_09 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/roof_09 |
+| `ecorce-cerisier.jpg` | Tree bark: cherry | sakura_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/sakura_bark |
+| `ecorce-chene.jpg` | Tree bark: oak | jolcham_oak_bark_01 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/jolcham_oak_bark_01 |
+| `ecorce-erable.jpg` | Tree bark: maple | trident_maple_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/trident_maple_bark |
+| `ecorce-frene.jpg` | Tree bark: ash | bark_brown_01 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/bark_brown_01 |
+| `ecorce-marronnier.jpg` | Tree bark: horse chestnut | bark_brown_02 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/bark_brown_02 |
 | `ecorce-cypres.jpg` | Tree bark: cypress | chinese_cedar_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/chinese_cedar_bark |
 | `ecorce-olivier.jpg` | Tree bark: olive | bark_willow_02 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/bark_willow_02 |
 | `ecorce-platane.jpg` | Tree bark: plane | bark_platanus | Poly Haven | CC0 1.0 | https://polyhaven.com/a/bark_platanus |

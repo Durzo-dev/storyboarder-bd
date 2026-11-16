@@ -24,10 +24,15 @@ async function untilBuilt(){
   }
 }
 
-let _rappels = { openScene: () => {}, version: '', ouvrirConfiguration: () => {}, fermerConfiguration: () => {}, ongletConfiguration: () => 'general' };
+/** The Panel's camera fields a view asked sets, and puts back (scene3d.js). */
+const CAMERA_FIELDS = ['camRotX', 'camRotY', 'camDist', 'camWx', 'camWy', 'camWz', 'camRotXTarget', 'camRotYTarget', 'camDistTarget',
+  'camWxTarget', 'camWyTarget', 'camWzTarget', '_topDownActive'];
+
+let _rappels = { openScene: () => {}, redessiner: () => {}, version: '', ouvrirConfiguration: () => {}, fermerConfiguration: () => {}, ongletConfiguration: () => 'general' };
 
 /**
- * Wires the connection once (events.js): `openScene(id)`, the application's; `version`, its version;
+ * Wires the connection once (events.js): `openScene(id)`, the application's; `redessiner()`, the page drawn
+ * again; `version`, its version;
  * `ouvrirConfiguration(onglet)`, `fermerConfiguration()`, `ongletConfiguration()`: Settings, for demanderIA.
  * The tools are made here; their list is given to the main process, which keeps it for the bridge.
  */
@@ -38,13 +43,25 @@ export function cablerConnexionIA(rappels){
   const tools = makeTools({
     scenes: () => S.scenes,
     importPlace: (args) => importerPourIA(args),
-    preview: async (scene) => {
+    preview: async (scene, camera = null) => {
       await untilBuilt();
       if (S.editingSceneId !== scene.id) _rappels.openScene(scene.id);
       await untilBuilt();
-      await frames(3);
-      const r = $('board').getBoundingClientRect();
-      return api.mcpCapture({ x: r.left, y: r.top, width: r.width, height: r.height });
+      // A view asked (#487): set on the Scene's Panel for this image, its own camera put back after.
+      const panel = camera && scene.pages && scene.pages[0] && scene.pages[0].objects.find(o => o.type === 'panel');
+      const saved = panel ? Object.fromEntries(CAMERA_FIELDS.map(k => [k, panel[k]])) : null;
+      if (panel) {
+        for (const [k, v] of Object.entries(camera)) { panel[k] = v; panel[k + 'Target'] = v; }
+        panel._topDownActive = false;
+        _rappels.redessiner();
+      }
+      try {
+        await frames(3);
+        const r = $('board').getBoundingClientRect();
+        return await api.mcpCapture({ x: r.left, y: r.top, width: r.width, height: r.height });
+      } finally {
+        if (panel) { Object.assign(panel, saved); _rappels.redessiner(); }
+      }
     },
   });
   const serverInfo = { name: 'storyboarder', title: 'Storyboarder', version: _rappels.version || '' };

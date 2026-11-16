@@ -92,10 +92,11 @@ describe('MCP, the tools on a real Scene', () => {
   const { panel } = layRealPlace(scene, { ...content, elements: [] }, { halfSize: 100, newObject: () => null });
   panel.lieu = { lat: centre.lat, lon: centre.lon, size_m: 200, detail: 'detailed', country: 'fr' };
   const imported = [], previews = [];
+  let lastCamera;
   const tools = makeTools({
     scenes: () => [scene],
     importPlace: async (a) => { imported.push(a); return a.query === 'nowhere' ? { error: 'No place found for « nowhere ».' } : { scene }; },
-    preview: async (s) => { previews.push(s.id); return { data: 'AAAA', mimeType: 'image/jpeg' }; },
+    preview: async (s, camera) => { previews.push(s.id); lastCamera = camera; return { data: 'AAAA', mimeType: 'image/jpeg' }; },
   });
   test('the four tools, each with a description and a closed schema', () => {
     assert.deepEqual(tools.map(t => t.name), ['list_scenes', 'read_scene', 'create_scene_from_place', 'scene_preview']);
@@ -148,6 +149,19 @@ describe('MCP, the tools on a real Scene', () => {
     const r = (await call(tools, 'scene_preview', { scene_id: scene.id })).result;
     assert.deepEqual(r.content[0], { type: 'image', data: 'AAAA', mimeType: 'image/jpeg' });
     assert.deepEqual(previews, [scene.id]);
+  });
+  test('scene_preview from a view (#487): the camera asked, for this image only; out of bounds refused', async () => {
+    const r = (await call(tools, 'scene_preview', { scene_id: scene.id, view: { look_at_x: 10, look_at_z: -20, distance: 40, facing: 90, pitch: 20 } })).result;
+    assert.match(r.content[1].text, /view asked/);
+    assert.ok(Math.abs(lastCamera.camRotX - Math.PI / 9) < 1e-9);
+    assert.ok(Math.abs(lastCamera.camRotY + Math.PI / 2) < 1e-9, 'facing east: the camera on the west');
+    assert.deepEqual([lastCamera.camWx, lastCamera.camWz, lastCamera.camDist], [10, -20, 40]);
+    // Facing east, the camera sits west of the point (scene3d.js: backward = (sin rotY · cos rotX, …)).
+    assert.ok(Math.sin(lastCamera.camRotY) < 0);
+    await call(tools, 'scene_preview', { scene_id: scene.id });
+    assert.equal(lastCamera, null, 'no view: the Scene\'s own camera');
+    const bad = await call(tools, 'scene_preview', { scene_id: scene.id, view: { distance: 5000 } });
+    assert.match(JSON.stringify(bad), /distance must be between/);
   });
   test('a Scene made by hand: no place', () => {
     assert.equal(sceneListItem(createScene()).place, null);

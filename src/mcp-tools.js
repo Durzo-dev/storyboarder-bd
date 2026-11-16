@@ -92,13 +92,37 @@ export function sceneSummary(scene){
   };
 }
 
+/** The bounds of a view asked for scene_preview (metres, degrees). */
+export const VIEW_LIMITS = Object.freeze({ distance: [1, 2000], pitch: [2, 90], height: [-50, 500] });
+
+/**
+ * The Panel camera of a view (#487, asked by Durzo: « choisir certains angles de vue »): looking at
+ * (look_at_x, look_at_height, look_at_z), metres from the Scene's centre (x east, z south), from `distance`
+ * metres, facing `facing` (compass degrees the camera looks toward: 0 north, 90 east), tilted down `pitch`
+ * degrees (90: from straight above). The camera's own fields (scene3d.js: an orbit point, a distance, rotX the
+ * pitch, rotY the turn; rotY 0 looks north, the camera on the south). Throws on a value out of bounds.
+ */
+export function cameraOfView(view){
+  const num = (k, d) => (view[k] === undefined ? d : Number(view[k]));
+  const v = { x: num('look_at_x', 0), z: num('look_at_z', 0), y: num('look_at_height', 0), distance: num('distance', 60),
+    facing: num('facing', 0), pitch: num('pitch', 35) };
+  for (const [k, val] of Object.entries(v)) if (!Number.isFinite(val)) throw new ToolError(`view.${k} must be a number.`);
+  const within = (val, [lo, hi], name) => { if (val < lo || val > hi) throw new ToolError(`view.${name} must be between ${lo} and ${hi}.`); };
+  within(v.distance, VIEW_LIMITS.distance, 'distance');
+  within(v.pitch, VIEW_LIMITS.pitch, 'pitch');
+  within(v.y, VIEW_LIMITS.height, 'look_at_height');
+  const rad = Math.PI / 180;
+  return { camRotX: Math.min(89.9, v.pitch) * rad, camRotY: -((((v.facing % 360) + 360) % 360) * rad), camDist: v.distance,
+    camWx: v.x, camWy: v.y, camWz: v.z };
+}
+
 /**
  * The tools, bound to the application's gestures. `deps`:
  *   - scenes(): the Project's Scenes;
  *   - importPlace({ query, lat, lon, sideM, detail }): imports a real place as a new Scene, shown to the user
  *     as the « New scene » window would; resolves to { scene } or { error } (a sentence);
- *   - preview(scene): opens the Scene, waits for it to be built and drawn, resolves to { data, mimeType } (an
- *     image of the Scene's view, base64).
+ *   - preview(scene, camera): opens the Scene, waits for it to be built and drawn, resolves to { data, mimeType }
+ *     (an image of the Scene's view, base64); `camera` (cameraOfView), when given, the view for this image only.
  */
 export function makeTools(deps){
   return [
@@ -161,17 +185,35 @@ export function makeTools(deps){
     {
       name: 'scene_preview',
       title: 'See a Scene',
-      description: 'An image of a Scene as its camera sees it (from above, after an import). Opens the Scene in Storyboarder.',
+      description: 'An image of a Scene as its camera sees it (from above, after an import), or from a view you choose (`view`): '
+        + 'the point looked at, the distance, the direction faced and the tilt. Opens the Scene in Storyboarder; a view chosen '
+        + 'is for this image only, the Scene\'s camera is put back.',
       inputSchema: {
         type: 'object',
-        properties: { scene_id: { type: 'string', description: 'The Scene\'s id, from list_scenes.' } },
+        properties: {
+          scene_id: { type: 'string', description: 'The Scene\'s id, from list_scenes.' },
+          view: {
+            type: 'object', additionalProperties: false,
+            description: 'A view to see the Scene from (all optional). Metres from the Scene\'s centre, x east, z south.',
+            properties: {
+              look_at_x: { type: 'number', description: 'The point looked at, metres east of the centre (0 by default).' },
+              look_at_z: { type: 'number', description: 'The point looked at, metres south of the centre (0 by default).' },
+              look_at_height: { type: 'number', description: 'Its height above the ground, metres (0 by default).' },
+              distance: { type: 'number', description: 'From how far, metres (1 to 2000; 60 by default).' },
+              facing: { type: 'number', description: 'The direction the camera looks toward, compass degrees: 0 north, 90 east, 180 south, 270 west (0 by default).' },
+              pitch: { type: 'number', description: 'How far it looks down, degrees: 90 from straight above, 10 nearly level (2 to 90; 35 by default).' },
+            },
+          },
+        },
         required: ['scene_id'], additionalProperties: false,
       },
-      run: async ({ scene_id }) => {
+      run: async ({ scene_id, view }) => {
         const scene = sceneOf(deps.scenes(), scene_id);
-        const img = await deps.preview(scene);
+        const camera = view ? cameraOfView(view) : null;
+        const img = await deps.preview(scene, camera);
         if (!img || !img.data) throw new ToolError('The Scene could not be drawn (was it closed while drawn?). Try again.');
-        return { content: [{ type: 'image', data: img.data, mimeType: img.mimeType || 'image/jpeg' }, { type: 'text', text: `Scene « ${scene.name} », as its camera sees it.` }] };
+        const said = camera ? `Scene « ${scene.name} », from the view asked.` : `Scene « ${scene.name} », as its camera sees it.`;
+        return { content: [{ type: 'image', data: img.data, mimeType: img.mimeType || 'image/jpeg' }, { type: 'text', text: said }] };
       },
     },
   ];
