@@ -1226,6 +1226,7 @@ ipcMain.handle('realplace:flora', async (event, lat, lon, km) => realPlace.flora
 ipcMain.handle('realplace:bdtopo', async (event, bbox) => realPlace.bdtopo(bbox));
 ipcMain.handle('realplace:vegetation', async (event, bbox) => realPlace.vegetation(bbox));
 ipcMain.handle('realplace:landmarks', async (event, bbox) => realPlace.landmarks(bbox));
+ipcMain.handle('realplace:soils', async (event, bbox) => realPlace.soils(bbox));
 ipcMain.handle('realplace:altitudes', async (event, requests, perSecond) => realPlace.altitudes(requests, perSecond));
 ipcMain.handle('realplace:tile', async (event, z, x, y) => realPlace.tile(z, x, y));
 ipcMain.handle('store:attribuer', async (event, resultat, fichier, resolution) => {

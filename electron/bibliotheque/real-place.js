@@ -306,6 +306,23 @@ async function landmarks(bbox){
   return { json: r.json };
 }
 
+/** The INRAE's soil units of a zone (France, #482e): their dominant soil and description. Cached. */
+const soilAnswers = sources.memoireBornee(4, 10 * 1024 * 1024);
+async function soils(bbox){
+  const ok = bbox && ['south', 'west', 'north', 'east'].every(k => Number.isFinite(bbox[k]));
+  if (!ok || bbox.north - bbox.south > 0.01 || bbox.east - bbox.west > 0.02) return { error: 'zone' };
+  const key = JSON.stringify(bbox);
+  const cached = soilAnswers.get(key);
+  if (cached) return { json: cached };
+  const started = Date.now();
+  const r = await request(vegetationUrl('INRA.CARTE.SOLS:geoportail_vf', ['geom', 'ger_nom', 'nom_ucs'], bbox));
+  const good = r.json && Array.isArray(r.json.features);
+  console.info(`[real-place] soils: ${good ? `${r.json.features.length} units` : (r.error || 'response')} in ${Date.now() - started} ms`);
+  if (!good) return r.error ? r : { error: 'response' };
+  soilAnswers.set(key, r.json);
+  return { json: r.json };
+}
+
 /** The BD TOPO buildings of a zone (France): the IGN's WFS, no key. Only the properties building-survey.js reads. */
 const BDTOPO_PROPERTIES = ['geometrie', 'hauteur', 'altitude_minimale_toit', 'altitude_maximale_toit', 'usage_1',
   'materiaux_des_murs', 'materiaux_de_la_toiture', 'construction_legere'];
@@ -483,4 +500,4 @@ async function tile(z, x, y){
   return { data: r.bytes };
 }
 
-module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, aerialPhoto, heightGrid, terrainGrid, flora, country, osm, bdtopo, bdTopoUrl, vegetation, landmarks, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };
+module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, aerialPhoto, heightGrid, terrainGrid, flora, country, osm, bdtopo, bdTopoUrl, vegetation, landmarks, soils, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };

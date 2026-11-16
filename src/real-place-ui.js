@@ -12,6 +12,8 @@ import { translateOsm, ZONE_SIDE_MAX, DETAIL_LEVELS } from './osm-scene.js';
 import { clearOfObstacles, obstaclesOf, fitCrowns } from './placement-clearance.js';
 import { readVegetation, fillVegetation, BD_FORET_CREDIT } from './vegetation-zones.js';
 import { readLandmarks } from './landmarks.js';
+import { readSoils, applySoils, SOIL_KINDS } from './soils.js';
+import { chargerTexturesUtilisateur, idDe as idDeTexture } from './textures-utilisateur.js';
 import { crownOf } from './ez-trees.js';
 import { TREE_TYPES } from './constants.js';
 import { planRelief, terrainPlan, reliefFromTerrain, TERRAIN_LIDAR } from './real-place-sources.js';
@@ -518,6 +520,24 @@ async function importer(){
       if (arrete()) return annule;
       if (lu) photoCredits.push(tr(AERIAL_CREDIT.en, AERIAL_CREDIT.fr));
     }
+    // France, Detailed and Realistic: the bare earth's colour from the soil map (soils.js, #482e); at the
+    // « Realistic » level, its texture from Poly Haven, once into « My textures ». Never blocking.
+    if (country === 'fr' && niveau !== 'simple' && api.realPlaceSoils && translated.zones.some(z => z.terrainType === 'terre')) {
+      const r = await api.realPlaceSoils(bbox);
+      if (arrete()) return annule;
+      const kinds = r && r.json ? applySoils(translated.zones, readSoils(r.json, centre)) : [];
+      console.info(`[real-place] soils: ${kinds.join(', ') || 'none'}`);
+      if (niveau === 'realistic' && kinds.length) {
+        let laid = 0;
+        for (const kind of kinds) {
+          const id = await textureDeLaTerre(kind);
+          if (arrete()) return annule;
+          if (!id) continue;
+          for (const z of translated.zones) if (z.soil === kind) { z.terrainType = id; delete z.terrainColor; laid++; }
+        }
+        if (laid) photoCredits.push(tr('Bare earth: Poly Haven textures (CC0)', 'Terre nue : textures Poly Haven (CC0)'));
+      }
+    }
     // The trees and shrubs OSM says nothing of (and those read on the aerial photo) take the place's forms.
     const flora = flore ? await flore : null;
     if (arrete()) return annule;
@@ -703,6 +723,36 @@ async function lireLesHauteurs({ toGeo, halfSize, country }){
  * the zone, decoded in memory, read metre by metre, then dropped (never shown nor kept, decided). Changes
  * `translated` in place; true when something was read from it (its credit is then due), false otherwise.
  */
+/**
+ * The texture of a kind of bare earth (#482e, « Realistic »): its Poly Haven texture (SOIL_KINDS), in « My
+ * textures » already or downloaded there now (1k), then known to the Ground (textures-utilisateur.js). Its Ground
+ * id (`tex:…`), or null (no network, no Ground use: the colour alone then).
+ */
+async function textureDeLaTerre(kind){
+  const api = window.storyboarderAPI;
+  const id = SOIL_KINDS[kind] && SOIL_KINDS[kind].polyhaven;
+  if (!id || !api || !api.texturesMes || !api.texturesOptions || !api.texturesTelecharger) return null;
+  try {
+    const owned = async () => ((await api.texturesMes()) || []).find(t => t.cle === `polyhaven:${id}`);
+    let t = await owned();
+    if (!t) {
+      const o = await api.texturesOptions('polyhaven', id);
+      const options = (o && Array.isArray(o.options)) ? o.options : [];
+      const res = options.find(x => /^1k$/i.test(x.resolution)) || options[0];
+      if (!res) return null;
+      const d = await api.texturesTelecharger('polyhaven', id, res.resolution);
+      if (!d || d.erreur) return null;
+      t = await owned();
+    }
+    if (!t || !t.grain || !Array.isArray(t.usages) || !t.usages.includes('sol')) return null;
+    await chargerTexturesUtilisateur(api);
+    return idDeTexture(t);
+  } catch (e) {
+    console.warn('[real-place] soil texture:', e && e.message);
+    return null;
+  }
+}
+
 async function lireLaVueAerienne(translated, { toGeo, halfSize, country, south }){
   const api = window.storyboarderAPI;
   const plan = aerialPhotoPlan({ toGeo, halfSize, country });

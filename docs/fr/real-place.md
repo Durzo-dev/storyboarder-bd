@@ -18,6 +18,7 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
 | `src/aerial-photo.js` | PUR. La vue aérienne d'une zone (France), à LIRE pendant l'import, jamais montrée ni gardée : la photo à demander (`aerialPhotoPlan`), son crédit. La requête : `realplace:aerialPhoto` (le WMS de la Géoplateforme, `ORTHOIMAGERY.ORTHOPHOTOS`, un JPEG ; une réponse qui n'est pas un JPEG est une erreur). |
 | `src/vegetation-zones.js` | PUR. Les bois, vergers, landes et haies relevés par l'IGN (France), remplis d'arbres et d'arbustes intégrés (`readVegetation`, `fillVegetation`). La requête : `realplace:vegetation`. |
 | `src/landmarks.js` | PUR. Les croix, calvaires, éoliennes, antennes-relais et clochers relevés par l'IGN (France, BD TOPO `construction_ponctuelle`) : `readLandmarks`. La requête : `realplace:landmarks`. |
+| `src/soils.js` | PUR. La couleur de la terre nue (et, au niveau Réaliste, sa texture) d'après la carte des sols de l'INRAE (France) : `soilKindOf`, `readSoils`, `applySoils`. La requête : `realplace:soils`. |
 | `src/real-place-import.js` | PUR. La traduction et les altitudes devenues le contenu d'une Scène (`sceneContentOf` : objets Tracés et Zones, relief, crédits). |
 | `src/real-place-ui.js` | La fenêtre d'une Scène neuve : le choix, puis recherche, carte (tuiles OpenStreetMap), taille de la zone, import avec sa progression. |
 | `electron/bibliotheque/real-place.js` | Le réseau (processus principal) : Nominatim, Overpass (avec miroirs), altitudes, tuiles ; identifié par le User-Agent de l'application. |
@@ -191,6 +192,15 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    (`kindKnown`), son genre quand l'essence le dit, `filled` : l'arbre intégré, jamais un modèle (banque, EZ-Tree,
    stores : des centaines de modèles noieraient le rendu). Crédit quand une forêt de la BD Forêt a été remplie :
    « © IGN, BD Forêt® v2 ».
+   Après la lecture aérienne, la terre nue (France, « Détaillé » et « Réaliste », Zones de `terre`) :
+   `realplace:soils` (WFS `INRA.CARTE.SOLS:geoportail_vf`, son `ger_nom` et son `nom_ucs`), `readSoils`,
+   `soilKindOf` (les mots de la description d'abord : sable, calcaire, roche volcanique, cailloux, terre
+   rouge ; sinon le groupe de sol : CALCOSOL → calcaire, BRUNISOL → brun, LUVISOL → limoneux, FLUVIOSOL →
+   alluvial, REDUCTISOL → humide, ANDOSOL → volcanique…), `applySoils` : chaque Zone prend la couleur
+   (`terrainColor`, `SOIL_KINDS`) du sol où se tiennent la plupart de ses cases. Au niveau « Réaliste », la
+   texture Poly Haven de chaque sorte (choisie à la main, `SOIL_KINDS.polyhaven`, CC0) est prise dans « Mes
+   textures », ou téléchargée (1k), et posée sur ces Zones à la place de la teinte (`textureDeLaTerre`) ;
+   crédit « Terre nue : textures Poly Haven (CC0) ».
    Puis les petits ouvrages : `realplace:landmarks` (WFS `BDTOPO_V3:construction_ponctuelle`), `readLandmarks` :
    Croix → `croix`, Calvaire → `calvaire`, Eolienne → `eolienne`, Antenne → `antenne`, Clocher → `clocher` (les
    autres laissés de côté), leur `hauteur` relevée gardée quand elle est vraisemblable, un ouvrage qu'OSM a déjà

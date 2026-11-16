@@ -133,6 +133,7 @@ contextBridge.exposeInMainWorld('storyboarderAPI', {
   realPlaceBdTopo: (bbox) => ipcRenderer.invoke('realplace:bdtopo', bbox),
   realPlaceVegetation: (bbox) => ipcRenderer.invoke('realplace:vegetation', bbox),
   realPlaceLandmarks: (bbox) => ipcRenderer.invoke('realplace:landmarks', bbox),
+  realPlaceSoils: (bbox) => ipcRenderer.invoke('realplace:soils', bbox),
   realPlaceAltitudes: (requests, perSecond) => ipcRenderer.invoke('realplace:altitudes', requests, perSecond),
   realPlaceTile: (z, x, y) => ipcRenderer.invoke('realplace:tile', z, x, y),
   mcpStatus: () => ipcRenderer.invoke('mcp:status'),

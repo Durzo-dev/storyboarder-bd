@@ -29,8 +29,11 @@ export function pathObject(p, { panelId, newId, nameOf = (k) => k }){
 
 /** A Zone object (a painted mask) from a translated zone. */
 export function zoneObject(z, { panelId, newId, nameOf = () => 'Terrain' }){
-  return { id: newId(), type: 'tracé', tracéType: 'terrain', name: z.name || nameOf('terrain'), panelId, terrainType: z.terrainType, label: '',
+  const o = { id: newId(), type: 'tracé', tracéType: 'terrain', name: z.name || nameOf('terrain'), panelId, terrainType: z.terrainType, label: '',
     world: JSON.parse(JSON.stringify(z.world)) };
+  // Its tint (the bare earth's soil, soils.js), as the terrain editor sets it.
+  if (typeof z.terrainColor === 'string') o.terrainColor = z.terrainColor;
+  return o;
 }
 
 /**
