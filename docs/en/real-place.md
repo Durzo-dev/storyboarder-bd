@@ -180,8 +180,9 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    when nothing measured), the same at each import, 3 m from the trees already there, within the zone; a
    BD TOPO forest inside a BD Forêt one left to it; 350 trees and 150 shrubs at most (spread when there are
    more places). Each is an element like OSM's, its kind known (`kindKnown`), its genus when the essence says
-   it, `filled`: the built-in tree, never a model (bank, EZ-Tree, stores: hundreds of models would sink the
-   render). Credit when a BD Forêt forest was filled: « © IGN, BD Forêt® v2 ».
+   it (« Chênes sempervirents »: the holm oak by its species, `taxon`), `filled`: one of our EZ-Tree species when
+   its genus has one (a few variants generated once, every tree a clone with its levels of detail), else the
+   built-in tree; never a model of the bank or of the stores (hundreds of models would sink the render). Credit when a BD Forêt forest was filled: « © IGN, BD Forêt® v2 ».
    After the aerial reading, the bare earth (France, « Detailed » and « Realistic », Zones of `terre`):
    `realplace:soils` (WFS `INRA.CARTE.SOLS:geoportail_vf`, its `ger_nom` and `nom_ucs`), `readSoils`,
    `soilKindOf` (the description's words first, sand, chalk, a volcanic rock, stones, red earth; else the

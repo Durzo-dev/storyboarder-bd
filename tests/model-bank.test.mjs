@@ -8,7 +8,8 @@ import './helpers/dom-stub.mjs';
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import { BANK_PREFIX, bankLabel, genusOfTags, taxonOfTags, bankModelsFor, applyBank, bankCredit } from '../src/model-bank.js';
+import { BANK_PREFIX, bankLabel, genusOfTags, taxonOfTags, bankModelsFor, applyBank, bankCredit, RETIRED_BANK_PLANTS, retireBankPlant } from '../src/model-bank.js';
+import { speciesFor } from '../src/tree-species.js';
 import { MODEL_BANK } from '../src/model-bank-data.js';
 
 const m = (file, objType, genera = [], extra = {}) => ({ file, objType, genera, generic: false, name: file, author: 'A', licence: 'CC-BY-4.0', url: `https://sketchfab.com/3d-models/x-${file}`, ratio: 0.7, ...extra });
@@ -118,6 +119,48 @@ describe('the shipped bank (src/model-bank-data.js)', () => {
       assert.ok(existsSync(new URL(`../assets/model-bank/${x.file}`, import.meta.url)), x.file);
       assert.ok(x.name && x.author && /^https:\/\/sketchfab\.com\/3d-models\//.test(x.url) && x.licence === 'CC-BY-4.0', x.file);
       assert.ok(Array.isArray(x.genera) && x.objType && x.ratio > 0, x.file);
+    }
+  });
+  test('no plant an import could never choose: our species cover its genera, and as a stand-in its type has none', () => {
+    const PLANTS = ['arbre', 'conifere', 'cypres', 'olivier', 'palmier', 'arbuste', 'buisson'];
+    for (const x of MODEL_BANK.filter(m => PLANTS.includes(m.objType))) {
+      assert.ok(x.genera.some(g => !speciesFor(x.objType, g)) || (x.generic && !speciesFor(x.objType, null)), `${x.file}: retire it (RETIRED_BANK_PLANTS)`);
+    }
+  });
+  test('a retired plant is neither in the bank nor shipped', () => {
+    for (const f of Object.keys(RETIRED_BANK_PLANTS)) {
+      assert.ok(!MODEL_BANK.some(m => m.file === f), f);
+      assert.ok(!existsSync(new URL(`../assets/model-bank/${f}`, import.meta.url)), f);
+    }
+  });
+});
+
+describe('a Scene holding a retired bank plant: the EZ-Tree tree of its species, on loading', () => {
+  const aspect = (t) => ({ arbre: 1 / 1.7, palmier: 5 / 7 })[t];
+  test('its type, species and variant; its height and centre kept, its width the type\'s; the model\'s fields gone', () => {
+    const o = { type: 'objet3d', objType: 'modele', modelFile: BANK_PREFIX + 'saule-1.glb', modelName: 'Saule 1', modelRatio: 1.2, usage: 'arbre',
+      x: 100, w: 200, h: 340, baseW: 200, baseH: 340, realHeightFloor: 8.5, wxFloor: -24.4, wzFloor: -21.6 };
+    assert.equal(retireBankPlant(o, aspect), true);
+    assert.equal(o.objType, 'arbre'); assert.equal(o.essence, 'Saule');
+    assert.ok(o.variante >= 1 && o.variante <= 3);
+    assert.equal(o.realHeightFloor, 8.5); assert.equal(o.h, 340);
+    assert.ok(Math.abs(o.w - 200) < 1e-9 && Math.abs(o.baseW - 200) < 1e-9, 'width: 340 / 1.7');
+    assert.equal(o.x, 100, 'its centre kept');
+    for (const k of ['modelFile', 'modelName', 'modelRatio', 'usage']) assert.ok(!(k in o), k);
+    const again = { ...o }; assert.equal(retireBankPlant(again, aspect), false, 'once');
+  });
+  test('a bush without its genus: its type\'s stand-in; a palm by its genus', () => {
+    const b = { objType: 'modele', modelFile: BANK_PREFIX + 'buisson-3.glb', h: 50, w: 60 };
+    retireBankPlant(b); assert.equal(b.essence, 'Ronce'); assert.equal(b.w, 60, 'no aspect given: width kept');
+    const p = { objType: 'modele', modelFile: BANK_PREFIX + 'palmier-washingtonia-1.glb', h: 280, w: 100 };
+    retireBankPlant(p, aspect); assert.equal(p.essence, 'Palmier'); assert.equal(p.objType, 'palmier');
+  });
+  test('run on loading a Project (io.js)', () => {
+    assert.match(readFileSync(new URL('../src/io.js', import.meta.url), 'utf8'), /retireBankPlant\(o, t => OBJECT_ASPECT_RATIOS\[t\]\)/);
+  });
+  test('a model still in the bank, or of « My models »: untouched', () => {
+    for (const f of [BANK_PREFIX + 'erable-1.glb', 'chene.glb']) {
+      const o = { objType: 'modele', modelFile: f }; assert.equal(retireBankPlant(o), false); assert.equal(o.modelFile, f);
     }
   });
 });

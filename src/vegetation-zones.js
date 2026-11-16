@@ -10,9 +10,10 @@
  *
  * Each area is filled with trees (or shrubs) on a jittered grid, its spacing by its kind, the same at each import
  * (a hash of the cell): an object `{ objType, x, z, kindKnown, genus?, height?, source, filled }` like OSM's, so the
- * flora, the LiDAR's heights and the clearance treat it as any tree. `filled`: the built-in tree, never a model
- * of the bank, of EZ-Tree or of the stores (model-bank.js, realistic-models.js): hundreds of them, each model
- * 7 000 to 400 000 faces, would sink the render. The BD Forêt first (its
+ * flora, the LiDAR's heights and the clearance treat it as any tree. `filled`: one of our EZ-Tree species when
+ * its genus has one (model-bank.js: a few variants generated once, every tree a clone with its levels of detail),
+ * else the built-in tree; never a model of the bank or of the stores (realistic-models.js): hundreds of them, each
+ * model 7 000 to 400 000 faces, would sink the render. The BD Forêt first (its
  * essence); the BD TOPO where the BD Forêt has nothing. Vines wait for their models (#481). Never more than
  * MAX_TREES trees and MAX_SHRUBS shrubs in a zone: a 400 m forest would hold thousands; the spacing grows instead.
  */
@@ -51,6 +52,8 @@ export function kindOfEssence(essence, tfv = '') {
   const e = plain(essence), t = plain(tfv);
   if (/lande/.test(t) || e === 'nc') return { kind: 'heath', genera: [] };
   if (/sans couvert/.test(t) || e === 'nr') return null;
+  // « Chênes sempervirents »: the holm oak and the cork oak (our Yeuse, by its species), not the deciduous oaks.
+  if (/chene/.test(e) && /sempervirent/.test(e)) return { kind: 'broadleaved', genera: ['Quercus'], taxon: 'quercus ilex' };
   if (/chene/.test(e)) return { kind: 'broadleaved', genera: ['Quercus'] };
   if (/hetre/.test(e)) return { kind: 'broadleaved', genera: ['Fagus'] };
   if (/chataignier/.test(e)) return { kind: 'broadleaved', genera: ['Castanea'] };
@@ -176,6 +179,7 @@ export function fillVegetation(areas, { halfSize, existing = [] } = {}) {
       const genera = a.genera.length ? a.genera : (kind.genus ? [kind.genus] : []);
       const e = { objType, x: Math.round(p.x * 100) / 100, z: Math.round(p.z * 100) / 100, kindKnown: true, source: a.source, filled: true };
       if (genera.length) e.genus = genera[Math.floor(hash(p.i, p.j, 0x7f4a + n) * genera.length)];
+      if (a.taxon) e.taxon = a.taxon;
       if (kind.height) e.height = Math.round(kind.height * (0.85 + 0.3 * u) * 10) / 10;
       out.push(e);
     }

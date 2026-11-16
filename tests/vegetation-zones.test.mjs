@@ -84,9 +84,23 @@ test('heaths and hedges: shrubs; a hedge dense', () => {
   assert.ok(out.filter(e => e.x < 25).length >= 7, 'a hedge every 2.5 m');
 });
 
-test('the filled trees take no model of the bank (hundreds of models would sink the render)', () => {
+test('the filled trees: one of our EZ-Tree species when their genus has one, never a model of the bank', () => {
+  const bank = [{ file: 'p.glb', objType: 'arbre', genera: ['Platanus', 'Grevillea'], generic: true, ratio: 1 }];
   const els = fillVegetation([area('broadleaved', 0, 0, 30, 30, { genera: ['Platanus'] })], { halfSize: 100 });
-  const r = applyBank(els, { bank: [{ file: 'p.glb', objType: 'arbre', genera: ['Platanus'], generic: true, ratio: 1 }] });
-  assert.equal(r.n + r.species, 0);
-  assert.ok(els.every(e => !e.modelFile && !e.essence));
+  const r = applyBank(els, { bank });
+  assert.ok(els.length > 5 && r.species === els.length && r.n === 0);
+  assert.ok(els.every(e => !e.modelFile && e.essence === 'Platane'));
+  // A genus of none of our species: the built-in tree (hundreds of models would sink the render).
+  const odd = fillVegetation([area('broadleaved', 0, 0, 30, 30, { genera: ['Grevillea'] })], { halfSize: 100 });
+  const r2 = applyBank(odd, { bank });
+  assert.equal(r2.n + r2.species, 0);
+  assert.ok(odd.every(e => !e.modelFile && !e.essence));
+});
+
+test('« Chênes sempervirents »: the holm oak by its species, carried to every tree filled', () => {
+  assert.deepEqual(kindOfEssence('Chênes sempervirents'), { kind: 'broadleaved', genera: ['Quercus'], taxon: 'quercus ilex' });
+  assert.deepEqual(kindOfEssence('Chênes décidus'), { kind: 'broadleaved', genera: ['Quercus'] });
+  const els = fillVegetation([area('broadleaved', 0, 0, 30, 30, { genera: ['Quercus'], taxon: 'quercus ilex' })], { halfSize: 100 });
+  applyBank(els, { bank: [] });
+  assert.ok(els.length > 5 && els.every(e => e.essence === 'Yeuse'));
 });

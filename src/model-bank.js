@@ -35,6 +35,68 @@ function hash(x, z, salt){
   return ((h ^ (h >>> 15)) >>> 0) / 4294967296;
 }
 
+/**
+ * THE PLANTS RETIRED FROM THE BANK: our EZ-Tree species cover every genus they showed, so no import chose them
+ * any more; their files are no longer shipped. Each one's type and genus, for the Scenes that still hold one
+ * (retireBankPlant): file → [objType, genus].
+ */
+export const RETIRED_BANK_PLANTS = Object.freeze({
+  'bouleau-1.glb': ['arbre', 'Betula'],
+  'bouleau-2.glb': ['arbre', 'Betula'],
+  'bouleau-3.glb': ['arbre', 'Betula'],
+  'peuplier-1.glb': ['arbre', 'Populus'],
+  'peuplier-3.glb': ['arbre', 'Populus'],
+  'peuplier-4.glb': ['arbre', 'Populus'],
+  'saule-1.glb': ['arbre', 'Salix'],
+  'saule-2.glb': ['arbre', 'Salix'],
+  'cerisier-1.glb': ['arbre', 'Prunus'],
+  'palmier-nain-1.glb': ['palmier', 'Chamaerops'],
+  'palmier-nain-2.glb': ['palmier', 'Chamaerops'],
+  'arbuste-2.glb': ['arbuste', null],
+  'marronnier-1.glb': ['arbre', 'Aesculus'],
+  'marronnier-2.glb': ['arbre', 'Aesculus'],
+  'marronnier-3.glb': ['arbre', 'Aesculus'],
+  'chene-1.glb': ['arbre', 'Quercus'],
+  'chene-2.glb': ['arbre', 'Quercus'],
+  'cedre-1.glb': ['conifere', 'Cedrus'],
+  'cedre-2.glb': ['conifere', 'Cedrus'],
+  'cypres-1.glb': ['cypres', 'Cupressus'],
+  'cypres-2.glb': ['cypres', 'Cupressus'],
+  'olivier-1.glb': ['olivier', 'Olea'],
+  'buisson-2.glb': ['buisson', null],
+  'buisson-3.glb': ['buisson', null],
+  'buisson-4.glb': ['buisson', null],
+  'buisson-5.glb': ['buisson', null],
+  'palmier-washingtonia-1.glb': ['palmier', 'Washingtonia'],
+  'palmier-washingtonia-2.glb': ['palmier', 'Washingtonia'],
+});
+
+/**
+ * An Element showing a retired bank plant (RETIRED_BANK_PLANTS) becomes the EZ-Tree tree of its species, in place:
+ * its type and species, a variant drawn from its place, its height kept, its width the type's
+ * (`aspectOf(objType)`: width over height), its centre kept. Returns whether it changed. Run on loading a Project.
+ */
+export function retireBankPlant(o, aspectOf = () => null){
+  const file = o && typeof o.modelFile === 'string' && o.modelFile.startsWith(BANK_PREFIX) ? o.modelFile.slice(BANK_PREFIX.length) : null;
+  const was = file && RETIRED_BANK_PLANTS[file];
+  if (!was) return false;
+  const essence = speciesFor(was[0], was[1]);
+  if (!essence) return false;
+  const sp = SPECIES[essence];
+  o.objType = sp.type;
+  o.essence = essence;
+  o.variante = 1 + Math.floor(hash(o.wxFloor || 0, o.wzFloor || 0, 0x7f4a) * VARIANTS);
+  for (const k of ['modelFile', 'modelName', 'modelRatio', 'usage']) delete o[k];
+  const aspect = aspectOf(sp.type);
+  if (aspect > 0 && o.h > 0) {
+    const w = o.h * aspect;
+    if (typeof o.x === 'number' && o.w > 0) o.x += (o.w - w) / 2;
+    o.w = w;
+    if (o.baseH > 0) o.baseW = o.baseH * aspect;
+  }
+  return true;
+}
+
 /** A key drawn from shares ({ key: share }), or null. */
 function drawFrom(shares, u){
   const entries = Object.entries(shares || {}).filter(([, s]) => s > 0);
@@ -69,8 +131,7 @@ export function applyBank(elements, { flora = null, rural = false, bank = MODEL_
   const used = new Map();
   let n = 0, species = 0;
   for (const e of elements || []) {
-    // A tree filling a wood (vegetation-zones.js, `filled`): the built-in tree, light (hundreds of them).
-    if (e.modelFile || e.filled) continue;
+    if (e.modelFile) continue;
     const genus = e.genus || drawFrom(flora && flora.genusShares && flora.genusShares[e.objType], hash(e.x, e.z, 0x5bd1));
     const essence = speciesFor(e.objType, genus, e.taxon);
     if (essence) {
@@ -82,6 +143,9 @@ export function applyBank(elements, { flora = null, rural = false, bank = MODEL_
       species++;
       continue;
     }
+    // A tree filling a wood (vegetation-zones.js, `filled`) of none of our species: the built-in tree, light
+    // (hundreds of them), never a model of the bank.
+    if (e.filled) continue;
     const list = bankModelsFor(e.objType, genus, { rural, bank });
     if (!list.length) continue;
     const m = list[Math.floor(hash(e.x, e.z, 0x9e37) * list.length)];

@@ -33,6 +33,9 @@ measured height, the species' usual one (±15 %). It takes no model of the bank 
 Every genus of the flora's table (`GENERA`, flora.js) has a species: a species stands for several genera of one
 form (its `genus` list, named on its sheet). A shrub or a bush without its genus takes its type's stand-in
 (`typeDefault`: the evergreen shrub, the bramble); a tree or a conifer without its genus takes none (the bank).
+The bank keeps no plant an import could never choose (a test holds it): those retired are listed in
+`RETIRED_BANK_PLANTS` (model-bank.js), and on loading a Project each Element still showing one becomes the EZ-Tree
+tree of its species (`retireBankPlant`: its height and centre kept).
 
 A bark is a Poly Haven photo (`bark`, shipped as `assets/textures/ecorce-*.jpg`) or drawn in code (`barkDrawn`, the birch's:
 no photo of a white birch bark there); `barkGain` lightens one darker than the real bark (its tint times the gain).

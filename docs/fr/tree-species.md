@@ -34,6 +34,9 @@ stores. Chaque genre de la table de la flore (`GENERA`, flora.js) a une essence 
 genres d'une même forme (sa liste `genus`, nommée sur sa fiche). Un arbuste ou un buisson sans genre prend la
 doublure de son type (`typeDefault` : l'arbuste persistant, la ronce) ; un arbre ou un conifère sans genre n'en
 prend aucune (la banque).
+La banque ne garde aucune plante qu'un import ne pourrait plus choisir (un test y veille) : les plantes retirées sont
+listées dans `RETIRED_BANK_PLANTS` (model-bank.js), et au chargement d'un Projet chaque Élément qui en montre encore
+une devient l'arbre EZ-Tree de son essence (`retireBankPlant` : sa hauteur et son centre gardés).
 
 Une écorce est une photo de Poly Haven (`bark`, livrée en `assets/textures/ecorce-*.jpg`) ou dessinée par le code
 (`barkDrawn`, celle du bouleau : pas de photo d'écorce de bouleau blanc là-bas) ; `barkGain` éclaircit une écorce plus

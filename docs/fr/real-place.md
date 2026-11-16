@@ -194,8 +194,10 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    d'une haie ; les arbres d'un verger hauts de 4 m sans mesure), pareille à chaque import, à 3 m des arbres déjà
    là, dans la zone ; une forêt de la BD TOPO dans une forêt de la BD Forêt laissée à celle-ci ; 350 arbres et 150
    arbustes au plus (répartis quand il y a plus de places). Chacun est un élément comme ceux d'OSM, son type connu
-   (`kindKnown`), son genre quand l'essence le dit, `filled` : l'arbre intégré, jamais un modèle (banque, EZ-Tree,
-   stores : des centaines de modèles noieraient le rendu). Crédit quand une forêt de la BD Forêt a été remplie :
+   (`kindKnown`), son genre quand l'essence le dit (« Chênes sempervirents » : le chêne vert par son espèce,
+   `taxon`), `filled` : une de nos essences EZ-Tree quand son genre en a une (quelques variantes générées une fois,
+   chaque arbre un clone avec ses niveaux de détail), sinon l'arbre intégré ; jamais un modèle de la banque ni des
+   stores (des centaines de modèles noieraient le rendu). Crédit quand une forêt de la BD Forêt a été remplie :
    « © IGN, BD Forêt® v2 ».
    Après la lecture aérienne, la terre nue (France, « Détaillé » et « Réaliste », Zones de `terre`) :
    `realplace:soils` (WFS `INRA.CARTE.SOLS:geoportail_vf`, son `ger_nom` et son `nom_ucs`), `readSoils`,

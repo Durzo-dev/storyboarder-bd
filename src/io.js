@@ -32,7 +32,8 @@ import {
   seedPoseLibrary3D, mergePoseLibrary3D, posesUsedByProject3D,
   missingBuiltinPoses3D, forgetDismissedPoses3D,
 } from './utils.js';
-import { WALL_TYPES, WALL_PX_PER_UNIT_3D, PANEL_CAM_DEFAULT_DIST_3D, GROUND_Y_DEFAULT_3D } from './constants.js';
+import { WALL_TYPES, WALL_PX_PER_UNIT_3D, PANEL_CAM_DEFAULT_DIST_3D, GROUND_Y_DEFAULT_3D, OBJECT_ASPECT_RATIOS } from './constants.js';
+import { retireBankPlant } from './model-bank.js';
 // Qui est devant, et comment le fermer. La décision d'Échap est pure et testée là-bas.
 import {
   actionEchap, pileOuverte, fermerModaleDuDessus, enregistrerFermeture, surveillerModales,
@@ -601,6 +602,8 @@ export function applyProjectData(data){
   migrateMissingHomePanelId();
   migrateSceneTopDownDefault();
   migrateElementWxFloor();
+  // The plants retired from the model bank: each becomes the EZ-Tree tree of its species (retireBankPlant).
+  [...S.tomes, ...S.scenes].forEach(v => (v.pages || []).forEach(p => (p.objects || []).forEach(o => retireBankPlant(o, t => OBJECT_ASPECT_RATIOS[t]))));
   // #454b : la hauteur réelle des bâtiments placés suit leur bâtiment (toit plat compris).
   [...S.tomes, ...S.scenes].forEach(v => (v.pages || []).forEach(p => (p.objects || []).forEach(recalerHauteurDuBatimentPlace)));
   migratePanelWorldCoords(); // Phase 3: de-scale world coords for old projects
