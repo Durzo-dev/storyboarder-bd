@@ -47,8 +47,8 @@ Durzo, puis, si elle est acceptée :
 2. Mesurer les empreintes de ses modèles avec la nouvelle version, dans un navigateur, et les reporter dans
    `tests/ez-tree.test.mjs` : le test vérifie que la copie fait pousser les mêmes arbres qu'EZ-Tree.
 3. Revoir nos essences : un changement de croissance change leurs silhouettes.
-4. Reporter NOS AJOUTS (listés en tête du fichier, marqués « Ours (#485) » dans le code) : `branch.droop` et
-   `leaves.hang`, neutres par défaut (les empreintes se mesurent sans eux), et testés dans `tests/ez-tree.test.mjs`.
+4. Reporter NOS AJOUTS (listés en tête du fichier, marqués « Ours (#485) » dans le code) : `branch.droop`,
+   `leaves.hang` et `fronds` (la couronne d'un palmier), neutres par défaut (les empreintes se mesurent sans eux), et testés dans `tests/ez-tree.test.mjs`.
    Ils sont destinés à une pull request chez EZ-Tree ; une fois chez EZ-Tree, ils sont les siens.
 
 ## Platane commun (*Platanus × hispanica*)
@@ -491,3 +491,34 @@ Durzo, puis, si elle est acceptée :
   Écorce `tree_bark_03` teintée gris (`#b8b4ac`). Feuillage : forme `tulip` (dessinée pour lui), `#5a923e` à
   `#669e47`.
 - **Références** : Commons, catégorie « Liriodendron tulipifera » (port, feuilles, écorce).
+
+
+## Palmier — palmier à éventails (*Trachycarpus fortunei*, *Chamaerops humilis*, *Washingtonia*, *Livistona*, *Sabal*)
+
+- **Silhouette** : 3 à 12 m (le Washingtonia jusqu'à 20), un seul stipe élancé (le Chamaerops souvent en touffe)
+  sous une tête ronde d'éventails raides ; jardins, squares et fronts de mer du Midi et de la côte Atlantique.
+- **Tronc** : un « stipe », sans branche, 0,15 à 0,3 m, égal du pied à la cime ; gainé de FIBRES brun foncé et des
+  bases des vieilles feuilles (Trachycarpus), annelé une fois nu.
+- **Feuilles** : en ÉVENTAIL (palmées), 0,5 à 1 m de large, fendues en 30 à 50 segments raides et plissés, leurs
+  pointes retombantes ; sur un long pétiole fin ; vert sombre dessus, grisâtres dessous. Les vieilles pendent sous la
+  couronne avant de tomber. Persistantes.
+- **Dans EZ-Tree** : notre ajout `fronds` (« Les mises à jour d'EZ-Tree ») : un tronc sans branche (niveaux 0, long
+  de 30, épais de 0,9, presque sans effilement) et 24 palmes à sa cime, longues de 13, larges de 11, levées de 5 à
+  85°, un peu courbées (droop 0,09), tournées pour se présenter de face (turn 70). Stipe DESSINÉ (`palmBark`, fibreux).
+  Palme DESSINÉE (`palmFrond`, un éventail au bout d'un pétiole nu), `#3f6e3a` à `#487a42`.
+- **Références** : Commons, catégories « Trachycarpus fortunei », « Chamaerops humilis » et « Washingtonia
+  robusta » (port, feuilles, stipe).
+
+## Dattier — palmier dattier (*Phoenix canariensis*, *P. dactylifera*, et les palmiers pennés *Butia*, *Syagrus*)
+
+- **Silhouette** : 8 à 15 m, un stipe ÉPAIS et droit sous une couronne ronde et dense de longues palmes arquées, les
+  plus vieilles pendantes ; le palmier des Canaries des avenues de la Côte d'Azur.
+- **Tronc** : 0,6 à 1 m (P. canariensis), droit, gris-brun, couvert des cicatrices en losange des anciennes bases de
+  feuilles, en anneaux ; souvent un « ananas » de ces bases sous la couronne.
+- **Feuilles** : pennées, 4 à 6 m, 150 à 200 folioles étroites et raides de chaque côté, inclinées vers l'avant, les
+  plus basses changées en épines ; vert sombre (canariensis) à vert-gris (dactylifera). Persistantes.
+- **Dans EZ-Tree** : notre ajout `fronds` : un tronc sans branche (niveaux 0, long de 30, épais de 2,2) et 40 palmes
+  à sa cime, longues de 21, larges de 6, levées de −20 à 72°, arquées (droop 0,12) sur 12 segments, chacune croisée
+  d'un second ruban (du volume vue de profil). Stipe DESSINÉ (`palmBark`, annelé, cicatrices en losange). Palme
+  DESSINÉE (`palmFrond`, pennée : un rachis et des folioles étroites inclinées vers l'avant).
+- **Références** : Commons, catégories « Phoenix canariensis » et « Phoenix dactylifera » (port, feuilles, stipe).

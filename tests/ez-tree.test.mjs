@@ -50,7 +50,8 @@ const size = (o) => new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3(
 for (const name of Object.keys(SPECIES)) {
   test(`${name}: a whole tree, light enough, its foliage drawn`, () => {
     const t = generateSpeciesTree(name, 1, { makeCanvas: fakeCanvas });
-    assert.ok(t.triangleCount > 3000 && t.triangleCount < 40000, `${t.triangleCount} triangles`);
+    // A palm is light (a trunk, a few dozen fronds: 480 and 2 160 measured); a tree with branches far less so.
+    assert.ok(t.triangleCount > (SPECIES[name].type === 'palmier' ? 300 : 3000) && t.triangleCount < 40000, `${t.triangleCount} triangles`);
     assert.ok(t.leavesMesh.material.map && t.leavesMesh.material.map.image.width === 512);
     // Read as they are (the application's renderer does not re-encode in sRGB): sRGB gave black trunks, seen.
     assert.equal(t.leavesMesh.material.map.encoding, THREE.LinearEncoding);
@@ -196,4 +197,22 @@ test('our additions to EZ-Tree (#485): a level\'s droop bends it down, hanging l
   const tipsBelow = (t) => { const v = t.leaves.verts; let n = 0, all = 0; for (let q = 0; q + 12 <= v.length; q += 12) { all++; if (v[q + 1] < v[q + 4]) n++; } return n / all; };
   const hanging = grow(o => { o.leaves.hang = 0.95; });
   assert.ok(tipsBelow(hanging) > 0.95 && tipsBelow(plain) < 0.7, `${tipsBelow(hanging)} of hanging leaves point down, ${tipsBelow(plain)} of the others`);
+});
+
+test('our palms (#485): fronds only at the top of a bare trunk, none by default; a fan palm and a date palm by genus', () => {
+  for (const name of ['Palmier', 'Dattier']) {
+    const t = generateSpeciesTree(name, 1, { makeCanvas: fakeCanvas });
+    const box = new THREE.Box3().setFromObject(t), h = box.max.y - box.min.y;
+    const pos = t.leavesMesh.geometry.attributes.position;
+    assert.ok(pos.count > 100, `${name}: its fronds (${pos.count} vertices)`);
+    let low = Infinity; for (let i = 0; i < pos.count; i++) low = Math.min(low, pos.getY(i));
+    assert.ok((low - box.min.y) / h > (name === 'Dattier' ? 0.25 : 0.5), `${name}: its crown above its bare trunk (${((low - box.min.y) / h).toFixed(2)})`);
+  }
+  const plain = new Tree(new TreeOptions());
+  plain.options.copy(structuredClone(TREE_PRESETS['Oak Small'])); plain.generate();
+  assert.equal(plain.options.fronds.count, 0);
+  assert.equal(speciesFor('palmier', 'Chamaerops'), 'Palmier');
+  assert.equal(speciesFor('palmier', 'Trachycarpus'), 'Palmier');
+  assert.equal(speciesFor('palmier', 'Phoenix'), 'Dattier');
+  assert.equal(speciesFor('palmier', null), null, 'two palms: none without its genus');
 });

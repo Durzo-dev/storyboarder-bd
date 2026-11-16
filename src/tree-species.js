@@ -73,6 +73,64 @@ function birchBark({ seed = 1, makeCanvas = domCanvas } = {}){
   return c;
 }
 
+/**
+ * A palm's trunk (its « stipe »), DRAWN: rings of old leaf bases across it (u, the canvas' x, goes round it), the
+ * fan palms' wrapped in dark fibres (`fibrous`: Trachycarpus, Chamaerops).
+ */
+function palmBark({ seed = 1, fibrous = false, makeCanvas = domCanvas } = {}){
+  const c = makeCanvas(256);
+  const ctx = c.getContext('2d'), rnd = rng(seed);
+  ctx.fillStyle = fibrous ? '#5a4632' : '#8a7a62'; ctx.fillRect(0, 0, 256, 256);
+  for (let y = 0; y < 256; y += 16) {
+    ctx.fillStyle = fibrous ? '#3e2f22' : '#6c5d48';
+    ctx.fillRect(0, y, 256, 3 + rnd() * 2);
+    for (let x = rnd() * 32; x < 256; x += 28 + rnd() * 10) {
+      ctx.fillStyle = fibrous ? '#6e5640' : '#9c8c72';
+      ctx.beginPath(); ctx.moveTo(x, y + 4); ctx.lineTo(x + 12, y + 9); ctx.lineTo(x, y + 14); ctx.lineTo(x - 12, y + 9); ctx.closePath(); ctx.fill();
+    }
+  }
+  if (fibrous) {
+    ctx.strokeStyle = '#2e2218'; ctx.globalAlpha = 0.5; ctx.lineWidth = 1;
+    for (let i = 0; i < 160; i++) { const x = rnd() * 256, y = rnd() * 256; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (rnd() - 0.5) * 20, y + 10 + rnd() * 20); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+  }
+  return c;
+}
+
+/**
+ * A palm's frond on a 512 px canvas, its base at the bottom, its tip at the top (EZ-Tree's `fronds`: a strip from
+ * its base, v 0, to its tip, v 1). `pinnate`: a rachis with narrow leaflets both sides, angled forward, shorter
+ * toward the tip (Phoenix); else a fan: a bare stalk, then stiff pleated segments spread from one point (Chamaerops,
+ * Trachycarpus, Washingtonia).
+ */
+function palmFrond({ pinnate = true, colours = ['#4f7f36', '#5a8b3e', '#46732f'], seed = 1, makeCanvas = domCanvas } = {}){
+  const c = makeCanvas(512);
+  const ctx = c.getContext('2d'), rnd = rng(seed);
+  ctx.lineCap = 'round';
+  if (pinnate) {
+    ctx.strokeStyle = '#8a8a4a'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(256, 512); ctx.lineTo(256, 8); ctx.stroke();
+    for (let y = 440; y > 14; y -= 10) {
+      const t = (512 - y) / 512, len = 230 * Math.sin(Math.PI * Math.min(1, t * 1.15)) * (0.85 + rnd() * 0.25);
+      for (const k of [-1, 1]) {
+        ctx.strokeStyle = colours[Math.floor(rnd() * colours.length)]; ctx.lineWidth = 4 + rnd() * 2;
+        ctx.beginPath(); ctx.moveTo(256, y); ctx.lineTo(256 + k * len, y - len * 0.55); ctx.stroke();
+      }
+    }
+  } else {
+    ctx.strokeStyle = '#7a7040'; ctx.lineWidth = 9;
+    ctx.beginPath(); ctx.moveTo(256, 512); ctx.lineTo(256, 250); ctx.stroke();
+    for (let a = -1.45; a <= 1.45; a += 0.075) {
+      const len = 220 + rnd() * 30, ex = 256 + Math.sin(a) * len, ey = 250 - Math.cos(a) * len;
+      ctx.strokeStyle = colours[Math.floor(rnd() * colours.length)]; ctx.lineWidth = 14;
+      ctx.beginPath(); ctx.moveTo(256, 250); ctx.lineTo(ex, ey); ctx.stroke();
+      // The split tips of the segments, hanging a little.
+      ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex + Math.sin(a) * 24, ey + 10); ctx.stroke();
+    }
+  }
+  return c;
+}
+
 /** Leaf shapes, drawn around (0, 0), `s` their half length. */
 const SHAPES = {
   plane(ctx, s, rnd){
@@ -457,6 +515,30 @@ Object.assign(SPECIES, {
     bark: BARK('tree_bark_03'), barkTint: 0xb8b4ac,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'tulip', colours: ['#5a923e', '#669e47', '#508636'], n: 6, size: 66, seed }),
     set(o){ o.branch.angle[1] = 38; o.branch.start[1] = 0.3; o.branch.children[0] = 12; o.leaves.size = 6; o.leaves.count = 14; } },
+});
+
+// The palms (#485): EZ-Tree with our `fronds` (src/vendor/ez-tree/ez-tree.js), a trunk with no branch.
+Object.assign(SPECIES, {
+  Palmier: { from: 'Aspen Small', label: { fr: 'Palmier', en: 'Fan palm' }, type: 'palmier', height: 7,
+    genus: ['Chamaerops', 'Trachycarpus', 'Washingtonia', 'Livistona', 'Sabal'],
+    barkDrawn: (seed, makeCanvas) => palmBark({ seed, fibrous: true, makeCanvas }), barkTint: 0xffffff,
+    foliage: (seed, makeCanvas) => palmFrond({ pinnate: false, colours: ['#3f6e3a', '#487a42', '#386233'], seed, makeCanvas }),
+    set(o){
+      o.type = 'deciduous'; o.branch.levels = 0; o.branch.length[0] = 30; o.branch.radius[0] = 0.9; o.branch.taper[0] = 0.15;
+      o.branch.sections[0] = 12; o.branch.segments[0] = 8; o.branch.gnarliness[0] = 0.03; o.branch.force.strength = 0.003; o.branch.twist[0] = 0;
+      o.leaves.count = 0;   // no leaf along the trunk: the fronds only
+      Object.assign(o.fronds, { count: 24, length: 13, width: 11, riseMin: 5, riseMax: 85, droop: 0.09, segments: 6, variance: 0.12, turn: 70, cross: false });
+    } },
+  Dattier: { from: 'Aspen Small', label: { fr: 'Palmier dattier', en: 'Date palm' }, type: 'palmier', height: 10,
+    genus: ['Phoenix', 'Butia', 'Syagrus', 'Cocos'],
+    barkDrawn: (seed, makeCanvas) => palmBark({ seed, makeCanvas }), barkTint: 0xffffff,
+    foliage: (seed, makeCanvas) => palmFrond({ pinnate: true, seed, makeCanvas }),
+    set(o){
+      o.type = 'deciduous'; o.branch.levels = 0; o.branch.length[0] = 30; o.branch.radius[0] = 2.2; o.branch.taper[0] = 0.1;
+      o.branch.sections[0] = 12; o.branch.segments[0] = 10; o.branch.gnarliness[0] = 0.02; o.branch.force.strength = 0.004; o.branch.twist[0] = 0;
+      o.leaves.count = 0;
+      Object.assign(o.fronds, { count: 40, length: 21, width: 6, riseMin: -20, riseMax: 72, droop: 0.12, segments: 12, variance: 0.15, cross: true });
+    } },
 });
 
 /** The variants of each species (seeds 1 to VARIANTS): enough for a row of trees not to look cloned. */

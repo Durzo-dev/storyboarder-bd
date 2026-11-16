@@ -17,7 +17,13 @@
  *     whatever its radius (the growth force is divided by the radius: a trunk thick enough not to bend leaves its
  *     thin twigs bent the most, never hanging straight while the limbs only arch);
  *   - `leaves.hang` (0 to 1): a leaf turned that far from its twig's way toward hanging straight down (a willow's
- *     strands).
+ *     strands);
+ *   - `fronds` (a palm's crown): `count` fronds grown from the top of the trunk, each a long strip ARCHING from its
+ *     base (`rise`, degrees above level, from `riseMin` for the oldest to `riseMax` for the youngest) and bending
+ *     down as it goes (`droop`, radians a segment); `length`, `width`, `segments`, ±`variance`; `turn`: the strip
+ *     turned about its line (degrees: 0 lies flat, a pinnate frond; ~70 faces out, a fan); `cross`: a second
+ *     strip across the first (volume seen edge on). They go in the leaves' mesh (its material, its drawn texture:
+ *     the frond's base at the texture's bottom, its tip at its top). 0 fronds: none, no random draw.
  * A new version of EZ-Tree: see docs/en/tree-species.md (« EZ-Tree updates »).
  */
 
@@ -84,6 +90,7 @@ export class TreeOptions {
       type: 'oak', billboard: Billboard.Double, angle: 10, count: 1, start: 0, size: 2.5, sizeVariance: 0.7,
       tint: 0xffffff, alphaTest: 0.5, hang: 0,
     };
+    this.fronds = { count: 0, length: 10, width: 2.5, riseMin: -20, riseMax: 70, droop: 0.08, segments: 8, variance: 0.15, turn: 0, cross: true };
     this.trellis = { enabled: false };
   }
 
@@ -202,13 +209,17 @@ export class Tree extends THREE.Group {
 
     this.generateBranchIndices(indexOffset, branch);
 
+    // Ours (#485): a palm's fronds, at the top of its trunk.
+    const palm = branch.level === 0 && o.fronds.count > 0;
+    if (palm) this.generateFronds(sections[sections.length - 1]);
+
     // Deciduous trees: a terminal branch growing out of the end of its parent
     if (o.type === 'deciduous') {
       const lastSection = sections[sections.length - 1];
       if (branch.level < o.branch.levels) {
         this.branchQueue.push(new Branch(lastSection.origin, lastSection.orientation, o.branch.length[branch.level + 1],
           lastSection.radius, branch.level + 1, branch.sectionCount, branch.segmentCount));
-      } else {
+      } else if (!palm) {
         this.generateLeaf(lastSection.origin, lastSection.orientation);
       }
     }
@@ -266,6 +277,57 @@ export class Tree extends THREE.Group {
         orientation = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromEuler(orientation).slerp(hanging, o.leaves.hang));
       }
       this.generateLeaf(at.origin, orientation);
+    }
+  }
+
+  /**
+   * Ours (#485): a palm's crown, around the top of its trunk (`top`: its last section). The fronds go round by the
+   * golden angle, the youngest standing up, the oldest hanging: each a strip of `segments` quads along an arching
+   * line, its texture's v from its base (0) to its tip (1).
+   */
+  generateFronds(top) {
+    const f = this.options.fronds;
+    const up = new THREE.Vector3(0, 1, 0);
+    const axis = up.clone().applyEuler(top.orientation);
+    for (let i = 0; i < f.count; i++) {
+      const age = this.rng.random();
+      const turn = i * 2.39996 + this.rng.random(0.3, -0.3);
+      const rise = THREE.MathUtils.degToRad(f.riseMax + (f.riseMin - f.riseMax) * age + this.rng.random(8, -8));
+      const length = f.length * (1 + this.rng.random(f.variance, -f.variance));
+      const out = new THREE.Vector3(Math.cos(turn), 0, Math.sin(turn));
+      const dir = out.clone().multiplyScalar(Math.cos(rise)).addScaledVector(up, Math.sin(rise)).normalize();
+      const side = new THREE.Vector3().crossVectors(dir, up).normalize();
+      if (side.lengthSq() < 1e-6) side.set(-Math.sin(turn), 0, Math.cos(turn));
+      const spine = [top.origin.clone().addScaledVector(out, top.radius * 0.6).addScaledVector(axis, -top.radius * 0.3)];
+      const step = length / f.segments;
+      for (let k = 0; k < f.segments; k++) {
+        const p = spine[k].clone().addScaledVector(dir, step);
+        spine.push(p);
+        dir.applyAxisAngle(side, -f.droop).normalize();
+      }
+      const along = spine[spine.length - 1].clone().sub(spine[0]).normalize();
+      const face = side.clone().applyAxisAngle(along, THREE.MathUtils.degToRad(f.turn));
+      this.frondStrip(spine, face, f.width);
+      // Across the first: turned a quarter round about the line from the spine's start to its end.
+      if (f.cross) this.frondStrip(spine, face.clone().applyAxisAngle(along, Math.PI / 2), f.width * 0.8);
+    }
+  }
+
+  /** Ours (#485): a strip along `spine` (points), `width` wide across `side`, its v from 0 at its base to 1. */
+  frondStrip(spine, side, width) {
+    const i = this.leaves.verts.length / 3;
+    const n = spine.length - 1;
+    for (let k = 0; k <= n; k++) {
+      const a = spine[k].clone().addScaledVector(side, -width / 2), b = spine[k].clone().addScaledVector(side, width / 2);
+      const along = spine[Math.min(k + 1, n)].clone().sub(spine[Math.max(k - 1, 0)]).normalize();
+      const normal = new THREE.Vector3().crossVectors(side, along).normalize();
+      this.leaves.verts.push(a.x, a.y, a.z, b.x, b.y, b.z);
+      this.leaves.normals.push(normal.x, normal.y, normal.z, normal.x, normal.y, normal.z);
+      this.leaves.uvs.push(0, k / n, 1, k / n);
+    }
+    for (let k = 0; k < n; k++) {
+      const a = i + 2 * k;
+      this.leaves.indices.push(a, a + 1, a + 3, a, a + 3, a + 2);
     }
   }
 

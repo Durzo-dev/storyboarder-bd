@@ -45,8 +45,8 @@ then, if accepted:
 2. Measure the fingerprints of its presets with the new version, in a browser, and update them in
    `tests/ez-tree.test.mjs`: the test checks the copy grows the very trees of EZ-Tree.
 3. Look at our species again: a change of growth changes their silhouettes.
-4. Carry over OUR ADDITIONS (listed at the top of the file, marked « Ours (#485) » in the code): `branch.droop` and
-   `leaves.hang`, neutral by default (the fingerprints are measured without them), and tested in
+4. Carry over OUR ADDITIONS (listed at the top of the file, marked « Ours (#485) » in the code): `branch.droop`,
+   `leaves.hang` and `fronds` (a palm's crown), neutral by default (the fingerprints are measured without them), and tested in
    `tests/ez-tree.test.mjs`. They are meant for a pull request to EZ-Tree; once EZ-Tree has them, they are its own.
 
 ## Platane — London plane (*Platanus × hispanica*)
@@ -473,3 +473,33 @@ then, if accepted:
 - **In EZ-Tree**: from « Ash Large »; branches from 30 %, angle 38, 12 branches; leaves size 6, 14. Bark
   `tree_bark_03` tinted grey (`#b8b4ac`). Foliage: shape `tulip` (drawn for it), `#5a923e` to `#669e47`.
 - **References**: Commons, category « Liriodendron tulipifera » (habit, leaves, bark).
+
+
+## Palmier — Fan palm (*Trachycarpus fortunei*, *Chamaerops humilis*, *Washingtonia*, *Livistona*, *Sabal*)
+
+- **Silhouette**: 3 to 12 m (the Washingtonia up to 20), a single slim trunk (Chamaerops often a clump) under a
+  round head of stiff fans; gardens, squares and seafronts of the South and the West coast.
+- **Trunk**: a « stipe », no branch, 0.15 to 0.3 m, even from foot to top; wrapped in dark brown FIBRES and old leaf
+  bases (Trachycarpus), ringed when bare.
+- **Leaves**: palmate FANS 0.5 to 1 m across, split into 30 to 50 stiff pleated segments, their tips hanging; on a
+  long slender stalk; dark green above, greyish under. The old ones hang below the crown before falling. Evergreen.
+- **In EZ-Tree**: our `fronds` addition (« EZ-Tree updates »): a trunk with no branch (levels 0, 30 long, 0.9
+  thick, hardly tapering) and 24 fronds at its top, 13 long, 11 wide, rising from 5 to 85°, bending a little
+  (droop 0.09), turned to face out (turn 70). Trunk DRAWN (`palmBark`, fibrous). Frond DRAWN (`palmFrond`, a fan
+  on a bare stalk), `#3f6e3a` to `#487a42`.
+- **References**: Commons, categories « Trachycarpus fortunei », « Chamaerops humilis » and « Washingtonia
+  robusta » (habit, leaves, trunk).
+
+## Dattier — Date palm (*Phoenix canariensis*, *P. dactylifera*, and the pinnate palms *Butia*, *Syagrus*)
+
+- **Silhouette**: 8 to 15 m, a THICK straight trunk under a dense round crown of long arching fronds, the oldest
+  hanging; the Canary date palm of the Riviera's avenues.
+- **Trunk**: 0.6 to 1 m (P. canariensis), straight, grey-brown, patterned all over with the diamond scars of the old
+  leaf bases, in rings; often a « pineapple » of them under the crown.
+- **Leaves**: pinnate, 4 to 6 m, 150 to 200 narrow stiff leaflets each side, angled forward, the lowest turned into
+  spines; dark green (canariensis) to grey-green (dactylifera). Evergreen.
+- **In EZ-Tree**: our `fronds` addition: a trunk with no branch (levels 0, 30 long, 2.2 thick) and 40 fronds at its
+  top, 21 long, 6 wide, rising from −20 to 72°, arching (droop 0.12) over 12 segments, each crossed by a second
+  strip (volume seen edge on). Trunk DRAWN (`palmBark`, ringed, diamond scars). Frond DRAWN (`palmFrond`, pinnate:
+  a rachis and narrow leaflets angled forward).
+- **References**: Commons, categories « Phoenix canariensis » and « Phoenix dactylifera » (habit, leaves, trunk).
