@@ -12,7 +12,11 @@
  * `makeCanvas(size)` (a DOM canvas in the application; tests give their own), so this module runs anywhere.
  */
 
-/** Poly Haven's barks (CC0): the asset's identifier (https://polyhaven.com/a/<id>). */
+/**
+ * Poly Haven's barks (CC0): the asset's identifier (https://polyhaven.com/a/<id>). A species may instead have its
+ * bark DRAWN (`barkDrawn(seed, makeCanvas)`, no file). `barkGain` (1 by default) lightens a bark darker than the
+ * species' real one (its tint times the gain: colours above white).
+ */
 const BARK = (id) => id;
 
 /**
@@ -35,6 +39,33 @@ function rng(seed){
 function shade(hex, k){
   const n = parseInt(hex.slice(1), 16);
   return '#' + [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.max(0, Math.min(255, Math.round(v * k))).toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * A birch's bark, DRAWN (no CC0 photo of a white birch bark on Poly Haven, 16 Nov. 2026): chalk white, grey
+ * streaks along the trunk, short dark lenticels ACROSS it (u, the canvas' x, goes round the branch) and a few
+ * black patches. Its colours are those of Commons' photos of Betula pendula.
+ */
+function birchBark({ seed = 1, makeCanvas = domCanvas } = {}){
+  const c = makeCanvas(256);
+  const ctx = c.getContext('2d'), rnd = rng(seed);
+  ctx.fillStyle = '#e6e3da'; ctx.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 40; i++) {
+    ctx.fillStyle = rnd() < 0.5 ? '#d4d0c6' : '#f2f0ea';
+    ctx.globalAlpha = 0.5; ctx.fillRect(rnd() * 256, 0, 2 + rnd() * 6, 256); ctx.globalAlpha = 1;
+  }
+  ctx.fillStyle = '#3a3632';
+  for (let i = 0; i < 70; i++) {
+    const x = rnd() * 256, y = rnd() * 256, w = 6 + rnd() * 22;
+    ctx.fillRect(x, y, w, 1.5 + rnd() * 2);
+    if (x + w > 256) ctx.fillRect(x - 256, y, w, 2);
+  }
+  for (let i = 0; i < 5; i++) {
+    const x = rnd() * 256, y = rnd() * 256, w = 14 + rnd() * 26, h = 8 + rnd() * 16;
+    ctx.fillStyle = '#26231f';
+    ctx.beginPath(); ctx.moveTo(x - w / 2, y); ctx.lineTo(x, y - h / 2); ctx.lineTo(x + w / 2, y); ctx.lineTo(x, y + h / 2); ctx.closePath(); ctx.fill();
+  }
+  return c;
 }
 
 /** Leaf shapes, drawn around (0, 0), `s` their half length. */
@@ -185,7 +216,7 @@ function cypressSpray({ colours = ['#2f4f27', '#3a5f2e', '#456d33'], tip = '#7d9
 }
 
 /** A pine's shoot: needles in pairs, long, in tufts at the twigs' ends (Pinus sylvestris, pinaster). */
-function needleTuft({ colours = ['#3d5f2c', '#46693a', '#52763c'], seed = 1, makeCanvas = domCanvas } = {}){
+function needleTuft({ colours = ['#5a8442', '#66904c', '#73a056'], seed = 1, makeCanvas = domCanvas } = {}){
   const c = makeCanvas(512);
   const ctx = c.getContext('2d'), rnd = rng(seed);
   ctx.lineCap = 'round';
@@ -207,7 +238,7 @@ function needleTuft({ colours = ['#3d5f2c', '#46693a', '#52763c'], seed = 1, mak
 }
 
 /** A fir's or a spruce's spray: flat, branching twice, short needles combed out on both sides (Abies, Picea). */
-function firSpray({ colours = ['#2c4a2a', '#345633', '#3c5f37'], under = '#5f7f5a', seed = 1, makeCanvas = domCanvas } = {}){
+function firSpray({ colours = ['#4a7444', '#55804e', '#618c58'], under = '#7f9f7a', seed = 1, makeCanvas = domCanvas } = {}){
   const c = makeCanvas(512);
   const ctx = c.getContext('2d'), rnd = rng(seed);
   ctx.lineCap = 'round';
@@ -240,9 +271,9 @@ function firSpray({ colours = ['#2c4a2a', '#345633', '#3c5f37'], under = '#5f7f5
  * (`foliage(seed, makeCanvas)`). */
 export const SPECIES = {
   Platane: { from: 'Oak Large', label: { fr: 'Platane', en: 'Plane' }, type: 'arbre', height: 18, genus: 'Platanus',
-    bark: BARK('bark_platanus'), barkTint: 0xffffff,
+    bark: BARK('bark_platanus'), barkTint: 0xffffff, barkGain: 1.6,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'plane', colours: ['#4f8a3e', '#5a9445', '#467d37'], n: 6, size: 110, seed }),
-    set(o){ o.branch.length[0] = 60; o.branch.angle[1] = 40; o.branch.children[0] = 8; o.branch.radius[0] = 3.4; o.branch.force.strength = 0.015; o.leaves.size = 8; o.leaves.count = 12; } },
+    set(o){ o.branch.length[0] = 60; o.branch.angle[1] = 40; o.branch.children[0] = 8; o.branch.radius[0] = 3.4; o.branch.force.strength = 0.015; o.leaves.size = 5.5; o.leaves.count = 20; } },
   Tilleul: { from: 'Ash Large', label: { fr: 'Tilleul', en: 'Linden' }, type: 'arbre', height: 14, genus: 'Tilia',
     bark: BARK('tree_bark_03'), barkTint: 0xd8d4cc,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'linden', colours: ['#4e8a35', '#5c9a3f', '#447a2f'], n: 7, size: 62, seed }),
@@ -292,9 +323,9 @@ export const SPECIES = {
       o.leaves.size = 4.5; o.leaves.count = 24; o.leaves.start = 0.2;
     } },
   Peuplier: { from: 'Aspen Large', label: { fr: 'Peuplier', en: 'Poplar' }, type: 'arbre', height: 25, genus: 'Populus',
-    bark: BARK('bark_willow'), barkTint: 0xd4d4cc,
+    bark: BARK('bark_willow'), barkTint: 0xd4d4cc, barkGain: 2.2,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'delta', colours: ['#5b8f42', '#66994a', '#4f803a'], n: 7, size: 60, seed }),
-    set(o){ o.branch.angle[1] = 28; o.branch.length[1] = 24; o.branch.children[0] = 14; o.leaves.size = 6; o.leaves.count = 20; } },
+    set(o){ o.branch.start[1] = 0.3; o.branch.angle[1] = 28; o.branch.length[1] = 24; o.branch.children[0] = 14; o.leaves.size = 6; o.leaves.count = 20; o.leaves.start = 0.1; } },
   Robinier: { from: 'Aspen Medium', label: { fr: 'Robinier', en: 'Black locust' }, type: 'arbre', height: 15, genus: 'Robinia',
     bark: BARK('japanese_camphor_bark'), barkTint: 0xffffff,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#6a9a4a', '#76a653', '#5e8c42'], n: 9, size: 34, opposite: true, spread: 0.5, seed }),
@@ -308,7 +339,7 @@ export const SPECIES = {
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#557f3c', '#5f8b44', '#4c7335'], under: '#9db089', n: 8, size: 50, seed }),
     set(o){ o.branch.angle[1] = 55; o.branch.children[0] = 6; o.branch.gnarliness[1] = 0.3; o.branch.force.strength = -0.01; o.leaves.size = 4.2; o.leaves.count = 22; } },
   Bouleau: { from: 'Aspen Medium', label: { fr: 'Bouleau', en: 'Birch' }, type: 'arbre', height: 15, genus: 'Betula',
-    bark: BARK('japanese_sycamore'), barkTint: 0xffffff,
+    barkDrawn: (seed, makeCanvas) => birchBark({ seed, makeCanvas }), barkTint: 0xffffff,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'delta', colours: ['#6c9c48', '#78a852', '#5f8e40'], n: 9, size: 40, seed }),
     set(o){ o.branch.angle[1] = 32; o.branch.force.strength = 0.006; o.leaves.size = 3.6; o.leaves.count = 22; } },
   Hetre: { from: 'Oak Large', label: { fr: 'Hêtre', en: 'Beech' }, type: 'arbre', height: 25, genus: 'Fagus',

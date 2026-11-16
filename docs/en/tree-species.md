@@ -28,7 +28,9 @@ When a Scene is created from a place (Detailed and Realistic levels), a tree who
 tags, else drawn from the flora) is given that species (`essence`), a variant drawn from its place and, without a
 measured height, the species' usual one (±15 %). It takes no model of the bank nor of the stores.
 
-Barks are loaded after the first drawing (an image each, `assets/textures/ecorce-*.jpg`). ⚠️ A Panel's image is
+A bark is a Poly Haven photo (`bark`, shipped as `assets/textures/ecorce-*.jpg`) or drawn in code (`barkDrawn`, the birch's:
+no photo of a white birch bark there); `barkGain` lightens one darker than the real bark (its tint times the gain).
+Photo barks are loaded after the first drawing (an image each). ⚠️ A Panel's image is
 cached by a signature of what it shows: `barkSettled(species)` enters it, so a Panel drawn before its trees' bark
 arrived is drawn again once it has arrived (or is found missing). Without it, the first Panel kept branches drawn
 from an empty texture: transparent, plain white over the page.
@@ -52,8 +54,8 @@ then, if accepted:
 - **Branches**: big limbs rising at a slant (40 to 50°), then spreading.
 - **Leaves**: palmate, 3 to 5 pointed lobes, deep sinuses, a few teeth; 12 to 25 cm; alternate; mid green above,
   paler under. Deciduous.
-- **In EZ-Tree**: from « Oak Large »; long trunk (60), angle 40, 8 branches, radius 3.4; dense foliage (size 8,
-  12 a twig). Bark `bark_platanus` (the real one). Foliage `leafTwig` shape `plane`, greens `#4f8a3e` to
+- **In EZ-Tree**: from « Oak Large »; long trunk (60), angle 40, 8 branches, radius 3.4; dense foliage (size 5.5,
+  20 a twig). Bark `bark_platanus` (the real one), lightened (gain 1.6: the real bark is pale and mottled). Foliage `leafTwig` shape `plane`, greens `#4f8a3e` to
   `#5a9445`.
 - **References**: Commons, « Fallen leaf of Platanus x hispanica (1).jpg », « Leafless London plane tree
   (Platanus × hispanica) », « Plane trees in Sóller being pruned ».
@@ -176,7 +178,7 @@ then, if accepted:
   twigs' ends. Evergreen.
 - **In EZ-Tree**: from « Pine Large », but with branches of two levels (the preset is a spruce's cone): 14 branches
   from 60 %, level (88°), 34 long, hardly lifted (force 0.004), 5 twigs each; leaves size 4.5, 24. Bark
-  `pine_bark`. Foliage `needleTuft` (needles in pairs, in tufts), `#3d5f2c` to `#52763c`.
+  `pine_bark`. Foliage `needleTuft` (needles in pairs, in tufts), `#5a8442` to `#73a056`.
 - **References**: Commons, categories « Pinus sylvestris » and « Pinus pinaster » (habit, needles, bark).
 
 ## Peuplier — Black poplar (*Populus nigra*, its « Italica » column, and the hybrid poplars)
@@ -186,8 +188,8 @@ then, if accepted:
 - **Branches**: steeply ascending (20 to 30°), all along the trunk.
 - **Leaves**: a triangle (deltoid), broad straight base, pointed tip, finely toothed, long flat stalk (they
   tremble); 5 to 10 cm; alternate; bright green; yellow in autumn. Deciduous.
-- **In EZ-Tree**: from « Aspen Large »; angle 28, 14 branches 24 long; leaves size 6, 20. Bark `bark_willow` tinted
-  grey (`#d4d4cc`). Foliage shape `delta`, `#5b8f42` to `#66994a`.
+- **In EZ-Tree**: from « Aspen Large »; branches from 30 %, angle 28, 14 branches 24 long; leaves size 6, 20, from 10 %. Bark
+  `bark_willow` tinted grey (`#d4d4cc`), lightened (gain 2.2). Foliage shape `delta`, `#5b8f42` to `#66994a`.
 - **References**: Commons, categories « Populus nigra » and « Populus nigra 'Italica' » (habit, leaves).
 
 ## Robinier — Black locust (*Robinia pseudoacacia*)
@@ -235,7 +237,7 @@ then, if accepted:
 - **Leaves**: triangular-ovate, pointed, doubly toothed; 3 to 7 cm; alternate; light green; golden yellow in
   autumn. Deciduous.
 - **In EZ-Tree**: from « Aspen Medium »; angle 32, hardly lifted (force 0.006); leaves size 3.6, 22. Bark
-  `japanese_sycamore` (pale, mottled; no white birch bark on Poly Haven). Foliage shape `delta`, small, `#6c9c48`
+  DRAWN (`birchBark`: chalk white, dark lenticels across the trunk, a few black patches; no white birch bark on Poly Haven). Foliage shape `delta`, small, `#6c9c48`
   to `#78a852`.
 - **References**: Commons, category « Betula pendula » (habit, leaves, bark).
 
@@ -271,6 +273,6 @@ then, if accepted:
 - **Leaves**: short needles (1 to 3 cm), the fir's flat in two combs with two white lines beneath, the spruce's
   all round its twig; dark green. Evergreen.
 - **In EZ-Tree**: from « Pine Medium » (its cone), straight and even (gnarliness 0.01 and 0.03, no push, no twist); leaves size 4. Bark `knotted_pine_bark` tinted grey (`#b8b4ac`).
-  Foliage `firSpray` (a flat spray branching twice, needles combed on both sides), `#2c4a2a` to `#3c5f37`, some
-  showing their pale side (`#5f7f5a`).
+  Foliage `firSpray` (a flat spray branching twice, needles combed on both sides), `#4a7444` to `#618c58`, some
+  showing their pale side (`#7f9f7a`).
 - **References**: Commons, categories « Abies alba » and « Picea abies » (habit, twigs, bark).

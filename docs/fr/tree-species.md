@@ -29,7 +29,10 @@ essence (étiquettes OSM, sinon tiré de la flore) reçoit cette essence (`essen
 et, sans hauteur mesurée, la hauteur habituelle de l'essence (±15 %). Il ne prend aucun modèle de la banque ni des
 stores.
 
-Les écorces arrivent après le premier dessin (une image chacune, `assets/textures/ecorce-*.jpg`). ⚠️ L'image d'une
+Une écorce est une photo de Poly Haven (`bark`, livrée en `assets/textures/ecorce-*.jpg`) ou dessinée par le code
+(`barkDrawn`, celle du bouleau : pas de photo d'écorce de bouleau blanc là-bas) ; `barkGain` éclaircit une écorce plus
+sombre que la vraie (sa teinte multipliée par le gain). Les écorces en photo arrivent après le premier dessin (une image
+chacune). ⚠️ L'image d'une
 Case est gardée en cache selon une signature de ce qu'elle montre : `barkSettled(essence)` y entre, pour qu'une Case
 dessinée avant l'arrivée de l'écorce de ses arbres soit redessinée une fois celle-ci arrivée (ou constatée absente).
 Sans cela, la première Case gardait des branches dessinées d'une texture vide : transparentes, blanc uni sur la page.
@@ -55,7 +58,7 @@ Durzo, puis, si elle est acceptée :
 - **Feuilles** : palmées, 3 à 5 lobes pointus, sinus marqués, quelques dents ; 12 à 25 cm ; alternes ; vert
   moyen dessus, plus clair dessous. Caduques.
 - **Dans EZ-Tree** : départ « Oak Large » ; tronc long (60), angle 40, 8 branches, rayon 3,4 ; feuillage dense
-  (taille 8, 12 par rameau). Écorce `bark_platanus` (la vraie). Feuillage `leafTwig` forme `plane`, verts
+  (taille 5,5, 20 par rameau). Écorce `bark_platanus` (la vraie), éclaircie (gain 1,6 : la vraie est pâle et marbrée). Feuillage `leafTwig` forme `plane`, verts
   `#4f8a3e` à `#5a9445`.
 - **Références** : Commons, « Fallen leaf of Platanus x hispanica (1).jpg », « Leafless London plane tree
   (Platanus × hispanica) », « Plane trees in Sóller being pruned ».
@@ -182,7 +185,7 @@ Durzo, puis, si elle est acceptée :
 - **Dans EZ-Tree** : départ « Pine Large », mais avec des branches sur deux niveaux (le modèle est un cône
   d'épicéa) : 14 branches dès 60 %, horizontales (88°), longues de 34, à peine relevées (force 0,004), 5 rameaux
   chacune ; feuilles taille 4,5, 24. Écorce `pine_bark`. Feuillage `needleTuft` (aiguilles par deux, en touffes),
-  `#3d5f2c` à `#52763c`.
+  `#5a8442` à `#73a056`.
 - **Références** : Commons, catégories « Pinus sylvestris » et « Pinus pinaster » (port, aiguilles, écorce).
 
 ## Peuplier (*Populus nigra*, sa colonne « Italica », et les peupliers hybrides)
@@ -193,8 +196,8 @@ Durzo, puis, si elle est acceptée :
 - **Branches** : très montantes (20 à 30°), tout le long du tronc.
 - **Feuilles** : un triangle (deltoïde), base large et droite, pointe aiguë, finement dentées, long pétiole aplati
   (elles tremblent) ; 5 à 10 cm ; alternes ; vert vif ; jaunes à l'automne. Caduques.
-- **Dans EZ-Tree** : départ « Aspen Large » ; angle 28, 14 branches longues de 24 ; feuilles taille 6, 20. Écorce
-  `bark_willow` teintée gris (`#d4d4cc`). Feuillage forme `delta`, `#5b8f42` à `#66994a`.
+- **Dans EZ-Tree** : départ « Aspen Large » ; branches dès 30 %, angle 28, 14 branches longues de 24 ; feuilles taille 6, 20, dès
+  10 %. Écorce `bark_willow` teintée gris (`#d4d4cc`), éclaircie (gain 2,2). Feuillage forme `delta`, `#5b8f42` à `#66994a`.
 - **Références** : Commons, catégories « Populus nigra » et « Populus nigra 'Italica' » (port, feuilles).
 
 ## Robinier (*Robinia pseudoacacia*)
@@ -243,7 +246,7 @@ Durzo, puis, si elle est acceptée :
 - **Feuilles** : triangulaires-ovales, pointues, doublement dentées ; 3 à 7 cm ; alternes ; vert clair ; jaune d'or
   à l'automne. Caduques.
 - **Dans EZ-Tree** : départ « Aspen Medium » ; angle 32, à peine relevé (force 0,006) ; feuilles taille 3,6, 22.
-  Écorce `japanese_sycamore` (pâle, marbrée ; pas d'écorce de bouleau blanc chez Poly Haven). Feuillage forme
+  Écorce DESSINÉE (`birchBark` : blanc craie, lenticelles sombres en travers du tronc, quelques plaques noires ; pas d'écorce de bouleau blanc chez Poly Haven). Feuillage forme
   `delta`, petite, `#6c9c48` à `#78a852`.
 - **Références** : Commons, catégorie « Betula pendula » (port, feuilles, écorce).
 
@@ -282,5 +285,5 @@ Durzo, puis, si elle est acceptée :
   dessous, celles de l'épicéa tout autour du rameau ; vert sombre. Persistantes.
 - **Dans EZ-Tree** : départ « Pine Medium » (son cône), droit et régulier (tortuosité 0,01 et 0,03, sans poussée ni torsion) ; feuilles taille 4. Écorce `knotted_pine_bark` teintée gris
   (`#b8b4ac`). Feuillage `firSpray` (un rameau plat ramifié deux fois, aiguilles en peigne des deux côtés),
-  `#2c4a2a` à `#3c5f37`, quelques-unes montrant leur revers pâle (`#5f7f5a`).
+  `#4a7444` à `#618c58`, quelques-unes montrant leur revers pâle (`#7f9f7a`).
 - **Références** : Commons, catégories « Abies alba » et « Picea abies » (port, rameaux, écorce).

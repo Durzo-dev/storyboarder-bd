@@ -11,7 +11,7 @@ import * as THREE from 'three';
 globalThis.THREE = THREE;
 const { Tree, TreeOptions, EZ_TREE_VERSION } = await import('../src/vendor/ez-tree/ez-tree.js');
 const { TREE_PRESETS } = await import('../src/vendor/ez-tree/presets.js');
-const { generateSpeciesTree, speciesTree, barkRepeat, speciesOptions, crownOf } = await import('../src/ez-trees.js');
+const { generateSpeciesTree, speciesTree, barkRepeat, speciesOptions, crownOf, barkColour } = await import('../src/ez-trees.js');
 const { SPECIES, speciesFor, speciesOfType } = await import('../src/tree-species.js');
 
 /** A canvas that draws nothing (Node has none): every method of its context does nothing. */
@@ -153,4 +153,17 @@ test('the rig\'s box is centred on the trunk (the render centres the box on the 
     const c = box.getCenter(new THREE.Vector3());
     assert.ok(Math.abs(c.x) < 1e-6 && Math.abs(c.z) < 1e-6, `${name}: ${c.x}, ${c.z}`);
   }
+});
+
+test('a bark lightened: the plane\'s and the poplar\'s above white, the others at their tint', () => {
+  assert.ok(barkColour(SPECIES.Platane).r > 1.5 && barkColour(SPECIES.Peuplier).g > 1.2);
+  assert.equal(barkColour(SPECIES.Tilleul).getHex(), SPECIES.Tilleul.barkTint);
+  const bark = new THREE.Texture();
+  const t = generateSpeciesTree('Platane', 1, { makeCanvas: fakeCanvas, barkTexture: () => bark });
+  let m; t.traverse(o => { if (o.isMesh && o.material.name === 'branches') m = o.material; });
+  assert.ok(Math.abs(m.color.r - 1.6) < 1e-6, 'the gain reaches the material');
+});
+
+test('every species has its bark: a Poly Haven asset, or one drawn', () => {
+  for (const [name, sp] of Object.entries(SPECIES)) assert.ok(!!sp.bark !== !!sp.barkDrawn, name);
 });

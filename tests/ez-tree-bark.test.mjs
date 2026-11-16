@@ -10,15 +10,15 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 
 globalThis.THREE = THREE;
-const images = [];
-globalThis.document = {};
-globalThis.Image = class { constructor(){ images.push(this); } };
-const { generateSpeciesTree, barkSettled } = await import('../src/ez-trees.js');
-
 const fakeCanvas = (size) => {
   const ctx = new Proxy({}, { get: (o, k) => (k in o ? o[k] : () => ({ addColorStop() {} })), set: (o, k, v) => { o[k] = v; return true; } });
   return { width: size, height: size, getContext: () => ctx };
 };
+const images = [];
+globalThis.document = { createElement: () => fakeCanvas(256) };
+globalThis.Image = class { constructor(){ images.push(this); } };
+const { generateSpeciesTree, barkSettled } = await import('../src/ez-trees.js');
+
 const imageOf = (file) => images.find(i => String(i.src).endsWith(file));
 
 test('a bark asked is not settled until it arrives; then it is', () => {
@@ -40,4 +40,13 @@ test('a bark missing is settled too (its trees drawn plain, as they will stay)',
 
 test('a bark never asked is not settled; one species\' arrival settles no other', () => {
   assert.equal(barkSettled('Tilleul'), false);
+});
+
+test('a bark drawn (the birch\'s): a canvas at once, settled, no file asked', () => {
+  const before = images.length;
+  const t = generateSpeciesTree('Bouleau', 1, { makeCanvas: fakeCanvas });
+  assert.equal(images.length, before, 'no image file asked');
+  let m; t.traverse(o => { if (o.isMesh && o.material.name === 'branches') m = o.material; });
+  assert.ok(m.map && m.map.isCanvasTexture, 'the drawn canvas is the bark');
+  assert.equal(barkSettled('Bouleau'), true);
 });

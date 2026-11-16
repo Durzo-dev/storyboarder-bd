@@ -38,6 +38,11 @@ const barkMaterials = new Map();
 const barksSettled = new Set();
 function shippedBark(name) {
   if (typeof document === 'undefined' || typeof Image === 'undefined') return null;
+  // A bark drawn (tree-species.js, `barkDrawn`): no file, there at once.
+  if (!barks.has(name) && SPECIES[name].barkDrawn) {
+    barks.set(name, new THREE.CanvasTexture(SPECIES[name].barkDrawn(1, domCanvas)));
+    barksSettled.add(name);
+  }
   if (!barks.has(name)) {
     const tex = new THREE.Texture();
     const img = new Image();
@@ -66,8 +71,13 @@ export function barkSettled(name) {
 
 /** A bark's plain colour (its texture missing): a grey-brown, tinted by the species. */
 function plainBark(material, sp) {
-  material.color.set(BARK_FALLBACK).multiply(new THREE.Color(sp.barkTint));
+  material.color.set(BARK_FALLBACK).multiply(barkColour(sp));
   material.needsUpdate = true;
+}
+
+/** A species' bark colour: its tint, times its gain (above white for a bark lightened). */
+export function barkColour(sp) {
+  return new THREE.Color(sp.barkTint).multiplyScalar(sp.barkGain || 1);
 }
 
 /** How many times the bark goes round a branch (EZ-Tree's u runs once round, 0 to 1). */
@@ -125,7 +135,7 @@ export function generateSpeciesTree(name, variant = 1, { makeCanvas = domCanvas,
     // Seen at a slant on a trunk, a bark blurs without it (three keeps it within what the GPU allows).
     bark.anisotropy = 8;
     branches.map = bark;
-    branches.color.set(sp.barkTint);
+    branches.color.copy(barkColour(sp));
     if (!barkMaterials.has(name)) barkMaterials.set(name, []);
     barkMaterials.get(name).push(branches);
   } else {

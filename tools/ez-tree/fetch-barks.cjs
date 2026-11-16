@@ -21,7 +21,7 @@ async function fetchBarks(){
   const { SPECIES, barkFile } = await import('../../src/tree-species.js');
   let failed = 0;
   for (const [name, sp] of Object.entries(SPECIES)) {
-    if (fs.existsSync(path.join(OUT, barkFile(name)))) continue;
+    if (!sp.bark || fs.existsSync(path.join(OUT, barkFile(name)))) continue;   // a bark drawn has no file
     try {
       const res = await fetch(url(sp.bark));
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
