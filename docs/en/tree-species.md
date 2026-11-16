@@ -46,7 +46,8 @@ then, if accepted:
    `tests/ez-tree.test.mjs`: the test checks the copy grows the very trees of EZ-Tree.
 3. Look at our species again: a change of growth changes their silhouettes.
 4. Carry over OUR ADDITIONS (listed at the top of the file, marked « Ours (#485) » in the code): `branch.droop`,
-   `leaves.hang` and `fronds` (a palm's crown), neutral by default (the fingerprints are measured without them), and tested in
+   `branch.terminal`, `leaves.hang` and `fronds` (a palm's crown: folded strips, leaf bases, a trunk with no
+   point), neutral by default (the fingerprints are measured without them), and tested in
    `tests/ez-tree.test.mjs`. They are meant for a pull request to EZ-Tree; once EZ-Tree has them, they are its own.
 
 ## Platane — London plane (*Platanus × hispanica*)
@@ -374,8 +375,9 @@ then, if accepted:
 - **Leaves**: narrow lances 8 to 15 cm, finely toothed; light yellow-green above, grey-white under. Deciduous,
   among the first out and last to fall.
 - **In EZ-Tree**: from « Aspen Large », with our two additions to EZ-Tree (`droop`, `leaves.hang`, see « EZ-Tree
-  updates »): a thick trunk (22, 2.6 thick), no growth force; 12 limbs from 40 %, angle 55, 34 long, ARCHING
-  (droop 0.05); 11 twigs each, 22 long, HANGING (droop 0.4); leaves hanging (hang 0.92), size 8.5, 13 a twig. Bark
+  updates »): a short thick trunk (16, 2.6 thick), no growth force; 13 limbs from 30 %, angle 50, 34 long, ARCHING
+  (droop 0.1), the leader cut to 0.3 of a limb (`terminal`: it rose above the dome, seen); 11 twigs each, leaving
+  sideways (75°), 22 long, HANGING at once (droop 0.55); leaves hanging (hang 0.92), size 8.5, 13 a twig. Bark
   `bark_willow` tinted (`#d4d0c4`), lightened (gain 1.8). Foliage: a hanging strand of 18 narrow leaves (`lance`),
   `#8fb25a` to `#9bbd63`, under `#b6c99a`.
 - **References**: Commons, categories « Salix babylonica » and « Salix × sepulcralis » (habit, leaves).
@@ -484,9 +486,11 @@ then, if accepted:
 - **Leaves**: palmate FANS 0.5 to 1 m across, split into 30 to 50 stiff pleated segments, their tips hanging; on a
   long slender stalk; dark green above, greyish under. The old ones hang below the crown before falling. Evergreen.
 - **In EZ-Tree**: our `fronds` addition (« EZ-Tree updates »): a trunk with no branch (levels 0, 30 long, 0.9
-  thick, hardly tapering) and 24 fronds at its top, 13 long, 11 wide, rising from 5 to 85°, bending a little
-  (droop 0.09), turned to face out (turn 70). Trunk DRAWN (`palmBark`, fibrous). Frond DRAWN (`palmFrond`, a fan
-  on a bare stalk), `#3f6e3a` to `#487a42`.
+  thick, hardly tapering, no point at its top) and 26 fronds growing from inside its top, 13 long, 11 wide, rising
+  from 0 to 85°, bending a little (droop 0.09), turned to face out (turn 70), pleated (fold 0.35); 36 old leaf
+  bases (`boots`) down 5 trunk radii, 0.22 of a frond. Trunk DRAWN (`palmBark`, fibrous). Frond DRAWN (`palmFrond`:
+  a broad brown sheath, a bare stalk, then 38 narrow segments split past half their length, alternately lit as
+  pleats, their tips hanging), `#3f6e3a` to `#487a42`.
 - **References**: Commons, categories « Trachycarpus fortunei », « Chamaerops humilis » and « Washingtonia
   robusta » (habit, leaves, trunk).
 
@@ -499,7 +503,8 @@ then, if accepted:
 - **Leaves**: pinnate, 4 to 6 m, 150 to 200 narrow stiff leaflets each side, angled forward, the lowest turned into
   spines; dark green (canariensis) to grey-green (dactylifera). Evergreen.
 - **In EZ-Tree**: our `fronds` addition: a trunk with no branch (levels 0, 30 long, 2.2 thick) and 40 fronds at its
-  top, 21 long, 6 wide, rising from −20 to 72°, arching (droop 0.12) over 12 segments, each crossed by a second
-  strip (volume seen edge on). Trunk DRAWN (`palmBark`, ringed, diamond scars). Frond DRAWN (`palmFrond`, pinnate:
-  a rachis and narrow leaflets angled forward).
+  top, 21 long, 6 wide, rising from −20 to 72°, arching (droop 0.12) over 12 segments, folded in a V (fold 0.55);
+  70 old leaf bases (`boots`, the « pineapple ») down 2.2 trunk radii, 0.16 of a frond. Trunk DRAWN (`palmBark`,
+  ringed, diamond scars). Frond DRAWN (`palmFrond`, pinnate: a broad sheath, a stalk with spines, a tapering rachis,
+  narrow curved leaflets angled forward, their fold lit).
 - **References**: Commons, categories « Phoenix canariensis » and « Phoenix dactylifera » (habit, leaves, trunk).

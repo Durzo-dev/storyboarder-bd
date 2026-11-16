@@ -206,7 +206,8 @@ test('our palms (#485): fronds only at the top of a bare trunk, none by default;
     const pos = t.leavesMesh.geometry.attributes.position;
     assert.ok(pos.count > 100, `${name}: its fronds (${pos.count} vertices)`);
     let low = Infinity; for (let i = 0; i < pos.count; i++) low = Math.min(low, pos.getY(i));
-    assert.ok((low - box.min.y) / h > (name === 'Dattier' ? 0.25 : 0.5), `${name}: its crown above its bare trunk (${((low - box.min.y) / h).toFixed(2)})`);
+    // Measured: the old leaf bases (boots) come down to 0.50 of a fan palm's height, the hanging fronds to ~0.3 of a date palm's.
+    assert.ok((low - box.min.y) / h > (name === 'Dattier' ? 0.25 : 0.4), `${name}: its crown above its bare trunk (${((low - box.min.y) / h).toFixed(2)})`);
   }
   const plain = new Tree(new TreeOptions());
   plain.options.copy(structuredClone(TREE_PRESETS['Oak Small'])); plain.generate();
@@ -215,4 +216,31 @@ test('our palms (#485): fronds only at the top of a bare trunk, none by default;
   assert.equal(speciesFor('palmier', 'Trachycarpus'), 'Palmier');
   assert.equal(speciesFor('palmier', 'Phoenix'), 'Dattier');
   assert.equal(speciesFor('palmier', null), null, 'two palms: none without its genus');
+});
+
+test('our additions (#485): a shorter leader, a palm trunk with no point, folded fronds and leaf bases', () => {
+  const grow = (preset, set) => {
+    const t = new Tree(new TreeOptions());
+    t.options.copy(structuredClone(TREE_PRESETS[preset]));
+    t.options.seed = 7919;
+    set(t.options);
+    t.generate();
+    return t;
+  };
+  const top = (t) => { const v = t.branches.verts; let y = -Infinity; for (let i = 1; i < v.length; i += 3) y = Math.max(y, v[i]); return y; };
+  const plain = grow('Aspen Large', () => {}), short = grow('Aspen Large', o => { o.branch.terminal = 0.3; });
+  assert.ok(top(short) < top(plain) - 5, `the leader shortened: ${top(short).toFixed(1)} under ${top(plain).toFixed(1)}`);
+  // A palm: its trunk's last ring as wide as the one under it (EZ-Tree pinches a last branch to a point).
+  const palm = grow('Aspen Small', o => { o.branch.levels = 0; o.leaves.count = 0; Object.assign(o.fronds, { count: 10, boots: 6, fold: 0.5, cross: false }); });
+  const v = palm.branches.verts, ring = palm.options.branch.segments[0] + 1, last = v.length / 3 - ring;
+  const width = (start) => {
+    const at = (k, c) => v[(start + k) * 3 + c];
+    const cx = [0, 1, 2].map(c => { let s = 0; for (let k = 0; k < ring; k++) s += at(k, c); return s / ring; });
+    let m = 0; for (let k = 0; k < ring; k++) m = Math.max(m, Math.hypot(at(k, 0) - cx[0], at(k, 1) - cx[1], at(k, 2) - cx[2]));
+    return m;
+  };
+  assert.ok(width(last) > width(last - ring) * 0.5, 'no point at the top of a palm trunk');
+  // Five vertices a row of a frond (its fold), and the boots: 16 fronds in all.
+  const rows = (f) => f.count * (f.segments + 1) + f.boots * 3;
+  assert.equal(palm.leaves.verts.length / 3, 5 * rows(palm.options.fronds));
 });

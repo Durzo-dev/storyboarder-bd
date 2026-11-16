@@ -107,26 +107,62 @@ function palmFrond({ pinnate = true, colours = ['#4f7f36', '#5a8b3e', '#46732f']
   const c = makeCanvas(512);
   const ctx = c.getContext('2d'), rnd = rng(seed);
   ctx.lineCap = 'round';
+  // The leaf's SHEATH at its base (bottom 9 %): broad, brown and fibrous, hugging the trunk's top (where the frond
+  // meets it, and the old leaf bases round it, EZ-Tree's `boots`, show only this part).
+  const sheath = ctx.createLinearGradient(0, 512, 0, 466);
+  sheath.addColorStop(0, '#6e5a3c'); sheath.addColorStop(1, pinnate ? '#a49a5a' : '#7d7444');
+  ctx.fillStyle = sheath;
+  ctx.beginPath(); ctx.moveTo(40, 512); ctx.lineTo(472, 512); ctx.lineTo(276, 466); ctx.lineTo(236, 466); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#4e3e2a'; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.6;
+  for (let k = 0; k < 30; k++) { const x = 50 + rnd() * 412; ctx.beginPath(); ctx.moveTo(x, 512); ctx.lineTo(256 + (x - 256) * 0.1, 470); ctx.stroke(); }
+  ctx.globalAlpha = 1;
   if (pinnate) {
-    ctx.strokeStyle = '#8a8a4a'; ctx.lineWidth = 6;
-    ctx.beginPath(); ctx.moveTo(256, 512); ctx.lineTo(256, 8); ctx.stroke();
-    for (let y = 440; y > 14; y -= 10) {
-      const t = (512 - y) / 512, len = 230 * Math.sin(Math.PI * Math.min(1, t * 1.15)) * (0.85 + rnd() * 0.25);
+    // The stalk (bottom 12 %) with a few spines, then the rachis tapering to the tip, leaflets both sides.
+    for (let y = 512; y > 8; y -= 8) {
+      ctx.strokeStyle = '#a49a5a'; ctx.lineWidth = 2 + 6 * (y / 512);
+      ctx.beginPath(); ctx.moveTo(256, y); ctx.lineTo(256, y - 9); ctx.stroke();
+    }
+    for (let y = 500; y > 450; y -= 12) for (const k of [-1, 1]) {
+      ctx.strokeStyle = '#c8b878'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(256, y); ctx.lineTo(256 + k * 22, y - 16); ctx.stroke();
+    }
+    for (let y = 448; y > 10; y -= 6) {
+      const t = (512 - y) / 512, len = 238 * Math.pow(Math.sin(Math.PI * Math.min(1, (t - 0.1) * 1.2)), 0.8) * (0.85 + rnd() * 0.25);
       for (const k of [-1, 1]) {
-        ctx.strokeStyle = colours[Math.floor(rnd() * colours.length)]; ctx.lineWidth = 4 + rnd() * 2;
-        ctx.beginPath(); ctx.moveTo(256, y); ctx.lineTo(256 + k * len, y - len * 0.55); ctx.stroke();
+        const base = colours[Math.floor(rnd() * colours.length)];
+        const ex = 256 + k * len, ey = y - len * (0.5 + rnd() * 0.15);
+        ctx.strokeStyle = base; ctx.lineWidth = 3 + rnd() * 2.5;
+        ctx.beginPath(); ctx.moveTo(256, y); ctx.quadraticCurveTo(256 + k * len * 0.55, y - len * 0.42, ex, ey + 6); ctx.stroke();
+        // Its fold catching the light.
+        ctx.strokeStyle = shade(base, 1.3); ctx.lineWidth = 1; ctx.globalAlpha = 0.6;
+        ctx.beginPath(); ctx.moveTo(256, y - 1); ctx.quadraticCurveTo(256 + k * len * 0.55, y - len * 0.42 - 1, ex, ey + 5); ctx.stroke();
+        ctx.globalAlpha = 1;
       }
     }
   } else {
-    ctx.strokeStyle = '#7a7040'; ctx.lineWidth = 9;
-    ctx.beginPath(); ctx.moveTo(256, 512); ctx.lineTo(256, 250); ctx.stroke();
-    for (let a = -1.45; a <= 1.45; a += 0.075) {
-      const len = 220 + rnd() * 30, ex = 256 + Math.sin(a) * len, ey = 250 - Math.cos(a) * len;
-      ctx.strokeStyle = colours[Math.floor(rnd() * colours.length)]; ctx.lineWidth = 14;
-      ctx.beginPath(); ctx.moveTo(256, 250); ctx.lineTo(ex, ey); ctx.stroke();
-      // The split tips of the segments, hanging a little.
-      ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex + Math.sin(a) * 24, ey + 10); ctx.stroke();
+    // A long bare stalk (bottom 42 %), then stiff segments from one point, split deep, their tips hanging.
+    ctx.strokeStyle = '#7d7444'; ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(256, 512); ctx.lineTo(256, 296); ctx.stroke();
+    const hx = 256, hy = 296, n = 38;
+    for (let s = 0; s < n; s++) {
+      const a = -1.5 + 3 * (s + 0.5) / n + (rnd() - 0.5) * 0.03;
+      const len = 200 + rnd() * 40, split = len * (0.45 + rnd() * 0.15);
+      const w0 = 0.032, w1 = 0.012;
+      const base = colours[s % colours.length], col = s % 2 ? shade(base, 1.18) : shade(base, 0.86);
+      const pt = (r, da) => [hx + Math.sin(a + da) * r, hy - Math.cos(a + da) * r];
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.moveTo(hx, hy);
+      ctx.lineTo(...pt(split, -w0)); ctx.lineTo(...pt(len, -w1)); ctx.lineTo(...pt(len, w1)); ctx.lineTo(...pt(split, w0));
+      ctx.closePath(); ctx.fill();
+      // The inner part of the fan is one blade: no gap there.
+      ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(...pt(split, -1.5 / n * 1.05)); ctx.lineTo(...pt(split, 1.5 / n * 1.05)); ctx.closePath(); ctx.fill();
+      // The split tip, hanging.
+      const [tx, ty] = pt(len, 0);
+      ctx.strokeStyle = shade(col, 0.9); ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(tx, ty); ctx.quadraticCurveTo(tx + Math.sin(a) * 14, ty, tx + Math.sin(a) * 20, ty + 14 + rnd() * 10); ctx.stroke();
     }
+    // The hastula: the small crest where the stalk meets the fan.
+    ctx.fillStyle = '#6d6a3c'; ctx.beginPath(); ctx.arc(hx, hy, 7, 0, Math.PI * 2); ctx.fill();
   }
   return c;
 }
@@ -469,11 +505,11 @@ Object.assign(SPECIES, {
     // A hanging strand: drawn from the canvas' bottom (where it hangs from) up, its leaves narrow and close.
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'lance', colours: ['#8fb25a', '#9bbd63', '#82a650'], under: '#b6c99a', n: 18, size: 34, spread: 0.32, seed }),
     set(o){
-      o.branch.levels = 2; o.branch.length[0] = 22; o.branch.radius[0] = 2.6; o.branch.gnarliness[0] = 0.03; o.branch.force.strength = 0;
-      o.branch.start[1] = 0.4; o.branch.children[0] = 12; o.branch.angle[1] = 55; o.branch.length[1] = 34; o.branch.radius[1] = 0.42;
-      o.branch.gnarliness[1] = 0.04; o.branch.droop[1] = 0.05;
-      o.branch.children[1] = 11; o.branch.angle[2] = 40; o.branch.length[2] = 22; o.branch.start[2] = 0.1; o.branch.radius[2] = 0.3;
-      o.branch.droop[2] = 0.4;
+      o.branch.levels = 2; o.branch.length[0] = 16; o.branch.radius[0] = 2.6; o.branch.gnarliness[0] = 0.03; o.branch.force.strength = 0;
+      o.branch.start[1] = 0.3; o.branch.children[0] = 13; o.branch.angle[1] = 50; o.branch.length[1] = 34; o.branch.radius[1] = 0.42;
+      o.branch.gnarliness[1] = 0.04; o.branch.droop[1] = 0.1; o.branch.terminal = 0.3;
+      o.branch.children[1] = 11; o.branch.angle[2] = 75; o.branch.length[2] = 22; o.branch.start[2] = 0.1; o.branch.radius[2] = 0.3;
+      o.branch.droop[2] = 0.55;
       o.leaves.size = 8.5; o.leaves.count = 13; o.leaves.start = 0; o.leaves.hang = 0.92;
     } },
   Yeuse: { from: 'Oak Small', label: { fr: 'Chêne vert', en: 'Holm oak' }, type: 'arbre', height: 10, genus: 'Quercus', taxa: ['quercus ilex', 'quercus suber', 'quercus coccifera'],
@@ -527,7 +563,7 @@ Object.assign(SPECIES, {
       o.type = 'deciduous'; o.branch.levels = 0; o.branch.length[0] = 30; o.branch.radius[0] = 0.9; o.branch.taper[0] = 0.15;
       o.branch.sections[0] = 12; o.branch.segments[0] = 8; o.branch.gnarliness[0] = 0.03; o.branch.force.strength = 0.003; o.branch.twist[0] = 0;
       o.leaves.count = 0;   // no leaf along the trunk: the fronds only
-      Object.assign(o.fronds, { count: 24, length: 13, width: 11, riseMin: 5, riseMax: 85, droop: 0.09, segments: 6, variance: 0.12, turn: 70, cross: false });
+      Object.assign(o.fronds, { count: 26, length: 13, width: 11, riseMin: 0, riseMax: 85, droop: 0.09, segments: 8, variance: 0.12, turn: 70, cross: false, fold: 0.35, boots: 36, bootDepth: 5, bootLength: 0.22 });
     } },
   Dattier: { from: 'Aspen Small', label: { fr: 'Palmier dattier', en: 'Date palm' }, type: 'palmier', height: 10,
     genus: ['Phoenix', 'Butia', 'Syagrus', 'Cocos'],
@@ -537,7 +573,7 @@ Object.assign(SPECIES, {
       o.type = 'deciduous'; o.branch.levels = 0; o.branch.length[0] = 30; o.branch.radius[0] = 2.2; o.branch.taper[0] = 0.1;
       o.branch.sections[0] = 12; o.branch.segments[0] = 10; o.branch.gnarliness[0] = 0.02; o.branch.force.strength = 0.004; o.branch.twist[0] = 0;
       o.leaves.count = 0;
-      Object.assign(o.fronds, { count: 40, length: 21, width: 6, riseMin: -20, riseMax: 72, droop: 0.12, segments: 12, variance: 0.15, cross: true });
+      Object.assign(o.fronds, { count: 44, length: 21, width: 6, riseMin: -20, riseMax: 72, droop: 0.12, segments: 12, variance: 0.15, cross: false, fold: 0.55, boots: 70, bootDepth: 2.2, bootLength: 0.16 });
     } },
 });
 

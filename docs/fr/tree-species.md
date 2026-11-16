@@ -48,7 +48,8 @@ Durzo, puis, si elle est acceptée :
    `tests/ez-tree.test.mjs` : le test vérifie que la copie fait pousser les mêmes arbres qu'EZ-Tree.
 3. Revoir nos essences : un changement de croissance change leurs silhouettes.
 4. Reporter NOS AJOUTS (listés en tête du fichier, marqués « Ours (#485) » dans le code) : `branch.droop`,
-   `leaves.hang` et `fronds` (la couronne d'un palmier), neutres par défaut (les empreintes se mesurent sans eux), et testés dans `tests/ez-tree.test.mjs`.
+   `branch.terminal`, `leaves.hang` et `fronds` (la couronne d'un palmier : rubans pliés, bases de palmes, un stipe
+   sans pointe), neutres par défaut (les empreintes se mesurent sans eux), et testés dans `tests/ez-tree.test.mjs`.
    Ils sont destinés à une pull request chez EZ-Tree ; une fois chez EZ-Tree, ils sont les siens.
 
 ## Platane commun (*Platanus × hispanica*)
@@ -386,9 +387,10 @@ Durzo, puis, si elle est acceptée :
 - **Feuilles** : lances étroites de 8 à 15 cm, finement dentées ; vert-jaune clair dessus, gris-blanc dessous.
   Caduques, parmi les premières à sortir et les dernières à tomber.
 - **Dans EZ-Tree** : départ « Aspen Large », avec nos deux ajouts à EZ-Tree (`droop`, `leaves.hang`, voir « Les
-  mises à jour d'EZ-Tree ») : un tronc épais (22, épais de 2,6), sans force de croissance ; 12 charpentières dès
-  40 %, angle 55, longues de 34, ARQUÉES (droop 0,05) ; 11 rameaux chacune, longs de 22, PENDANTS (droop 0,4) ;
-  feuilles pendantes (hang 0,92), taille 8,5, 13 par rameau. Écorce `bark_willow` teintée (`#d4d0c4`), éclaircie
+  mises à jour d'EZ-Tree ») : un tronc court et épais (16, épais de 2,6), sans force de croissance ; 13
+  charpentières dès 30 %, angle 50, longues de 34, ARQUÉES (droop 0,1), la flèche réduite à 0,3 d'une charpentière
+  (`terminal` : elle dépassait du dôme, vu) ; 11 rameaux chacune, partant de côté (75°), longs de 22, PENDANTS
+  aussitôt (droop 0,55) ; feuilles pendantes (hang 0,92), taille 8,5, 13 par rameau. Écorce `bark_willow` teintée (`#d4d0c4`), éclaircie
   (gain 1,8). Feuillage : une lanière pendante de 18 feuilles étroites (`lance`), `#8fb25a` à `#9bbd63`, revers
   `#b6c99a`.
 - **Références** : Commons, catégories « Salix babylonica » et « Salix × sepulcralis » (port, feuilles).
@@ -503,9 +505,12 @@ Durzo, puis, si elle est acceptée :
   pointes retombantes ; sur un long pétiole fin ; vert sombre dessus, grisâtres dessous. Les vieilles pendent sous la
   couronne avant de tomber. Persistantes.
 - **Dans EZ-Tree** : notre ajout `fronds` (« Les mises à jour d'EZ-Tree ») : un tronc sans branche (niveaux 0, long
-  de 30, épais de 0,9, presque sans effilement) et 24 palmes à sa cime, longues de 13, larges de 11, levées de 5 à
-  85°, un peu courbées (droop 0,09), tournées pour se présenter de face (turn 70). Stipe DESSINÉ (`palmBark`, fibreux).
-  Palme DESSINÉE (`palmFrond`, un éventail au bout d'un pétiole nu), `#3f6e3a` à `#487a42`.
+  de 30, épais de 0,9, presque sans effilement, sans pointe à son sommet) et 26 palmes sortant de l'intérieur de sa
+  cime, longues de 13, larges de 11, levées de 0 à 85°, un peu courbées (droop 0,09), tournées pour se présenter de
+  face (turn 70), plissées (fold 0,35) ; 36 bases de vieilles palmes (`boots`) sur 5 rayons de stipe, longues de 0,22
+  d'une palme. Stipe DESSINÉ (`palmBark`, fibreux). Palme DESSINÉE (`palmFrond` : une large gaine brune, un pétiole nu,
+  puis 38 segments étroits fendus au-delà de leur moitié, éclairés un sur deux comme des plis, leurs pointes
+  retombantes), `#3f6e3a` à `#487a42`.
 - **Références** : Commons, catégories « Trachycarpus fortunei », « Chamaerops humilis » et « Washingtonia
   robusta » (port, feuilles, stipe).
 
@@ -518,7 +523,9 @@ Durzo, puis, si elle est acceptée :
 - **Feuilles** : pennées, 4 à 6 m, 150 à 200 folioles étroites et raides de chaque côté, inclinées vers l'avant, les
   plus basses changées en épines ; vert sombre (canariensis) à vert-gris (dactylifera). Persistantes.
 - **Dans EZ-Tree** : notre ajout `fronds` : un tronc sans branche (niveaux 0, long de 30, épais de 2,2) et 40 palmes
-  à sa cime, longues de 21, larges de 6, levées de −20 à 72°, arquées (droop 0,12) sur 12 segments, chacune croisée
-  d'un second ruban (du volume vue de profil). Stipe DESSINÉ (`palmBark`, annelé, cicatrices en losange). Palme
-  DESSINÉE (`palmFrond`, pennée : un rachis et des folioles étroites inclinées vers l'avant).
+  à sa cime, longues de 21, larges de 6, levées de −20 à 72°, arquées (droop 0,12) sur 12 segments, pliées en V
+  (fold 0,55) ; 70 bases de vieilles palmes (`boots`, l'« ananas ») sur 2,2 rayons de stipe, longues de 0,16 d'une
+  palme. Stipe DESSINÉ (`palmBark`, annelé, cicatrices en losange). Palme DESSINÉE (`palmFrond`, pennée : une large
+  gaine, un pétiole épineux, un rachis qui s'affine, des folioles étroites et courbes inclinées vers l'avant, leur
+  pli éclairé).
 - **Références** : Commons, catégories « Phoenix canariensis » et « Phoenix dactylifera » (port, feuilles, stipe).

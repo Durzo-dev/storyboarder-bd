@@ -16,12 +16,15 @@
  *   - `branch.droop[level]`: each section of a branch of that level turns that much (radians) toward the ground,
  *     whatever its radius (the growth force is divided by the radius: a trunk thick enough not to bend leaves its
  *     thin twigs bent the most, never hanging straight while the limbs only arch);
+ *   - `branch.terminal`: the length of the branch a deciduous tree grows on from the end of each branch (its
+ *     leader), as a share of its level's length (1: EZ-Tree's);
  *   - `leaves.hang` (0 to 1): a leaf turned that far from its twig's way toward hanging straight down (a willow's
  *     strands);
  *   - `fronds` (a palm's crown): `count` fronds grown from the top of the trunk, each a long strip ARCHING from its
  *     base (`rise`, degrees above level, from `riseMin` for the oldest to `riseMax` for the youngest) and bending
  *     down as it goes (`droop`, radians a segment); `length`, `width`, `segments`, ±`variance`; `turn`: the strip
- *     turned about its line (degrees: 0 lies flat, a pinnate frond; ~70 faces out, a fan); `cross`: a second
+ *     turned about its line (degrees: 0 lies flat, a pinnate frond; ~70 faces out, a fan); `fold`: a V along its
+ *     middle; `boots`: that many old leaf bases round the trunk's top, `bootLength` of a frond, down `bootDepth` radii; `cross`: a second
  *     strip across the first (volume seen edge on). They go in the leaves' mesh (its material, its drawn texture:
  *     the frond's base at the texture's bottom, its tip at its top). 0 fronds: none, no random draw.
  * A new version of EZ-Tree: see docs/en/tree-species.md (« EZ-Tree updates »).
@@ -85,12 +88,13 @@ export class TreeOptions {
       taper: { 0: 0.7, 1: 0.7, 2: 0.7, 3: 0.7 },
       twist: { 0: 0, 1: 0, 2: 0, 3: 0 },
       droop: { 0: 0, 1: 0, 2: 0, 3: 0 },
+      terminal: 1,
     };
     this.leaves = {
       type: 'oak', billboard: Billboard.Double, angle: 10, count: 1, start: 0, size: 2.5, sizeVariance: 0.7,
       tint: 0xffffff, alphaTest: 0.5, hang: 0,
     };
-    this.fronds = { count: 0, length: 10, width: 2.5, riseMin: -20, riseMax: 70, droop: 0.08, segments: 8, variance: 0.15, turn: 0, cross: true };
+    this.fronds = { count: 0, length: 10, width: 2.5, riseMin: -20, riseMax: 70, droop: 0.08, segments: 8, variance: 0.15, turn: 0, cross: true, fold: 0, boots: 0, bootDepth: 3, bootLength: 0.1 };
     this.trellis = { enabled: false };
   }
 
@@ -155,7 +159,8 @@ export class Tree extends THREE.Group {
       let sectionRadius = branch.radius;
 
       // Final section of the final level: a radius of nearly zero
-      if (i === branch.sectionCount && branch.level === o.branch.levels) {
+      // Ours (#485): a palm's trunk keeps its thickness to its top (its fronds grow there): no point.
+      if (i === branch.sectionCount && branch.level === o.branch.levels && !(branch.level === 0 && o.fronds.count > 0)) {
         sectionRadius = 0.001;
       } else if (o.type === TreeType.Deciduous) {
         sectionRadius *= 1 - o.branch.taper[branch.level] * (i / branch.sectionCount);
@@ -217,7 +222,8 @@ export class Tree extends THREE.Group {
     if (o.type === 'deciduous') {
       const lastSection = sections[sections.length - 1];
       if (branch.level < o.branch.levels) {
-        this.branchQueue.push(new Branch(lastSection.origin, lastSection.orientation, o.branch.length[branch.level + 1],
+        // Ours (#485): `branch.terminal` scales it (1 by default; a weeping tree's leader must not rise above its dome).
+        this.branchQueue.push(new Branch(lastSection.origin, lastSection.orientation, o.branch.length[branch.level + 1] * o.branch.terminal,
           lastSection.radius, branch.level + 1, branch.sectionCount, branch.segmentCount));
       } else if (!palm) {
         this.generateLeaf(lastSection.origin, lastSection.orientation);
@@ -295,39 +301,68 @@ export class Tree extends THREE.Group {
       const rise = THREE.MathUtils.degToRad(f.riseMax + (f.riseMin - f.riseMax) * age + this.rng.random(8, -8));
       const length = f.length * (1 + this.rng.random(f.variance, -f.variance));
       const out = new THREE.Vector3(Math.cos(turn), 0, Math.sin(turn));
-      const dir = out.clone().multiplyScalar(Math.cos(rise)).addScaledVector(up, Math.sin(rise)).normalize();
-      const side = new THREE.Vector3().crossVectors(dir, up).normalize();
-      if (side.lengthSq() < 1e-6) side.set(-Math.sin(turn), 0, Math.cos(turn));
-      const spine = [top.origin.clone().addScaledVector(out, top.radius * 0.6).addScaledVector(axis, -top.radius * 0.3)];
-      const step = length / f.segments;
-      for (let k = 0; k < f.segments; k++) {
-        const p = spine[k].clone().addScaledVector(dir, step);
-        spine.push(p);
-        dir.applyAxisAngle(side, -f.droop).normalize();
-      }
-      const along = spine[spine.length - 1].clone().sub(spine[0]).normalize();
-      const face = side.clone().applyAxisAngle(along, THREE.MathUtils.degToRad(f.turn));
-      this.frondStrip(spine, face, f.width);
-      // Across the first: turned a quarter round about the line from the spine's start to its end.
-      if (f.cross) this.frondStrip(spine, face.clone().applyAxisAngle(along, Math.PI / 2), f.width * 0.8);
+      // From INSIDE the trunk's top, a little below it: the frond grows out of the crown, not from its rim.
+      const base = top.origin.clone().addScaledVector(out, top.radius * 0.25).addScaledVector(axis, -top.radius * (0.3 + 0.5 * age));
+      this.frond(base, out, rise, length, f.width, f.segments, f.droop, 1, f);
+    }
+    // The old leaf bases round the top of the trunk (a date palm's « pineapple », a fan palm's boots): short stubs,
+    // the bottom of the frond's drawing (its stalk), from the top down `bootDepth` trunk radii.
+    for (let i = 0; i < f.boots; i++) {
+      const turn = i * 2.39996 + this.rng.random(0.4, -0.4);
+      const depth = this.rng.random() * f.bootDepth * top.radius;
+      const out = new THREE.Vector3(Math.cos(turn), 0, Math.sin(turn));
+      const base = top.origin.clone().addScaledVector(axis, -depth).addScaledVector(out, top.radius * 0.8);
+      const rise = THREE.MathUtils.degToRad(this.rng.random(75, 45));
+      this.frond(base, out, rise, f.length * f.bootLength, f.width * 0.5, 2, 0, 0.09, f);
     }
   }
 
-  /** Ours (#485): a strip along `spine` (points), `width` wide across `side`, its v from 0 at its base to 1. */
-  frondStrip(spine, side, width) {
+  /**
+   * Ours (#485): one frond from `base`, toward `out` raised `rise` (radians), `length` long in `segments` bending
+   * `droop` each; its drawing from v 0 at its base to `vEnd` (1: the whole frond; less: only its stalk).
+   */
+  frond(base, out, rise, length, width, segments, droop, vEnd, f) {
+    const up = new THREE.Vector3(0, 1, 0);
+    const dir = out.clone().multiplyScalar(Math.cos(rise)).addScaledVector(up, Math.sin(rise)).normalize();
+    const side = new THREE.Vector3().crossVectors(dir, up).normalize();
+    if (side.lengthSq() < 1e-6) side.set(-out.z, 0, out.x);
+    const spine = [base];
+    const step = length / segments;
+    for (let k = 0; k < segments; k++) {
+      spine.push(spine[k].clone().addScaledVector(dir, step));
+      dir.applyAxisAngle(side, -droop).normalize();
+    }
+    const along = spine[spine.length - 1].clone().sub(spine[0]).normalize();
+    const face = side.clone().applyAxisAngle(along, THREE.MathUtils.degToRad(f.turn));
+    this.frondStrip(spine, face, width, f.fold, vEnd);
+    // Across the first: turned a quarter round about the line from the spine's start to its end.
+    if (f.cross) this.frondStrip(spine, face.clone().applyAxisAngle(along, Math.PI / 2), width * 0.8, f.fold, vEnd);
+  }
+
+  /**
+   * Ours (#485): a strip along `spine` (points), `width` wide across `side`, FOLDED along its middle (`fold`: its
+   * edges raised that share of its half width, a V as a date palm's frond, a pleat as a fan's), five vertices a row;
+   * its v from 0 at its base to `vEnd`.
+   */
+  frondStrip(spine, side, width, fold = 0, vEnd = 1) {
     const i = this.leaves.verts.length / 3;
-    const n = spine.length - 1;
+    const n = spine.length - 1, across = [-1, -0.5, 0, 0.5, 1];
     for (let k = 0; k <= n; k++) {
-      const a = spine[k].clone().addScaledVector(side, -width / 2), b = spine[k].clone().addScaledVector(side, width / 2);
       const along = spine[Math.min(k + 1, n)].clone().sub(spine[Math.max(k - 1, 0)]).normalize();
       const normal = new THREE.Vector3().crossVectors(side, along).normalize();
-      this.leaves.verts.push(a.x, a.y, a.z, b.x, b.y, b.z);
-      this.leaves.normals.push(normal.x, normal.y, normal.z, normal.x, normal.y, normal.z);
-      this.leaves.uvs.push(0, k / n, 1, k / n);
+      for (const a of across) {
+        const p = spine[k].clone().addScaledVector(side, a * width / 2).addScaledVector(normal, Math.abs(a) * fold * width / 2);
+        const nn = normal.clone().addScaledVector(side, -Math.sign(a) * fold).normalize();
+        this.leaves.verts.push(p.x, p.y, p.z);
+        this.leaves.normals.push(nn.x, nn.y, nn.z);
+        this.leaves.uvs.push((a + 1) / 2, vEnd * k / n);
+      }
     }
     for (let k = 0; k < n; k++) {
-      const a = i + 2 * k;
-      this.leaves.indices.push(a, a + 1, a + 3, a, a + 3, a + 2);
+      for (let c = 0; c < across.length - 1; c++) {
+        const a = i + across.length * k + c, b = a + across.length;
+        this.leaves.indices.push(a, a + 1, b + 1, a, b + 1, b);
+      }
     }
   }
 
