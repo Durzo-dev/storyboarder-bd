@@ -408,8 +408,16 @@ Object.assign(SPECIES, {
     set(o){ o.branch.length[0] = 12; o.branch.radius[0] = 1.2; o.branch.angle[1] = 40; o.branch.length[1] = 10; o.branch.length[2] = 6; o.leaves.size = 3.6; o.leaves.count = 6; } },
   Saule: { from: 'Aspen Large', label: { fr: 'Saule pleureur', en: 'Weeping willow' }, type: 'arbre', height: 12, genus: 'Salix',
     bark: BARK('bark_willow'), barkTint: 0xd4d0c4, barkGain: 1.8,
-    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'lance', colours: ['#8fb25a', '#9bbd63', '#82a650'], under: '#b6c99a', n: 13, size: 40, spread: 0.3, seed }),
-    set(o){ o.branch.levels = 3; o.branch.length[0] = 30; o.branch.radius[0] = 2.6; o.branch.start[1] = 0.4; o.branch.angle[1] = 55; o.branch.length[1] = 30; o.branch.radius[1] = 0.7; o.branch.children[0] = 10; o.branch.gnarliness[0] = 0.02; o.branch.force.strength = -0.05; o.branch.children[1] = 12; o.branch.angle[2] = 35; o.branch.length[2] = 28; o.branch.start[2] = 0.3; o.branch.radius[2] = 0.4; o.branch.children[2] = 0; o.leaves.size = 5.5; o.leaves.count = 24; o.leaves.start = 0; } },
+    // A hanging strand: drawn from the canvas' bottom (where it hangs from) up, its leaves narrow and close.
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'lance', colours: ['#8fb25a', '#9bbd63', '#82a650'], under: '#b6c99a', n: 18, size: 34, spread: 0.32, seed }),
+    set(o){
+      o.branch.levels = 2; o.branch.length[0] = 22; o.branch.radius[0] = 2.6; o.branch.gnarliness[0] = 0.03; o.branch.force.strength = 0;
+      o.branch.start[1] = 0.4; o.branch.children[0] = 12; o.branch.angle[1] = 55; o.branch.length[1] = 34; o.branch.radius[1] = 0.42;
+      o.branch.gnarliness[1] = 0.04; o.branch.droop[1] = 0.05;
+      o.branch.children[1] = 11; o.branch.angle[2] = 40; o.branch.length[2] = 22; o.branch.start[2] = 0.1; o.branch.radius[2] = 0.3;
+      o.branch.droop[2] = 0.4;
+      o.leaves.size = 8.5; o.leaves.count = 13; o.leaves.start = 0; o.leaves.hang = 0.92;
+    } },
   Yeuse: { from: 'Oak Small', label: { fr: 'Chêne vert', en: 'Holm oak' }, type: 'arbre', height: 10, genus: 'Quercus', taxa: ['quercus ilex', 'quercus suber', 'quercus coccifera'],
     bark: BARK('chinese_hackberry_bark'), barkTint: 0x8a8682,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#34502c', '#3c5a32', '#2f4828'], under: '#8c9a80', n: 10, size: 30, seed }),

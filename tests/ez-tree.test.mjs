@@ -174,3 +174,26 @@ test('a bark lightened: the plane\'s and the poplar\'s above white, the others a
 test('every species has its bark: a Poly Haven asset, or one drawn', () => {
   for (const [name, sp] of Object.entries(SPECIES)) assert.ok(!!sp.bark !== !!sp.barkDrawn, name);
 });
+
+test('our additions to EZ-Tree (#485): a level\'s droop bends it down, hanging leaves point down; 0 changes nothing', () => {
+  const grow = (set) => {
+    const t = new Tree(new TreeOptions());
+    t.options.copy(structuredClone(TREE_PRESETS['Ash Medium']));
+    t.options.seed = 7919;
+    set(t.options);
+    t.generate();
+    return t;
+  };
+  const lowest = (t) => { const v = t.branches.verts; let y = Infinity; for (let i = 1; i < v.length; i += 3) y = Math.min(y, v[i]); return y; };
+  const plain = grow(() => {}), zero = grow(o => { o.branch.droop[2] = 0; o.leaves.hang = 0; });
+  assert.deepEqual(zero.branches.verts, plain.branches.verts, 'droop 0: the very tree');
+  assert.deepEqual(zero.leaves.verts, plain.leaves.verts, 'hang 0: the very leaves');
+  const drooping = grow(o => { o.branch.droop[2] = 0.3; o.branch.droop[3] = 0.4; });
+  const meanY = (t) => { const v = t.branches.verts; let s = 0; for (let i = 1; i < v.length; i += 3) s += v[i]; return s / (v.length / 3); };
+  assert.ok(meanY(drooping) < meanY(plain) - 1, `twigs drooping: lower (${meanY(drooping).toFixed(1)} < ${meanY(plain).toFixed(1)})`);
+  assert.ok(lowest(drooping) >= lowest(plain) - 50, 'the trunk unbent');
+  // A leaf is a quad from its stalk (vertices 1, 2) to its tip (0, 3): hanging, its tip is below its stalk.
+  const tipsBelow = (t) => { const v = t.leaves.verts; let n = 0, all = 0; for (let q = 0; q + 12 <= v.length; q += 12) { all++; if (v[q + 1] < v[q + 4]) n++; } return n / all; };
+  const hanging = grow(o => { o.leaves.hang = 0.95; });
+  assert.ok(tipsBelow(hanging) > 0.95 && tipsBelow(plain) < 0.7, `${tipsBelow(hanging)} of hanging leaves point down, ${tipsBelow(plain)} of the others`);
+});

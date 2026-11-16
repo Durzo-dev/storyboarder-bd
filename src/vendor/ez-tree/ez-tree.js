@@ -11,6 +11,13 @@
  *   - no wind (the leaves' swaying shader, `update(time)`): a storyboard is still;
  *   - no trellis (a climbing plant on a grid);
  *   - indices in 32 bits when a tree passes 65 535 vertices (16 bits in EZ-Tree, which would wrap).
+ * And TWO ADDITIONS OF OURS (#485, for the weeping trees), neutral by default (0: the tree EZ-Tree draws, its random
+ * draws untouched), meant for a pull request to EZ-Tree:
+ *   - `branch.droop[level]`: each section of a branch of that level turns that much (radians) toward the ground,
+ *     whatever its radius (the growth force is divided by the radius: a trunk thick enough not to bend leaves its
+ *     thin twigs bent the most, never hanging straight while the limbs only arch);
+ *   - `leaves.hang` (0 to 1): a leaf turned that far from its twig's way toward hanging straight down (a willow's
+ *     strands).
  * A new version of EZ-Tree: see docs/en/tree-species.md (« EZ-Tree updates »).
  */
 
@@ -49,6 +56,9 @@ class Branch {
 const Billboard = { Single: 'single', Double: 'double' };
 const TreeType = { Deciduous: 'deciduous', Evergreen: 'evergreen' };
 
+/** Ours (#485): the turn that points a section's (or a leaf's) +y straight down. */
+const DOWN = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
+
 /** The options of a tree (EZ-Tree's defaults); a preset is copied over them. */
 export class TreeOptions {
   constructor() {
@@ -68,10 +78,11 @@ export class TreeOptions {
       start: { 1: 0.4, 2: 0.3, 3: 0.3 },
       taper: { 0: 0.7, 1: 0.7, 2: 0.7, 3: 0.7 },
       twist: { 0: 0, 1: 0, 2: 0, 3: 0 },
+      droop: { 0: 0, 1: 0, 2: 0, 3: 0 },
     };
     this.leaves = {
       type: 'oak', billboard: Billboard.Double, angle: 10, count: 1, start: 0, size: 2.5, sizeVariance: 0.7,
-      tint: 0xffffff, alphaTest: 0.5,
+      tint: 0xffffff, alphaTest: 0.5, hang: 0,
     };
     this.trellis = { enabled: false };
   }
@@ -182,6 +193,9 @@ export class Tree extends THREE.Group {
         new THREE.Vector3().copy(o.branch.force.direction));
       qSection.multiply(qTwist);
       qSection.rotateTowards(qForce, o.branch.force.strength / sectionRadius);
+      // Ours (#485): the droop of this level, the same for a thick limb as for a thin twig.
+      const droop = o.branch.droop[branch.level] || 0;
+      if (droop > 0) qSection.rotateTowards(DOWN, droop);
 
       sectionOrientation.setFromQuaternion(qSection);
     }
@@ -245,7 +259,13 @@ export class Tree extends THREE.Group {
       const leafStart = this.rng.random(1.0, o.leaves.start);
       const at = this.sectionAt(sections, leafStart);
       const radialAngle = 2.0 * Math.PI * (radialOffset + i / o.leaves.count);
-      this.generateLeaf(at.origin, Tree.childOrientation(at.orientation, o.leaves.angle, radialAngle));
+      let orientation = Tree.childOrientation(at.orientation, o.leaves.angle, radialAngle);
+      // Ours (#485): a leaf turned toward hanging straight down, its own turn about the vertical kept.
+      if (o.leaves.hang > 0) {
+        const hanging = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), radialAngle).premultiply(DOWN);
+        orientation = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromEuler(orientation).slerp(hanging, o.leaves.hang));
+      }
+      this.generateLeaf(at.origin, orientation);
     }
   }
 

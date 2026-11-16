@@ -45,6 +45,9 @@ then, if accepted:
 2. Measure the fingerprints of its presets with the new version, in a browser, and update them in
    `tests/ez-tree.test.mjs`: the test checks the copy grows the very trees of EZ-Tree.
 3. Look at our species again: a change of growth changes their silhouettes.
+4. Carry over OUR ADDITIONS (listed at the top of the file, marked « Ours (#485) » in the code): `branch.droop` and
+   `leaves.hang`, neutral by default (the fingerprints are measured without them), and tested in
+   `tests/ez-tree.test.mjs`. They are meant for a pull request to EZ-Tree; once EZ-Tree has them, they are its own.
 
 ## Platane — London plane (*Platanus × hispanica*)
 
@@ -370,10 +373,11 @@ then, if accepted:
 - **Branches**: rising, then arching down; long thin twigs hanging straight.
 - **Leaves**: narrow lances 8 to 15 cm, finely toothed; light yellow-green above, grey-white under. Deciduous,
   among the first out and last to fall.
-- **In EZ-Tree**: from « Aspen Large », three levels: a thick trunk (30, 2.6 thick) so the pull DOWN (force −0.05) bends
-  only the thin parts (EZ-Tree bends a section by the force over its radius): 10 branches from 40 %, angle 55, 30
-  long, 12 twigs each, 28 long, hanging; leaves size 5.5, 24. Bark `bark_willow` tinted (`#d4d0c4`), lightened (gain 1.8). Foliage shape
-  `lance`, `#8fb25a` to `#9bbd63`, under `#b6c99a`.
+- **In EZ-Tree**: from « Aspen Large », with our two additions to EZ-Tree (`droop`, `leaves.hang`, see « EZ-Tree
+  updates »): a thick trunk (22, 2.6 thick), no growth force; 12 limbs from 40 %, angle 55, 34 long, ARCHING
+  (droop 0.05); 11 twigs each, 22 long, HANGING (droop 0.4); leaves hanging (hang 0.92), size 8.5, 13 a twig. Bark
+  `bark_willow` tinted (`#d4d0c4`), lightened (gain 1.8). Foliage: a hanging strand of 18 narrow leaves (`lance`),
+  `#8fb25a` to `#9bbd63`, under `#b6c99a`.
 - **References**: Commons, categories « Salix babylonica » and « Salix × sepulcralis » (habit, leaves).
 
 ## Yeuse — Holm oak (*Quercus ilex*, and the cork oak *Q. suber*)

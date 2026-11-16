@@ -47,6 +47,9 @@ Durzo, puis, si elle est acceptée :
 2. Mesurer les empreintes de ses modèles avec la nouvelle version, dans un navigateur, et les reporter dans
    `tests/ez-tree.test.mjs` : le test vérifie que la copie fait pousser les mêmes arbres qu'EZ-Tree.
 3. Revoir nos essences : un changement de croissance change leurs silhouettes.
+4. Reporter NOS AJOUTS (listés en tête du fichier, marqués « Ours (#485) » dans le code) : `branch.droop` et
+   `leaves.hang`, neutres par défaut (les empreintes se mesurent sans eux), et testés dans `tests/ez-tree.test.mjs`.
+   Ils sont destinés à une pull request chez EZ-Tree ; une fois chez EZ-Tree, ils sont les siens.
 
 ## Platane commun (*Platanus × hispanica*)
 
@@ -382,11 +385,12 @@ Durzo, puis, si elle est acceptée :
 - **Branches** : montantes, puis retombant en arc ; de longs rameaux fins pendant droit.
 - **Feuilles** : lances étroites de 8 à 15 cm, finement dentées ; vert-jaune clair dessus, gris-blanc dessous.
   Caduques, parmi les premières à sortir et les dernières à tomber.
-- **Dans EZ-Tree** : départ « Aspen Large », trois niveaux : un tronc épais (30, épais de 2,6) pour que la traction vers
-  le BAS (force −0,05) ne courbe que les parties fines (EZ-Tree courbe une section selon la force divisée par son
-  rayon) : 10 branches dès 40 %, angle 55, longues de 30, 12 rameaux chacune, longs de 28, pendants ; feuilles
-  taille 5,5, 24. Écorce `bark_willow` teintée (`#d4d0c4`),
-  éclaircie (gain 1,8). Feuillage forme `lance`, `#8fb25a` à `#9bbd63`, revers `#b6c99a`.
+- **Dans EZ-Tree** : départ « Aspen Large », avec nos deux ajouts à EZ-Tree (`droop`, `leaves.hang`, voir « Les
+  mises à jour d'EZ-Tree ») : un tronc épais (22, épais de 2,6), sans force de croissance ; 12 charpentières dès
+  40 %, angle 55, longues de 34, ARQUÉES (droop 0,05) ; 11 rameaux chacune, longs de 22, PENDANTS (droop 0,4) ;
+  feuilles pendantes (hang 0,92), taille 8,5, 13 par rameau. Écorce `bark_willow` teintée (`#d4d0c4`), éclaircie
+  (gain 1,8). Feuillage : une lanière pendante de 18 feuilles étroites (`lance`), `#8fb25a` à `#9bbd63`, revers
+  `#b6c99a`.
 - **Références** : Commons, catégories « Salix babylonica » et « Salix × sepulcralis » (port, feuilles).
 
 ## Yeuse — chêne vert (*Quercus ilex*, et le chêne-liège *Q. suber*)
