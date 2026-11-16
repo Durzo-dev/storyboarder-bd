@@ -40,9 +40,11 @@ Added fields: an old file reads as it is.
   under roads and paths** (`reliefEffectif3D`), recomputed at each render. A road is draped by its axis
   (`profilFranchissant`), so it stays level across its width: `cutUnderRoads` brings every grid point
   within half its width (plus 0.5 m and a cell and a half) down to 10 cm under the road, and the drape
-  reuses the same profile. A path within a road's width (plus 1 m) is brought 5 cm under that road
-  (`hauteurSousLesRoutes`): each line reads its height on its own axis, so a path running beside a road on a
-  slope would otherwise cross through it and be cut in its middle; this way the road's edge cuts it. The cut is kept per Panel while neither the relief nor the lines change, and the whole effective relief
+  reuses the same profile. A path within a road's width (plus 0.5 m) is brought 8 cm under that road
+  (`hauteurSousLesRoutes`), and a path's ribbon on a relief has points every 50 cm across: each line reads its
+  height on its own axis, so a path running beside a road on a slope would otherwise cross through it and be
+  cut in its middle; this way the road's edge cuts it. A tree stands on the lowest ground around its trunk
+  (`hauteurSousLeTronc`, 60 cm around), so on a slope it sinks into the upper side rather than floating. The cut is kept per Panel while neither the relief nor the lines change, and the whole effective relief
   is kept per Panel while the relief, the Zones, rivers, roads and buildings are unchanged (`_reliefsEffectifs3D`,
   keyed by their settings and their `world` / `batiment` by identity, never by the camera): flattening
   under hundreds of buildings again on every frame took about 1 s per frame on a city centre. It uses the Ground's very material; the flat Ground

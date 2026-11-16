@@ -38,6 +38,17 @@ export function reliefValide(r){
 }
 
 /** La hauteur du relief en (x, z) (mètres), interpolée ; 0 hors de la grille ou sans relief. */
+/**
+ * Where a TREE stands on a slope: the lowest ground around its trunk (its centre and 8 points at `rayon`),
+ * not the height at its centre: on a slope the trunk then sinks into the upper side instead of floating
+ * above the lower one (reported on a quay, Nov. 2026: up to 0.3 m of air on a 1 m slope). PURE.
+ */
+export function hauteurSousLeTronc(r, x, z, rayon = 0.6){
+  let h = hauteurDuRelief(r, x, z);
+  for (let a = 0; a < 8; a++) h = Math.min(h, hauteurDuRelief(r, x + rayon * Math.cos(a * Math.PI / 4), z + rayon * Math.sin(a * Math.PI / 4)));
+  return h;
+}
+
 export function hauteurDuRelief(r, x, z){
   if (!reliefValide(r)) return 0;
   const fx = (x - r.x0) / r.pas, fz = (z - r.z0) / r.pas;
@@ -421,11 +432,12 @@ export function profilFranchissant(r, pts){
  * place de la Bastille). Chaque ligne lit sa hauteur sur SA ligne centrale : un chemin parallèle à une route, décalé de
  * quelques mètres sur une pente, lisait 0,31 m là où la route lisait 0,73 m ; les deux rubans se croisaient en 3D et la
  * coupure suivait leur intersection, au milieu de la route. Ici, dans l'emprise d'une route (sa demi-largeur, plus
- * `marge` : un sommet de chemin juste hors du bord, relié à un sommet dedans, ferait pointer son triangle au-dessus),
+ * `marge` : un sommet de chemin juste hors du bord, relié à un sommet dedans, ferait pointer son triangle au-dessus ;
+ * le ruban d'un chemin a pour cela des sommets tous les 50 cm en travers),
  * le chemin est ramené SOUS la route de `sous` : la route, opaque, le couvre jusqu'à son bord. `routes` :
  * [{ pts, demi, profil }]. Rend (x, z) → hauteur. PUR.
  */
-export function hauteurSousLesRoutes(profil, routes, { marge = 1, sous = 0.05 } = {}){
+export function hauteurSousLesRoutes(profil, routes, { marge = 0.5, sous = 0.08 } = {}){
   if (!Array.isArray(routes) || !routes.length) return profil;
   const loin = (r, x, z) => {
     let d = Infinity;

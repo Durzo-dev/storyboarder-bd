@@ -189,7 +189,7 @@ test('rendu : un Élément monte de la hauteur du relief sous lui ; une route s\
   const drape = hauteurRoute();
   assert.ok(Math.abs(drape - plat - R.hauteurDuRelief(r, 0, 0)) < 0.3, `la route au sommet : ${plat} → ${drape}`);
   const sc = lire('scene3d.js');
-  assert.match(sc, /wy \+= hauteurDuRelief\(_relief, wx, z\);/);
+  assert.match(sc, /wy \+= \(o\.objType === .arbre. \|\| o\.usage === .arbre.\) \? hauteurSousLeTronc\(_relief, wx, z\) : hauteurDuRelief\(_relief, wx, z\);/);
   assert.match(sc, /draperSurLeRelief3D\(group, _relief\);/);
 });
 
@@ -379,8 +379,9 @@ describe('hauteurSousLesRoutes: a path passes under the road it runs along', () 
   const pathProfile = () => 0.31;
   test('inside the road (and its margin) the path sits under the road', () => {
     const h = R.hauteurSousLesRoutes(() => 1.5, [road]);
-    assert.ok(Math.abs(h(1, 10) - 0.68) < 1e-9);      // 0.73 − 0.05
-    assert.ok(Math.abs(h(4.4, 10) - 0.68) < 1e-9);    // within demi + 1 m margin
+    assert.ok(Math.abs(h(1, 10) - 0.65) < 1e-9);      // 0.73 − 0.08
+    assert.ok(Math.abs(h(3.9, 10) - 0.65) < 1e-9);    // within demi + 0.5 m margin
+    assert.equal(h(4.1, 10), 1.5);                     // just past the margin: its own height
   });
   test('a path already lower stays where it is', () => {
     assert.equal(R.hauteurSousLesRoutes(pathProfile, [road])(1, 10), 0.31);
@@ -390,5 +391,20 @@ describe('hauteurSousLesRoutes: a path passes under the road it runs along', () 
   });
   test('without roads the profile is returned as is', () => {
     assert.equal(R.hauteurSousLesRoutes(pathProfile, []), pathProfile);
+  });
+});
+
+describe('hauteurSousLeTronc: a tree on a slope does not float', () => {
+  // A 1 m grid rising 0.3 m per metre eastward.
+  const nx = 11, nz = 11, h = [];
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) h.push(0.3 * i);
+  const r = { pas: 1, x0: -5, z0: -5, nx, nz, h, v: 1 };
+  test('the lowest ground around the trunk, not the centre', () => {
+    assert.ok(Math.abs(R.hauteurDuRelief(r, 0, 0) - 1.5) < 1e-9);
+    assert.ok(Math.abs(R.hauteurSousLeTronc(r, 0, 0) - (1.5 - 0.3 * 0.6)) < 1e-9);
+  });
+  test('on flat ground it is the height itself', () => {
+    const flat = { ...r, h: h.map(() => 2) };
+    assert.equal(R.hauteurSousLeTronc(flat, 0, 0), 2);
   });
 });

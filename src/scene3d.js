@@ -15,7 +15,7 @@ import { mursDevantMasques, mursDeDevant, versLaCameraDansLeBatiment, retenirMur
 import { estUnBatimentPlace } from './batiment-element.js';
 import { MARQUE_SOL_PERCE } from './batiment-3d.js';
 import { reliefPlat, signatureDuRelief, hauteurDuRelief, densifierLaLigne, aplanirSousLesEmprises, cutUnderRoads,
-  creuserLesRivieres, releverLesZones, profilFranchissant, hauteurSousLesRoutes, hauteurDeLaZone, PROFONDEUR_RIVIERE, EAU_SOUS_LA_BERGE, NIVEAU_EAU_PAR_DEFAUT } from './terrain-relief.js';
+  creuserLesRivieres, releverLesZones, profilFranchissant, hauteurSousLesRoutes, hauteurSousLeTronc, hauteurDeLaZone, PROFONDEUR_RIVIERE, EAU_SOUS_LA_BERGE, NIVEAU_EAU_PAR_DEFAUT } from './terrain-relief.js';
 import { installerEau3D } from './ground-water-3d.js';
 import { casesDuMasque, dansLeMasque, caseLaPlusProche } from './terrain-zone-pinceau.js';
 import { niveauxTries } from './batiment-niveaux.js';
@@ -2033,7 +2033,9 @@ export function buildTracéWallGeometry3D(worldPts, wallH, wallT, yBase, holes) 
 // Builds a THREE.BufferGeometry of a flat ribbon for a Road/Dirt Path.
 // Uses miter joints at corners for continuous transitions without gaps.
 // worldPts = [{x,z}...], worldWidth = width in world units, yOff = optional Y.
-function buildTracéRouteGeometry3D(worldPts, worldWidth, yOff) {
+// across = strips across the width (1: its two edges only). A path draped under a road needs points
+// across its width: with its two edges only, the slope between them crossed the road mid-width.
+function buildTracéRouteGeometry3D(worldPts, worldWidth, yOff, across = 1) {
   // Catmull-Rom smoothing: 8 subdivisions per segment for natural turns.
   const smoothed = smoothTracéPath3D(worldPts, 8);
   const n = smoothed ? smoothed.length : 0;
@@ -2075,11 +2077,15 @@ function buildTracéRouteGeometry3D(worldPts, worldWidth, yOff) {
     rz.push(p.z - mz * hw * mScale);
   }
 
-  // Triangle strip: 2 triangles per segment.
-  const verts = [];
+  // Triangle strips: 2 triangles per segment and per strip across.
+  const verts = [], k = Math.max(1, Math.round(across));
+  const at = (i, t) => [lx[i] + (rx[i] - lx[i]) * t, y, lz[i] + (rz[i] - lz[i]) * t];
   for (let i = 0; i < n - 1; i++) {
-    verts.push(lx[i], y, lz[i],   rx[i], y, rz[i],     lx[i+1], y, lz[i+1]);
-    verts.push(rx[i], y, rz[i],   rx[i+1], y, rz[i+1], lx[i+1], y, lz[i+1]);
+    for (let s = 0; s < k; s++) {
+      const t0 = s / k, t1 = (s + 1) / k;
+      verts.push(...at(i, t0), ...at(i, t1), ...at(i + 1, t0));
+      verts.push(...at(i, t1), ...at(i + 1, t1), ...at(i + 1, t0));
+    }
   }
   if (verts.length === 0) return null;
   const geo = new THREE.BufferGeometry();
@@ -3099,7 +3105,8 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       z  = ((o.wzFloor !== undefined) ? o.wzFloor : getElementDepth(o)) + idx * 0.0001;
       // #462c-2 : ce qui est posé suit le relief (un bâtiment, la hauteur en son centre : le relief y
       // est aplani à cette hauteur).
-      wy += hauteurDuRelief(_relief, wx, z);
+      // A tree stands on the lowest ground around its trunk: on a slope it does not float (hauteurSousLeTronc).
+      wy += (o.objType === 'arbre' || o.usage === 'arbre') ? hauteurSousLeTronc(_relief, wx, z) : hauteurDuRelief(_relief, wx, z);
     }
     // For Personas: use the standing height measured once at rig creation
     // (entry.deboutNaturalH) as a fixed reference, to prevent lying-down (lieFlat)
@@ -3566,7 +3573,9 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         const isRoute = o.tracéType === 'route';
         const col     = o.color || (isRoute ? '#888888' : '#9B7240');
         // Main mesh: the road's body.
-        const roadGeo = buildTracéRouteGeometry3D(w.pts, w.width, GROUND_Y_DEFAULT_3D + 0.007);
+        // A path on a relief gets points every 50 cm across: under a road it sinks right at the road's edge.
+        const across = (!isRoute && !reliefPlat(_relief)) ? Math.ceil((w.width || 4) / 0.5) : 1;
+        const roadGeo = buildTracéRouteGeometry3D(w.pts, w.width, GROUND_Y_DEFAULT_3D + 0.007, across);
         if (roadGeo) {
           const roadMat = materiauDeTrace3D(isRoute ? 'route' : 'chemin', o.color, { texture: o.traceTexture,
             couleurAplat: col, roughness: isRoute ? 0.85 : 0.99, metalness: 0,
