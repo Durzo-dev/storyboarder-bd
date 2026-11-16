@@ -30,6 +30,9 @@ camera's distance.
 When a Scene is created from a place (Detailed and Realistic levels), a tree whose genus is one of a species (OSM
 tags, else drawn from the flora) is given that species (`essence`), a variant drawn from its place and, without a
 measured height, the species' usual one (±15 %). It takes no model of the bank nor of the stores.
+Every genus of the flora's table (`GENERA`, flora.js) has a species: a species stands for several genera of one
+form (its `genus` list, named on its sheet). A shrub or a bush without its genus takes its type's stand-in
+(`typeDefault`: the evergreen shrub, the bramble); a tree or a conifer without its genus takes none (the bank).
 
 A bark is a Poly Haven photo (`bark`, shipped as `assets/textures/ecorce-*.jpg`) or drawn in code (`barkDrawn`, the birch's:
 no photo of a white birch bark there); `barkGain` lightens one darker than the real bark (its tint times the gain).
@@ -520,3 +523,135 @@ then, if accepted:
   ringed, diamond scars). Frond DRAWN (`palmFrond`, pinnate: a broad sheath, a stalk with spines, a tapering rachis,
   narrow curved leaflets angled forward, their fold lit).
 - **References**: Commons, categories « Phoenix canariensis » and « Phoenix dactylifera » (habit, leaves, trunk).
+
+## Catalpa — Indian bean tree and empress tree (*Catalpa bignonioides*, *Paulownia tomentosa*)
+
+- **Silhouette**: 10 to 15 m, a broad low dome, often wider than tall, on a short trunk.
+- **Trunk**: short, 0.4 to 0.8 m. Grey-brown bark, thin, in small scales.
+- **Branches**: few and thick, spreading (55 to 65°), crooked.
+- **Leaves**: very LARGE hearts (20 to 30 cm, the paulownia's up to 40), soft, light green, in pairs or threes. Long
+  bean-like pods (catalpa) or egg-shaped capsules (paulownia). Deciduous.
+- **In EZ-Tree**: from « Oak Medium »; trunk 18, branches from 40 %, angle 58, 6 branches, gnarled 0.12; leaves
+  size 4.4, 13. Bark `japanese_camphor_bark` tinted (`#b0a89c`). Foliage shape `linden`, large (80), in pairs,
+  `#6a9a3e` to `#76a647`. Also for *Paulownia*.
+- **References**: Commons, categories « Catalpa bignonioides » and « Paulownia tomentosa » (habit, leaves).
+
+## Ginkgo — Maidenhair tree (*Ginkgo biloba*)
+
+- **Silhouette**: 15 to 25 m, narrow and irregular when young (a loose column), broader with age.
+- **Trunk**: straight, 0.4 to 0.8 m. Grey-brown bark, furrowed.
+- **Branches**: rising (40°), with short spur shoots crowded with leaves.
+- **Leaves**: FANS, 5 to 8 cm, wavy outer edge often notched in the middle, on a long stalk; light green; golden
+  yellow in autumn. Deciduous.
+- **In EZ-Tree**: from « Aspen Medium »; branches from 22 %, angle 42, 10 branches, 1.5 × as long; leaves size
+  4.5, 18. Bark `tree_bark_03` tinted (`#b4aca0`). Foliage shape `fan` (drawn for it), `#7aa648` to `#86b251`.
+- **References**: Commons, category « Ginkgo biloba » (habit, leaves).
+
+## Eucalyptus — Eucalyptus (*Eucalyptus globulus*, *E. gunnii*, *E. camaldulensis*)
+
+- **Silhouette**: 20 to 40 m, tall and open, the crown irregular, light.
+- **Trunk**: tall, straight, SMOOTH, pale cream to grey, shedding its bark in long strips.
+- **Branches**: rising (40°), few, the twigs hanging.
+- **Leaves**: adult leaves narrow sickles, 10 to 25 cm, HANGING, grey-green to blue-green, leathery; aromatic.
+  Evergreen.
+- **In EZ-Tree**: from « Aspen Large »; branches from 30 %, angle 40, 1.4 × as long, gnarled 0.15; leaves size 6,
+  24, hanging (0.5). Bark `japanese_sycamore` (smooth, pale) brightened (`barkGain` 1.5). Foliage shape `lance`,
+  narrow, grey-green `#7f9a7a` to `#8aa584`.
+- **References**: Commons, categories « Eucalyptus globulus » and « Eucalyptus camaldulensis » (habit, bark).
+
+## Figuier — Fig and mulberry (*Ficus carica*, *Morus alba*, *M. nigra*, *M. kagayamae* of the streets)
+
+- **Silhouette**: 5 to 10 m, low and spreading, often several stems, wider than tall.
+- **Trunk**: short, often leaning, smooth grey (fig) or orange-brown and furrowed (mulberry).
+- **Branches**: thick, spreading widely (70°).
+- **Leaves**: large, 3 to 5 deep lobes (fig, rough), or heart-shaped to lobed (mulberry, shiny); 10 to 25 cm;
+  mid to dark green. Deciduous. Figs, mulberries.
+- **In EZ-Tree**: from « Oak Small »; trunk 9, angle 70, 6 branches; leaves size 6, 12. Bark `japanese_sycamore`
+  tinted (`#c0bab0`). Foliage shape `maple` (broad lobes), large (88), `#4f7f36` to `#5a8b3e`.
+- **References**: Commons, categories « Ficus carica » and « Morus alba » (habit, leaves).
+
+## Gainier — Judas tree and crape myrtle (*Cercis siliquastrum*, *Lagerstroemia indica*)
+
+- **Silhouette**: 5 to 10 m, a small tree, often multi-stemmed, a rounded open crown.
+- **Trunk**: short, often crooked; dark grey (Judas tree) or smooth, mottled grey and pink, peeling (crape myrtle).
+- **Branches**: rising then spreading (45°), zigzag.
+- **Leaves**: kidney-shaped, rounded (Judas tree, 7 to 12 cm) or small ovals (crape myrtle); mid green. Pink flowers
+  on bare wood in spring (Judas tree), in summer panicles (crape myrtle). Deciduous.
+- **In EZ-Tree**: from « Oak Small »; trunk 6, angle 45, 7 branches, gnarled 0.16; leaves size 4.5, 16. Bark
+  `sakura_bark` tinted (`#9c948c`). Foliage shape `linden`, `#5d8f3c` to `#679a44`.
+- **References**: Commons, categories « Cercis siliquastrum » and « Lagerstroemia indica » (habit, flowers).
+
+## Sequoia — Redwoods and Japanese cedar (*Sequoiadendron giganteum*, *Sequoia sempervirens*, *Metasequoia glyptostroboides*, *Cryptomeria japonica*)
+
+- **Silhouette**: 25 to 50 m in parks, a tall dense cone, rounded at the top with age.
+- **Trunk**: VERY broad at the base, tapering; thick soft fibrous bark, red-brown (rusty for the metasequoia).
+- **Branches**: short, drooping then upturned at their tips, along the whole trunk.
+- **Leaves**: scales pressed on the shoots (giant sequoia, cryptomeria) or flat needles in two rows (redwood,
+  metasequoia, which is deciduous: russet in autumn); blue-green to dark green.
+- **In EZ-Tree**: from « Pine Large »; trunk 1.6 × as thick, straight (gnarliness 0.005), no growth force, branches
+  0.6 × as long; leaves size 3.5, 1.2 × as many. Bark `metasequoia_bark` tinted red (`#e0a080`). Foliage
+  `firSpray`, `#3f6436` to `#4f7a42`.
+- **References**: Commons, categories « Sequoiadendron giganteum », « Metasequoia glyptostroboides » and
+  « Cryptomeria japonica » (habit, bark).
+
+## Araucaria — Monkey puzzle (*Araucaria araucana*, *A. heterophylla*)
+
+- **Silhouette**: 10 to 25 m, a tall bare trunk then TIERS of long level branches, a dome on top with age.
+- **Trunk**: straight, cylindrical, grey bark ringed by old branch scars.
+- **Branches**: in whorls of 5 to 7, level, long, upturned at their tips, few side twigs (« ropes »).
+- **Leaves**: stiff overlapping triangles, sharp, dark glossy green, covering the branches entirely. Evergreen.
+- **In EZ-Tree**: from « Pine Medium », two levels: 20 branches from 35 %, level (84°), 22 long, a straight trunk,
+  no growth force; 4 short twigs each; leaves size 4, 10. Bark `knotted_pine_bark` tinted grey (`#9a948c`). Foliage
+  `needleTuft`, dark `#2f5228` to `#3f6634`.
+- **References**: Commons, categories « Araucaria araucana » and « Araucaria heterophylla » (habit).
+
+## Laurier — Evergreen shrubs (*Laurus*, *Ilex*, *Ligustrum*, *Buxus*, *Euonymus*, *Phillyrea*, *Photinia*, *Pittosporum*, *Myrtus*, *Nerium*, *Pistacia*, *Arbutus*, *Viburnum*)
+
+- **Silhouette**: 1 to 6 m, DENSE and rounded, many stems, leafy to the ground (hedges, gardens, roadsides).
+- **Trunk**: stems from the ground, smooth, grey to brown (the strawberry tree's red and peeling).
+- **Branches**: rising (25°), then spreading, dense.
+- **Leaves**: ovals or lances, LEATHERY, glossy dark green above, paler under; 3 to 12 cm (oleander's narrow,
+  holly's spiny, box's tiny). Evergreen. The stand-in of a shrub without its genus (`typeDefault`).
+- **In EZ-Tree**: from « Bush 1 » (stems from the ground); angle 24, 11 stems, twigs at 45°; leaves size 3, 20.
+  Bark `sakura_bark` tinted dark (`#8c8478`). Foliage shape `ovate`, dark `#2f5a28` to `#386630`, lighter undersides.
+- **References**: Commons, categories « Laurus nobilis », « Ilex aquifolium », « Ligustrum » and « Nerium oleander »
+  (habit, leaves).
+
+## Lavande — Lavender, heather and other sub-shrubs (*Lavandula*, *Thymus*, *Salvia*, *Rosmarinus*, *Calluna*, *Erica*, *Cistus*)
+
+- **Silhouette**: 0.3 to 1 m, a low rounded tuft, its stems rising from one base.
+- **Trunk**: none: woody stems at the base.
+- **Branches**: thin upright stems, many.
+- **Leaves**: narrow, small, grey-green (lavender, rosemary, thyme) or scales (heather); flowers at the stems' tips:
+  violet spikes (lavender), purple to pink bells (heather). Evergreen.
+- **In EZ-Tree**: from « Bush 2 »; 14 stems at 30°; leaves size 4, 9. Foliage DRAWN (`bushSprig`): stems `#7e9070`,
+  narrow grey-green leaves `#93a68a`, violet spikes `#8a74b8`.
+- **References**: Commons, categories « Lavandula angustifolia », « Calluna vulgaris » and « Cistus » (habit).
+
+## Genet — Broom and gorse (*Spartium junceum*, *Genista*, *Cytisus scoparius*, *Ulex europaeus*)
+
+- **Silhouette**: 1 to 3 m, a clump of upright green rods, airy.
+- **Trunk**: none: stems from the ground.
+- **Branches**: green, rush-like, rising steeply (20°), almost leafless (gorse: spines).
+- **Leaves**: few and tiny, falling early: the green stems do their work. Masses of YELLOW pea flowers in spring.
+- **In EZ-Tree**: from « Bush 2 »; 12 stems at 22°; leaves size 4.2, 9. Foliage DRAWN (`bushSprig`): green rods
+  `#4f7a34`, yellow flowers `#e8c62a`, no leaves.
+- **References**: Commons, categories « Spartium junceum » and « Ulex europaeus » (habit, flowers).
+
+## Ronce — Bramble and rose (*Rubus*, *Rosa*, *Ruscus*)
+
+- **Silhouette**: 0.5 to 2 m, a tangled mound, its long stems arching back to the ground.
+- **Trunk**: none: thorny arching canes.
+- **Branches**: arching (50°), hanging at their tips, crossing.
+- **Leaves**: compound, 3 to 7 toothed leaflets, dark green above; white to pink flowers, berries or hips.
+  Deciduous to semi-evergreen. The stand-in of a bush without its genus (`typeDefault`).
+- **In EZ-Tree**: from « Bush 1 »; angle 50, 10 canes, gnarled 0.2, drooping (0.25); leaves size 3.6, 22. Bark
+  `sakura_bark` tinted (`#8a6a5a`). Foliage shape `ovate`, in pairs, `#3f6a30` to `#4a7638`.
+- **References**: Commons, categories « Rubus fruticosus » and « Rosa canina » (habit).
+
+## Genera joined to an existing species
+
+Of a form close enough to share its sheet: *Zelkova* the elm (Orme), *Sorbus* the ash (Frene), *Tsuga* the Douglas
+fir (Douglas), *Juniperus* the yew (If); the pinnate *Ailanthus*, *Melia* and *Koelreuteria* the pagoda tree
+(Sophora), *Albizia* and *Jacaranda* the honey locust (Fevier); the deciduous shrubs *Cornus*, *Crataegus*,
+*Sambucus* and *Rhamnus* the hazel (Noisetier).

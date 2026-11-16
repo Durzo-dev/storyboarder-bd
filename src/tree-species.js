@@ -261,6 +261,17 @@ const SHAPES = {
     ctx.lineTo(-s * 0.6, -s * 0.15); ctx.lineTo(-s * 0.85, s * 0.35); ctx.lineTo(-s * 0.35, s * 0.55);
     ctx.closePath();
   },
+  // A ginkgo's: a fan, its outer edge wavy and notched in its middle, on a long stalk (Ginkgo biloba).
+  fan(ctx, s){
+    ctx.beginPath(); ctx.moveTo(0, s);
+    ctx.lineTo(-s * 0.08, s * 0.2);
+    ctx.quadraticCurveTo(-s * 0.95, -s * 0.2, -s * 0.85, -s * 0.7);
+    ctx.quadraticCurveTo(-s * 0.45, -s * 0.95, -s * 0.06, -s * 0.72);
+    ctx.lineTo(0, -s * 0.5); ctx.lineTo(s * 0.06, -s * 0.72);
+    ctx.quadraticCurveTo(s * 0.45, -s * 0.95, s * 0.85, -s * 0.7);
+    ctx.quadraticCurveTo(s * 0.95, -s * 0.2, s * 0.08, s * 0.2);
+    ctx.closePath();
+  },
   // A sweet chestnut's: long and narrow, a sharp tooth at the end of each vein (Castanea sativa).
   serrate(ctx, s){
     const n = 22, w = (t) => s * 0.3 * Math.pow(Math.sin(Math.PI * t), 0.7);
@@ -320,6 +331,36 @@ function cypressSpray({ colours = ['#2f4f27', '#3a5f2e', '#456d33'], tip = '#7d9
     }
   }
   frond(256, 505, 0, 360, 9, 3);
+  return c;
+}
+
+/**
+ * A bush's sprig: thin upright stems, `leaf` tiny leaves along them (narrow, grey-green for a lavender or a
+ * heather; none for a broom's green rods), and `flower` dots or spikes at their tops (`spike`: a lavender's).
+ */
+function bushSprig({ stem = '#5e7a44', leaf = null, flower = null, spike = false, seed = 1, makeCanvas = domCanvas } = {}){
+  const c = makeCanvas(512);
+  const ctx = c.getContext('2d'), rnd = rng(seed);
+  ctx.lineCap = 'round';
+  for (let k = 0; k < 13; k++) {
+    const a = (rnd() - 0.5) * 1.2, len = 300 + rnd() * 170;
+    const ex = 256 + Math.sin(a) * len, ey = 505 - Math.cos(a) * len;
+    ctx.strokeStyle = stem; ctx.lineWidth = 3 + rnd() * 2;
+    ctx.beginPath(); ctx.moveTo(256, 505); ctx.quadraticCurveTo(256 + Math.sin(a) * len * 0.3, 505 - len * 0.6, ex, ey); ctx.stroke();
+    if (leaf) for (let i = 0; i < 18; i++) {
+      const t = 0.15 + 0.75 * rnd(), px = 256 + (ex - 256) * t, py = 505 + (ey - 505) * t, b = a + (i % 2 ? 0.7 : -0.7);
+      ctx.strokeStyle = leaf; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + Math.sin(b) * 26, py - Math.cos(b) * 26); ctx.stroke();
+    }
+    if (flower) {
+      ctx.fillStyle = flower;
+      const n = spike ? 9 : 5;
+      for (let i = 0; i < n; i++) {
+        const t = spike ? 0.82 + 0.18 * i / n : 0.4 + 0.6 * rnd(), px = 256 + (ex - 256) * t + (spike ? 0 : (rnd() - 0.5) * 16), py = 505 + (ey - 505) * t;
+        ctx.beginPath(); ctx.ellipse(px, py, spike ? 7 : 9, spike ? 9 : 8, a, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+  }
   return c;
 }
 
@@ -409,7 +450,7 @@ export const SPECIES = {
     bark: BARK('bark_brown_02'), barkTint: 0xe0d8cc,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'chestnut', colours: ['#3f7a33', '#4b8a3a', '#386f2e'], n: 4, opposite: true, size: 80, spread: 0.6, seed }),
     set(o){ o.branch.angle[1] = 45; o.branch.force.strength = -0.02; o.branch.length[0] = 45; o.leaves.size = 7; o.leaves.count = 16; } },
-  Frene: { from: 'Ash Large', label: { fr: 'Frêne', en: 'Ash' }, type: 'arbre', height: 20, genus: 'Fraxinus',
+  Frene: { from: 'Ash Large', label: { fr: 'Frêne', en: 'Ash' }, type: 'arbre', height: 20, genus: ['Fraxinus', 'Sorbus'],
     bark: BARK('bark_brown_01'), barkTint: 0xcfcfc8,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'lance', colours: ['#5a9445', '#66a04d', '#528a3e'], n: 11, opposite: true, size: 46, spread: 0.7, seed }),
     set(o){ o.branch.angle[1] = 35; o.branch.start[1] = 0.45; o.leaves.size = 5; o.leaves.count = 16; } },
@@ -467,11 +508,11 @@ export const SPECIES = {
 // Wave 2 (#480h) is added to SPECIES just below: the rest of the streets, the holm oak, the stone pine, the
 // forests' Douglas fir and larch.
 Object.assign(SPECIES, {
-  Sophora: { from: 'Ash Medium', label: { fr: 'Sophora', en: 'Pagoda tree' }, type: 'arbre', height: 14, genus: ['Styphnolobium', 'Sophora'],
+  Sophora: { from: 'Ash Medium', label: { fr: 'Sophora', en: 'Pagoda tree' }, type: 'arbre', height: 14, genus: ['Styphnolobium', 'Sophora', 'Ailanthus', 'Melia', 'Koelreuteria'],
     bark: BARK('japanese_camphor_bark'), barkTint: 0xc8c4bc,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#4f8a3a', '#5a9643', '#467f35'], n: 11, size: 30, opposite: true, spread: 0.6, seed }),
     set(o){ o.branch.angle[1] = 50; o.branch.children[0] = 9; o.branch.gnarliness[1] = 0.2; o.leaves.size = 6; o.leaves.count = 20; } },
-  Orme: { from: 'Oak Medium', label: { fr: 'Orme', en: 'Elm' }, type: 'arbre', height: 18, genus: 'Ulmus',
+  Orme: { from: 'Oak Medium', label: { fr: 'Orme', en: 'Elm' }, type: 'arbre', height: 18, genus: ['Ulmus', 'Zelkova'],
     bark: BARK('bark_brown_01'), barkTint: 0xbcb8b0,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'serrate', colours: ['#3f7030', '#4a7c38', '#3a672c'], n: 9, size: 44, seed }),
     set(o){ o.branch.start[1] = 0.22; o.branch.angle[1] = 42; o.branch.length[0] = 40; o.branch.length[1] = 24; o.branch.force.strength = 0.01; o.leaves.size = 6; o.leaves.count = 22; } },
@@ -479,7 +520,7 @@ Object.assign(SPECIES, {
     bark: BARK('tree_bark_03'), barkTint: 0x8c8880,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'linden', colours: ['#365f2a', '#3f6a30', '#305626'], n: 8, size: 46, seed }),
     set(o){ o.branch.angle[1] = 55; o.branch.length[1] = 16; o.branch.children[0] = 12; o.branch.start[1] = 0.25; o.leaves.size = 5; o.leaves.count = 18; } },
-  Noisetier: { from: 'Bush 1', label: { fr: 'Noisetier', en: 'Hazel' }, type: 'arbuste', height: 4, genus: 'Corylus',
+  Noisetier: { from: 'Bush 1', label: { fr: 'Noisetier', en: 'Hazel' }, type: 'arbuste', height: 4, genus: ['Corylus', 'Cornus', 'Crataegus', 'Sambucus', 'Rhamnus'],
     bark: BARK('sakura_bark'), barkTint: 0xb8a898,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'linden', colours: ['#55893f', '#609547', '#4c7d38'], n: 7, size: 52, seed }),
     set(o){ o.branch.angle[1] = 18; o.branch.children[0] = 9; o.leaves.size = 4; o.leaves.count = 16; } },
@@ -492,11 +533,11 @@ Object.assign(SPECIES, {
       o.branch.children[1] = 7; o.branch.angle[2] = 88; o.branch.length[2] = 12; o.branch.start[2] = 0.15; o.branch.radius[2] = 0.6;
       o.leaves.size = 4.5; o.leaves.count = 12; o.leaves.start = 0.2; o.leaves.angle = 80;
     } },
-  Fevier: { from: 'Ash Medium', label: { fr: 'Févier', en: 'Honey locust' }, type: 'arbre', height: 15, genus: 'Gleditsia',
+  Fevier: { from: 'Ash Medium', label: { fr: 'Févier', en: 'Honey locust' }, type: 'arbre', height: 15, genus: ['Gleditsia', 'Albizia', 'Jacaranda'],
     bark: BARK('japanese_camphor_bark'), barkTint: 0x9c9890,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#7aa84a', '#86b453', '#6e9b42'], n: 13, size: 22, opposite: true, spread: 0.5, seed }),
     set(o){ o.branch.angle[1] = 60; o.branch.children[0] = 6; o.branch.gnarliness[1] = 0.18; o.leaves.size = 5.5; o.leaves.count = 14; } },
-  If: { from: 'Bush 3', label: { fr: 'If', en: 'Yew' }, type: 'conifere', height: 10, genus: 'Taxus',
+  If: { from: 'Bush 3', label: { fr: 'If', en: 'Yew' }, type: 'conifere', height: 10, genus: ['Taxus', 'Juniperus'],
     bark: BARK('chinese_cedar_bark'), barkTint: 0xd09a80,
     foliage: (seed, makeCanvas) => firSpray({ seed, makeCanvas, colours: ['#2a4526', '#31502c', '#385a32'], under: '#5e7a50' }),
     set(o){ o.branch.length[0] = 12; o.branch.radius[0] = 1.2; o.branch.angle[1] = 40; o.branch.length[1] = 10; o.branch.length[2] = 6; o.leaves.size = 3.6; o.leaves.count = 6; } },
@@ -527,7 +568,7 @@ Object.assign(SPECIES, {
       o.branch.children[1] = 12; o.branch.angle[2] = 40; o.branch.length[2] = 10; o.branch.start[2] = 0.35; o.branch.radius[2] = 0.6;
       o.leaves.size = 5; o.leaves.count = 30; o.leaves.start = 0.2; o.leaves.angle = 70;
     } },
-  Douglas: { from: 'Pine Large', label: { fr: 'Douglas', en: 'Douglas fir' }, type: 'conifere', height: 30, genus: 'Pseudotsuga',
+  Douglas: { from: 'Pine Large', label: { fr: 'Douglas', en: 'Douglas fir' }, type: 'conifere', height: 30, genus: ['Pseudotsuga', 'Tsuga'],
     bark: BARK('knotted_pine_bark'), barkTint: 0xb0a090,
     foliage: (seed, makeCanvas) => firSpray({ seed, makeCanvas, colours: ['#3e6838', '#477342', '#517e4b'], under: '#7c9c74' }),
     set(o){ o.branch.gnarliness[0] = 0.01; o.branch.force.strength = 0; o.leaves.size = 3.5; } },
@@ -577,6 +618,64 @@ Object.assign(SPECIES, {
     } },
 });
 
+// Wave 3: the rarer trees of towns, the shrubs and the bushes. A species stands for several genera of one form
+// (its sheet names them): the genera of a form too close to an existing species joined it (Zelkova the elm, Sorbus
+// the ash, Tsuga the Douglas fir, Juniperus the yew; the pinnate Ailanthus, Melia and Koelreuteria the pagoda tree,
+// Albizia and Jacaranda the honey locust; the deciduous shrubs the hazel).
+Object.assign(SPECIES, {
+  Catalpa: { from: 'Oak Medium', label: { fr: 'Catalpa / paulownia', en: 'Catalpa / paulownia' }, type: 'arbre', height: 12, genus: ['Catalpa', 'Paulownia'],
+    bark: BARK('japanese_camphor_bark'), barkTint: 0xb0a89c,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'linden', colours: ['#6a9a3e', '#76a647', '#5f8c37'], n: 5, size: 80, opposite: true, seed }),
+    set(o){ o.branch.length[0] = 18; o.branch.start[1] = 0.4; o.branch.angle[1] = 58; o.branch.children[0] = 6; o.branch.gnarliness[1] = 0.12; o.leaves.size = 4.4; o.leaves.count = 13; } },
+  Ginkgo: { from: 'Aspen Medium', label: { fr: 'Ginkgo', en: 'Ginkgo' }, type: 'arbre', height: 16, genus: 'Ginkgo',
+    bark: BARK('tree_bark_03'), barkTint: 0xb4aca0,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'fan', colours: ['#7aa648', '#86b251', '#6f9a40'], n: 9, size: 44, spread: 1.2, seed }),
+    set(o){ o.branch.start[1] = 0.22; o.branch.angle[1] = 42; o.branch.children[0] = 10; o.branch.length[1] = o.branch.length[1] * 1.5; o.leaves.size = 4.5; o.leaves.count = 18; } },
+  Eucalyptus: { from: 'Aspen Large', label: { fr: 'Eucalyptus', en: 'Eucalyptus' }, type: 'arbre', height: 22, genus: 'Eucalyptus',
+    bark: BARK('japanese_sycamore'), barkTint: 0xffffff, barkGain: 1.5,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'lance', colours: ['#7f9a7a', '#8aa584', '#73906e'], n: 12, size: 54, spread: 0.4, seed }),
+    set(o){ o.branch.start[1] = 0.3; o.branch.angle[1] = 40; o.branch.length[1] = o.branch.length[1] * 1.4; o.branch.gnarliness[1] = 0.15; o.leaves.size = 6; o.leaves.count = 24; o.leaves.hang = 0.5; } },
+  Figuier: { from: 'Oak Small', label: { fr: 'Figuier / mûrier', en: 'Fig / mulberry' }, type: 'arbre', height: 7, genus: ['Ficus', 'Morus'],
+    bark: BARK('japanese_sycamore'), barkTint: 0xc0bab0,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'maple', colours: ['#4f7f36', '#5a8b3e', '#46732f'], n: 5, size: 88, seed }),
+    set(o){ o.branch.length[0] = 9; o.branch.angle[1] = 70; o.branch.children[0] = 6; o.leaves.size = 6; o.leaves.count = 12; } },
+  Gainier: { from: 'Oak Small', label: { fr: 'Arbre de Judée / lilas des Indes', en: 'Redbud / crape myrtle' }, type: 'arbre', height: 7, genus: ['Cercis', 'Lagerstroemia'],
+    bark: BARK('sakura_bark'), barkTint: 0x9c948c,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'linden', colours: ['#5d8f3c', '#679a44', '#527f35'], n: 7, size: 54, seed }),
+    set(o){ o.branch.length[0] = 6; o.branch.angle[1] = 45; o.branch.children[0] = 7; o.branch.gnarliness[1] = 0.16; o.leaves.size = 4.5; o.leaves.count = 16; } },
+  Sequoia: { from: 'Pine Large', label: { fr: 'Séquoia / cryptomeria', en: 'Redwood / cryptomeria' }, type: 'conifere', height: 30,
+    genus: ['Sequoia', 'Sequoiadendron', 'Metasequoia', 'Cryptomeria'],
+    bark: BARK('metasequoia_bark'), barkTint: 0xe0a080,
+    foliage: (seed, makeCanvas) => firSpray({ seed, makeCanvas, colours: ['#3f6436', '#47703c', '#4f7a42'], under: '#7a9670' }),
+    set(o){ o.branch.radius[0] = o.branch.radius[0] * 1.6; o.branch.gnarliness[0] = 0.005; o.branch.length[1] = o.branch.length[1] * 0.6; o.branch.force.strength = 0; o.leaves.size = 3.5; o.leaves.count = Math.round(o.leaves.count * 1.2); } },
+  Araucaria: { from: 'Pine Medium', label: { fr: 'Araucaria', en: 'Monkey puzzle' }, type: 'conifere', height: 15, genus: 'Araucaria',
+    bark: BARK('knotted_pine_bark'), barkTint: 0x9a948c,
+    foliage: (seed, makeCanvas) => needleTuft({ seed, makeCanvas, colours: ['#2f5228', '#365c2e', '#3f6634'] }),
+    set(o){
+      o.branch.levels = 2; o.branch.start[1] = 0.35; o.branch.children[0] = 20; o.branch.angle[1] = 84; o.branch.length[1] = 22;
+      o.branch.gnarliness[0] = 0.005; o.branch.gnarliness[1] = 0.02; o.branch.force.strength = 0; o.branch.radius[1] = 0.4;
+      o.branch.children[1] = 4; o.branch.angle[2] = 70; o.branch.length[2] = 6; o.branch.start[2] = 0.5;
+      o.leaves.size = 4; o.leaves.count = 10; o.leaves.start = 0.3;
+    } },
+  Laurier: { from: 'Bush 1', label: { fr: 'Arbuste persistant (laurier, houx, troène…)', en: 'Evergreen shrub (bay, holly, privet…)' }, type: 'arbuste', height: 4, typeDefault: true,
+    genus: ['Laurus', 'Ilex', 'Ligustrum', 'Buxus', 'Euonymus', 'Phillyrea', 'Photinia', 'Pittosporum', 'Myrtus', 'Nerium', 'Pistacia', 'Arbutus', 'Viburnum'],
+    bark: BARK('sakura_bark'), barkTint: 0x8c8478,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#2f5a28', '#386630', '#2a4f24'], under: '#6f8a5e', n: 10, size: 40, seed }),
+    set(o){ o.branch.angle[1] = 24; o.branch.children[0] = 11; o.branch.angle[2] = 45; o.leaves.size = 3; o.leaves.count = 20; } },
+  Lavande: { from: 'Bush 2', label: { fr: 'Lavande / bruyère (sous-arbrisseau)', en: 'Lavender / heather (sub-shrub)' }, type: 'buisson', height: 0.7,
+    genus: ['Lavandula', 'Thymus', 'Salvia', 'Calluna', 'Erica', 'Cistus', 'Rosmarinus'],
+    bark: BARK('sakura_bark'), barkTint: 0x8c8478,
+    foliage: (seed, makeCanvas) => bushSprig({ seed, makeCanvas, stem: '#7e9070', leaf: '#93a68a', flower: '#8a74b8', spike: true }),
+    set(o){ o.branch.children[0] = 14; o.branch.angle[1] = 30; o.leaves.size = 4; o.leaves.count = 9; } },
+  Genet: { from: 'Bush 2', label: { fr: 'Genêt / ajonc', en: 'Broom / gorse' }, type: 'buisson', height: 1.6, genus: ['Genista', 'Spartium', 'Ulex', 'Cytisus'],
+    bark: BARK('sakura_bark'), barkTint: 0x7c8a5c,
+    foliage: (seed, makeCanvas) => bushSprig({ seed, makeCanvas, stem: '#4f7a34', flower: '#e8c62a' }),
+    set(o){ o.branch.children[0] = 12; o.branch.angle[1] = 22; o.leaves.size = 4.2; o.leaves.count = 9; } },
+  Ronce: { from: 'Bush 1', label: { fr: 'Ronce / rosier', en: 'Bramble / rose' }, type: 'buisson', height: 1.4, typeDefault: true, genus: ['Rubus', 'Rosa', 'Ruscus'],
+    bark: BARK('sakura_bark'), barkTint: 0x8a6a5a,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#3f6a30', '#4a7638', '#365e2a'], n: 9, size: 34, opposite: true, seed }),
+    set(o){ o.branch.angle[1] = 50; o.branch.children[0] = 10; o.branch.gnarliness[1] = 0.2; o.branch.droop[1] = 0.25; o.leaves.size = 3.6; o.leaves.count = 22; } },
+});
 /** The variants of each species (seeds 1 to VARIANTS): enough for a row of trees not to look cloned. */
 export const VARIANTS = 3;
 
@@ -592,10 +691,13 @@ export function speciesFor(objType, genus, taxon = null){
   const ofGenus = genus ? all.filter(([, sp]) => genera(sp).includes(genus)) : [];
   const byGenus = ofGenus.find(([, sp]) => sp.type === objType) || ofGenus.find(([, sp]) => !sp.taxa);
   if (byGenus && (byGenus[1].type === objType || objType === 'arbre')) return byGenus[0];
-  // Without its genus, a type our one species stands for whole (a cypress, an olive): not a tree nor a conifer,
-  // whose genera differ too much (a cedar is no pine).
+  // Without its genus, a type our one species stands for whole (a cypress, an olive), or the species marked as its
+  // type's stand-in (`typeDefault`: a shrub, a bush). Never a tree nor a conifer, whose genera differ too much
+  // (a cedar is no pine).
+  if (['arbre', 'conifere'].includes(objType)) return null;
   const ofType = all.filter(([, sp]) => sp.type === objType);
-  return !['arbre', 'conifere'].includes(objType) && ofType.length === 1 ? ofType[0][0] : null;
+  const stand = ofType.length === 1 ? ofType[0] : ofType.find(([, sp]) => sp.typeDefault);
+  return stand ? stand[0] : null;
 }
 
 /** The species an Element of `objType` may take (the sheet's « Essence » list): keys of SPECIES. */

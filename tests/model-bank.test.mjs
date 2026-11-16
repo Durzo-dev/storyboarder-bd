@@ -14,8 +14,8 @@ import { MODEL_BANK } from '../src/model-bank-data.js';
 const m = (file, objType, genera = [], extra = {}) => ({ file, objType, genera, generic: false, name: file, author: 'A', licence: 'CC-BY-4.0', url: `https://sketchfab.com/3d-models/x-${file}`, ratio: 0.7, ...extra });
 const BANK = [
   m('platane-1.glb', 'arbre', ['Platanus'], { generic: true }),
-  m('tilleul-1.glb', 'arbre', ['Tilia', 'Celtis', 'Ulmus', 'Ficus'], { generic: true }),
-  m('noyer-1.glb', 'arbre', ['Juglans', 'Ailanthus']),
+  m('tilleul-1.glb', 'arbre', ['Tilia', 'Celtis', 'Ulmus', 'Bauhinia'], { generic: true }),
+  m('noyer-1.glb', 'arbre', ['Juglans', 'Grevillea']),
   m('pin-1.glb', 'conifere', ['Pinus'], { generic: true }),
   m('banc-1.glb', 'banc', [], { generic: true }), m('banc-2.glb', 'banc', [], { generic: true }),
   m('borne-1.glb', 'borne', [], { generic: true }), m('borne-rurale.glb', 'borne', [], { generic: true, rural: true }),
@@ -74,20 +74,20 @@ describe('a bank model is never « missing »', () => {
 
 describe('the bank given to an import', () => {
   const els = () => [
-    { objType: 'arbre', genus: 'Ailanthus', x: 1, z: 1 },   // genera with no species of ours: the bank's
+    { objType: 'arbre', genus: 'Grevillea', x: 1, z: 1 },   // genera with no species of ours: the bank's
     ...Array.from({ length: 40 }, (_, i) => ({ objType: 'arbre', x: i * 4.1, z: 7 })),
     { objType: 'banc', x: 3, z: 3 }, { objType: 'palmier', x: 5, z: 5 },
     { objType: 'arbre', modelFile: 'Oak.glb', x: 9, z: 9 },
   ];
   test('a tree of its genus; the others drawn from the flora\'s genera of their form; the same at each import', () => {
-    const flora = { genusShares: { arbre: { Platanus: 0.5, Ficus: 0.5 } } };
+    const flora = { genusShares: { arbre: { Platanus: 0.5, Bauhinia: 0.5 } } };
     const a = els(), b = els();
     const r = applyBank(a, { flora, bank: BANK });
     applyBank(b, { flora, bank: BANK });
     assert.deepEqual(a.map(e => [e.modelFile, e.essence, e.variante]), b.map(e => [e.modelFile, e.essence, e.variante]));
     assert.equal(a[0].modelFile, BANK_PREFIX + 'noyer-1.glb');
     const drawn = a.slice(1, 41);
-    assert.ok(drawn.some(e => e.modelFile === BANK_PREFIX + 'tilleul-1.glb'), 'a fig (no species of ours): the bank');
+    assert.ok(drawn.some(e => e.modelFile === BANK_PREFIX + 'tilleul-1.glb'), 'a bauhinia (no species of ours): the bank');
     assert.ok(!drawn.some(e => e.modelFile === BANK_PREFIX + 'noyer-1.glb'), 'that model only where OSM says its genus');
     assert.equal(a[0].usage, 'arbre'); assert.equal(a[0].modelRatio, 0.7);
     assert.equal(a.find(e => e.objType === 'banc').modelFile.startsWith(BANK_PREFIX + 'banc-'), true);

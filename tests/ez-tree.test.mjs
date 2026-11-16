@@ -110,7 +110,7 @@ test('the species of a tree: its genus first, else its type', () => {
   assert.equal(speciesFor('arbre', 'Platanus'), 'Platane');
   assert.equal(speciesFor('arbre', 'Tilia'), 'Tilleul');
   assert.equal(speciesFor('arbre', 'Acer'), 'Erable');
-  assert.equal(speciesFor('arbre', 'Ginkgo'), null);
+  assert.equal(speciesFor('arbre', 'Grevillea'), null, 'a genus of none of ours');
   assert.equal(speciesFor('conifere', 'Cedrus'), 'Cedre', 'a cedar is no pine');
   assert.equal(speciesFor('conifere', 'Pinus'), 'Pin');
   assert.equal(speciesFor('pin_parasol', 'Pinus'), 'Pignon', 'a stone pine: the species of its type');
@@ -118,6 +118,16 @@ test('the species of a tree: its genus first, else its type', () => {
   assert.equal(speciesFor('arbre', 'Quercus', 'quercus ilex'), 'Yeuse', 'its species before its genus');
   assert.equal(speciesFor('arbre', 'Quercus', 'quercus robur'), 'Chene');
   assert.equal(speciesFor('arbuste', 'Corylus'), 'Noisetier');
+  // Wave 3: the rarer genera, the shrubs and bushes; a shrub or a bush without its genus: its type's stand-in.
+  assert.equal(speciesFor('arbre', 'Ginkgo'), 'Ginkgo');
+  assert.equal(speciesFor('arbre', 'Zelkova'), 'Orme');
+  assert.equal(speciesFor('conifere', 'Sequoiadendron'), 'Sequoia');
+  assert.equal(speciesFor('arbuste', 'Ilex'), 'Laurier');
+  assert.equal(speciesFor('arbuste', 'Crataegus'), 'Noisetier');
+  assert.equal(speciesFor('buisson', 'Ulex'), 'Genet');
+  assert.equal(speciesFor('arbuste', null), 'Laurier');
+  assert.equal(speciesFor('buisson', null), 'Ronce');
+  assert.equal(speciesFor('arbuste', 'Grevillea'), 'Laurier');
   assert.equal(speciesFor('arbre', 'Styphnolobium'), 'Sophora');
   assert.equal(speciesFor('arbre', null), null);
   assert.equal(speciesFor('cypres', 'Thuja'), 'Cypres');

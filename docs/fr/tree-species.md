@@ -30,7 +30,10 @@ three passe de l'un à l'autre selon la distance de la caméra.
 À la création d'une Scène depuis un lieu (niveaux Détaillé et Réaliste), un arbre dont le genre est celui d'une
 essence (étiquettes OSM, sinon tiré de la flore) reçoit cette essence (`essence`), une variante tirée de sa place
 et, sans hauteur mesurée, la hauteur habituelle de l'essence (±15 %). Il ne prend aucun modèle de la banque ni des
-stores.
+stores. Chaque genre de la table de la flore (`GENERA`, flora.js) a une essence : une essence vaut pour plusieurs
+genres d'une même forme (sa liste `genus`, nommée sur sa fiche). Un arbuste ou un buisson sans genre prend la
+doublure de son type (`typeDefault` : l'arbuste persistant, la ronce) ; un arbre ou un conifère sans genre n'en
+prend aucune (la banque).
 
 Une écorce est une photo de Poly Haven (`bark`, livrée en `assets/textures/ecorce-*.jpg`) ou dessinée par le code
 (`barkDrawn`, celle du bouleau : pas de photo d'écorce de bouleau blanc là-bas) ; `barkGain` éclaircit une écorce plus
@@ -541,3 +544,143 @@ Durzo, puis, si elle est acceptée :
   gaine, un pétiole épineux, un rachis qui s'affine, des folioles étroites et courbes inclinées vers l'avant, leur
   pli éclairé).
 - **Références** : Commons, catégories « Phoenix canariensis » et « Phoenix dactylifera » (port, feuilles, stipe).
+
+## Catalpa / paulownia (*Catalpa bignonioides*, *Paulownia tomentosa*)
+
+- **Silhouette** : 10 à 15 m, un large dôme bas, souvent plus large que haut, sur un tronc court.
+- **Tronc** : court, 0,4 à 0,8 m. Écorce gris-brun, mince, en petites écailles.
+- **Branches** : peu nombreuses et épaisses, étalées (55 à 65°), tortueuses.
+- **Feuilles** : de TRÈS GRANDS cœurs (20 à 30 cm, jusqu'à 40 pour le paulownia), douces, vert clair, par deux ou
+  trois. Longues gousses en haricot (catalpa) ou capsules en œuf (paulownia). Caduques.
+- **Dans EZ-Tree** : départ « Oak Medium » ; tronc 18, branches dès 40 %, angle 58, 6 branches, noueuses 0,12 ;
+  feuilles taille 4,4, 13. Écorce `japanese_camphor_bark` teintée (`#b0a89c`). Feuillage forme `linden`, grande (80),
+  par paires, `#6a9a3e` à `#76a647`. Vaut aussi pour *Paulownia*.
+- **Références** : Commons, catégories « Catalpa bignonioides » et « Paulownia tomentosa » (port, feuilles).
+
+## Ginkgo (*Ginkgo biloba*)
+
+- **Silhouette** : 15 à 25 m, étroit et irrégulier jeune (une colonne lâche), plus large avec l'âge.
+- **Tronc** : droit, 0,4 à 0,8 m. Écorce gris-brun, sillonnée.
+- **Branches** : montantes (40°), avec de courts rameaux chargés de feuilles.
+- **Feuilles** : des ÉVENTAILS de 5 à 8 cm, le bord ondulé souvent échancré au milieu, sur un long pétiole ; vert
+  clair ; jaune d'or à l'automne. Caduques.
+- **Dans EZ-Tree** : départ « Aspen Medium » ; branches dès 22 %, angle 42, 10 branches, 1,5 × plus longues ;
+  feuilles taille 4,5, 18. Écorce `tree_bark_03` teintée (`#b4aca0`). Feuillage forme `fan` (dessinée pour lui),
+  `#7aa648` à `#86b251`.
+- **Références** : Commons, catégorie « Ginkgo biloba » (port, feuilles).
+
+## Eucalyptus (*Eucalyptus globulus*, *E. gunnii*, *E. camaldulensis*)
+
+- **Silhouette** : 20 à 40 m, haut et ouvert, la couronne irrégulière, légère.
+- **Tronc** : haut, droit, LISSE, crème pâle à gris, perdant son écorce en longues lanières.
+- **Branches** : montantes (40°), peu nombreuses, les rameaux pendants.
+- **Feuilles** : adultes en faucilles étroites de 10 à 25 cm, PENDANTES, gris-vert à vert bleuté, coriaces ;
+  aromatiques. Persistantes.
+- **Dans EZ-Tree** : départ « Aspen Large » ; branches dès 30 %, angle 40, 1,4 × plus longues, noueuses 0,15 ;
+  feuilles taille 6, 24, pendantes (0,5). Écorce `japanese_sycamore` (lisse, pâle) éclaircie (`barkGain` 1,5).
+  Feuillage forme `lance`, étroite, gris-vert `#7f9a7a` à `#8aa584`.
+- **Références** : Commons, catégories « Eucalyptus globulus » et « Eucalyptus camaldulensis » (port, écorce).
+
+## Figuier / mûrier (*Ficus carica*, *Morus alba*, *M. nigra*, *M. kagayamae* des rues)
+
+- **Silhouette** : 5 à 10 m, bas et étalé, souvent plusieurs troncs, plus large que haut.
+- **Tronc** : court, souvent penché, gris lisse (figuier) ou brun orangé et sillonné (mûrier).
+- **Branches** : épaisses, très étalées (70°).
+- **Feuilles** : grandes, 3 à 5 lobes profonds (figuier, rêches), ou en cœur à lobées (mûrier, luisantes) ; 10 à
+  25 cm ; vert moyen à foncé. Caduques. Figues, mûres.
+- **Dans EZ-Tree** : départ « Oak Small » ; tronc 9, angle 70, 6 branches ; feuilles taille 6, 12. Écorce
+  `japanese_sycamore` teintée (`#c0bab0`). Feuillage forme `maple` (larges lobes), grande (88), `#4f7f36` à `#5a8b3e`.
+- **Références** : Commons, catégories « Ficus carica » et « Morus alba » (port, feuilles).
+
+## Gainier — arbre de Judée / lilas des Indes (*Cercis siliquastrum*, *Lagerstroemia indica*)
+
+- **Silhouette** : 5 à 10 m, un petit arbre souvent à plusieurs troncs, une couronne arrondie et ouverte.
+- **Tronc** : court, souvent tortueux ; gris foncé (arbre de Judée) ou lisse, marbré gris et rose, s'exfoliant
+  (lilas des Indes).
+- **Branches** : montantes puis étalées (45°), en zigzag.
+- **Feuilles** : en rein, arrondies (arbre de Judée, 7 à 12 cm) ou petits ovales (lilas des Indes) ; vert moyen.
+  Fleurs roses sur le bois nu au printemps (arbre de Judée), en panicules l'été (lilas des Indes). Caduques.
+- **Dans EZ-Tree** : départ « Oak Small » ; tronc 6, angle 45, 7 branches, noueuses 0,16 ; feuilles taille 4,5, 16.
+  Écorce `sakura_bark` teintée (`#9c948c`). Feuillage forme `linden`, `#5d8f3c` à `#679a44`.
+- **Références** : Commons, catégories « Cercis siliquastrum » et « Lagerstroemia indica » (port, fleurs).
+
+## Séquoia / cryptomeria (*Sequoiadendron giganteum*, *Sequoia sempervirens*, *Metasequoia glyptostroboides*, *Cryptomeria japonica*)
+
+- **Silhouette** : 25 à 50 m dans les parcs, un haut cône dense, arrondi au sommet avec l'âge.
+- **Tronc** : TRÈS large à la base, s'effilant ; écorce épaisse, tendre, fibreuse, brun-rouge (rouille pour le
+  métaséquoia).
+- **Branches** : courtes, retombantes puis relevées au bout, tout le long du tronc.
+- **Feuilles** : des écailles plaquées sur les rameaux (séquoia géant, cryptomeria) ou des aiguilles plates sur deux
+  rangs (séquoia à feuilles d'if, métaséquoia, caduc : roux à l'automne) ; vert bleuté à vert foncé.
+- **Dans EZ-Tree** : départ « Pine Large » ; tronc 1,6 × plus épais, droit (noueux 0,005), sans force de croissance,
+  branches 0,6 × plus longues ; feuilles taille 3,5, 1,2 × plus nombreuses. Écorce `metasequoia_bark` teintée rouge
+  (`#e0a080`). Feuillage `firSpray`, `#3f6436` à `#4f7a42`.
+- **Références** : Commons, catégories « Sequoiadendron giganteum », « Metasequoia glyptostroboides » et
+  « Cryptomeria japonica » (port, écorce).
+
+## Araucaria (*Araucaria araucana*, *A. heterophylla*)
+
+- **Silhouette** : 10 à 25 m, un haut tronc nu puis des ÉTAGES de longues branches horizontales, un dôme au sommet
+  avec l'âge.
+- **Tronc** : droit, cylindrique, écorce grise cerclée des cicatrices des anciennes branches.
+- **Branches** : en verticilles de 5 à 7, horizontales, longues, relevées au bout, peu de rameaux (des « cordes »).
+- **Feuilles** : des triangles raides imbriqués, piquants, vert foncé luisant, couvrant entièrement les branches.
+  Persistantes.
+- **Dans EZ-Tree** : départ « Pine Medium », deux niveaux : 20 branches dès 35 %, horizontales (84°), longueur 22, un
+  tronc droit, sans force de croissance ; 4 rameaux courts chacune ; feuilles taille 4, 10. Écorce
+  `knotted_pine_bark` teintée grise (`#9a948c`). Feuillage `needleTuft`, foncé `#2f5228` à `#3f6634`.
+- **Références** : Commons, catégories « Araucaria araucana » et « Araucaria heterophylla » (port).
+
+## Laurier — arbuste persistant : laurier, houx, troène… (*Laurus*, *Ilex*, *Ligustrum*, *Buxus*, *Euonymus*, *Phillyrea*, *Photinia*, *Pittosporum*, *Myrtus*, *Nerium*, *Pistacia*, *Arbutus*, *Viburnum*)
+
+- **Silhouette** : 1 à 6 m, DENSE et arrondi, de nombreuses tiges, feuillu jusqu'au sol (haies, jardins, bords de
+  route).
+- **Tronc** : des tiges partant du sol, lisses, grises à brunes (rouge et s'exfoliant pour l'arbousier).
+- **Branches** : montantes (25°), puis étalées, denses.
+- **Feuilles** : ovales ou lancéolées, CORIACES, vert foncé luisant dessus, plus pâles dessous ; 3 à 12 cm (étroites
+  pour le laurier-rose, piquantes pour le houx, minuscules pour le buis). Persistantes. La doublure d'un arbuste sans
+  genre (`typeDefault`).
+- **Dans EZ-Tree** : départ « Bush 1 » (tiges partant du sol) ; angle 24, 11 tiges, rameaux à 45° ; feuilles taille
+  3, 20. Écorce `sakura_bark` teintée foncée (`#8c8478`). Feuillage forme `ovate`, foncé `#2f5a28` à `#386630`,
+  dessous plus clairs.
+- **Références** : Commons, catégories « Laurus nobilis », « Ilex aquifolium », « Ligustrum » et « Nerium oleander »
+  (port, feuilles).
+
+## Lavande / bruyère, sous-arbrisseaux (*Lavandula*, *Thymus*, *Salvia*, *Rosmarinus*, *Calluna*, *Erica*, *Cistus*)
+
+- **Silhouette** : 0,3 à 1 m, une touffe basse et arrondie, ses tiges montant d'une même base.
+- **Tronc** : aucun : des tiges ligneuses à la base.
+- **Branches** : de fines tiges dressées, nombreuses.
+- **Feuilles** : étroites, petites, gris-vert (lavande, romarin, thym) ou en écailles (bruyère) ; fleurs au bout des
+  tiges : épis violets (lavande), clochettes pourpres à roses (bruyère). Persistantes.
+- **Dans EZ-Tree** : départ « Bush 2 » ; 14 tiges à 30° ; feuilles taille 4, 9. Feuillage DESSINÉ (`bushSprig`) :
+  tiges `#7e9070`, feuilles étroites gris-vert `#93a68a`, épis violets `#8a74b8`.
+- **Références** : Commons, catégories « Lavandula angustifolia », « Calluna vulgaris » et « Cistus » (port).
+
+## Genêt / ajonc (*Spartium junceum*, *Genista*, *Cytisus scoparius*, *Ulex europaeus*)
+
+- **Silhouette** : 1 à 3 m, une touffe de baguettes vertes dressées, aérée.
+- **Tronc** : aucun : des tiges partant du sol.
+- **Branches** : vertes, comme des joncs, très dressées (20°), presque sans feuilles (ajonc : des épines).
+- **Feuilles** : rares et minuscules, vite tombées : les tiges vertes font leur travail. Une masse de fleurs JAUNES
+  en papillon au printemps.
+- **Dans EZ-Tree** : départ « Bush 2 » ; 12 tiges à 22° ; feuilles taille 4,2, 9. Feuillage DESSINÉ (`bushSprig`) :
+  baguettes vertes `#4f7a34`, fleurs jaunes `#e8c62a`, sans feuilles.
+- **Références** : Commons, catégories « Spartium junceum » et « Ulex europaeus » (port, fleurs).
+
+## Ronce / rosier (*Rubus*, *Rosa*, *Ruscus*)
+
+- **Silhouette** : 0,5 à 2 m, un fourré emmêlé, ses longues tiges retombant en arc jusqu'au sol.
+- **Tronc** : aucun : des tiges épineuses arquées.
+- **Branches** : arquées (50°), pendantes au bout, entrecroisées.
+- **Feuilles** : composées, 3 à 7 folioles dentées, vert foncé dessus ; fleurs blanches à roses, mûres ou cynorhodons.
+  Caduques à semi-persistantes. La doublure d'un buisson sans genre (`typeDefault`).
+- **Dans EZ-Tree** : départ « Bush 1 » ; angle 50, 10 tiges, noueuses 0,2, retombantes (0,25) ; feuilles taille 3,6,
+  22. Écorce `sakura_bark` teintée (`#8a6a5a`). Feuillage forme `ovate`, par paires, `#3f6a30` à `#4a7638`.
+- **Références** : Commons, catégories « Rubus fruticosus » et « Rosa canina » (port).
+
+## Genres rattachés à une essence existante
+
+D'une forme assez proche pour partager sa fiche : *Zelkova* l'orme, *Sorbus* le frêne, *Tsuga* le Douglas,
+*Juniperus* l'if ; les pennés *Ailanthus*, *Melia* et *Koelreuteria* le sophora, *Albizia* et *Jacaranda* le
+févier ; les arbustes caducs *Cornus*, *Crataegus*, *Sambucus* et *Rhamnus* le noisetier.
