@@ -28,6 +28,11 @@ When a Scene is created from a place (Detailed and Realistic levels), a tree who
 tags, else drawn from the flora) is given that species (`essence`), a variant drawn from its place and, without a
 measured height, the species' usual one (±15 %). It takes no model of the bank nor of the stores.
 
+Barks are loaded after the first drawing (an image each, `assets/textures/ecorce-*.jpg`). ⚠️ A Panel's image is
+cached by a signature of what it shows: `barkSettled(species)` enters it, so a Panel drawn before its trees' bark
+arrived is drawn again once it has arrived (or is found missing). Without it, the first Panel kept branches drawn
+from an empty texture: transparent, plain white over the page.
+
 ## EZ-Tree updates
 
 `node tools/ez-tree/check-update.mjs` says whether a newer EZ-Tree is out. A new version is proposed to Durzo,

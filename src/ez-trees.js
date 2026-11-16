@@ -34,21 +34,34 @@ export function setSpeciesTreeCallbacks({ onChange }) {
  */
 const barks = new Map();
 const barkMaterials = new Map();
+/** The species whose bark has arrived, or will never (missing file): their trees are drawn as they will stay. */
+const barksSettled = new Set();
 function shippedBark(name) {
   if (typeof document === 'undefined' || typeof Image === 'undefined') return null;
   if (!barks.has(name)) {
     const tex = new THREE.Texture();
     const img = new Image();
-    img.onload = () => { tex.image = img; tex.needsUpdate = true; onBarkLoaded(); };
+    img.onload = () => { tex.image = img; tex.needsUpdate = true; barksSettled.add(name); onBarkLoaded(); };
     img.onerror = () => {
       console.warn(`[ez-trees] bark missing: ${BARK_DIR}${barkFile(name)}`);
       for (const m of barkMaterials.get(name) || []) { m.map = null; plainBark(m, SPECIES[name]); }
+      barksSettled.add(name);
       onBarkLoaded();
     };
     img.src = BARK_DIR + barkFile(name);
     barks.set(name, tex);
   }
   return barks.get(name);
+}
+
+/**
+ * Is a species' bark settled (arrived, or missing for good)? For the Panels' render signature (scene3d.js): a Panel drawn
+ * before its trees' bark arrived must be drawn again when it does. Seen on 16 Nov. 2026: a Case drawn first kept,
+ * from its cache, oaks with plain WHITE branches (a texture without its image: transparent, the white page showing
+ * through), the redraw on arrival serving the same image. True where there is no DOM (tests: no bark is ever asked).
+ */
+export function barkSettled(name) {
+  return typeof document === 'undefined' || typeof Image === 'undefined' || barksSettled.has(name);
 }
 
 /** A bark's plain colour (its texture missing): a grey-brown, tinted by the species. */

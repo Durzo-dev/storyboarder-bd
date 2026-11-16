@@ -29,6 +29,11 @@ essence (étiquettes OSM, sinon tiré de la flore) reçoit cette essence (`essen
 et, sans hauteur mesurée, la hauteur habituelle de l'essence (±15 %). Il ne prend aucun modèle de la banque ni des
 stores.
 
+Les écorces arrivent après le premier dessin (une image chacune, `assets/textures/ecorce-*.jpg`). ⚠️ L'image d'une
+Case est gardée en cache selon une signature de ce qu'elle montre : `barkSettled(essence)` y entre, pour qu'une Case
+dessinée avant l'arrivée de l'écorce de ses arbres soit redessinée une fois celle-ci arrivée (ou constatée absente).
+Sans cela, la première Case gardait des branches dessinées d'une texture vide : transparentes, blanc uni sur la page.
+
 ## Les mises à jour d'EZ-Tree
 
 `node tools/ez-tree/check-update.mjs` dit si une version plus récente d'EZ-Tree est sortie. Elle est proposée à

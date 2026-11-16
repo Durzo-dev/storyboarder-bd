@@ -50,6 +50,7 @@ import { clearImageCache } from './image-cache.js';
 // 2D divergent de ce que le GPU affiche réellement.
 import { box3FromObjectSkinAwareCached3D, box3FromObjectSkinAware3D } from './skinned-box-3d.js';
 import { boiteDesOsMappes3D, applySkeletonPose } from './rig3d.js';
+import { barkSettled } from './ez-trees.js';
 import { cloneSkinned } from './vendor/SkeletonUtils.js';
 // Le champ visible d'une Case : il sert de plan éloigné à l'ombre d'une source SANS portée (#422d).
 import { champVisibleDeCase3D } from './shadows-3d.js';
@@ -2169,6 +2170,8 @@ function computePanelSceneSignature3D(panel, page, styleKey){
   const parts = elements.map(o => {
     const wp = ensureElementWorldPos3D(o, panel);
     const clone = Object.assign({}, o, { x: wp.x, y: wp.y });
+    // A tree of our species drawn before its bark arrived is drawn again when it does (ez-trees.js, barkSettled).
+    if (o.essence) clone.__bark = barkSettled(o.essence);
     if (WALL_TYPES.includes(o.objType)) {
       const children = page.objects.filter(c => c.type === 'objet3d' && c.magnetWallId === o.id && WALL_OPENING_MAGNET_TYPES.includes(c.objType));
       clone.__children = children.map(c => Object.assign({}, c, ensureElementWorldPos3D(c, panel)));
