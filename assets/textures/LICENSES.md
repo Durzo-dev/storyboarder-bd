@@ -56,3 +56,13 @@ a row, and on a row without a file. Add the row when you bake a new texture.
 | `ecorce-olivier.jpg` | Tree bark: olive | bark_willow_02 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/bark_willow_02 |
 | `ecorce-platane.jpg` | Tree bark: plane | bark_platanus | Poly Haven | CC0 1.0 | https://polyhaven.com/a/bark_platanus |
 | `ecorce-tilleul.jpg` | Tree bark: linden | tree_bark_03 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/tree_bark_03 |
+| `ecorce-micocoulier.jpg` | Tree bark: hackberry | chinese_hackberry_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/chinese_hackberry_bark |
+| `ecorce-pin.jpg` | Tree bark: pine | pine_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/pine_bark |
+| `ecorce-peuplier.jpg` | Tree bark: poplar | bark_willow | Poly Haven | CC0 1.0 | https://polyhaven.com/a/bark_willow |
+| `ecorce-robinier.jpg` | Tree bark: black locust | japanese_camphor_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/japanese_camphor_bark |
+| `ecorce-charme.jpg` | Tree bark: hornbeam | chinese_hackberry_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/chinese_hackberry_bark |
+| `ecorce-pommier.jpg` | Tree bark: apple / pear | japanese_zelkova_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/japanese_zelkova_bark |
+| `ecorce-bouleau.jpg` | Tree bark: birch | japanese_sycamore | Poly Haven | CC0 1.0 | https://polyhaven.com/a/japanese_sycamore |
+| `ecorce-hetre.jpg` | Tree bark: beech | bark_bluegum | Poly Haven | CC0 1.0 | https://polyhaven.com/a/bark_bluegum |
+| `ecorce-chataignier.jpg` | Tree bark: sweet chestnut | metasequoia_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/metasequoia_bark |
+| `ecorce-sapin.jpg` | Tree bark: fir / spruce | knotted_pine_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/knotted_pine_bark |
