@@ -14,7 +14,7 @@ import { MODEL_BANK } from '../src/model-bank-data.js';
 const m = (file, objType, genera = [], extra = {}) => ({ file, objType, genera, generic: false, name: file, author: 'A', licence: 'CC-BY-4.0', url: `https://sketchfab.com/3d-models/x-${file}`, ratio: 0.7, ...extra });
 const BANK = [
   m('platane-1.glb', 'arbre', ['Platanus'], { generic: true }),
-  m('tilleul-1.glb', 'arbre', ['Tilia', 'Celtis'], { generic: true }),
+  m('tilleul-1.glb', 'arbre', ['Tilia', 'Celtis', 'Ulmus'], { generic: true }),
   m('noyer-1.glb', 'arbre', ['Juglans']),
   m('pin-1.glb', 'conifere', ['Pinus'], { generic: true }),
   m('banc-1.glb', 'banc', [], { generic: true }), m('banc-2.glb', 'banc', [], { generic: true }),
@@ -80,14 +80,14 @@ describe('the bank given to an import', () => {
     { objType: 'arbre', modelFile: 'Oak.glb', x: 9, z: 9 },
   ];
   test('a tree of its genus; the others drawn from the flora\'s genera of their form; the same at each import', () => {
-    const flora = { genusShares: { arbre: { Platanus: 0.5, Celtis: 0.5 } } };
+    const flora = { genusShares: { arbre: { Platanus: 0.5, Ulmus: 0.5 } } };
     const a = els(), b = els();
     const r = applyBank(a, { flora, bank: BANK });
     applyBank(b, { flora, bank: BANK });
     assert.deepEqual(a.map(e => [e.modelFile, e.essence, e.variante]), b.map(e => [e.modelFile, e.essence, e.variante]));
     assert.equal(a[0].modelFile, BANK_PREFIX + 'noyer-1.glb');
     const drawn = a.slice(1, 41);
-    assert.ok(drawn.some(e => e.modelFile === BANK_PREFIX + 'tilleul-1.glb'), 'a hackberry: the bank');
+    assert.ok(drawn.some(e => e.modelFile === BANK_PREFIX + 'tilleul-1.glb'), 'an elm (no species yet): the bank');
     assert.ok(!drawn.some(e => e.modelFile === BANK_PREFIX + 'noyer-1.glb'), 'a walnut only where OSM says so');
     assert.equal(a[0].usage, 'arbre'); assert.equal(a[0].modelRatio, 0.7);
     assert.equal(a.find(e => e.objType === 'banc').modelFile.startsWith(BANK_PREFIX + 'banc-'), true);

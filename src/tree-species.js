@@ -113,6 +113,21 @@ const SHAPES = {
     ctx.beginPath(); ctx.moveTo(0, -s);
     ctx.quadraticCurveTo(s * 0.42, 0, 0, s); ctx.quadraticCurveTo(-s * 0.42, 0, 0, -s); ctx.closePath();
   },
+  // A poplar's or a birch's: a triangle, its base broad and nearly straight, its tip drawn out (Populus nigra, Betula).
+  delta(ctx, s){
+    ctx.beginPath(); ctx.moveTo(0, -s);
+    ctx.quadraticCurveTo(s * 0.3, -s * 0.15, s * 0.78, s * 0.55);
+    ctx.quadraticCurveTo(s * 0.45, s * 0.9, 0, s * 0.72);
+    ctx.quadraticCurveTo(-s * 0.45, s * 0.9, -s * 0.78, s * 0.55);
+    ctx.quadraticCurveTo(-s * 0.3, -s * 0.15, 0, -s);
+    ctx.closePath();
+  },
+  // A sweet chestnut's: long and narrow, a sharp tooth at the end of each vein (Castanea sativa).
+  serrate(ctx, s){
+    const n = 22, w = (t) => s * 0.3 * Math.pow(Math.sin(Math.PI * t), 0.7);
+    const side = (k) => { for (let i = 1; i < n; i++) { const t = k > 0 ? i / n : 1 - i / n; ctx.lineTo(k * w(t) * (i % 2 ? 1.12 : 0.88), s - 2 * s * t); } };
+    ctx.beginPath(); ctx.moveTo(0, s); side(1); ctx.lineTo(0, -s); side(-1); ctx.closePath();
+  },
 };
 
 /** A twig with leaves of a shape (in opposite pairs if asked), on a transparent 512 px canvas. */
@@ -169,6 +184,57 @@ function cypressSpray({ colours = ['#2f4f27', '#3a5f2e', '#456d33'], tip = '#7d9
   return c;
 }
 
+/** A pine's shoot: needles in pairs, long, in tufts at the twigs' ends (Pinus sylvestris, pinaster). */
+function needleTuft({ colours = ['#3d5f2c', '#46693a', '#52763c'], seed = 1, makeCanvas = domCanvas } = {}){
+  const c = makeCanvas(512);
+  const ctx = c.getContext('2d'), rnd = rng(seed);
+  ctx.lineCap = 'round';
+  const twigs = [[256, 505, 0, 330], [256, 330, -0.7, 200], [256, 290, 0.75, 190], [256, 400, -0.95, 150], [256, 380, 0.9, 150]];
+  for (const [x, y, ang, len] of twigs) {
+    const ex = x + Math.sin(ang) * len, ey = y - Math.cos(ang) * len;
+    ctx.strokeStyle = '#6a5038'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ex, ey); ctx.stroke();
+    // The needles on the twig's outer half, thicker towards its end.
+    for (let i = 0; i < 46; i++) {
+      const t = 0.45 + 0.55 * Math.sqrt(rnd());
+      const px = x + (ex - x) * t, py = y + (ey - y) * t;
+      const a = ang + (rnd() - 0.5) * 2.6 * (1.2 - t), l = 55 + rnd() * 45;
+      ctx.strokeStyle = colours[Math.floor(rnd() * colours.length)]; ctx.lineWidth = 2.6 + rnd() * 1.4;
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + Math.sin(a) * l, py - Math.cos(a) * l); ctx.stroke();
+    }
+  }
+  return c;
+}
+
+/** A fir's or a spruce's spray: flat, branching twice, short needles combed out on both sides (Abies, Picea). */
+function firSpray({ colours = ['#2c4a2a', '#345633', '#3c5f37'], under = '#5f7f5a', seed = 1, makeCanvas = domCanvas } = {}){
+  const c = makeCanvas(512);
+  const ctx = c.getContext('2d'), rnd = rng(seed);
+  ctx.lineCap = 'round';
+  function shoot(x, y, ang, len, depth){
+    const ex = x + Math.sin(ang) * len, ey = y - Math.cos(ang) * len;
+    ctx.strokeStyle = '#6b5a3c'; ctx.lineWidth = 2 + depth * 1.5;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ex, ey); ctx.stroke();
+    const steps = Math.round(len / 6);
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps, px = x + (ex - x) * t, py = y + (ey - y) * t;
+      for (const k of [1, -1]) {
+        const a = ang + k * (1.05 + rnd() * 0.2), l = (12 + rnd() * 4) * (1 - 0.4 * t);
+        ctx.strokeStyle = rnd() < 0.15 ? under : colours[Math.floor(rnd() * colours.length)]; ctx.lineWidth = 2.4;
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + Math.sin(a) * l, py - Math.cos(a) * l); ctx.stroke();
+      }
+    }
+    if (depth > 0) {
+      for (let k = 1; k <= 6; k++) {
+        const t = k / 7.5;
+        shoot(x + (ex - x) * t, y + (ey - y) * t, ang + (k % 2 ? 1 : -1) * (0.85 + rnd() * 0.15), len * 0.42 * (1 - t * 0.6), depth - 1);
+      }
+    }
+  }
+  shoot(256, 505, 0, 440, 2);
+  return c;
+}
+
 /** The species: `from` (an EZ-Tree preset), its `label` (the sheet's « Essence » list), the Element's `type`, its usual `height` in a town (m, its sheet),
  * its `genus` (OSM, GBIF), `set(options)`, the bark (Poly Haven id), its tint, the foliage drawn
  * (`foliage(seed, makeCanvas)`). */
@@ -190,6 +256,8 @@ export const SPECIES = {
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'olive', colours: ['#55634a', '#5f6d50', '#4d5a42'], under: '#b3bba4', n: 11, size: 68, opposite: true, spread: 0.8, seed }),
     set(o){ o.branch.length[0] = 18; o.branch.radius[0] = 3; o.branch.start[1] = 0.5; o.branch.gnarliness[0] = 0.3; o.branch.gnarliness[1] = 0.35; o.branch.twist[0] = 0.5; o.branch.angle[1] = 58; o.branch.length[1] = 20; o.branch.children[0] = 7; o.branch.force.strength = -0.01; o.leaves.size = 4.5; o.leaves.count = 16; o.leaves.start = 0.3; o.leaves.alphaTest = 0.3; } },
   // ── Wave 1 (#480h): the streets' and the forests' trees ──
+  // A twig drawn fills about a quarter of its square: its leaves are sized to show (the cherry's 2.2 left its
+  // crown bare, seen in the harness on 16 Nov. 2026).
   Erable: { from: 'Ash Medium', label: { fr: 'Érable', en: 'Maple' }, type: 'arbre', height: 15, genus: 'Acer',
     bark: BARK('trident_maple_bark'), barkTint: 0xd6d0c6,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'maple', colours: ['#4f8b3b', '#5d9a44', '#46803a'], n: 6, opposite: true, size: 78, seed }),
@@ -209,7 +277,52 @@ export const SPECIES = {
   Cerisier: { from: 'Oak Small', label: { fr: 'Cerisier', en: 'Cherry' }, type: 'arbre', height: 8, genus: 'Prunus',
     bark: BARK('sakura_bark'), barkTint: 0xffffff,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#4c7f37', '#578c3f', '#447332'], n: 9, size: 52, seed }),
-    set(o){ o.branch.angle[1] = 40; o.branch.length[1] = 12; o.leaves.size = 2.2; o.leaves.count = 22; } },
+    set(o){ o.branch.angle[1] = 40; o.branch.length[1] = 12; o.leaves.size = 4; o.leaves.count = 22; } },
+  Micocoulier: { from: 'Ash Medium', label: { fr: 'Micocoulier', en: 'Hackberry' }, type: 'arbre', height: 16, genus: 'Celtis',
+    bark: BARK('chinese_hackberry_bark'), barkTint: 0xdcdad2,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'lance', colours: ['#4d7a3c', '#56853f', '#45703a'], n: 8, size: 58, seed }),
+    set(o){ o.branch.angle[1] = 50; o.branch.children[0] = 9; o.branch.gnarliness[1] = 0.15; o.leaves.size = 8; o.leaves.count = 22; } },
+  Pin: { from: 'Pine Large', label: { fr: 'Pin', en: 'Pine' }, type: 'conifere', height: 20, genus: 'Pinus',
+    bark: BARK('pine_bark'), barkTint: 0xffffff,
+    foliage: (seed, makeCanvas) => needleTuft({ seed, makeCanvas }),
+    set(o){
+      o.branch.levels = 2; o.branch.start[1] = 0.6; o.branch.children[0] = 14; o.branch.angle[1] = 88; o.branch.length[1] = 34;
+      o.branch.radius[1] = 0.5; o.branch.gnarliness[0] = 0.06; o.branch.gnarliness[1] = 0.2; o.branch.force.strength = 0.004;
+      o.branch.children[1] = 5; o.branch.angle[2] = 55; o.branch.length[2] = 12; o.branch.start[2] = 0.3; o.branch.radius[2] = 0.6;
+      o.leaves.size = 4.5; o.leaves.count = 24; o.leaves.start = 0.2;
+    } },
+  Peuplier: { from: 'Aspen Large', label: { fr: 'Peuplier', en: 'Poplar' }, type: 'arbre', height: 25, genus: 'Populus',
+    bark: BARK('bark_willow'), barkTint: 0xd4d4cc,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'delta', colours: ['#5b8f42', '#66994a', '#4f803a'], n: 7, size: 60, seed }),
+    set(o){ o.branch.angle[1] = 28; o.branch.length[1] = 24; o.branch.children[0] = 14; o.leaves.size = 6; o.leaves.count = 20; } },
+  Robinier: { from: 'Aspen Medium', label: { fr: 'Robinier', en: 'Black locust' }, type: 'arbre', height: 15, genus: 'Robinia',
+    bark: BARK('japanese_camphor_bark'), barkTint: 0xffffff,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#6a9a4a', '#76a653', '#5e8c42'], n: 9, size: 34, opposite: true, spread: 0.5, seed }),
+    set(o){ o.branch.angle[1] = 55; o.branch.gnarliness[0] = 0.12; o.branch.gnarliness[1] = 0.25; o.branch.length[1] = 12; o.leaves.size = 6.5; o.leaves.count = 18; } },
+  Charme: { from: 'Oak Medium', label: { fr: 'Charme', en: 'Hornbeam' }, type: 'arbre', height: 15, genus: 'Carpinus',
+    bark: BARK('chinese_hackberry_bark'), barkTint: 0xc8c8c2,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#4f8a3a', '#5a9642', '#467d34'], n: 8, size: 50, seed }),
+    set(o){ o.branch.angle[1] = 45; o.branch.children[0] = 8; o.leaves.size = 7; o.leaves.count = 20; } },
+  Pommier: { from: 'Oak Small', label: { fr: 'Pommier / poirier', en: 'Apple / pear' }, type: 'arbre', height: 7, genus: ['Malus', 'Pyrus'],
+    bark: BARK('japanese_zelkova_bark'), barkTint: 0xd8d0c4,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#557f3c', '#5f8b44', '#4c7335'], under: '#9db089', n: 8, size: 50, seed }),
+    set(o){ o.branch.angle[1] = 55; o.branch.children[0] = 6; o.branch.gnarliness[1] = 0.3; o.branch.force.strength = -0.01; o.leaves.size = 4.2; o.leaves.count = 22; } },
+  Bouleau: { from: 'Aspen Medium', label: { fr: 'Bouleau', en: 'Birch' }, type: 'arbre', height: 15, genus: 'Betula',
+    bark: BARK('japanese_sycamore'), barkTint: 0xffffff,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'delta', colours: ['#6c9c48', '#78a852', '#5f8e40'], n: 9, size: 40, seed }),
+    set(o){ o.branch.angle[1] = 32; o.branch.force.strength = 0.006; o.leaves.size = 3.6; o.leaves.count = 22; } },
+  Hetre: { from: 'Oak Large', label: { fr: 'Hêtre', en: 'Beech' }, type: 'arbre', height: 25, genus: 'Fagus',
+    bark: BARK('bark_bluegum'), barkTint: 0xc8c8c0,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#4d8a35', '#58963e', '#437a2e'], n: 9, size: 50, seed }),
+    set(o){ o.branch.radius[0] = 3; o.branch.angle[1] = 55; o.branch.length[0] = 50; o.leaves.size = 6.5; o.leaves.count = 18; } },
+  Chataignier: { from: 'Oak Large', label: { fr: 'Châtaignier', en: 'Sweet chestnut' }, type: 'arbre', height: 20, genus: 'Castanea',
+    bark: BARK('metasequoia_bark'), barkTint: 0xffffff,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'serrate', colours: ['#4b8233', '#56903b', '#437530'], n: 7, size: 90, seed }),
+    set(o){ o.branch.radius[0] = 3.8; o.branch.twist[0] = 0.3; o.branch.angle[1] = 60; o.branch.gnarliness[1] = 0.2; o.leaves.size = 6; o.leaves.count = 14; } },
+  Sapin: { from: 'Pine Medium', label: { fr: 'Sapin / épicéa', en: 'Fir / spruce' }, type: 'conifere', height: 25, genus: ['Abies', 'Picea'],
+    bark: BARK('knotted_pine_bark'), barkTint: 0xb8b4ac,
+    foliage: (seed, makeCanvas) => firSpray({ seed, makeCanvas }),
+    set(o){ o.leaves.size = 4; } },
 };
 
 /** The variants of each species (seeds 1 to VARIANTS): enough for a row of trees not to look cloned. */

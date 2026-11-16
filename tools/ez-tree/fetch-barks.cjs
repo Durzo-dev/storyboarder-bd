@@ -4,6 +4,8 @@
  * src/tree-species.js, Poly Haven's colour map of its bark (CC0, 1k JPEG), brought to 512 px, JPEG quality 90,
  * written as assets/textures/ecorce-<species>.jpg (`barkFile`). Each needs its row in assets/textures/LICENSES.md.
  *
+ * A bark already there is left as it is (to fetch it again, delete its file first).
+ *
  * 512 px: measured on the four first barks, 64 to 116 KB each (1024 px: 260 to 440 KB), and a trunk is never
  * seen bigger than that in a panel. Electron's nativeImage resizes (no image library in the project).
  */
@@ -19,6 +21,7 @@ async function fetchBarks(){
   const { SPECIES, barkFile } = await import('../../src/tree-species.js');
   let failed = 0;
   for (const [name, sp] of Object.entries(SPECIES)) {
+    if (fs.existsSync(path.join(OUT, barkFile(name)))) continue;
     try {
       const res = await fetch(url(sp.bark));
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

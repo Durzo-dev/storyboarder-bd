@@ -146,6 +146,126 @@ then, if accepted:
 - **Branches**: few, ascending (40°), then spreading.
 - **Leaves**: ovate, pointed tip, finely toothed; 6 to 15 cm; alternate; mid green; orange-red in autumn. White or
   pink blossom in spring (for #483). Deciduous.
-- **In EZ-Tree**: from « Oak Small »; angle 40, branches 12; leaves size 2.2, 22. Bark `sakura_bark`. Foliage shape
+- **In EZ-Tree**: from « Oak Small »; angle 40, branches 12; leaves size 4, 22 (2.2 left the crown bare). Bark `sakura_bark`. Foliage shape
   `ovate`, `#4c7f37` to `#578c3f`.
 - **References**: Commons, categories « Prunus avium » and « Prunus serrulata » (habit, bark).
+
+## Micocoulier — Hackberry (*Celtis australis*)
+
+- **Silhouette**: 15 to 25 m, broad rounded crown, dense; the street tree of the South.
+- **Trunk**: straight, 0.4 to 0.8 m. Smooth grey bark, like a beech's, all its life.
+- **Branches**: many, rising at 45 to 55°, slender, a little drooping at their tips.
+- **Leaves**: lance-shaped, the tip long drawn out, toothed, the base lopsided; 5 to 15 cm; alternate; dark
+  green, rough above; pale yellow in autumn. Deciduous.
+- **In EZ-Tree**: from « Ash Medium »; angle 50, 9 branches, little gnarl (0.15); leaves size 8, 22. Bark
+  `chinese_hackberry_bark` (a hackberry's own) tinted grey (`#dcdad2`). Foliage shape `lance`, `#4d7a3c` to `#56853f`.
+- **References**: Commons, category « Celtis australis » (habit, leaves, bark).
+
+## Pin — Scots and maritime pine (*Pinus sylvestris*, *P. pinaster*)
+
+- **Silhouette**: 20 to 35 m, a tall bare trunk under a high crown, irregular and flattened with age.
+- **Trunk**: straight or a little bent, 0.4 to 1 m. Bark in deep plates, grey-brown below, orange-red high up
+  (Scots pine).
+- **Branches**: in whorls, nearly level (80 to 90°), only in the top third or two fifths.
+- **Leaves**: needles in pairs, 4 to 7 cm (Scots, blue-green) or 10 to 25 cm (maritime, darker), in tufts at the
+  twigs' ends. Evergreen.
+- **In EZ-Tree**: from « Pine Large », but with branches of two levels (the preset is a spruce's cone): 14 branches
+  from 60 %, level (88°), 34 long, hardly lifted (force 0.004), 5 twigs each; leaves size 4.5, 24. Bark
+  `pine_bark`. Foliage `needleTuft` (needles in pairs, in tufts), `#3d5f2c` to `#52763c`.
+- **References**: Commons, categories « Pinus sylvestris » and « Pinus pinaster » (habit, needles, bark).
+
+## Peuplier — Black poplar (*Populus nigra*, its « Italica » column, and the hybrid poplars)
+
+- **Silhouette**: 25 to 30 m, narrow: a column (Lombardy poplar) or a tall oval (the plantations' hybrids).
+- **Trunk**: straight, tall, 0.5 to 1 m. Bark grey, deeply furrowed lengthwise.
+- **Branches**: steeply ascending (20 to 30°), all along the trunk.
+- **Leaves**: a triangle (deltoid), broad straight base, pointed tip, finely toothed, long flat stalk (they
+  tremble); 5 to 10 cm; alternate; bright green; yellow in autumn. Deciduous.
+- **In EZ-Tree**: from « Aspen Large »; angle 28, 14 branches 24 long; leaves size 6, 20. Bark `bark_willow` tinted
+  grey (`#d4d4cc`). Foliage shape `delta`, `#5b8f42` to `#66994a`.
+- **References**: Commons, categories « Populus nigra » and « Populus nigra 'Italica' » (habit, leaves).
+
+## Robinier — Black locust (*Robinia pseudoacacia*)
+
+- **Silhouette**: 12 to 25 m, light open crown, irregular, often leaning; in thickets on waste ground.
+- **Trunk**: often forked, twisted, 0.3 to 0.8 m. Bark grey-brown, thick, in deep criss-crossed ridges.
+- **Branches**: zigzag, thorny, rising at 50 to 60°.
+- **Leaves**: pinnate, 9 to 19 small oval leaflets, rounded tip; 15 to 30 cm; alternate; light yellow-green; yellow
+  in autumn. White scented flowers in hanging clusters in May. Deciduous.
+- **In EZ-Tree**: from « Aspen Medium »; angle 55, gnarled (0.12 trunk, 0.25 branches), branches 12; leaves size
+  6.5, 18. Bark `japanese_camphor_bark` (narrow ridges, deep fissures). Foliage: leaflets shape `ovate` in
+  opposite pairs, `#6a9a4a` to `#76a653`.
+- **References**: Commons, category « Robinia pseudoacacia » (habit, leaves, bark).
+
+## Charme — Hornbeam (*Carpinus betulus*)
+
+- **Silhouette**: 10 to 20 m, rounded to oval, dense; also clipped into hedges and arbours.
+- **Trunk**: short, fluted (as if muscled), 0.3 to 0.6 m. Smooth grey bark, streaked paler.
+- **Branches**: fine, numerous, rising at 40 to 50°.
+- **Leaves**: ovate, pointed, doubly toothed, pleated along their parallel veins; 5 to 10 cm; alternate; mid green;
+  yellow then brown, held through winter on hedges. Deciduous.
+- **In EZ-Tree**: from « Oak Medium »; angle 45, 8 branches; leaves size 7, 20. Bark `chinese_hackberry_bark` tinted
+  grey (`#c8c8c2`). Foliage shape `ovate`, `#4f8a3a` to `#5a9642`.
+- **References**: Commons, category « Carpinus betulus » (habit, leaves, bark).
+
+## Pommier — Apple and pear (*Malus domestica*, *Pyrus communis*, and the ornamental crabs and pears)
+
+- **Silhouette**: 4 to 10 m (orchards: 3 to 6 m, pruned), a short trunk under a broad, low, rounded crown (the
+  pear's narrower and higher).
+- **Trunk**: short (1 to 2 m), 0.2 to 0.4 m. Bark grey-brown, flaking in small plates (apple) or in squares (pear).
+- **Branches**: few, spreading (55°), tortuous, weighed down by the fruit.
+- **Leaves**: ovate, finely toothed, the apple's downy and paler beneath; 5 to 10 cm; alternate; mid green.
+  Blossom white or pink in April, fruit in autumn (for #485). Deciduous.
+- **In EZ-Tree**: from « Oak Small »; angle 55, 6 branches, gnarled (0.3), a little weighed down (force −0.01);
+  leaves size 4.2, 22. Bark `japanese_zelkova_bark` (flaky) tinted (`#d8d0c4`). Foliage shape `ovate`, `#557f3c`
+  to `#5f8b44`, some leaves turned to their pale side (`#9db089`).
+- **References**: Commons, categories « Malus domestica » and « Pyrus communis » (habit, leaves, bark).
+
+## Bouleau — Silver birch (*Betula pendula*)
+
+- **Silhouette**: 15 to 25 m, slender, narrow oval, light; the twigs hanging at the tips.
+- **Trunk**: straight, thin (0.2 to 0.5 m). White bark, peeling in papery strips, black diamond-shaped marks; dark
+  and cracked at the foot.
+- **Branches**: ascending (30°), fine, the twigs weeping.
+- **Leaves**: triangular-ovate, pointed, doubly toothed; 3 to 7 cm; alternate; light green; golden yellow in
+  autumn. Deciduous.
+- **In EZ-Tree**: from « Aspen Medium »; angle 32, hardly lifted (force 0.006); leaves size 3.6, 22. Bark
+  `japanese_sycamore` (pale, mottled; no white birch bark on Poly Haven). Foliage shape `delta`, small, `#6c9c48`
+  to `#78a852`.
+- **References**: Commons, category « Betula pendula » (habit, leaves, bark).
+
+## Hetre — Beech (*Fagus sylvatica*)
+
+- **Silhouette**: 25 to 40 m in a forest (a tall clean trunk), a broad dome when free-standing, the branches down
+  to the ground.
+- **Trunk**: straight, 0.6 to 1.5 m. Smooth silver-grey bark all its life.
+- **Branches**: strong, rising at 50 to 60°, the twigs in flat sprays.
+- **Leaves**: oval, the edge wavy and fringed with hairs, 7 to 10 pairs of parallel veins; 5 to 10 cm; alternate;
+  glossy bright green; copper in autumn. Deciduous.
+- **In EZ-Tree**: from « Oak Large »; trunk 50, 3 thick; angle 55; leaves size 6.5, 18. Bark `bark_bluegum` (smooth)
+  tinted grey (`#c8c8c0`). Foliage shape `ovate`, `#4d8a35` to `#58963e`.
+- **References**: Commons, category « Fagus sylvatica » (habit, leaves, bark).
+
+## Chataignier — Sweet chestnut (*Castanea sativa*)
+
+- **Silhouette**: 20 to 30 m, a broad dome, massive; coppiced in many forests (several trunks from one stool).
+- **Trunk**: thick (1 to 2 m), short. Bark grey-brown, in long ridges twisting round the trunk.
+- **Branches**: big, spreading at 60°.
+- **Leaves**: long and narrow (lance-shaped), a sharp tooth at the end of each of their many parallel veins; 10 to
+  25 cm; alternate; glossy dark green; yellow-brown in autumn. Burrs in autumn (for #485). Deciduous.
+- **In EZ-Tree**: from « Oak Large »; thick trunk (3.8), twisted (0.3), angle 60, gnarled (0.2); leaves size 6, 14.
+  Bark `metasequoia_bark` (long furrows). Foliage shape `serrate`, `#4b8233` to `#56903b`.
+- **References**: Commons, category « Castanea sativa » (habit, leaves, bark).
+
+## Sapin — Silver fir and Norway spruce (*Abies alba*, *Picea abies*)
+
+- **Silhouette**: 30 to 50 m, a narrow pointed cone, the branches down low; the fir's top flattened with age.
+- **Trunk**: straight, 0.5 to 1.5 m, through to the top. Bark grey and smooth (fir) or red-brown in small scales
+  (spruce).
+- **Branches**: in whorls, level, the spruce's drooping then upturned at their tips.
+- **Leaves**: short needles (1 to 3 cm), the fir's flat in two combs with two white lines beneath, the spruce's
+  all round its twig; dark green. Evergreen.
+- **In EZ-Tree**: from « Pine Medium » (its cone); leaves size 4. Bark `knotted_pine_bark` tinted grey (`#b8b4ac`).
+  Foliage `firSpray` (a flat spray branching twice, needles combed on both sides), `#2c4a2a` to `#3c5f37`, some
+  showing their pale side (`#5f7f5a`).
+- **References**: Commons, categories « Abies alba » and « Picea abies » (habit, twigs, bark).

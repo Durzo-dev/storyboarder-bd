@@ -112,6 +112,20 @@ test('the species of a tree: its genus first, else its type', () => {
   assert.equal(speciesFor('olivier', null), 'Olivier');
   assert.equal(speciesFor('arbre', 'Olea'), 'Olivier');
   assert.equal(speciesFor('conifere', 'Olea'), null);
+  // Wave 1, lots 2 and 3: two genera for one species; the conifers by their genus only.
+  assert.equal(speciesFor('arbre', 'Pyrus'), 'Pommier');
+  assert.equal(speciesFor('arbre', 'Malus'), 'Pommier');
+  assert.equal(speciesFor('conifere', 'Picea'), 'Sapin');
+  assert.equal(speciesFor('conifere', 'Pinus'), 'Pin');
+  assert.equal(speciesFor('pin_parasol', 'Pinus'), null, 'a stone pine is no Scots pine');
+  assert.equal(speciesFor('conifere', null), null);
+});
+
+test('the pine\'s trunk bare under a high crown, the poplar narrow, the fir a cone', () => {
+  for (const v of [1, 2, 3]) assert.ok(crownOf('Pin', v, { makeCanvas: fakeCanvas }).base > 0.45, `pine ${v}`);
+  const p = size(generateSpeciesTree('Peuplier', 1, { makeCanvas: fakeCanvas }));
+  assert.ok(p.y / Math.max(p.x, p.z) > 1.8, `poplar ${p.y} by ${p.x}`);
+  assert.ok(crownOf('Sapin', 1, { makeCanvas: fakeCanvas }).base < 0.25, 'the fir\'s branches down low');
 });
 
 test('the sheet\'s « Essence » list: the species of the type, none for another', () => {

@@ -150,6 +150,132 @@ Durzo, puis, si elle est acceptée :
 - **Branches** : peu nombreuses, montantes (40°), puis étalées.
 - **Feuilles** : ovales, pointe effilée, finement dentées ; 6 à 15 cm ; alternes ; vert moyen ; orange-rouge à
   l'automne. Floraison blanche ou rose au printemps (pour #483). Caduques.
-- **Dans EZ-Tree** : départ « Oak Small » ; angle 40, branches 12 ; feuilles taille 2,2, 22. Écorce `sakura_bark`.
+- **Dans EZ-Tree** : départ « Oak Small » ; angle 40, branches 12 ; feuilles taille 4, 22 (2,2 laissait la couronne nue). Écorce `sakura_bark`.
   Feuillage forme `ovate`, `#4c7f37` à `#578c3f`.
 - **Références** : Commons, catégories « Prunus avium » et « Prunus serrulata » (port, écorce).
+
+## Micocoulier (*Celtis australis*)
+
+- **Silhouette** : 15 à 25 m, couronne large et ronde, dense ; l'arbre des rues du Midi.
+- **Tronc** : droit, 0,4 à 0,8 m. Écorce grise et lisse toute sa vie, comme celle d'un hêtre.
+- **Branches** : nombreuses, montant à 45-55°, fines, un peu retombantes au bout.
+- **Feuilles** : en lance, la pointe très effilée, dentées, la base dissymétrique ; 5 à 15 cm ; alternes ; vert
+  sombre, rêches dessus ; jaune pâle à l'automne. Caduques.
+- **Dans EZ-Tree** : départ « Ash Medium » ; angle 50, 9 branches, peu tortueuses (0,15) ; feuilles taille 8, 22.
+  Écorce `chinese_hackberry_bark` (celle d'un micocoulier) teintée gris (`#dcdad2`). Feuillage forme `lance`,
+  `#4d7a3c` à `#56853f`.
+- **Références** : Commons, catégorie « Celtis australis » (port, feuilles, écorce).
+
+## Pin (*Pinus sylvestris*, *P. pinaster*)
+
+- **Silhouette** : 20 à 35 m, un haut fût nu sous une couronne haute, irrégulière, aplatie avec l'âge.
+- **Tronc** : droit ou un peu courbé, 0,4 à 1 m. Écorce en plaques profondes, gris-brun en bas, rouge orangé en
+  haut (pin sylvestre).
+- **Branches** : en étages, presque horizontales (80 à 90°), seulement dans le tiers ou les deux cinquièmes du haut.
+- **Feuilles** : aiguilles par deux, 4 à 7 cm (sylvestre, vert bleuté) ou 10 à 25 cm (maritime, plus sombre), en
+  touffes au bout des rameaux. Persistantes.
+- **Dans EZ-Tree** : départ « Pine Large », mais avec des branches sur deux niveaux (le modèle est un cône
+  d'épicéa) : 14 branches dès 60 %, horizontales (88°), longues de 34, à peine relevées (force 0,004), 5 rameaux
+  chacune ; feuilles taille 4,5, 24. Écorce `pine_bark`. Feuillage `needleTuft` (aiguilles par deux, en touffes),
+  `#3d5f2c` à `#52763c`.
+- **Références** : Commons, catégories « Pinus sylvestris » et « Pinus pinaster » (port, aiguilles, écorce).
+
+## Peuplier (*Populus nigra*, sa colonne « Italica », et les peupliers hybrides)
+
+- **Silhouette** : 25 à 30 m, étroite : une colonne (peuplier d'Italie) ou un ovale haut (les hybrides des
+  peupleraies).
+- **Tronc** : droit, haut, 0,5 à 1 m. Écorce grise, profondément crevassée en long.
+- **Branches** : très montantes (20 à 30°), tout le long du tronc.
+- **Feuilles** : un triangle (deltoïde), base large et droite, pointe aiguë, finement dentées, long pétiole aplati
+  (elles tremblent) ; 5 à 10 cm ; alternes ; vert vif ; jaunes à l'automne. Caduques.
+- **Dans EZ-Tree** : départ « Aspen Large » ; angle 28, 14 branches longues de 24 ; feuilles taille 6, 20. Écorce
+  `bark_willow` teintée gris (`#d4d4cc`). Feuillage forme `delta`, `#5b8f42` à `#66994a`.
+- **Références** : Commons, catégories « Populus nigra » et « Populus nigra 'Italica' » (port, feuilles).
+
+## Robinier (*Robinia pseudoacacia*)
+
+- **Silhouette** : 12 à 25 m, couronne légère et ouverte, irrégulière, souvent penchée ; en fourrés sur les friches.
+- **Tronc** : souvent fourchu, tordu, 0,3 à 0,8 m. Écorce gris-brun, épaisse, en côtes profondes entrecroisées.
+- **Branches** : en zigzag, épineuses, montant à 50-60°.
+- **Feuilles** : composées pennées, 9 à 19 petites folioles ovales à bout arrondi ; 15 à 30 cm ; alternes ; vert
+  jaune clair ; jaunes à l'automne. Fleurs blanches parfumées en grappes pendantes en mai. Caduques.
+- **Dans EZ-Tree** : départ « Aspen Medium » ; angle 55, tortueux (0,12 tronc, 0,25 branches), branches 12 ;
+  feuilles taille 6,5, 18. Écorce `japanese_camphor_bark` (côtes étroites, crevasses profondes). Feuillage :
+  folioles forme `ovate` par paires opposées, `#6a9a4a` à `#76a653`.
+- **Références** : Commons, catégorie « Robinia pseudoacacia » (port, feuilles, écorce).
+
+## Charme (*Carpinus betulus*)
+
+- **Silhouette** : 10 à 20 m, ronde à ovale, dense ; aussi taillé en haies et en charmilles.
+- **Tronc** : court, cannelé (comme musclé), 0,3 à 0,6 m. Écorce grise et lisse, striée plus clair.
+- **Branches** : fines, nombreuses, montant à 40-50°.
+- **Feuilles** : ovales, pointues, doublement dentées, plissées le long de leurs nervures parallèles ; 5 à 10 cm ;
+  alternes ; vert moyen ; jaunes puis brunes, gardées l'hiver sur les haies. Caduques.
+- **Dans EZ-Tree** : départ « Oak Medium » ; angle 45, 8 branches ; feuilles taille 7, 20. Écorce
+  `chinese_hackberry_bark` teintée gris (`#c8c8c2`). Feuillage forme `ovate`, `#4f8a3a` à `#5a9642`.
+- **Références** : Commons, catégorie « Carpinus betulus » (port, feuilles, écorce).
+
+## Pommier / poirier (*Malus domestica*, *Pyrus communis*, et les pommiers et poiriers d'ornement)
+
+- **Silhouette** : 4 à 10 m (vergers : 3 à 6 m, taillés), un tronc court sous une couronne large, basse et ronde
+  (celle du poirier plus étroite et plus haute).
+- **Tronc** : court (1 à 2 m), 0,2 à 0,4 m. Écorce gris-brun, s'écaillant en petites plaques (pommier) ou en
+  carrés (poirier).
+- **Branches** : peu nombreuses, étalées (55°), tortueuses, alourdies par les fruits.
+- **Feuilles** : ovales, finement dentées, celles du pommier duveteuses et plus pâles dessous ; 5 à 10 cm ;
+  alternes ; vert moyen. Fleurs blanches ou roses en avril, fruits à l'automne (pour #485). Caduques.
+- **Dans EZ-Tree** : départ « Oak Small » ; angle 55, 6 branches, tortueuses (0,3), un peu alourdies (force
+  −0,01) ; feuilles taille 4,2, 22. Écorce `japanese_zelkova_bark` (écailleuse) teintée (`#d8d0c4`). Feuillage
+  forme `ovate`, `#557f3c` à `#5f8b44`, quelques feuilles montrant leur revers pâle (`#9db089`).
+- **Références** : Commons, catégories « Malus domestica » et « Pyrus communis » (port, feuilles, écorce).
+
+## Bouleau (*Betula pendula*)
+
+- **Silhouette** : 15 à 25 m, élancé, ovale étroit, léger ; les rameaux pendant au bout.
+- **Tronc** : droit, mince (0,2 à 0,5 m). Écorce blanche, se détachant en lanières de papier, marquée de losanges
+  noirs ; sombre et crevassée au pied.
+- **Branches** : montantes (30°), fines, les rameaux pleureurs.
+- **Feuilles** : triangulaires-ovales, pointues, doublement dentées ; 3 à 7 cm ; alternes ; vert clair ; jaune d'or
+  à l'automne. Caduques.
+- **Dans EZ-Tree** : départ « Aspen Medium » ; angle 32, à peine relevé (force 0,006) ; feuilles taille 3,6, 22.
+  Écorce `japanese_sycamore` (pâle, marbrée ; pas d'écorce de bouleau blanc chez Poly Haven). Feuillage forme
+  `delta`, petite, `#6c9c48` à `#78a852`.
+- **Références** : Commons, catégorie « Betula pendula » (port, feuilles, écorce).
+
+## Hêtre (*Fagus sylvatica*)
+
+- **Silhouette** : 25 à 40 m en forêt (un haut fût net), un large dôme isolé, les branches jusqu'au sol.
+- **Tronc** : droit, 0,6 à 1,5 m. Écorce gris argenté, lisse toute sa vie.
+- **Branches** : fortes, montant à 50-60°, les rameaux en éventails plats.
+- **Feuilles** : ovales, le bord ondulé et cilié, 7 à 10 paires de nervures parallèles ; 5 à 10 cm ; alternes ;
+  vert vif luisant ; cuivrées à l'automne. Caduques.
+- **Dans EZ-Tree** : départ « Oak Large » ; tronc 50, épais de 3 ; angle 55 ; feuilles taille 6,5, 18. Écorce
+  `bark_bluegum` (lisse) teintée gris (`#c8c8c0`). Feuillage forme `ovate`, `#4d8a35` à `#58963e`.
+- **Références** : Commons, catégorie « Fagus sylvatica » (port, feuilles, écorce).
+
+## Châtaignier (*Castanea sativa*)
+
+- **Silhouette** : 20 à 30 m, un large dôme, massif ; en taillis dans beaucoup de forêts (plusieurs troncs d'une
+  souche).
+- **Tronc** : épais (1 à 2 m), court. Écorce gris-brun, en longues côtes qui tournent autour du tronc.
+- **Branches** : grosses, étalées à 60°.
+- **Feuilles** : longues et étroites (en lance), une dent aiguë au bout de chacune de leurs nombreuses nervures
+  parallèles ; 10 à 25 cm ; alternes ; vert sombre luisant ; jaune-brun à l'automne. Bogues à l'automne (pour
+  #485). Caduques.
+- **Dans EZ-Tree** : départ « Oak Large » ; tronc épais (3,8), vrillé (0,3), angle 60, tortueux (0,2) ; feuilles
+  taille 6, 14. Écorce `metasequoia_bark` (longs sillons). Feuillage forme `serrate`, `#4b8233` à `#56903b`.
+- **Références** : Commons, catégorie « Castanea sativa » (port, feuilles, écorce).
+
+## Sapin / épicéa (*Abies alba*, *Picea abies*)
+
+- **Silhouette** : 30 à 50 m, un cône étroit et pointu, les branches jusqu'en bas ; la cime du sapin aplatie avec
+  l'âge.
+- **Tronc** : droit, 0,5 à 1,5 m, jusqu'à la cime. Écorce grise et lisse (sapin) ou brun-rouge en petites écailles
+  (épicéa).
+- **Branches** : en étages, horizontales, celles de l'épicéa retombantes puis relevées au bout.
+- **Feuilles** : aiguilles courtes (1 à 3 cm), celles du sapin plates, en deux peignes, deux lignes blanches
+  dessous, celles de l'épicéa tout autour du rameau ; vert sombre. Persistantes.
+- **Dans EZ-Tree** : départ « Pine Medium » (son cône) ; feuilles taille 4. Écorce `knotted_pine_bark` teintée gris
+  (`#b8b4ac`). Feuillage `firSpray` (un rameau plat ramifié deux fois, aiguilles en peigne des deux côtés),
+  `#2c4a2a` à `#3c5f37`, quelques-unes montrant leur revers pâle (`#5f7f5a`).
+- **Références** : Commons, catégories « Abies alba » et « Picea abies » (port, rameaux, écorce).
