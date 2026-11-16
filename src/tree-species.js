@@ -67,43 +67,40 @@ const SHAPES = {
     ctx.beginPath(); ctx.moveTo(0, -s);
     ctx.quadraticCurveTo(s * 0.3, 0, 0, s); ctx.quadraticCurveTo(-s * 0.3, 0, 0, -s); ctx.closePath();
   },
-  // A maple's: five pointed lobes, the sinuses rounded and deep, a few large teeth (Acer platanoides).
-  maple(ctx, s, rnd){
-    const lobes = [[-1.5, 0.72], [-0.8, 0.95], [0, 1], [0.8, 0.95], [1.5, 0.72]];
-    ctx.beginPath(); ctx.moveTo(0, s * 0.2);
+  // A maple's: five broad pointed lobes, the sinuses rounded and deep, a large tooth a side (Acer platanoides).
+  maple(ctx, s){
+    const lobes = [[-1.55, 0.7], [-0.82, 0.92], [0, 1], [0.82, 0.92], [1.55, 0.7]];
+    ctx.beginPath(); ctx.moveTo(0, s * 0.25);
     lobes.forEach(([a, l], i) => {
       const tip = [Math.sin(a) * s * l, -Math.cos(a) * s * l];
-      const mid = (a + (i ? lobes[i - 1][0] : a - 0.9)) / 2, sinus = [Math.sin(mid) * s * 0.36, -Math.cos(mid) * s * 0.36];
-      ctx.quadraticCurveTo(sinus[0] * 0.8, sinus[1] * 0.8, sinus[0], sinus[1]);
-      ctx.lineTo((sinus[0] + tip[0]) / 2 + Math.cos(a) * s * 0.12 + (rnd() - 0.5) * s * 0.04, (sinus[1] + tip[1]) / 2 + Math.sin(a) * s * 0.12);
+      const mid = (a + (i ? lobes[i - 1][0] : a - 0.9)) / 2, sinus = [Math.sin(mid) * s * 0.5, -Math.cos(mid) * s * 0.5];
+      ctx.quadraticCurveTo(sinus[0] * 0.85, sinus[1] * 0.85, sinus[0], sinus[1]);
+      ctx.lineTo((sinus[0] + tip[0]) / 2 - Math.cos(a) * s * 0.16, (sinus[1] + tip[1]) / 2 - Math.sin(a) * s * 0.16);
       ctx.lineTo(tip[0], tip[1]);
     });
-    ctx.lineTo(Math.sin(2.4) * s * 0.36, -Math.cos(2.4) * s * 0.36);
+    ctx.lineTo(Math.sin(2.4) * s * 0.5, -Math.cos(2.4) * s * 0.5);
     ctx.closePath();
   },
-  // An oak's: obovate, four or five rounded lobes a side, short-stalked (Quercus robur).
+  // An oak's: obovate, four or five deep rounded lobes a side, short-stalked (Quercus robur).
   oak(ctx, s){
-    ctx.beginPath();
-    const side = (k) => {
-      for (let i = 0; i <= 40; i++) {
-        const t = i / 40, y = s - 2 * s * t;
-        const w = s * 0.42 * Math.sin(Math.PI * Math.min(1, t * 1.15)) * (0.75 + 0.25 * Math.abs(Math.sin(t * Math.PI * 4.5)));
-        ctx.lineTo(k * w, y);
-      }
-    };
-    ctx.moveTo(0, s); side(1); side(-1);
+    const w = (t) => s * 0.55 * Math.pow(Math.sin(Math.PI * Math.min(1, t * 1.1)), 0.8) * (0.55 + 0.45 * Math.abs(Math.sin(t * Math.PI * 4.5 + 0.3)));
+    ctx.beginPath(); ctx.moveTo(0, s);
+    for (let i = 0; i <= 60; i++) ctx.lineTo(w(i / 60), s - 2 * s * i / 60);
+    for (let i = 60; i >= 0; i--) ctx.lineTo(-w(i / 60), s - 2 * s * i / 60);
     ctx.closePath();
   },
-  // A horse chestnut's: seven obovate leaflets spread like a hand from one point (Aesculus hippocastanum).
+  // A horse chestnut's: seven obovate leaflets spread like a hand from one point, each apart (Aesculus
+  // hippocastanum); filled here leaflet by leaflet (overlapping in one path, they merged into one lobed blob).
   chestnut(ctx, s){
-    ctx.beginPath();
     for (let k = -3; k <= 3; k++) {
-      const a = k * 0.42, l = s * (1 - Math.abs(k) * 0.12);
-      ctx.save(); ctx.rotate(a);
-      ctx.moveTo(0, s * 0.35);
-      ctx.ellipse(0, s * 0.35 - l * 0.6, l * 0.2, l * 0.6, 0, Math.PI / 2, Math.PI * 2.5);
-      ctx.restore();
+      const l = s * (1 - Math.abs(k) * 0.13);
+      ctx.save(); ctx.translate(0, s * 0.4); ctx.rotate(k * 0.5);
+      ctx.beginPath(); ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(l * 0.28, -l * 0.5, l * 0.2, -l * 1.1, 0, -l * 1.25);
+      ctx.bezierCurveTo(-l * 0.2, -l * 1.1, -l * 0.28, -l * 0.5, 0, 0);
+      ctx.fill(); ctx.restore();
     }
+    ctx.beginPath();
   },
   // An ash's leaflet, or a cherry's leaf: a pointed oval, toothed, broader (`w`) or narrower.
   ovate(ctx, s){
@@ -203,7 +200,7 @@ export const SPECIES = {
     set(o){ o.branch.radius[0] = 3.6; o.branch.gnarliness[1] = 0.25; o.branch.angle[1] = 65; o.branch.length[0] = 40; o.leaves.size = 6; o.leaves.count = 14; } },
   Marronnier: { from: 'Oak Large', label: { fr: 'Marronnier', en: 'Horse chestnut' }, type: 'arbre', height: 18, genus: 'Aesculus',
     bark: BARK('bark_brown_02'), barkTint: 0xe0d8cc,
-    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'chestnut', colours: ['#3f7a33', '#4b8a3a', '#386f2e'], n: 4, opposite: true, size: 95, spread: 0.6, seed }),
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'chestnut', colours: ['#3f7a33', '#4b8a3a', '#386f2e'], n: 4, opposite: true, size: 80, spread: 0.6, seed }),
     set(o){ o.branch.angle[1] = 45; o.branch.force.strength = -0.02; o.branch.length[0] = 45; o.leaves.size = 7; o.leaves.count = 16; } },
   Frene: { from: 'Ash Large', label: { fr: 'Frêne', en: 'Ash' }, type: 'arbre', height: 20, genus: 'Fraxinus',
     bark: BARK('bark_brown_01'), barkTint: 0xcfcfc8,
