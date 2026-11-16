@@ -38,6 +38,10 @@ cached by a signature of what it shows: `barkSettled(species)` enters it, so a P
 arrived is drawn again once it has arrived (or is found missing). Without it, the first Panel kept branches drawn
 from an empty texture: transparent, plain white over the page.
 
+⚠️ The leaves are CUT OUT (alphaTest) and write an alpha of 1 where they are drawn (`opaqueCutout`). A Panel's 3D image
+is laid on the page: leaves writing their mipmaps' alpha (0.66 to 0.8 from 30 m) let the white page through, the crowns
+pale from afar.
+
 ## EZ-Tree updates
 
 `node tools/ez-tree/check-update.mjs` says whether a newer EZ-Tree is out. A new version is proposed to Durzo,

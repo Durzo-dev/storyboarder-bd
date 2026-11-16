@@ -146,6 +146,7 @@ export function generateSpeciesTree(name, variant = 1, { makeCanvas = domCanvas,
   const leaves = tree.leavesMesh.material;
   leaves.map = leaf;
   leaves.color.set(0xffffff);
+  opaqueCutout(leaves);
 
   const bark = barkTexture(name);
   const branches = tree.branchesMesh.material;
@@ -166,6 +167,25 @@ export function generateSpeciesTree(name, variant = 1, { makeCanvas = domCanvas,
   tree.userData.variant = variant;
   return tree;
 }
+
+/**
+ * A cut-out material (alphaTest) writes an alpha of 1 where it is drawn. Without it, the leaves wrote the alpha of
+ * their mipmaps (0.66 to 0.8 from 30 m away, measured in the application on 16 Nov. 2026), and a Panel's 3D image is
+ * laid on the page: the white page showed through every leaf, the crowns pale from afar (119, 136, 110 for a green of
+ * 48, 74, 35). Chained on the material's own shader change (EZ-Tree's rounded normals), and named in its program key.
+ */
+export function opaqueCutout(material) {
+  const before = material.onBeforeCompile;
+  const keyBefore = material.customProgramCacheKey ? material.customProgramCacheKey() : '';
+  material.onBeforeCompile = (shader, renderer) => {
+    if (before) before(shader, renderer);
+    shader.fragmentShader = shader.fragmentShader.replace('#include <alphatest_fragment>', OPAQUE_CUTOUT);
+  };
+  material.customProgramCacheKey = () => `${keyBefore}+opaque-cutout`;
+  material.needsUpdate = true;
+}
+/** The shader lines: the cut-out as three writes it, then a full alpha. */
+export const OPAQUE_CUTOUT = '#include <alphatest_fragment>\n\tdiffuseColor.a = 1.0;';
 
 /** The generated variants, for the session (a few: our species times their variants). */
 const cache = new Map();

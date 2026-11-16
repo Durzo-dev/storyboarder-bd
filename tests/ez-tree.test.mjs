@@ -249,3 +249,15 @@ test('our additions (#485): a shorter leader, a palm trunk with no point, folded
   const rows = (f) => f.count * (f.segments + 1) + f.boots * 3;
   assert.equal(palm.leaves.verts.length / 3, 5 * rows(palm.options.fronds));
 });
+
+test('the leaves write a full alpha where drawn (the white page showed through mipmapped leaves), EZ-Tree\'s shader kept', () => {
+  const t = generateSpeciesTree('Chene', 1, { makeCanvas: fakeCanvas });
+  const m = t.leavesMesh.material;
+  const shader = { fragmentShader: 'a\n#include <alphatest_fragment>\n#include <normal_fragment_begin>\nb', vertexShader: '' };
+  globalThis.THREE.ShaderChunk.normal_fragment_begin ??= '';
+  m.onBeforeCompile(shader, null);
+  assert.match(shader.fragmentShader, /#include <alphatest_fragment>\n\tdiffuseColor\.a = 1\.0;/);
+  assert.ok(!shader.fragmentShader.includes('#include <normal_fragment_begin>'), 'EZ-Tree\'s rounded normals still applied');
+  assert.match(m.customProgramCacheKey(), /ez-tree-rounded-normals\+opaque-cutout$/);
+  assert.equal(t.branchesMesh.material.customProgramCacheKey().includes('opaque'), false, 'the bark is not cut out');
+});
