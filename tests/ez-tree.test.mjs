@@ -106,7 +106,14 @@ test('the species of a tree: its genus first, else its type', () => {
   assert.equal(speciesFor('arbre', 'Tilia'), 'Tilleul');
   assert.equal(speciesFor('arbre', 'Acer'), 'Erable');
   assert.equal(speciesFor('arbre', 'Ginkgo'), null);
-  assert.equal(speciesFor('conifere', 'Cedrus'), null, 'a cedar is no pine');
+  assert.equal(speciesFor('conifere', 'Cedrus'), 'Cedre', 'a cedar is no pine');
+  assert.equal(speciesFor('conifere', 'Pinus'), 'Pin');
+  assert.equal(speciesFor('pin_parasol', 'Pinus'), 'Pignon', 'a stone pine: the species of its type');
+  assert.equal(speciesFor('arbre', 'Quercus'), 'Chene');
+  assert.equal(speciesFor('arbre', 'Quercus', 'quercus ilex'), 'Yeuse', 'its species before its genus');
+  assert.equal(speciesFor('arbre', 'Quercus', 'quercus robur'), 'Chene');
+  assert.equal(speciesFor('arbuste', 'Corylus'), 'Noisetier');
+  assert.equal(speciesFor('arbre', 'Styphnolobium'), 'Sophora');
   assert.equal(speciesFor('arbre', null), null);
   assert.equal(speciesFor('cypres', 'Thuja'), 'Cypres');
   assert.equal(speciesFor('olivier', null), 'Olivier');
@@ -117,7 +124,7 @@ test('the species of a tree: its genus first, else its type', () => {
   assert.equal(speciesFor('arbre', 'Malus'), 'Pommier');
   assert.equal(speciesFor('conifere', 'Picea'), 'Sapin');
   assert.equal(speciesFor('conifere', 'Pinus'), 'Pin');
-  assert.equal(speciesFor('pin_parasol', 'Pinus'), null, 'a stone pine is no Scots pine');
+  assert.equal(speciesFor('pin_parasol', null), 'Pignon', 'a stone pine is no Scots pine: its own species');
   assert.equal(speciesFor('conifere', null), null);
 });
 

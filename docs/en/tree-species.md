@@ -276,3 +276,194 @@ then, if accepted:
   Foliage `firSpray` (a flat spray branching twice, needles combed on both sides), `#4a7444` to `#618c58`, some
   showing their pale side (`#7f9f7a`).
 - **References**: Commons, categories « Abies alba » and « Picea abies » (habit, twigs, bark).
+
+
+## Sophora — Pagoda tree (*Styphnolobium japonicum*, formerly *Sophora japonica*)
+
+- **Silhouette**: 10 to 20 m, a broad rounded dome, often as wide as tall; light, airy.
+- **Trunk**: short, 0.4 to 0.8 m, often leaning. Grey-brown bark, deeply ridged, like a black locust's.
+- **Branches**: spreading at 45 to 60°, twisting; green young shoots.
+- **Leaves**: pinnate, 9 to 17 small ovate leaflets (3 to 5 cm) in opposite pairs; mid green, paler under; yellow
+  in autumn. Creamy flower panicles in August. Deciduous.
+- **In EZ-Tree**: from « Ash Medium »; angle 50, 9 branches, gnarled branches (0.2); leaves size 6, 20. Bark
+  `japanese_camphor_bark` tinted grey (`#c8c4bc`). Foliage: leaflets shape `ovate` in opposite pairs, `#4f8a3a`
+  to `#5a9643`.
+- **References**: Commons, category « Styphnolobium japonicum » (habit, leaves, bark).
+
+## Orme — Elm (*Ulmus minor*, *U. laevis*, *U. × hollandica*, and the resistant hybrids)
+
+- **Silhouette**: 15 to 25 m, an oval to vase-shaped crown, dense; in towns mostly young or hybrid trees.
+- **Trunk**: straight, 0.5 to 1 m. Grey-brown bark, deeply furrowed in a net.
+- **Branches**: rising steeply (30 to 40°) then arching.
+- **Leaves**: ovate, doubly toothed, their base lopsided; 5 to 10 cm; alternate; dark green, rough; yellow in
+  autumn. Deciduous.
+- **In EZ-Tree**: from « Oak Medium »; trunk 40, branches from 22 %, angle 42, 24 long, slight upward push (0.01); leaves size
+  6, 22. Bark
+  `bark_brown_01` tinted grey (`#bcb8b0`). Foliage shape `serrate`, `#3f7030` to `#4a7c38`.
+- **References**: Commons, categories « Ulmus minor » and « Ulmus laevis » (habit, leaves, bark).
+
+## Aulne — Alder (*Alnus glutinosa*, *A. cordata*)
+
+- **Silhouette**: 10 to 20 m, conical when young then oval; along rivers, and in towns (Italian alder).
+- **Trunk**: straight, often several, 0.3 to 0.6 m. Dark grey to black bark, fissured in plates.
+- **Branches**: numerous, nearly level (55 to 70°), short.
+- **Leaves**: rounded, the tip blunt or notched, toothed; 4 to 10 cm; alternate; dark glossy green; they fall
+  green. Small black cones held through winter. Deciduous.
+- **In EZ-Tree**: from « Ash Medium »; branches from 25 %, angle 55, 12 branches, 16 long; leaves size 5, 18.
+  Bark `tree_bark_03` tinted dark grey (`#8c8880`). Foliage shape `linden` (rounded), `#365f2a` to `#3f6a30`.
+- **References**: Commons, categories « Alnus glutinosa » and « Alnus cordata » (habit, leaves, bark).
+
+## Noisetier — Hazel (*Corylus avellana*, and the Turkish hazel *C. colurna* of the streets)
+
+- **Silhouette**: a shrub of 3 to 6 m, many stems from the ground, spreading in a fan (the Turkish hazel of the
+  streets is a tree, conical, like a lime).
+- **Trunk**: no trunk: stems 5 to 15 cm, smooth, shiny brown, banded with lenticels.
+- **Branches**: the stems rising steeply, arching at the top.
+- **Leaves**: rounded, heart-shaped base, a short point, doubly toothed, soft; 6 to 12 cm; alternate; mid green;
+  yellow in autumn. Catkins in late winter. Deciduous.
+- **In EZ-Tree**: from « Bush 1 » (stems from the ground); angle 18, 9 stems; leaves size 4, 16. Bark
+  `sakura_bark` (smooth, banded) tinted (`#b8a898`). Foliage shape `linden`, `#55893f` to `#609547`.
+- **References**: Commons, categories « Corylus avellana » and « Corylus colurna » (habit, leaves).
+
+## Cedre — Cedar (*Cedrus atlantica*, *C. libani*, *C. deodara*)
+
+- **Silhouette**: 20 to 30 m, conical when young, then wide, in flat TIERS (the cedar of Lebanon a table top);
+  bluish (Atlas) or green.
+- **Trunk**: massive, 1 to 2 m, often forked. Dark grey bark, cracked in small square plates.
+- **Branches**: from low down, LEVEL and long, in layers, the twigs fanning out flat.
+- **Leaves**: needles 2 to 3 cm in tufts of 20 to 40 on short shoots; blue-green to dark green. Evergreen.
+- **In EZ-Tree**: from « Pine Large », branches on two levels: 22 branches from 12 %, level (88°), 40 long,
+  slightly drooping (−0.004), 10 level twigs each (88°); leaves size 4, 22, flat (80°). Bark `chinese_cedar_bark` tinted grey (`#a8a49c`).
+  Foliage `needleTuft`, blue-green `#4c6a5a` to `#62806c`.
+- **References**: Commons, categories « Cedrus atlantica », « Cedrus libani » and « Cedrus deodara » (habit,
+  needles, bark).
+
+## Fevier — Honey locust (*Gleditsia triacanthos*, mostly 'Inermis', thornless)
+
+- **Silhouette**: 12 to 20 m, a broad open crown, very light: its shade dappled.
+- **Trunk**: straight, 0.4 to 0.8 m. Dark grey-brown bark, in long plates (thorns in clusters on the wild form).
+- **Branches**: spreading wide (55 to 70°), zigzag twigs.
+- **Leaves**: pinnate or twice pinnate, 20 to 30 tiny leaflets (2 to 3 cm); light bright green; golden yellow in
+  autumn. Long twisted pods. Deciduous.
+- **In EZ-Tree**: from « Ash Medium »; angle 60, 6 branches, gnarled branches (0.18); light foliage (size 5.5, 14).
+  Bark `japanese_camphor_bark` tinted dark (`#9c9890`). Foliage: tiny leaflets shape `ovate` in pairs (13),
+  `#7aa84a` to `#86b453`.
+- **References**: Commons, category « Gleditsia triacanthos » (habit, leaves, bark).
+
+## If — Yew (*Taxus baccata*)
+
+- **Silhouette**: 5 to 15 m, a broad dense cone or dome, very dark; often clipped (hedges, topiary).
+- **Trunk**: short, fluted, often several. Thin bark, red-brown, flaking in strips.
+- **Branches**: from the ground, spreading, dense.
+- **Leaves**: flat needles 2 to 3 cm, in two rows along the twig, dark glossy green above, paler under. Red
+  berries (arils). Evergreen.
+- **In EZ-Tree**: from « Bush 3 » (an evergreen bush); trunk 12, 1.2 thick; angle 40, branches 10 then 6 long; leaves size
+  3.6, 6 a spray. Bark
+  `chinese_cedar_bark` tinted red-brown (`#d09a80`). Foliage `firSpray`, dark `#2a4526` to `#385a32`, pale side
+  `#5e7a50`.
+- **References**: Commons, category « Taxus baccata » (habit, twigs, bark).
+
+## Saule — Weeping willow (*Salix babylonica*, *S. × sepulcralis*, and the white willow *S. alba*)
+
+- **Silhouette**: 10 to 15 m, a broad dome whose twigs HANG down to the ground, by the water.
+- **Trunk**: short, thick, 0.5 to 1 m. Grey-brown bark, deeply ridged in a net.
+- **Branches**: rising, then arching down; long thin twigs hanging straight.
+- **Leaves**: narrow lances 8 to 15 cm, finely toothed; light yellow-green above, grey-white under. Deciduous,
+  among the first out and last to fall.
+- **In EZ-Tree**: from « Aspen Large »; trunk 35, branches from 35 %, angle 55, 26 long, 9 twigs each, pulled
+  DOWN (force −0.05); leaves size 5.5, 30. Bark `bark_willow` tinted (`#d4d0c4`), lightened (gain 1.8). Foliage shape
+  `lance`, `#8fb25a` to `#9bbd63`, under `#b6c99a`.
+- **References**: Commons, categories « Salix babylonica » and « Salix × sepulcralis » (habit, leaves).
+
+## Yeuse — Holm oak (*Quercus ilex*, and the cork oak *Q. suber*)
+
+- **Silhouette**: 8 to 15 m in towns, a dense rounded dome, dark grey-green all year (the South).
+- **Trunk**: short, 0.4 to 1 m, often leaning. Bark nearly black, cracked in small square plates (the cork oak's:
+  thick pale cork).
+- **Branches**: many, spreading, down to low on the trunk.
+- **Leaves**: small, leathery, ovate to lanceolate, 3 to 7 cm, entire or spiny (young shoots); dark green above,
+  grey-felted under. Evergreen.
+- **In EZ-Tree**: from « Oak Small »; trunk 20, 2 thick; angle 55, 7 branches, gnarled branches (0.12); dense
+  foliage (size 5, 30). Bark `chinese_hackberry_bark` tinted dark (`#8a8682`). Foliage shape `ovate`, small,
+  `#34502c` to `#3c5a32`, under `#8c9a80`. Chosen by its species (`taxa`: OSM's « Quercus ilex », « Quercus suber »,
+  « Quercus coccifera »), the genus alone giving the deciduous oak.
+- **References**: Commons, categories « Quercus ilex » and « Quercus suber » (habit, leaves, bark).
+
+## Pignon — Stone pine (*Pinus pinea*)
+
+- **Silhouette**: 12 to 20 m, a tall bare trunk under a flat, wide UMBRELLA crown; the South and the coasts.
+- **Trunk**: straight or leaning, 0.5 to 1 m. Bark red-brown in deep fissures between long flat plates.
+- **Branches**: only at the top, rising at 40 to 50° from the trunk then spreading level.
+- **Leaves**: needles in pairs, 10 to 20 cm, stiff; bright to grey green. Big round cones. Evergreen.
+- **In EZ-Tree**: from « Pine Large », branches on two levels: 12 branches from 66 %, angle 72, 60 long, no
+  push, 8 twigs each; leaves size 5, 26, from 40 %. Bark `pine_bark`, lightened (gain 1.2). Foliage
+  `needleTuft`, `#4f7a3c` to `#669250`. Its own type (`pin_parasol`, OSM's « Pinus pinea »).
+- **References**: Commons, category « Pinus pinea » (habit, needles, bark).
+
+## Douglas — Douglas fir (*Pseudotsuga menziesii*)
+
+- **Silhouette**: 30 to 50 m, a regular narrow cone, the top pointed; planted forests (BD Forêt).
+- **Trunk**: very straight, 0.6 to 1.5 m. Bark smooth with resin blisters when young, then thick, corky, deeply
+  furrowed, red-brown.
+- **Branches**: level, in whorls, drooping slightly at the tips.
+- **Leaves**: soft flat needles 2 to 3 cm, all round the twig, fragrant; green to blue-green. Cones with
+  three-pointed bracts. Evergreen.
+- **In EZ-Tree**: from « Pine Large » (its cone), straight (gnarliness 0.01, no push); leaves size 3.5. Bark
+  `knotted_pine_bark` tinted red-brown (`#b0a090`). Foliage `firSpray`, `#3e6838` to `#517e4b`.
+- **References**: Commons, category « Pseudotsuga menziesii » (habit, twigs, bark).
+
+## Meleze — Larch (*Larix decidua*, *L. kaempferi*)
+
+- **Silhouette**: 20 to 35 m, a narrow open cone, light: the mountains (BD Forêt) and plantations.
+- **Trunk**: straight, 0.5 to 1 m. Bark grey-brown, then thick, scaly, red under the scales.
+- **Branches**: level, the twigs hanging slightly.
+- **Leaves**: soft needles 2 to 4 cm in tufts of 30 to 40, BRIGHT light green; golden yellow in autumn, then BARE
+  (the only conifer of ours that loses them).
+- **In EZ-Tree**: from « Pine Medium »; straight, slightly drooping (−0.01), 50 branches; light foliage (size 3,
+  14). Bark `pine_bark` tinted (`#c0a898`). Foliage `needleTuft`, light `#7aa858` to `#86b462`.
+- **References**: Commons, categories « Larix decidua » and « Larix kaempferi » (habit, needles, bark).
+
+## Noyer — Walnut (*Juglans regia*, *J. nigra*)
+
+- **Silhouette**: 15 to 25 m, a broad round crown, open; in fields, orchards (RPG) and villages.
+- **Trunk**: short, thick, 0.5 to 1.5 m. Bark silver-grey, smooth when young, then deeply fissured.
+- **Branches**: few, thick, spreading wide (60°).
+- **Leaves**: pinnate, 5 to 9 large leaflets (6 to 15 cm), the end one largest; light green, bronze when young;
+  fall early, without colour. Deciduous.
+- **In EZ-Tree**: from « Oak Large »; trunk 30, 3.2 thick; angle 60, 7 branches; leaves size 7, 14. Bark
+  `tree_bark_03` tinted grey (`#c8c4bc`). Foliage: large leaflets shape `ovate` in opposite pairs, `#5a8a3e` to
+  `#659647`.
+- **References**: Commons, categories « Juglans regia » and « Juglans nigra » (habit, leaves, bark).
+
+## Magnolia — Magnolia (*Magnolia grandiflora*, and the deciduous *M. × soulangeana*)
+
+- **Silhouette**: 6 to 15 m, a dense broad cone to dome (the evergreen southern magnolia of the squares).
+- **Trunk**: short, 0.3 to 0.6 m. Smooth grey bark.
+- **Branches**: from low down, rising at 40 to 50°.
+- **Leaves**: large, leathery, oval, 12 to 25 cm; dark glossy green above, rusty-felted under (grandiflora).
+  Big white flowers. Evergreen (grandiflora) or deciduous (soulangeana, pink flowers before the leaves).
+- **In EZ-Tree**: from « Oak Small »; angle 45, 6 branches; leaves size 5, 18. Bark `sakura_bark` tinted grey
+  (`#a8a8a4`). Foliage: large leaves shape `ovate`, dark `#2f5428` to `#386030`, under rusty `#6b6a45`.
+- **References**: Commons, categories « Magnolia grandiflora » and « Magnolia × soulangeana » (habit, leaves).
+
+## Liquidambar — Sweetgum (*Liquidambar styraciflua*)
+
+- **Silhouette**: 15 to 25 m, a regular cone, then oval; planted in streets and car parks for its autumn.
+- **Trunk**: straight, 0.4 to 0.8 m. Grey-brown bark, deeply furrowed; corky wings on the twigs.
+- **Branches**: from a straight leader, rising at 40°, short.
+- **Leaves**: star-shaped, 5 to 7 pointed lobes, like a maple's but ALTERNATE; 10 to 15 cm; glossy green; red,
+  purple and orange in autumn. Spiky ball fruits. Deciduous.
+- **In EZ-Tree**: from « Ash Medium »; trunk 50, branches from 25 %, angle 40, 12 branches, 16 long; leaves size
+  5, 16. Bark `japanese_zelkova_bark` tinted (`#b0a89c`). Foliage shape `maple`, `#4a8236` to `#558e3e`.
+- **References**: Commons, category « Liquidambar styraciflua » (habit, leaves, autumn).
+
+## Tulipier — Tulip tree (*Liriodendron tulipifera*)
+
+- **Silhouette**: 20 to 35 m, tall, a narrow oval crown when young, then broad; parks and avenues.
+- **Trunk**: very straight, 0.6 to 1.2 m. Grey bark, in regular interlaced ridges.
+- **Branches**: from a straight leader, rising at 35 to 45°.
+- **Leaves**: four lobes, the tip CUT SQUARE as if notched; 10 to 20 cm; long stalk; light green; bright yellow in
+  autumn. Tulip-like green and orange flowers. Deciduous.
+- **In EZ-Tree**: from « Ash Large »; branches from 30 %, angle 38, 12 branches; leaves size 6, 14. Bark
+  `tree_bark_03` tinted grey (`#b8b4ac`). Foliage: shape `tulip` (drawn for it), `#5a923e` to `#669e47`.
+- **References**: Commons, category « Liriodendron tulipifera » (habit, leaves, bark).

@@ -20,3 +20,13 @@ for (const lang of ['fr', 'en']) {
     assert.deepEqual(sheets(lang).map(norm).sort(), species.map(norm).sort());
   });
 }
+
+test('every bark file a species reads is shipped, and every shipped bark is read (one file a Poly Haven bark)', async () => {
+  const { readdirSync } = await import('node:fs');
+  const { SPECIES, barkFile } = await import('../src/tree-species.js');
+  const shipped = readdirSync(new URL('../assets/textures/', import.meta.url)).filter(f => /^ecorce-.*\.jpg$/.test(f)).sort();
+  const read = [...new Set(Object.keys(SPECIES).filter(k => SPECIES[k].bark).map(barkFile))].sort();
+  assert.deepEqual(read, shipped);
+  const ids = Object.values(SPECIES).map(sp => sp.bark).filter(Boolean);
+  assert.equal(new Set(ids).size, shipped.length, 'as many files as Poly Haven barks');
+});

@@ -60,7 +60,6 @@ a row, and on a row without a file. Add the row when you bake a new texture.
 | `ecorce-pin.jpg` | Tree bark: pine | pine_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/pine_bark |
 | `ecorce-peuplier.jpg` | Tree bark: poplar | bark_willow | Poly Haven | CC0 1.0 | https://polyhaven.com/a/bark_willow |
 | `ecorce-robinier.jpg` | Tree bark: black locust | japanese_camphor_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/japanese_camphor_bark |
-| `ecorce-charme.jpg` | Tree bark: hornbeam | chinese_hackberry_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/chinese_hackberry_bark |
 | `ecorce-pommier.jpg` | Tree bark: apple / pear | japanese_zelkova_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/japanese_zelkova_bark |
 | `ecorce-hetre.jpg` | Tree bark: beech | japanese_sycamore | Poly Haven | CC0 1.0 | https://polyhaven.com/a/japanese_sycamore |
 | `ecorce-chataignier.jpg` | Tree bark: sweet chestnut | metasequoia_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/metasequoia_bark |

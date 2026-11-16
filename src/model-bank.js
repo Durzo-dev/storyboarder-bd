@@ -21,6 +21,12 @@ export function genusOfTags(tags = {}){
   return /^[a-z]{3,}$/i.test(word) ? word[0].toUpperCase() + word.slice(1).toLowerCase() : null;
 }
 
+/** A tree's species from OSM (`species`, else `taxon`) when it names one (two words), lower case: « quercus ilex ». */
+export function taxonOfTags(tags = {}){
+  const words = String(tags.species || tags.taxon || '').trim().toLowerCase().split(/[\s_]+/);
+  return words.length >= 2 && /^[a-z]{3,}$/.test(words[0]) && /^[a-z-]{3,}$/.test(words[1]) ? `${words[0]} ${words[1]}` : null;
+}
+
 /** A number in [0, 1) from a place and a salt: the same element draws the same at each import. */
 function hash(x, z, salt){
   let h = Math.imul(Math.round(x * 10) | 0, 2246822519) ^ Math.imul(Math.round(z * 10) | 0, 3266489917) ^ salt;
@@ -66,7 +72,7 @@ export function applyBank(elements, { flora = null, rural = false, bank = MODEL_
     // A tree filling a wood (vegetation-zones.js, `filled`): the built-in tree, light (hundreds of them).
     if (e.modelFile || e.filled) continue;
     const genus = e.genus || drawFrom(flora && flora.genusShares && flora.genusShares[e.objType], hash(e.x, e.z, 0x5bd1));
-    const essence = speciesFor(e.objType, genus);
+    const essence = speciesFor(e.objType, genus, e.taxon);
     if (essence) {
       const sp = SPECIES[essence];
       e.essence = essence;
