@@ -273,7 +273,7 @@ export const SPECIES = {
   Frene: { from: 'Ash Large', label: { fr: 'Frêne', en: 'Ash' }, type: 'arbre', height: 20, genus: 'Fraxinus',
     bark: BARK('bark_brown_01'), barkTint: 0xcfcfc8,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'lance', colours: ['#5a9445', '#66a04d', '#528a3e'], n: 11, opposite: true, size: 46, spread: 0.7, seed }),
-    set(o){ o.branch.angle[1] = 35; o.branch.start[1] = 0.45; o.leaves.size = 4; o.leaves.count = 8; } },
+    set(o){ o.branch.angle[1] = 35; o.branch.start[1] = 0.45; o.leaves.size = 5; o.leaves.count = 16; } },
   Cerisier: { from: 'Oak Small', label: { fr: 'Cerisier', en: 'Cherry' }, type: 'arbre', height: 8, genus: 'Prunus',
     bark: BARK('sakura_bark'), barkTint: 0xffffff,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#4c7f37', '#578c3f', '#447332'], n: 9, size: 52, seed }),
@@ -298,7 +298,7 @@ export const SPECIES = {
   Robinier: { from: 'Aspen Medium', label: { fr: 'Robinier', en: 'Black locust' }, type: 'arbre', height: 15, genus: 'Robinia',
     bark: BARK('japanese_camphor_bark'), barkTint: 0xffffff,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#6a9a4a', '#76a653', '#5e8c42'], n: 9, size: 34, opposite: true, spread: 0.5, seed }),
-    set(o){ o.branch.angle[1] = 55; o.branch.gnarliness[0] = 0.12; o.branch.gnarliness[1] = 0.25; o.branch.length[1] = 12; o.leaves.size = 6.5; o.leaves.count = 18; } },
+    set(o){ o.branch.radius[0] = 1.5; o.branch.angle[1] = 55; o.branch.gnarliness[0] = 0.05; o.branch.gnarliness[1] = 0.25; o.branch.length[1] = 12; o.leaves.size = 6.5; o.leaves.count = 18; } },
   Charme: { from: 'Oak Medium', label: { fr: 'Charme', en: 'Hornbeam' }, type: 'arbre', height: 15, genus: 'Carpinus',
     bark: BARK('chinese_hackberry_bark'), barkTint: 0xc8c8c2,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#4f8a3a', '#5a9642', '#467d34'], n: 8, size: 50, seed }),
@@ -312,7 +312,7 @@ export const SPECIES = {
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'delta', colours: ['#6c9c48', '#78a852', '#5f8e40'], n: 9, size: 40, seed }),
     set(o){ o.branch.angle[1] = 32; o.branch.force.strength = 0.006; o.leaves.size = 3.6; o.leaves.count = 22; } },
   Hetre: { from: 'Oak Large', label: { fr: 'Hêtre', en: 'Beech' }, type: 'arbre', height: 25, genus: 'Fagus',
-    bark: BARK('bark_bluegum'), barkTint: 0xc8c8c0,
+    bark: BARK('japanese_sycamore'), barkTint: 0xb4b8bc,
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#4d8a35', '#58963e', '#437a2e'], n: 9, size: 50, seed }),
     set(o){ o.branch.radius[0] = 3; o.branch.angle[1] = 55; o.branch.length[0] = 50; o.leaves.size = 6.5; o.leaves.count = 18; } },
   Chataignier: { from: 'Oak Large', label: { fr: 'Châtaignier', en: 'Sweet chestnut' }, type: 'arbre', height: 20, genus: 'Castanea',
@@ -322,7 +322,7 @@ export const SPECIES = {
   Sapin: { from: 'Pine Medium', label: { fr: 'Sapin / épicéa', en: 'Fir / spruce' }, type: 'conifere', height: 25, genus: ['Abies', 'Picea'],
     bark: BARK('knotted_pine_bark'), barkTint: 0xb8b4ac,
     foliage: (seed, makeCanvas) => firSpray({ seed, makeCanvas }),
-    set(o){ o.leaves.size = 4; } },
+    set(o){ o.branch.gnarliness[0] = 0.01; o.branch.gnarliness[1] = 0.03; o.branch.force.strength = 0; o.branch.twist[0] = 0; o.leaves.size = 4; } },
 };
 
 /** The variants of each species (seeds 1 to VARIANTS): enough for a row of trees not to look cloned. */

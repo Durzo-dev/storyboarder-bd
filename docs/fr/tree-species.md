@@ -142,7 +142,7 @@ Durzo, puis, si elle est acceptée :
 - **Branches** : montantes (30 à 40°), leurs pointes relevées, dès mi-hauteur.
 - **Feuilles** : composées pennées, 9 à 13 folioles lancéolées dentées ; 20 à 35 cm ; opposées ; vert clair ; tombant
   vertes ou jaune pâle. Bourgeons noirs. Caduques.
-- **Dans EZ-Tree** : départ « Ash Large » ; angle 35, branches à partir de 45 % ; feuillage léger (taille 4, 8).
+- **Dans EZ-Tree** : départ « Ash Large » ; angle 35, branches à partir de 45 % ; feuillage léger (taille 5, 16).
   Écorce `bark_brown_01` teintée gris (`#cfcfc8`). Feuillage : folioles forme `lance` par paires opposées,
   `#5a9445` à `#66a04d`.
 - **Références** : Commons, catégorie « Fraxinus excelsior » (port, feuilles, écorce).
@@ -204,7 +204,7 @@ Durzo, puis, si elle est acceptée :
 - **Branches** : en zigzag, épineuses, montant à 50-60°.
 - **Feuilles** : composées pennées, 9 à 19 petites folioles ovales à bout arrondi ; 15 à 30 cm ; alternes ; vert
   jaune clair ; jaunes à l'automne. Fleurs blanches parfumées en grappes pendantes en mai. Caduques.
-- **Dans EZ-Tree** : départ « Aspen Medium » ; angle 55, tortueux (0,12 tronc, 0,25 branches), branches 12 ;
+- **Dans EZ-Tree** : départ « Aspen Medium » ; tronc épais de 1,5, angle 55, tortueux (0,05 tronc, 0,25 branches), branches 12 ;
   feuilles taille 6,5, 18. Écorce `japanese_camphor_bark` (côtes étroites, crevasses profondes). Feuillage :
   folioles forme `ovate` par paires opposées, `#6a9a4a` à `#76a653`.
 - **Références** : Commons, catégorie « Robinia pseudoacacia » (port, feuilles, écorce).
@@ -255,7 +255,7 @@ Durzo, puis, si elle est acceptée :
 - **Feuilles** : ovales, le bord ondulé et cilié, 7 à 10 paires de nervures parallèles ; 5 à 10 cm ; alternes ;
   vert vif luisant ; cuivrées à l'automne. Caduques.
 - **Dans EZ-Tree** : départ « Oak Large » ; tronc 50, épais de 3 ; angle 55 ; feuilles taille 6,5, 18. Écorce
-  `bark_bluegum` (lisse) teintée gris (`#c8c8c0`). Feuillage forme `ovate`, `#4d8a35` à `#58963e`.
+  `japanese_sycamore` (lisse) teintée gris (`#b4b8bc`). Feuillage forme `ovate`, `#4d8a35` à `#58963e`.
 - **Références** : Commons, catégorie « Fagus sylvatica » (port, feuilles, écorce).
 
 ## Châtaignier (*Castanea sativa*)
@@ -280,7 +280,7 @@ Durzo, puis, si elle est acceptée :
 - **Branches** : en étages, horizontales, celles de l'épicéa retombantes puis relevées au bout.
 - **Feuilles** : aiguilles courtes (1 à 3 cm), celles du sapin plates, en deux peignes, deux lignes blanches
   dessous, celles de l'épicéa tout autour du rameau ; vert sombre. Persistantes.
-- **Dans EZ-Tree** : départ « Pine Medium » (son cône) ; feuilles taille 4. Écorce `knotted_pine_bark` teintée gris
+- **Dans EZ-Tree** : départ « Pine Medium » (son cône), droit et régulier (tortuosité 0,01 et 0,03, sans poussée ni torsion) ; feuilles taille 4. Écorce `knotted_pine_bark` teintée gris
   (`#b8b4ac`). Feuillage `firSpray` (un rameau plat ramifié deux fois, aiguilles en peigne des deux côtés),
   `#2c4a2a` à `#3c5f37`, quelques-unes montrant leur revers pâle (`#5f7f5a`).
 - **Références** : Commons, catégories « Abies alba » et « Picea abies » (port, rameaux, écorce).

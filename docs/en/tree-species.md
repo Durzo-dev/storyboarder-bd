@@ -140,7 +140,7 @@ then, if accepted:
 - **Branches**: ascending (30 to 40°), their tips upturned, from mid-height.
 - **Leaves**: pinnate, 9 to 13 lance-shaped toothed leaflets; 20 to 35 cm; opposite; light green; falling green or
   pale yellow. Black buds. Deciduous.
-- **In EZ-Tree**: from « Ash Large »; angle 35, branches from 45 %; light foliage (size 4, 8). Bark `bark_brown_01`
+- **In EZ-Tree**: from « Ash Large »; angle 35, branches from 45 %; light foliage (size 5, 16). Bark `bark_brown_01`
   tinted grey (`#cfcfc8`). Foliage: leaflets shape `lance` in opposite pairs, `#5a9445` to `#66a04d`.
 - **References**: Commons, category « Fraxinus excelsior » (habit, leaves, bark).
 
@@ -197,7 +197,7 @@ then, if accepted:
 - **Branches**: zigzag, thorny, rising at 50 to 60°.
 - **Leaves**: pinnate, 9 to 19 small oval leaflets, rounded tip; 15 to 30 cm; alternate; light yellow-green; yellow
   in autumn. White scented flowers in hanging clusters in May. Deciduous.
-- **In EZ-Tree**: from « Aspen Medium »; angle 55, gnarled (0.12 trunk, 0.25 branches), branches 12; leaves size
+- **In EZ-Tree**: from « Aspen Medium »; trunk 1.5 thick, angle 55, gnarled (0.05 trunk, 0.25 branches), branches 12; leaves size
   6.5, 18. Bark `japanese_camphor_bark` (narrow ridges, deep fissures). Foliage: leaflets shape `ovate` in
   opposite pairs, `#6a9a4a` to `#76a653`.
 - **References**: Commons, category « Robinia pseudoacacia » (habit, leaves, bark).
@@ -247,8 +247,8 @@ then, if accepted:
 - **Branches**: strong, rising at 50 to 60°, the twigs in flat sprays.
 - **Leaves**: oval, the edge wavy and fringed with hairs, 7 to 10 pairs of parallel veins; 5 to 10 cm; alternate;
   glossy bright green; copper in autumn. Deciduous.
-- **In EZ-Tree**: from « Oak Large »; trunk 50, 3 thick; angle 55; leaves size 6.5, 18. Bark `bark_bluegum` (smooth)
-  tinted grey (`#c8c8c0`). Foliage shape `ovate`, `#4d8a35` to `#58963e`.
+- **In EZ-Tree**: from « Oak Large »; trunk 50, 3 thick; angle 55; leaves size 6.5, 18. Bark `japanese_sycamore` (smooth)
+  tinted grey (`#b4b8bc`). Foliage shape `ovate`, `#4d8a35` to `#58963e`.
 - **References**: Commons, category « Fagus sylvatica » (habit, leaves, bark).
 
 ## Chataignier — Sweet chestnut (*Castanea sativa*)
@@ -270,7 +270,7 @@ then, if accepted:
 - **Branches**: in whorls, level, the spruce's drooping then upturned at their tips.
 - **Leaves**: short needles (1 to 3 cm), the fir's flat in two combs with two white lines beneath, the spruce's
   all round its twig; dark green. Evergreen.
-- **In EZ-Tree**: from « Pine Medium » (its cone); leaves size 4. Bark `knotted_pine_bark` tinted grey (`#b8b4ac`).
+- **In EZ-Tree**: from « Pine Medium » (its cone), straight and even (gnarliness 0.01 and 0.03, no push, no twist); leaves size 4. Bark `knotted_pine_bark` tinted grey (`#b8b4ac`).
   Foliage `firSpray` (a flat spray branching twice, needles combed on both sides), `#2c4a2a` to `#3c5f37`, some
   showing their pale side (`#5f7f5a`).
 - **References**: Commons, categories « Abies alba » and « Picea abies » (habit, twigs, bark).
