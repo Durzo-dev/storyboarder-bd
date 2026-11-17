@@ -187,7 +187,8 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    (`RPG.LATEST:parcelles_graphiques`, its `code_group` and `code_cultu`, same request). `groundOfPlot`: each crop
    group a ground (`PLOT_GROUNDS`: cereals earth tinted golden, rape and sunflower a green crop, meadows grass,
    fallows dry grass, vegetables tilled earth; vines earth with their rows, `vines`: { angle }, the parcel's
-   longest side, `vineRowAngle`, as for an OSM `landuse=vineyard` at « Detailed » and « Realistic »); `addPlotGrounds`: each parcel a
+   longest side, `vineRowAngle`, as for an OSM `landuse=vineyard` at « Detailed » and « Realistic », and for the BD
+   TOPO's « Vigne » areas, `readBdTopoVines`, laid after the RPG's where it has none); `addPlotGrounds`: each parcel a
    Zone of its ground, its cells taken from OSM's earth and grass Zones under it (one Zone per cell: two flat Zones on
    one cell would flicker), left where another ground holds them; the slivers between two parcels a few centimetres
    apart given to a plot around them. Orchards, olive groves and nut groves (`plotAreas`: `olives`, `nuts`, the nut
@@ -195,8 +196,12 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    is made wider (an orchard keeps its rows). Credit: « © IGN, RPG ».
    A vineyard's stocks are not Elements: at render time `vineStocks` (vineyard.js) lays them in rows 2.2 m apart, one
    every 1.1 m, on the Zone's own cells, at most 8 000 (the step along the rows widened), and `vineyard3D`
-   (vineyard-3d.js) draws them as copies of three generated vines (« Vigne », 472 triangles), one InstancedMesh per
-   part and variant, each on the Ground (`GROUND_Y_DEFAULT_3D`, −3) at the relief's lowest height round its foot,
+   (vineyard-3d.js) draws them as copies of three stocks it BUILDS as a vineyard trains them (`buildVineStock`, about
+   260 triangles: a twisted trunk up to the fruiting wire, two arms along the row, shoots up between the wires, leaf
+   cards out of the row's plane, cut out at 0.2 rather than 0.5: from afar their mipmaps fell under 0.5 and the rows
+   lost their leaves; the « Vigne » species gives its bark and leaves), one InstancedMesh per part and
+   variant, its posts (`vineRuns`: at a run's ends and every 5 stocks, between two stocks) as copies, its three wires
+   (`VINE_WIRES`, 0.6, 1.0, 1.4 m) as lines following the ground, each on the Ground (`GROUND_Y_DEFAULT_3D`, −3) at the relief's lowest height round its foot,
    a few centimetres in; their geometry and materials are shared (`userData.shared`: never
    disposed with the Zone). Measured at Eguisheim (200 m, 17 vineyard Zones): first render about 5 s (the vines
    generated), then about 1.6 s.

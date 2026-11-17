@@ -77,3 +77,29 @@ test('an OSM vineyard (landuse=vineyard), Detailed: its rows too; Simple: its ea
   assert.ok(z.vines && Math.abs(z.vines.angle) < 0.01);
   assert.equal(translateOsm(data, { centre: c, halfSize: 100, detail: 'simple' }).zones.find(x => x.osmId === 9).vines, undefined);
 });
+
+test('a stock as a vineyard trains it: a trunk to the fruiting wire, two arms along the row, shoots up to the wires; light', async () => {
+  const { buildVineStock, VINE_WIRES } = await import('../src/vineyard-3d.js');
+  const a = buildVineStock(1), b = buildVineStock(2);
+  const xs = (p) => p.position.filter((_, i) => i % 3 === 0), ys = (p) => p.position.filter((_, i) => i % 3 === 1), zs = (p) => p.position.filter((_, i) => i % 3 === 2);
+  const tris = (p) => p.index.length / 3;
+  assert.ok(tris(a.wood) + tris(a.leaves) < 400, `${tris(a.wood) + tris(a.leaves)} triangles: copied by the thousand`);
+  assert.ok(Math.min(...ys(a.wood)) > -0.05 && Math.min(...ys(a.wood)) < 0.05, 'its foot on the ground');
+  assert.ok(Math.max(...xs(a.wood)) > 0.45 && Math.min(...xs(a.wood)) < -0.45, 'its arms half a place each way along the row');
+  assert.ok(Math.max(...zs(a.wood)) < 0.15 && Math.min(...zs(a.wood)) > -0.15, 'a narrow wall: nothing far across the row');
+  assert.ok(Math.max(...ys(a.leaves)) < 2 && Math.max(...ys(a.leaves)) > VINE_WIRES[2], 'its leaves up past the top wire');
+  assert.ok(Math.min(...ys(a.leaves)) > VINE_WIRES[0] - 0.25, 'no leaf under the fruiting wire');
+  assert.notDeepEqual(a.wood.position, b.wood.position, 'variants differ');
+  assert.deepEqual(buildVineStock(1), a, 'the same each time');
+});
+
+test('the wired runs: posts between stocks, never on a trunk, at both ends', async () => {
+  const { vineRuns } = await import('../src/vineyard.js');
+  const stocks = Array.from({ length: 12 }, (_, c) => ({ x: c * 1.1, z: 0, row: 0, col: c }))
+    .concat([{ x: 20, z: 0, row: 0, col: 18 }, { x: 21.1, z: 0, row: 0, col: 19 }]);
+  const { runs, posts } = vineRuns(stocks);
+  assert.equal(runs.length, 2, 'a gap splits a row');
+  assert.ok(Math.abs(runs[0].a.x + 0.55) < 0.01 && Math.abs(runs[0].b.x - 12.65) < 0.01);
+  assert.ok(posts.every(p => stocks.every(s => Math.hypot(s.x - p.x, s.z - p.z) > 0.4)), 'never on a trunk');
+  assert.ok(posts.length >= 5);
+});

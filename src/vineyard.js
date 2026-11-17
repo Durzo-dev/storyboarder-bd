@@ -23,6 +23,38 @@ export function vineRowAngle(ring) {
   return Math.round(angle * 1000) / 1000;
 }
 
+/**
+ * The wired runs of a vineyard's rows: each row's stocks next to one another (no gap of more than one place),
+ * from half a place before its first to half a place after its last, and its posts (at both ends, and between two
+ * stocks every `postEvery`). → { runs: [{ a, b }],
+ * posts: [{ x, z }] }, from vineStocks' stocks.
+ */
+export function vineRuns(stocks, { postEvery = 5 } = {}) {
+  const rows = new Map();
+  for (const s of stocks || []) { if (!rows.has(s.row)) rows.set(s.row, []); rows.get(s.row).push(s); }
+  const runs = [], posts = [];
+  for (const list of rows.values()) {
+    list.sort((a, b) => a.col - b.col);
+    let start = 0;
+    for (let i = 1; i <= list.length; i++) {
+      if (i < list.length && list[i].col - list[i - 1].col <= 2) continue;
+      const run = list.slice(start, i);
+      if (run.length >= 2) {
+        // The posts between two stocks (never on a trunk), the end ones half a place beyond the last stocks.
+        const f = run[0], l = run[run.length - 1], half = (p, q) => ({ x: Math.round((p.x + (p.x - q.x) / 2) * 100) / 100, z: Math.round((p.z + (p.z - q.z) / 2) * 100) / 100 });
+        const a = half(f, run[1]), b = half(l, run[run.length - 2]);
+        runs.push({ a, b });
+        posts.push(a, b);
+        for (let k = postEvery; k + 1 < run.length; k += postEvery) {
+          posts.push({ x: Math.round((run[k].x + run[k - 1].x) * 50) / 100, z: Math.round((run[k].z + run[k - 1].z) * 50) / 100 });
+        }
+      }
+      start = i;
+    }
+  }
+  return { runs, posts };
+}
+
 /** A number in [0, 1) from integers and a salt: the same stock jitters the same at each render. */
 function hash(i, j, salt) {
   let h = Math.imul(i | 0, 374761393) ^ Math.imul(j | 0, 668265263) ^ salt;
@@ -58,10 +90,11 @@ export function vineStocks(masque, { angle = 0, gap = VINE_ROW_GAP, step = VINE_
         const u = c * s + (hash(r, c, 0x2c1b) - 0.5) * 0.15 * s;
         const x = u * ux + v * vx, z = u * uz + v * vz;
         if (!full(x, z)) continue;
+        // Turned along its row (its arms on the wire), a few degrees off; `row`, `col`: its place in the grid.
         out.push({ x: Math.round(x * 100) / 100, z: Math.round(z * 100) / 100,
-          rotY: Math.round((-angle + (hash(r, c, 0x51ed) - 0.5) * 0.8) * 1000) / 1000,
-          scale: Math.round((0.85 + 0.3 * hash(r, c, 0x7a3f)) * 100) / 100,
-          variant: 1 + Math.floor(hash(r, c, 0x9e37) * variants) });
+          rotY: Math.round((-angle + (hash(r, c, 0x51ed) - 0.5) * 0.12) * 1000) / 1000,
+          scale: Math.round((0.92 + 0.16 * hash(r, c, 0x7a3f)) * 100) / 100,
+          variant: 1 + Math.floor(hash(r, c, 0x9e37) * variants), row: r, col: c });
         if (out.length > max) return null;
       }
     }

@@ -3381,7 +3381,10 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       // Release the old group if present.
       if (entry) {
         // A vineyard's vines share their geometry and materials with every vineyard (vineyard-3d.js): kept.
-        entry.group.traverse(ch => { if (ch.isMesh && !ch.userData.shared) { ch.geometry.dispose(); libererMateriauDeTrace3D(ch.material); } });
+        entry.group.traverse(ch => {
+          if (ch.isMesh && !ch.userData.shared) { ch.geometry.dispose(); libererMateriauDeTrace3D(ch.material); }
+          else if (ch.isLine) ch.geometry.dispose();   // a vineyard's wires: their own geometry, a shared material
+        });
         personaScene3D.remove(entry.group);
       }
       const group = new THREE.Group();

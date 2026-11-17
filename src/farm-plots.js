@@ -60,6 +60,21 @@ function ringsOf(g, toLocal) {
   return polys.map(p => ({ ring: loc(p[0]), holes: p.slice(1).map(loc).filter(h => h.length >= 4) })).filter(p => p.ring.length >= 4);
 }
 
+/**
+ * The BD TOPO's vineyards (`BDTOPO_V3:zone_de_vegetation`, nature « Vigne »: the same answer as the woods,
+ * vegetation-zones.js) as plots of vines: they cover what the RPG lacks (vines not declared, outside the CAP). Laid
+ * after the RPG's (addPlotGrounds: a cell an RPG plot holds is left to it).
+ */
+export function readBdTopoVines(geojson, centre) {
+  const { toLocal } = projector(centre);
+  const out = [];
+  for (const f of (geojson && geojson.features) || []) {
+    if (!/vigne/i.test(String((f.properties || {}).nature || ''))) continue;
+    for (const r of ringsOf(f.geometry, toLocal)) out.push({ group: 21, crop: 'BDTOPO', ground: PLOT_GROUNDS[21], source: 'bdtopo', ...r });
+  }
+  return out;
+}
+
 /** The RPG's answer (GeoJSON) around `centre` → [{ group, crop, ground, ring, holes }] in local metres. */
 export function readPlots(geojson, centre) {
   const { toLocal } = projector(centre);
@@ -113,14 +128,14 @@ export function addPlotGrounds(translated, plots, halfSize) {
         const c = cellOf(zone.world.masque, x, z);
         if (c >= 0 && cellsOfZone(zone)[c] === '1') holders.push([zone, c]);
       }
-      if (holders.some(([zone]) => !YIELDING.has(zone.terrainType) || zone.source === 'rpg')) cells[k] = '0';
+      if (holders.some(([zone]) => !YIELDING.has(zone.terrainType) || zone.plot)) cells[k] = '0';
       else for (const [zone, c] of holders) cellsOfZone(zone)[c] = '0';
     }
     const plein = cells.join('');
     if (!plein.includes('1')) continue;
     const world = mondeDuMasque({ ...mask, plein });
     if (!world) continue;
-    const zone = { terrainType: p.ground.terrainType, world, source: 'rpg', crop: p.crop };
+    const zone = { terrainType: p.ground.terrainType, world, source: p.source || 'rpg', crop: p.crop, plot: true };
     if (p.ground.terrainColor) zone.terrainColor = p.ground.terrainColor;
     // A vineyard: its stocks in rows along its longest side, drawn at render time (vineyard.js).
     if (p.ground.vines) zone.vines = { angle: vineRowAngle(p.ring) };
@@ -134,8 +149,8 @@ export function addPlotGrounds(translated, plots, halfSize) {
     const m = zone.world && zone.world.masque; const c = m ? cellOf(m, x, z) : -1;
     return c >= 0 && (cellsOf.has(zone) ? cellsOf.get(zone)[c] : m.plein[c]) === '1';
   });
-  for (const zone of translated.zones.filter(z => z.source === 'rpg')) {
-    const m = zone.world.masque, cells = cellsOf.get(zone), before = cells.slice();   // counted on `before`: no creeping
+  for (const zone of translated.zones.filter(z => z.plot)) {
+    const m = zone.world.masque, cells = cellsOfZone(zone), before = cells.slice();   // counted on `before`: no creeping
     for (let k = 0; k < cells.length; k++) {
       if (cells[k] === '1') continue;
       const i = k % m.nx, j = Math.floor(k / m.nx);

@@ -89,3 +89,24 @@ test('two neighbouring parcels a few centimetres apart on a diagonal: no hole of
   assert.equal(held(-3.5, -3.5), 0, 'outside both: no creeping');
   assert.equal(held(45.5, 20.5), 0);
 });
+
+test('the BD TOPO\'s vineyards: vines where the RPG has none, left to the RPG where it has them', async () => {
+  const { readBdTopoVines } = await import('../src/farm-plots.js');
+  const zones = { features: [
+    { properties: { nature: 'Vigne' }, geometry: { type: 'MultiPolygon', coordinates: [[square(0, 0, 60, 20)]] } },
+    { properties: { nature: 'Bois' }, geometry: { type: 'MultiPolygon', coordinates: [[square(0, 40, 20, 20)]] } },
+  ] };
+  const vines = readBdTopoVines(zones, centre);
+  assert.equal(vines.length, 1, 'only the vines');
+  assert.equal(vines[0].ground.vines, true);
+  const translated = { zones: [] };
+  addPlotGrounds(translated, readPlots({ features: [plot('21', 'VRC', square(0, 0, 30, 20))] }, centre), 100);
+  addPlotGrounds(translated, vines, 100);
+  assert.equal(translated.zones.length, 2);
+  const [rpg, bd] = translated.zones;
+  assert.equal(rpg.source, 'rpg'); assert.equal(bd.source, 'bdtopo'); assert.ok(bd.vines && rpg.vines);
+  const cell = (z, x, y) => { const m = z.world.masque; const i = Math.floor((x - m.x0) / m.pas), j = Math.floor((y - m.z0) / m.pas);
+    return i >= 0 && j >= 0 && i < m.nx && j < m.nz ? m.plein[j * m.nx + i] : '0'; };
+  assert.equal(cell(rpg, 10.5, 10.5), '1'); assert.equal(cell(bd, 10.5, 10.5), '0', 'the RPG\'s cell left to it');
+  assert.equal(cell(bd, 45.5, 10.5), '1', 'the BD TOPO\'s own vines');
+});

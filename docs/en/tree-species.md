@@ -661,8 +661,9 @@ then, if accepted:
 - **Trunk**: 0.4 to 0.8 m, gnarled and twisted, its bark grey-brown, peeling in long strips.
 - **Branches**: the year's shoots, rising (35 to 40°), thin and flexible, with tendrils.
 - **Leaves**: five-lobed, 10 to 20 cm, toothed, mid green; yellow to red in autumn. Bunches in late summer. Deciduous.
-- **In EZ-Tree**: not an Element's tree: a vineyard's stock, drawn by the thousand as copies of three variants
-  (vineyard-3d.js, InstancedMesh), so as light as can be (472 triangles: few sections, single-billboard leaves). From
+- **In EZ-Tree**: not an Element's tree: a vineyard's stock, whose SHAPE vineyard-3d.js builds (a trunk, two arms on
+  the wire, shoots between the wires: EZ-Tree grows round a trunk and cannot train it); EZ-Tree's generation gives its
+  MATERIALS, this bark and these leaves (the tree itself, light: 472 triangles). From
   « Aspen Small », two levels: a trunk (radius 1.5, gnarliness 0.22), 9 shoots from 40 %, angle 38, length 7; leaves
   size 5.2, 7, single billboards. Bark `bark_willow` tinted (`#b09078`, gain 1.4). Foliage shape `maple` (five
   lobes), large (96), `#5d8a3a` to `#68953f`.

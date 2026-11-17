@@ -693,9 +693,10 @@ Durzo, puis, si elle est acceptée :
 - **Branches** : les rameaux de l'année, montants (35 à 40°), fins et souples, avec des vrilles.
 - **Feuilles** : à cinq lobes, 10 à 20 cm, dentées, vert moyen ; jaunes à rouges à l'automne. Grappes en fin d'été.
   Caduques.
-- **Dans EZ-Tree** : pas l'arbre d'un Élément : le cep d'une vigne, dessiné par milliers en copies de trois variantes
-  (vineyard-3d.js, InstancedMesh), donc aussi léger que possible (472 triangles : peu de sections, feuilles en un
-  seul plan). Départ « Aspen Small », deux niveaux : un tronc (rayon 1,5, noueux 0,22), 9 rameaux dès 40 %, angle 38,
+- **Dans EZ-Tree** : pas l'arbre d'un Élément : le cep d'une vigne, dont vineyard-3d.js CONSTRUIT la FORME (un tronc,
+  deux bras sur le fil, des rameaux entre les fils : EZ-Tree pousse autour d'un tronc et ne sait pas la palisser) ; la
+  génération d'EZ-Tree en donne les MATÉRIAUX, cette écorce et ces feuilles (l'arbre lui-même, léger : 472
+  triangles). Départ « Aspen Small », deux niveaux : un tronc (rayon 1,5, noueux 0,22), 9 rameaux dès 40 %, angle 38,
   longueur 7 ; feuilles taille 5,2, 7, en un seul plan. Écorce `bark_willow` teintée (`#b09078`, gain 1,4). Feuillage
   forme `maple` (cinq lobes), grande (96), `#5d8a3a` à `#68953f`.
 - **Références** : Commons, catégories « Vitis vinifera » et « Vineyards in France » (ceps, rangs, feuilles).

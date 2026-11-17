@@ -203,7 +203,8 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    (`RPG.LATEST:parcelles_graphiques`, son `code_group` et son `code_cultu`, même requête). `groundOfPlot` : chaque
    groupe de cultures un sol (`PLOT_GROUNDS` : céréales en terre teintée dorée, colza et tournesol une culture verte,
    prairies en herbe, jachères en herbe sèche, légumes en terre labourée ; vignes en terre avec leurs rangs, `vines` : { angle }, le plus
-   long côté de la parcelle, `vineRowAngle`, comme pour un `landuse=vineyard` d'OSM en « Détaillé » et « Réaliste ») ;
+   long côté de la parcelle, `vineRowAngle`, comme pour un `landuse=vineyard` d'OSM en « Détaillé » et « Réaliste », et
+   pour les zones « Vigne » de la BD TOPO, `readBdTopoVines`, posées après le RPG là où il n'en a pas) ;
    `addPlotGrounds` : chaque parcelle une Zone de son sol, ses cases prises aux Zones de terre et d'herbe d'OSM
    dessous (une Zone par case : deux Zones plates sur une case scintilleraient), laissées là où un autre sol les
    tient ; les interstices entre deux parcelles à quelques centimètres donnés à une parcelle voisine. Vergers,
@@ -212,8 +213,12 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    « © IGN, RPG ».
    Les ceps d'une vigne ne sont pas des Éléments : au rendu, `vineStocks` (vineyard.js) les pose en rangs à 2,2 m, un
    tous les 1,1 m, sur les cases de la Zone, 8 000 au plus (le pas le long des rangs élargi), et `vineyard3D`
-   (vineyard-3d.js) les dessine en copies de trois vignes générées (« Vigne », 472 triangles), un InstancedMesh par
-   partie et variante, chacun sur le Sol (`GROUND_Y_DEFAULT_3D`, −3) à la hauteur la plus basse du relief autour
+   (vineyard-3d.js) les dessine en copies de trois ceps qu'il CONSTRUIT comme on taille une vigne (`buildVineStock`,
+   environ 260 triangles : un tronc tordu jusqu'au fil porteur, deux bras le long du rang, des rameaux montant entre
+   les fils, des feuilles en cartes hors du plan du rang, découpées à 0,2 et non 0,5 : de loin leurs mipmaps passaient
+   sous 0,5 et les rangs perdaient leurs feuilles ; l'essence « Vigne » donne l'écorce et les feuilles), un
+   InstancedMesh par partie et variante, ses piquets (`vineRuns` : aux bouts d'un rang et tous les 5 ceps, entre deux
+   ceps) en copies, ses trois fils (`VINE_WIRES`, 0,6, 1,0, 1,4 m) en lignes qui suivent le sol, chacun sur le Sol (`GROUND_Y_DEFAULT_3D`, −3) à la hauteur la plus basse du relief autour
    de son pied, enfoncé de quelques centimètres ; leur géométrie et leurs matériaux sont partagés
    (`userData.shared` : jamais libérés avec la Zone). Mesuré à Eguisheim (200 m, 17 Zones de vigne) : premier rendu
    environ 5 s (les vignes générées), puis environ 1,6 s.

@@ -701,8 +701,9 @@ Object.assign(SPECIES, {
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#3f6a30', '#4a7638', '#365e2a'], n: 9, size: 34, opposite: true, seed }),
     set(o){ o.branch.angle[1] = 50; o.branch.children[0] = 10; o.branch.gnarliness[1] = 0.2; o.branch.droop[1] = 0.25; o.leaves.size = 3.6; o.leaves.count = 22; } },
 });
-// The vine (#481b): not an Element's tree but a vineyard's stock, drawn by the thousand as copies of one mesh
-// (vineyard.js): a twisted trunk, its shoots rising along the wire, broad five-lobed leaves.
+// The vine (#481b): not an Element's tree but a vineyard's stock. Its SHAPE is built by vineyard-3d.js (a trunk,
+// two arms on the wire, shoots between the wires: EZ-Tree grows round a trunk and could not train it); EZ-Tree's
+// generation gives its MATERIALS: this bark and these leaves.
 Object.assign(SPECIES, {
   Vigne: { from: 'Aspen Small', label: { fr: 'Vigne', en: 'Grapevine' }, type: 'vigne', height: 1.5, genus: 'Vitis',
     bark: BARK('bark_willow'), barkTint: 0xb09078, barkGain: 1.4,
