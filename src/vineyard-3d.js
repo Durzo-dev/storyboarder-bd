@@ -129,12 +129,12 @@ function vineModel(variant) {
 }
 
 /**
- * The vineyard of a Zone (`o.vines`, its mask `o.world.masque`), the ground's height at (x, z) given by `heightAt`:
- * a Group (stocks, posts, wires), or null (no stock).
+ * The vineyard of a Zone (`o.vines`, its mask `o.world.masque`), the ground's height at (x, z) given by `heightAt`,
+ * no stock where `avoid(x, z)` (the Traces across it, vineyard.js onTraces): a Group (stocks, posts, wires), or null.
  */
-export function vineyard3D(o, heightAt = () => 0) {
+export function vineyard3D(o, heightAt = () => 0, { avoid = null } = {}) {
   const masque = o && o.world && o.world.masque;
-  const stocks = vineStocks(masque, o.vines || {}, { variants: VARIANTS });
+  const stocks = vineStocks(masque, o.vines || {}, { variants: VARIANTS, avoid });
   if (!stocks.length) return null;
   const group = new THREE.Group();
   group.userData.vineyard = stocks.length;

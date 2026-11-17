@@ -158,8 +158,8 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    provider, and with none a flat Ground.
    Before the models, every element stands clear of the buildings and of the paths that bar the way
    (`clearOfObstacles`, placement-clearance.js: footprints kept on the translated buildings as `footprint`;
-   roads, rivers, low walls, fences, hedges and barriers, their half width; pavements and footpaths are no
-   obstacle): pushed to the nearest place 1 m clear for a tree, 0.4 m for anything else (a street lamp may stand against a
+   roads, rivers, low walls, fences, hedges and barriers, their half width; footpaths (`chemin`) for the trees only,
+   pavements for nothing): pushed to the nearest place 1 m clear for a tree, 0.4 m for anything else (a street lamp may stand against a
    facade: `AGAINST_BUILDINGS`), and left out when that
    place is more than 4 m away.
    After the bank, our generated trees' crowns (`fitCrowns`; `crownOf`, ez-trees.js: the outline of its leaves
@@ -195,7 +195,8 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    by its crop, NOX a walnut) are filled like the forests, before the BD TOPO's. When the budget is exceeded the grid
    is made wider (an orchard keeps its rows). Credit: « © IGN, RPG ».
    A vineyard's stocks are not Elements: at render time `vineStocks` (vineyard.js) lays them in rows 2.2 m apart, one
-   every 1.1 m, on the Zone's own cells, at most 8 000 (the step along the rows widened), and `vineyard3D`
+   every 1.1 m, on the Zone's own cells, never within 0.6 m of a road, path, pavement, wall, hedge, fence, barrier or
+   river crossing it (`onTraces`, `VINE_OBSTACLES`; a Trace drawn across it redraws it), at most 8 000 (the step along the rows widened), and `vineyard3D`
    (vineyard-3d.js) draws them as copies of three stocks it BUILDS as a vineyard trains them (`buildVineStock`, about
    260 triangles: a twisted trunk up to the fruiting wire, two arms along the row, shoots up between the wires, leaf
    cards out of the row's plane, cut out at 0.2 rather than 0.5: from afar their mipmaps fell under 0.5 and the rows

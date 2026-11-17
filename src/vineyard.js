@@ -23,6 +23,38 @@ export function vineRowAngle(ring) {
   return Math.round(angle * 1000) / 1000;
 }
 
+/** The Traces no vine stands on (asked by Durzo on 17 Nov. 2026: rows across a path, seen), their width when they have none (m). */
+export const VINE_OBSTACLES = Object.freeze({ route: 5, chemin: 1.5, trottoir: 2, riviere: 4, muret: 0.5, haie: 1, cloture: 0.1, barriere: 0.1 });
+
+/**
+ * A test for the stocks: is (x, z) on one of these Traces (`traces`: { tracéType, world: { pts, width } }), within
+ * its half width and `margin` (a vine's spread, its arms)? Segments kept by 8 m cells: thousands of stocks against
+ * every segment of a Scene's paths cost too much. Null when there is no such Trace.
+ */
+export function onTraces(traces, margin = 0.6) {
+  const CELL = 8, cells = new Map(), key = (i, j) => i * 100003 + j;
+  let any = false;
+  for (const t of traces || []) {
+    const pts = t && t.world && t.world.pts;
+    if (!(t.tracéType in VINE_OBSTACLES) || !Array.isArray(pts) || pts.length < 2) continue;
+    const reach = (t.world.width > 0 ? t.world.width : VINE_OBSTACLES[t.tracéType]) / 2 + margin;
+    for (let i = 0; i + 1 < pts.length; i++) {
+      const a = pts[i], b = pts[i + 1], seg = { a, b, reach };
+      for (let ci = Math.floor((Math.min(a.x, b.x) - reach) / CELL); ci <= Math.floor((Math.max(a.x, b.x) + reach) / CELL); ci++) {
+        for (let cj = Math.floor((Math.min(a.z, b.z) - reach) / CELL); cj <= Math.floor((Math.max(a.z, b.z) + reach) / CELL); cj++) {
+          const k = key(ci, cj); if (!cells.has(k)) cells.set(k, []); cells.get(k).push(seg); any = true;
+        }
+      }
+    }
+  }
+  if (!any) return null;
+  return (x, z) => (cells.get(key(Math.floor(x / CELL), Math.floor(z / CELL))) || []).some(({ a, b, reach }) => {
+    const dx = b.x - a.x, dz = b.z - a.z, l2 = dx * dx + dz * dz;
+    const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / l2)) : 0;
+    return Math.hypot(x - (a.x + t * dx), z - (a.z + t * dz)) < reach;
+  });
+}
+
 /**
  * The wired runs of a vineyard's rows: each row's stocks next to one another (no gap of more than one place),
  * from half a place before its first to half a place after its last, and its posts (at both ends, and between two
@@ -66,7 +98,7 @@ function hash(i, j, salt) {
  * The stocks of a vineyard Zone's mask (`masque`: { pas, x0, z0, nx, nz, plein }) → [{ x, z, rotY, scale, variant }]:
  * along rows of `angle`, `gap` apart, every `step`, on its full cells; at most `max` (the step widened).
  */
-export function vineStocks(masque, { angle = 0, gap = VINE_ROW_GAP, step = VINE_STEP } = {}, { max = MAX_VINES, variants = 3 } = {}) {
+export function vineStocks(masque, { angle = 0, gap = VINE_ROW_GAP, step = VINE_STEP } = {}, { max = MAX_VINES, variants = 3, avoid = null } = {}) {
   const m = masque;
   if (!m || !(m.pas > 0) || !(m.nx > 0) || !(m.nz > 0) || typeof m.plein !== 'string') return [];
   const ux = Math.cos(angle), uz = Math.sin(angle), vx = -uz, vz = ux;
@@ -89,7 +121,7 @@ export function vineStocks(masque, { angle = 0, gap = VINE_ROW_GAP, step = VINE_
       for (let c = Math.ceil(u0 / s); c * s <= u1; c++) {
         const u = c * s + (hash(r, c, 0x2c1b) - 0.5) * 0.15 * s;
         const x = u * ux + v * vx, z = u * uz + v * vz;
-        if (!full(x, z)) continue;
+        if (!full(x, z) || (avoid && avoid(x, z))) continue;
         // Turned along its row (its arms on the wire), a few degrees off; `row`, `col`: its place in the grid.
         out.push({ x: Math.round(x * 100) / 100, z: Math.round(z * 100) / 100,
           rotY: Math.round((-angle + (hash(r, c, 0x51ed) - 0.5) * 0.12) * 1000) / 1000,

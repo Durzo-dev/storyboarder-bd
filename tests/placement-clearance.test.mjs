@@ -78,7 +78,7 @@ test('the obstacles of a place: footprints, and the paths that bar the way, thei
       { kind: 'trottoir', world: { pts: [{ x: 0, z: 0 }, { x: 1, z: 0 }], width: 2 } },
       { kind: 'chemin', world: { pts: [{ x: 0, z: 0 }, { x: 1, z: 0 }] } }] });
   assert.equal(o.rings.length, 1);
-  assert.deepEqual(o.lines.map(l => l.half), [3.5, 0.25]);
+  assert.deepEqual(o.lines.map(l => l.half), [3.5, 0.25, 0.75], 'a path too (for the trees only)');
 });
 
 test('a street lamp on a facade stays there (OSM puts it on the outline); off the road all the same', () => {
@@ -154,4 +154,17 @@ describe('trees apart (asked by Durzo on 16 Nov. 2026: trunks in each other)', (
     assert.ok(e.x !== -1 || e.z !== 0, 'moved');
     assert.ok(gap >= TREE_GAP_M - 1e-9, `moved to (${e.x}, ${e.z}), ${gap.toFixed(2)} m from its neighbour`);
   });
+});
+
+test('a tree off a path (chemin) as off a road (asked: trees on the traces, seen)', async () => {
+  const { clearOfObstacles, obstaclesOf } = await import('../src/placement-clearance.js');
+  const translated = { buildings: [], paths: [{ kind: 'chemin', world: { pts: [{ x: 0, z: -20 }, { x: 0, z: 20 }], width: 2 } }] };
+  const els = [{ objType: 'arbre', x: 0.3, z: 0 }, { objType: 'arbre', x: 8, z: 0 }];
+  clearOfObstacles(els, obstaclesOf(translated));
+  assert.equal(els.length, 2);
+  assert.ok(Math.abs(els[0].x) >= 2 - 1e-6, `moved off the path: ${els[0].x}`);
+  assert.equal(els[1].x, 8);
+  const bench = [{ objType: 'banc', x: 0.3, z: 0 }];
+  clearOfObstacles(bench, obstaclesOf(translated));
+  assert.equal(bench[0].x, 0.3, 'a bench may stand on a path');
 });

@@ -12,6 +12,7 @@
  * drawCurrentPage, refreshCameraSliders, renderSideCameraGizmo.
  */
 import { vineyard3D } from './vineyard-3d.js';
+import { onTraces, VINE_OBSTACLES } from './vineyard.js';
 import { mursDevantMasques, mursDeDevant, versLaCameraDansLeBatiment, retenirMursDevant } from './batiment-murs-devant.js';
 import { estUnBatimentPlace } from './batiment-element.js';
 import { MARQUE_SOL_PERCE } from './batiment-3d.js';
@@ -2679,6 +2680,11 @@ function reliefEffectifCalcule3D(panel, page, sousLesBatiments = true){
   _cutReliefs3D.set(panel.id, { key, cut });
   return cut;
 }
+/** What a vineyard's stocks keep off (vineyard.js onTraces), for its signature: a path drawn across it redraws it. */
+function _vineObstaclesSig3D(traces){
+  return traces.filter(t => t.tracéType in VINE_OBSTACLES && t.world && Array.isArray(t.world.pts))
+    .map(t => `${t.id}:${t.world.width || ''}:${t.world.pts.length}:${t.world.pts.map(p => `${Math.round(p.x * 10)},${Math.round(p.z * 10)}`).join(' ')}`).join('|');
+}
 /** The profile of each road and path, per effective relief (reliefEffectif3D): o.id → (x, z) → height. */
 const _roadProfiles3D = new WeakMap();
 /** The last relief cut under the roads, per Panel, with what it was made from. */
@@ -3372,7 +3378,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
     // #437 : l'arrivée du grain refait la Trace, qui passe de l'aplat à sa texture.
     const sigKey = JSON.stringify({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, wh: o.wallHeight, wt: o.wallThickness, world: o.world, holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),
       relief: signatureDuRelief(_relief), eau: [o.niveauEau, o.profondeur, o.hauteurZone, o.penteZone, o.sensPente],
-      vines: o.vines ? [o.vines, barkSettled('Vigne')] : null });   // #462c-2 : drapé sur le relief ; #462d : l'eau
+      vines: o.vines ? [o.vines, barkSettled('Vigne'), _vineObstaclesSig3D(panelTracés3D)] : null });   // #462c-2 : drapé sur le relief ; #462d : l'eau
     let entry = tracéMeshCache3D.get(o.id);
     // Pendant un coup de pinceau du relief, les Tracés gardent leur maillage (le relief change à chaque
     // image ; les redraper toutes coûtait plus que le reste du rendu) : ils suivent au relâcher.
@@ -3628,7 +3634,8 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       // GROUND_Y_DEFAULT_3D: without it they stood 3 m up, seen), after the drape (copies are not draped). A few
       // centimetres in: a stock on a slope does not show air under its downhill side.
       if (o.tracéType === 'terrain' && o.vines) {
-        const vines = vineyard3D(o, (x, z) => GROUND_Y_DEFAULT_3D + hauteurSousLeTronc(_relief, x, z, 0.15) - 0.03);
+        const vines = vineyard3D(o, (x, z) => GROUND_Y_DEFAULT_3D + hauteurSousLeTronc(_relief, x, z, 0.15) - 0.03,
+          { avoid: onTraces(panelTracés3D) });   // never on a road, a path, a wall… crossing it (asked)
         if (vines) group.add(vines);
       }
       personaScene3D.add(group);

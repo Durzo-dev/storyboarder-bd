@@ -171,8 +171,8 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    d'échec le fournisseur suivant, et sans aucun un Sol plat.
    Avant les modèles, chaque élément est écarté des bâtiments et des tracés qui barrent le passage
    (`clearOfObstacles`, placement-clearance.js : emprises gardées sur les bâtiments traduits, `footprint` ; routes,
-   rivières, murets, clôtures, haies et barrières, leur demi-largeur ; trottoirs et chemins ne sont pas des
-   obstacles) : poussé à l'endroit le plus proche, à 1 m d'écart pour un arbre, 0,4 m pour le reste (un lampadaire peut être
+   rivières, murets, clôtures, haies et barrières, leur demi-largeur ; les chemins pour les arbres seulement, les
+   trottoirs pour rien) : poussé à l'endroit le plus proche, à 1 m d'écart pour un arbre, 0,4 m pour le reste (un lampadaire peut être
    contre une façade : `AGAINST_BUILDINGS`), et retiré
    quand cet endroit est à plus de 4 m.
    Après la banque, la couronne de nos arbres générés (`fitCrowns` ; `crownOf`, ez-trees.js : le contour de ses
@@ -212,7 +212,9 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    les forêts, avant ceux de la BD TOPO. Budget dépassé : la grille s'élargit (un verger garde ses rangs). Crédit :
    « © IGN, RPG ».
    Les ceps d'une vigne ne sont pas des Éléments : au rendu, `vineStocks` (vineyard.js) les pose en rangs à 2,2 m, un
-   tous les 1,1 m, sur les cases de la Zone, 8 000 au plus (le pas le long des rangs élargi), et `vineyard3D`
+   tous les 1,1 m, sur les cases de la Zone, jamais à moins de 0,6 m d'une route, d'un chemin, d'un trottoir, d'un
+   muret, d'une haie, d'une clôture, d'une barrière ou d'une rivière qui la traverse (`onTraces`, `VINE_OBSTACLES` ; un
+   Tracé dessiné à travers la redessine), 8 000 au plus (le pas le long des rangs élargi), et `vineyard3D`
    (vineyard-3d.js) les dessine en copies de trois ceps qu'il CONSTRUIT comme on taille une vigne (`buildVineStock`,
    environ 260 triangles : un tronc tordu jusqu'au fil porteur, deux bras le long du rang, des rameaux montant entre
    les fils, des feuilles en cartes hors du plan du rang, découpées à 0,2 et non 0,5 : de loin leurs mipmaps passaient

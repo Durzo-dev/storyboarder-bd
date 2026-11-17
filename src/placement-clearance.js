@@ -15,9 +15,15 @@ import { LARGEUR_PAR_DEFAUT_M } from './terrain-plan.js';
 import { TREE_TYPES } from './constants.js';
 import { encombrementDuBatiment } from './batiment-element.js';
 
-/** The paths an object may not stand on, with their width when the path has none (m). */
+/**
+ * The paths an object may not stand on, with their width when the path has none (m). A path (chemin) bars only the
+ * trees (asked by Durzo on 17 Nov. 2026, orchards across their paths seen): a bench or a lamp may stand by or on one.
+ */
 export const OBSTACLE_PATHS = Object.freeze({ route: LARGEUR_PAR_DEFAUT_M.route, riviere: LARGEUR_PAR_DEFAUT_M.riviere,
-  muret: 0.5, cloture: 0.1, haie: 1, barriere: 0.1 });
+  chemin: LARGEUR_PAR_DEFAUT_M.chemin, muret: 0.5, cloture: 0.1, haie: 1, barriere: 0.1 });
+
+/** The paths that bar only the trees. */
+const TREES_ONLY = Object.freeze(['chemin']);
 
 /** How far an object's base keeps from an obstacle (m): a trunk and its foot; anything else, its own footprint. */
 export function clearanceOf(objType) {
@@ -44,7 +50,7 @@ export function obstaclesOf(translated) {
   const lines = [];
   for (const p of translated.paths || []) {
     if (!(p.kind in OBSTACLE_PATHS) || !p.world || !Array.isArray(p.world.pts) || p.world.pts.length < 2) continue;
-    lines.push({ pts: p.world.pts, half: (p.world.width > 0 ? p.world.width : OBSTACLE_PATHS[p.kind]) / 2 });
+    lines.push({ pts: p.world.pts, half: (p.world.width > 0 ? p.world.width : OBSTACLE_PATHS[p.kind]) / 2, kind: p.kind });
   }
   return { rings, heights, lines };
 }
@@ -97,7 +103,8 @@ export function clearOfObstacles(elements, obstacles) {
   const kept = [];
   for (const e of elements) {
     const r = clearanceOf(e.objType);
-    const own = AGAINST_BUILDINGS.includes(e.objType) ? { rings: [], lines: obstacles.lines } : obstacles;
+    const lines = TREE_TYPES.includes(e.objType) ? obstacles.lines : obstacles.lines.filter(l => !TREES_ONLY.includes(l.kind));
+    const own = AGAINST_BUILDINGS.includes(e.objType) ? { rings: [], lines } : { ...obstacles, lines };
     const start = { x: e.x, z: e.z };
     let p = { ...start };
     for (let k = 0; k < PASSES && !clears(p, r, own); k++) {
