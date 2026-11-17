@@ -408,3 +408,22 @@ describe('hauteurSousLeTronc: a tree on a slope does not float', () => {
     assert.equal(R.hauteurSousLeTronc(flat, 0, 0), 2);
   });
 });
+
+test('a path reaching the edge of a real place\'s relief does not bridge a valley to it (its edges are brought to 0)', () => {
+  // A real place 100 m wide sloping down to the east (30 m), its sides brought to 0 over 20 m: the east edge at 0
+  // stands above the low ground just inside it, a « bank » that is no bank.
+  const n = 101, alt = [];
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) alt.push(300 - 0.3 * i);
+  const { relief } = R.reliefDepuisAltitudes({ x0: -50, z0: -50, pas: 1, nx: n, nz: n, altitudes: alt });
+  assert.equal(relief.raccord, R.RACCORD_DU_RELIEF);
+  const ligne = R.densifierLaLigne([{ x: -50, z: 0 }, { x: 50, z: 0 }], 0.5);
+  const sol = R.hauteurDuRelief(relief, 25, 0);
+  assert.ok(sol < -5, `the low ground ${sol}`);
+  assert.ok(Math.abs(R.profilFranchissant(relief, ligne)(25, 0) - sol) < 0.05, 'the path follows the ground, no bridge to the edge');
+  // Saved before `raccord` was kept: a real place's relief (its `altitude`) is read with the default band.
+  const old = { ...relief }; delete old.raccord;
+  assert.ok(Math.abs(R.profilFranchissant(old, ligne)(25, 0) - sol) < 0.05);
+  // A relief painted by hand (no band): the same shape is bridged to its edge as before.
+  const peint = { ...relief }; delete peint.raccord; delete peint.altitude;
+  assert.ok(R.profilFranchissant(peint, ligne)(25, 0) > sol + 3);
+});

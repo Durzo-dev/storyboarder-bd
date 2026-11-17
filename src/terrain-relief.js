@@ -104,7 +104,10 @@ export function etendreLeRelief(r, x0, z0, x1, z1){
  * Ground around it (outside the grid, the height is 0) without a cliff.
  * Returns `{ relief, bornee }`, or null if the grid is inconsistent.
  */
-export function reliefDepuisAltitudes({ x0, z0, pas = PAS_DU_RELIEF, nx, nz, altitudes }, raccord = 20){
+/** The band (m) along each side of a real place's relief brought down to 0, to meet the flat Ground (reliefDepuisAltitudes). */
+export const RACCORD_DU_RELIEF = 20;
+
+export function reliefDepuisAltitudes({ x0, z0, pas = PAS_DU_RELIEF, nx, nz, altitudes }, raccord = RACCORD_DU_RELIEF){
   if (!fini(x0) || !fini(z0) || !(pas > 0) || !Number.isInteger(nx) || !Number.isInteger(nz) || nx < 2 || nz < 2
     || nx > COTE_MAX_DU_RELIEF || nz > COTE_MAX_DU_RELIEF || !Array.isArray(altitudes) || altitudes.length !== nx * nz) return null;
   let min = Infinity, max = -Infinity;
@@ -123,7 +126,9 @@ export function reliefDepuisAltitudes({ x0, z0, pas = PAS_DU_RELIEF, nx, nz, alt
     if (raccord > 0) v *= doux(Math.min(i, j, nx - 1 - i, nz - 1 - j) * pas);
     h[j * nx + i] = Math.round(v * 1000) / 1000 || 0;   // never -0 in saved data
   }
-  return { relief: { pas, x0, z0, nx, nz, h, v: 0, altitude: base }, bornee };
+  const relief = { pas, x0, z0, nx, nz, h, v: 0, altitude: base };
+  if (raccord > 0) relief.raccord = raccord;
+  return { relief, bornee };
 }
 
 /** L'atténuation du pinceau à la distance d (0 au bord, 1 au centre), douce. */
@@ -373,6 +378,18 @@ export function releverLesZones(r, zones){
   return { ...g, h };
 }
 
+/** The band of a relief brought down to 0 at its sides (m): its `raccord`; a real place's saved without it, the default; else 0. */
+function bandeDeRaccord(r){
+  if (!reliefValide(r)) return 0;
+  if (fini(r.raccord)) return r.raccord;
+  return fini(r.altitude) ? RACCORD_DU_RELIEF : 0;
+}
+/** Whether (x, z) is off the grid or within `bande` metres of one of its sides. */
+function dansLeRaccord(r, p, bande){
+  const x1 = r.x0 + (r.nx - 1) * r.pas, z1 = r.z0 + (r.nz - 1) * r.pas;
+  return Math.min(p.x - r.x0, x1 - p.x, p.z - r.z0, z1 - p.z) < bande;
+}
+
 /**
  * Demandé (3 novembre 2026) : une route ou un chemin qui traverse un CREUX ne s'y enfonce pas, il le
  * franchit. Le profil d'une ligne (ses points redécoupés) est « rempli » comme de l'eau : chaque point
@@ -383,11 +400,17 @@ export function releverLesZones(r, zones){
 export function profilFranchissant(r, pts){
   if (!Array.isArray(pts) || pts.length < 2) return (x, z) => hauteurDuRelief(r, x, z);
   const h = pts.map(p => hauteurDuRelief(r, p.x, p.z));
+  // ⚠️ THE EDGES OF A REAL PLACE'S RELIEF HOLD NOTHING UP (reported by Durzo, 17 Nov. 2026: paths floating 20 m
+  // over a valley of Fontainebleau). Its heights are brought to 0 along each side (`raccord`, reliefDepuisAltitudes)
+  // and are 0 beyond the grid: a path reaching the Scene's edge read there a « bank » as high as the flat Ground and
+  // bridged the whole valley to it. A point in that band, or off the grid, is never a bank (it keeps its own height).
+  const bande = bandeDeRaccord(r);
+  const appui = h.map((v, i) => (bande > 0 && dansLeRaccord(r, pts[i], bande) ? -Infinity : v));
   const avant = [], apres = [];
   let m = -Infinity;
-  for (let i = 0; i < h.length; i++) { m = Math.max(m, h[i]); avant[i] = m; }
+  for (let i = 0; i < h.length; i++) { m = Math.max(m, appui[i]); avant[i] = m; }
   m = -Infinity;
-  for (let i = h.length - 1; i >= 0; i--) { m = Math.max(m, h[i]); apres[i] = m; }
+  for (let i = h.length - 1; i >= 0; i--) { m = Math.max(m, appui[i]); apres[i] = m; }
   const f = h.map((v, i) => Math.max(v, Math.min(avant[i], apres[i])));
   // Les segments rangés par cases de `CASE` mètres : un sommet ne cherche son segment le plus proche que
   // dans les cases voisines (chercher dans tous coûtait des dizaines de millisecondes par route).

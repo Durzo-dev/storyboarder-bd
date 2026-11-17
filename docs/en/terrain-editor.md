@@ -38,7 +38,9 @@ Added fields: an old file reads as it is.
   autosave waits.
 - **Rendered relief = painted relief, raised by Zones, dug by rivers, flattened under buildings, cut
   under roads and paths** (`reliefEffectif3D`), recomputed at each render. A road is draped by its axis
-  (`profilFranchissant`), so it stays level across its width: `cutUnderRoads` brings every grid point
+  (`profilFranchissant`: a dip between two higher points of the line is filled; a point within a real place's edge band,
+  `raccord` (20 m brought down to 0 to meet the flat Ground), or off the grid, never holds a dip up), so it stays
+  level across its width: `cutUnderRoads` brings every grid point
   within half its width (plus 0.5 m and a cell and a half) down to 10 cm under the road, and the drape
   reuses the same profile. A path within a road's width (plus 0.5 m) is brought 8 cm under that road
   (`hauteurSousLesRoutes`), and a path's ribbon on a relief has points every 50 cm across: each line reads its

@@ -38,7 +38,9 @@ Des champs ajoutés : un fichier ancien se lit tel quel.
   et la sauvegarde automatique attend.
 - **Le relief rendu = le relief peint, relevé par les Zones, creusé par les rivières, aplani sous les
   bâtiments, entaillé sous les routes et chemins** (`reliefEffectif3D`), recalculé à chaque rendu. Une route
-  est drapée par son axe (`profilFranchissant`), donc de niveau sur sa largeur : `cutUnderRoads` descend
+  est drapée par son axe (`profilFranchissant` : un creux entre deux points plus hauts de la ligne est comblé ; un
+  point dans la bande de bord d'un lieu réel, `raccord` (20 m ramenés à 0 pour rejoindre le Sol plat), ou hors de la
+  grille, ne soutient jamais un creux), donc de niveau sur sa largeur : `cutUnderRoads` descend
   chaque point de la grille à moins d'une demi-largeur (plus 0,5 m et une case et demie) à 10 cm sous la
   route, et le drapé reprend le même profil. Un chemin dans la largeur d'une route (plus 0,5 m) est ramené 8 cm
   sous cette route (`hauteurSousLesRoutes`), et le ruban d'un chemin sur un relief a des sommets tous les 50 cm en
