@@ -6,6 +6,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 
 globalThis.THREE = THREE;
@@ -80,12 +81,21 @@ test('two variants differ; a variant is generated once, its trees share it', () 
 });
 
 test('the bark given is read as it is, its tint applied', () => {
-  const bark = new THREE.Texture();
+  const bark = new THREE.Texture({ width: 4, height: 4 });
   const t = generateSpeciesTree('Tilleul', 1, { makeCanvas: fakeCanvas, barkTexture: () => bark });
   const m = t.branchesMesh.material;
   assert.equal(m.map, bark);
   assert.equal(bark.encoding, THREE.LinearEncoding);
   assert.equal(m.color.getHex(), SPECIES.Tilleul.barkTint);
+});
+
+test('a bark whose image has not arrived: the plain colour, never the empty texture (white branches seen)', () => {
+  const t = generateSpeciesTree('Tilleul', 2, { makeCanvas: fakeCanvas, barkTexture: () => new THREE.Texture() });
+  const m = t.branchesMesh.material;
+  assert.equal(m.map, null);
+  assert.notEqual(m.color.getHex(), 0xffffff);
+  assert.match(readFileSync(new URL('../src/ez-trees.js', import.meta.url), 'utf8'),
+    /for \(const m of barkMaterials\.get\(name\) \|\| \[\]\) \{ m\.map = tex; m\.color\.copy\(barkColour\(SPECIES\[name\]\)\); m\.needsUpdate = true; \}/);
 });
 
 test('the bark square on the trunk: as many texels round as up (a fixed [1, 6] squeezed it 17 times, seen)', () => {
@@ -182,7 +192,7 @@ test('the rig\'s box is centred on the trunk (the render centres the box on the 
 test('a bark lightened: the plane\'s and the poplar\'s above white, the others at their tint', () => {
   assert.ok(barkColour(SPECIES.Platane).r > 1.5 && barkColour(SPECIES.Peuplier).g > 1.2);
   assert.equal(barkColour(SPECIES.Tilleul).getHex(), SPECIES.Tilleul.barkTint);
-  const bark = new THREE.Texture();
+  const bark = new THREE.Texture({ width: 4, height: 4 });
   const t = generateSpeciesTree('Platane', 1, { makeCanvas: fakeCanvas, barkTexture: () => bark });
   let m; t.traverse(o => { if (o.isMesh && o.material.name === 'branches') m = o.material; });
   assert.ok(Math.abs(m.color.r - 1.6) < 1e-6, 'the gain reaches the material');

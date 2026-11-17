@@ -46,7 +46,12 @@ function shippedBark(name) {
   if (!barks.has(name)) {
     const tex = new THREE.Texture();
     const img = new Image();
-    img.onload = () => { tex.image = img; tex.needsUpdate = true; barksSettled.add(name); onBarkLoaded(); };
+    img.onload = () => {
+      tex.image = img; tex.needsUpdate = true; barksSettled.add(name);
+      // The trees drawn meanwhile in the plain colour take their bark now (see generateSpeciesTree).
+      for (const m of barkMaterials.get(name) || []) { m.map = tex; m.color.copy(barkColour(SPECIES[name])); m.needsUpdate = true; }
+      onBarkLoaded();
+    };
     img.onerror = () => {
       console.warn(`[ez-trees] bark missing: ${BARK_DIR}${barkFile(name)}`);
       for (const m of barkMaterials.get(name) || []) { m.map = null; plainBark(m, SPECIES[name]); }
@@ -174,8 +179,11 @@ export function generateSpeciesTree(name, variant = 1, { makeCanvas = domCanvas,
     bark.repeat.set(...barkRepeat(tree.options));
     // Seen at a slant on a trunk, a bark blurs without it (three keeps it within what the GPU allows).
     bark.anisotropy = 8;
-    branches.map = bark;
-    branches.color.copy(barkColour(sp));
+    // Its image not there yet (the first trees after a launch): the plain colour until it arrives, never the empty
+    // texture (seen on 17 Nov. 2026: WHITE branches on the first preview, the image without its picture transparent,
+    // the page through it); shippedBark's onload gives the map to every material waiting.
+    if (bark.image) { branches.map = bark; branches.color.copy(barkColour(sp)); }
+    else plainBark(branches, sp);
     if (!barkMaterials.has(name)) barkMaterials.set(name, []);
     barkMaterials.get(name).push(branches);
   } else {

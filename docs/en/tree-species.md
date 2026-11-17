@@ -42,7 +42,8 @@ no photo of a white birch bark there); `barkGain` lightens one darker than the r
 Photo barks are loaded after the first drawing (an image each). ⚠️ A Panel's image is
 cached by a signature of what it shows: `barkSettled(species)` enters it, so a Panel drawn before its trees' bark
 arrived is drawn again once it has arrived (or is found missing). Without it, the first Panel kept branches drawn
-from an empty texture: transparent, plain white over the page.
+from an empty texture: transparent, plain white over the page. Until its image arrives, a tree's branches take
+the bark's plain colour (no map), and the arrival gives the map to every material waiting: never the empty texture.
 
 ⚠️ The leaves are CUT OUT (alphaTest) and write an alpha of 1 where they are drawn (`opaqueCutout`). A Panel's 3D image
 is laid on the page: leaves writing their mipmaps' alpha (0.66 to 0.8 from 30 m) let the white page through, the crowns

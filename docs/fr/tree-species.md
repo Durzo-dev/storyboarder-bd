@@ -45,6 +45,8 @@ chacune). ⚠️ L'image d'une
 Case est gardée en cache selon une signature de ce qu'elle montre : `barkSettled(essence)` y entre, pour qu'une Case
 dessinée avant l'arrivée de l'écorce de ses arbres soit redessinée une fois celle-ci arrivée (ou constatée absente).
 Sans cela, la première Case gardait des branches dessinées d'une texture vide : transparentes, blanc uni sur la page.
+Tant que l'image n'est pas arrivée, les branches d'un arbre prennent la couleur unie de l'écorce (sans texture), et
+son arrivée donne la texture à tous les matériaux en attente : jamais la texture vide.
 
 ⚠️ Les feuilles sont DÉCOUPÉES (alphaTest) et écrivent un alpha de 1 là où elles sont dessinées (`opaqueCutout`).
 L'image 3D d'une Case est posée sur la page : des feuilles écrivant l'alpha de leurs mipmaps (0,66 à 0,8 à 30 m)
