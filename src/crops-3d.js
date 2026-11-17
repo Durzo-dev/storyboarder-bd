@@ -16,14 +16,25 @@ import { vineStocks } from './vineyard.js';
  * The crops: their rows `gap` apart and a card every `step` (m), a card `width` wide and `height` high (m), at most
  * `max` cards a field (the step along the rows widened beyond), and its picture.
  */
+/**
+ * Near the camera (asked by Durzo on 17 Nov. 2026: fine from afar, too coarse close up), a stand has a second level
+ * of detail (`near`): small cards of a few plants each, drawn larger (each stalk, grain, petal seen), many more of
+ * them, and no level card (close, it read as ears lying flat). A field is cut into CROP_TILE_M squares, each a THREE.LOD: its near cards are made the first time the camera
+ * comes within NEAR_M of it, never for the tiles it never nears.
+ */
+export const CROP_TILE_M = 30;
+export const NEAR_M = 40;
+
 export const CROP_KINDS = Object.freeze({
   // A cereal or rape: a closed stand, no rows seen; its cards scattered (`scatter`) and three planes each, so that
   // no square of bare earth shows between them (seen with two planes on a grid); and a level card at the ears' or
   // flowers' height (`canopy`, its share of the height): seen from above, a stand is its ears, not its stems' edges.
-  wheat: { gap: 0.75, step: 0.75, width: 1.2, height: 0.95, planes: 3, scatter: true, canopy: 0.86, max: 45000 },
+  wheat: { gap: 0.75, step: 0.75, width: 1.2, height: 0.95, planes: 3, scatter: true, canopy: 0.86, max: 45000,
+    near: { gap: 0.26, step: 0.26, width: 0.42, height: 0.95, planes: 3, scatter: true, max: 16000 } },
   maize: { gap: 0.8, step: 1.3, width: 1.5, height: 2.4, planes: 2, max: 25000 },
   sunflower: { gap: 0.8, step: 1.0, width: 1.2, height: 1.75, planes: 2, max: 25000 },
-  rape: { gap: 0.8, step: 0.8, width: 1.2, height: 1.3, planes: 3, scatter: true, canopy: 0.9, max: 45000 },
+  rape: { gap: 0.8, step: 0.8, width: 1.2, height: 1.3, planes: 3, scatter: true, canopy: 0.9, max: 45000,
+    near: { gap: 0.3, step: 0.3, width: 0.48, height: 1.3, planes: 3, scatter: true, max: 16000 } },
 });
 
 /** The crop standing on a field of an RPG crop group (`code_group`), or null: cereals, maize, rape, sunflower. */
@@ -40,10 +51,10 @@ function hash(i, j, salt) {
 }
 
 /** The cards of a field Zone: in its rows, on its cells, off `avoid`; each turned and sized a little. PURE. */
-export function cropCards(o, { avoid = null } = {}) {
-  const c = o && o.crop, kind = c && CROP_KINDS[c.kind];
+export function cropCards(o, { avoid = null, near = false, masque = null } = {}) {
+  const c = o && o.crop, base = c && CROP_KINDS[c.kind], kind = base && (near ? base.near : base);
   if (!kind) return [];
-  return vineStocks(o.world && o.world.masque, { angle: c.angle || 0, gap: kind.gap, step: kind.step }, { max: kind.max, avoid, variants: 1 })
+  return vineStocks(masque || (o.world && o.world.masque), { angle: c.angle || 0, gap: kind.gap, step: kind.step }, { max: kind.max, avoid, variants: 1 })
     .map(t => {
       if (!kind.scatter) return { x: t.x, z: t.z, rotY: Math.round((-(c.angle || 0) + (hash(t.row, t.col, 0x41c7) - 0.5) * 0.5) * 1000) / 1000,
         scale: Math.round((0.85 + 0.3 * hash(t.row, t.col, 0x1f3d)) * 100) / 100 };
@@ -53,6 +64,16 @@ export function cropCards(o, { avoid = null } = {}) {
         rotY: Math.round(hash(t.row, t.col, 0x41c7) * Math.PI * 2000) / 1000, scale: Math.round((0.85 + 0.3 * hash(t.row, t.col, 0x1f3d)) * 100) / 100 };
     })
     .filter(t => !avoid || !avoid(t.x, t.z));
+}
+
+/** The part of a mask within [x0, x1) × [z0, z1) (whole cells), or null. PURE. */
+export function cropMask(m, x0, z0, x1, z1) {
+  const i0 = Math.max(0, Math.floor((x0 - m.x0) / m.pas)), i1 = Math.min(m.nx, Math.ceil((x1 - m.x0) / m.pas));
+  const j0 = Math.max(0, Math.floor((z0 - m.z0) / m.pas)), j1 = Math.min(m.nz, Math.ceil((z1 - m.z0) / m.pas));
+  if (i1 <= i0 || j1 <= j0) return null;
+  let plein = '';
+  for (let j = j0; j < j1; j++) plein += m.plein.slice(j * m.nx + i0, j * m.nx + i1);
+  return plein.includes('1') ? { pas: m.pas, x0: m.x0 + i0 * m.pas, z0: m.z0 + j0 * m.pas, nx: i1 - i0, nz: j1 - j0, plein } : null;
 }
 
 /** A clump's card: `planes` crossed planes `w` wide, `h` high, its foot at the origin. PURE ({ position, uv, index }). */
@@ -207,10 +228,85 @@ const TOP_PICTURES = {
   },
 };
 
+/**
+ * The near pictures: a FEW plants on the same 512 × 1024 canvas (a card 0.4 to 0.5 m wide), so that each is drawn
+ * large: a wheat ear's grains shaded one by one, its awns; rape's flowers petal by petal, its buds, pods and leaves.
+ */
+const NEAR_PICTURES = {
+  wheat(ctx, r) {
+    for (let k = 0; k < 6; k++) {
+      const x = r() * W, y = H - r() * 260, len = 120 + r() * 140, s = r() < 0.5 ? -1 : 1;
+      ctx.fillStyle = mix('#9c7c38', '#c4a258', r());
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + s * len * 0.5, y - len * 0.8, x + s * len, y - len * 0.35);
+      ctx.quadraticCurveTo(x + s * len * 0.45, y - len * 0.55, x + 4, y); ctx.fill();
+    }
+    for (let k = 0; k < 11; k++) {
+      const x = 30 + r() * (W - 60), top = 120 + r() * 220, lean = (r() - 0.5) * 80, nod = (r() - 0.3) * 0.45, tone = r();
+      // The stem: a light side and a shaded one, its nodes.
+      ctx.strokeStyle = mix('#9d7c34', '#cfae5c', tone); ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(x, H); ctx.quadraticCurveTo(x + lean * 0.2, H * 0.55, x + lean, top + 6); ctx.stroke();
+      ctx.strokeStyle = 'rgba(240,222,160,0.55)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x - 1.5, H); ctx.quadraticCurveTo(x + lean * 0.2 - 1.5, H * 0.55, x + lean - 1.5, top + 6); ctx.stroke();
+      for (let n = 1; n <= 3; n++) { const t = n / 4, nx = x + lean * t * t, ny = H - (H - top) * t; ctx.fillStyle = '#8a6a2a'; ctx.fillRect(nx - 4, ny, 8, 3); }
+      // The ear: 16 spikelets alternating, each three grains shaded, a long awn each.
+      const ex = x + lean, ang = nod + lean / 400, ca = Math.sin(ang), sa = Math.cos(ang);
+      for (let g = 0; g < 16; g++) {
+        const d = g * 9, gx = ex + ca * d, gy = top - sa * d, side = g % 2 ? 1 : -1, sz = 1 - g / 26;
+        for (let q = 0; q < 2; q++) {
+          const ox = gx + side * (5 + q * 4) * sa, oy = gy + side * (5 + q * 4) * ca;
+          const grad = ctx.createLinearGradient(ox - 6, oy, ox + 6, oy);
+          grad.addColorStop(0, mix('#a98330', '#c9a24a', tone)); grad.addColorStop(0.6, mix('#e2c475', '#f2dc9a', tone)); grad.addColorStop(1, '#b38c3a');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.ellipse(ox, oy, 6.5 * sz, 11 * sz, ang + side * 0.4, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = 'rgba(120,90,30,0.6)'; ctx.lineWidth = 1; ctx.stroke();
+        }
+        ctx.strokeStyle = 'rgba(232,212,150,0.9)'; ctx.lineWidth = 1.3;
+        ctx.beginPath(); ctx.moveTo(gx + side * 10 * sa, gy - 6); ctx.quadraticCurveTo(gx + side * 16 * sa + ca * 30, gy - 40, gx + side * 22 + ca * 60, gy - sa * 70); ctx.stroke();
+      }
+    }
+  },
+  rape(ctx, r) {
+    // Lobed blue-green leaves clasping the stems low down.
+    for (let k = 0; k < 7; k++) {
+      const x = r() * W, y = H - 30 - r() * 300, s = r() < 0.5 ? -1 : 1, L = 90 + r() * 70;
+      ctx.fillStyle = mix('#4a7642', '#6c9a5a', r());
+      ctx.beginPath(); ctx.moveTo(x, y);
+      for (let l = 0; l <= 4; l++) { const t = l / 4; ctx.quadraticCurveTo(x + s * L * t + s * 10, y - 30 - 18 * Math.sin(t * Math.PI) - (l % 2) * 10, x + s * L * (t + 0.12), y - 10 * Math.sin(t * 3)); }
+      ctx.quadraticCurveTo(x + s * L * 0.5, y + 22, x, y + 4); ctx.fill();
+      ctx.strokeStyle = 'rgba(190,215,170,0.6)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + s * L, y - 8); ctx.stroke();
+    }
+    for (let k = 0; k < 4; k++) {
+      const x = 60 + r() * (W - 120), top = 120 + r() * 200, lean = (r() - 0.5) * 70;
+      ctx.strokeStyle = '#6a9440'; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(x, H); ctx.quadraticCurveTo(x + lean * 0.3, H * 0.6, x + lean, top + 40); ctx.stroke();
+      const fx = x + lean;
+      // Its pods: long, thin, on short stalks, below the flowers.
+      for (let p = 0; p < 9; p++) {
+        const y = top + 90 + p * 24, s = p % 2 ? 1 : -1;
+        ctx.strokeStyle = '#7ea84c'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(fx - lean * 0.01 * p, y); ctx.quadraticCurveTo(fx + s * 14, y - 10, fx + s * 34, y - 46); ctx.stroke();
+      }
+      // The raceme: flowers four-petalled, cross-shaped, a darker eye; buds at the top.
+      for (let f = 0; f < 22; f++) {
+        const a = r() * Math.PI, d = 8 + r() * 46, cx = fx + Math.cos(a) * d * 1.2, cy = top + 40 - Math.sin(a) * d * 0.9;
+        const rot = r() * Math.PI;
+        for (let q = 0; q < 4; q++) {
+          const t = rot + q * Math.PI / 2;
+          ctx.fillStyle = q % 2 ? '#f6dc22' : '#fbe74a';
+          ctx.beginPath(); ctx.ellipse(cx + Math.cos(t) * 7, cy + Math.sin(t) * 7, 7.5, 5, t, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = 'rgba(190,150,10,0.6)'; ctx.lineWidth = 1; ctx.stroke();
+        }
+        ctx.fillStyle = '#c9a00e'; ctx.beginPath(); ctx.arc(cx, cy, 2.6, 0, Math.PI * 2); ctx.fill();
+      }
+      for (let b = 0; b < 9; b++) { ctx.fillStyle = mix('#b9c24a', '#e0c82a', r()); ctx.beginPath(); ctx.ellipse(fx + (r() - 0.5) * 22, top - r() * 26, 4, 6, 0, 0, Math.PI * 2); ctx.fill(); }
+    }
+  },
+};
+
 /** A crop's picture, drawn once. `makeCanvas(w, h)`: a canvas (the DOM's in the application). */
-export function drawCropPicture(kind, makeCanvas = (w, h) => { const c = domCanvas(w); c.height = h; return c; }) {
+export function drawCropPicture(kind, makeCanvas = (w, h) => { const c = domCanvas(w); c.height = h; return c; }, near = false) {
   const c = makeCanvas(W, H);
-  PICTURES[kind](c.getContext('2d'), rng(0x5eed + kind.length));
+  (near ? NEAR_PICTURES : PICTURES)[kind](c.getContext('2d'), rng(0x5eed + kind.length + (near ? 99 : 0)));
   return c;
 }
 
@@ -229,20 +325,39 @@ export function cropCanopyGeometry(w, y) {
   return { position, uv, index: [0, 2, 1, 0, 3, 2], h };
 }
 
-/** Each crop's geometry and material, made once. */
+/**
+ * A card's material lit the same on both faces: three turns a back face's normal down (`normal * faceDirection`), so
+ * a card seen from behind went dark olive (half the rape's flowers, seen in the application). Its normals all point
+ * up (the ground's light): the flip is taken out.
+ */
+function bothSidesLit(material) {
+  const before = material.onBeforeCompile, key = material.customProgramCacheKey ? material.customProgramCacheKey() : '';
+  material.onBeforeCompile = (shader, renderer) => {
+    if (before) before(shader, renderer);
+    shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_begin>',
+      THREE.ShaderChunk.normal_fragment_begin.replace(/normal = normal \* faceDirection;/g, ''));
+  };
+  material.customProgramCacheKey = () => `${key}+both-sides-lit`;
+  return material;
+}
+
+/** Each crop's parts (geometry, material) for a level (`near`), made once. */
 const made = new Map();
-function cropModel(kind) {
-  if (!made.has(kind)) {
-    const k = CROP_KINDS[kind], g = cropCardGeometry(k.width, k.height, k.planes);
+function cropModel(kind, near = false) {
+  const key = `${kind}|${near}`;
+  if (!made.has(key)) {
+    const k = near ? CROP_KINDS[kind].near : CROP_KINDS[kind], g = cropCardGeometry(k.width, k.height, k.planes);
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(g.position, 3));
     geometry.setAttribute('uv', new THREE.Float32BufferAttribute(g.uv, 2));
     geometry.setIndex(g.index);
-    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(g.position.map((_, i) => (i % 3 === 1 ? 1 : 0)), 3));
-    const map = new THREE.CanvasTexture(drawCropPicture(kind));
     // Lit from above like the ground they grow on, not by the planes' own normals (edge-on, a card went black).
+    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(g.position.map((_, i) => (i % 3 === 1 ? 1 : 0)), 3));
+    const map = new THREE.CanvasTexture(drawCropPicture(kind, undefined, near));
+    map.anisotropy = 8;
     const material = new THREE.MeshStandardMaterial({ map, side: THREE.DoubleSide, alphaTest: 0.35, roughness: 0.95, metalness: 0 });
     opaqueCutout(material);
+    bothSidesLit(material);
     const parts = [{ geometry, material }];
     if (k.canopy) {
       const c = cropCanopyGeometry(k.width, k.height * k.canopy), top = new THREE.BufferGeometry();
@@ -252,19 +367,17 @@ function cropModel(kind) {
       top.setIndex(c.index);
       const topMaterial = new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(drawCropTop(kind)), side: THREE.DoubleSide, alphaTest: 0.35, roughness: 0.95, metalness: 0 });
       opaqueCutout(topMaterial);
+      bothSidesLit(topMaterial);
       parts.push({ geometry: top, material: topMaterial });
     }
-    made.set(kind, parts);
+    made.set(key, parts);
   }
-  return made.get(kind);
+  return made.get(key);
 }
 
-/** The crop of a field Zone, the ground's height at (x, z) by `heightAt`, off `avoid`: a Group of InstancedMeshes, or null. */
-export function crops3D(o, heightAt = () => 0, { avoid = null } = {}) {
-  const cards = cropCards(o, { avoid });
-  if (!cards.length) return null;
+/** The InstancedMeshes of `cards` (a level's parts), each card at the ground's height. */
+function instancesOf(cards, parts, heightAt) {
   const group = new THREE.Group();
-  group.userData.crop = cards.length;
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
   const matrices = cards.map(t => {
     q.setFromAxisAngle(up, t.rotY);
@@ -272,13 +385,57 @@ export function crops3D(o, heightAt = () => 0, { avoid = null } = {}) {
     p.set(t.x, heightAt(t.x, t.z), t.z);
     return m.compose(p, q, s).clone();
   });
-  for (const { geometry, material } of cropModel(o.crop.kind)) {
+  for (const { geometry, material } of parts) {
     const mesh = new THREE.InstancedMesh(geometry, material, cards.length);
     matrices.forEach((mm, i) => mesh.setMatrixAt(i, mm));
     mesh.instanceMatrix.needsUpdate = true;
     mesh.frustumCulled = false;
     mesh.userData.shared = true;
     group.add(mesh);
+  }
+  return group;
+}
+
+/**
+ * The crop of a field Zone, the ground's height at (x, z) by `heightAt`, off `avoid`: a Group, or null. A crop with a
+ * near level is cut into tiles, each a THREE.LOD (its far cards; its near ones made when the camera first nears it).
+ */
+export function crops3D(o, heightAt = () => 0, { avoid = null } = {}) {
+  const cards = cropCards(o, { avoid });
+  if (!cards.length) return null;
+  const kind = CROP_KINDS[o.crop.kind];
+  const group = new THREE.Group();
+  group.userData.crop = cards.length;
+  if (!kind.near) { group.add(instancesOf(cards, cropModel(o.crop.kind), heightAt)); return group; }
+  const tiles = new Map();
+  for (const c of cards) {
+    const key = `${Math.floor(c.x / CROP_TILE_M)},${Math.floor(c.z / CROP_TILE_M)}`;
+    if (!tiles.has(key)) tiles.set(key, []);
+    tiles.get(key).push(c);
+  }
+  const masque = o.world.masque;
+  for (const [key, list] of tiles) {
+    const [ti, tj] = key.split(',').map(Number);
+    const lod = new THREE.LOD();
+    const cx = (ti + 0.5) * CROP_TILE_M, cz = (tj + 0.5) * CROP_TILE_M;
+    lod.position.set(cx, heightAt(cx, cz), cz);
+    // Its levels are in the world (the cards' own places): they undo the tile's position.
+    const nearLevel = new THREE.Group(), farLevel = instancesOf(list, cropModel(o.crop.kind), heightAt);
+    for (const g of [nearLevel, farLevel]) g.position.set(-cx, -lod.position.y, -cz);
+    lod.addLevel(nearLevel, 0);
+    lod.addLevel(farLevel, NEAR_M);
+    let built = false;
+    const update = lod.update.bind(lod);
+    lod.update = (camera) => {
+      if (!built && camera.getWorldPosition(new THREE.Vector3()).distanceTo(lod.getWorldPosition(new THREE.Vector3())) < NEAR_M * 1.25) {
+        built = true;
+        const sub = cropMask(masque, ti * CROP_TILE_M, tj * CROP_TILE_M, (ti + 1) * CROP_TILE_M, (tj + 1) * CROP_TILE_M);
+        const near = sub ? cropCards(o, { avoid, near: true, masque: sub }) : [];
+        if (near.length) nearLevel.add(instancesOf(near, cropModel(o.crop.kind, true), heightAt));
+      }
+      update(camera);
+    };
+    group.add(lod);
   }
   return group;
 }

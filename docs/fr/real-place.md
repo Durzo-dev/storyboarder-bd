@@ -223,7 +223,12 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    grains et ses barbes, maïs en fleur, tournesols en fleur, colza en fleurs à quatre pétales ; `drawCropPicture`,
    512 × 1024), éclairée comme le sol (normales vers le haut), un InstancedMesh par partie et par champ. Un couvert
    fermé (blé, colza) a ses cartes dispersées et tournées au hasard, trois plans chacune, et une carte à plat à la
-   hauteur des épis (`canopy`, `drawCropTop`) : vu de haut, des épis et des fleurs, aucun carré de terre nue. Les
+   hauteur des épis (`canopy`, `drawCropTop`) : vu de haut, des épis et des fleurs, aucun carré de terre nue. De près,
+   le blé et le colza ont un second niveau de détail (`near`) : le champ découpé en carrés de 30 m (`CROP_TILE_M`),
+   chacun un THREE.LOD dont le niveau proche, de petites cartes de quelques plantes dessinées en grand (chaque tige,
+   chaque grain, chaque pétale), est construit la première fois que la caméra s'en approche à 40 m environ
+   (`NEAR_M`). Les deux faces d'une carte sont éclairées pareil (`bothSidesLit` : le retournement de la face arrière
+   par three retiré). Les
    plantes d'un champ, les ceps d'une vigne et les arbres d'un verger restent hors des bâtiments (scene3d.js
    `_plantsAvoid3D` : les emprises de leur rez-de-chaussée, avec la marge des Tracés) ; un bâtiment déplacé ou un Tracé
    dessiné les redessine. Mesuré en Beauce (300 m, 8 champs) : premier rendu environ 5,7 s.

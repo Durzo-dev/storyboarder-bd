@@ -206,7 +206,10 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    maize in tassel, sunflowers in flower, rape in four-petalled flowers; `drawCropPicture`, 512 × 1024), lit as the
    ground (normals up), one InstancedMesh a part and field. A closed stand (wheat, rape) has its cards scattered and
    turned at random, three planes each, and a level card at its ears' height (`canopy`, `drawCropTop`): from above,
-   ears and flowers, no squares of bare earth. Every field's plants, a vineyard's stocks and an orchard's trees keep
+   ears and flowers, no squares of bare earth. Close up, wheat and rape have a second level of detail (`near`):
+   the field cut into 30 m tiles (`CROP_TILE_M`), each a THREE.LOD whose near level, small cards of a few plants
+   drawn large (each stalk, grain and petal), is made the first time the camera comes within about 40 m (`NEAR_M`).
+   Both faces of a card are lit alike (`bothSidesLit`: three's back-face flip taken out). Every field's plants, a vineyard's stocks and an orchard's trees keep
    out of the buildings (scene3d.js `_plantsAvoid3D`: their ground floor's footprints, with the Traces' margin); a
    building moved or a Trace drawn redraws them. Measured in the Beauce (300 m, 8 fields): first render about 5.7 s.
    A vineyard's stocks are not Elements: at render time `vineStocks` (vineyard.js) lays them in rows 2.2 m apart, one

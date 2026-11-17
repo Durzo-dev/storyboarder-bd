@@ -75,3 +75,28 @@ test('plants keep out of the buildings (asked: a crop through a house, seen)', (
   // A building moved, or a path drawn, redraws the field.
   assert.match(sc, /\+ '#' \+ panelOwnedElements3D\(panel, page\)\.filter\(estUnBatimentPlace\)/);
 });
+
+test('close up, a stand has a near level: small cards of a few plants, made per tile only when the camera nears it', async () => {
+  const { cropMask, CROP_TILE_M, NEAR_M } = await import('../src/crops-3d.js');
+  for (const k of ['wheat', 'rape']) {
+    const { near } = CROP_KINDS[k], far = CROP_KINDS[k];
+    assert.ok(near && near.width < far.width / 2 && near.gap < far.gap / 2, `${k}: smaller cards, many more`);
+  }
+  assert.ok(NEAR_M > CROP_TILE_M);
+  const z = field('1', 'BTH', 90, 60);
+  const m = z.world.masque, sub = cropMask(m, 0, 0, CROP_TILE_M, CROP_TILE_M);
+  assert.ok(sub && sub.nx <= CROP_TILE_M / m.pas + 1 && sub.nz <= CROP_TILE_M / m.pas + 1);
+  const near = cropCards(z, { near: true, masque: sub });
+  assert.ok(near.length > 0.7 * (CROP_TILE_M * CROP_TILE_M) / (CROP_KINDS.wheat.near.gap * CROP_KINDS.wheat.near.step), `${near.length}`);
+  assert.ok(near.every(c => c.x >= -0.2 && c.x <= CROP_TILE_M + 0.2 && c.z >= -0.2 && c.z <= CROP_TILE_M + 0.2), 'within its tile');
+  assert.equal(cropMask(m, 500, 500, 530, 530), null);
+  const src = readFileSync(new URL('../src/crops-3d.js', import.meta.url), 'utf8');
+  assert.match(src, /lod\.addLevel\(nearLevel, 0\);\s*lod\.addLevel\(farLevel, NEAR_M\);/);
+  assert.match(src, /if \(!built && camera\.getWorldPosition/);
+});
+
+test('a card seen from behind is lit as from the front (half the rape went dark olive, seen)', () => {
+  const src = readFileSync(new URL('../src/crops-3d.js', import.meta.url), 'utf8');
+  assert.match(src, /normal_fragment_begin\.replace\(\/normal = normal \\\* faceDirection;\/g, ''\)/);
+  assert.equal((src.match(/bothSidesLit\((material|topMaterial)\);/g) || []).length, 2);
+});
