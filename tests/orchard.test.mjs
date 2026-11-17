@@ -66,7 +66,7 @@ test('an OSM orchard (landuse=orchard), Detailed: its rows; olive trees when OSM
 
 test('drawn at render time on the Ground, off the Traces; the trees light', async () => {
   const sc = readFileSync(new URL('../src/scene3d.js', import.meta.url), 'utf8');
-  assert.match(sc, /const trees = orchard3D\(o, \(x, z\) => GROUND_Y_DEFAULT_3D \+ hauteurSousLeTronc\(_relief, x, z, 0\.4\) - 0\.03,\s*\{ avoid: onTraces\(panelTracés3D, 1\.5\) \}\);/);
+  assert.match(sc, /const trees = orchard3D\(o, \(x, z\) => GROUND_Y_DEFAULT_3D \+ hauteurSousLeTronc\(_relief, x, z, 0\.4\) - 0\.03,\s*\{ avoid: _plantsAvoid3D\(panelTracés3D, panel, page, 1\.5\) \}\);/);
   const { generateSpeciesTree } = await import('../src/ez-trees.js');
   const fake = () => ({ width: 512, height: 512, getContext: () => new Proxy({}, { get: () => () => ({ addColorStop() {} }) }) });
   for (const n of ['Pommier', 'Olivier', 'Noyer']) {

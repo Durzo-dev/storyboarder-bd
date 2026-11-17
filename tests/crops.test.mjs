@@ -53,15 +53,25 @@ test('a BD TOPO plot never says its crop', () => {
   assert.equal(t.zones[0].crop, undefined);
 });
 
-test('a card: two crossed planes, its foot on the ground', () => {
+test('a card: crossed planes, its foot on the ground; a stand three, with a level card at its ears (no bare squares)', () => {
   const g = cropCardGeometry(1.5, 2.4);
   assert.equal(g.index.length, 12);
+  assert.equal(cropCardGeometry(1.2, 0.95, 3).index.length, 18);
+  assert.ok(CROP_KINDS.wheat.planes === 3 && CROP_KINDS.wheat.scatter && CROP_KINDS.wheat.canopy > 0.5);
+  assert.ok(CROP_KINDS.rape.planes === 3 && CROP_KINDS.rape.canopy > 0.5);
   const ys = g.position.filter((_, i) => i % 3 === 1);
   assert.equal(Math.min(...ys), 0); assert.equal(Math.max(...ys), 2.4);
 });
 
 test('drawn at render time on the Ground, off the Traces, its meshes shared', () => {
   const sc = readFileSync(new URL('../src/scene3d.js', import.meta.url), 'utf8');
-  assert.match(sc, /const crop = crops3D\(o, \(x, z\) => GROUND_Y_DEFAULT_3D \+ hauteurDuRelief\(_relief, x, z\) \+ 0\.01, \{ avoid: onTraces\(panelTracés3D, 0\.3\) \}\);/);
+  assert.match(sc, /const crop = crops3D\(o, \(x, z\) => GROUND_Y_DEFAULT_3D \+ hauteurDuRelief\(_relief, x, z\) \+ 0\.01, \{ avoid: _plantsAvoid3D\(panelTracés3D, panel, page, 0\.3\) \}\);/);
   assert.match(readFileSync(new URL('../src/crops-3d.js', import.meta.url), 'utf8'), /mesh\.userData\.shared = true;/);
+});
+
+test('plants keep out of the buildings (asked: a crop through a house, seen)', () => {
+  const sc = readFileSync(new URL('../src/scene3d.js', import.meta.url), 'utf8');
+  assert.match(sc, /function _plantsAvoid3D\(traces, panel, page, margin\)\{\s*const onT = onTraces\(traces, margin\);\s*const fps = _footprints3D\(panel, page\);/);
+  // A building moved, or a path drawn, redraws the field.
+  assert.match(sc, /\+ '#' \+ panelOwnedElements3D\(panel, page\)\.filter\(estUnBatimentPlace\)/);
 });

@@ -202,9 +202,13 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    A field of cereals, maize, rape or sunflowers (the RPG's groups 1, 3, 4; 2; 5; 6: `cropOfGroup`) is a Zone with
    `crop` ({ kind, angle }); crops-3d.js draws its crop standing at render time (`cropCards`: rows of the kind's
    spacing, `CROP_KINDS`, on the Zone's cells, 0.3 m off the Traces, 25 000 to 40 000 a field), copies of one card
-   (two crossed planes, `cropCardGeometry`) bearing a clump DRAWN in high summer (ripe wheat, maize in tassel,
-   sunflowers in flower, rape in yellow; `drawCropPicture`), lit as the ground (normals up), one InstancedMesh a
-   field. Measured in the Beauce (300 m, 8 fields): first render about 5.7 s.
+   (crossed planes, `cropCardGeometry`) bearing a clump DRAWN in high summer (ripe wheat with its grains and awns,
+   maize in tassel, sunflowers in flower, rape in four-petalled flowers; `drawCropPicture`, 512 × 1024), lit as the
+   ground (normals up), one InstancedMesh a part and field. A closed stand (wheat, rape) has its cards scattered and
+   turned at random, three planes each, and a level card at its ears' height (`canopy`, `drawCropTop`): from above,
+   ears and flowers, no squares of bare earth. Every field's plants, a vineyard's stocks and an orchard's trees keep
+   out of the buildings (scene3d.js `_plantsAvoid3D`: their ground floor's footprints, with the Traces' margin); a
+   building moved or a Trace drawn redraws them. Measured in the Beauce (300 m, 8 fields): first render about 5.7 s.
    A vineyard's stocks are not Elements: at render time `vineStocks` (vineyard.js) lays them in rows 2.2 m apart, one
    every 1.1 m, on the Zone's own cells, never within 0.6 m of a road, path, pavement, wall, hedge, fence, barrier or
    river crossing it (`onTraces`, `VINE_OBSTACLES`; a Trace drawn across it redraws it), at most 8 000 (the step along the rows widened), and `vineyard3D`

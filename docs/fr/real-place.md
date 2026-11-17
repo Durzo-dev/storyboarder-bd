@@ -219,9 +219,14 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    Un champ de céréales, de maïs, de colza ou de tournesols (groupes du RPG 1, 3, 4 ; 2 ; 5 ; 6 : `cropOfGroup`) est
    une Zone avec `crop` ({ kind, angle }) ; crops-3d.js dessine sa culture debout au rendu (`cropCards` : rangs à
    l'écart de la culture, `CROP_KINDS`, sur les cases de la Zone, à 0,3 m des Tracés, 25 000 à 40 000 par champ), en
-   copies d'une carte (deux plans croisés, `cropCardGeometry`) portant une touffe DESSINÉE en plein été (blé mûr, maïs
-   en fleur, tournesols en fleur, colza jaune ; `drawCropPicture`), éclairée comme le sol (normales vers le haut), un
-   InstancedMesh par champ. Mesuré en Beauce (300 m, 8 champs) : premier rendu environ 5,7 s.
+   copies d'une carte (plans croisés, `cropCardGeometry`) portant une touffe DESSINÉE en plein été (blé mûr avec ses
+   grains et ses barbes, maïs en fleur, tournesols en fleur, colza en fleurs à quatre pétales ; `drawCropPicture`,
+   512 × 1024), éclairée comme le sol (normales vers le haut), un InstancedMesh par partie et par champ. Un couvert
+   fermé (blé, colza) a ses cartes dispersées et tournées au hasard, trois plans chacune, et une carte à plat à la
+   hauteur des épis (`canopy`, `drawCropTop`) : vu de haut, des épis et des fleurs, aucun carré de terre nue. Les
+   plantes d'un champ, les ceps d'une vigne et les arbres d'un verger restent hors des bâtiments (scene3d.js
+   `_plantsAvoid3D` : les emprises de leur rez-de-chaussée, avec la marge des Tracés) ; un bâtiment déplacé ou un Tracé
+   dessiné les redessine. Mesuré en Beauce (300 m, 8 champs) : premier rendu environ 5,7 s.
    Les ceps d'une vigne ne sont pas des Éléments : au rendu, `vineStocks` (vineyard.js) les pose en rangs à 2,2 m, un
    tous les 1,1 m, sur les cases de la Zone, jamais à moins de 0,6 m d'une route, d'un chemin, d'un trottoir, d'un
    muret, d'une haie, d'une clôture, d'une barrière ou d'une rivière qui la traverse (`onTraces`, `VINE_OBSTACLES` ; un

@@ -2683,9 +2683,46 @@ function reliefEffectifCalcule3D(panel, page, sousLesBatiments = true){
   return cut;
 }
 /** What a vineyard's stocks keep off (vineyard.js onTraces), for its signature: a path drawn across it redraws it. */
-function _vineObstaclesSig3D(traces){
+function _vineObstaclesSig3D(traces, panel, page){
   return traces.filter(t => t.tracéType in VINE_OBSTACLES && t.world && Array.isArray(t.world.pts))
-    .map(t => `${t.id}:${t.world.width || ''}:${t.world.pts.length}:${t.world.pts.map(p => `${Math.round(p.x * 10)},${Math.round(p.z * 10)}`).join(' ')}`).join('|');
+    .map(t => `${t.id}:${t.world.width || ''}:${t.world.pts.length}:${t.world.pts.map(p => `${Math.round(p.x * 10)},${Math.round(p.z * 10)}`).join(' ')}`).join('|')
+    + '#' + panelOwnedElements3D(panel, page).filter(estUnBatimentPlace).map(o => `${o.id}:${o.wxFloor}:${o.wzFloor}:${o.rotY}`).join('|');
+}
+/**
+ * The footprints of a Panel's placed buildings, in the world (their ground floor's rooms, as the relief flattens under
+ * them), each with its bounds: what a field's plants, a vineyard's stocks, an orchard's trees keep out of (asked by
+ * Durzo on 17 Nov. 2026: a crop growing through a house, seen).
+ */
+function _footprints3D(panel, page){
+  const out = [];
+  for (const o of panelOwnedElements3D(panel, page)) {
+    if (!estUnBatimentPlace(o) || !o.batiment || !o.batiment.niveaux) continue;
+    try {
+      const tries = niveauxTries(o.batiment);
+      const rdc = tries.find(n => n.elevation > -1e-9) || tries[0];
+      if (!rdc) continue;
+      for (const f of formesDesPieces(o.batiment, rdc.id).values()) {
+        const poly = f.points.map(p => { const w = pointDuBatimentPlace3D(o, panel, { x: p.x, y: 0, z: p.z }); return { x: w.x, z: w.z }; });
+        const xs = poly.map(p => p.x), zs = poly.map(p => p.z);
+        out.push({ poly, x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) });
+      }
+    } catch (e) { /* an unreadable building keeps nothing out */ }
+  }
+  return out;
+}
+/** Plants keep off the Traces (onTraces, `margin` m) and out of the buildings (`margin` m round their footprints). */
+function _plantsAvoid3D(traces, panel, page, margin){
+  const onT = onTraces(traces, margin);
+  const fps = _footprints3D(panel, page);
+  const inside = (x, z, q) => { let r = false; for (let i = 0, j = q.length - 1; i < q.length; j = i++) {
+    if ((q[i].z > z) !== (q[j].z > z) && x < (q[j].x - q[i].x) * (z - q[i].z) / (q[j].z - q[i].z) + q[i].x) r = !r; } return r; };
+  const near = (x, z, q) => { for (let i = 0, j = q.length - 1; i < q.length; j = i++) {
+    const a = q[j], b = q[i], dx = b.x - a.x, dz = b.z - a.z, l2 = dx * dx + dz * dz;
+    const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / l2)) : 0;
+    if (Math.hypot(x - a.x - t * dx, z - a.z - t * dz) < margin) return true; } return false; };
+  if (!onT && !fps.length) return null;
+  return (x, z) => (onT && onT(x, z)) || fps.some(f => x > f.x0 - margin && x < f.x1 + margin && z > f.z0 - margin && z < f.z1 + margin
+    && (inside(x, z, f.poly) || near(x, z, f.poly)));
 }
 /** The profile of each road and path, per effective relief (reliefEffectif3D): o.id → (x, z) → height. */
 const _roadProfiles3D = new WeakMap();
@@ -3380,9 +3417,9 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
     // #437 : l'arrivée du grain refait la Trace, qui passe de l'aplat à sa texture.
     const sigKey = JSON.stringify({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, wh: o.wallHeight, wt: o.wallThickness, world: o.world, holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),
       relief: signatureDuRelief(_relief), eau: [o.niveauEau, o.profondeur, o.hauteurZone, o.penteZone, o.sensPente],
-      vines: o.vines ? [o.vines, barkSettled('Vigne'), _vineObstaclesSig3D(panelTracés3D)] : null,
-      orchard: o.orchard ? [o.orchard, barkSettled(o.orchard.essence), _vineObstaclesSig3D(panelTracés3D)] : null,
-      crop: o.crop ? [o.crop, _vineObstaclesSig3D(panelTracés3D)] : null });   // #462c-2 : drapé sur le relief ; #462d : l'eau
+      vines: o.vines ? [o.vines, barkSettled('Vigne'), _vineObstaclesSig3D(panelTracés3D, panel, page)] : null,
+      orchard: o.orchard ? [o.orchard, barkSettled(o.orchard.essence), _vineObstaclesSig3D(panelTracés3D, panel, page)] : null,
+      crop: o.crop ? [o.crop, _vineObstaclesSig3D(panelTracés3D, panel, page)] : null });   // #462c-2 : drapé sur le relief ; #462d : l'eau
     let entry = tracéMeshCache3D.get(o.id);
     // Pendant un coup de pinceau du relief, les Tracés gardent leur maillage (le relief change à chaque
     // image ; les redraper toutes coûtait plus que le reste du rendu) : ils suivent au relâcher.
@@ -3639,18 +3676,18 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       // centimetres in: a stock on a slope does not show air under its downhill side.
       if (o.tracéType === 'terrain' && o.vines) {
         const vines = vineyard3D(o, (x, z) => GROUND_Y_DEFAULT_3D + hauteurSousLeTronc(_relief, x, z, 0.15) - 0.03,
-          { avoid: onTraces(panelTracés3D) });   // never on a road, a path, a wall… crossing it (asked)
+          { avoid: _plantsAvoid3D(panelTracés3D, panel, page, 0.6) });   // never on a road, a path, a wall, in a house (asked)
         if (vines) group.add(vines);
       }
       // A field's standing crop (crops-3d.js), likewise.
       if (o.tracéType === 'terrain' && o.crop) {
-        const crop = crops3D(o, (x, z) => GROUND_Y_DEFAULT_3D + hauteurDuRelief(_relief, x, z) + 0.01, { avoid: onTraces(panelTracés3D, 0.3) });
+        const crop = crops3D(o, (x, z) => GROUND_Y_DEFAULT_3D + hauteurDuRelief(_relief, x, z) + 0.01, { avoid: _plantsAvoid3D(panelTracés3D, panel, page, 0.3) });
         if (crop) group.add(crop);
       }
       // An orchard's trees, likewise (orchard-3d.js): on the Ground, off the Traces.
       if (o.tracéType === 'terrain' && o.orchard) {
         const trees = orchard3D(o, (x, z) => GROUND_Y_DEFAULT_3D + hauteurSousLeTronc(_relief, x, z, 0.4) - 0.03,
-          { avoid: onTraces(panelTracés3D, 1.5) });
+          { avoid: _plantsAvoid3D(panelTracés3D, panel, page, 1.5) });
         if (trees) group.add(trees);
       }
       personaScene3D.add(group);
