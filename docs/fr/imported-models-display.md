@@ -21,6 +21,13 @@ sa vignette et dans l'aperçu du store. Tout passe par **un seul chemin**, `prep
    le JSON et appliquée.
 5. **Lumières et caméras du fichier** : retirées. Posé dans une Case, un modèle éclairerait sinon
    toute la Case, autant de fois qu'il a d'exemplaires.
+6. **Découpes** (`MASK` du glTF, feuilles) : elles écrivent un alpha de 1 là où elles sont dessinées
+   (`opaqueCutouts`, `src/opaque-cutout.js`, partagé avec les arbres générés et les cultures). L'image 3D
+   d'une Case est posée sur la page : des feuilles qui écrivaient l'alpha de leurs mipmaps (0,45 à 0,8 de
+   loin) laissaient passer la page blanche, et les couronnes paraissaient presque blanches. Les plantes de
+   la banque de modèles (arbres, conifères, palmiers : `isBankPlantFile`) voient aussi leurs matériaux
+   texturés **en mélange** dessinés en découpe (seuil 0,5) ; le verre et l'eau des autres modèles restent en
+   mélange.
 
 ## À l'import
 

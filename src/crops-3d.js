@@ -9,7 +9,7 @@
  * with a Zone (scene3d.js).
  */
 import { domCanvas } from './tree-species.js';
-import { opaqueCutout } from './ez-trees.js';
+import { opaqueCutout } from './opaque-cutout.js';
 import { vineStocks } from './vineyard.js';
 
 /**

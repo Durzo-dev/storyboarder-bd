@@ -27,6 +27,8 @@
  */
 
 import { chargeurGltf } from './gltf-decoders.js';
+import { opaqueCutouts } from './opaque-cutout.js';
+import { isBankPlantFile } from './model-bank.js';
 import { sondeDebut, sondeFin, sondeCompter } from './perf-probe.js';
 import { glbSansTexturesEnDouble3D } from './glb-textures.js';
 import { readModel } from './model-store.js';
@@ -289,8 +291,9 @@ function sansLumieresNiCameras3D(scene){
  * TOUT ce qu'un modèle importé doit subir pour s'afficher juste, dans l'ordre, une fois au décodage.
  * Le cache des Cases ET l'aperçu 3D du store passent par ici : un seul chemin, sinon l'aperçu
  * finirait par montrer autre chose que la Case. Rend la scène.
+ * `plant`: a plant of the model bank, whose blended leaves are drawn as cut-outs (opaque-cutout.js).
  */
-export function preparerModeleImporte3D(gltf){
+export function preparerModeleImporte3D(gltf, { plant = false } = {}){
   const scene = gltf && gltf.scene;
   if (!scene) return null;
   sansLumieresNiCameras3D(scene);
@@ -298,6 +301,8 @@ export function preparerModeleImporte3D(gltf){
   couleursPourAffichage3D(scene);
   couleursDeSommetsPourAffichage3D(scene);
   ambianteSurLesMetaux3D(scene);
+  // Cut-out leaves write a full alpha: the white page no longer shows through them from afar (#480j).
+  opaqueCutouts(scene, { plant });
   return scene;
 }
 
@@ -333,7 +338,7 @@ export async function preloadModels(noms){
       // géométrie brute (position de bind) qui ne représente pas la pose réellement affichée, cf.
       // src/skinned-box-3d.js.
       applyAnisotropy(scene);
-      preparerModeleImporte3D(gltf);
+      preparerModeleImporte3D(gltf, { plant: isBankPlantFile(nom) });
       const _tMesures = sondeDebut();
       const _entree = {
         scene,

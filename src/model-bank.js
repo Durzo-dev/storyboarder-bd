@@ -15,6 +15,16 @@ import { SPECIES, VARIANTS, speciesFor } from './tree-species.js';
 /** The prefix of a bank model's file name (a name « My models » never gives: see resolveModelName). */
 export const BANK_PREFIX = 'bank--';
 
+/** The bank's plant types: their blended leaves are drawn as cut-outs (opaque-cutout.js). */
+export const BANK_PLANT_TYPES = Object.freeze(['arbre', 'conifere', 'palmier']);
+
+/** Whether a model file (as an Element cites it) is one of the bank's plants. */
+export function isBankPlantFile(file, bank = MODEL_BANK){
+  if (typeof file !== 'string' || !file.startsWith(BANK_PREFIX)) return false;
+  const m = bank.find(x => BANK_PREFIX + x.file === file);
+  return !!m && BANK_PLANT_TYPES.includes(m.objType);
+}
+
 /** An element's genus from OSM's tags (Latin, its first word, capitalised), or null. */
 export function genusOfTags(tags = {}){
   const word = String(tags.genus || tags.species || tags.taxon || '').trim().split(/[\s_]+/)[0];

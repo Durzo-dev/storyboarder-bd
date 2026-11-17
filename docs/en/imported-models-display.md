@@ -21,6 +21,12 @@ thumbnail and in the store preview. Everything goes through **a single path**,
    JSON and applied.
 5. **The file's lights and cameras**: removed. Placed in a Panel, a model would otherwise light the
    whole Panel, as many times as it has copies.
+6. **Cut-outs** (glTF `MASK`, leaves): they write an alpha of 1 where they are drawn
+   (`opaqueCutouts`, `src/opaque-cutout.js`, shared with the generated trees and the crops). A Panel's 3D
+   image is laid on the page: leaves writing the alpha of their mipmaps (0.45 to 0.8 from afar) let the
+   white page through, and crowns looked almost white. The model bank's plants (trees, conifers, palms:
+   `isBankPlantFile`) also have their **blended** textured materials drawn as cut-outs (threshold 0.5);
+   glass and water of other models stay blended.
 
 ## On import
 

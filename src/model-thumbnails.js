@@ -18,6 +18,7 @@
 import { chargeurGltf } from './gltf-decoders.js';
 import { readModel } from './model-store.js';
 import { preparerModeleImporte3D } from './model-cache.js';
+import { isBankPlantFile } from './model-bank.js';
 import { maillagesHorsCorps3D, maillagesParNom3D } from './stray-meshes-3d.js';
 import { CLE_ACTUELLE, AMBIANTE_ACTUELLE } from './lighting-3d.js';
 import { cadrage3D, positionCamera3D } from './store-apercu-3d.js';
@@ -102,7 +103,7 @@ async function decoderEtMesurer(nom){
   if (!octets) return null;
   const brut = octets.buffer.slice(octets.byteOffset, octets.byteOffset + octets.byteLength);
   const gltf = await new Promise((ok, ko) => { try { chargeurGltf().parse(brut, '', ok, ko); } catch (e) { ko(e); } });
-  const modele = preparerModeleImporte3D(gltf);
+  const modele = preparerModeleImporte3D(gltf, { plant: isBankPlantFile(nom) });
   maillagesParNom3D(modele, maillagesHorsCorps3D(modele)).forEach(m => { m.visible = false; });
   const noms = [];
   let os = 0;

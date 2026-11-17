@@ -277,7 +277,7 @@ describe('Les couleurs d\'un modèle importé, comme le reste de l\'application 
   });
   test('appliqué à CHAQUE modèle décodé, juste après l\'anisotropie', () => {
     const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'model-cache.js'), 'utf8');
-    assert.match(src, /applyAnisotropy\(scene\);\n\s+preparerModeleImporte3D\(gltf\);/);
+    assert.match(src, /applyAnisotropy\(scene\);\n\s+preparerModeleImporte3D\(gltf, \{ plant: isBankPlantFile\(nom\) \}\);/);
   });
   test('⚠️ un matériau PARTAGÉ par deux mailles n\'est converti qu\'une fois', () => {
     const a = maille();
