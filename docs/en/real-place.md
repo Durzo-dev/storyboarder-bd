@@ -191,9 +191,14 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    TOPO's « Vigne » areas, `readBdTopoVines`, laid after the RPG's where it has none); `addPlotGrounds`: each parcel a
    Zone of its ground, its cells taken from OSM's earth and grass Zones under it (one Zone per cell: two flat Zones on
    one cell would flicker), left where another ground holds them; the slivers between two parcels a few centimetres
-   apart given to a plot around them. Orchards, olive groves and nut groves (`plotAreas`: `olives`, `nuts`, the nut
-   by its crop, NOX a walnut) are filled like the forests, before the BD TOPO's. When the budget is exceeded the grid
-   is made wider (an orchard keeps its rows). Credit: « © IGN, RPG ».
+   apart given to a plot around them. Orchards, olive groves and nut groves (the RPG's, the BD TOPO's « Verger »,
+   OSM's `landuse=orchard`) are Zones with `orchard` (`orchardOf`: their rows' direction, a species of their genera,
+   the nut by its crop, NOX a walnut; `ORCHARD_KINDS`: rows 5 × 3.5 m for an orchard, 7 × 6 for olives, 9 × 8 for
+   nuts): their trees are not Elements but drawn at render time by orchard-3d.js (`orchardTrees`: in rows, on the
+   Zone's cells, never within 1.5 m of a Trace, at most 1 500 a Zone), copies of three LIGHT variants of the species
+   (ez-trees.js `lightenOptions`: one level of twigs less, fewer sections, half the leaves, larger, one plane:
+   about 1 800 triangles for an apple tree against 12 000). When the forests' budget is exceeded the grid is made
+   wider. Credit: « © IGN, RPG ».
    A vineyard's stocks are not Elements: at render time `vineStocks` (vineyard.js) lays them in rows 2.2 m apart, one
    every 1.1 m, on the Zone's own cells, never within 0.6 m of a road, path, pavement, wall, hedge, fence, barrier or
    river crossing it (`onTraces`, `VINE_OBSTACLES`; a Trace drawn across it redraws it), at most 8 000 (the step along the rows widened), and `vineyard3D`

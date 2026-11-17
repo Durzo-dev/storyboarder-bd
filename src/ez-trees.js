@@ -130,13 +130,32 @@ export function speciesOptions(name, variant = 1) {
 }
 
 /**
+ * A species' options made LIGHT, for trees copied by the hundred (an orchard, orchard-3d.js): about half the sections
+ * round a branch and along it, half the leaves, larger, on one plane each. The same silhouette (the same seed and
+ * branching), far fewer triangles.
+ */
+export function lightenOptions(options) {
+  const b = options.branch;
+  // Its finest twigs dropped (one level less, from three), their leaves borne by the level above, larger.
+  if (b.levels >= 3) { b.levels -= 1; options.leaves.count = Math.round(options.leaves.count * 2.2); }
+  for (const k of Object.keys(b.sections)) b.sections[k] = Math.max(3, Math.round(b.sections[k] * 0.4));
+  for (const k of Object.keys(b.segments)) b.segments[k] = Math.max(3, Math.round(b.segments[k] * 0.5));
+  options.leaves.count = Math.max(3, Math.round(options.leaves.count * 0.55));
+  options.leaves.size *= 1.9;
+  options.leaves.billboard = 'single';
+  return options;
+}
+
+/**
  * Generates a species' variant, at EZ-Tree's own scale. `makeCanvas(size)` draws the foliage (a DOM canvas by
  * default); `barkTexture(name)` gives the species' bark texture, or null (a plain colour then): the shipped file
  * by default.
  */
-export function generateSpeciesTree(name, variant = 1, { makeCanvas = domCanvas, barkTexture = shippedBark, lods = SPECIES_LODS } = {}) {
+export function generateSpeciesTree(name, variant = 1, { makeCanvas = domCanvas, barkTexture = shippedBark, lods = SPECIES_LODS, light = false } = {}) {
   const sp = SPECIES[name];
-  const tree = new Tree(speciesOptions(name, variant));
+  const options = speciesOptions(name, variant);
+  if (light) lightenOptions(options);
+  const tree = new Tree(options);
   // Its levels of detail (EZ-Tree 2): all on one skeleton and sharing the two materials set below; `lods: null`,
   // the full tree only.
   if (lods) tree.generateLODs(lods);

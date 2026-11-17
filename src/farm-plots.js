@@ -9,7 +9,7 @@
  *
  * Each parcel gives a Zone of its ground (`PLOT_GROUNDS`: earth tinted by its crop, or grass), cut out of the
  * OSM farmland and meadows under it (one Zone per cell: two flat Zones on one cell would flicker); orchards,
- * olive groves and nut groves are filled with their trees (vegetation-zones.js, `plotAreas`). Vines: their
+ * olive groves and nut groves are Zones with their trees in rows (`orchard`: drawn by orchard-3d.js). Vines: their
  * ground here, their stocks in rows
  * (`vines`: their direction; vineyard.js, drawn by vineyard-3d.js).
  */
@@ -17,6 +17,7 @@ import { projector } from './geo-local.js';
 import { maskOfPolygon, insidePolygon } from './osm-scene.js';
 import { mondeDuMasque } from './terrain-zone-pinceau.js';
 import { vineRowAngle } from './vineyard.js';
+import { speciesFor } from './tree-species.js';
 
 /** The credit of the RPG. */
 export const RPG_CREDIT = Object.freeze({ fr: 'Parcelles agricoles : © IGN, RPG', en: 'Farm plots: © IGN, RPG' });
@@ -61,16 +62,19 @@ function ringsOf(g, toLocal) {
 }
 
 /**
- * The BD TOPO's vineyards (`BDTOPO_V3:zone_de_vegetation`, nature « Vigne »: the same answer as the woods,
- * vegetation-zones.js) as plots of vines: they cover what the RPG lacks (vines not declared, outside the CAP). Laid
- * after the RPG's (addPlotGrounds: a cell an RPG plot holds is left to it).
+ * The BD TOPO's vineyards and orchards (`BDTOPO_V3:zone_de_vegetation`, natures « Vigne » and « Verger »: the same
+ * answer as the woods, vegetation-zones.js) as plots: they cover what the RPG lacks (not declared, outside the CAP).
+ * Laid after the RPG's (addPlotGrounds: a cell an RPG plot holds is left to it).
  */
 export function readBdTopoVines(geojson, centre) {
   const { toLocal } = projector(centre);
   const out = [];
   for (const f of (geojson && geojson.features) || []) {
-    if (!/vigne/i.test(String((f.properties || {}).nature || ''))) continue;
-    for (const r of ringsOf(f.geometry, toLocal)) out.push({ group: 21, crop: 'BDTOPO', ground: PLOT_GROUNDS[21], source: 'bdtopo', ...r });
+    const nature = String((f.properties || {}).nature || '');
+    // A vineyard, an orchard (its genera those of the RPG's orchards).
+    const group = /vigne/i.test(nature) ? 21 : /verger/i.test(nature) ? 20 : 0;
+    if (!group) continue;
+    for (const r of ringsOf(f.geometry, toLocal)) out.push({ group, crop: 'BDTOPO', ground: PLOT_GROUNDS[group], source: 'bdtopo', ...r });
   }
   return out;
 }
@@ -88,10 +92,26 @@ export function readPlots(geojson, centre) {
   return out;
 }
 
-/** The plots filled with trees, as vegetation-zones.js areas ({ kind, genera, ring, holes, source }). */
-export function plotAreas(plots) {
-  return plots.filter(p => p.ground.fill).map(p => ({ kind: p.ground.fill.kind, genera: p.ground.fill.genera, ring: p.ring, holes: p.holes, source: 'rpg' }));
+/**
+ * An orchard's rows by its kind: rows `gap` apart (m), a tree every `step`, as high as `height` (m; a pruned fruit tree,
+ * a grown olive or walnut), the trees' type (for their species, speciesFor).
+ */
+export const ORCHARD_KINDS = Object.freeze({
+  orchard: { gap: 5, step: 3.5, height: 4, objType: 'arbre' },
+  olives: { gap: 7, step: 6, height: 5, objType: 'olivier' },
+  nuts: { gap: 9, step: 8, height: 9, objType: 'arbre' },
+});
+
+/** An orchard plot's `orchard` field: its rows' direction, its species (one of its genera, drawn from its outline). */
+export function orchardOf(p) {
+  const fill = p.ground && p.ground.fill, kind = fill && ORCHARD_KINDS[fill.kind];
+  if (!kind) return null;
+  const c = p.ring[0] || { x: 0, z: 0 };
+  const pick = Math.abs(Math.round(c.x * 7 + c.z * 13)) % fill.genera.length;
+  const essence = speciesFor(kind.objType, fill.genera[pick]);
+  return essence ? { angle: vineRowAngle(p.ring), essence, gap: kind.gap, step: kind.step, height: kind.height } : null;
 }
+
 
 /** The grounds a parcel takes the place of: OSM's farmland, meadows, orchards and vines (earth or grass). */
 const YIELDING = new Set(['terre', 'herbe']);
@@ -139,6 +159,9 @@ export function addPlotGrounds(translated, plots, halfSize) {
     if (p.ground.terrainColor) zone.terrainColor = p.ground.terrainColor;
     // A vineyard: its stocks in rows along its longest side, drawn at render time (vineyard.js).
     if (p.ground.vines) zone.vines = { angle: vineRowAngle(p.ring) };
+    // An orchard, an olive or nut grove: its trees in rows, drawn at render time (orchard-3d.js).
+    const orchard = orchardOf(p);
+    if (orchard) zone.orchard = orchard;
     translated.zones.push(zone);
     cellsOf.set(zone, cells);
     n++;

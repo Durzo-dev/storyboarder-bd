@@ -208,9 +208,14 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    `addPlotGrounds` : chaque parcelle une Zone de son sol, ses cases prises aux Zones de terre et d'herbe d'OSM
    dessous (une Zone par case : deux Zones plates sur une case scintilleraient), laissées là où un autre sol les
    tient ; les interstices entre deux parcelles à quelques centimètres donnés à une parcelle voisine. Vergers,
-   oliveraies et noyeraies (`plotAreas` : `olives`, `nuts`, la noix par sa culture, NOX un noyer) sont remplis comme
-   les forêts, avant ceux de la BD TOPO. Budget dépassé : la grille s'élargit (un verger garde ses rangs). Crédit :
-   « © IGN, RPG ».
+   oliveraies et noyeraies (ceux du RPG, les « Verger » de la BD TOPO, les `landuse=orchard` d'OSM) sont des Zones avec
+   `orchard` (`orchardOf` : le sens de leurs rangs, une essence de leurs genres, la noix par sa culture, NOX un noyer ;
+   `ORCHARD_KINDS` : rangs de 5 × 3,5 m pour un verger, 7 × 6 pour les oliviers, 9 × 8 pour les noyers) : leurs arbres
+   ne sont pas des Éléments mais dessinés au rendu par orchard-3d.js (`orchardTrees` : en rangs, sur les cases de la
+   Zone, jamais à moins de 1,5 m d'un Tracé, 1 500 au plus par Zone), en copies de trois variantes LÉGÈRES de l'essence
+   (ez-trees.js `lightenOptions` : un niveau de rameaux de moins, moins de sections, moitié moins de feuilles, plus
+   grandes, en un plan : environ 1 800 triangles pour un pommier contre 12 000). Budget des forêts dépassé : la grille
+   s'élargit. Crédit : « © IGN, RPG ».
    Les ceps d'une vigne ne sont pas des Éléments : au rendu, `vineStocks` (vineyard.js) les pose en rangs à 2,2 m, un
    tous les 1,1 m, sur les cases de la Zone, jamais à moins de 0,6 m d'une route, d'un chemin, d'un trottoir, d'un
    muret, d'une haie, d'une clôture, d'une barrière ou d'une rivière qui la traverse (`onTraces`, `VINE_OBSTACLES` ; un

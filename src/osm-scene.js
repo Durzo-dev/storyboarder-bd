@@ -760,6 +760,12 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       if (w.tags.name) zone.name = w.tags.name;
       // A vineyard (#481b), Detailed and Realistic: its stocks in rows along its longest side (vineyard.js).
       if (detailed && w.tags.landuse === 'vineyard') zone.vines = { angle: vineRowAngle(w.pts) };
+      // An orchard: its trees in rows (orchard-3d.js), olive trees when OSM says so, else apple trees.
+      if (detailed && w.tags.landuse === 'orchard') {
+        const olives = /olive/.test(w.tags.trees || '');
+        zone.orchard = olives ? { angle: vineRowAngle(w.pts), essence: 'Olivier', gap: 7, step: 6, height: 5 }
+          : { angle: vineRowAngle(w.pts), essence: 'Pommier', gap: 5, step: 3.5, height: 4 };
+      }
       out.zones.push(zone);
     }
   }

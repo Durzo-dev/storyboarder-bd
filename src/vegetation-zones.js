@@ -75,7 +75,8 @@ export function kindOfEssence(essence, tfv = '') {
 export function kindOfNature(nature) {
   const n = plain(nature);
   if (/vigne/.test(n)) return null;
-  if (/verger/.test(n)) return { kind: 'orchard', genera: ['Malus', 'Prunus', 'Pyrus'] };
+  // An orchard: a farm plot (farm-plots.js readBdTopoVines), its trees in rows drawn as copies.
+  if (/verger/.test(n)) return null;
   if (/peupleraie/.test(n)) return { kind: 'poplars', genera: ['Populus'] };
   if (/haie/.test(n)) return { kind: 'hedge', genera: [] };
   if (/lande/.test(n)) return { kind: 'heath', genera: [] };

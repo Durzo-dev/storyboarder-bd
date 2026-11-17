@@ -26,7 +26,7 @@ test('the BD TOPO\'s natures (as measured): their kind; vines left out', () => {
   assert.equal(kindOfNature('Bois').kind, 'wood');
   assert.equal(kindOfNature('Haie').kind, 'hedge');
   assert.equal(kindOfNature('Lande ligneuse').kind, 'heath');
-  assert.deepEqual(kindOfNature('Verger'), { kind: 'orchard', genera: ['Malus', 'Prunus', 'Pyrus'] });
+  assert.equal(kindOfNature('Verger'), null, 'an orchard: a farm plot (farm-plots.js)');
   assert.equal(kindOfNature('Vigne'), null);
 });
 
@@ -41,7 +41,8 @@ test('read: the WFS answers in local metres, BD Forêt then BD TOPO', () => {
     forests: { features: [feature({ essence: 'Pin sylvestre', tfv: '' }, ring(-50, -50, 40, 40))] },
     zones: { features: [feature({ nature: 'Verger' }, ring(10, 10, 30, 20)), feature({ nature: 'Vigne' }, ring(0, 0, 5, 5))] },
   }, centre);
-  assert.deepEqual(areas.map(a => [a.source, a.kind]), [['bdforet', 'conifers'], ['bdtopo', 'orchard']]);
+  // Orchards and vines: farm plots, their rows drawn as copies (farm-plots.js readBdTopoVines).
+  assert.deepEqual(areas.map(a => [a.source, a.kind]), [['bdforet', 'conifers']]);
   assert.ok(Math.abs(areas[0].ring[0].x + 50) < 0.1 && Math.abs(areas[0].ring[0].z + 50) < 0.1);
 });
 

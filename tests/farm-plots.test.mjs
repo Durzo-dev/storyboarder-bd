@@ -5,9 +5,7 @@
 import './helpers/dom-stub.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { groundOfPlot, readPlots, plotAreas, addPlotGrounds, PLOT_GROUNDS } from '../src/farm-plots.js';
-import { fillVegetation } from '../src/vegetation-zones.js';
-import { applyBank } from '../src/model-bank.js';
+import { groundOfPlot, readPlots, addPlotGrounds, PLOT_GROUNDS } from '../src/farm-plots.js';
 import { maskOfPolygon } from '../src/osm-scene.js';
 import { mondeDuMasque } from '../src/terrain-zone-pinceau.js';
 
@@ -68,14 +66,6 @@ test('an OSM Zone wholly under parcels is gone', () => {
   assert.deepEqual(translated.zones.map(z => z.source), ['rpg']);
 });
 
-test('an olive grove filled with olive trees in rows, our EZ-Tree olive; a BD TOPO orchard within it filled once', () => {
-  const plots = readPlots({ features: [plot('23', 'OLI', square(0, 0, 42, 35))] }, centre);
-  const bdtopo = { kind: 'orchard', genera: ['Malus'], ring: plots[0].ring.map(p => ({ x: p.x * 0.5 + 5, z: p.z * 0.5 + 5 })), holes: [], source: 'bdtopo' };
-  const els = fillVegetation([bdtopo, ...plotAreas(plots)], { halfSize: 100 });
-  assert.ok(els.length >= 20 && els.every(e => e.objType === 'olivier' && e.genus === 'Olea' && e.source === 'rpg'), JSON.stringify(els.slice(0, 2)));
-  applyBank(els, { bank: [] });
-  assert.ok(els.every(e => e.essence === 'Olivier'));
-});
 
 test('two neighbouring parcels a few centimetres apart on a diagonal: no hole of bare ground between them', () => {
   // Two triangles splitting a 40 m square along its diagonal, 0.3 m apart (as the RPG's outlines are).

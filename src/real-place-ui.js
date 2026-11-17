@@ -11,7 +11,7 @@ import { S, tr, newId } from './state.js';
 import { translateOsm, ZONE_SIDE_MAX, DETAIL_LEVELS } from './osm-scene.js';
 import { clearOfObstacles, obstaclesOf, fitCrowns, spaceTrees } from './placement-clearance.js';
 import { readVegetation, fillVegetation, BD_FORET_CREDIT } from './vegetation-zones.js';
-import { readPlots, readBdTopoVines, plotAreas, addPlotGrounds, RPG_CREDIT } from './farm-plots.js';
+import { readPlots, readBdTopoVines, addPlotGrounds, RPG_CREDIT } from './farm-plots.js';
 import { readLandmarks } from './landmarks.js';
 import { addExtras } from './bdtopo-extras.js';
 import { readSoils, applySoils, SOIL_KINDS } from './soils.js';
@@ -494,7 +494,8 @@ async function importer(){
       const v = await api.realPlaceVegetation(bbox);
       if (arrete()) return annule;
       if (v && (v.forests || v.zones || v.plots)) {
-        // The farm plots (#481, the RPG): each a Zone of its crop's ground; orchards, olive and nut groves filled.
+        // The farm plots (#481, the RPG): each a Zone of its crop's ground; vineyards, orchards, olive and nut groves
+        // with their rows (drawn as copies at render time).
         // The BD TOPO's vineyards after them: where the RPG has none (vines not declared).
         const plots = readPlots(v.plots, centre);
         const rpgGrounds = addPlotGrounds(translated, plots, halfSize);
@@ -504,7 +505,7 @@ async function importer(){
           console.info(`[real-place] farm plots: ${grounds} grounds`);
         }
         const existing = translated.elements.filter(e => TREE_TYPES.includes(e.objType) || e.objType === 'buisson');
-        const added = fillVegetation([...readVegetation(v, centre), ...plotAreas(plots)], { halfSize, existing });
+        const added = fillVegetation(readVegetation(v, centre), { halfSize, existing });
         translated.elements.push(...added);
         console.info(`[real-place] vegetation: ${added.length} trees and shrubs filled`);
         if (added.some(e => e.source === 'bdforet')) photoCredits.push(tr(BD_FORET_CREDIT.en, BD_FORET_CREDIT.fr));
