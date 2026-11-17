@@ -186,12 +186,19 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    With them, the farm plots (`farm-plots.js`): the RPG, the parcels declared to the CAP
    (`RPG.LATEST:parcelles_graphiques`, its `code_group` and `code_cultu`, same request). `groundOfPlot`: each crop
    group a ground (`PLOT_GROUNDS`: cereals earth tinted golden, rape and sunflower a green crop, meadows grass,
-   fallows dry grass, vegetables tilled earth; vines earth, their stocks to come); `addPlotGrounds`: each parcel a
+   fallows dry grass, vegetables tilled earth; vines earth with their rows, `vines`: { angle }, the parcel's
+   longest side, `vineRowAngle`, as for an OSM `landuse=vineyard` at « Detailed » and « Realistic »); `addPlotGrounds`: each parcel a
    Zone of its ground, its cells taken from OSM's earth and grass Zones under it (one Zone per cell: two flat Zones on
    one cell would flicker), left where another ground holds them; the slivers between two parcels a few centimetres
    apart given to a plot around them. Orchards, olive groves and nut groves (`plotAreas`: `olives`, `nuts`, the nut
    by its crop, NOX a walnut) are filled like the forests, before the BD TOPO's. When the budget is exceeded the grid
    is made wider (an orchard keeps its rows). Credit: « © IGN, RPG ».
+   A vineyard's stocks are not Elements: at render time `vineStocks` (vineyard.js) lays them in rows 2.2 m apart, one
+   every 1.1 m, on the Zone's own cells, at most 8 000 (the step along the rows widened), and `vineyard3D`
+   (vineyard-3d.js) draws them as copies of three generated vines (« Vigne », 472 triangles), one InstancedMesh per
+   part and variant, each at the relief's height; their geometry and materials are shared (`userData.shared`: never
+   disposed with the Zone). Measured at Eguisheim (200 m, 17 vineyard Zones): first render about 5 s (the vines
+   generated), then about 1.6 s.
    After the aerial reading, the bare earth (France, « Detailed » and « Realistic », Zones of `terre`):
    `realplace:soils` (WFS `INRA.CARTE.SOLS:geoportail_vf`, its `ger_nom` and `nom_ucs`), `readSoils`,
    `soilKindOf` (the description's words first, sand, chalk, a volcanic rock, stones, red earth; else the

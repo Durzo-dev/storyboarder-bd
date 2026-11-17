@@ -35,6 +35,8 @@ export function zoneObject(z, { panelId, newId, nameOf = () => 'Terrain' }){
     world: JSON.parse(JSON.stringify(z.world)) };
   // Its tint (the bare earth's soil, soils.js), as the terrain editor sets it.
   if (typeof z.terrainColor === 'string') o.terrainColor = z.terrainColor;
+  // A vineyard's rows (#481b, vineyard.js).
+  if (z.vines && Number.isFinite(z.vines.angle)) o.vines = { angle: z.vines.angle };
   return o;
 }
 

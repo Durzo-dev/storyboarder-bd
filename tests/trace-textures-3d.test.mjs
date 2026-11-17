@@ -172,8 +172,9 @@ describe('Traces : chaque Trace est branchée', () => {
   test('⚠️ L’ARRIVÉE DU GRAIN REFAIT LA TRACE ET LA CASE', () => {
     // #446d : la texture choisie entre aussi dans la signature, et c'est SON grain qu'on attend.
     // #462c-2 : la signature du relief la suit (le drapé).
-    assert.ok(scene.includes('holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),\n      relief: signatureDuRelief(_relief), eau: [o.niveauEau, o.profondeur, o.hauteurZone, o.penteZone, o.sensPente] });'));
-    assert.ok(scene.includes('world: o.world, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) }))'));
+    // #481b : et la vigne d'une Zone, son écorce arrivée.
+    assert.ok(scene.includes('holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),\n      relief: signatureDuRelief(_relief), eau: [o.niveauEau, o.profondeur, o.hauteurZone, o.penteZone, o.sensPente],\n      vines: o.vines ? [o.vines, barkSettled(\'Vigne\')] : null });'));
+    assert.ok(scene.includes('world: o.world, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),\n        v: o.vines ? [o.vines, barkSettled(\'Vigne\')] : null }))'));
     const events = readFileSync(join(RACINE, 'src', 'events.js'), 'utf8');
     assert.ok(events.includes('...grainsDesTraces3D()'), 'les grains des Traces ne sont pas préchargés');
   });

@@ -19,6 +19,7 @@
  * (real-place-sources.js). OSM gives no windows: they are GENERATED, a facade "inspired by", not a survey.
  */
 
+import { vineRowAngle } from './vineyard.js';
 import { creerBatiment } from './batiment.js';
 import { ajouterEtage } from './batiment-niveaux.js';
 import { ajouterContour } from './batiment-trace.js';
@@ -757,6 +758,8 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       }
       const zone = { terrainType: ground, world: mondeDuMasque(mask), osmId: w.id };
       if (w.tags.name) zone.name = w.tags.name;
+      // A vineyard (#481b), Detailed and Realistic: its stocks in rows along its longest side (vineyard.js).
+      if (detailed && w.tags.landuse === 'vineyard') zone.vines = { angle: vineRowAngle(w.pts) };
       out.zones.push(zone);
     }
   }

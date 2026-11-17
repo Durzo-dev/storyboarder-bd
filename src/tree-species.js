@@ -701,6 +701,22 @@ Object.assign(SPECIES, {
     foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'ovate', colours: ['#3f6a30', '#4a7638', '#365e2a'], n: 9, size: 34, opposite: true, seed }),
     set(o){ o.branch.angle[1] = 50; o.branch.children[0] = 10; o.branch.gnarliness[1] = 0.2; o.branch.droop[1] = 0.25; o.leaves.size = 3.6; o.leaves.count = 22; } },
 });
+// The vine (#481b): not an Element's tree but a vineyard's stock, drawn by the thousand as copies of one mesh
+// (vineyard.js): a twisted trunk, its shoots rising along the wire, broad five-lobed leaves.
+Object.assign(SPECIES, {
+  Vigne: { from: 'Aspen Small', label: { fr: 'Vigne', en: 'Grapevine' }, type: 'vigne', height: 1.5, genus: 'Vitis',
+    bark: BARK('bark_willow'), barkTint: 0xb09078, barkGain: 1.4,
+    foliage: (seed, makeCanvas) => leafTwig({ makeCanvas, shape: 'maple', colours: ['#5d8a3a', '#68953f', '#527c33'], under: '#9db27e', n: 5, size: 96, spread: 1.1, seed }),
+    set(o){
+      o.branch.levels = 2; o.branch.length[0] = 10; o.branch.radius[0] = 1.5; o.branch.taper[0] = 0.4;
+      o.branch.gnarliness[0] = 0.22; o.branch.sections[0] = 4; o.branch.segments[0] = 4; o.branch.force.strength = 0.015;
+      o.branch.start[1] = 0.4; o.branch.children[0] = 9; o.branch.angle[1] = 38; o.branch.length[1] = 7; o.branch.radius[1] = 0.3;
+      o.branch.sections[1] = 2; o.branch.segments[1] = 3; o.branch.gnarliness[1] = 0.2;
+      o.branch.children[1] = 0; o.branch.sections[2] = 2;
+      o.leaves.size = 5.2; o.leaves.count = 7; o.leaves.start = 0.05; o.leaves.angle = 70; o.leaves.billboard = 'single';
+    } },
+});
+
 /** The variants of each species (seeds 1 to VARIANTS): enough for a row of trees not to look cloned. */
 export const VARIANTS = 3;
 

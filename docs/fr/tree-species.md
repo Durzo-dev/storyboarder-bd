@@ -684,6 +684,22 @@ Durzo, puis, si elle est acceptée :
   22. Écorce `sakura_bark` teintée (`#8a6a5a`). Feuillage forme `ovate`, par paires, `#3f6a30` à `#4a7638`.
 - **Références** : Commons, catégories « Rubus fruticosus » et « Rosa canina » (port).
 
+## Vigne (*Vitis vinifera*)
+
+- **Silhouette** : un cep de 1 à 1,8 m, taillé chaque hiver : un court tronc tordu, puis une masse de rameaux
+  palissés le long des fils de son rang ; les rangs (2 à 2,5 m d'écart, un cep tous les 1 à 1,2 m) forment de bas
+  murs verts.
+- **Tronc** : 0,4 à 0,8 m, noueux et tordu, écorce gris-brun s'exfoliant en longues lanières.
+- **Branches** : les rameaux de l'année, montants (35 à 40°), fins et souples, avec des vrilles.
+- **Feuilles** : à cinq lobes, 10 à 20 cm, dentées, vert moyen ; jaunes à rouges à l'automne. Grappes en fin d'été.
+  Caduques.
+- **Dans EZ-Tree** : pas l'arbre d'un Élément : le cep d'une vigne, dessiné par milliers en copies de trois variantes
+  (vineyard-3d.js, InstancedMesh), donc aussi léger que possible (472 triangles : peu de sections, feuilles en un
+  seul plan). Départ « Aspen Small », deux niveaux : un tronc (rayon 1,5, noueux 0,22), 9 rameaux dès 40 %, angle 38,
+  longueur 7 ; feuilles taille 5,2, 7, en un seul plan. Écorce `bark_willow` teintée (`#b09078`, gain 1,4). Feuillage
+  forme `maple` (cinq lobes), grande (96), `#5d8a3a` à `#68953f`.
+- **Références** : Commons, catégories « Vitis vinifera » et « Vineyards in France » (ceps, rangs, feuilles).
+
 ## Genres rattachés à une essence existante
 
 D'une forme assez proche pour partager sa fiche : *Zelkova* l'orme, *Sorbus* le frêne, *Tsuga* le Douglas,

@@ -11,6 +11,7 @@
  * Callbacks injected by app.js (setScene3DCallbacks) to avoid circular imports:
  * drawCurrentPage, refreshCameraSliders, renderSideCameraGizmo.
  */
+import { vineyard3D } from './vineyard-3d.js';
 import { mursDevantMasques, mursDeDevant, versLaCameraDansLeBatiment, retenirMursDevant } from './batiment-murs-devant.js';
 import { estUnBatimentPlace } from './batiment-element.js';
 import { MARQUE_SOL_PERCE } from './batiment-3d.js';
@@ -2222,7 +2223,8 @@ function computePanelSceneSignature3D(panel, page, styleKey){
   // and would needlessly invalidate the cache on every camera rotation.
   const tracéPart = JSON.stringify(
     page.objects.filter(o => o.type === 'tracé' && o.panelId === panel.id)
-      .map(o => ({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, w: o.width, world: o.world, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture) }))
+      .map(o => ({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, w: o.width, world: o.world, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),
+        v: o.vines ? [o.vines, barkSettled('Vigne')] : null }))
   );
   return camPart + '||' + parts.join('|') + '||t:' + tracéPart + '||m:' + modelPart + '||l:' + lumierePart;
 }
@@ -3369,7 +3371,8 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       : null;
     // #437 : l'arrivée du grain refait la Trace, qui passe de l'aplat à sa texture.
     const sigKey = JSON.stringify({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, wh: o.wallHeight, wt: o.wallThickness, world: o.world, holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),
-      relief: signatureDuRelief(_relief), eau: [o.niveauEau, o.profondeur, o.hauteurZone, o.penteZone, o.sensPente] });   // #462c-2 : drapé sur le relief ; #462d : l'eau
+      relief: signatureDuRelief(_relief), eau: [o.niveauEau, o.profondeur, o.hauteurZone, o.penteZone, o.sensPente],
+      vines: o.vines ? [o.vines, barkSettled('Vigne')] : null });   // #462c-2 : drapé sur le relief ; #462d : l'eau
     let entry = tracéMeshCache3D.get(o.id);
     // Pendant un coup de pinceau du relief, les Tracés gardent leur maillage (le relief change à chaque
     // image ; les redraper toutes coûtait plus que le reste du rendu) : ils suivent au relâcher.
@@ -3377,7 +3380,8 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       sondeCompter('Trace reconstruite');
       // Release the old group if present.
       if (entry) {
-        entry.group.traverse(ch => { if (ch.isMesh) { ch.geometry.dispose(); libererMateriauDeTrace3D(ch.material); } });
+        // A vineyard's vines share their geometry and materials with every vineyard (vineyard-3d.js): kept.
+        entry.group.traverse(ch => { if (ch.isMesh && !ch.userData.shared) { ch.geometry.dispose(); libererMateriauDeTrace3D(ch.material); } });
         personaScene3D.remove(entry.group);
       }
       const group = new THREE.Group();
@@ -3617,6 +3621,11 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       // #462c : un dessin à plat (route, chemin, Zone) reste un dessin au sol même drapé sur une
       // colline : il ne projette pas d'ombre (marquerProjectionDOmbre3D lit cette marque).
       if (o.tracéType === 'route' || o.tracéType === 'chemin' || o.tracéType === 'terrain') group.traverse(m => { m.userData.dessinAuSol = true; });
+      // #481b : a vineyard's stocks, on the relief (each at the ground's height), after the drape (copies are not draped).
+      if (o.tracéType === 'terrain' && o.vines) {
+        const vines = vineyard3D(o, (x, z) => hauteurDuRelief(_relief, x, z));
+        if (vines) group.add(vines);
+      }
       personaScene3D.add(group);
       entry = { group, sigKey };
       tracéMeshCache3D.set(o.id, entry);

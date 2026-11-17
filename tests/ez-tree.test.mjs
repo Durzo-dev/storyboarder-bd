@@ -51,8 +51,10 @@ const size = (o) => new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3(
 for (const name of Object.keys(SPECIES)) {
   test(`${name}: a whole tree, light enough, its foliage drawn`, () => {
     const t = generateSpeciesTree(name, 1, { makeCanvas: fakeCanvas });
-    // A palm is light (a trunk, a few dozen fronds: 480 and 2 160 measured); a tree with branches far less so.
-    assert.ok(t.triangleCount > (SPECIES[name].type === 'palmier' ? 300 : 3000) && t.triangleCount < 40000, `${t.triangleCount} triangles`);
+    // A palm is light (a trunk, a few dozen fronds: 480 and 2 160 measured); a tree with branches far less so. The
+    // vine is drawn by the thousand (vineyard-3d.js): a few hundred (472 measured), never more than 800.
+    const light = ['palmier', 'vigne'].includes(SPECIES[name].type);
+    assert.ok(t.triangleCount > (light ? 300 : 3000) && t.triangleCount < (SPECIES[name].type === 'vigne' ? 800 : 40000), `${t.triangleCount} triangles`);
     assert.ok(t.leavesMesh.material.map && t.leavesMesh.material.map.image.width === 512);
     // Read as they are (the application's renderer does not re-encode in sRGB): sRGB gave black trunks, seen.
     assert.equal(t.leavesMesh.material.map.encoding, THREE.LinearEncoding);

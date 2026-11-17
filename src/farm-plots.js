@@ -10,11 +10,13 @@
  * Each parcel gives a Zone of its ground (`PLOT_GROUNDS`: earth tinted by its crop, or grass), cut out of the
  * OSM farmland and meadows under it (one Zone per cell: two flat Zones on one cell would flicker); orchards,
  * olive groves and nut groves are filled with their trees (vegetation-zones.js, `plotAreas`). Vines: their
- * ground here, their stocks later.
+ * ground here, their stocks in rows
+ * (`vines`: their direction; vineyard.js, drawn by vineyard-3d.js).
  */
 import { projector } from './geo-local.js';
 import { maskOfPolygon, insidePolygon } from './osm-scene.js';
 import { mondeDuMasque } from './terrain-zone-pinceau.js';
+import { vineRowAngle } from './vineyard.js';
 
 /** The credit of the RPG. */
 export const RPG_CREDIT = Object.freeze({ fr: 'Parcelles agricoles : © IGN, RPG', en: 'Farm plots: © IGN, RPG' });
@@ -120,6 +122,8 @@ export function addPlotGrounds(translated, plots, halfSize) {
     if (!world) continue;
     const zone = { terrainType: p.ground.terrainType, world, source: 'rpg', crop: p.crop };
     if (p.ground.terrainColor) zone.terrainColor = p.ground.terrainColor;
+    // A vineyard: its stocks in rows along its longest side, drawn at render time (vineyard.js).
+    if (p.ground.vines) zone.vines = { angle: vineRowAngle(p.ring) };
     translated.zones.push(zone);
     cellsOf.set(zone, cells);
     n++;

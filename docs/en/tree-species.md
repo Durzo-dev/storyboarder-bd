@@ -654,6 +654,20 @@ then, if accepted:
   `sakura_bark` tinted (`#8a6a5a`). Foliage shape `ovate`, in pairs, `#3f6a30` to `#4a7638`.
 - **References**: Commons, categories « Rubus fruticosus » and « Rosa canina » (habit).
 
+## Vigne — Grapevine (*Vitis vinifera*)
+
+- **Silhouette**: a stock of 1 to 1.8 m, pruned every winter: a short twisted trunk, then a mass of shoots trained
+  along the wires of its row; the rows (2 to 2.5 m apart, a stock every 1 to 1.2 m) make low green walls.
+- **Trunk**: 0.4 to 0.8 m, gnarled and twisted, its bark grey-brown, peeling in long strips.
+- **Branches**: the year's shoots, rising (35 to 40°), thin and flexible, with tendrils.
+- **Leaves**: five-lobed, 10 to 20 cm, toothed, mid green; yellow to red in autumn. Bunches in late summer. Deciduous.
+- **In EZ-Tree**: not an Element's tree: a vineyard's stock, drawn by the thousand as copies of three variants
+  (vineyard-3d.js, InstancedMesh), so as light as can be (472 triangles: few sections, single-billboard leaves). From
+  « Aspen Small », two levels: a trunk (radius 1.5, gnarliness 0.22), 9 shoots from 40 %, angle 38, length 7; leaves
+  size 5.2, 7, single billboards. Bark `bark_willow` tinted (`#b09078`, gain 1.4). Foliage shape `maple` (five
+  lobes), large (96), `#5d8a3a` to `#68953f`.
+- **References**: Commons, categories « Vitis vinifera » and « Vineyards in France » (stocks, rows, leaves).
+
 ## Genera joined to an existing species
 
 Of a form close enough to share its sheet: *Zelkova* the elm (Orme), *Sorbus* the ash (Frene), *Tsuga* the Douglas
