@@ -183,6 +183,15 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    it (« Chênes sempervirents »: the holm oak by its species, `taxon`), `filled`: one of our EZ-Tree species when
    its genus has one (a few variants generated once, every tree a clone with its levels of detail), else the
    built-in tree; never a model of the bank or of the stores (hundreds of models would sink the render). Credit when a BD Forêt forest was filled: « © IGN, BD Forêt® v2 ».
+   With them, the farm plots (`farm-plots.js`): the RPG, the parcels declared to the CAP
+   (`RPG.LATEST:parcelles_graphiques`, its `code_group` and `code_cultu`, same request). `groundOfPlot`: each crop
+   group a ground (`PLOT_GROUNDS`: cereals earth tinted golden, rape and sunflower a green crop, meadows grass,
+   fallows dry grass, vegetables tilled earth; vines earth, their stocks to come); `addPlotGrounds`: each parcel a
+   Zone of its ground, its cells taken from OSM's earth and grass Zones under it (one Zone per cell: two flat Zones on
+   one cell would flicker), left where another ground holds them; the slivers between two parcels a few centimetres
+   apart given to a plot around them. Orchards, olive groves and nut groves (`plotAreas`: `olives`, `nuts`, the nut
+   by its crop, NOX a walnut) are filled like the forests, before the BD TOPO's. When the budget is exceeded the grid
+   is made wider (an orchard keeps its rows). Credit: « © IGN, RPG ».
    After the aerial reading, the bare earth (France, « Detailed » and « Realistic », Zones of `terre`):
    `realplace:soils` (WFS `INRA.CARTE.SOLS:geoportail_vf`, its `ger_nom` and `nom_ucs`), `readSoils`,
    `soilKindOf` (the description's words first, sand, chalk, a volcanic rock, stones, red earth; else the

@@ -269,7 +269,7 @@ function vegetationUrl(layer, properties, { south, west, north, east }){
     + `&PROPERTYNAME=${properties.join(',')}&outputFormat=application/json&SRSNAME=urn:ogc:def:crs:OGC:1.3:CRS84`;
 }
 const plantings = sources.memoireBornee(4, 30 * 1024 * 1024);
-/** { forests, zones } (GeoJSON, either null when its service failed), or { error }. Cached. */
+/** { forests, zones, plots } (GeoJSON, each null when its service failed; plots: the RPG's farm parcels), or { error }. Cached. */
 async function vegetation(bbox){
   const ok = bbox && ['south', 'west', 'north', 'east'].every(k => Number.isFinite(bbox[k]));
   if (!ok || bbox.north - bbox.south > 0.01 || bbox.east - bbox.west > 0.02) return { error: 'zone' };
@@ -277,15 +277,17 @@ async function vegetation(bbox){
   const cached = plantings.get(key);
   if (cached) return cached;
   const started = Date.now();
-  const [f, z] = await Promise.all([
+  const [f, z, p] = await Promise.all([
     request(vegetationUrl('LANDCOVER.FORESTINVENTORY.V2:formation_vegetale', ['geom', 'essence', 'tfv'], bbox)),
     request(vegetationUrl('BDTOPO_V3:zone_de_vegetation', ['geometrie', 'nature'], bbox)),
+    request(vegetationUrl('RPG.LATEST:parcelles_graphiques', ['geom', 'code_group', 'code_cultu'], bbox)),
   ]);
   const good = (r) => (r.json && Array.isArray(r.json.features) ? r.json : null);
-  const out = { forests: good(f), zones: good(z) };
+  const out = { forests: good(f), zones: good(z), plots: good(p) };
   console.info(`[real-place] vegetation: ${out.forests ? out.forests.features.length : (f.error || 'response')} forests, `
-    + `${out.zones ? out.zones.features.length : (z.error || 'response')} planted areas in ${Date.now() - started} ms`);
-  if (out.forests || out.zones) plantings.set(key, out);
+    + `${out.zones ? out.zones.features.length : (z.error || 'response')} planted areas, `
+    + `${out.plots ? out.plots.features.length : (p.error || 'response')} farm plots in ${Date.now() - started} ms`);
+  if (out.forests || out.zones || out.plots) plantings.set(key, out);
   return out;
 }
 

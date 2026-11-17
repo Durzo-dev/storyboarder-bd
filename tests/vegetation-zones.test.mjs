@@ -65,7 +65,7 @@ test('a forest: inside its outline and the zone, away from the trees there, unde
   assert.ok(out.every(e => Math.abs(e.x) <= 60 && Math.abs(e.z) <= 60 && e.objType === 'conifere' && e.genus === 'Pinus'));
   assert.ok(out.every(e => Math.hypot(e.x, e.z) >= 3), 'not on the tree there');
   const huge = fillVegetation(forest, { halfSize: 200 });
-  assert.equal(huge.length, MAX_TREES, 'thousands of places: the budget, spread');
+  assert.ok(huge.length <= MAX_TREES && huge.length > MAX_TREES * 0.6, `thousands of places: the budget, the grid made wider (${huge.length})`);
   const xs = huge.map(e => e.x);
   assert.ok(Math.min(...xs) < -150 && Math.max(...xs) > 150, 'spread over the zone');
 });
@@ -103,4 +103,13 @@ test('« Chênes sempervirents »: the holm oak by its species, carried to every
   const els = fillVegetation([area('broadleaved', 0, 0, 30, 30, { genera: ['Quercus'], taxon: 'quercus ilex' })], { halfSize: 100 });
   applyBank(els, { bank: [] });
   assert.ok(els.length > 5 && els.every(e => e.essence === 'Yeuse'));
+});
+
+test('an orchard too large for the budget keeps its rows, further apart', () => {
+  const big = [area('orchard', -200, -200, 400, 400, { genera: ['Malus'] })];
+  const out = fillVegetation(big, { halfSize: 200 });
+  assert.ok(out.length <= MAX_TREES && out.length > 100);
+  // In rows: few distinct x and z (a grid), not a scatter.
+  const xs = new Set(out.map(e => e.x)), zs = new Set(out.map(e => e.z));
+  assert.ok(xs.size * zs.size <= out.length * 1.2, `${xs.size} × ${zs.size} for ${out.length}`);
 });

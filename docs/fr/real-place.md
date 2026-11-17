@@ -199,6 +199,16 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    chaque arbre un clone avec ses niveaux de détail), sinon l'arbre intégré ; jamais un modèle de la banque ni des
    stores (des centaines de modèles noieraient le rendu). Crédit quand une forêt de la BD Forêt a été remplie :
    « © IGN, BD Forêt® v2 ».
+   Avec elles, les parcelles agricoles (`farm-plots.js`) : le RPG, les parcelles déclarées à la PAC
+   (`RPG.LATEST:parcelles_graphiques`, son `code_group` et son `code_cultu`, même requête). `groundOfPlot` : chaque
+   groupe de cultures un sol (`PLOT_GROUNDS` : céréales en terre teintée dorée, colza et tournesol une culture verte,
+   prairies en herbe, jachères en herbe sèche, légumes en terre labourée ; vignes en terre, leurs ceps à venir) ;
+   `addPlotGrounds` : chaque parcelle une Zone de son sol, ses cases prises aux Zones de terre et d'herbe d'OSM
+   dessous (une Zone par case : deux Zones plates sur une case scintilleraient), laissées là où un autre sol les
+   tient ; les interstices entre deux parcelles à quelques centimètres donnés à une parcelle voisine. Vergers,
+   oliveraies et noyeraies (`plotAreas` : `olives`, `nuts`, la noix par sa culture, NOX un noyer) sont remplis comme
+   les forêts, avant ceux de la BD TOPO. Budget dépassé : la grille s'élargit (un verger garde ses rangs). Crédit :
+   « © IGN, RPG ».
    Après la lecture aérienne, la terre nue (France, « Détaillé » et « Réaliste », Zones de `terre`) :
    `realplace:soils` (WFS `INRA.CARTE.SOLS:geoportail_vf`, son `ger_nom` et son `nom_ucs`), `readSoils`,
    `soilKindOf` (les mots de la description d'abord : sable, calcaire, roche volcanique, cailloux, terre

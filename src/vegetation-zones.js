@@ -41,6 +41,8 @@ export const AREA_KINDS = Object.freeze({
   wood: { objType: 'arbre', spacing: 8 },
   poplars: { objType: 'arbre', genus: 'Populus', spacing: 7, rows: true },
   orchard: { objType: 'arbre', genus: 'Malus', spacing: 6, rows: true, height: 4 },
+  olives: { objType: 'olivier', genus: 'Olea', spacing: 7, rows: true },
+  nuts: { objType: 'arbre', genus: 'Juglans', spacing: 8, rows: true },
   heath: { objType: 'buisson', spacing: 6 },
   hedge: { objType: 'buisson', spacing: 2.5 },
 });
@@ -153,25 +155,28 @@ function gridOf(a, spacing, h, salt) {
  * x, z, kindKnown, genus, height, source). A BD TOPO area inside a BD Forêt one is the same forest: left to it.
  */
 export function fillVegetation(areas, { halfSize, existing = [] } = {}) {
-  const forests = areas.filter(a => a.source === 'bdforet');
-  const kept = areas.filter(a => a.source === 'bdforet'
+  // The BD Forêt's forests and the RPG's plots (farm-plots.js: orchards, olive and nut groves, their crop known)
+  // first; a BD TOPO area within one of them is the same planting.
+  const first = (a) => a.source === 'bdforet' || a.source === 'rpg';
+  const forests = areas.filter(first);
+  const kept = areas.filter(a => first(a)
     || !forests.some(f => { const c = a.ring[0]; return inArea(c, f) || inArea(a.ring[Math.floor(a.ring.length / 2)], f); }));
-  const placed = (k) => {
+  const placed = (k, wider = 1) => {
     const all = [];
     kept.forEach((a, n) => {
       const kind = AREA_KINDS[a.kind];
       if ((kind.objType === 'buisson') !== (k === 'shrub')) return;
-      for (const p of gridOf(a, kind.spacing, halfSize, 0x9e37 + n)) all.push({ a, p, kind, n });
+      for (const p of gridOf(a, kind.spacing * wider, halfSize, 0x9e37 + n)) all.push({ a, p, kind, n });
     });
     return all;
   };
   const out = [];
   const near = existing.filter(e => typeof e.x === 'number');
   for (const [k, max] of [['tree', MAX_TREES], ['shrub', MAX_SHRUBS]]) {
-    let cands = placed(k);
-    // Too many: one in every `step` kept, spread (the grid's own order mixes the areas).
-    const step = cands.length > max ? cands.length / max : 1;
-    cands = step > 1 ? Array.from({ length: max }, (_, i) => cands[Math.floor(i * step)]) : cands;
+    // Too many: the grid made wider until they fit (an orchard keeps its rows, further apart; picking one in
+    // every few scattered them).
+    let wider = 1, cands = placed(k);
+    while (cands.length > max && wider < 20) { wider *= Math.min(2, Math.max(1.05, Math.sqrt(cands.length / max))); cands = placed(k, wider); }
     for (const { a, p, kind, n } of cands) {
       if (near.some(e => Math.hypot(e.x - p.x, e.z - p.z) < NEAR_EXISTING)) continue;
       const u = hash(p.i, p.j, 0x31c7 + n);
