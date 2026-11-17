@@ -39,6 +39,8 @@ export function zoneObject(z, { panelId, newId, nameOf = () => 'Terrain' }){
   if (z.vines && Number.isFinite(z.vines.angle)) o.vines = { angle: z.vines.angle };
   // An orchard's rows and species (#481, orchard-3d.js).
   if (z.orchard && z.orchard.essence) o.orchard = { ...z.orchard };
+  // A field's standing crop (#481c, crops-3d.js).
+  if (z.crop && z.crop.kind) o.crop = { ...z.crop };
   return o;
 }
 

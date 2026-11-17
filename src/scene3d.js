@@ -13,6 +13,7 @@
  */
 import { vineyard3D } from './vineyard-3d.js';
 import { orchard3D } from './orchard-3d.js';
+import { crops3D } from './crops-3d.js';
 import { onTraces, VINE_OBSTACLES } from './vineyard.js';
 import { mursDevantMasques, mursDeDevant, versLaCameraDansLeBatiment, retenirMursDevant } from './batiment-murs-devant.js';
 import { estUnBatimentPlace } from './batiment-element.js';
@@ -2226,7 +2227,7 @@ function computePanelSceneSignature3D(panel, page, styleKey){
   const tracéPart = JSON.stringify(
     page.objects.filter(o => o.type === 'tracé' && o.panelId === panel.id)
       .map(o => ({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, w: o.width, world: o.world, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),
-        v: o.vines ? [o.vines, barkSettled('Vigne')] : null, or: o.orchard ? [o.orchard, barkSettled(o.orchard.essence)] : null }))
+        v: o.vines ? [o.vines, barkSettled('Vigne')] : null, or: o.orchard ? [o.orchard, barkSettled(o.orchard.essence)] : null, cr: o.crop || null }))
   );
   return camPart + '||' + parts.join('|') + '||t:' + tracéPart + '||m:' + modelPart + '||l:' + lumierePart;
 }
@@ -3380,7 +3381,8 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
     const sigKey = JSON.stringify({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, wh: o.wallHeight, wt: o.wallThickness, world: o.world, holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),
       relief: signatureDuRelief(_relief), eau: [o.niveauEau, o.profondeur, o.hauteurZone, o.penteZone, o.sensPente],
       vines: o.vines ? [o.vines, barkSettled('Vigne'), _vineObstaclesSig3D(panelTracés3D)] : null,
-      orchard: o.orchard ? [o.orchard, barkSettled(o.orchard.essence), _vineObstaclesSig3D(panelTracés3D)] : null });   // #462c-2 : drapé sur le relief ; #462d : l'eau
+      orchard: o.orchard ? [o.orchard, barkSettled(o.orchard.essence), _vineObstaclesSig3D(panelTracés3D)] : null,
+      crop: o.crop ? [o.crop, _vineObstaclesSig3D(panelTracés3D)] : null });   // #462c-2 : drapé sur le relief ; #462d : l'eau
     let entry = tracéMeshCache3D.get(o.id);
     // Pendant un coup de pinceau du relief, les Tracés gardent leur maillage (le relief change à chaque
     // image ; les redraper toutes coûtait plus que le reste du rendu) : ils suivent au relâcher.
@@ -3639,6 +3641,11 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         const vines = vineyard3D(o, (x, z) => GROUND_Y_DEFAULT_3D + hauteurSousLeTronc(_relief, x, z, 0.15) - 0.03,
           { avoid: onTraces(panelTracés3D) });   // never on a road, a path, a wall… crossing it (asked)
         if (vines) group.add(vines);
+      }
+      // A field's standing crop (crops-3d.js), likewise.
+      if (o.tracéType === 'terrain' && o.crop) {
+        const crop = crops3D(o, (x, z) => GROUND_Y_DEFAULT_3D + hauteurDuRelief(_relief, x, z) + 0.01, { avoid: onTraces(panelTracés3D, 0.3) });
+        if (crop) group.add(crop);
       }
       // An orchard's trees, likewise (orchard-3d.js): on the Ground, off the Traces.
       if (o.tracéType === 'terrain' && o.orchard) {

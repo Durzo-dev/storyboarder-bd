@@ -18,6 +18,7 @@ import { maskOfPolygon, insidePolygon } from './osm-scene.js';
 import { mondeDuMasque } from './terrain-zone-pinceau.js';
 import { vineRowAngle } from './vineyard.js';
 import { speciesFor } from './tree-species.js';
+import { cropOfGroup } from './crops-3d.js';
 
 /** The credit of the RPG. */
 export const RPG_CREDIT = Object.freeze({ fr: 'Parcelles agricoles : © IGN, RPG', en: 'Farm plots: © IGN, RPG' });
@@ -155,13 +156,16 @@ export function addPlotGrounds(translated, plots, halfSize) {
     if (!plein.includes('1')) continue;
     const world = mondeDuMasque({ ...mask, plein });
     if (!world) continue;
-    const zone = { terrainType: p.ground.terrainType, world, source: p.source || 'rpg', crop: p.crop, plot: true };
+    const zone = { terrainType: p.ground.terrainType, world, source: p.source || 'rpg', code: p.crop, plot: true };
     if (p.ground.terrainColor) zone.terrainColor = p.ground.terrainColor;
     // A vineyard: its stocks in rows along its longest side, drawn at render time (vineyard.js).
     if (p.ground.vines) zone.vines = { angle: vineRowAngle(p.ring) };
     // An orchard, an olive or nut grove: its trees in rows, drawn at render time (orchard-3d.js).
     const orchard = orchardOf(p);
     if (orchard) zone.orchard = orchard;
+    // A field of wheat, maize, sunflowers or rape: its crop standing in rows (crops-3d.js, #481c).
+    const crop = cropOfGroup(p.group);
+    if (crop && p.source !== 'bdtopo') zone.crop = { kind: crop, angle: vineRowAngle(p.ring) };
     translated.zones.push(zone);
     cellsOf.set(zone, cells);
     n++;

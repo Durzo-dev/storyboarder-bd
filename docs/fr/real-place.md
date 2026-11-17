@@ -216,6 +216,12 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    (ez-trees.js `lightenOptions` : un niveau de rameaux de moins, moins de sections, moitié moins de feuilles, plus
    grandes, en un plan : environ 1 800 triangles pour un pommier contre 12 000). Budget des forêts dépassé : la grille
    s'élargit. Crédit : « © IGN, RPG ».
+   Un champ de céréales, de maïs, de colza ou de tournesols (groupes du RPG 1, 3, 4 ; 2 ; 5 ; 6 : `cropOfGroup`) est
+   une Zone avec `crop` ({ kind, angle }) ; crops-3d.js dessine sa culture debout au rendu (`cropCards` : rangs à
+   l'écart de la culture, `CROP_KINDS`, sur les cases de la Zone, à 0,3 m des Tracés, 25 000 à 40 000 par champ), en
+   copies d'une carte (deux plans croisés, `cropCardGeometry`) portant une touffe DESSINÉE en plein été (blé mûr, maïs
+   en fleur, tournesols en fleur, colza jaune ; `drawCropPicture`), éclairée comme le sol (normales vers le haut), un
+   InstancedMesh par champ. Mesuré en Beauce (300 m, 8 champs) : premier rendu environ 5,7 s.
    Les ceps d'une vigne ne sont pas des Éléments : au rendu, `vineStocks` (vineyard.js) les pose en rangs à 2,2 m, un
    tous les 1,1 m, sur les cases de la Zone, jamais à moins de 0,6 m d'une route, d'un chemin, d'un trottoir, d'un
    muret, d'une haie, d'une clôture, d'une barrière ou d'une rivière qui la traverse (`onTraces`, `VINE_OBSTACLES` ; un
