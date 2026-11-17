@@ -158,8 +158,8 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    provider, and with none a flat Ground.
    Before the models, every element stands clear of the buildings and of the paths that bar the way
    (`clearOfObstacles`, placement-clearance.js: footprints kept on the translated buildings as `footprint`;
-   roads, rivers, low walls, fences, hedges and barriers, their half width; footpaths (`chemin`) for the trees only,
-   pavements for nothing): pushed to the nearest place 1 m clear for a tree, 0.4 m for anything else (a street lamp may stand against a
+   roads, rivers, low walls, fences, hedges and barriers, their half width; footpaths (`chemin`) too,
+   pavements none): pushed to the nearest place 1 m clear for a tree, 0.4 m for anything else (a street lamp may stand against a
    facade: `AGAINST_BUILDINGS`), and left out when that
    place is more than 4 m away.
    After the bank, our generated trees' crowns (`fitCrowns`; `crownOf`, ez-trees.js: the outline of its leaves

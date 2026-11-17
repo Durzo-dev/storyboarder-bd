@@ -171,8 +171,8 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    d'échec le fournisseur suivant, et sans aucun un Sol plat.
    Avant les modèles, chaque élément est écarté des bâtiments et des tracés qui barrent le passage
    (`clearOfObstacles`, placement-clearance.js : emprises gardées sur les bâtiments traduits, `footprint` ; routes,
-   rivières, murets, clôtures, haies et barrières, leur demi-largeur ; les chemins pour les arbres seulement, les
-   trottoirs pour rien) : poussé à l'endroit le plus proche, à 1 m d'écart pour un arbre, 0,4 m pour le reste (un lampadaire peut être
+   rivières, murets, clôtures, haies et barrières, leur demi-largeur ; les chemins aussi, les trottoirs
+   jamais) : poussé à l'endroit le plus proche, à 1 m d'écart pour un arbre, 0,4 m pour le reste (un lampadaire peut être
    contre une façade : `AGAINST_BUILDINGS`), et retiré
    quand cet endroit est à plus de 4 m.
    Après la banque, la couronne de nos arbres générés (`fitCrowns` ; `crownOf`, ez-trees.js : le contour de ses
