@@ -191,6 +191,9 @@ function createWindow(mode = 'app') {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, bloque ? 'preload-blocage.js' : 'preload.js'),
+      // The page keeps drawing when its window is covered or minimised: an AI's scene_preview waited for frames that
+      // never came (requestAnimationFrame paused, seen: 80 s then a timeout, the window behind another).
+      backgroundThrottling: false,
     },
     autoHideMenuBar: true,
   });

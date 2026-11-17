@@ -12,7 +12,44 @@ import { importerPourIA } from './real-place-ui.js';
 import { connectionTexts, iaPrete } from './mcp-status.js';
 
 const $ = (id) => document.getElementById(id);
-const frames = (n = 2) => new Promise(ok => { const step = (k) => (k ? requestAnimationFrame(() => step(k - 1)) : ok()); step(n); });
+/**
+ * Waits `n` frames, each at most FRAME_WAIT_MS: a hidden window may give none (requestAnimationFrame paused), and the
+ * preview then went on waiting until its client gave up.
+ */
+const FRAME_WAIT_MS = 120;
+const frames = (n = 2) => new Promise(ok => {
+  const step = (k) => {
+    if (!k) return ok();
+    let done = false;
+    const next = () => { if (!done) { done = true; step(k - 1); } };
+    requestAnimationFrame(next);
+    setTimeout(next, FRAME_WAIT_MS);
+  };
+  step(n);
+});
+
+/** The widest image sent to an AI (pixels). */
+const PREVIEW_MAX_W = 1280;
+
+/**
+ * The board's image, read from its canvas: it holds what is drawn whether or not the window shows (a screenshot of a
+ * covered or minimised window came back empty or of what covered it). JPEG, at most PREVIEW_MAX_W wide; null if the
+ * canvas cannot be read.
+ */
+export function boardImage(canvas){
+  if (!canvas || !(canvas.width > 0) || !(canvas.height > 0)) return null;
+  const k = Math.min(1, PREVIEW_MAX_W / canvas.width);
+  let src = canvas;
+  if (k < 1) {
+    src = document.createElement('canvas');
+    src.width = Math.round(canvas.width * k); src.height = Math.round(canvas.height * k);
+    const ctx = src.getContext('2d'); ctx.imageSmoothingQuality = 'high'; ctx.drawImage(canvas, 0, 0, src.width, src.height);
+  }
+  try {
+    const url = src.toDataURL('image/jpeg', 0.85);
+    return { data: url.slice(url.indexOf(',') + 1), mimeType: 'image/jpeg' };
+  } catch (e) { return null; }
+}
 
 /** Waits until nothing is being built or imported (the cards over the Scene and the « New scene » window). */
 async function untilBuilt(){
@@ -57,6 +94,9 @@ export function cablerConnexionIA(rappels){
       }
       try {
         await frames(3);
+        // The canvas first (drawn even in a hidden window); a screenshot only if it cannot be read.
+        const own = boardImage($('board'));
+        if (own) return own;
         const r = $('board').getBoundingClientRect();
         return await api.mcpCapture({ x: r.left, y: r.top, width: r.width, height: r.height });
       } finally {
