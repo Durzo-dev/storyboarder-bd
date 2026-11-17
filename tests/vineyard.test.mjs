@@ -60,7 +60,8 @@ test('the RPG\'s vines: a Zone of earth with its rows\' direction, carried to th
 
 test('drawn at render time: after the drape, its shared meshes never disposed', () => {
   const sc = readFileSync(new URL('../src/scene3d.js', import.meta.url), 'utf8');
-  assert.match(sc, /if \(o\.tracéType === 'terrain' && o\.vines\) \{\s*const vines = vineyard3D\(o, \(x, z\) => hauteurDuRelief\(_relief, x, z\)\);/);
+  // On the Ground (GROUND_Y_DEFAULT_3D, -3: without it the stocks stood 3 m up, seen on 17 Nov. 2026) and the relief.
+  assert.match(sc, /if \(o\.tracéType === 'terrain' && o\.vines\) \{\s*const vines = vineyard3D\(o, \(x, z\) => GROUND_Y_DEFAULT_3D \+ hauteurSousLeTronc\(_relief, x, z, 0\.15\) - 0\.03\);/);
   assert.ok(sc.indexOf('vineyard3D(o,') > sc.indexOf("draperSurLeRelief3D(group, _relief);"), 'after the drape');
   assert.match(sc, /if \(ch\.isMesh && !ch\.userData\.shared\) \{ ch\.geometry\.dispose\(\)/);
   assert.match(readFileSync(new URL('../src/vineyard-3d.js', import.meta.url), 'utf8'), /mesh\.userData\.shared = true;/);

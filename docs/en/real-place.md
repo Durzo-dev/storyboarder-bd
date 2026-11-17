@@ -196,7 +196,8 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    A vineyard's stocks are not Elements: at render time `vineStocks` (vineyard.js) lays them in rows 2.2 m apart, one
    every 1.1 m, on the Zone's own cells, at most 8 000 (the step along the rows widened), and `vineyard3D`
    (vineyard-3d.js) draws them as copies of three generated vines (« Vigne », 472 triangles), one InstancedMesh per
-   part and variant, each at the relief's height; their geometry and materials are shared (`userData.shared`: never
+   part and variant, each on the Ground (`GROUND_Y_DEFAULT_3D`, −3) at the relief's lowest height round its foot,
+   a few centimetres in; their geometry and materials are shared (`userData.shared`: never
    disposed with the Zone). Measured at Eguisheim (200 m, 17 vineyard Zones): first render about 5 s (the vines
    generated), then about 1.6 s.
    After the aerial reading, the bare earth (France, « Detailed » and « Realistic », Zones of `terre`):

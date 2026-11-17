@@ -213,7 +213,8 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    Les ceps d'une vigne ne sont pas des Éléments : au rendu, `vineStocks` (vineyard.js) les pose en rangs à 2,2 m, un
    tous les 1,1 m, sur les cases de la Zone, 8 000 au plus (le pas le long des rangs élargi), et `vineyard3D`
    (vineyard-3d.js) les dessine en copies de trois vignes générées (« Vigne », 472 triangles), un InstancedMesh par
-   partie et variante, chacun à la hauteur du relief ; leur géométrie et leurs matériaux sont partagés
+   partie et variante, chacun sur le Sol (`GROUND_Y_DEFAULT_3D`, −3) à la hauteur la plus basse du relief autour
+   de son pied, enfoncé de quelques centimètres ; leur géométrie et leurs matériaux sont partagés
    (`userData.shared` : jamais libérés avec la Zone). Mesuré à Eguisheim (200 m, 17 Zones de vigne) : premier rendu
    environ 5 s (les vignes générées), puis environ 1,6 s.
    Après la lecture aérienne, la terre nue (France, « Détaillé » et « Réaliste », Zones de `terre`) :

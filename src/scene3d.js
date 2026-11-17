@@ -3621,9 +3621,11 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
       // #462c : un dessin à plat (route, chemin, Zone) reste un dessin au sol même drapé sur une
       // colline : il ne projette pas d'ombre (marquerProjectionDOmbre3D lit cette marque).
       if (o.tracéType === 'route' || o.tracéType === 'chemin' || o.tracéType === 'terrain') group.traverse(m => { m.userData.dessinAuSol = true; });
-      // #481b : a vineyard's stocks, on the relief (each at the ground's height), after the drape (copies are not draped).
+      // #481b : a vineyard's stocks, on the relief (each at the ground's height, the Ground being at
+      // GROUND_Y_DEFAULT_3D: without it they stood 3 m up, seen), after the drape (copies are not draped). A few
+      // centimetres in: a stock on a slope does not show air under its downhill side.
       if (o.tracéType === 'terrain' && o.vines) {
-        const vines = vineyard3D(o, (x, z) => hauteurDuRelief(_relief, x, z));
+        const vines = vineyard3D(o, (x, z) => GROUND_Y_DEFAULT_3D + hauteurSousLeTronc(_relief, x, z, 0.15) - 0.03);
         if (vines) group.add(vines);
       }
       personaScene3D.add(group);
