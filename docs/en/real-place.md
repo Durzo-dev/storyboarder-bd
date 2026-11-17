@@ -197,7 +197,8 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    nuts): their trees are not Elements but drawn at render time by orchard-3d.js (`orchardTrees`: in rows, on the
    Zone's cells, never within 1.5 m of a Trace, at most 1 500 a Zone), copies of three LIGHT variants of the species
    (ez-trees.js `lightenOptions`: one level of twigs less, fewer sections, half the leaves, larger, one plane:
-   about 1 800 triangles for an apple tree against 12 000). When the forests' budget is exceeded the grid is made
+   about 1 800 triangles for an apple tree against 12 000), their leaves cut out at 0.2 (at 0.5 their mipmaps emptied
+   the crowns from afar). When the forests' budget is exceeded the grid is made
    wider. Credit: « © IGN, RPG ».
    A field of cereals, maize, rape or sunflowers (the RPG's groups 1, 3, 4; 2; 5; 6: `cropOfGroup`) is a Zone with
    `crop` ({ kind, angle }); crops-3d.js draws its crop standing at render time (`cropCards`: rows of the kind's

@@ -214,7 +214,8 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    ne sont pas des Éléments mais dessinés au rendu par orchard-3d.js (`orchardTrees` : en rangs, sur les cases de la
    Zone, jamais à moins de 1,5 m d'un Tracé, 1 500 au plus par Zone), en copies de trois variantes LÉGÈRES de l'essence
    (ez-trees.js `lightenOptions` : un niveau de rameaux de moins, moins de sections, moitié moins de feuilles, plus
-   grandes, en un plan : environ 1 800 triangles pour un pommier contre 12 000). Budget des forêts dépassé : la grille
+   grandes, en un plan : environ 1 800 triangles pour un pommier contre 12 000), leurs feuilles découpées à 0,2 (à 0,5 leurs mipmaps
+   vidaient les couronnes de loin). Budget des forêts dépassé : la grille
    s'élargit. Crédit : « © IGN, RPG ».
    Un champ de céréales, de maïs, de colza ou de tournesols (groupes du RPG 1, 3, 4 ; 2 ; 5 ; 6 : `cropOfGroup`) est
    une Zone avec `crop` ({ kind, angle }) ; crops-3d.js dessine sa culture debout au rendu (`cropCards` : rangs à

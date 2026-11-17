@@ -75,3 +75,7 @@ test('drawn at render time on the Ground, off the Traces; the trees light', asyn
     assert.ok(light < full / 3 && light < 3500, `${n}: ${light} against ${full}`);
   }
 });
+
+test('an orchard\'s leaves cut out at 0.2: from afar the crowns no longer empty (seen)', () => {
+  assert.match(readFileSync(new URL('../src/orchard-3d.js', import.meta.url), 'utf8'), /tree\.leavesMesh\.material\.alphaTest = 0\.2;/);
+});

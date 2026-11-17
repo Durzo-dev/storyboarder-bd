@@ -36,6 +36,11 @@ function treeModel(essence, variant) {
   const key = `${essence}|${variant}`;
   if (!models.has(key)) {
     const tree = generateSpeciesTree(essence, variant, { lods: null, light: true });
+    // Seen from afar, a leaf card's mipmaps average its leaves with the gaps between them: under EZ-Tree's alphaTest
+    // (0.5) the crowns emptied, an orchard of bare sticks (seen on 17 Nov. 2026, as the vines were). A lower threshold
+    // keeps the foliage; these materials are the orchard's own (this light variant was generated for it).
+    tree.leavesMesh.material.alphaTest = 0.2;
+    tree.leavesMesh.material.needsUpdate = true;
     tree.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(tree);
     const parts = [];
