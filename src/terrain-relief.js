@@ -220,30 +220,53 @@ export function densifierLaLigne(pts, pas = 1){
  * metres under it; nothing is raised (filling a dip is the profile's job). `roads`: [{ pts, width, profile }],
  * `profile(x, z)` the road's height at that point. Returns a new relief, or the same if nothing is cut. PURE.
  */
-export function cutUnderRoads(r, roads, margin = 0.5, below = 0.1){
+export function cutUnderRoads(r, roads, margin = 0.5, below = 0.1, fondu = 3){
   if (!reliefValide(r) || !Array.isArray(roads) || !roads.length) return r;
   let h = null;
+  // A point's distance to the nearest road and that road's height there, for the verges (below).
+  const verge = new Map(), cut = new Set();
   for (const { pts, width, profile } of roads) {
     if (!Array.isArray(pts) || pts.length < 2 || typeof profile !== 'function' || !(width > 0)) continue;
     // Plus one and a half cells: the relief between grid points is interpolated, so a road edge is under a
     // triangle whose corners stand up to a diagonal away; each one has to come down.
     const reach = width / 2 + margin + r.pas * 1.5, seen = new Set();
+    // Beyond, a VERGE `fondu` metres wide (asked by Durzo on 17 Nov. 2026: a trench one cell wide along the roads,
+    // its walls in large facets): the ground eased towards the road's height.
+    const far = reach + fondu;
     for (let s = 0; s + 1 < pts.length; s++) {
       const a = pts[s], b = pts[s + 1], dx = b.x - a.x, dz = b.z - a.z, l2 = dx * dx + dz * dz;
-      const i0 = Math.max(0, Math.floor((Math.min(a.x, b.x) - reach - r.x0) / r.pas)), i1 = Math.min(r.nx - 1, Math.ceil((Math.max(a.x, b.x) + reach - r.x0) / r.pas));
-      const j0 = Math.max(0, Math.floor((Math.min(a.z, b.z) - reach - r.z0) / r.pas)), j1 = Math.min(r.nz - 1, Math.ceil((Math.max(a.z, b.z) + reach - r.z0) / r.pas));
+      const i0 = Math.max(0, Math.floor((Math.min(a.x, b.x) - far - r.x0) / r.pas)), i1 = Math.min(r.nx - 1, Math.ceil((Math.max(a.x, b.x) + far - r.x0) / r.pas));
+      const j0 = Math.max(0, Math.floor((Math.min(a.z, b.z) - far - r.z0) / r.pas)), j1 = Math.min(r.nz - 1, Math.ceil((Math.max(a.z, b.z) + far - r.z0) / r.pas));
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
         const k = j * r.nx + i;
         if (seen.has(k)) continue;
         const x = r.x0 + i * r.pas, z = r.z0 + j * r.pas;
         const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / l2)) : 0;
-        if (Math.hypot(x - (a.x + t * dx), z - (a.z + t * dz)) > reach) continue;
-        seen.add(k);
+        const d = Math.hypot(x - (a.x + t * dx), z - (a.z + t * dz));
+        if (d > far) continue;
+        if (d > reach) {
+          if (cut.has(k)) continue;
+          const e = (d - reach) / fondu, prev = verge.get(k);
+          if (!prev || e < prev.e) verge.set(k, { e, v: profile(x, z) - below });
+          continue;
+        }
+        seen.add(k); cut.add(k);
+        verge.delete(k);
         const v = profile(x, z) - below;
         const cur = (h || r.h)[k] || 0;
         if (v < cur) { if (!h) h = r.h.slice(); h[k] = v; }
       }
     }
+  }
+  // The verges: each point eased from the road's height (at the cut's edge) to its own (at `fondu` metres), down
+  // where it stood above the road, up by at most RISE where it lay below (a low bank, never an embankment across a
+  // valley). Never into a road's own cut (those points left the map above).
+  const RISE = 0.6;
+  for (const [k, { e, v }] of verge) {
+    const cur = (h || r.h)[k] || 0, s = e * e * (3 - 2 * e);
+    let target = v + (cur - v) * s;
+    if (target > cur) target = Math.min(target, cur + RISE * (1 - s));
+    if (Math.abs(target - cur) > 1e-4) { if (!h) h = r.h.slice(); h[k] = Math.round(target * 1000) / 1000; }
   }
   return h ? { ...r, h } : r;
 }

@@ -26,7 +26,12 @@ Added fields: an old file reads as it is.
   point is `altitude` + height. Kept by every operation that rebuilds the grid.
 - **`terrain` path** (Zone): `world.masque` `{ pas, x0, z0, nx, nz, plein }` for a painted Zone (the
   bounding rectangle stays in `world`); `hauteurZone`, `penteZone` (degrees), `sensPente` (degrees);
-  `niveauEau` when `terrainType === 'eau'`.
+  `niveauEau` when `terrainType === 'eau'`. A Panel's painted Zones are drawn TOGETHER (`trianglesDesZones`):
+  one grid of labels, each cell corner the label most of its four cells have (a tie to a Zone), each cell shared out
+  by its corners' labels with its edges cut at their middles (marching squares; three labels or more, a quarter
+  each), so edges are smoothed, Zones meeting leave no gap, and a Zone reaches half a cell into bare ground; each
+  triangle cut by the relief's cell diagonal so that, draped, it lies on the relief; vertices shared (smooth
+  normals).
 - **`riviere` path**: `world.pts`, `world.width`, `profondeur`.
 - **`trottoir` path**: `world.pts`, `world.width` (2 m by default); drawn as a slab `TROTTOIR_BORDURE_M` (0.14 m) high, its kerb on both sides, in the Ground's concrete grain, lighter.
 
@@ -41,8 +46,8 @@ Added fields: an old file reads as it is.
   (`profilFranchissant`: a dip between two higher points of the line is filled; a point within a real place's edge band,
   `raccord` (20 m brought down to 0 to meet the flat Ground), or off the grid, never holds a dip up), so it stays
   level across its width: `cutUnderRoads` brings every grid point
-  within half its width (plus 0.5 m and a cell and a half) down to 10 cm under the road, and the drape
-  reuses the same profile. A path within a road's width (plus 0.5 m) is brought 8 cm under that road
+  within half its width (plus 0.5 m and a cell and a half) down to 10 cm under the road, then eases the ground over a 3 m verge from the road's height to its own
+  (lowered fully, raised by 0.6 m at most), and the drape reuses the same profile. A path within a road's width (plus 0.5 m) is brought 8 cm under that road
   (`hauteurSousLesRoutes`), and a path's ribbon on a relief has points every 50 cm across: each line reads its
   height on its own axis, so a path running beside a road on a slope would otherwise cross through it and be
   cut in its middle; this way the road's edge cuts it. A tree stands on the lowest ground around its trunk

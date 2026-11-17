@@ -357,18 +357,24 @@ describe('the relief cut under roads (cutUnderRoads)', () => {
   for (let j = 0; j < nx; j++) for (let i = 0; i < nx; i++) h.push((j - 10) * 0.5);
   const r = { pas: 1, x0: -10, z0: -10, nx, nz: nx, h, v: 0 };
   const road = { pts: [{ x: -10, z: 0 }, { x: 10, z: 0 }], width: 4, profile: () => 0 };
-  test('within reach of the axis the relief comes down under the road; farther, untouched; nothing raised', () => {
+  test('within reach of the axis the relief comes down under the road; a verge eases it; farther, untouched', () => {
     const c = R.cutUnderRoads(r, [road]);
     assert.notEqual(c, r);
     const at = (x, z) => c.h[(z + 10) * nx + (x + 10)];
     assert.equal(at(0, 2), -0.1, 'the uphill edge: under the road');
     assert.equal(at(0, 4), -0.1, 'half the width, the margin and a cell and a half (2 + 0.5 + 1.5)');
-    assert.equal(at(0, 5), 2.5, 'beyond: untouched');
+    // The verge (3 m, asked: a trench with walls in facets): from the road's height to the ground's, smoothstep.
+    assert.ok(at(0, 5) > -0.1 && at(0, 5) < 2.5, `the verge eases down: ${at(0, 5)}`);
+    assert.ok(at(0, 5) < at(0, 6) && at(0, 6) < at(0, 7) + 1e-9, 'rising steadily');
+    assert.equal(at(0, 8), 4, 'beyond the verge: untouched');
     assert.equal(at(0, -3), -1.5, 'downhill: lower already, not raised');
+    assert.ok(at(0, -5) > -2.5 && at(0, -5) <= -2.5 + 0.6, `downhill verge: raised a little, at most 0.6 m: ${at(0, -5)}`);
+    assert.equal(at(0, -8), -4, 'beyond: untouched');
   });
   test('nothing to cut: the same relief', () => {
     assert.equal(R.cutUnderRoads(r, []), r);
-    assert.equal(R.cutUnderRoads(r, [{ ...road, profile: () => 100 }]), r);
+    const high = R.cutUnderRoads(r, [{ ...road, profile: () => 100 }]);
+    assert.ok(high.h.every((v, k) => v >= r.h[k] - 1e-9 && v <= r.h[k] + 0.6 + 1e-9), 'a road far above: its verges rise 0.6 m at most, nothing cut');
     assert.equal(R.cutUnderRoads(null, [road]), null);
   });
 });
@@ -426,4 +432,57 @@ test('a path reaching the edge of a real place\'s relief does not bridge a valle
   // A relief painted by hand (no band): the same shape is bridged to its edge as before.
   const peint = { ...relief }; delete peint.raccord; delete peint.altitude;
   assert.ok(R.profilFranchissant(peint, ligne)(25, 0) > sol + 3);
+});
+
+describe('trianglesDuMasque: a Zone\'s edge smoothed, two Zones meeting fit (asked: edges in stairs)', async () => {
+  const { trianglesDuMasque } = await import('../src/terrain-zone-pinceau.js');
+  const area = (t) => Math.abs((t[1][0] - t[0][0]) * (t[2][1] - t[0][1]) - (t[2][0] - t[0][0]) * (t[1][1] - t[0][1])) / 2;
+  const sum = (ts) => ts.reduce((s, t) => s + area(t), 0);
+  let plein = '';
+  for (let j = 0; j < 6; j++) for (let i = 0; i < 6; i++) plein += i + j <= 4 ? '1' : '0';
+  const a = { pas: 1, x0: 0, z0: 0, nx: 6, nz: 6, plein };
+  const b = { ...a, plein: [...plein].map(c => (c === '1' ? '0' : '1')).join('') };
+  test('a staircase becomes a slope: corners cut, notches filled', () => {
+    const ta = trianglesDuMasque(a);
+    assert.ok(ta.some(t => area(t) === 0.5), 'half cells on the edge');
+    // The edge along the diagonal: no vertex of the Zone beyond x + z = 6 (the stair's outer corners cut).
+    assert.ok(ta.every(t => t.every(([x, z]) => x + z <= 6 + 1e-9)));
+  });
+  test('two Zones meeting on a staircase: complementary, every point inside the grid\'s border covered once', () => {
+    const inT = ([x, z], t) => { const d = (p, q) => (q[0] - p[0]) * (z - p[1]) - (q[1] - p[1]) * (x - p[0]);
+      const d1 = d(t[0], t[1]), d2 = d(t[1], t[2]), d3 = d(t[2], t[0]);
+      return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0)); };
+    const ta = trianglesDuMasque(a), tb = trianglesDuMasque(b);
+    for (let x = 1.13; x < 5; x += 0.37) for (let z = 1.07; z < 5; z += 0.41) {
+      const n = ta.filter(t => inT([x, z], t)).length + tb.filter(t => inT([x, z], t)).length;
+      assert.equal(n, 1, `${x.toFixed(2)},${z.toFixed(2)}`);
+    }
+  });
+  test('a shallow slope (one up every three across): a straight edge, no saw-teeth', () => {
+    let p = '';
+    for (let j = 0; j < 6; j++) for (let i = 0; i < 12; i++) p += j <= i / 3 ? '1' : '0';
+    const ts = trianglesDuMasque({ pas: 1, x0: 0, z0: 0, nx: 12, nz: 6, plein: p });
+    // Every vertex of the edge within half a cell of the line z = x / 3 + 0.5.
+    const edge = ts.flat().filter(([x, z]) => x > 0.5 && x < 11.5 && z > 0.5 && z < 5.5 && Math.abs(z - (x / 3 + 0.5)) < 1.5);
+    assert.ok(edge.every(([x, z]) => z - (x / 3 + 0.5) < 0.75), 'no tooth above the line');
+  });
+  test('a square: half a cell wider on each side (a tie goes to the Zone, so a strip one cell wide stays), its corners blunted', () => {
+    const sq = { pas: 1, x0: 0, z0: 0, nx: 3, nz: 3, plein: '111111111' };
+    assert.equal(sum(trianglesDuMasque(sq)), 16 - 4 * 0.5 - 4 * 0.625);
+    assert.ok(sum(trianglesDuMasque({ pas: 1, x0: 0, z0: 0, nx: 5, nz: 1, plein: '11111' })) > 4, 'a strip one cell wide kept');
+  });
+  test('three Zones meeting (taken together): no gap, no overlap (diamonds of bare ground seen)', async () => {
+    const { trianglesDesZones } = await import('../src/terrain-zone-pinceau.js');
+    const n = 8, mk = (f) => { let p = ''; for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) p += f(i, j) ? '1' : '0'; return { pas: 1, x0: 0, z0: 0, nx: n, nz: n, plein: p }; };
+    const zs = [mk((i, j) => i + j < 7), mk((i, j) => i + j >= 7 && i < 4), mk((i, j) => i + j >= 7 && i >= 4)];
+    const ts = trianglesDesZones(zs);
+    const inT = ([x, z], t) => { const d = (p, q) => (q[0] - p[0]) * (z - p[1]) - (q[1] - p[1]) * (x - p[0]);
+      const d1 = d(t[0], t[1]), d2 = d(t[1], t[2]), d3 = d(t[2], t[0]); return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0)); };
+    for (let x = 1.1317; x < 7; x += 0.3719) for (let z = 1.0733; z < 7; z += 0.4127) {
+      assert.equal(ts.reduce((c, l) => c + l.filter(t => inT([x, z], t)).length, 0), 1, `${x.toFixed(2)},${z.toFixed(2)}`);
+    }
+  });
+  test('the Zone\'s 3D geometry shares its vertices (no facets once draped)', () => {
+    assert.match(readFileSync(new URL('../src/scene3d.js', import.meta.url), 'utf8'), /function geometrieDuMasque3D\(w, y, tris = trianglesDuMasque\(w\.masque\)\)\{[\s\S]{0,900}geo\.setIndex\(index\);/);
+  });
 });

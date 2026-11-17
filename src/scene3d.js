@@ -21,7 +21,7 @@ import { MARQUE_SOL_PERCE } from './batiment-3d.js';
 import { reliefPlat, signatureDuRelief, hauteurDuRelief, densifierLaLigne, aplanirSousLesEmprises, cutUnderRoads,
   creuserLesRivieres, releverLesZones, profilFranchissant, hauteurSousLesRoutes, hauteurSousLeTronc, hauteurDeLaZone, PROFONDEUR_RIVIERE, EAU_SOUS_LA_BERGE, NIVEAU_EAU_PAR_DEFAUT } from './terrain-relief.js';
 import { installerEau3D } from './ground-water-3d.js';
-import { casesDuMasque, dansLeMasque, caseLaPlusProche } from './terrain-zone-pinceau.js';
+import { trianglesDuMasque, trianglesDesZones, dansLeMasque, caseLaPlusProche } from './terrain-zone-pinceau.js';
 import { niveauxTries } from './batiment-niveaux.js';
 import { formesDesPieces } from './batiment-pieces.js';
 import { sondeDebut, sondeFin, sondeCompter, sondeActive, sondeValeur } from './perf-probe.js';
@@ -2682,6 +2682,8 @@ function reliefEffectifCalcule3D(panel, page, sousLesBatiments = true){
   _cutReliefs3D.set(panel.id, { key, cut });
   return cut;
 }
+/** The painted Zones' triangles of each Panel, with the key they were made from. */
+const _trianglesDesZones3D = new Map();
 /** What a vineyard's stocks keep off (vineyard.js onTraces), for its signature: a path drawn across it redraws it. */
 function _vineObstaclesSig3D(traces, panel, page){
   return traces.filter(t => t.tracéType in VINE_OBSTACLES && t.world && Array.isArray(t.world.pts))
@@ -2774,25 +2776,31 @@ function matiereEau3D(ciel){
   return _matiereEau3D;
 }
 /**
- * La géométrie d'une Zone PEINTE (terrain-zone-pinceau.js) : deux triangles par case, à la hauteur `y`,
- * en coordonnées du monde ; ses coordonnées de texture sont celles du rectangle englobant (0 à 1),
- * comme une PlaneGeometry de la même taille couchée de la même façon.
+ * La géométrie d'une Zone PEINTE (terrain-zone-pinceau.js) : ses triangles (trianglesDuMasque : deux par case, le
+ * bord adouci en diagonale au lieu d'un escalier de cases), à la hauteur `y`, en coordonnées du monde ; ses
+ * coordonnées de texture sont celles du rectangle englobant (0 à 1), comme une PlaneGeometry de la même taille
+ * couchée de la même façon. ⚠️ SES SOMMETS SONT PARTAGÉS (géométrie indexée) : sans eux, chaque triangle drapé sur
+ * le relief gardait sa propre normale, la Zone en facettes (vu le 17 nov. 2026 le long d'une route) ; chaque triangle
+ * tourné vers le haut.
  */
-function geometrieDuMasque3D(w, y){
-  const cases = casesDuMasque(w.masque);
-  const pos = new Float32Array(cases.length * 18), uv = new Float32Array(cases.length * 12);
+function geometrieDuMasque3D(w, y, tris = trianglesDuMasque(w.masque)){
   const x0 = w.cx - w.w / 2, z0 = w.cz - w.h / 2;
   const U = (x) => (x - x0) / w.w, V = (z) => 1 - (z - z0) / w.h;
-  cases.forEach((c, k) => {
-    const sommets = [[c.x0, c.z0], [c.x0, c.z1], [c.x1, c.z0], [c.x1, c.z0], [c.x0, c.z1], [c.x1, c.z1]];
-    sommets.forEach(([x, z], n) => {
-      pos.set([x, y, z], k * 18 + n * 3);
-      uv.set([U(x), V(z)], k * 12 + n * 2);
-    });
-  });
+  const ids = new Map(), pos = [], uv = [], index = [];
+  const id = ([x, z]) => {
+    const k = `${Math.round(x * 1000)},${Math.round(z * 1000)}`;
+    if (!ids.has(k)) { ids.set(k, pos.length / 3); pos.push(x, y, z); uv.push(U(x), V(z)); }
+    return ids.get(k);
+  };
+  for (const [a, b, c] of tris) {
+    // Turned up: (b − a) × (c − a) has its y negative in three's frame for a triangle seen from above.
+    const up = (b[1] - a[1]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[1] - a[1]) > 0;
+    index.push(id(a), ...(up ? [id(b), id(c)] : [id(c), id(b)]));
+  }
   const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setIndex(index);
   geo.computeVertexNormals();
   return geo;
 }
@@ -3400,6 +3408,16 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
   jalon('  4. dalles');
   tracéMeshCache3D.forEach(e => { e.group.visible = false; });
   const panelTracés3D = page.objects.filter(o => o.type === 'tracé' && o.panelId === panel.id);
+  // The painted Zones' triangles, taken together (trianglesDesZones: their edges smoothed without gaps where they
+  // meet), kept while no Zone changes; their key enters each Zone's signature (a neighbour changed redraws it).
+  const _zonesPeintes = panelTracés3D.filter(o => o.tracéType === 'terrain' && o.world && o.world.masque);
+  const _cleZones = _zonesPeintes.map(o => `${o.id}:${identite3D(o.world)}`).join('|');
+  let _trianglesZones = _trianglesDesZones3D.get(panel.id);
+  if (!_trianglesZones || _trianglesZones.key !== _cleZones) {
+    const t = trianglesDesZones(_zonesPeintes.map(o => o.world.masque));
+    _trianglesZones = { key: _cleZones, par: new Map(_zonesPeintes.map((o, k) => [o.id, t[k]])) };
+    _trianglesDesZones3D.set(panel.id, _trianglesZones);
+  }
   const _tTraces = sondeDebut();
   panelTracés3D.forEach(o => {
     // Ensure the world coords exist (backward compatibility: files without obj.world).
@@ -3417,6 +3435,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
     // #437 : l'arrivée du grain refait la Trace, qui passe de l'aplat à sa texture.
     const sigKey = JSON.stringify({ tt: o.tracéType, c: o.color, tt2: o.terrainType, tc: o.terrainColor || null, mq: o.marquage !== false, wh: o.wallHeight, wt: o.wallThickness, world: o.world, holes: _tmHoleSig, tx: o.traceTexture || null, g: grainDeTracePret3D(o.tracéType, o.traceTexture),
       relief: signatureDuRelief(_relief), eau: [o.niveauEau, o.profondeur, o.hauteurZone, o.penteZone, o.sensPente],
+      zones: o.world && o.world.masque ? _cleZones : null,
       vines: o.vines ? [o.vines, barkSettled('Vigne'), _vineObstaclesSig3D(panelTracés3D, panel, page)] : null,
       orchard: o.orchard ? [o.orchard, barkSettled(o.orchard.essence), _vineObstaclesSig3D(panelTracés3D, panel, page)] : null,
       crop: o.crop ? [o.crop, _vineObstaclesSig3D(panelTracés3D, panel, page)] : null });   // #462c-2 : drapé sur le relief ; #462d : l'eau
@@ -3464,7 +3483,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         // drapée. Ce qui est plus bas que ce niveau (le relief creusé) est sous l'eau ; plus haut, la
         // nappe passe dessous et ne se voit pas.
         const _niveau = GROUND_Y_DEFAULT_3D + (Number.isFinite(o.niveauEau) ? o.niveauEau : NIVEAU_EAU_PAR_DEFAUT);
-        const nappe = w.masque ? new THREE.Mesh(geometrieDuMasque3D(w, _niveau), matiereEau3D(_eclairage.ciel))
+        const nappe = w.masque ? new THREE.Mesh(geometrieDuMasque3D(w, _niveau, _trianglesZones.par.get(o.id)), matiereEau3D(_eclairage.ciel))
           : new THREE.Mesh(new THREE.PlaneGeometry(w.w, w.h), matiereEau3D(_eclairage.ciel));
         if (!w.masque) {
           nappe.rotation.x = -Math.PI / 2;
@@ -3504,7 +3523,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         });
         // Une Zone PEINTE (au pinceau) : ses cases, posées dans le monde, avec les coordonnées de texture
         // du rectangle qui l'englobe (la même texture qu'une Zone rectangulaire de cette taille).
-        const terrMesh = new THREE.Mesh(w.masque ? (geo.dispose(), geometrieDuMasque3D(w, GROUND_Y_DEFAULT_3D + 0.005)) : geo, mat);
+        const terrMesh = new THREE.Mesh(w.masque ? (geo.dispose(), geometrieDuMasque3D(w, GROUND_Y_DEFAULT_3D + 0.005, _trianglesZones.par.get(o.id))) : geo, mat);
         if (!w.masque) {
           terrMesh.rotation.x = -Math.PI / 2;
           terrMesh.rotation.z = -(w.rotY || 0); // camera orientation frozen at creation

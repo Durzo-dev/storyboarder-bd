@@ -26,7 +26,12 @@ Des champs ajoutés : un fichier ancien se lit tel quel.
   réelle d'un point vaut `altitude` + hauteur. Gardée par toute opération qui refait la grille.
 - **Tracé `terrain`** (Zone) : `world.masque` `{ pas, x0, z0, nx, nz, plein }` pour une Zone peinte
   (le rectangle englobant reste dans `world`) ; `hauteurZone`, `penteZone` (degrés), `sensPente`
-  (degrés) ; `niveauEau` quand `terrainType === 'eau'`.
+  (degrés) ; `niveauEau` quand `terrainType === 'eau'`. Les Zones peintes d'une Case sont dessinées ENSEMBLE
+  (`trianglesDesZones`) : une grille d'étiquettes, chaque coin de case prenant l'étiquette de la plupart de ses quatre
+  cases (une égalité à une Zone), chaque case partagée par les étiquettes de ses coins, ses côtés coupés en leur
+  milieu (marching squares ; trois étiquettes ou plus, un quart chacune) : bords adoucis, aucun trou où des Zones se
+  touchent, une Zone déborde d'une demi-case sur le sol nu ; chaque triangle coupé par la diagonale de case du relief
+  pour que, drapé, il repose sur le relief ; sommets partagés (normales lissées).
 - **Tracé `riviere`** : `world.pts`, `world.width`, `profondeur`.
 - **Tracé `trottoir`** : `world.pts`, `world.width` (2 m par défaut) ; dessiné en dalle de `TROTTOIR_BORDURE_M` (0,14 m) de haut, sa bordure des deux côtés, dans le grain béton du Sol, plus clair.
 
@@ -42,7 +47,8 @@ Des champs ajoutés : un fichier ancien se lit tel quel.
   point dans la bande de bord d'un lieu réel, `raccord` (20 m ramenés à 0 pour rejoindre le Sol plat), ou hors de la
   grille, ne soutient jamais un creux), donc de niveau sur sa largeur : `cutUnderRoads` descend
   chaque point de la grille à moins d'une demi-largeur (plus 0,5 m et une case et demie) à 10 cm sous la
-  route, et le drapé reprend le même profil. Un chemin dans la largeur d'une route (plus 0,5 m) est ramené 8 cm
+  route, puis adoucit le sol sur un accotement de 3 m, de la hauteur de la route à la sienne (descendu entièrement,
+  relevé de 0,6 m au plus), et le drapé reprend le même profil. Un chemin dans la largeur d'une route (plus 0,5 m) est ramené 8 cm
   sous cette route (`hauteurSousLesRoutes`), et le ruban d'un chemin sur un relief a des sommets tous les 50 cm en
   travers : chaque ligne lit sa hauteur sur son axe, un chemin qui longe une route sur une pente la traverserait et
   serait coupé en son milieu ; ainsi c'est le bord de la route qui le coupe. Un arbre se pose sur le sol le plus bas
