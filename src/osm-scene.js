@@ -556,11 +556,33 @@ export function pathKindOf(tags){
 /** The ground of an OSM `surface` value, or undefined when it has none of ours. */
 const SURFACES = {
   asphalt: 'bitume', chipseal: 'bitume',
-  paved: 'béton', concrete: 'béton', 'concrete:plates': 'béton', paving_stones: 'béton', sett: 'béton',
-  cobblestone: 'béton', unhewn_cobblestone: 'béton', stone: 'béton', marble: 'béton', granite: 'béton',
+  paved: 'béton', concrete: 'béton', 'concrete:plates': 'béton', paving_stones: 'paves', sett: 'paves',
+  cobblestone: 'paves', unhewn_cobblestone: 'paves', stone: 'béton', marble: 'béton', granite: 'béton',
   gravel: 'gravier', fine_gravel: 'gravier', pebblestone: 'gravier', compacted: 'gravier',
   grass: 'herbe', sand: 'sable', dirt: 'terre', ground: 'terre', earth: 'terre', mud: 'terre',
 };
+
+/** The OSM `surface` values of cobbles and setts (a Path in cobbles, #480c-2). */
+const COBBLES = ['paving_stones', 'sett', 'cobblestone', 'unhewn_cobblestone'];
+/** The OSM `surface` values of a gravel path. */
+const GRAVELS = ['gravel', 'fine_gravel', 'pebblestone', 'compacted'];
+/** The OSM materials of a wall that is not of stone: it keeps the low wall's bricks. */
+const NOT_STONE = ['brick', 'concrete', 'reinforced_concrete', 'wood', 'metal', 'plastic'];
+
+/**
+ * The bundled texture a Path wears instead of its kind's (Detailed and Realistic, #480c-2): `int:<id>` of
+ * textures-integrees.js, or null for its own. A street or a path in cobbles, a gravel path, a wall of stone
+ * (what a low wall of OSM is, unless its material says brick, concrete…).
+ */
+export function pathTextureOf(kind, tags = {}){
+  if ((kind === 'route' || kind === 'chemin') && COBBLES.includes(tags.surface)) return 'int:sol:paves';
+  if (kind === 'chemin' && GRAVELS.includes(tags.surface)) return 'int:sol:gravier';
+  if (kind === 'muret') {
+    const m = tags['wall:material'] || tags.material || (tags.wall === 'brick' ? 'brick' : null);
+    return NOT_STONE.includes(m) ? null : 'int:facade:pierre';
+  }
+  return null;
+}
 
 /** The ground of a closed way that is a Zone, or null. */
 export function zoneTypeOf(tags){
@@ -643,6 +665,8 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       const path = { kind: kind.kind, world, osmId: w.id };
       if (w.tags.name) path.name = w.tags.name;
       if (kind.marking === false) path.marking = false;
+      const texture = detailed && pathTextureOf(kind.kind, w.tags);
+      if (texture) path.traceTexture = texture;
       out.paths.push(path);
       if (kind.kind === 'route' || kind.kind === 'chemin') roads.push(piece);
       // The pavements drawn with the road: a Path each, beside it (just past its edge).
@@ -742,7 +766,9 @@ export function translateOsm(data, { centre, halfSize = ZONE_SIDE_MAX / 2, count
       if (!laid) out.skipped.invalid++;
       continue;
     }
-    const ground = closed && zoneTypeOf(w.tags);
+    const zoneGround = closed && zoneTypeOf(w.tags);
+    // Simple: no cobbles, the plain paving of before.
+    const ground = zoneGround === 'paves' && !detailed ? 'béton' : zoneGround;
     if (ground) {
       const mask = maskOfPolygon(w.pts, h);
       if (!mask) { out.skipped.outside++; continue; }

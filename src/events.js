@@ -148,6 +148,7 @@ import {
   initEditeurDeTerrain, setTerrainEditeurCallbacks, ouvrirEditeurDeTerrain, fermerEditeurDeTerrain, editeurDeTerrainOuvert,
   ouvrirChoixDeScene, fermerChoixDeScene, majBoutonEditeurDeTerrain, rafraichirEditeurDeTerrain, noterModificationDuTerrain,
 } from './terrain-editeur-ui.js';
+import { FACADES_LIVREES } from './textures-integrees.js';
 import { batimentDesPieces } from './batiment.js';
 import { creerElementBatiment, appliquerBatiment, estUnBatimentPlace } from './batiment-element.js';
 import {
@@ -9152,7 +9153,8 @@ if (typeof window !== 'undefined') {
 }
 
 if (window.document) {
-  prechargerGrains3D([...grainsAPrecharger3D(), ...grainsDuSol3D(), ...grainsDesTraces3D()], drawCurrentPage);
+  // The bundled facades too: their dressed stone also dresses the low walls (#480c-2), which never ask for it.
+  prechargerGrains3D([...grainsAPrecharger3D(), ...grainsDuSol3D(), ...grainsDesTraces3D(), ...FACADES_LIVREES.map(f => f.grain)], drawCurrentPage);
   // #446d : « Mes textures » sur le Sol et les Tracés, au démarrage puis à chaque changement de la
   // bibliothèque. Les Cases sont refaites : une texture supprimée doit quitter leur Sol.
   const rafraichirTextures = () => { panelSceneCache3D.clear(); updateSidePanel(); drawCurrentPage(); };

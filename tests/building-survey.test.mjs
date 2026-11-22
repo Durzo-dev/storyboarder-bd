@@ -8,7 +8,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { readBdTopo, matchSurvey, surveyedRoof, wallFinishOf, roofFinishOf, buildingTypeOf, BDTOPO_ATTRIBUTION, pitchWithin, MAX_GUESSED_RISE } from '../src/building-survey.js';
+import { readBdTopo, matchSurvey, surveyedRoof, wallFinishOf, roofFinishOf, buildingTypeOf, BRICK_TINT, BDTOPO_ATTRIBUTION, pitchWithin, MAX_GUESSED_RISE } from '../src/building-survey.js';
 import { translateOsm, levelsOf } from '../src/osm-scene.js';
 import { sceneContentOf } from '../src/real-place-import.js';
 
@@ -56,11 +56,11 @@ describe('BD TOPO, matched to OSM', () => {
     assert.ok(c.credits.includes(BDTOPO_ATTRIBUTION));
   });
   test('a surveyed building takes its materials: stone walls, flat tiles', () => {
-    const stone = surveyed.buildings.filter(b => b.building.facade && b.building.facade.texture === 'int:trace:muret');
+    const stone = surveyed.buildings.filter(b => b.building.facade && b.building.facade.texture === 'int:facade:pierre');
     assert.ok(stone.length >= 3);
     const tiles = surveyed.buildings.filter(b => b.building.niveaux.some(n => n.toit && n.toit.revetement && n.toit.revetement.texture === 'int:toit:tuiles-plates'));
     assert.ok(tiles.length >= 10);
-    assert.ok(plain.buildings.every(b => !b.building.facade), 'OSM alone says nothing of it here');
+    assert.ok(plain.buildings.every(b => b.building.facade && b.building.facade.texture === 'int:facade:enduit'), 'OSM alone says nothing of it here: the render');
   });
   test('the area must compare: a shed is not the house it stands in', () => {
     const house = { id: 'h', footprint: square(0, 0, 10), area: 100, centre: { x: 5, z: 5 } };
@@ -84,12 +84,16 @@ describe('BD TOPO, what it decides', () => {
     assert.equal(surveyedRoof({ roofRise: null }, square(0, 0, 8)), null);
     assert.equal(surveyedRoof(null, square(0, 0, 8)), null);
   });
-  test('materials: OSM first, then the survey; mixed or rendered walls keep the plain render', () => {
-    assert.deepEqual(wallFinishOf({}, { walls: [1] }), { texture: 'int:trace:muret', couleur: '#d9ccb0' }, 'dressed stone: the stone grain, pale');
+  test('materials: OSM first, then the survey; every other wall its render; only half-timbering kept plain', () => {
+    assert.deepEqual(wallFinishOf({}, { walls: [1] }), { texture: 'int:facade:pierre', couleur: null }, 'dressed stone: the bundled stone, untinted');
     assert.deepEqual(wallFinishOf({}, { walls: [6] }), { texture: 'int:trace:cloture', couleur: null });
     assert.equal(wallFinishOf({}, { walls: [1, 6] }), null, 'half-timbered: its facade is for later');
-    assert.equal(wallFinishOf({}, { walls: [3, 4] }), null);
-    assert.deepEqual(wallFinishOf({ 'building:colour': 'yellow' }, { walls: [1] }), { texture: null, couleur: '#e2c46a' });
+    assert.deepEqual(wallFinishOf({}, { walls: [3, 4] }), { texture: 'int:facade:enduit', couleur: null }, 'concrete, breeze block: rendered');
+    assert.deepEqual(wallFinishOf({}, null), { texture: 'int:facade:enduit', couleur: null }, 'nothing known: the render (it was the plain colour)');
+    assert.deepEqual(wallFinishOf({ 'building:colour': 'yellow' }, { walls: [1] }), { texture: 'int:facade:enduit', couleur: '#e2c46a' }, 'a colour alone tints the render');
+    assert.deepEqual(wallFinishOf({ 'building:material': 'brick' }), { texture: 'int:trace:muret', couleur: BRICK_TINT }, 'brick: the low wall\'s bricks, reddened');
+    assert.deepEqual(wallFinishOf({ 'building:material': 'stone', 'building:colour': '#AABBCC' }), { texture: 'int:facade:pierre', couleur: '#aabbcc' });
+    assert.deepEqual(wallFinishOf({ 'building:material': 'concrete' }, { walls: [1] }), { texture: 'int:facade:enduit', couleur: null }, 'OSM before the survey');
     assert.deepEqual(roofFinishOf({}, { roof: [1] }), { texture: 'int:toit:tuiles-plates', couleur: null });
     assert.deepEqual(roofFinishOf({}, { roof: [1], south: true }), { texture: 'int:toit:tuiles-canal', couleur: null }, 'the south: barrel tiles');
     assert.equal(readBdTopo(bd, { lat: 43.61, lon: 3.877 })[0].south, true, 'Montpellier is in the south');

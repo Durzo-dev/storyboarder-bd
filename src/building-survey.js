@@ -212,14 +212,11 @@ export function surveyedRoof(survey, footprint, holes = []){
 
 // ── Finishes: what the walls and the roof are made of ────────────────────────────────────────────
 
-const STONE = 'int:trace:muret', WOOD = 'int:trace:cloture';
-/**
- * A dressed-stone facade is pale (limestone, sandstone): the stone texture is a dry-stone wall, dark; tinted
- * this colour it keeps its grain (seen: Montpellier's Écusson, its stone facades drawn brown).
- */
-const STONE_FACADE = '#d9ccb0';
+const STONE = 'int:facade:pierre', RENDER = 'int:facade:enduit', BRICKS = 'int:trace:muret', WOOD = 'int:trace:cloture';
+/** The tint of a brick facade with no colour of its own: the low wall's bricks, reddened. */
+export const BRICK_TINT = '#a65a42';
 const FLAT_TILES = 'int:toit:tuiles-plates', BARREL_TILES = 'int:toit:tuiles-canal', SLATE = 'int:toit:ardoise';
-const METAL = '#8d9399', CONCRETE = '#9a948c', BRICK = '#a65a42';
+const METAL = '#8d9399', CONCRETE = '#9a948c';
 const COLOURS = { white: '#f2efe8', beige: '#d8c9a8', cream: '#eee3c6', yellow: '#e2c46a', ochre: '#c99a4b', orange: '#d98c4a',
   red: '#a8483a', brown: '#7a5640', grey: '#9a9a96', gray: '#9a9a96', pink: '#d9a5a0', blue: '#7f97b3', green: '#8fa680', black: '#3a3a3a' };
 const colourOf = (v) => {
@@ -233,21 +230,22 @@ const finish = (texture, couleur) => (texture || couleur ? { texture: texture ||
 
 /**
  * The facade's finish ({ texture, couleur } of batiment-revetements.js), or null for the default render.
- * OSM first (`building:material`, `building:colour`), then the survey: stone alone shows its stone, wood
- * alone its boards; a half-timbered house (wood with another material, or OSM `timber_framing`) and rendered
- * walls (concrete, brick, breeze block) keep the plain render: their facades are #468d's.
+ * OSM first (`building:material`, `building:colour`), then the survey: stone shows its dressed stone, brick its
+ * bricks, wood its boards; every other wall (nothing known, a colour alone, concrete, breeze block) its render,
+ * tinted by that colour (or the one read later on a street photo). Only a half-timbered house (wood with
+ * another material) keeps the plain render: its facade is #468d's.
  */
 export function wallFinishOf(tags = {}, survey = null){
   const colour = colourOf(tags['building:colour']);
   const m = tags['building:material'];
-  if (m === 'stone' || m === 'sandstone' || m === 'limestone') return finish(STONE, colour || STONE_FACADE);
+  if (m === 'stone' || m === 'sandstone' || m === 'limestone') return finish(STONE, colour);
   if (m === 'wood') return finish(WOOD, colour);
-  if (m === 'brick') return finish(null, colour || BRICK);
-  if (colour) return finish(null, colour);
+  if (m === 'brick') return finish(BRICKS, colour || BRICK_TINT);
   const d = (survey && Array.isArray(survey.walls)) ? survey.walls : [];   // a LiDAR-only reading has none
-  if (d.length && d.every(n => n === 1 || n === 2)) return finish(STONE, STONE_FACADE);
-  if (d.length && d.every(n => n === 6)) return finish(WOOD, null);
-  return null;
+  if (!m && !colour && d.length && d.every(n => n === 1 || n === 2)) return finish(STONE, null);
+  if (!m && !colour && d.length && d.every(n => n === 6)) return finish(WOOD, null);
+  if (!m && d.includes(6) && d.length > 1) return null;
+  return finish(RENDER, colour);
 }
 
 /**

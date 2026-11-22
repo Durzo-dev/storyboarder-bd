@@ -1173,6 +1173,9 @@ export const GROUND_TYPE_DEFS = [
   { id: 'gravier',   label: 'Gravier', labelEn: 'Gravel', swatch: '#8A8A8A', roughness: 0.9,  metalness: 0,    repeat: 3000 , plaques: 0.24 , grain: 'gravier' , pavage: true },
   { id: 'bitume',    label: 'Bitume', labelEn: 'Asphalt', swatch: '#282828', roughness: 0.85, metalness: 0.05, repeat: 3000 , plaques: 0.14 , grain: 'bitume' , pavage: true },
   { id: 'béton',     label: 'Béton', labelEn: 'Concrete', swatch: '#969696', roughness: 0.9,  metalness: 0,    repeat: 3000 , plaques: 0.12 , grain: 'beton' , pavage: true },
+  // #480c-2: cobbles (cobblestone_floor_08, 2 m): a regular pattern, so no anti-repetition; at their real size
+  // (a sett 10 cm), exempt from the texels-per-pixel cap like the tiles below.
+  { id: 'paves',     label: 'Pavés', labelEn: 'Cobbles', swatch: '#928B80', roughness: 0.9,  metalness: 0,    repeat: 6000 , plaques: 0.12 , grain: 'paves.couleur', motifTailleReelle: true },
   { id: 'neige',     label: 'Neige', labelEn: 'Snow', swatch: '#E8EFFA', roughness: 0.98, metalness: 0,    repeat: 3000 , plaques: 0.18 , grain: 'neige' , pavage: true },
   { id: 'eau',       label: 'Eau', labelEn: 'Water', swatch: '#1A6090', roughness: 0.15, metalness: 0,    repeat: 3000 , plaques: 0.1 , eau: true },
   // #435i (décidé le 4 novembre 2026) : une EXCEPTION à la tuile commune de 4 m. À 3000, les carreaux

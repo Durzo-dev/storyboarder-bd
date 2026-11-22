@@ -341,10 +341,12 @@ Tracé de ce type. Le choix se fait par un **grand carré** (la texture posée, 
 dans la section Sol et dans la fenêtre du Tracé : un clic ouvre le store en **mode « choisir »**
 (`choisirTexture`), sur « Mes textures », l'usage verrouillé ; une carte l'applique, une texture en
 ligne est téléchargée en 1k puis appliquée. **Les textures livrées** (`src/textures-integrees.js` :
-les matières du Sol, Neutre et Eau comprises, et les textures d'origine des Tracés) sont dans « Mes
-textures », avec leur provenance (celle de `assets/textures/LICENSES.md`, qu'un test compare), le
+les matières du Sol, Neutre et Eau comprises, les textures d'origine des Tracés, les toits et les façades :
+un enduit et une pierre de taille, `FACADES_LIVREES`) sont dans « Mes textures », avec leur provenance (celle de `assets/textures/LICENSES.md`, qu'un test compare), le
 poids de leur grain et un aperçu 3D (couleur : le grain teint ; relief : une normale tirée de ses
-nuances). Un clic droit sur une carte de « Mes textures » la renomme ou la supprime ; une texture
+nuances). Un clic droit sur une carte de « Mes textures » la renomme ou la supprime. Un Tracé peut porter
+une texture livrée d'une autre sorte qui sert son usage (pavés et gravier du Sol, `USAGES_TRACE_LIVREES` ;
+la pierre sur un muret) : `traceTexture: 'int:<id>'`, que `textureDuTrace` retrouve. Une texture
 livrée se renomme (son nom va dans `nomsIntegrees` de la bibliothèque) mais ne se supprime pas. Elle s'affiche au naturel (la teinte relevée à la
 cuisson) ; une autre couleur la teinte, comme les textures livrées. Les matières du Sol sont
 AJOUTÉES à `GROUND_TYPE_DEFS` (marquées `importee`) : tout le code qui cherchait une matière par son

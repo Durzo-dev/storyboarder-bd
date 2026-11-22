@@ -18,6 +18,7 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
 | `src/aerial-photo.js` | PURE. The aerial photo of a zone (France), to be READ at the import, never shown nor kept: the photo to ask (`aerialPhotoPlan`), its credit. The request: `realplace:aerialPhoto` (the Géoplateforme's WMS, `ORTHOIMAGERY.ORTHOPHOTOS`, one JPEG; an answer that is not a JPEG is an error). |
 | `src/vegetation-zones.js` | PURE. The woods, orchards, heaths and hedges the IGN surveys (France), filled with built-in trees and shrubs (`readVegetation`, `fillVegetation`). The request: `realplace:vegetation`. |
 | `src/landmarks.js` | PURE. The crosses, calvaries, wind turbines, relay masts and bell towers the IGN surveys (France, BD TOPO `construction_ponctuelle`): `readLandmarks`. The request: `realplace:landmarks`. |
+| `src/realistic-textures.js` | PURE. The « Realistic » level's textures: for each slot (render, stone, brick, cobbles, gravel, asphalt, road, low wall) a Poly Haven texture by region (`REALISTIC_TEXTURES`), what a translated place needs (`realisticNeeds`) and the swap (`applyRealisticTextures`). |
 | `src/soils.js` | PURE. The bare earth's colour (and, « Realistic », its texture) from the INRAE's soil map (France): `soilKindOf`, `readSoils`, `applySoils`. The request: `realplace:soils`. |
 | `src/bdtopo-extras.js` | PURE. What else the BD TOPO surveys (France): hedges as lines, sports grounds, cemeteries and their graves, water surfaces (`addExtras`). The request: `realplace:extras`. |
 | `src/real-place-import.js` | PURE. The translation and the altitudes turned into a Scene's content (`sceneContentOf`: Path and Zone objects, relief, credits). |
@@ -50,10 +51,15 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
   lanes or more, none with 1 or one-way, else only on main roads: motorway to tertiary and their links), pavements (`footway=sidewalk`) → `trottoir`, and a road's `sidewalk` tags (`sidewalkSides`) give a
   `trottoir` beside it on each side (`offsetPolyline`, 1.8 m unless `sidewalk:width`); other footways, paths, tracks, steps → `chemin`; `barrier` → `muret`, `cloture`,
   `haie`, `barriere`; `waterway` → `riviere`. A `width` tag wins. Tunnels are skipped. Clipped to the zone
-  (`clipPolyline`). `world` is the Path's own (`pts`, `width`).
+  (`clipPolyline`). `world` is the Path's own (`pts`, `width`). « Detailed » and « Realistic »: a bundled
+  texture of another kind when OSM says so (`pathTextureOf`, laid as `traceTexture`): cobbles
+  (`int:sol:paves`) on a road or path whose `surface` is sett, cobblestone or paving stones, gravel
+  (`int:sol:gravier`) on a gravel path, and dressed stone (`int:facade:pierre`) on every low wall unless its
+  material is brick, concrete, wood, metal or plastic (it keeps the low wall's bricks).
 - **Zones** (`zoneTypeOf`): grass, meadow, forest… → `herbe`; park, garden, pitch → `gazon`; farmland,
   vineyard… → `terre`; sand, beach → `sable`; water → `eau`; parking → `bitume`, a pedestrian square →
-  `béton` (paved); both follow the OSM `surface` when it names one of the grounds (asphalt, sett, gravel…).
+  `béton` (paved); both follow the OSM `surface` when it names one of the grounds (asphalt, gravel…; sett,
+  cobblestone and paving stones → `paves`, cobbles, which « Simple » keeps as `béton`).
   `landuse=residential` and the like are too wide: not a ground. The polygon becomes a painted Zone mask
   of 1 m cells (`maskOfPolygon`), `world` from `mondeDuMasque`.
 - **Elements**: `natural=tree` → `arbre`, `highway=street_lamp` → `lampadaire`, `traffic_sign` and
@@ -112,9 +118,11 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    its use). Where OSM says nothing, the survey decides: levels from the eaves height (`hauteur`, ground to
    lowest point of the roof), the roof flat under 0.5 m of rise, else its pitch over half the narrow width
    (`surveyedRoof`), the facade and roof finishes from the land-registry material codes (`wallFinishOf`,
-   `roofFinishOf`: dressed stone (the stone grain tinted pale), wood, tiles (barrel tiles south of 46° N, flat
-   tiles north of it), slate, metal, concrete; half-timbered and rendered walls keep the
-   plain render). Without an answer: OSM alone. At the « Realistic » level, the facades' colours from street
+   `roofFinishOf`: dressed stone (the bundled stone, `int:facade:pierre`), brick (the low wall's bricks,
+   reddened by `BRICK_TINT`), wood, tiles (barrel tiles south of 46° N, flat tiles north of it), slate, metal,
+   concrete; every other wall, OSM's or the survey's (nothing known, a colour alone, concrete, breeze block),
+   the bundled render (`int:facade:enduit`), tinted by its colour; only a half-timbered house keeps the plain
+   render). Without an answer: OSM alone. At the « Realistic » level, the facades' colours from street
    photos (`couleursDesFacades`, facade-colour.js): Panoramax's photos of the zone (`realplace:streetPhotos`,
    no key, at most 500), for each building the photo that best sees one of its ground-floor walls (`bestView`:
    4 to 35 m, at most 75° from facing it (a street's photos see its facades at a slant), the wall in a flat photo's field, no other outline across the sight
@@ -232,7 +240,16 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    ANDOSOL → volcanic…), `applySoils`: each Zone takes the colour (`terrainColor`, `SOIL_KINDS`) of the soil
    most of its cells stand on. At « Realistic », each kind's Poly Haven texture (chosen by hand,
    `SOIL_KINDS.polyhaven`, CC0) is taken from « My textures », or downloaded there (1k), and laid on those
-   Zones instead of the tint (`textureDeLaTerre`); credit « Bare earth: Poly Haven textures (CC0) ».
+   Zones instead of the tint (`textureDeLaTerre`, through `textureDuStore`); credit « Bare earth: Poly Haven
+   textures (CC0) ».
+   At « Realistic », after the 3D models, the step « Textures (Poly Haven) »: `realisticNeeds` lists the slots
+   the place uses (a facade's, a Zone's, a Path's bundled texture: `facadeSlot`, `zoneSlot`, `pathSlot`; a road
+   with no texture of its own is the `road` slot), each with the region's Poly Haven texture (south of 46° N
+   or north of it), those that ARE a bundled texture's source (`PROVENANCE`) left out; each is taken from « My
+   textures » or downloaded there (1k, `textureDuStore`, which refuses a texture that does not serve the slot's
+   usages), then `applyRealisticTextures` lays them: a render keeps its colour (it tints the plaster), a brick
+   facade loses `BRICK_TINT` only. Without network: the bundled textures stay. Credit « Facades, grounds and
+   paths: Poly Haven textures (CC0) ».
    Then the BD TOPO's extras (France, « Detailed » and « Realistic »): `realplace:extras` (WFS `haie`,
    `terrain_de_sport`, `cimetiere`, `surface_hydrographique`; `HAIES.BOCAGES:haie` holds the same hedges and
    `detail_orographique` only names, both left out), `addExtras`: a hedge as a `haie` Path (clipped to the zone,

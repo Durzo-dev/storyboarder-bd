@@ -20,6 +20,7 @@ import { crownOf } from './ez-trees.js';
 import { TREE_TYPES } from './constants.js';
 import { planRelief, terrainPlan, reliefFromTerrain, TERRAIN_LIDAR } from './real-place-sources.js';
 import { readBdTopo } from './building-survey.js';
+import { realisticNeeds, applyRealisticTextures } from './realistic-textures.js';
 import { facadesOf, bestView, samplePoints, wallColour } from './facade-colour.js';
 import { buildStepLabel } from './scene-loading.js';
 import { wireSearchField } from './search-field.js';
@@ -145,7 +146,7 @@ function montrerLaProgression(step, sub = 0, detail = null){
     buildings: tr('Buildings, streets and grounds', 'Bâtiments, rues et sols'),
     facades: tr('Facade colours (street photos)', 'Couleurs des façades (photos de rue)'),
     aerial: tr('Reading the aerial photo (IGN)', 'Lecture de la vue aérienne (IGN)'),
-    models: tr('3D models (Sketchfab)', 'Modèles 3D (Sketchfab)'), relief: tr('Relief', 'Relief'), scene: tr('Creating the scene', 'Création de la scène'),
+    models: tr('3D models (Sketchfab)', 'Modèles 3D (Sketchfab)'), textures: tr('Textures (Poly Haven)', 'Textures (Poly Haven)'), relief: tr('Relief', 'Relief'), scene: tr('Creating the scene', 'Création de la scène'),
     construction: buildStepLabel('buildings', step === 'construction' ? detail : null), ground: buildStepLabel('ground') };
   const i = step ? IMPORT_STEPS.indexOf(step) : -1;
   $('realPlaceProgress').hidden = false;
@@ -601,6 +602,21 @@ async function importer(){
       if (arrete()) return annule;
       montrerLeDetail('');
       photoCredits.push(...credits);
+      // The stores' textures in the bundled ones' place: facades, grounds, Paths (realistic-textures.js).
+      await etape('textures');
+      const needs = realisticNeeds(translated, { south: centre.lat < 46 });
+      const ids = {};
+      for (let k = 0; k < needs.length; k++) {
+        montrerLaProgression('textures', k / needs.length);
+        montrerLeDetail(needs[k].polyhaven);
+        const id = await textureDuStore(needs[k].polyhaven, needs[k].usages);
+        if (arrete()) return annule;
+        if (id) ids[needs[k].slot] = id;
+      }
+      montrerLeDetail('');
+      const laid = applyRealisticTextures(translated, ids);
+      console.info(`[real-place] store textures: ${Object.keys(ids).length} of ${needs.length} (${needs.map(n => n.polyhaven).join(', ') || 'none'}), ${laid} surfaces`);
+      if (laid) photoCredits.push(tr('Facades, grounds and paths: Poly Haven textures (CC0)', 'Façades, sols et tracés : textures Poly Haven (CC0)'));
     }
     await etape('relief');
     const relief = await reliefDuLieu(centre, halfSize, country, (sub) => montrerLaProgression('relief', sub), arrete);
@@ -748,13 +764,21 @@ async function lireLesHauteurs({ toGeo, halfSize, country }){
  * `translated` in place; true when something was read from it (its credit is then due), false otherwise.
  */
 /**
- * The texture of a kind of bare earth (#482e, « Realistic »): its Poly Haven texture (SOIL_KINDS), in « My
- * textures » already or downloaded there now (1k), then known to the Ground (textures-utilisateur.js). Its Ground
- * id (`tex:…`), or null (no network, no Ground use: the colour alone then).
+ * The texture of a kind of bare earth (#482e, « Realistic »): its Poly Haven texture (SOIL_KINDS), as
+ * `textureDuStore` gives it for the Ground; null without one.
  */
-async function textureDeLaTerre(kind){
-  const api = window.storyboarderAPI;
+function textureDeLaTerre(kind){
   const id = SOIL_KINDS[kind] && SOIL_KINDS[kind].polyhaven;
+  return id ? textureDuStore(id, ['sol']) : Promise.resolve(null);
+}
+
+/**
+ * A Poly Haven texture (« Realistic », #482e and #480c-2), in « My textures » already or downloaded there now (1k),
+ * then known to the Ground, the Paths and the buildings (textures-utilisateur.js). Its id (`tex:…`), or null (no
+ * network, or a texture that does not serve every one of `usages`: the bundled one then).
+ */
+async function textureDuStore(id, usages){
+  const api = window.storyboarderAPI;
   if (!id || !api || !api.texturesMes || !api.texturesOptions || !api.texturesTelecharger) return null;
   try {
     const owned = async () => ((await api.texturesMes()) || []).find(t => t.cle === `polyhaven:${id}`);
@@ -768,11 +792,11 @@ async function textureDeLaTerre(kind){
       if (!d || d.erreur) return null;
       t = await owned();
     }
-    if (!t || !t.grain || !Array.isArray(t.usages) || !t.usages.includes('sol')) return null;
+    if (!t || !t.grain || !Array.isArray(t.usages) || !usages.every(u => t.usages.includes(u))) return null;
     await chargerTexturesUtilisateur(api);
     return idDeTexture(t);
   } catch (e) {
-    console.warn('[real-place] soil texture:', e && e.message);
+    console.warn('[real-place] store texture:', id, e && e.message);
     return null;
   }
 }

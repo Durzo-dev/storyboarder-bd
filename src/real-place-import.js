@@ -26,6 +26,7 @@ export function pathObject(p, { panelId, newId, nameOf = (k) => k }){
   if (p.wallHeight > 0 && def.wallHeight !== undefined) o.wallHeight = p.wallHeight;
   if (p.kind === 'riviere') o.profondeur = PROFONDEUR_RIVIERE;
   if (p.marking === false) o.marquage = false;
+  if (typeof p.traceTexture === 'string') o.traceTexture = p.traceTexture;
   return o;
 }
 
@@ -73,12 +74,12 @@ export function sceneContentOf(translated, { panelId, newId, nameOf, altitudes =
  * THE IMPORT'S STEPS, in order, with their share of the progress bar (what they usually take: the map data
  * and the relief are network, the rest is computing).
  */
-export const IMPORT_STEPS = Object.freeze(['map', 'country', 'buildings', 'facades', 'aerial', 'models', 'relief', 'scene', 'construction', 'ground']);
+export const IMPORT_STEPS = Object.freeze(['map', 'country', 'buildings', 'facades', 'aerial', 'models', 'textures', 'relief', 'scene', 'construction', 'ground']);
 // The last two are the Scene's building (scene-loading.js), shown in the same window: one bar, start to end.
 // 'facades': the colours read on street photos; 'aerial': the aerial photo read (aerial-reading.js). Both at the
 // « Realistic » level only, passed at the others; so is 'models', the stores' models in the built-in objects'
-// place (realistic-models.js, #480c).
-const STEP_WEIGHTS = Object.freeze({ map: 0.2, country: 0.04, buildings: 0.1, facades: 0.08, aerial: 0.05, models: 0.1, relief: 0.16, scene: 0.04, construction: 0.18, ground: 0.05 });
+// place (realistic-models.js, #480c), and 'textures', the stores' textures in the bundled ones' (realistic-textures.js).
+const STEP_WEIGHTS = Object.freeze({ map: 0.2, country: 0.04, buildings: 0.1, facades: 0.08, aerial: 0.05, models: 0.06, textures: 0.04, relief: 0.16, scene: 0.04, construction: 0.18, ground: 0.05 });
 
 /** The progress (0 to 1) at `step`, that step itself `sub` done (0 to 1). An unknown step: 0. */
 export function importProgress(step, sub = 0){

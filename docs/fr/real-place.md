@@ -18,6 +18,7 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
 | `src/aerial-photo.js` | PUR. La vue aérienne d'une zone (France), à LIRE pendant l'import, jamais montrée ni gardée : la photo à demander (`aerialPhotoPlan`), son crédit. La requête : `realplace:aerialPhoto` (le WMS de la Géoplateforme, `ORTHOIMAGERY.ORTHOPHOTOS`, un JPEG ; une réponse qui n'est pas un JPEG est une erreur). |
 | `src/vegetation-zones.js` | PUR. Les bois, vergers, landes et haies relevés par l'IGN (France), remplis d'arbres et d'arbustes intégrés (`readVegetation`, `fillVegetation`). La requête : `realplace:vegetation`. |
 | `src/landmarks.js` | PUR. Les croix, calvaires, éoliennes, antennes-relais et clochers relevés par l'IGN (France, BD TOPO `construction_ponctuelle`) : `readLandmarks`. La requête : `realplace:landmarks`. |
+| `src/realistic-textures.js` | PUR. Les textures du niveau « Réaliste » : pour chaque emplacement (enduit, pierre, brique, pavés, gravier, asphalte, route, muret) une texture Poly Haven par région (`REALISTIC_TEXTURES`), ce qu'un lieu traduit demande (`realisticNeeds`) et la substitution (`applyRealisticTextures`). |
 | `src/soils.js` | PUR. La couleur de la terre nue (et, au niveau Réaliste, sa texture) d'après la carte des sols de l'INRAE (France) : `soilKindOf`, `readSoils`, `applySoils`. La requête : `realplace:soils`. |
 | `src/bdtopo-extras.js` | PUR. Ce que la BD TOPO relève encore (France) : haies en ligne, terrains de sport, cimetières et leurs tombes, plans d'eau (`addExtras`). La requête : `realplace:extras`. |
 | `src/real-place-import.js` | PUR. La traduction et les altitudes devenues le contenu d'une Scène (`sceneContentOf` : objets Tracés et Zones, relief, crédits). |
@@ -54,11 +55,15 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
   `sidewalk:width`) ; autres sentiers, pistes, escaliers → `chemin` ;
   `barrier` → `muret`, `cloture`, `haie`, `barriere` ; `waterway` → `riviere`. Une balise `width` l'emporte.
   Les tunnels sont écartés. Découpés à la zone (`clipPolyline`). `world` est celui d'un Tracé (`pts`,
-  `width`).
+  `width`). Aux niveaux « Détaillé » et « Réaliste » : une texture livrée d'une autre sorte quand OSM le dit
+  (`pathTextureOf`, posée en `traceTexture`) : des pavés (`int:sol:paves`) sur une route ou un chemin dont le
+  `surface` est sett, cobblestone ou paving_stones, du gravier (`int:sol:gravier`) sur un chemin de gravier,
+  et la pierre de taille (`int:facade:pierre`) sur tout muret, sauf en brique, béton, bois, métal ou
+  plastique (il garde les briques du muret).
 - **Zones** (`zoneTypeOf`) : prairie, pelouse, forêt… → `herbe` ; parc, jardin, terrain de sport →
   `gazon` ; champs, vignes… → `terre` ; sable, plage → `sable` ; eau → `eau` ; parkings → `bitume`, place
   piétonne → `béton` (dallée) ; les deux suivent le `surface` d'OSM quand il nomme un des sols (asphalte,
-  pavés, gravier…). `landuse=residential` et ses pareils sont trop vastes : ce n'est pas un sol. Le
+  gravier… ; sett, cobblestone et paving_stones → `paves`, les pavés, que « Simple » garde en `béton`). `landuse=residential` et ses pareils sont trop vastes : ce n'est pas un sol. Le
   polygone devient un masque de Zone peinte en cases de 1 m (`maskOfPolygon`), `world` par
   `mondeDuMasque`.
 - **Éléments** : `natural=tree` → `arbre`, `highway=street_lamp` → `lampadaire`, `traffic_sign` et
@@ -122,8 +127,11 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    (`buildingTypeOf` d'après son usage). Là où OSM ne dit rien, le relevé décide : les niveaux d'après la
    hauteur à l'égout (`hauteur`, du sol au point le plus bas du toit), le toit plat sous 0,5 m de montée,
    sinon sa pente sur la demi-largeur étroite (`surveyedRoof`), les revêtements de façade et de toit d'après
-   les codes de matériaux du cadastre (`wallFinishOf`, `roofFinishOf` : pierre de taille (le grain de pierre teinté clair), bois, tuiles
-   (canal au sud de 46° N, plates au nord), ardoise, métal, béton ; colombages et murs enduits gardent l'enduit uni). Sans réponse : OSM seul. Au niveau
+   les codes de matériaux du cadastre (`wallFinishOf`, `roofFinishOf` : pierre de taille (la pierre livrée,
+   `int:facade:pierre`), brique (les briques du muret, rougies par `BRICK_TINT`), bois, tuiles (canal au sud
+   de 46° N, plates au nord), ardoise, métal, béton ; tout autre mur, d'OSM ou du relevé (rien de connu, une
+   couleur seule, béton, parpaing), l'enduit livré (`int:facade:enduit`), teinté de sa couleur ; seuls les
+   colombages gardent l'enduit uni). Sans réponse : OSM seul. Au niveau
    « Réaliste », la couleur des façades d'après les photos de rue (`couleursDesFacades`, facade-colour.js) :
    les photos Panoramax de la zone (`realplace:streetPhotos`, sans clé, 500 au plus), pour chaque bâtiment la
    photo qui voit le mieux un de ses murs du rez-de-chaussée (`bestView` : de 4 à 35 m, à moins de 75° de face (les photos d'une rue en voient les façades de biais),
@@ -253,8 +261,16 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    alluvial, REDUCTISOL → humide, ANDOSOL → volcanique…), `applySoils` : chaque Zone prend la couleur
    (`terrainColor`, `SOIL_KINDS`) du sol où se tiennent la plupart de ses cases. Au niveau « Réaliste », la
    texture Poly Haven de chaque sorte (choisie à la main, `SOIL_KINDS.polyhaven`, CC0) est prise dans « Mes
-   textures », ou téléchargée (1k), et posée sur ces Zones à la place de la teinte (`textureDeLaTerre`) ;
-   crédit « Terre nue : textures Poly Haven (CC0) ».
+   textures », ou téléchargée (1k), et posée sur ces Zones à la place de la teinte (`textureDeLaTerre`, par
+   `textureDuStore`) ; crédit « Terre nue : textures Poly Haven (CC0) ».
+   Au niveau « Réaliste », après les modèles 3D, l'étape « Textures (Poly Haven) » : `realisticNeeds` liste les
+   emplacements que le lieu emploie (la texture livrée d'une façade, d'une Zone, d'un Tracé : `facadeSlot`,
+   `zoneSlot`, `pathSlot` ; une route sans texture à elle est l'emplacement `road`), chacun avec la texture
+   Poly Haven de sa région (au sud de 46° N ou au nord), sans celles qui SONT la source d'une texture livrée
+   (`PROVENANCE`) ; chacune est prise dans « Mes textures » ou téléchargée (1k, `textureDuStore`, qui refuse une
+   texture qui ne sert pas les usages de l'emplacement), puis `applyRealisticTextures` les pose : un enduit
+   garde sa couleur (elle teinte le plâtre), une façade de brique perd seulement `BRICK_TINT`. Sans réseau : les
+   textures livrées restent. Crédit « Façades, sols et tracés : textures Poly Haven (CC0) ».
    Puis le reste de la BD TOPO (France, « Détaillé » et « Réaliste ») : `realplace:extras` (WFS `haie`,
    `terrain_de_sport`, `cimetiere`, `surface_hydrographique` ; `HAIES.BOCAGES:haie` porte les mêmes haies et
    `detail_orographique` seulement des noms, tous deux laissés), `addExtras` : une haie en Tracé `haie` (coupée à

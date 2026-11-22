@@ -47,6 +47,9 @@ a row, and on a row without a file. Add the row when you bake a new texture.
 | `toit-ardoise.couleur.png` | Roof: slate | grey_roof_tiles_02 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/grey_roof_tiles_02 |
 | `toit-tuiles-canal.png` | Roof: barrel tiles | RoofingTiles014A | ambientCG | CC0 1.0 | https://ambientcg.com/view?id=RoofingTiles014A |
 | `toit-tuiles-plates.couleur.png` | Roof: old flat tiles | roof_09 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/roof_09 |
+| `facade-enduit.png` | Facade: render | white_stucco_02 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/white_stucco_02 |
+| `facade-pierre.couleur.png` | Facade and low wall: dressed stone | sandstone_blocks_05 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/sandstone_blocks_05 |
+| `paves.couleur.png` | Ground and paths: cobbles | cobblestone_floor_08 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/cobblestone_floor_08 |
 | `ecorce-cerisier.jpg` | Tree bark: cherry | sakura_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/sakura_bark |
 | `ecorce-chene.jpg` | Tree bark: oak | jolcham_oak_bark_01 | Poly Haven | CC0 1.0 | https://polyhaven.com/a/jolcham_oak_bark_01 |
 | `ecorce-erable.jpg` | Tree bark: maple | trident_maple_bark | Poly Haven | CC0 1.0 | https://polyhaven.com/a/trident_maple_bark |

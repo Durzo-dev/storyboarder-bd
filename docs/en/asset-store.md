@@ -333,10 +333,13 @@ choice is made through a **large square** (the current texture, its name, “Cha
 section and in the path's window: a click opens the store in **“choose” mode** (`choisirTexture`),
 on “My textures”, the use locked; a card applies it, an online texture is downloaded in 1k then
 applied. **The bundled textures** (`src/textures-integrees.js`: the Ground materials, Neutral and
-Water included, and the paths' original textures) are in “My textures”, with their origin (that of
+Water included, the paths' original textures, the roofs and the facades: a render and a dressed stone,
+`FACADES_LIVREES`) are in “My textures”, with their origin (that of
 `assets/textures/LICENSES.md`, which a test compares), their grain's weight and a 3D preview (colour:
 the tinted grain; relief: a normal map drawn from its shades). A right-click on a “My textures” card
-renames or deletes it; a bundled texture can be renamed (its name goes in the library's
+renames or deletes it. A path may wear a bundled texture of another kind that serves its use (cobbles
+and gravel of the Ground, `USAGES_TRACE_LIVREES`; the stone on a low wall): `traceTexture: 'int:<id>'`,
+which `textureDuTrace` finds. A bundled texture can be renamed (its name goes in the library's
 `nomsIntegrees`) but not deleted. It shows in its natural colour (the tint measured at baking); another colour tints it,
 like the shipped textures. Ground materials are ADDED to `GROUND_TYPE_DEFS` (flagged `importee`):
 all the code that looked a material up by its id finds it unchanged. Grains are read through IPC

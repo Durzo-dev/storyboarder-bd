@@ -71,7 +71,7 @@ describe('#457b-2, the village (Eguisheim)', () => {
     assert.ok(V.paths.some(p => p.kind === 'chemin' && p.world.width === 1.2), 'a path');
     assert.ok(V.paths.some(p => p.kind === 'muret'), 'the retaining wall');
     const square = V.zones.find(z => z.name === 'Place du Marché aux Saules');
-    assert.equal(square.terrainType, 'béton', 'paved (surface sett), not asphalt');
+    assert.equal(square.terrainType, 'paves', 'cobbled (surface sett), not asphalt');
     assert.ok(square.world.masque.plein.includes('1'));
   });
   test('relations are counted as skipped (multipolygons: later), the attribution is given', () => {

@@ -35,7 +35,7 @@ describe('real place, the content of a Scene', () => {
     assert.equal(grandRue.world.width, 5);
     assert.equal(grandRue.width, 10, 'the default 10 px stroke for 5 m');
     const square = c.traces.find(o => o.tracéType === 'terrain' && o.name === 'Place du Marché aux Saules');
-    assert.equal(square.terrainType, 'béton');
+    assert.equal(square.terrainType, 'paves', 'surface sett: cobbles');
     assert.ok(square.world.masque);
   });
   test('a wall gets its default height, a river its depth, an unnamed Path the application\'s name', () => {
@@ -94,7 +94,7 @@ describe('the relief from real altitudes', () => {
 describe('the import\'s progress and placement', async () => {
   const { IMPORT_STEPS, importProgress } = await import('../src/real-place-import.js');
   test('the steps in order; the bar grows through them, each step\'s share filled by its own progress', () => {
-    assert.deepEqual(IMPORT_STEPS, ['map', 'country', 'buildings', 'facades', 'aerial', 'models', 'relief', 'scene', 'construction', 'ground']);
+    assert.deepEqual(IMPORT_STEPS, ['map', 'country', 'buildings', 'facades', 'aerial', 'models', 'textures', 'relief', 'scene', 'construction', 'ground']);
     assert.equal(importProgress('map'), 0);
     let last = -1;
     for (const s of IMPORT_STEPS) for (const sub of [0, 0.5, 1]) { const p = importProgress(s, sub); assert.ok(p >= last); last = p; }

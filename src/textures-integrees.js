@@ -50,12 +50,15 @@ export const PROVENANCE = {
   'toit-ardoise.couleur': ['grey_roof_tiles_02', 'Poly Haven', 'https://polyhaven.com/a/grey_roof_tiles_02'],
   'toit-tuiles-canal': ['RoofingTiles014A', 'ambientCG', 'https://ambientcg.com/view?id=RoofingTiles014A'],
   'toit-tuiles-plates.couleur': ['roof_09', 'Poly Haven', 'https://polyhaven.com/a/roof_09'],
+  'facade-enduit': ['white_stucco_02', 'Poly Haven', 'https://polyhaven.com/a/white_stucco_02'],
+  'facade-pierre.couleur': ['sandstone_blocks_05', 'Poly Haven', 'https://polyhaven.com/a/sandstone_blocks_05'],
+  'paves.couleur': ['cobblestone_floor_08', 'Poly Haven', 'https://polyhaven.com/a/cobblestone_floor_08'],
 };
 
 /** La matière (texture-matieres.js) de chaque texture livrée, pour le filtre « Toutes les matières ». */
 const MATIERE = {
   herbe: 'herbe', gazon: 'herbe', terre: 'terre', sable: 'sable', gravier: 'gravier', bitume: 'asphalte',
-  'béton': 'beton', neige: 'neige', carrelage: 'carrelage', plancher: 'parquet', marbre: 'marbre', moquette: 'moquette',
+  'béton': 'beton', paves: 'paves', neige: 'neige', carrelage: 'carrelage', plancher: 'parquet', marbre: 'marbre', moquette: 'moquette',
   route: 'asphalte', chemin: 'terre', muret: 'brique', cloture: 'bois', haie: 'feuillage', barriere: 'metal',
 };
 
@@ -88,6 +91,26 @@ const USAGES_BATIMENT_LIVREES = {
   'trace:muret': ['mur-ext', 'mur-int'],
   'trace:cloture': ['mur-ext', 'mur-int', 'plafond'],
 };
+
+/**
+ * The Ground's bundled textures a Path may wear too (#480c-2: a cobbled street, a gravel path), by id: the
+ * Path usages they serve (texture-matieres.js). A Path then carries `traceTexture: 'int:sol:<id>'`.
+ */
+const USAGES_TRACE_LIVREES = {
+  'sol:paves': ['route', 'chemin'],
+  'sol:gravier': ['chemin'],
+};
+
+/**
+ * #480c-2: THE BUNDLED FACADES, for the Detailed level (offline): a render, tinted by the facade's colour, and a
+ * dressed stone, for the walls and the low walls of stone. `dimensions`: the real size of the texture, metres.
+ */
+export const FACADES_LIVREES = [
+  { id: 'enduit', grain: 'facade-enduit', nom: 'Enduit', nomEn: 'Render', teinte: '#d9d4c7', dimensions: [1.8, 1.8],
+    matieres: ['enduit'], usages: ['mur-ext', 'mur-int'] },
+  { id: 'pierre', grain: 'facade-pierre.couleur', nom: 'Pierre de taille', nomEn: 'Dressed stone', teinte: '#af9b84', dimensions: [3, 3],
+    matieres: ['roche'], usages: ['mur-ext', 'mur-int', 'muret'] },
+];
 
 /**
  * #458c : LES COUVERTURES DE TOIT LIVRÉES (choisies par Durzo parmi ses textures téléchargées,
@@ -130,7 +153,8 @@ export function texturesIntegrees(){
   const sol = GROUND_TYPE_DEFS.filter(d => !d.importee).map(d => ({
     cle: `${SOURCE}:sol:${d.id}`, source: SOURCE, id: `sol:${d.id}`, integree: true,
     nom: d.label, nomEn: d.labelEn || d.label, grain: d.grain || null, teinte: d.swatch,
-    matieres: MATIERE[d.id] ? [MATIERE[d.id]] : [], usages: ['sol', ...(USAGES_BATIMENT_LIVREES[`sol:${d.id}`] || [])],
+    matieres: MATIERE[d.id] ? [MATIERE[d.id]] : [],
+    usages: ['sol', ...(USAGES_TRACE_LIVREES[`sol:${d.id}`] || []), ...(USAGES_BATIMENT_LIVREES[`sol:${d.id}`] || [])],
     repeat: d.repeat, dessinee: !d.grain, provenance: provenance(d.grain), choix: { sol: d.id },
   }));
   const traces = Object.entries(TRACÉ_TEXTURES).map(([type, t]) => ({
@@ -147,6 +171,11 @@ export function texturesIntegrees(){
     nom: x.nom, nomEn: x.nomEn, grain: x.grain, teinte: x.teinte, dimensions: x.dimensions,
     matieres: ['tuiles'], usages: ['toit'], dessinee: false, provenance: provenance(x.grain), choix: {},
   }));
+  const facades = FACADES_LIVREES.map(x => ({
+    cle: `${SOURCE}:facade:${x.id}`, source: SOURCE, id: `facade:${x.id}`, integree: true,
+    nom: x.nom, nomEn: x.nomEn, grain: x.grain, teinte: x.teinte, dimensions: x.dimensions,
+    matieres: x.matieres, usages: x.usages, dessinee: false, provenance: provenance(x.grain), choix: {},
+  }));
   const bulles = BULLES_LIVREES.map(x => ({
     cle: `${SOURCE}:bulle:${x.cle}`, source: SOURCE, id: `bulle:${x.cle}`, integree: true, bulle: true,
     nom: x.nom, nomEn: x.nomEn, grain: x.grain, teinte: teinteParDefautDeLaTexture({ bulleTexture: x.cle }),
@@ -158,7 +187,7 @@ export function texturesIntegrees(){
   const uni = { cle: `${SOURCE}:uni`, source: SOURCE, id: 'uni', integree: true, uni: true,
     nom: 'Sans texture', nomEn: 'No texture', grain: null, teinte: COULEURS_BATIMENT['mur-ext'],
     matieres: [], usages: USAGES_BATIMENT.slice(), tags: [TAG_BULLE], dessinee: true, provenance: null, choix: {} };
-  return [...sol, ...traces, ...toits, ...bulles, uni];
+  return [...sol, ...traces, ...toits, ...facades, ...bulles, uni];
 }
 
 /**
@@ -179,7 +208,8 @@ export function valeurChoisie(t, usage){
   if (!t || !Array.isArray(t.usages) || !t.usages.includes(usage)) return undefined;
   // Un bâtiment : `int:<id>` pour une texture livrée, null pour « Sans texture ».
   if (estUsageBatiment(usage)) return t.integree ? (t.uni ? null : 'int:' + t.id) : 'tex:' + t.dossier;
-  if (t.integree) return usage === 'sol' ? t.choix.sol : null;
+  // A Path: its own original texture is null; another bundled one (cobbles, gravel, stone) its `int:` id.
+  if (t.integree) return usage === 'sol' ? t.choix.sol : (t.choix.trace === usage ? null : 'int:' + t.id);
   return 'tex:' + t.dossier;
 }
 
@@ -203,6 +233,10 @@ export function textureDeLaValeur(valeur, usage, mes = []){
   }
   if (typeof valeur === 'string' && valeur.startsWith('tex:')) {
     const t = mes.find(x => 'tex:' + x.dossier === valeur);
+    if (t) return t;
+  }
+  if (typeof valeur === 'string' && valeur.startsWith('int:')) {
+    const t = integrees.find(x => x.id === valeur.slice(4) && x.usages.includes(usage));
     if (t) return t;
   }
   return integrees.find(t => t.choix.trace === usage) || null;

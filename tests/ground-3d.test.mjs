@@ -644,7 +644,7 @@ describe('Sol : une matière photographiée doit pouvoir être VUE', () => {
     // #435i : une matière à motif de TAILLE RÉELLE (le carrelage) est exemptée, et c'est écrit dans
     // son entrée : la taille de la dalle prime ; son motif reste visible, seul son grain se moyenne.
     const soumises = GROUND_TYPE_DEFS.filter(d => d.grain && !d.motifTailleReelle);
-    assert.deepEqual(GROUND_TYPE_DEFS.filter(d => d.motifTailleReelle).map(d => d.id), ['carrelage']);
+    assert.deepEqual(GROUND_TYPE_DEFS.filter(d => d.motifTailleReelle).map(d => d.id), ['paves', 'carrelage']);
     const floues = soumises
       .map(d => ({ id: d.id, tx: texelsParPixel3D(COTE_GRAIN, d.repeat, GROUND_PLANE_SIZE_3D, WALL_PX_PER_UNIT_3D) }))
       .filter(x => x.tx > TEXELS_PAR_PIXEL_MAX_3D);

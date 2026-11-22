@@ -23,7 +23,7 @@
  * La moitié impure (lire « Mes textures » et charger les grains par l'IPC) est en fin de fichier ;
  * tout ce qui décide est pur, et testé sous Node.
  */
-import { GROUND_TYPE_DEFS, TRACÉ_TEXTURES } from './constants.js';
+import { GROUND_TYPE_DEFS, TRACÉ_TEXTURES, GROUND_PLANE_SIZE_3D } from './constants.js';
 import { definirAdresseDuGrain3D, prechargerGrains3D, grainCharge3D } from './bubble-grain.js';
 import { definirResolveurDeTexturesDeBulle } from './bubble-texture.js';
 import { texturesIntegrees } from './textures-integrees.js';
@@ -159,8 +159,28 @@ export function installerTexturesUtilisateur(entrees){
 
 /** La texture qu'un Tracé de ce type doit porter : celle de l'utilisateur si elle le permet, sinon l'originale. */
 export function textureDuTrace(type, texture){
-  const t = estTextureUtilisateur(texture) ? _traces.get(texture) : null;
+  const t = estTextureUtilisateur(texture) ? _traces.get(texture) : (traceLivree(texture) || null);
   return t && t.types.includes(type) ? t : (TRACÉ_TEXTURES[type] || null);
+}
+
+/**
+ * A bundled texture worn by a Path (`int:<id>`, #480c-2: cobbles, gravel, stone), in TRACÉ_TEXTURES' format with
+ * its `types`, or null. Its tile: its real size, else the Ground's (GROUND_PLANE_SIZE_3D / repeat). The bundled
+ * list never changes while the application runs: read once.
+ */
+let _livrees = null;
+function traceLivree(texture){
+  if (typeof texture !== 'string' || !texture.startsWith('int:')) return null;
+  if (!_livrees) {
+    _livrees = new Map();
+    for (const x of texturesIntegrees()) {
+      const types = Object.keys(USAGE_DU_TRACE).filter(k => x.usages.includes(USAGE_DU_TRACE[k]));
+      if (!x.grain || !types.length) continue;
+      const cote = x.repeat ? GROUND_PLANE_SIZE_3D / x.repeat : 2;
+      _livrees.set('int:' + x.id, { id: 'int:' + x.id, nom: x.nomEn, grain: x.grain, teinte: x.teinte, tuile: x.dimensions || [cote, cote], types });
+    }
+  }
+  return _livrees.get(texture) || null;
 }
 
 /**
