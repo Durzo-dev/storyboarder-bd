@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 
 import { builtParcels, parcelFences, HEIGHTS } from '../src/parcel-fences.js';
 import { projector } from '../src/geo-local.js';
+import { pathObject } from '../src/real-place-import.js';
 
 const centre = { lat: 48.6, lon: -4.5 };
 const { toLocal, toGeo } = projector(centre);
@@ -59,6 +60,19 @@ describe('the homes\' parcels, closed all round', () => {
     const crossing = p.filter(q => q.world.pts.some((a, i) => i && Math.min(a.x, q.world.pts[i - 1].x) < 22 && Math.max(a.x, q.world.pts[i - 1].x) > 22
       && Math.abs(a.z + 30) < 0.6));
     assert.deepEqual(crossing, [], 'the back limit is open where the path crosses it');
+  });
+  test('NOT along a car park (a Zone of asphalt): open there, as a road', () => {
+    const t = street();
+    // A car park over x 10 to 30, z -40 to -26: across the second parcel's back limit (z = -30).
+    t.zones = [{ terrainType: 'bitume', world: { masque: { x0: 10, z0: -40, pas: 1, nx: 20, nz: 14, plein: '1'.repeat(280) } } }];
+    const p = parcelFences(builtParcels(answer, t, { toLocal }), t, { halfSize: 60 });
+    assert.ok(total(along(p, q => Math.abs(q.z + 30) < 0.6 && q.x >= 0)) < 11, 'only the back limit west of the car park');
+  });
+  test('a garden hedge, trimmed: thinner than its height would make it', () => {
+    const hedges = pieces.filter(q => q.kind === 'haie');
+    assert.ok(hedges.length && hedges.every(q => q.wallThickness === 0.8));
+    assert.equal(pathObject(hedges[0], { panelId: 'p', newId: () => 'x' }).wallThickness, 0.8, 'the Path object carries it');
+    assert.equal(pathObject({ kind: 'route', world: { pts: [{ x: 0, z: 0 }, { x: 1, z: 0 }] }, wallThickness: 2 }, { panelId: 'p', newId: () => 'x' }).wallThickness, undefined, 'not a road');
   });
   test('up to a building\'s wall: the piece reaches it', () => {
     const t = street();

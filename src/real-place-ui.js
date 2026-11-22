@@ -536,7 +536,8 @@ async function importer(){
       const { rings, lines } = obstaclesOf(translated);
       const hedges = readHedges(hauteurs, { rings, lines: lines.map(l => (l.kind === 'route' ? { ...l, half: l.half + 1 } : l)), cells });
       for (const hd of hedges) {
-        translated.paths.push({ kind: 'haie', world: { pts: hd.pts, width: Math.min(3, Math.max(0.8, hd.width)) }, wallHeight: hd.rise, source: 'lidar' });
+        translated.paths.push({ kind: 'haie', world: { pts: hd.pts, width: Math.min(3, Math.max(0.8, hd.width)) }, wallHeight: hd.rise,
+          wallThickness: Math.min(1.5, Math.max(0.6, hd.width)), source: 'lidar' });
       }
       console.info(`[real-place] hedges read on the LiDAR: ${hedges.length}${cells ? '' : ' (no class map)'}`);
     }

@@ -42,6 +42,8 @@ const HOUSE_MAX = 400;
 const PARCEL_MAX = 3000;
 /** The heights laid (m): a front's low wall, a centre's wall, a fence, a hedge. */
 export const HEIGHTS = Object.freeze({ front: 0.9, wall: 2, fence: 1.5, hedge: 1.8 });
+/** A garden hedge's thickness (m): trimmed, thinner than its height would make it. */
+const HEDGE_THICKNESS = 0.8;
 /** The LiDAR's wall: raised this much (m), no more than that (higher: eaves, a tree), along this share of the limit. */
 const WALL_RISE = 0.6;
 const WALL_TOP = 3;
@@ -99,16 +101,22 @@ export function parcelFences(parcels, translated, { halfSize, heights = null, wa
     .map(p => { const half = (p.world.width > 0 ? p.world.width : (p.kind === 'route' ? 6 : 2)) / 2; return { pts: p.world.pts, half, reach: half + ROAD_REACH }; })
     .map(r => ({ ...r, box: boxOf(r.pts, r.reach) }));
   const known = paths.filter(p => ['muret', 'haie', 'cloture'].includes(p.kind) && p.world && Array.isArray(p.world.pts) && p.world.pts.length >= 2)
-    .map(p => ({ pts: p.world.pts, kind: p.kind, wallHeight: p.wallHeight, traceTexture: p.traceTexture, box: boxOf(p.world.pts, PATH_CLEAR) }));
+    .map(p => ({ pts: p.world.pts, kind: p.kind, wallHeight: p.wallHeight, wallThickness: p.wallThickness, traceTexture: p.traceTexture, box: boxOf(p.world.pts, PATH_CLEAR) }));
   const feet = (translated.buildings || []).filter(b => Array.isArray(b.footprint) && b.footprint.length >= 3)
     .map(b => ({ ring: b.footprint.concat([b.footprint[0]]), box: boxOf(b.footprint, BUILDING_CLEAR) }));
   const built = parcels.filter(p => p.built);
   const h = halfSize;
+  // A car park (a Zone of asphalt) is left open, as a road.
+  const parkings = (translated.zones || []).filter(z => z.terrainType === 'bitume' && z.world && z.world.masque).map(z => z.world.masque);
+  const onParking = (p) => parkings.some(m => {
+    const i = Math.floor((p.x - m.x0) / m.pas), j = Math.floor((p.z - m.z0) / m.pas);
+    return i >= 0 && j >= 0 && i < m.nx && j < m.nz && m.plein[j * m.nx + i] === '1';
+  });
   /** What a point of parcel `k`'s limit is: { face, ref? }. */
   const faceOf = (p, out, k) => {
     if (Math.abs(p.x) > h || Math.abs(p.z) > h) return { face: 'out' };
     const road = roads.find(r => inBox(p, r.box) && distanceTo(p, r.pts) < r.half * ON_ROAD);
-    if (road) return { face: 'road' };
+    if (road || onParking(p)) return { face: 'road' };
     const foot = feet.find(f => inBox(p, f.box) && (insidePolygon(p, f.ring) || distanceTo(p, f.ring) < BUILDING_CLEAR));
     if (foot) return { face: 'house', ref: foot.ring };
     const near = known.find(x => inBox(p, x.box) && distanceTo(p, x.pts) < PATH_CLEAR);
@@ -234,12 +242,13 @@ function piecesOf(run, all, parcel, k, rise, own){
       pieces.push({ kind: 'muret', world: { pts }, wallHeight: Math.round(hs[Math.floor(hs.length / 2)] * 10) / 10, traceTexture: parcel.dense ? STONE : RENDER, source: 'lidar' });
     } else if (own) {
       const piece = { kind: own.kind, world: { pts }, wallHeight: own.wallHeight > 0 ? own.wallHeight : HEIGHTS[own.kind === 'muret' ? 'front' : own.kind === 'haie' ? 'hedge' : 'fence'], source: 'cadastre' };
+      if (own.kind === 'haie') piece.wallThickness = own.wallThickness > 0 ? own.wallThickness : HEDGE_THICKNESS;
       if (own.kind === 'muret') piece.traceTexture = own.traceTexture || (parcel.dense ? STONE : RENDER);
       pieces.push(piece);
     } else if (parcel.dense) pieces.push({ kind: 'muret', world: { pts }, wallHeight: HEIGHTS.wall, traceTexture: STONE, source: 'cadastre' });
     else if (face === 'front') pieces.push({ kind: 'muret', world: { pts }, wallHeight: HEIGHTS.front, traceTexture: RENDER, source: 'cadastre' });
     else if (draw(k) < 0.5) pieces.push({ kind: 'cloture', world: { pts }, wallHeight: HEIGHTS.fence, source: 'cadastre' });
-    else pieces.push({ kind: 'haie', world: { pts }, wallHeight: HEIGHTS.hedge, source: 'cadastre' });
+    else pieces.push({ kind: 'haie', world: { pts }, wallHeight: HEIGHTS.hedge, wallThickness: HEDGE_THICKNESS, source: 'cadastre' });
   }
   return pieces;
 }

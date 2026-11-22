@@ -301,15 +301,16 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    plus (le parking d'un magasin, une école, une ferme restent ouverts) ; `dense` quand ses bâtiments en couvrent
    la moitié (un centre ancien). `parcelFences` clôt chaque parcelle d'habitation SUR TOUT SON TOUR, en lisant sa
    limite tous les mètres : ouverte là où une route ou un chemin la traverse (à moins de 75 % de sa
-   demi-largeur) ; rien à moins de 2,5 m du contour d'un bâtiment ni à moins de 2 m d'un mur, d'une haie ou d'une
+   demi-largeur) et le long d'un parking (une Zone de `bitume`) ; rien à moins de 2,5 m du contour d'un bâtiment ni à moins de 2 m d'un mur, d'une haie ou d'une
    clôture déjà là (OSM, BD TOPO, lue sur le LiDAR) ; une limite partagée avec une autre parcelle d'habitation est
    posée une fois ; à moins de la demi-largeur d'une route + 4 m, sa FAÇADE ; ailleurs (un voisin, un champ, un
    terrain vide), un CÔTÉ. Les tronçons suivent chacun un côté du contour et se rejoignent bout à bout, et
    rejoignent le mur du bâtiment ou le Tracé connu voisin (à 4 m au plus). Un côté qui a déjà un mur, une haie ou
    une clôture est complété avec, à sa hauteur. Sinon : d'une parcelle dense, un mur de pierre de 2 m
    (`int:facade:pierre`) ; en façade, un muret d'enduit de 0,9 m (`int:facade:enduit`) ouvert de 3 m devant la
-   maison (dès 8 m) ; un côté, une clôture de 1,5 m ou une haie de 1,8 m (tirée du rang de la parcelle, la même à
-   chaque import). Le LiDAR d'abord : un tronçon relevé de 0,6 à 3 m sur 60 % de sa longueur sur `wallCells` est
+   maison (dès 8 m) ; un côté, une clôture de 1,5 m ou une haie de 1,8 m, épaisse de 0,8 m (`wallThickness` ; tirée
+   du rang de la parcelle, la même à chaque import). Une haie lue sur le LiDAR prend sa largeur mesurée pour
+   épaisseur (0,6 à 1,5 m). Le LiDAR d'abord : un tronçon relevé de 0,6 à 3 m sur 60 % de sa longueur sur `wallCells` est
    un mur à sa hauteur médiane (`source: 'lidar'`). 400 morceaux au plus. Sans parcelles : rien de tout cela.
    Puis les petits ouvrages : `realplace:landmarks` (WFS `BDTOPO_V3:construction_ponctuelle`), `readLandmarks` :
    Croix → `croix`, Calvaire → `calvaire`, Eolienne → `eolienne`, Antenne → `antenne`, Clocher → `clocher` (les

@@ -24,6 +24,8 @@ export function pathObject(p, { panelId, newId, nameOf = (k) => k }){
   if (def.wallHeight !== undefined) o.wallHeight = def.wallHeight;
   // A surveyed height (a BD TOPO hedge's, bdtopo-extras.js) before the kind's.
   if (p.wallHeight > 0 && def.wallHeight !== undefined) o.wallHeight = p.wallHeight;
+  // A measured or chosen thickness (a hedge read on the LiDAR, a garden's, #495), metres.
+  if (p.wallThickness > 0 && def.wallHeight !== undefined) o.wallThickness = p.wallThickness;
   if (p.kind === 'riviere') o.profondeur = PROFONDEUR_RIVIERE;
   if (p.marking === false) o.marquage = false;
   if (typeof p.traceTexture === 'string') o.traceTexture = p.traceTexture;
