@@ -30,6 +30,7 @@ import { TRACÉ_TEXTURES, couleurDeTrace3D } from './constants.js';
 import { textureDuTrace } from './textures-utilisateur.js';
 import { grainCharge3D } from './bubble-grain.js';
 import { appliquerTeinteAuMotif3D, rvbDeCouleur3D, natureDuNom3D } from './bubble-texture.js';
+import { GLSL_PAVAGE, GLSL_PAVAGE_RELIEF } from './ground-tiling-3d.js';
 
 /** La netteté du fondu entre les trois projections : plus grand, plus franc. */
 export const PLAQUAGE_NETTETE = 4.0;
@@ -43,6 +44,9 @@ uniform vec2 uTuile;
 varying vec3 vTraceMonde;
 varying vec3 vTraceNormale;
 vec4 traceEchantillon( vec2 uv ) { return mapTexelToLinear( texture2D( map, uv ) ); }
+// On the ground, a texture without a regular pattern is paved as the Ground is (ground-tiling-3d.js): each cell
+// shifted at random, so a 3 m tile of asphalt does not show the same crack every 3 m.
+vec4 traceSol( vec2 uv ) { return uPavage > 0.5 ? pavageMap( uv ) : traceEchantillon( uv ); }
 `;
 
 /** Le plaquage le long du tracé : la géométrie porte (abscisse, hauteur) en mètres dans `uv`. */
@@ -61,7 +65,7 @@ export const GLSL_PLAQUAGE_FRAGMENT = `
   // Une face tournée vers x se lit en (z, y), vers z en (x, y), vers le haut en (x, z).
   vec4 texelColor = wT.x * traceEchantillon( vec2( vTraceMonde.z / uTuile.x, vTraceMonde.y / uTuile.y ) )
                   + wT.z * traceEchantillon( vec2( vTraceMonde.x / uTuile.x, vTraceMonde.y / uTuile.y ) )
-                  + wT.y * traceEchantillon( vec2( vTraceMonde.x / uTuile.x, vTraceMonde.z / uTuile.x ) );
+                  + wT.y * traceSol( vec2( vTraceMonde.x / uTuile.x, vTraceMonde.z / uTuile.x ) );
   diffuseColor *= texelColor;
 #endif
 `;
@@ -77,8 +81,7 @@ export const RELIEF_DE_TRACE = 0.8;
  */
 export const GLSL_RELIEF_DECLARATIONS = `
 #ifdef TANGENTSPACE_NORMALMAP
-vec3 traceRelief( vec3 eye, vec3 N, vec2 uv, float fd ) {
-  vec3 m = texture2D( normalMap, uv ).xyz * 2.0 - 1.0;
+vec3 traceReliefDe( vec3 eye, vec3 N, vec3 m, vec2 uv, float fd ) {
   m.xy *= normalScale;
   vec3 q0 = dFdx( eye ), q1 = dFdy( eye );
   vec2 s0 = dFdx( uv ), s1 = dFdy( uv );
@@ -87,6 +90,13 @@ vec3 traceRelief( vec3 eye, vec3 N, vec2 uv, float fd ) {
   float d = max( dot( T, T ), dot( B, B ) );
   float k = d == 0.0 ? 0.0 : fd * inversesqrt( d );
   return normalize( T * ( m.x * k ) + B * ( m.y * k ) + N * m.z );
+}
+vec3 traceRelief( vec3 eye, vec3 N, vec2 uv, float fd ) {
+  return traceReliefDe( eye, N, texture2D( normalMap, uv ).xyz * 2.0 - 1.0, uv, fd );
+}
+// On the ground, in the same cells as the colour (traceSol).
+vec3 traceReliefSol( vec3 eye, vec3 N, vec2 uv, float fd ) {
+  return uPavage > 0.5 ? traceReliefDe( eye, N, pavageNormale( uv ), uv, fd ) : traceRelief( eye, N, uv, fd );
 }
 #endif
 `;
@@ -109,33 +119,43 @@ export const GLSL_RELIEF_MONDE = `
   wR /= ( wR.x + wR.y + wR.z );
   normal = normalize( wR.x * traceRelief( -vViewPosition, normal, vec2( vTraceMonde.z / uTuile.x, vTraceMonde.y / uTuile.y ), faceDirection )
                     + wR.z * traceRelief( -vViewPosition, normal, vec2( vTraceMonde.x / uTuile.x, vTraceMonde.y / uTuile.y ), faceDirection )
-                    + wR.y * traceRelief( -vViewPosition, normal, vec2( vTraceMonde.x / uTuile.x, vTraceMonde.z / uTuile.x ), faceDirection ) );
+                    + wR.y * traceReliefSol( -vViewPosition, normal, vec2( vTraceMonde.x / uTuile.x, vTraceMonde.z / uTuile.x ), faceDirection ) );
 #endif
 `;
 
 /** Installe le plaquage monde sur un matériau standard. */
-export function installerPlaquageMonde3D(materiau, tuile, mode = 'monde'){
-  const uTuile = { value: new globalThis.THREE.Vector2(tuile[0], tuile[1]) };
+export function installerPlaquageMonde3D(materiau, tuile, mode = 'monde', moyenne = null){
+  const THREE = globalThis.THREE;
+  const uTuile = { value: new THREE.Vector2(tuile[0], tuile[1]) };
+  // The ground's anti-repetition: on when the tile's mean colour is given (the blend keeps its variance around it).
+  const uPavage = { value: moyenne ? 1 : 0 };
+  const uPavageMoyenne = { value: new THREE.Vector3(...(moyenne || [0.5, 0.5, 0.5])) };
   materiau.onBeforeCompile = (shader) => {
     shader.uniforms.uTuile = uTuile;
+    shader.uniforms.uPavage = uPavage;
+    shader.uniforms.uPavageMoyenne = uPavageMoyenne;
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vTraceMonde;\nvarying vec3 vTraceNormale;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\n'
         + 'vTraceMonde = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;\n'
         + 'vTraceNormale = mat3( modelMatrix ) * objectNormal;');
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <map_pars_fragment>', '#include <map_pars_fragment>\n' + GLSL_PLAQUAGE_DECLARATIONS)
+      .replace('#include <map_pars_fragment>', '#include <map_pars_fragment>\n' + GLSL_PAVAGE + GLSL_PLAQUAGE_DECLARATIONS)
       .replace('#include <map_fragment>', mode === 'trace' ? GLSL_PLAQUAGE_TRACE : GLSL_PLAQUAGE_FRAGMENT)
-      .replace('#include <normalmap_pars_fragment>', '#include <normalmap_pars_fragment>\n' + GLSL_RELIEF_DECLARATIONS)
+      .replace('#include <normalmap_pars_fragment>', '#include <normalmap_pars_fragment>\n' + GLSL_PAVAGE_RELIEF + GLSL_RELIEF_DECLARATIONS)
       .replace('#include <normal_fragment_maps>', mode === 'trace' ? GLSL_RELIEF_TRACE : GLSL_RELIEF_MONDE);
   };
   // Derivatives for the relief's frame (WebGL 1; WebGL 2 has them).
-  materiau.extensions = Object.assign({}, materiau.extensions, { derivatives: true });
+  materiau.extensions = Object.assign({}, materiau.extensions, { derivatives: true, shaderTextureLOD: true });
   materiau.customProgramCacheKey = () => 'trace-plaquage-1-' + mode;
   materiau.userData.uTuile = uTuile;
+  materiau.userData.uPavage = uPavage;
   materiau.needsUpdate = true;
   return materiau;
 }
+
+/** Each tinted texture's mean colour (for the anti-repetition). */
+const _moyennes = new WeakMap();
 
 /** Les textures teintées, par grain et couleur. Une Trace n'en a qu'une par couleur choisie. */
 const _textures = new Map();
@@ -172,6 +192,12 @@ export function textureDeTrace3D(type, couleur, texture = null){
   tc.putImageData(donnees, 0, 0);
   const THREE = globalThis.THREE;
   const carte = new THREE.CanvasTexture(tuile);
+  // Its mean colour, for the anti-repetition's blend (as the Ground's, tuileDuGrainDuSol3D): the pixels are read here.
+  const px = donnees.data;
+  let r = 0, v = 0, b = 0;
+  for (let i = 0; i < px.length; i += 4) { r += px[i]; v += px[i + 1]; b += px[i + 2]; }
+  const n = Math.max(1, px.length / 4);
+  _moyennes.set(carte, [r / n / 255, v / n / 255, b / n / 255]);
   carte.wrapS = carte.wrapT = THREE.RepeatWrapping;
   carte.anisotropy = 4;
   carte.needsUpdate = true;
@@ -247,11 +273,12 @@ export function materiauDeTrace3D(type, couleur, options = {}){
   }
   const tex = textureDuTrace(type, texture);
   const relief = reliefDeTrace3D(type, texture);
-  const cle = [type, tex.grain, teinteDe(type, couleur, tex), ombre, plaquage, relief ? tex.normale : '', JSON.stringify(reste)].join('|');
+  const pave = !!(tex.pavage && plaquage === 'monde' && _moyennes.get(carte));
+  const cle = [type, tex.grain, teinteDe(type, couleur, tex), ombre, plaquage, relief ? tex.normale : '', pave, JSON.stringify(reste)].join('|');
   if (_materiaux.has(cle)) return _materiaux.get(cle);
   const mat = new THREE.MeshStandardMaterial({ map: carte, color: new THREE.Color(ombre, ombre, ombre), ...reste });
   if (relief) { mat.normalMap = relief; mat.normalScale = new THREE.Vector2(RELIEF_DE_TRACE, RELIEF_DE_TRACE); }
-  installerPlaquageMonde3D(mat, tex.tuile, plaquage);
+  installerPlaquageMonde3D(mat, tex.tuile, plaquage, pave ? _moyennes.get(carte) : null);
   mat.userData.partage = true;
   _materiaux.set(cle, mat);
   return mat;

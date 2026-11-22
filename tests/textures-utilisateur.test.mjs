@@ -80,4 +80,10 @@ describe('les textures de l\'utilisateur sur le Sol et les Tracés (#446d)', () 
     const sans = entree({ usages: ['sol', 'chemin', 'mur-ext'] });
     assert.ok(!('normale' in U.defSolDe(sans)) && !('normale' in U.traceDe(sans)) && !('normale' in U.batimentDe(sans)));
   });
+
+  test('#494a : une texture de Tracé sans motif régulier se pave au sol ; des pavés non', () => {
+    assert.equal(U.traceDe(entree({ matieres: ['asphalte'], usages: ['route'] })).pavage, true);
+    assert.equal(U.traceDe(entree({ matieres: ['paves'], usages: ['route'] })).pavage, false);
+  });
 });
+

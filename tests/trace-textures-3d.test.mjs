@@ -126,7 +126,7 @@ describe('Traces : le plaquage s’insère dans le VRAI shader de three.js', () 
     // Le muret doit montrer ses pierres debout, et la route ne doit pas s'étirer en hauteur.
     assert.ok(GLSL_PLAQUAGE_FRAGMENT.includes('wT.x * traceEchantillon( vec2( vTraceMonde.z / uTuile.x, vTraceMonde.y / uTuile.y ) )'));
     assert.ok(GLSL_PLAQUAGE_FRAGMENT.includes('wT.z * traceEchantillon( vec2( vTraceMonde.x / uTuile.x, vTraceMonde.y / uTuile.y ) )'));
-    assert.ok(GLSL_PLAQUAGE_FRAGMENT.includes('wT.y * traceEchantillon( vec2( vTraceMonde.x / uTuile.x, vTraceMonde.z / uTuile.x ) )'));
+    assert.ok(GLSL_PLAQUAGE_FRAGMENT.includes('wT.y * traceSol( vec2( vTraceMonde.x / uTuile.x, vTraceMonde.z / uTuile.x ) )'), 'the ground, paved or not');
     assert.ok(GLSL_PLAQUAGE_FRAGMENT.includes('wT /= ( wT.x + wT.y + wT.z );'), 'les poids ne somment pas à 1');
   });
 });
@@ -257,6 +257,25 @@ describe('Traces : le relief d\'une texture de « Mes textures » (#494a)', () =
       'vec2( vTraceMonde.x / uTuile.x, vTraceMonde.z / uTuile.x )']) {
       assert.ok(GLSL_RELIEF_MONDE.includes(uv) && GLSL_PLAQUAGE_FRAGMENT.includes(uv), uv);
     }
+  });
+
+  test('⚠️ AU SOL, UNE TEXTURE SANS MOTIF RÉGULIER EST PAVÉE (la même fissure ne revient pas tous les 3 m), couleur et relief', () => {
+    _viderGrains3D(); _viderTexturesDesTraces3D();
+    const asphalte = { ...entree, dossier: 'polyhaven-asphalt_02', matieres: ['asphalte'], usages: ['route', 'muret'], dimensions: [3, 3] };
+    const paves = { ...entree, dossier: 'polyhaven-cobblestone_floor_08', matieres: ['paves'], usages: ['route'] };
+    installerTexturesUtilisateur([asphalte, paves]);
+    for (const d of ['polyhaven-asphalt_02', 'polyhaven-cobblestone_floor_08']) {
+      _setGrain3D(`tex:${d}.couleur`, { width: 4, height: 4 }); _setGrain3D(`tex:${d}#normal`, { width: 4, height: 4 });
+    }
+    const pave = (type, tex, plaquage) => materiauDeTrace3D(type, null, { texture: tex, plaquage }).userData.uPavage.value;
+    assert.equal(pave('route', 'tex:polyhaven-asphalt_02'), 1, 'asphalt on a road: paved');
+    assert.equal(pave('route', 'tex:polyhaven-cobblestone_floor_08'), 0, 'cobbles: a regular pattern, cut at every cell');
+    assert.equal(pave('muret', 'tex:polyhaven-asphalt_02', 'trace'), 0, 'along a wall: not the ground');
+    const g = shader('monde').f, i = (x) => { const n = g.indexOf(x); assert.ok(n >= 0, x); return n; };
+    assert.ok(i('vec4 pavageMap(') < i('vec4 traceSol('), 'traceSol reads pavageMap');
+    assert.ok(i('#include <normalmap_pars_fragment>') < i('vec3 pavageNormale(') && i('vec3 pavageNormale(') < i('vec3 traceReliefSol('));
+    assert.ok(GLSL_RELIEF_MONDE.includes('wR.y * traceReliefSol('), 'the relief in the same cells as the colour');
+    installerTexturesUtilisateur([]); _viderGrains3D(); _viderTexturesDesTraces3D();
   });
 });
 

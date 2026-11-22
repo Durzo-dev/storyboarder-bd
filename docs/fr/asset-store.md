@@ -355,7 +355,10 @@ coordonnées que sa couleur (`traceRelief` dans `trace-textures-3d.js` : le `per
 coordonnées données ; sur les trois axes, le repère de chaque projection, pondéré comme la couleur). Un Sol pavé la
 lit dans les mêmes cellules que sa couleur (`pavageNormale` dans `ground-tiling-3d.js`), après le
 `normal_fragment_maps` de three, qui reste (l'eau s'insère après lui). Piège : un Tracé attend son relief avant de se
-dessiner texturé (`grainDeTracePret3D`), sinon, dessiné une fois sans, sa signature ne changerait pas à son arrivée. Elle s'affiche au naturel (la teinte relevée à la
+dessiner texturé (`grainDeTracePret3D`), sinon, dessiné une fois sans, sa signature ne changerait pas à son arrivée. Au sol (plaquage
+monde, la projection du dessus), une texture de Tracé sans motif régulier (`pavage` de `traceDe` : pas des pavés,
+des briques…) est pavée comme le Sol (`traceSol`, `traceReliefSol` : les cellules de `ground-tiling-3d.js`, autour
+de la couleur moyenne de la tuile), pour qu'une tuile d'asphalte de 3 m ne montre pas la même fissure tous les 3 m. Elle s'affiche au naturel (la teinte relevée à la
 cuisson) ; une autre couleur la teinte, comme les textures livrées. Les matières du Sol sont
 AJOUTÉES à `GROUND_TYPE_DEFS` (marquées `importee`) : tout le code qui cherchait une matière par son
 identifiant la trouve sans changer. Les grains sont lus par l'IPC (`textures:image`) et servis en

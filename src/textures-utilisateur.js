@@ -89,7 +89,9 @@ export function traceDe(entree){
   if (!types.length) return null;
   const d = Array.isArray(entree.dimensions) && entree.dimensions.length === 2 && entree.dimensions.every(v => Number(v) > 0)
     ? entree.dimensions.map(Number) : TUILE_PAR_DEFAUT;
-  return { id: idDe(entree), nom: entree.nom || entree.dossier, grain: cleDuGrain(entree), teinte: couleur(entree.teinte), tuile: d, types, ...reliefDe(entree) };
+  // Anti-repetition on the ground (#494a), as on the Ground: not for a regular pattern (cobbles, bricks).
+  const pavage = !(Array.isArray(entree.matieres) ? entree.matieres : []).some(m => MOTIF_REGULIER.includes(m));
+  return { id: idDe(entree), nom: entree.nom || entree.dossier, grain: cleDuGrain(entree), teinte: couleur(entree.teinte), tuile: d, types, pavage, ...reliefDe(entree) };
 }
 
 /** Les textures de Tracé de l'utilisateur, par identifiant. Remplie par `installerTexturesUtilisateur`. */
