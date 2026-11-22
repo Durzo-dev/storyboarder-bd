@@ -32,21 +32,41 @@ export const MOST_HEDGES = 200;
  * vegetation, building, « perennial above-ground » (a wall, a mast); transparent: nothing named (a car, a
  * passer-by). A ridge may stand on vegetation, the ground or above-ground; not on a building, nor on nothing.
  */
-const PALETTE = [[207, 150, 70, true], [70, 150, 60, true], [90, 110, 40, true], [255, 0, 255, true], [180, 20, 20, false]];
+const PALETTE = [[207, 150, 70, 'ground'], [70, 150, 60, 'vegetation'], [90, 110, 40, 'vegetation'], [255, 0, 255, 'above'], [180, 20, 20, 'building']];
+/** The class of a pixel of the class map (RGBA): 'ground', 'vegetation', 'above', 'building', or null (unknown). */
+function classOf(r, g, b, a){
+  if (a < 128) return null;
+  const k = PALETTE.find(([pr, pg, pb]) => Math.abs(pr - r) + Math.abs(pg - g) + Math.abs(pb - b) <= 24);
+  return k ? k[3] : null;
+}
 /** May a ridge stand on this pixel of the class map (RGBA)? Unknown colours: no. */
 export function hedgeMayStand(r, g, b, a){
-  if (a < 128) return false;
-  const k = PALETTE.find(([pr, pg, pb]) => Math.abs(pr - r) + Math.abs(pg - g) + Math.abs(pb - b) <= 24);
-  return !!(k && k[3]);
+  const c = classOf(r, g, b, a);
+  return c === 'ground' || c === 'vegetation' || c === 'above';
+}
+/**
+ * May a WALL be read there (parcel-fences.js)? The ground or « perennial above-ground »: not vegetation (a hedge),
+ * nor a building (its eaves), nor nothing named (a car).
+ */
+export function wallMayStand(r, g, b, a){
+  const c = classOf(r, g, b, a);
+  return c === 'ground' || c === 'above';
 }
 /** The cells where a ridge may stand, from the class map (`{ width, height, data }`, RGBA) over the grid `g`. */
 export function hedgeCells(map, g){
+  return cellsWhere(map, g, hedgeMayStand);
+}
+/** The cells where a wall may be read (wallMayStand), likewise. */
+export function wallCells(map, g){
+  return cellsWhere(map, g, wallMayStand);
+}
+function cellsWhere(map, g, may){
   if (!map || !g || !(map.width > 0) || !(map.height > 0)) return null;
   const out = new Uint8Array(g.n * g.n);
   for (let j = 0; j < g.n; j++) for (let i = 0; i < g.n; i++) {
     const u = Math.min(map.width - 1, Math.floor((i + 0.5) * map.width / g.n)), v = Math.min(map.height - 1, Math.floor((j + 0.5) * map.height / g.n));
     const k = (v * map.width + u) * 4;
-    out[j * g.n + i] = hedgeMayStand(map.data[k], map.data[k + 1], map.data[k + 2], map.data[k + 3]) ? 1 : 0;
+    out[j * g.n + i] = may(map.data[k], map.data[k + 1], map.data[k + 2], map.data[k + 3]) ? 1 : 0;
   }
   return out;
 }

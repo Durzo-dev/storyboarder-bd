@@ -6,7 +6,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { readHedges, ridgeMask, hedgeMayStand, hedgeCells, MIN_LENGTH, MAX_RISE } from '../src/hedge-reading.js';
+import { readHedges, ridgeMask, hedgeMayStand, wallMayStand, hedgeCells, wallCells, MIN_LENGTH, MAX_RISE } from '../src/hedge-reading.js';
 
 const HALF = 30, STEP = 0.5, N = 2 * HALF / STEP;
 const grid = () => ({ n: N, step: STEP, halfSize: HALF, h: new Float32Array(N * N) });
@@ -85,6 +85,17 @@ describe('the LiDAR\'s classes', () => {
     assert.equal(hedgeMayStand(0, 0, 0, 0), false, 'nothing named (a car)');
     assert.equal(hedgeMayStand(70, 150, 60, 0), false, 'transparent, whatever its colour');
     assert.equal(hedgeMayStand(30, 150, 160, 255), false, 'water, or any colour unknown');
+  });
+  test('a wall is read on the ground or above-ground only: not on vegetation (a hedge), a building (eaves), a car', () => {
+    assert.equal(wallMayStand(207, 150, 70, 255), true);
+    assert.equal(wallMayStand(255, 0, 255, 255), true);
+    assert.equal(wallMayStand(70, 150, 60, 255), false);
+    assert.equal(wallMayStand(90, 110, 40, 255), false);
+    assert.equal(wallMayStand(180, 20, 20, 255), false);
+    assert.equal(wallMayStand(207, 150, 70, 0), false);
+    const map = { width: 2, height: 1, data: new Uint8ClampedArray([207, 150, 70, 255, 70, 150, 60, 255]) };
+    const c = wallCells(map, { n: 4 });
+    assert.deepEqual([...c.slice(0, 4)], [1, 1, 0, 0]);
   });
   test('the map laid on the grid, whatever its size', () => {
     const g = grid();

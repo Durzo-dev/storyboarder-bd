@@ -103,11 +103,11 @@ const USAGES_TRACE_LIVREES = {
 
 /**
  * #480c-2: THE BUNDLED FACADES, for the Detailed level (offline): a render, tinted by the facade's colour, and a
- * dressed stone, for the walls and the low walls of stone. `dimensions`: the real size of the texture, metres.
+ * dressed stone, for the walls; both for the low walls too (the garden walls of #495). `dimensions`: the real size of the texture, metres.
  */
 export const FACADES_LIVREES = [
   { id: 'enduit', grain: 'facade-enduit', nom: 'Enduit', nomEn: 'Render', teinte: '#d9d4c7', dimensions: [1.8, 1.8],
-    matieres: ['enduit'], usages: ['mur-ext', 'mur-int'] },
+    matieres: ['enduit'], usages: ['mur-ext', 'mur-int', 'muret'] },
   { id: 'pierre', grain: 'facade-pierre.couleur', nom: 'Pierre de taille', nomEn: 'Dressed stone', teinte: '#af9b84', dimensions: [3, 3],
     matieres: ['roche'], usages: ['mur-ext', 'mur-int', 'muret'] },
 ];

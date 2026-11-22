@@ -62,7 +62,8 @@ describe('the bundled textures, found where they are worn', () => {
     const pierre = all.find(t => t.id === 'facade:pierre');
     assert.equal(valeurChoisie(pierre, 'mur-ext'), 'int:facade:pierre');
     assert.equal(valeurChoisie(pierre, 'muret'), 'int:facade:pierre');
-    assert.equal(valeurChoisie(all.find(t => t.id === 'facade:enduit'), 'muret'), undefined, 'the render is no low wall');
+    assert.equal(valeurChoisie(all.find(t => t.id === 'facade:enduit'), 'muret'), 'int:facade:enduit', 'a rendered low wall (#495)');
+    assert.equal(valeurChoisie(all.find(t => t.id === 'facade:enduit'), 'route'), undefined);
     assert.ok(GROUND_TYPE_DEFS.some(d => d.id === 'paves' && d.grain === 'paves.couleur'));
   });
   test('a Path wears a bundled texture of another kind by its id; its own original stays null', () => {

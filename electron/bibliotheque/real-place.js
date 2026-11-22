@@ -327,7 +327,8 @@ async function soils(bbox){
 
 /**
  * What else the BD TOPO surveys in a zone (France, #482f): hedges (lines), sports grounds, cemeteries, water
- * surfaces. `{ hedges, sports, cemeteries, waters }`, each GeoJSON or null when its layer failed. Cached.
+ * surfaces; and the cadastre's parcels (#495). `{ hedges, sports, cemeteries, waters, parcels }`, each GeoJSON or
+ * null when its layer failed. Cached.
  */
 const extraAnswers = sources.memoireBornee(4, 20 * 1024 * 1024);
 async function extras(bbox){
@@ -340,7 +341,9 @@ async function extras(bbox){
   const layers = [['hedges', 'BDTOPO_V3:haie', ['geometrie', 'hauteur', 'largeur']],
     ['sports', 'BDTOPO_V3:terrain_de_sport', ['geometrie', 'nature']],
     ['cemeteries', 'BDTOPO_V3:cimetiere', ['geometrie', 'nature']],
-    ['waters', 'BDTOPO_V3:surface_hydrographique', ['geometrie', 'nature']]];
+    ['waters', 'BDTOPO_V3:surface_hydrographique', ['geometrie', 'nature']],
+    // The cadastre's parcels (#495, parcel-fences.js): where the walls and fences of the gardens can be.
+    ['parcels', 'CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle', ['geom', 'contenance']]];
   const answers = await Promise.all(layers.map(([, layer, props]) => request(vegetationUrl(layer, props, bbox))));
   const out = {};
   layers.forEach(([name], i) => { const r = answers[i]; out[name] = r.json && Array.isArray(r.json.features) ? r.json : null; });

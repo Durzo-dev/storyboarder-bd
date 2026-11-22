@@ -21,6 +21,7 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
 | `src/realistic-textures.js` | PUR. Les textures du niveau « Réaliste » : pour chaque emplacement (enduit, pierre, brique, pavés, gravier, asphalte, route, muret) une texture Poly Haven par région (`REALISTIC_TEXTURES`), ce qu'un lieu traduit demande (`realisticNeeds`) et la substitution (`applyRealisticTextures`). |
 | `src/soils.js` | PUR. La couleur de la terre nue (et, au niveau Réaliste, sa texture) d'après la carte des sols de l'INRAE (France) : `soilKindOf`, `readSoils`, `applySoils`. La requête : `realplace:soils`. |
 | `src/hedge-reading.js` | PUR. Les haies que personne n'a cartographiées, lues sur les hauteurs du LiDAR : crêtes du MNH (`ridgeMask`), là où les classes du LiDAR le permettent (`hedgeMayStand`, `hedgeCells`), suivies en lignes (`readHedges`). La requête : `realplace:lidarClasses`. |
+| `src/parcel-fences.js` | PUR. Les murs, clôtures et haies des jardins, le long des parcelles du cadastre, par des règles ; les murs que le LiDAR confirme à leur hauteur (`builtParcels`, `parcelFences`). Les parcelles viennent avec `realplace:extras`. |
 | `src/bdtopo-extras.js` | PUR. Ce que la BD TOPO relève encore (France) : haies en ligne, terrains de sport, cimetières et leurs tombes, plans d'eau (`addExtras`). La requête : `realplace:extras`. |
 | `src/real-place-import.js` | PUR. La traduction et les altitudes devenues le contenu d'une Scène (`sceneContentOf` : objets Tracés et Zones, relief, crédits). |
 | `src/real-place-ui.js` | La fenêtre d'une Scène neuve : le choix, puis recherche, carte (tuiles OpenStreetMap), taille de la zone, import avec sa progression. |
@@ -293,7 +294,20 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    `MIN_LENGTH` 10 m, 200 au plus : chacune un Tracé `haie` (`source: 'lidar'`, sa hauteur médiane en
    `wallHeight`, sa largeur de 0,8 à 3 m). Les murs ne sont pas lus : le LiDAR voit la plupart en végétation ou en
    sol, et ni les murs de soutènement ni les clôtures ; une crête douteuse est une haie. Sans la carte des
-   classes : les hauteurs seules.
+   classes : les hauteurs seules ; `wallCells` (le sol et le sursol pérenne de la carte) est gardé pour la suite.
+   Puis les limites des jardins (France, « Détaillé » et « Réaliste ») : les parcelles du cadastre (`parcels` de
+   `realplace:extras`, WFS `CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle`), `builtParcels` : la parcelle d'une
+   habitation porte un bâtiment de `HOUSE_MAX` 400 m² au plus, rien de plus grand, et fait `PARCEL_MAX` 3 000 m² au
+   plus (le parking d'un magasin, une école, une ferme restent ouverts) ; `dense` quand ses bâtiments en couvrent
+   la moitié (un centre ancien). `parcelFences` lit la limite de chaque parcelle d'habitation tous les mètres :
+   rien à moins de 2,5 m du contour d'un bâtiment ni à moins de 2 m d'un Tracé déjà là (OSM, BD TOPO, haie lue sur
+   le LiDAR) ; à moins de la demi-largeur d'une route + 4 m, sa FAÇADE ; sinon, si l'autre côté est une autre
+   parcelle d'habitation, une limite PARTAGÉE (lue une fois) ; sinon rien (un champ, un terrain vide). Les
+   tronçons de 3 m et plus : d'une parcelle dense, un mur de pierre de 2 m (`int:facade:pierre`) ; en façade, un
+   muret d'enduit de 0,9 m (`int:facade:enduit`) ouvert de 3 m devant la maison (dès 8 m) ; une limite partagée,
+   une clôture de 1,5 m ou une haie de 1,8 m (tirée du rang de la parcelle, la même à chaque import). Le LiDAR
+   d'abord : un tronçon relevé de 0,6 à 3 m sur 60 % de sa longueur sur `wallCells` est un mur à sa hauteur
+   médiane (`source: 'lidar'`). 400 morceaux au plus. Sans parcelles : rien de tout cela.
    Puis les petits ouvrages : `realplace:landmarks` (WFS `BDTOPO_V3:construction_ponctuelle`), `readLandmarks` :
    Croix → `croix`, Calvaire → `calvaire`, Eolienne → `eolienne`, Antenne → `antenne`, Clocher → `clocher` (les
    autres laissés de côté), leur `hauteur` relevée gardée quand elle est vraisemblable, un ouvrage qu'OSM a déjà
