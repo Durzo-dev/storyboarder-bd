@@ -455,6 +455,41 @@ function maillage(T, pos, uvs, mat){
   return new T.Mesh(g, mat);
 }
 
+/** A gable tall enough for a room under the roof gets a window (signalled: a big blind gable looked odd). */
+export const GABLE_WINDOW = Object.freeze({ minHeight: 2.2, minWidth: 2.5, width: 0.7, height: 1, margin: 0.25 });
+
+/**
+ * The window of a gable (`points`: its outline, vertical, base first: points[0] to points[1] on its lowest line), or
+ * null: under its peak, as wide as GABLE_WINDOW says, with room around it under the roof. `{ x, y, z, angle, w, h }`
+ * (y: its sill; angle: its turn about the vertical, as an opening's). PURE.
+ */
+export function fenetreDuPignon(points){
+  if (!Array.isArray(points) || points.length < 3) return null;
+  const a = points[0], c = points[1];
+  const L = Math.hypot(c.x - a.x, c.z - a.z);
+  if (!(L >= GABLE_WINDOW.minWidth)) return null;
+  const d = { x: (c.x - a.x) / L, z: (c.z - a.z) / L };
+  const uv = points.map(q => ({ u: (q.x - a.x) * d.x + (q.z - a.z) * d.z, y: q.y }));
+  const base = Math.min(a.y, c.y);
+  // The outline's top at u: the highest of its edges there.
+  const top = (u) => {
+    let best = -Infinity;
+    for (let i = 0; i < uv.length; i++) {
+      const p = uv[i], q = uv[(i + 1) % uv.length];
+      if ((p.u - u) * (q.u - u) > 0 || p.u === q.u) continue;
+      best = Math.max(best, p.y + (q.y - p.y) * (u - p.u) / (q.u - p.u));
+    }
+    return best;
+  };
+  const peak = uv.reduce((m, q) => (q.y > m.y ? q : m), uv[0]);
+  const w = GABLE_WINDOW.width, half = w / 2 + GABLE_WINDOW.margin;
+  const u0 = Math.min(L - half, Math.max(half, peak.u));
+  const room = Math.min(top(u0 - w / 2), top(u0 + w / 2)) - base;
+  if (!(top(u0) - base >= GABLE_WINDOW.minHeight) || !(room >= GABLE_WINDOW.height + 2 * GABLE_WINDOW.margin)) return null;
+  const y = base + Math.min(0.6, (room - GABLE_WINDOW.height) / 2);
+  return { x: a.x + d.x * u0, y, z: a.z + d.z * u0, angle: -Math.atan2(d.z, d.x), w, h: GABLE_WINDOW.height };
+}
+
 /**
  * Les toits d'un niveau (#458) : les pans (épaissis : dessous et rive), les pignons qui ferment les
  * murs sous eux (de la matière de la façade), ou, sur un toit plat, son acrotère ou son garde-corps.
@@ -493,6 +528,22 @@ function construireToits(T, b, n, mats, groupe){
         eventail(p.points, p.points.map(q => [q.x * d.x + q.z * d.z, q.y]), pp, pu, true, p.triangles || null);
       });
       if (pp.length) groupe.add(maillage(T, pp, pu, facade));
+      // A window in each gable tall enough (fenetreDuPignon): its frame and its glass, through the gable's face.
+      g.pignons.forEach(p => {
+        const f = fenetreDuPignon(p.points);
+        if (!f) return;
+        const fen = new T.Group();
+        fen.position.set(f.x, f.y, f.z);
+        fen.rotation.y = f.angle;
+        const boite = (lx, ly, lz, x, y, mat) => { const m = new T.Mesh(boiteUnite(T), mat); m.scale.set(lx, ly, lz); m.position.set(x, y, 0); fen.add(m); };
+        const ep = 0.06, prof = 0.14;
+        boite(ep, f.h, prof, -f.w / 2 + ep / 2, f.h / 2, mats.cadre);
+        boite(ep, f.h, prof, f.w / 2 - ep / 2, f.h / 2, mats.cadre);
+        boite(f.w, ep, prof, 0, f.h - ep / 2, mats.cadre);
+        boite(f.w, ep, prof, 0, ep / 2, mats.cadre);
+        boite(f.w - 2 * ep, f.h - 2 * ep, 0.1, 0, f.h / 2, mats.verre);
+        groupe.add(fen);
+      });
     } else if (t.reglages.bordure === 'acrotere') {
       // Un anneau entre la face extérieure des murs et son retrait, sur le toit plat ; et autour de
       // chaque cour (#458c).

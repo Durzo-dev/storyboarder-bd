@@ -73,7 +73,9 @@ vue de dessus, y vers le haut en 3D, origine libre). C'est l'Élément placé qu
 - **Pièces** : seuls le nom, le `repere` (un point intérieur) et les revêtements sont gardés ; la forme
   se recalcule. `vide: true` fait une cour.
 - **Toits** : un par niveau (`niveau.toit`, absent = plat) : `{ type, pente, debord, sens, bordure,
-  revetement }`. Le champ `toit` au niveau du bâtiment est relu et gardé, mais n'est pas dessiné.
+  revetement }`. Le champ `toit` au niveau du bâtiment est relu et gardé, mais n'est pas dessiné. Un pignon de
+  2,2 m de haut ou plus et de 2,5 m de large ou plus reçoit une fenêtre sous sa pointe (`fenetreDuPignon`,
+  `GABLE_WINDOW` : 0,7 × 1 m, avec 0,25 m de marge sous les pans), dessinée, pas enregistrée.
 - **Revêtements** : `{ texture: 'int:<id>' | 'tex:<dossier>' | null, couleur: '#rrggbb' | null }`.
 
 Une valeur illisible prend sa valeur par défaut, un mur illisible est écarté, un champ inconnu est

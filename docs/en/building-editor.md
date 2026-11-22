@@ -72,7 +72,9 @@ y upwards in 3D, free origin). The placed Element converts to the Scene.
 - **Rooms**: only the name, the `repere` (an inside point) and the finishes are kept; the shape is
   recomputed. `vide: true` makes a courtyard.
 - **Roofs**: one per level (`niveau.toit`, absent = flat): `{ type, pente, debord, sens, bordure,
-  revetement }`. The building-level `toit` field is read back and kept, but not drawn.
+  revetement }`. The building-level `toit` field is read back and kept, but not drawn. A gable 2.2 m high or
+  more and 2.5 m wide or more gets a window under its peak (`fenetreDuPignon`, `GABLE_WINDOW`: 0.7 × 1 m, with
+  0.25 m of room under the slopes), drawn, not stored.
 - **Finishes**: `{ texture: 'int:<id>' | 'tex:<folder>' | null, couleur: '#rrggbb' | null }`.
 
 An unreadable value takes its default, an unreadable wall is dropped, an unknown field is kept as is.

@@ -4,11 +4,12 @@
  * source says where the walls and fences are and what they are (the aerial photo is too coarse, the LiDAR sees
  * most walls as vegetation and no fence; durzo-docs). The cadastre's parcels say where they CAN be: 93 % of the
  * walls OSM knows in Sare stand within 2 m of a parcel's limit (measured 22 Nov. 2026). So the limits of the
- * built parcels are closed with what is likely there, by rules (decided with Durzo):
+ * homes' parcels are closed ALL ROUND with what is likely there, by rules (decided with Durzo):
  *   - along a road, a low wall (an opening for the way in, before the house);
- *   - between two built parcels, a fence or a hedge; nothing along a field or an empty plot;
+ *   - elsewhere (a neighbour, a field, an empty plot), a fence or a hedge;
  *   - in an old centre (a parcel mostly built), a high wall instead;
- *   - never against a building, nor where a Path (OSM, BD TOPO, a hedge read on the LiDAR) already is.
+ *   - a side that already has a wall or a hedge somewhere (OSM, BD TOPO, read on the LiDAR) is completed with it;
+ *   - never across a road or a path, nor along a building's wall: the pieces run up to it, and to each other.
  * And the LiDAR confirms (`heights`, height-reading.js; `walls`, hedge-reading.js wallCells: the LiDAR's ground and
  * perennial above-ground, not its vegetation, buildings or unnamed things, cars): a limit raised 0.6 to 3 m along
  * most of it, there, is a real wall, its height measured. PURE.
@@ -21,11 +22,16 @@ import { insidePolygon, nearestOnPolyline } from './osm-scene.js';
 const STEP = 1;
 /** A limit is along a road within this much of its edge (m). */
 const ROAD_REACH = 4;
-/** Nothing within this much of a building's outline (m), nor of a known Path. */
+/** Nothing within this much of a building's outline (m): the piece runs up to it instead; nor of a known Path. */
 const BUILDING_CLEAR = 2.5;
 const PATH_CLEAR = 2;
+/** A limit is ON a road or a path within this share of its half width (it crosses it): left open there. A limit
+ * along a road's edge is not (the cadastre's limit and the road's drawn edge are a metre or so apart). */
+const ON_ROAD = 0.75;
+/** How far a piece's end reaches to join a building or a known Path (m). */
+const JOIN = 4;
 /** The shortest piece laid (m); the opening left for the way in (m), in a front of this length at least. */
-export const MIN_RUN = 3;
+export const MIN_RUN = 1;
 const OPENING = 3;
 const OPENING_FROM = 8;
 /** A parcel built over this share of its area is an old centre's: high walls. */
@@ -82,7 +88,7 @@ export function builtParcels(answer, translated, { toLocal }){
 }
 
 /**
- * The walls, fences and hedges along the limits of the built parcels: Paths `{ kind, world: { pts }, wallHeight,
+ * The walls, fences and hedges along the limits of the homes' parcels: Paths `{ kind, world: { pts }, wallHeight,
  * traceTexture?, source }` (source 'cadastre', or 'lidar' for a wall the heights confirm), MOST_PIECES at most.
  * `parcels`: builtParcels; `halfSize`: the zone's; `heights`: the MNH grid, `walls`: its cells where a wall may be
  * read (both optional: without them, the rules alone).
@@ -90,25 +96,31 @@ export function builtParcels(answer, translated, { toLocal }){
 export function parcelFences(parcels, translated, { halfSize, heights = null, walls = null } = {}){
   const paths = translated.paths || [];
   const roads = paths.filter(p => (p.kind === 'route' || p.kind === 'chemin') && p.world && Array.isArray(p.world.pts) && p.world.pts.length >= 2)
-    .map(p => ({ pts: p.world.pts, reach: (p.world.width > 0 ? p.world.width : (p.kind === 'route' ? 6 : 2)) / 2 + ROAD_REACH })).map(r => ({ ...r, box: boxOf(r.pts, r.reach) }));
-  const known = paths.filter(p => p.kind !== 'route' && p.kind !== 'chemin' && p.kind !== 'trottoir' && p.world && Array.isArray(p.world.pts) && p.world.pts.length >= 2)
-    .map(p => ({ pts: p.world.pts, box: boxOf(p.world.pts, PATH_CLEAR) }));
+    .map(p => { const half = (p.world.width > 0 ? p.world.width : (p.kind === 'route' ? 6 : 2)) / 2; return { pts: p.world.pts, half, reach: half + ROAD_REACH }; })
+    .map(r => ({ ...r, box: boxOf(r.pts, r.reach) }));
+  const known = paths.filter(p => ['muret', 'haie', 'cloture'].includes(p.kind) && p.world && Array.isArray(p.world.pts) && p.world.pts.length >= 2)
+    .map(p => ({ pts: p.world.pts, kind: p.kind, wallHeight: p.wallHeight, traceTexture: p.traceTexture, box: boxOf(p.world.pts, PATH_CLEAR) }));
   const feet = (translated.buildings || []).filter(b => Array.isArray(b.footprint) && b.footprint.length >= 3)
-    .map(b => ({ ring: b.footprint, box: boxOf(b.footprint, BUILDING_CLEAR) }));
+    .map(b => ({ ring: b.footprint.concat([b.footprint[0]]), box: boxOf(b.footprint, BUILDING_CLEAR) }));
   const built = parcels.filter(p => p.built);
   const h = halfSize;
-  /** What a point of parcel `k`'s limit faces: 'front', 'shared' (another built parcel, read once), or null. */
+  /** What a point of parcel `k`'s limit is: { face, ref? }. */
   const faceOf = (p, out, k) => {
-    if (Math.abs(p.x) > h || Math.abs(p.z) > h) return null;
-    if (feet.some(f => inBox(p, f.box) && (insidePolygon(p, f.ring) || distanceTo(p, f.ring.concat([f.ring[0]])) < BUILDING_CLEAR))) return null;
-    if (known.some(x => inBox(p, x.box) && distanceTo(p, x.pts) < PATH_CLEAR)) return null;
-    if (roads.some(r => inBox(p, r.box) && distanceTo(p, r.pts) < r.reach)) return 'front';
-    // Across the limit: of the two sides, the one out of this parcel.
+    if (Math.abs(p.x) > h || Math.abs(p.z) > h) return { face: 'out' };
+    const road = roads.find(r => inBox(p, r.box) && distanceTo(p, r.pts) < r.half * ON_ROAD);
+    if (road) return { face: 'road' };
+    const foot = feet.find(f => inBox(p, f.box) && (insidePolygon(p, f.ring) || distanceTo(p, f.ring) < BUILDING_CLEAR));
+    if (foot) return { face: 'house', ref: foot.ring };
+    const near = known.find(x => inBox(p, x.box) && distanceTo(p, x.pts) < PATH_CLEAR);
+    if (near) return { face: 'known', ref: near };
+    // Across the limit: of the two sides, the one out of this parcel; a limit two homes share is laid once.
     const own = built[k].ring;
     let across = { x: p.x + out.x * 1.5, z: p.z + out.z * 1.5 };
     if (insidePolygon(across, own)) across = { x: p.x - out.x * 1.5, z: p.z - out.z * 1.5 };
     const other = built.findIndex(q => q !== built[k] && inBox(across, q.box) && insidePolygon(across, q.ring));
-    return other > k ? 'shared' : null;
+    if (other >= 0 && other < k) return { face: 'theirs' };
+    if (roads.some(r => inBox(p, r.box) && distanceTo(p, r.pts) < r.reach)) return { face: 'front' };
+    return { face: 'side' };
   };
   const rise = (p) => {
     if (!heights || !walls) return null;
@@ -125,6 +137,7 @@ export function parcelFences(parcels, translated, { halfSize, heights = null, wa
   const out = [];
   built.forEach((parcel, k) => {
     const ring = parcel.ring;
+    // Every metre of the limit, each knowing its side of the ring (a side is completed with what it already has).
     const samples = [];
     for (let i = 0; i + 1 < ring.length; i++) {
       const a = ring[i], b = ring[i + 1], L = Math.hypot(b.x - a.x, b.z - a.z);
@@ -132,22 +145,55 @@ export function parcelFences(parcels, translated, { halfSize, heights = null, wa
       const ux = (b.x - a.x) / L, uz = (b.z - a.z) / L, nrm = { x: -uz, z: ux };
       for (let d = 0; d < L; d += STEP) {
         const p = { x: a.x + ux * d, z: a.z + uz * d };
-        samples.push({ p, face: faceOf(p, nrm, k) });
+        samples.push({ p, side: i, ...faceOf(p, nrm, k) });
       }
     }
-    // The runs: consecutive points facing the same way.
+    if (!samples.length) return;
+    // A side's own: the first known wall or hedge on it.
+    const sideKnown = new Map();
+    for (const s of samples) if (s.face === 'known' && !sideKnown.has(s.side)) sideKnown.set(s.side, s.ref);
+    const laid = (s) => s.face === 'front' || s.face === 'side';
+    // A run: one side of the ring, one face (or completed with what the side has); runs are joined end to end.
+    const kindOf = (s) => (sideKnown.has(s.side) ? 'own' : s.face) + ':' + s.side;
+    // Start where a run starts: the ring has no first point of its own.
+    let start = samples.findIndex((s, i) => { const q = samples[(i + samples.length - 1) % samples.length]; return laid(s) !== laid(q) || (laid(s) && kindOf(s) !== kindOf(q)); });
+    if (start < 0) start = 0;
+    const ordered = samples.slice(start).concat(samples.slice(0, start));
     let run = [];
-    const flush = () => {
-      if (run.length * STEP >= MIN_RUN) out.push(...piecesOf(run, parcel, k, rise));
+    const flush = (next) => {
+      if (run.length) {
+        const pts = run.map(s => s.p);
+        // Joined to what is next to it: a building's wall, a known Path, the next piece.
+        const before = ordered[(ordered.indexOf(run[0]) + ordered.length - 1) % ordered.length];
+        pts.unshift(...joinTo(before, run[0].p));
+        if (next) pts.push(...joinTo(next, run[run.length - 1].p, true));
+        if (lengthOf(pts) >= MIN_RUN) out.push(...piecesOf(run, pts, parcel, k, rise, sideKnown.get(run[0].side)));
+      }
       run = [];
     };
-    for (const s of samples) {
-      if (run.length && s.face !== run[0].face) flush();
-      if (s.face) run.push(s);
+    for (const s of ordered) {
+      if (run.length && (!laid(s) || kindOf(s) !== kindOf(run[0]))) flush(s);
+      if (laid(s)) run.push(s);
     }
-    flush();
+    flush(ordered[0]);
   });
   return out.slice(0, MOST_PIECES);
+}
+
+const lengthOf = (pts) => pts.slice(1).reduce((s, p, k) => s + Math.hypot(p.x - pts[k].x, p.z - pts[k].z), 0);
+
+/**
+ * The point a piece reaches out to, beyond its end `p`, toward its neighbour sample `s`: a building's wall or a
+ * known Path (their nearest point, within JOIN), the next piece (its first point); none along a road (left open).
+ */
+function joinTo(s, p, after = false){
+  if (!s) return [];
+  if (s.face === 'house' || s.face === 'known') {
+    const q = nearestOnPolyline(p, s.face === 'house' ? s.ref : s.ref.pts);
+    return q && Math.hypot(q.x - p.x, q.z - p.z) <= JOIN ? [q] : [];
+  }
+  if (s.face === 'front' || s.face === 'side' || s.face === 'theirs') return after ? [s.p] : [];
+  return [];
 }
 
 /** A line's points with the ones in a straight line between their neighbours (within 10 cm) left out. */
@@ -162,30 +208,35 @@ function straight(pts){
   return out;
 }
 
-/** A run's pieces: the front opened for the way in, its kind by the rules, a real wall if the LiDAR says so. */
-function piecesOf(run, parcel, k, rise){
+/**
+ * A run's pieces: the front opened for the way in; a wall if the LiDAR says so; what its side already has; else
+ * its kind by the rules.
+ */
+function piecesOf(run, all, parcel, k, rise, own){
   const face = run[0].face;
-  let parts = [run];
-  if (face === 'front' && run.length * STEP >= OPENING_FROM && parcel.houses.length) {
+  let parts = [all];
+  if (face === 'front' && !own && run.length * STEP >= OPENING_FROM && parcel.houses.length) {
     // The opening: before the house (the run's point nearest to it), OPENING metres wide.
     const house = parcel.houses[0];
     let at = 0, d0 = Infinity;
-    run.forEach((s, i) => { const d = Math.hypot(s.p.x - house.x, s.p.z - house.z); if (d < d0) { d0 = d; at = i; } });
+    all.forEach((p, i) => { const d = Math.hypot(p.x - house.x, p.z - house.z); if (d < d0) { d0 = d; at = i; } });
     const half = Math.round(OPENING / STEP / 2);
-    parts = [run.slice(0, Math.max(0, at - half)), run.slice(at + half + 1)];
+    parts = [all.slice(0, Math.max(0, at - half + 1)), all.slice(at + half)];
   }
+  const read = run.map(s => rise(s.p)).filter(v => v !== null);
+  const raised = read.filter(v => v >= WALL_RISE);
   const pieces = [];
   for (const part of parts) {
-    if (part.length * STEP < MIN_RUN) continue;
-    const pts = straight(part.map(s => ({ x: Math.round(s.p.x * 100) / 100, z: Math.round(s.p.z * 100) / 100 })));
-    const read = part.map(s => rise(s.p)).filter(v => v !== null);
-    const raised = read.filter(v => v >= WALL_RISE);
+    if (part.length < 2 || lengthOf(part) < MIN_RUN) continue;
+    const pts = straight(part.map(q => ({ x: Math.round(q.x * 100) / 100, z: Math.round(q.z * 100) / 100 })));
     if (read.length && raised.length / read.length >= WALL_SHARE) {
-      const hs = raised.sort((a, b) => a - b);
+      const hs = raised.slice().sort((a, b) => a - b);
       pieces.push({ kind: 'muret', world: { pts }, wallHeight: Math.round(hs[Math.floor(hs.length / 2)] * 10) / 10, traceTexture: parcel.dense ? STONE : RENDER, source: 'lidar' });
-      continue;
-    }
-    if (parcel.dense) pieces.push({ kind: 'muret', world: { pts }, wallHeight: HEIGHTS.wall, traceTexture: STONE, source: 'cadastre' });
+    } else if (own) {
+      const piece = { kind: own.kind, world: { pts }, wallHeight: own.wallHeight > 0 ? own.wallHeight : HEIGHTS[own.kind === 'muret' ? 'front' : own.kind === 'haie' ? 'hedge' : 'fence'], source: 'cadastre' };
+      if (own.kind === 'muret') piece.traceTexture = own.traceTexture || (parcel.dense ? STONE : RENDER);
+      pieces.push(piece);
+    } else if (parcel.dense) pieces.push({ kind: 'muret', world: { pts }, wallHeight: HEIGHTS.wall, traceTexture: STONE, source: 'cadastre' });
     else if (face === 'front') pieces.push({ kind: 'muret', world: { pts }, wallHeight: HEIGHTS.front, traceTexture: RENDER, source: 'cadastre' });
     else if (draw(k) < 0.5) pieces.push({ kind: 'cloture', world: { pts }, wallHeight: HEIGHTS.fence, source: 'cadastre' });
     else pieces.push({ kind: 'haie', world: { pts }, wallHeight: HEIGHTS.hedge, source: 'cadastre' });

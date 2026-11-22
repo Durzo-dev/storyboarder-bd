@@ -277,14 +277,17 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    `realplace:extras`, WFS `CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle`), `builtParcels`: a home's parcel holds a
    building of `HOUSE_MAX` 400 m² at most, nothing larger, and is `PARCEL_MAX` 3,000 m² at most (a shop's car
    park, a school, a farm stay open); `dense` when its buildings cover half of it (an old centre). `parcelFences`
-   reads each home parcel's limit every metre: nothing within 2.5 m of a building's outline nor 2 m of a Path
-   already there (OSM, BD TOPO, a hedge read on the LiDAR); within a road's half width + 4 m, its FRONT; else, if
-   the other side is another home parcel, a SHARED limit (read once); else nothing (a field, an empty plot). The
-   runs of 3 m or more: a dense parcel's, a 2 m wall of stone (`int:facade:pierre`); a front, a 0.9 m low wall of
-   render (`int:facade:enduit`) with a 3 m opening before the house (from 8 m); a shared limit, a 1.5 m fence or
-   a 1.8 m hedge (drawn from the parcel's rank, the same at every import). The LiDAR first: a run raised 0.6 to
-   3 m along 60 % of it on `wallCells` is a wall at its median height (`source: 'lidar'`). 400 pieces at most.
-   Without parcels: none of this.
+   closes each home parcel ALL ROUND, reading its limit every metre: open where a road or a path crosses it
+   (within 75 % of its half width); not within 2.5 m of a building's outline nor 2 m of a wall, hedge or fence
+   already there (OSM, BD TOPO, read on the LiDAR); a limit another home parcel shares is laid once; within a
+   road's half width + 4 m, its FRONT; elsewhere (a neighbour, a field, an empty plot), a SIDE. Runs follow one
+   side of the ring each and are joined end to end, and to the building's wall or the known Path beside them
+   (within 4 m). A side that already has a wall, hedge or fence is completed with it, at its height. Otherwise: a
+   dense parcel's, a 2 m wall of stone (`int:facade:pierre`); a front, a 0.9 m low wall of render
+   (`int:facade:enduit`) with a 3 m opening before the house (from 8 m); a side, a 1.5 m fence or a 1.8 m hedge
+   (drawn from the parcel's rank, the same at every import). The LiDAR first: a run raised 0.6 to 3 m along 60 %
+   of it on `wallCells` is a wall at its median height (`source: 'lidar'`). 400 pieces at most. Without parcels:
+   none of this.
    Then the landmarks: `realplace:landmarks` (WFS `BDTOPO_V3:construction_ponctuelle`), `readLandmarks`:
    Croix → `croix`, Calvaire → `calvaire`, Eolienne → `eolienne`, Antenne → `antenne`, Clocher → `clocher`
    (the others left out), their surveyed `hauteur` kept within reason, one OSM already maps (the same object

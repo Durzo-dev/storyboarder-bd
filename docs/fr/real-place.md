@@ -299,15 +299,18 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    `realplace:extras`, WFS `CADASTRALPARCELS.PARCELLAIRE_EXPRESS:parcelle`), `builtParcels` : la parcelle d'une
    habitation porte un bâtiment de `HOUSE_MAX` 400 m² au plus, rien de plus grand, et fait `PARCEL_MAX` 3 000 m² au
    plus (le parking d'un magasin, une école, une ferme restent ouverts) ; `dense` quand ses bâtiments en couvrent
-   la moitié (un centre ancien). `parcelFences` lit la limite de chaque parcelle d'habitation tous les mètres :
-   rien à moins de 2,5 m du contour d'un bâtiment ni à moins de 2 m d'un Tracé déjà là (OSM, BD TOPO, haie lue sur
-   le LiDAR) ; à moins de la demi-largeur d'une route + 4 m, sa FAÇADE ; sinon, si l'autre côté est une autre
-   parcelle d'habitation, une limite PARTAGÉE (lue une fois) ; sinon rien (un champ, un terrain vide). Les
-   tronçons de 3 m et plus : d'une parcelle dense, un mur de pierre de 2 m (`int:facade:pierre`) ; en façade, un
-   muret d'enduit de 0,9 m (`int:facade:enduit`) ouvert de 3 m devant la maison (dès 8 m) ; une limite partagée,
-   une clôture de 1,5 m ou une haie de 1,8 m (tirée du rang de la parcelle, la même à chaque import). Le LiDAR
-   d'abord : un tronçon relevé de 0,6 à 3 m sur 60 % de sa longueur sur `wallCells` est un mur à sa hauteur
-   médiane (`source: 'lidar'`). 400 morceaux au plus. Sans parcelles : rien de tout cela.
+   la moitié (un centre ancien). `parcelFences` clôt chaque parcelle d'habitation SUR TOUT SON TOUR, en lisant sa
+   limite tous les mètres : ouverte là où une route ou un chemin la traverse (à moins de 75 % de sa
+   demi-largeur) ; rien à moins de 2,5 m du contour d'un bâtiment ni à moins de 2 m d'un mur, d'une haie ou d'une
+   clôture déjà là (OSM, BD TOPO, lue sur le LiDAR) ; une limite partagée avec une autre parcelle d'habitation est
+   posée une fois ; à moins de la demi-largeur d'une route + 4 m, sa FAÇADE ; ailleurs (un voisin, un champ, un
+   terrain vide), un CÔTÉ. Les tronçons suivent chacun un côté du contour et se rejoignent bout à bout, et
+   rejoignent le mur du bâtiment ou le Tracé connu voisin (à 4 m au plus). Un côté qui a déjà un mur, une haie ou
+   une clôture est complété avec, à sa hauteur. Sinon : d'une parcelle dense, un mur de pierre de 2 m
+   (`int:facade:pierre`) ; en façade, un muret d'enduit de 0,9 m (`int:facade:enduit`) ouvert de 3 m devant la
+   maison (dès 8 m) ; un côté, une clôture de 1,5 m ou une haie de 1,8 m (tirée du rang de la parcelle, la même à
+   chaque import). Le LiDAR d'abord : un tronçon relevé de 0,6 à 3 m sur 60 % de sa longueur sur `wallCells` est
+   un mur à sa hauteur médiane (`source: 'lidar'`). 400 morceaux au plus. Sans parcelles : rien de tout cela.
    Puis les petits ouvrages : `realplace:landmarks` (WFS `BDTOPO_V3:construction_ponctuelle`), `readLandmarks` :
    Croix → `croix`, Calvaire → `calvaire`, Eolienne → `eolienne`, Antenne → `antenne`, Clocher → `clocher` (les
    autres laissés de côté), leur `hauteur` relevée gardée quand elle est vraisemblable, un ouvrage qu'OSM a déjà
