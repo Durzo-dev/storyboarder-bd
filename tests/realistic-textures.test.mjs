@@ -93,7 +93,7 @@ describe('Realistic: the stores\' textures in the bundled ones\' place', () => {
     assert.equal(realisticTextureOf('render', { south: false }), null, 'white_stucco_02 is the bundled render');
     assert.equal(realisticTextureOf('render', { south: true }), 'painted_plaster_wall');
     assert.equal(realisticTextureOf('paving', { south: true }), null);
-    assert.equal(realisticTextureOf('road', {}), 'asphalt_01');
+    assert.equal(realisticTextureOf('road', {}), 'asphalt_04');
     assert.throws(() => realisticTextureOf('marble', {}), /unknown slot/);
     assert.ok(Object.values(REALISTIC_TEXTURES).every(s => s.south && s.north && s.usages.length));
   });
@@ -111,7 +111,7 @@ describe('Realistic: the stores\' textures in the bundled ones\' place', () => {
   });
   test('what a place needs: each slot it uses once, in the table\'s order, the bundled ones left out', () => {
     assert.deepEqual(realisticNeeds(place(), { south: true }).map(n => [n.slot, n.polyhaven]),
-      [['render', 'painted_plaster_wall'], ['brick', 'red_bricks_04'], ['asphalt', 'clean_asphalt'], ['road', 'asphalt_01'], ['lowWall', 'rustic_stone_wall_02']]);
+      [['render', 'painted_plaster_wall'], ['brick', 'red_bricks_04'], ['asphalt', 'clean_asphalt'], ['road', 'asphalt_04'], ['lowWall', 'rustic_stone_wall_02']]);
     assert.deepEqual(realisticNeeds(place(), { south: false }).map(n => n.slot), ['brick', 'asphalt', 'road', 'lowWall']);
     assert.deepEqual(realisticNeeds({}, {}), []);
     assert.deepEqual(realisticNeeds(place(), { south: true })[0].usages, ['mur-ext']);
