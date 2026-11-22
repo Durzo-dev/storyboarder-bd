@@ -20,6 +20,7 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
 | `src/landmarks.js` | PUR. Les croix, calvaires, éoliennes, antennes-relais et clochers relevés par l'IGN (France, BD TOPO `construction_ponctuelle`) : `readLandmarks`. La requête : `realplace:landmarks`. |
 | `src/realistic-textures.js` | PUR. Les textures du niveau « Réaliste » : pour chaque emplacement (enduit, pierre, brique, pavés, gravier, asphalte, route, muret) une texture Poly Haven par région (`REALISTIC_TEXTURES`), ce qu'un lieu traduit demande (`realisticNeeds`) et la substitution (`applyRealisticTextures`). |
 | `src/soils.js` | PUR. La couleur de la terre nue (et, au niveau Réaliste, sa texture) d'après la carte des sols de l'INRAE (France) : `soilKindOf`, `readSoils`, `applySoils`. La requête : `realplace:soils`. |
+| `src/hedge-reading.js` | PUR. Les haies que personne n'a cartographiées, lues sur les hauteurs du LiDAR : crêtes du MNH (`ridgeMask`), là où les classes du LiDAR le permettent (`hedgeMayStand`, `hedgeCells`), suivies en lignes (`readHedges`). La requête : `realplace:lidarClasses`. |
 | `src/bdtopo-extras.js` | PUR. Ce que la BD TOPO relève encore (France) : haies en ligne, terrains de sport, cimetières et leurs tombes, plans d'eau (`addExtras`). La requête : `realplace:extras`. |
 | `src/real-place-import.js` | PUR. La traduction et les altitudes devenues le contenu d'une Scène (`sceneContentOf` : objets Tracés et Zones, relief, crédits). |
 | `src/real-place-ui.js` | La fenêtre d'une Scène neuve : le choix, puis recherche, carte (tuiles OpenStreetMap), taille de la zone, import avec sa progression. |
@@ -280,6 +281,19 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    cimetière en gravier avec des rangées de tombes (`gravesOf` : 3 m entre rangées, 1,6 m le long d'une rangée,
    dans le sens de son plus long côté, à 1,5 m de son mur, 200 au plus, aucune là où OSM a des tombes), un plan
    d'eau en eau ; une zone dont le milieu est déjà dans une Zone OSM du même sol est celle d'OSM.
+   Puis les haies que personne n'a cartographiées (France, « Détaillé » et « Réaliste », avec les hauteurs) : la
+   carte des classes du LiDAR sur la grille des hauteurs (`realplace:lidarClasses`, WMS `IGNF_LIDAR-HD_CLASS`,
+   servie seulement en Web Mercator : le processus principal convertit l'emprise ; un PNG, décodé en mémoire puis
+   jeté, `classesDuLidar`), `hedgeCells` : là où une haie peut se tenir (végétation, sol, sursol pérenne ; pas un
+   bâtiment, ni ce que le LiDAR n'a pas su nommer, une voiture garée) ; puis `readHedges` : les CRÊTES du MNH
+   (de `MIN_RISE` 0,5 à `MAX_RISE` 5 m, sous 70 % de cette hauteur à 3 m des deux côtés, selon l'une de quatre
+   directions), hors des contours des bâtiments et 0,5 m autour, des routes (1 m de plus : les voitures garées)
+   et des tracés et clôtures connus (`obstaclesOf`) ; les cases réunies, chaque partie suivie par son plus long
+   chemin, puis le plus long dans ce qui reste (les cases à 3 m d'un chemin sont prises), gardées dès
+   `MIN_LENGTH` 10 m, 200 au plus : chacune un Tracé `haie` (`source: 'lidar'`, sa hauteur médiane en
+   `wallHeight`, sa largeur de 0,8 à 3 m). Les murs ne sont pas lus : le LiDAR voit la plupart en végétation ou en
+   sol, et ni les murs de soutènement ni les clôtures ; une crête douteuse est une haie. Sans la carte des
+   classes : les hauteurs seules.
    Puis les petits ouvrages : `realplace:landmarks` (WFS `BDTOPO_V3:construction_ponctuelle`), `readLandmarks` :
    Croix → `croix`, Calvaire → `calvaire`, Eolienne → `eolienne`, Antenne → `antenne`, Clocher → `clocher` (les
    autres laissés de côté), leur `hauteur` relevée gardée quand elle est vraisemblable, un ouvrage qu'OSM a déjà

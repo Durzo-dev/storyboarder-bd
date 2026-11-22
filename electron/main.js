@@ -1224,6 +1224,7 @@ ipcMain.handle('realplace:streetPhotos', async (event, bbox) => realPlace.street
 ipcMain.handle('realplace:streetPhoto', async (event, url) => realPlace.streetPhoto(url));
 ipcMain.handle('realplace:aerialPhoto', async (event, bbox, width, height) => realPlace.aerialPhoto(bbox, width, height));
 ipcMain.handle('realplace:heightGrid', async (event, bbox, width, height) => realPlace.heightGrid(bbox, width, height));
+ipcMain.handle('realplace:lidarClasses', async (event, bbox, width, height) => realPlace.lidarClasses(bbox, width, height));
 ipcMain.handle('realplace:terrainGrid', async (event, bbox, width, height) => realPlace.terrainGrid(bbox, width, height));
 ipcMain.handle('realplace:flora', async (event, lat, lon, km) => realPlace.flora(lat, lon, km));
 ipcMain.handle('realplace:bdtopo', async (event, bbox) => realPlace.bdtopo(bbox));

@@ -30,6 +30,7 @@ import { aerialPhotoPlan, AERIAL_CREDIT } from './aerial-photo.js';
 import { classGrid, readAerialPhoto } from './aerial-reading.js';
 import { monumentsOf } from './monuments.js';
 import { heightPlan, heightGrid, treeHeightAt, LIDAR_CREDIT } from './height-reading.js';
+import { readHedges, hedgeCells } from './hedge-reading.js';
 import { floraOf, applyFlora, FLORA_CREDIT, FLORA_RADIUS_KM } from './flora.js';
 import { MODEL_USAGES, FACES, MAX_DOWNLOADS, queriesFor, candidatesFor, usagesOf, applyModels } from './realistic-models.js';
 import { telechargerEnSilence, dejaPossede, rafraichirPossedes, sketchfabConnecte, signIn } from './store-ui.js';
@@ -522,6 +523,19 @@ async function importer(){
         console.info(`[real-place] extras: ${n.hedges} hedges, ${n.sports} sports grounds, ${n.cemeteries} cemeteries (${n.graves} graves), ${n.waters} waters`);
       }
     }
+    // France, Detailed and Realistic: the hedges no one mapped (gardens), read on the LiDAR's heights, where its
+    // classes allow (hedge-reading.js, #493); out of the buildings, the roads (and their parked cars), the known
+    // barriers. Never blocking: without the class map, the heights alone.
+    if (hauteurs) {
+      const cells = await classesDuLidar(hauteurs, { toGeo, halfSize, country });
+      if (arrete()) return annule;
+      const { rings, lines } = obstaclesOf(translated);
+      const hedges = readHedges(hauteurs, { rings, lines: lines.map(l => (l.kind === 'route' ? { ...l, half: l.half + 1 } : l)), cells });
+      for (const hd of hedges) {
+        translated.paths.push({ kind: 'haie', world: { pts: hd.pts, width: Math.min(3, Math.max(0.8, hd.width)) }, wallHeight: hd.rise, source: 'lidar' });
+      }
+      console.info(`[real-place] hedges read on the LiDAR: ${hedges.length}${cells ? '' : ' (no class map)'}`);
+    }
     // France, Detailed and Realistic: the crosses, calvaries, wind turbines, masts and bell towers the IGN surveys
     // (landmarks.js, #482d), those OSM has not already.
     if (country === 'fr' && niveau !== 'simple' && api.realPlaceLandmarks) {
@@ -744,6 +758,28 @@ async function lireLaFlore(centre){
     if (!f) console.warn('[real-place] flora: none', r && r.error);
     return f;
   } catch (e) { console.warn('[real-place] flora:', e.message); return null; }
+}
+
+/**
+ * THE LIDAR'S CLASSES (hedge-reading.js decides; here the network and the pixels): the class map over the heights'
+ * grid, decoded in memory and dropped: the cells where a hedge may stand (hedgeCells), or null.
+ */
+async function classesDuLidar(grille, { toGeo, halfSize, country }){
+  const api = window.storyboarderAPI;
+  const plan = heightPlan({ toGeo, halfSize, country });
+  if (!plan || !api || !api.realPlaceLidarClasses || typeof createImageBitmap !== 'function') return null;
+  const r = await api.realPlaceLidarClasses(plan.bbox, plan.width, plan.height);
+  if (!r || !r.data) { console.warn('[real-place] lidar classes: none', r && r.error); return null; }
+  try {
+    const bmp = await createImageBitmap(new Blob([r.data], { type: 'image/png' }));
+    const canvas = document.createElement('canvas');
+    canvas.width = bmp.width; canvas.height = bmp.height;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(bmp, 0, 0);
+    const map = ctx.getImageData(0, 0, bmp.width, bmp.height);
+    bmp.close();
+    return hedgeCells(map, grille);
+  } catch (e) { console.warn('[real-place] lidar classes', e); return null; }
 }
 
 async function lireLesHauteurs({ toGeo, halfSize, country }){

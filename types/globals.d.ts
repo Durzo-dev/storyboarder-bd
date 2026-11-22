@@ -109,6 +109,7 @@ interface StoryboarderAPI {
   realPlaceAerialPhoto(bbox: { south: number; west: number; north: number; east: number }, width: number, height: number): Promise<{ data?: Uint8Array; error?: string }>;
   realPlaceFlora(lat: number, lon: number, km?: number): Promise<{ json?: any; error?: string }>;
   realPlaceHeightGrid(bbox: { south: number; west: number; north: number; east: number }, width: number, height: number): Promise<{ data?: Uint8Array; error?: string }>;
+  realPlaceLidarClasses(bbox: { south: number; west: number; north: number; east: number }, width: number, height: number): Promise<{ data?: Uint8Array; error?: string }>;
   realPlaceTerrainGrid(bbox: { south: number; west: number; north: number; east: number }, width: number, height: number): Promise<{ data?: Uint8Array; error?: string }>;
   realPlaceBdTopo(bbox: { south: number; west: number; north: number; east: number }): Promise<{ json?: any; error?: string }>;
   realPlaceExtras(bbox: { south: number; west: number; north: number; east: number }): Promise<{ hedges?: any; sports?: any; cemeteries?: any; waters?: any; error?: string }>;

@@ -20,6 +20,7 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
 | `src/landmarks.js` | PURE. The crosses, calvaries, wind turbines, relay masts and bell towers the IGN surveys (France, BD TOPO `construction_ponctuelle`): `readLandmarks`. The request: `realplace:landmarks`. |
 | `src/realistic-textures.js` | PURE. The « Realistic » level's textures: for each slot (render, stone, brick, cobbles, gravel, asphalt, road, low wall) a Poly Haven texture by region (`REALISTIC_TEXTURES`), what a translated place needs (`realisticNeeds`) and the swap (`applyRealisticTextures`). |
 | `src/soils.js` | PURE. The bare earth's colour (and, « Realistic », its texture) from the INRAE's soil map (France): `soilKindOf`, `readSoils`, `applySoils`. The request: `realplace:soils`. |
+| `src/hedge-reading.js` | PURE. The hedges no one mapped, read on the LiDAR's heights: ridges of the MNH (`ridgeMask`), where the LiDAR's classes allow (`hedgeMayStand`, `hedgeCells`), followed as lines (`readHedges`). The request: `realplace:lidarClasses`. |
 | `src/bdtopo-extras.js` | PURE. What else the BD TOPO surveys (France): hedges as lines, sports grounds, cemeteries and their graves, water surfaces (`addExtras`). The request: `realplace:extras`. |
 | `src/real-place-import.js` | PURE. The translation and the altitudes turned into a Scene's content (`sceneContentOf`: Path and Zone objects, relief, credits). |
 | `src/real-place-ui.js` | The new Scene's window: the choice, then search, map (OpenStreetMap tiles), zone size, import with its progress. |
@@ -259,6 +260,18 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    of graves (`gravesOf`: 3 m apart, 1.6 m along a row, as its longest side, 1.5 m inside its wall, 200 at most,
    none where OSM has graves), a water surface as water; an area whose middle an OSM Zone of the same ground
    holds is OSM's.
+   Then the hedges no one mapped (France, « Detailed » and « Realistic », with the heights): the LiDAR's class map
+   over the heights' grid (`realplace:lidarClasses`, WMS `IGNF_LIDAR-HD_CLASS`, only served in Web Mercator: the
+   main process turns the bounding box; a PNG, decoded in memory and dropped, `classesDuLidar`), `hedgeCells`:
+   where a hedge may stand (vegetation, ground, perennial above-ground; not a building, nor what the LiDAR could
+   not name, a parked car); then `readHedges`: the RIDGES of the MNH (raised `MIN_RISE` 0.5 to `MAX_RISE` 5 m,
+   under 70 % of that 3 m away on both sides, along one of four directions), out of the buildings' outlines and
+   0.5 m around, of the roads (1 m wider: parked cars) and the known paths and barriers (`obstaclesOf`); the cells
+   gathered, each part followed by its longest path, then the longest through what is left (cells within 3 m of a
+   path taken), kept from `MIN_LENGTH` 10 m, 200 at most: each a `haie` Path (`source: 'lidar'`, its median
+   height as `wallHeight`, its width 0.8 to 3 m). Walls are not read: the LiDAR sees most of them as vegetation
+   or ground, and neither retaining walls nor fences; a ridge in doubt is a hedge. Without the class map: the
+   heights alone.
    Then the landmarks: `realplace:landmarks` (WFS `BDTOPO_V3:construction_ponctuelle`), `readLandmarks`:
    Croix → `croix`, Calvaire → `calvaire`, Eolienne → `eolienne`, Antenne → `antenne`, Clocher → `clocher`
    (the others left out), their surveyed `hauteur` kept within reason, one OSM already maps (the same object

@@ -436,6 +436,30 @@ async function aerialPhoto(bbox, width, height){
 }
 
 /**
+ * THE LIDAR'S CLASSES OF A ZONE (src/hedge-reading.js reads them): the IGN's LiDAR HD class map (ground,
+ * vegetation, building…), a PNG from the Géoplateforme's WMS, no key. The layer is only served in Web Mercator:
+ * the bounding box is turned into it (over a few hundred metres the two grids match within a pixel). `bbox`:
+ * degrees; `width`, `height`: pixels (2048 at most). Returns { data } (the PNG's bytes) or { error }.
+ */
+async function lidarClasses(bbox, width, height){
+  const n = (v) => Number(v);
+  const b = bbox || {};
+  if (![b.south, b.west, b.north, b.east].every(v => Number.isFinite(n(v))) || !(n(b.north) > n(b.south)) || !(n(b.east) > n(b.west))) return { error: 'response' };
+  const w = Math.max(16, Math.min(2048, Math.round(n(width) || 0))), h = Math.max(16, Math.min(2048, Math.round(n(height) || 0)));
+  const x = (lon) => n(lon) * 20037508.342789244 / 180;
+  const y = (lat) => Math.log(Math.tan((90 + n(lat)) * Math.PI / 360)) * 6378137;
+  const url = `${AERIAL_WMS}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=IGNF_LIDAR-HD_CLASS&STYLES=&CRS=EPSG:3857`
+    + `&BBOX=${x(b.west)},${y(b.south)},${x(b.east)},${y(b.north)}&WIDTH=${w}&HEIGHT=${h}&FORMAT=image/png`;
+  const started = Date.now();
+  const r = await request(url, { json: false, timeout: 30000 });
+  if (r.error) return r;
+  // A WMS error comes back as XML with a 200: a map begins with the PNG signature.
+  if (!r.bytes || r.bytes.length < 100 || r.bytes[0] !== 0x89 || r.bytes[1] !== 0x50) { console.warn('[real-place] lidar classes: not a PNG'); return { error: 'response' }; }
+  console.info(`[real-place] lidar classes: ${w}×${h} px, ${Math.round(r.bytes.length / 1024)} KB in ${Date.now() - started} ms`);
+  return { data: r.bytes };
+}
+
+/**
  * THE HEIGHTS OF A ZONE (src/height-reading.js plans and reads them): the IGN's LiDAR HD MNH (the height above
  * the ground, 50 cm), from the Géoplateforme's WMS as raw floats (`image/x-bil;bits=32`, row by row from the
  * north), no key. `bbox`: degrees; `width`, `height`: cells (2048 at most). Returns { data } (the bytes) or
@@ -526,4 +550,4 @@ async function tile(z, x, y){
   return { data: r.bytes };
 }
 
-module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, aerialPhoto, heightGrid, terrainGrid, flora, country, osm, bdtopo, bdTopoUrl, vegetation, landmarks, soils, extras, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };
+module.exports = { search, suggest, abortImport, streetPhotos, streetPhoto, aerialPhoto, lidarClasses, heightGrid, terrainGrid, flora, country, osm, bdtopo, bdTopoUrl, vegetation, landmarks, soils, extras, altitudes, tile, overpassQuery, ALTITUDE_HOSTS };
