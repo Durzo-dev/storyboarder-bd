@@ -31,7 +31,8 @@ Des champs ajoutés : un fichier ancien se lit tel quel.
   cases (une égalité à une Zone), chaque case partagée par les étiquettes de ses coins, ses côtés coupés en leur
   milieu (marching squares ; trois étiquettes ou plus, un quart chacune) : bords adoucis, aucun trou où des Zones se
   touchent, une Zone déborde d'une demi-case sur le sol nu ; chaque triangle coupé par la diagonale de case du relief
-  pour que, drapé, il repose sur le relief ; sommets partagés (normales lissées).
+  pour que, drapé, il repose sur le relief ; sommets partagés (normales lissées). Sa texture a la densité du Sol
+  (`repetitionDuSol3D` : `repeat` tuiles sur `GROUND_PLANE_SIZE_3D`), comme le sol d'une pièce, et son relief s'il en a un.
 - **Tracé `riviere`** : `world.pts`, `world.width`, `profondeur`.
 - **Tracé `trottoir`** : `world.pts`, `world.width` (2 m par défaut) ; dessiné en dalle de `TROTTOIR_BORDURE_M` (0,14 m) de haut, sa bordure des deux côtés, dans le grain béton du Sol, plus clair.
 

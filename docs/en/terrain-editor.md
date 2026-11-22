@@ -31,7 +31,8 @@ Added fields: an old file reads as it is.
   by its corners' labels with its edges cut at their middles (marching squares; three labels or more, a quarter
   each), so edges are smoothed, Zones meeting leave no gap, and a Zone reaches half a cell into bare ground; each
   triangle cut by the relief's cell diagonal so that, draped, it lies on the relief; vertices shared (smooth
-  normals).
+  normals). Its texture has the Ground's density (`repetitionDuSol3D`: `repeat` tiles over `GROUND_PLANE_SIZE_3D`), as
+  a room's floor, and its relief when it has one.
 - **`riviere` path**: `world.pts`, `world.width`, `profondeur`.
 - **`trottoir` path**: `world.pts`, `world.width` (2 m by default); drawn as a slab `TROTTOIR_BORDURE_M` (0.14 m) high, its kerb on both sides, in the Ground's concrete grain, lighter.
 

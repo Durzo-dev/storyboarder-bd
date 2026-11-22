@@ -569,6 +569,19 @@ describe('Sol : la matière photographiée, et le manque qui doit rester un manq
   });
 });
 
+describe('Zones et sols des pièces : la densité du Sol', () => {
+  test('⚠️ UNE ZONE D\'HERBE A LA TUILE DE L\'HERBE DU SOL (4 m pour un repeat de 3000), pas 3 cm', async () => {
+    const { repetitionDuSol3D } = await import('../src/constants.js');
+    assert.equal(GROUND_PLANE_SIZE_3D / 3000, 4);
+    assert.equal(repetitionDuSol3D(3000, 40), 10, '40 m of a Zone: ten 4 m tiles (was 1200: tiles of 3.3 cm)');
+    assert.equal(repetitionDuSol3D(3000, 1), 0.5, 'half a tile at least');
+    const scene = readFileSync(join(RACINE, 'src', 'scene3d.js'), 'utf8');
+    assert.ok(scene.includes('tMapClone.repeat.set(repetitionDuSol3D(tDef.repeat, w.w), repetitionDuSol3D(tDef.repeat, w.h));'), 'the Zones');
+    assert.ok(scene.includes('tMapClone.repeat.set(repetitionDuSol3D(tDef.repeat, polyW), repetitionDuSol3D(tDef.repeat, polyD));'), 'the rooms\' floors');
+    assert.equal(scene.split('tMapClone.repeat.set(').length, 3, 'another Ground texture repeated by hand');
+  });
+});
+
 describe('Sol : le relief d\'une texture de « Mes textures » (#494a)', () => {
   const entree = (x = {}) => ({ cle: 'polyhaven:clean_asphalt', dossier: 'polyhaven-clean_asphalt', nom: 'Asphalt',
     grain: 'grain.couleur.png', nature: 'couleur', teinte: '#555555', matieres: ['bitume'], usages: ['sol'], ...x });

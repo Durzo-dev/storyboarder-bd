@@ -30,7 +30,7 @@ import { poserCiel3D, retirerCiel3D, abaissementDeLHorizon3D } from './sky-3d.js
 import {
   BUILD_WALL_DEFAULT_HEIGHT, BUILD_WALL_THICKNESS_RATIO_3D, CAM_SMOOTH_EPS, CAM_SMOOTH_FACTOR, CAM_SMOOTH_FACTOR_PAN, PANEL_CAM_DEFAULT_DIST_3D, PANEL_CAM_REF_DIST_3D, PERSONA_REAL_HEIGHT_M,
   PANEL_DEPTH_MAX_3D, PANEL_SCENE_RENDER_MAX_PX, CHILD_DESIGN_SIZE_3D, FIXED_COLOR, WALL_OPENING_MAGNET_TYPES,
-  GROUND_CONTACT_EPS_3D, GROUND_TYPE_DEFS, teinteDuSol3D, GROUND_PLANE_SIZE_3D, GROUND_Y_DEFAULT_3D, TRAVERSANT_TYPES, WALL_PX_PER_UNIT_3D,
+  GROUND_CONTACT_EPS_3D, GROUND_TYPE_DEFS, teinteDuSol3D, GROUND_PLANE_SIZE_3D, repetitionDuSol3D, GROUND_Y_DEFAULT_3D, TRAVERSANT_TYPES, WALL_PX_PER_UNIT_3D,
   TRACÉ_DEFAULTS, TROTTOIR_BORDURE_M, WALL_TYPES,
 } from './constants.js';
 // FIX (pre-existing latent bug, surfaced by the Fix 28 tests): TRACÉ_DEFAULTS above was already
@@ -3366,10 +3366,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
           const xs = o.polygon.map(p => p.x), zs = o.polygon.map(p => p.z);
           const polyW = Math.max(...xs) - Math.min(...xs);
           const polyD = Math.max(...zs) - Math.min(...zs);
-          tMapClone.repeat.set(
-            Math.max(0.5, polyW * tDef.repeat / GROUND_PLANE_SIZE_3D),
-            Math.max(0.5, polyD * tDef.repeat / GROUND_PLANE_SIZE_3D)
-          );
+          tMapClone.repeat.set(repetitionDuSol3D(tDef.repeat, polyW), repetitionDuSol3D(tDef.repeat, polyD));
           tMapClone.needsUpdate = true;
           mat = new THREE.MeshStandardMaterial({
             map: tMapClone, color: new THREE.Color(0xffffff),
@@ -3509,8 +3506,9 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         const { map: tMap, normale: tRelief } = buildGroundTexture(tType, teinteDuSol3D(tDef, o.terrainColor));
         const tMapClone = tMap.clone();
         tMapClone.wrapS = tMapClone.wrapT = THREE.RepeatWrapping;
-        tMapClone.repeat.set(Math.max(0.5, w.w * (tDef.repeat || 60) / 100),
-                             Math.max(0.5, w.h * (tDef.repeat || 60) / 100));
+        // The Ground's density (repetitionDuSol3D). ⚠️ It was `repeat / 100` per metre: a tile of 3 cm for a repeat of
+        // 3000, 120 times too fine, so a Zone showed its texture's mean colour, flat (seen on a car park of asphalt).
+        tMapClone.repeat.set(repetitionDuSol3D(tDef.repeat, w.w), repetitionDuSol3D(tDef.repeat, w.h));
         tMapClone.needsUpdate = true;
         // #462c-2 : sur un relief, la Zone est découpée au mètre pour s'y draper.
         const _decoupe = (d) => (reliefPlat(_relief) ? 1 : Math.max(1, Math.min(400, Math.ceil(d * 2))));

@@ -857,6 +857,12 @@ export const GROUND_CONTACT_EPS_3D = 0.01;
 
 export const GROUND_PLANE_SIZE_3D = 12000; // very large compared to the camera distance (PANEL_CAM_REF_DIST_3D = 12) so it looks infinite
 
+/**
+ * How many times a Ground material's texture repeats across `metres` of a Zone or a room's floor: the Ground's own
+ * density (`repeat` tiles over GROUND_PLANE_SIZE_3D), so a Zone of grass is the grass around it. Half a tile at least.
+ */
+export const repetitionDuSol3D = (repeat, metres) => Math.max(0.5, metres * (repeat || 60) / GROUND_PLANE_SIZE_3D);
+
 // ─── Ground types ─────────────────────────────────────────────────────────────
 // Each type defines: id (data key), label (UI), icon (emoji swatch), UI preview color,
 // and Three.js rendering parameters (roughness, metalness, texture repeat).
