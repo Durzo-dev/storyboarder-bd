@@ -90,6 +90,18 @@ describe('the homes\' parcels, closed all round', () => {
     assert.deepEqual([rest[0].kind, rest[0].wallHeight], ['haie', 2.2]);
     assert.ok(rest[0].world.pts.some(q => Math.abs(q.z + 20) < 0.3), 'joined to the known hedge\'s end');
   });
+  test('a known hedge a little off the limit: its side is not laid again beside it', () => {
+    // Plouguerneau: a 1.5 m thick hedge 2.2 m off the cadastre's limit; the limit's pieces drew a second one alongside.
+    const t = street();
+    t.paths.push({ kind: 'haie', world: { pts: [{ x: 2.2, z: -32 }, { x: 2.2, z: -1 }] }, wallHeight: 2.2, wallThickness: 1.5 });
+    const p = parcelFences(builtParcels(answer, t, { toLocal }), t, { halfSize: 60 });
+    assert.equal(along(p, q => Math.abs(q.x) < 0.6).length, 0, 'nothing along x = 0 beside the hedge');
+    assert.ok(along(p, q => Math.abs(q.x + 30) < 0.6).length, 'the far side (x = -30), away from it, still laid');
+    const far = street();
+    far.paths.push({ kind: 'haie', world: { pts: [{ x: 6, z: -32 }, { x: 6, z: -1 }] }, wallHeight: 2.2, wallThickness: 1.5 });
+    assert.ok(along(parcelFences(builtParcels(answer, far, { toLocal }), far, { halfSize: 60 }), q => Math.abs(q.x) < 0.6).length,
+      '6 m off: another barrier, the limit laid');
+  });
   test('an old centre\'s parcel, mostly built: a high wall of stone', () => {
     const t = { buildings: [house(-28, -28, -12, -8), house(-11, -28, -2, -8)], paths: [road] };
     const p = parcelFences(builtParcels({ features: [parcel(-30, -30, 0, -3)] }, t, { toLocal }), t, { halfSize: 60 });

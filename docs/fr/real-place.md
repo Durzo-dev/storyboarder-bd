@@ -308,7 +308,9 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    clôture déjà là (OSM, BD TOPO, lue sur le LiDAR) ; une limite partagée avec une autre parcelle d'habitation est
    posée une fois ; à moins de la demi-largeur d'une route + 4 m, sa FAÇADE ; ailleurs (un voisin, un champ, un
    terrain vide), un CÔTÉ. Les tronçons suivent chacun un côté du contour et se rejoignent bout à bout, et
-   rejoignent le mur du bâtiment ou le Tracé connu voisin (à 4 m au plus). Un côté qui a déjà un mur, une haie ou
+   rejoignent le mur du bâtiment ou le Tracé connu voisin (à 4 m au plus). Un morceau qui court, sur 70 % de sa
+   longueur, à 2,5 m au plus (au-delà de sa demi-épaisseur) d'un mur, d'une haie ou d'une clôture déjà là la double :
+   il est retiré. Un côté qui a déjà un mur, une haie ou
    une clôture est complété avec, à sa hauteur. Sinon : d'une parcelle dense, un mur de pierre de 2 m
    (`int:facade:pierre`) ; en façade, un muret d'enduit de 0,9 m (`int:facade:enduit`) ouvert de 3 m devant la
    maison (dès 8 m) ; un côté, une clôture de 1,5 m ou une haie de 1,8 m, épaisse de 0,8 m (`wallThickness` ; tirée

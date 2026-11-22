@@ -50,6 +50,10 @@ const WALL_TOP = 3;
 const WALL_SHARE = 0.6;
 /** The most pieces laid in a zone. */
 export const MOST_PIECES = 400;
+/** A piece running within this much (m, beyond the barrier's half thickness) of a known barrier along this share
+ * of it doubles that barrier: left out (a thick hedge read off the limit, its side laid again beside it). */
+const ALONGSIDE = 2.5;
+const ALONGSIDE_SHARE = 0.7;
 
 const RENDER = 'int:facade:enduit', STONE = 'int:facade:pierre';
 
@@ -185,7 +189,19 @@ export function parcelFences(parcels, translated, { halfSize, heights = null, wa
     }
     flush(ordered[0]);
   });
-  return out.slice(0, MOST_PIECES);
+  return out.filter(piece => !alongKnown(piece.world.pts, known)).slice(0, MOST_PIECES);
+}
+
+/** Whether most of a piece runs beside one of the known barriers (within ALONGSIDE beyond its half thickness). */
+function alongKnown(pts, known){
+  const dense = [pts[0]];
+  for (let k = 1; k < pts.length; k++) {
+    const a = pts[k - 1], b = pts[k], L = Math.hypot(b.x - a.x, b.z - a.z);
+    for (let d = 1; d < L; d += 1) dense.push({ x: a.x + (b.x - a.x) * d / L, z: a.z + (b.z - a.z) * d / L });
+    dense.push(b);
+  }
+  const beside = (p) => known.some(x => distanceTo(p, x.pts) <= ALONGSIDE + (x.wallThickness || 0) / 2);
+  return dense.filter(beside).length >= ALONGSIDE_SHARE * dense.length;
 }
 
 const lengthOf = (pts) => pts.slice(1).reduce((s, p, k) => s + Math.hypot(p.x - pts[k].x, p.z - pts[k].z), 0);

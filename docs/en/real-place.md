@@ -285,7 +285,8 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    already there (OSM, BD TOPO, read on the LiDAR); a limit another home parcel shares is laid once; within a
    road's half width + 4 m, its FRONT; elsewhere (a neighbour, a field, an empty plot), a SIDE. Runs follow one
    side of the ring each and are joined end to end, and to the building's wall or the known Path beside them
-   (within 4 m). A side that already has a wall, hedge or fence is completed with it, at its height. Otherwise: a
+   (within 4 m). A piece that runs, along 70 % of it, within 2.5 m (beyond its half thickness) of a wall, hedge or
+   fence already there doubles it: left out. A side that already has a wall, hedge or fence is completed with it, at its height. Otherwise: a
    dense parcel's, a 2 m wall of stone (`int:facade:pierre`); a front, a 0.9 m low wall of render
    (`int:facade:enduit`) with a 3 m opening before the house (from 8 m); a side, a 1.5 m fence or a 1.8 m hedge,
    0.8 m thick (`wallThickness`; drawn from the parcel's rank, the same at every import). A hedge read on the LiDAR
