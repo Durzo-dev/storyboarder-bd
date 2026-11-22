@@ -141,7 +141,9 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    (`heights`): for each building `roofFromHeights` (the 10th and 95th percentiles of what stands above 2 m
    in its footprint: eaves and top; under 1.2 m of rise, flat; otherwise the median slope of its core, its
    1 m edge aside, as the pitch; the main slope's axis by doubled angles, the ridge across it; hipped when
-   the slopes across it weigh 12 % or more and the footprint is nearly convex, an L or a U reading alike),
+   the slopes across it weigh 12 % or more, the footprint is nearly convex, an L or a U reading alike, and the
+   ridge (what stands within 0.6 m of the top) is shorter than the length less 0.7 of the width: a hipped
+   roof's ridge stops before its ends, a gabled one's runs to its gables, chimneys and dormers whatever they add),
    passed as the survey's `lidar`: it comes BEFORE the tags and the survey (`levelsOf`: OSM's count of levels
    kept, their height from the measured eaves; `roofOf`, `surveyedRoof`; the ridge's `sens` by `ridgeSense`).
    The measured pitch is lowered when, climbing to the middle of the roof's widest part, it would rise above the

@@ -49,6 +49,21 @@ describe('LiDAR heights, a building\'s roof', () => {
     assert.equal(r.hip, true);
     assert.ok(Math.abs(r.pitch - 30) <= 3, `pitch ${r.pitch}`);
   });
+  test('a gabled roof with three gabled dormers: still gabled (its ridge runs to its gables)', () => {
+    // Measured in Plouguerneau and Sare: big gable chimneys, dormers and dents read as slopes across (0.13 to 0.28,
+    // enough to make a roof hipped), but such roofs' ridges run 0.8 to 0.97 of their length.
+    const box2 = [-7, -4, 7, 4];   // 14 × 8 m
+    const g = grid(40, (x, z) => {
+      if (!inRect(x, z, box2)) return 0;
+      const roof = 6 + (4 - Math.abs(z)) * deg(45);
+      let dormer = 0;
+      for (const cx of [-4, 0, 4]) if (Math.abs(x - cx) < 1.5 && z > 0.5) dormer = Math.max(dormer, 7.5 + (1.5 - Math.abs(x - cx)) * 1.6);
+      return Math.max(roof, dormer);
+    });
+    const r = roofFromHeights(g, rect(...box2));
+    assert.equal(r.flat, false);
+    assert.equal(r.hip, false);
+  });
   test('an L-shaped building is not hipped (its wings\' slopes cross: measured 0.16 to 0.22 on Eguisheim)', () => {
     // Two gabled wings: one along x (ridge z = 0), one along z (ridge x = -7).
     const L = [{ x: -10, z: -5 }, { x: 10, z: -5 }, { x: 10, z: 5 }, { x: -4, z: 5 }, { x: -4, z: 15 }, { x: -10, z: 15 }];

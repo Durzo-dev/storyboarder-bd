@@ -152,8 +152,10 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    données à `translateOsm` (`heights`) : pour chaque bâtiment `roofFromHeights` (les 10e et 95e centiles de
    ce qui dépasse 2 m dans son emprise : égout et sommet ; sous 1,2 m d'écart, plat ; sinon la pente médiane
    de son cœur, son bord de 1 m à part ; l'axe de la pente principale par angles doublés, le faîtage en
-   travers ; quatre pans quand les pentes en travers pèsent 12 % ou plus et que l'emprise est presque
-   convexe, un L ou un U se lisant pareil), passé comme `lidar` du relevé : il passe AVANT les balises et le
+   travers ; quatre pans quand les pentes en travers pèsent 12 % ou plus, que l'emprise est presque
+   convexe, un L ou un U se lisant pareil, et que le faîtage (ce qui se tient à 0,6 m du sommet) est plus court
+   que la longueur moins 0,7 fois la largeur : le faîtage d'un toit en croupe s'arrête avant ses bouts, celui d'un
+   toit à pignons court jusqu'à eux, quoi qu'ajoutent cheminées et lucarnes), passé comme `lidar` du relevé : il passe AVANT les balises et le
    relevé (`levelsOf` : le nombre de niveaux d'OSM gardé, leur hauteur d'après l'égout mesuré ; `roofOf`,
    `surveyedRoof` ; le `sens` du faîtage par `ridgeSense` ; la pente mesurée abaissée quand,
    montée jusqu'au milieu de la partie la plus large du toit, elle irait plus haut que le toit mesuré, sommet moins égout,

@@ -67,6 +67,15 @@ export const FLAT_RISE = 1.2;
  * 0.16 to 0.22 too (its wings' slopes cross): only a nearly convex footprint is read as hipped.
  */
 const HIP_SHARE = 0.12;
+/**
+ * And its ridge must be short: a hipped roof's stops about half its width before each end, a gabled one runs to
+ * its gables. A roof is hipped only if its ridge (what stands within RIDGE_BAND of its top) is shorter than its
+ * length less HIP_RIDGE of its width. MEASURED (22 Nov. 2026): in Plouguerneau and Sare, where Durzo saw gables
+ * only, the share alone made 52 of 143 and 35 of 80 roofs hipped (big gable chimneys, dormers, dents read as
+ * slopes across); their ridges ran 0.8 to 0.97 of their length. With this test: 11 and 7, complex blocks.
+ */
+const HIP_RIDGE = 0.7;
+const RIDGE_BAND = 0.6;
 /** A footprint this convex (its area over its hull's) or more may be hipped. */
 const HIP_CONVEXITY = 0.9;
 
@@ -125,9 +134,17 @@ export function roofFromHeights(g, outline, holes = []){
     if (d > Math.PI / 2) d = Math.PI - d;
     if (d > Math.PI / 3) across += slopes[k];
   });
+  // The ridge's length against the footprint's length and width, along the ridge.
+  const along = { x: -Math.sin(phi), z: Math.cos(phi) };
+  const u = (p) => p.x * along.x + p.z * along.z, v = (p) => p.x * along.z - p.z * along.x;
+  const extent = (vals) => Math.max(...vals) - Math.min(...vals);
+  const length = extent(outline.map(u)), width = extent(outline.map(v));
+  const ridge = cells.filter(([i, j]) => at(g, i, j) >= top - RIDGE_BAND)
+    .map(([i, j]) => u({ x: -g.halfSize + (i + 0.5) * g.step, z: -g.halfSize + (j + 0.5) * g.step }));
+  const shortRidge = ridge.length > 0 && extent(ridge) < length - HIP_RIDGE * width;
   return {
     eaves: r1(eaves), top: r1(top), flat: false, pitch,
-    hip: across / w > HIP_SHARE && area(outline) >= HIP_CONVEXITY * area(hull(outline)),
+    hip: across / w > HIP_SHARE && shortRidge && area(outline) >= HIP_CONVEXITY * area(hull(outline)),
     ridge: { x: Math.round(-Math.sin(phi) * 1000) / 1000, z: Math.round(Math.cos(phi) * 1000) / 1000 },
   };
 }
