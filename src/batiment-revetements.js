@@ -17,6 +17,7 @@
  * La première moitié est PURE (les règles, testées) ; la fabrique de matières, en fin de fichier,
  * touche au canevas et à three.
  */
+import { occulterLaTuile3D, prendLOcclusion, carteRepetee3D } from './texture-maps-3d.js';
 import { COULEURS_BATIMENT, texturesIntegrees } from './textures-integrees.js';
 import { textureDeBatiment } from './textures-utilisateur.js';
 import { grainCharge3D, prechargerGrains3D } from './bubble-grain.js';
@@ -80,7 +81,9 @@ export function peintureDuRevetement(rev, usage){
   }
   const t = textureDeBatiment(r.texture);
   if (!t) return uni;   // absente sur cette machine : l'uni, le fichier garde la référence
-  return { grain: t.grain, teinte: r.couleur || t.teinte, tuile: t.tuile, ...(t.normale ? { normale: t.normale } : {}) };
+  const cartes = {};
+  for (const k of ['normale', 'ao', 'rugosite']) if (t[k]) cartes[k] = t[k];
+  return { grain: t.grain, teinte: r.couleur || t.teinte, tuile: t.tuile, ...cartes };
 }
 
 // ── La fabrique de matières ─────────────────────────────────────────────────────────────────────
@@ -121,7 +124,10 @@ export function fabriqueDeRevetements(T){
     if (p.grain && !img) demanderLeGrain(p.grain);
     // Its relief (#494a): the normal map of a texture of « My textures », once loaded (else flat, as before).
     const relief = p.normale ? grainCharge3D(p.normale) : null;
-    const cle = p.grain ? `${p.grain}|${p.teinte}|${p.tuile.join('x')}|${img ? 'pret' : 'attente'}|${relief ? 'relief' : ''}|${usage}` : `uni|${p.couleur}|${usage}`;
+    // Its occlusion and roughness, likewise (texture-maps-3d.js).
+    const ao = p.ao && prendLOcclusion(p.grain) ? grainCharge3D(p.ao) : null;
+    const rugosite = p.rugosite ? grainCharge3D(p.rugosite) : null;
+    const cle = p.grain ? `${p.grain}|${p.teinte}|${p.tuile.join('x')}|${img ? 'pret' : 'attente'}|${relief ? 'relief' : ''}|${ao ? 'ao' : ''}|${rugosite ? 'rugosite' : ''}|${usage}` : `uni|${p.couleur}|${usage}`;
     if (cache.has(cle)) { const m = cache.get(cle); cache.delete(cle); cache.set(cle, m); return m; }
     const doubleFace = usage === 'sol-int' || usage === 'plafond' || usage === 'toit';
     let m;
@@ -130,6 +136,7 @@ export function fabriqueDeRevetements(T){
       toile.width = img.width; toile.height = img.height;
       const c = toile.getContext('2d', { willReadFrequently: true });
       c.drawImage(img, 0, 0);
+      occulterLaTuile3D(c, ao, toile.width, toile.height);
       const d = c.getImageData(0, 0, toile.width, toile.height);
       const rvb = rvbDeCouleur3D(p.teinte);
       if (rvb) appliquerTeinteAuMotif3D(d.data, rvb, natureDuNom3D(p.grain));
@@ -147,6 +154,12 @@ export function fabriqueDeRevetements(T){
         m.normalMap = normale;
         m.normalScale = new T.Vector2(RELIEF, RELIEF);
       }
+      if (rugosite) {
+        const r = carteRepetee3D(T, rugosite);
+        r.repeat.copy(carte.repeat);
+        m.roughnessMap = r;
+        m.roughness = 1;   // the map gives it
+      }
     } else {
       m = new T.MeshStandardMaterial({ color: new T.Color(p.teinte || p.couleur), roughness: 0.9, side: doubleFace ? T.DoubleSide : T.FrontSide });
     }
@@ -156,6 +169,7 @@ export function fabriqueDeRevetements(T){
       cache.delete(k);
       if (vieille.map) vieille.map.dispose();
       if (vieille.normalMap) vieille.normalMap.dispose();
+      if (vieille.roughnessMap) vieille.roughnessMap.dispose();
       vieille.dispose();
     }
     cache.set(cle, m);

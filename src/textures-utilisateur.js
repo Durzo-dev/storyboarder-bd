@@ -79,8 +79,19 @@ export function defSolDe(entree){
   };
 }
 
-/** Its relief (#494a): `{ normale }`, the key of the normal map downloaded with it (Poly Haven's, ambientCG's), or {}. */
-const reliefDe = (entree) => (Array.isArray(entree.cartes) && entree.cartes.includes('normal') ? { normale: cleDeLaNormale(entree) } : {});
+/**
+ * Its other maps (#494a), as keys among the loaded images: `normale` (its relief), `ao` (its occlusion), `rugosite`
+ * (its roughness), each when it was downloaded with it (Poly Haven's, ambientCG's).
+ */
+const CARTES = { normale: 'normal', ao: 'ao', rugosite: 'rugosite' };
+const reliefDe = (entree) => {
+  const cartes = Array.isArray(entree.cartes) ? entree.cartes : [];
+  const out = {};
+  for (const [cle, carte] of Object.entries(CARTES)) if (cartes.includes(carte)) out[cle] = cleDeLaCarte(entree, carte);
+  return out;
+};
+/** The key of one of a texture's maps among the loaded images. */
+export const cleDeLaCarte = (entree, carte) => idDe(entree) + '#' + carte;
 
 /** La texture de Tracé d'une texture (format de TRACÉ_TEXTURES), ou null si aucun Tracé ne la prend. */
 export function traceDe(entree){
@@ -116,8 +127,6 @@ export function batimentDe(entree){
   return { id: idDe(entree), grain: cleDuGrain(entree), teinte: couleur(entree.teinte), tuile: d, usages, ...reliefDe(entree) };
 }
 
-/** The key of a texture's normal map among the loaded images (bubble-grain.js). */
-export const cleDeLaNormale = (entree) => idDe(entree) + '#normal';
 
 /** Les textures de bâtiment de l'utilisateur, par identifiant (`tex:<dossier>`). */
 const _batiment = new Map();
@@ -236,14 +245,16 @@ export async function chargerTexturesUtilisateur(api, apres){
       cles.push(cle);
     } catch (e) { /* ce grain manque : la matière retombe sur son aplat */ }
   }));
-  // Their normal maps (#494a: buildings, Paths, Ground), likewise: a missing one leaves the texture flat.
-  await Promise.all(entrees.filter(e => utilisable(e) && reliefDe(e).normale && !grainCharge3D(cleDeLaNormale(e))).map(async (entree) => {
+  // Their other maps (#494a: relief, occlusion, roughness; buildings, Paths, Ground), likewise: a missing one leaves
+  // the texture without it.
+  const cartes = entrees.filter(utilisable).flatMap(e => Object.entries(CARTES).filter(([k]) => reliefDe(e)[k]).map(([, carte]) => [e, carte]));
+  await Promise.all(cartes.filter(([e, carte]) => !grainCharge3D(cleDeLaCarte(e, carte))).map(async ([entree, carte]) => {
     try {
-      const r = await api.texturesImage(entree.cle, 'normal');
+      const r = await api.texturesImage(entree.cle, carte);
       if (!r || !r.ok || !r.data) return;
-      definirAdresseDuGrain3D(cleDeLaNormale(entree), URL.createObjectURL(new Blob([r.data], { type: r.type || 'image/jpeg' })));
-      cles.push(cleDeLaNormale(entree));
-    } catch (e) { /* no relief */ }
+      definirAdresseDuGrain3D(cleDeLaCarte(entree, carte), URL.createObjectURL(new Blob([r.data], { type: r.type || 'image/jpeg' })));
+      cles.push(cleDeLaCarte(entree, carte));
+    } catch (e) { /* without it */ }
   }));
   if (cles.length) await prechargerGrains3D(cles, apres);
   else if (change && typeof apres === 'function') apres();

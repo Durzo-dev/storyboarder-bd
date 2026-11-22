@@ -3482,7 +3482,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         const tType = o.terrainType || 'herbe';
         const tDef  = GROUND_TYPE_DEFS.find(d => d.id === tType) || GROUND_TYPE_DEFS[0];
         // Sa couleur (terrainColor) teint la texture, comme le Sol d'une Case.
-        const { map: tMap, normale: tRelief } = buildGroundTexture(tType, teinteDuSol3D(tDef, o.terrainColor));
+        const { map: tMap, normale: tRelief, rugosite: tRugosite } = buildGroundTexture(tType, teinteDuSol3D(tDef, o.terrainColor));
         const tMapClone = tMap.clone();
         tMapClone.wrapS = tMapClone.wrapT = THREE.RepeatWrapping;
         // The Ground's density (repetitionDuSol3D). ⚠️ It was `repeat / 100` per metre: a tile of 3 cm for a repeat of
@@ -3500,6 +3500,8 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         });
         // Its relief (#494a): the normal map read through the same `vUv` (the clone's repeat).
         if (tRelief) { mat.normalMap = tRelief; mat.normalScale.set(RELIEF_DU_SOL, RELIEF_DU_SOL); }
+        // Its roughness (#494a), read through the same `vUv`; the map gives it.
+        if (tRugosite) { mat.roughnessMap = tRugosite; mat.roughness = 1; }
         // Une Zone PEINTE (au pinceau) : ses cases, posées dans le monde, avec les coordonnées de texture
         // du rectangle qui l'englobe (la même texture qu'une Zone rectangulaire de cette taille).
         const terrMesh = new THREE.Mesh(w.masque ? (geo.dispose(), geometrieDuMasque3D(w, GROUND_Y_DEFAULT_3D + 0.005, _trianglesZones.par.get(o.id))) : geo, mat);

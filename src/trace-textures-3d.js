@@ -31,6 +31,7 @@ import { textureDuTrace } from './textures-utilisateur.js';
 import { grainCharge3D } from './bubble-grain.js';
 import { appliquerTeinteAuMotif3D, rvbDeCouleur3D, natureDuNom3D } from './bubble-texture.js';
 import { GLSL_PAVAGE, GLSL_PAVAGE_RELIEF } from './ground-tiling-3d.js';
+import { occulterLaTuile3D, prendLOcclusion, carteRepetee3D } from './texture-maps-3d.js';
 
 /** La netteté du fondu entre les trois projections : plus grand, plus franc. */
 export const PLAQUAGE_NETTETE = 4.0;
@@ -123,6 +124,29 @@ export const GLSL_RELIEF_MONDE = `
 #endif
 `;
 
+/**
+ * A texture's ROUGHNESS (#494a) on a Path: its map read with the same coordinates as its colour (three's reading
+ * takes `vUv`). Replaces `roughnessmap_fragment`; on the ground, in the same cells as the colour (traceSol).
+ */
+export const GLSL_RUGOSITE_TRACE = `
+float roughnessFactor = roughness;
+#ifdef USE_ROUGHNESSMAP
+  roughnessFactor *= texture2D( roughnessMap, vUv / uTuile ).g;
+#endif
+`;
+export const GLSL_RUGOSITE_MONDE = `
+float roughnessFactor = roughness;
+#ifdef USE_ROUGHNESSMAP
+  vec3 nG = abs( normalize( vTraceNormale ) );
+  vec3 wG = pow( nG, vec3( ${PLAQUAGE_NETTETE.toFixed(1)} ) );
+  wG /= ( wG.x + wG.y + wG.z );
+  vec2 uvG = vec2( vTraceMonde.x / uTuile.x, vTraceMonde.z / uTuile.x );
+  roughnessFactor *= wG.x * texture2D( roughnessMap, vec2( vTraceMonde.z / uTuile.x, vTraceMonde.y / uTuile.y ) ).g
+                   + wG.z * texture2D( roughnessMap, vec2( vTraceMonde.x / uTuile.x, vTraceMonde.y / uTuile.y ) ).g
+                   + wG.y * ( uPavage > 0.5 ? pavageMelange( roughnessMap, uvG ) : texture2D( roughnessMap, uvG ) ).g;
+#endif
+`;
+
 /** Installe le plaquage monde sur un matériau standard. */
 export function installerPlaquageMonde3D(materiau, tuile, mode = 'monde', moyenne = null, rotation = false){
   const THREE = globalThis.THREE;
@@ -144,7 +168,8 @@ export function installerPlaquageMonde3D(materiau, tuile, mode = 'monde', moyenn
         + (rotation ? '#define PAVAGE_PART_ROTATION 1.0\n' : '') + GLSL_PAVAGE + GLSL_PLAQUAGE_DECLARATIONS)
       .replace('#include <map_fragment>', mode === 'trace' ? GLSL_PLAQUAGE_TRACE : GLSL_PLAQUAGE_FRAGMENT)
       .replace('#include <normalmap_pars_fragment>', '#include <normalmap_pars_fragment>\n' + GLSL_PAVAGE_RELIEF + GLSL_RELIEF_DECLARATIONS)
-      .replace('#include <normal_fragment_maps>', mode === 'trace' ? GLSL_RELIEF_TRACE : GLSL_RELIEF_MONDE);
+      .replace('#include <normal_fragment_maps>', mode === 'trace' ? GLSL_RELIEF_TRACE : GLSL_RELIEF_MONDE)
+      .replace('#include <roughnessmap_fragment>', mode === 'trace' ? GLSL_RUGOSITE_TRACE : GLSL_RUGOSITE_MONDE);
   };
   // Derivatives for the relief's frame (WebGL 1; WebGL 2 has them).
   materiau.extensions = Object.assign({}, materiau.extensions, { derivatives: true, shaderTextureLOD: true });
@@ -180,7 +205,9 @@ export function textureDeTrace3D(type, couleur, texture = null){
   const img = grainCharge3D(tex.grain);
   if (!img) return null;
   const teinte = teinteDe(type, couleur, tex);
-  const cle = tex.grain + '|' + teinte;
+  // Its occlusion (#494a), in the tile (texture-maps-3d.js).
+  const ao = tex.ao && prendLOcclusion(tex.grain) ? grainCharge3D(tex.ao) : null;
+  const cle = tex.grain + '|' + teinte + (ao ? '|ao' : '');
   if (_textures.has(cle)) return _textures.get(cle);
   const rvb = rvbDeCouleur3D(teinte);
   if (!rvb || typeof document === 'undefined') return null;
@@ -188,6 +215,7 @@ export function textureDeTrace3D(type, couleur, texture = null){
   tuile.width = img.width; tuile.height = img.height;
   const tc = tuile.getContext('2d');
   tc.drawImage(img, 0, 0);
+  occulterLaTuile3D(tc, ao, tuile.width, tuile.height);
   const donnees = tc.getImageData(0, 0, tuile.width, tuile.height);
   appliquerTeinteAuMotif3D(donnees.data, rvb, natureDuNom3D(tex.grain));
   tc.putImageData(donnees, 0, 0);
@@ -210,20 +238,22 @@ export function textureDeTrace3D(type, couleur, texture = null){
 /** The relief maps (#494a), by key: never tinted, one per texture. */
 const _reliefs = new Map();
 
-/** A Path texture's normal map, or null (none, or not loaded yet). */
-export function reliefDeTrace3D(type, texture = null){
+/** One of a Path texture's maps (`quoi`: 'normale', 'rugosite'), or null (none, or not loaded yet). */
+function carteDeTrace3D(type, texture, quoi){
   const tex = textureDuTrace(type, texture);
-  const img = tex && tex.normale ? grainCharge3D(tex.normale) : null;
+  const img = tex && tex[quoi] ? grainCharge3D(tex[quoi]) : null;
   if (!img) return null;
-  if (_reliefs.has(tex.normale)) return _reliefs.get(tex.normale);
-  const THREE = globalThis.THREE;
-  const carte = new THREE.Texture(img);
-  carte.wrapS = carte.wrapT = THREE.RepeatWrapping;
+  if (_reliefs.has(tex[quoi])) return _reliefs.get(tex[quoi]);
+  const carte = carteRepetee3D(globalThis.THREE, img);
   carte.anisotropy = 4;
-  carte.needsUpdate = true;
-  _reliefs.set(tex.normale, carte);
+  _reliefs.set(tex[quoi], carte);
   return carte;
 }
+
+/** A Path texture's normal map, or null (none, or not loaded yet). */
+export const reliefDeTrace3D = (type, texture = null) => carteDeTrace3D(type, texture, 'normale');
+/** A Path texture's roughness map, or null. */
+export const rugositeDeTrace3D = (type, texture = null) => carteDeTrace3D(type, texture, 'rugosite');
 
 /**
  * ⚠️ PLAFONNÉES : la couleur d'un Tracé s'applique EN DIRECT au glissé du sélecteur (demandé), et
@@ -246,7 +276,8 @@ export function grainDeTracePret3D(type, texture = null){
   const tex = textureDuTrace(type, texture);
   // A texture with a relief waits for it too: else the Path, drawn once without it, would keep it so (its
   // signature would not change when the relief arrives).
-  return !!(tex && grainCharge3D(tex.grain) && (!tex.normale || grainCharge3D(tex.normale)));
+  // Likewise its occlusion and its roughness.
+  return !!(tex && grainCharge3D(tex.grain) && ['normale', 'ao', 'rugosite'].every(k => !tex[k] || grainCharge3D(tex[k])));
 }
 
 /**
@@ -274,12 +305,14 @@ export function materiauDeTrace3D(type, couleur, options = {}){
   }
   const tex = textureDuTrace(type, texture);
   const relief = reliefDeTrace3D(type, texture);
+  const rugosite = rugositeDeTrace3D(type, texture);
   const pave = !!(tex.pavage && plaquage === 'monde' && _moyennes.get(carte));
   const tourne = pave && !!tex.rotation;
-  const cle = [type, tex.grain, teinteDe(type, couleur, tex), ombre, plaquage, relief ? tex.normale : '', pave, tourne, JSON.stringify(reste)].join('|');
+  const cle = [type, tex.grain, teinteDe(type, couleur, tex), ombre, plaquage, relief ? tex.normale : '', rugosite ? tex.rugosite : '', pave, tourne, JSON.stringify(reste)].join('|');
   if (_materiaux.has(cle)) return _materiaux.get(cle);
   const mat = new THREE.MeshStandardMaterial({ map: carte, color: new THREE.Color(ombre, ombre, ombre), ...reste });
   if (relief) { mat.normalMap = relief; mat.normalScale = new THREE.Vector2(RELIEF_DE_TRACE, RELIEF_DE_TRACE); }
+  if (rugosite) { mat.roughnessMap = rugosite; mat.roughness = 1; }   // the map gives it
   installerPlaquageMonde3D(mat, tex.tuile, plaquage, pave ? _moyennes.get(carte) : null, tourne);
   mat.userData.partage = true;
   _materiaux.set(cle, mat);

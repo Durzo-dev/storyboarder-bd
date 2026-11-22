@@ -158,6 +158,15 @@ void pavageTriangle( vec2 uv, out vec3 w, out vec2 s1, out vec2 s2, out vec2 s3 
   w /= ( w.x + w.y + w.z );
 }
 
+// Any map sampled in the cells (a plain weighted blend: roughness, which has no variance to keep).
+vec4 pavageMelange( sampler2D t, vec2 uv ) {
+  vec2 dx = dFdx( uv ), dy = dFdy( uv );
+  vec3 w; vec2 s1; vec2 s2; vec2 s3;
+  pavageTriangle( uv, w, s1, s2, s3 );
+  return w.x * pavageEchantillonDe( t, uv, s1, dx, dy ) + w.y * pavageEchantillonDe( t, uv, s2, dx, dy )
+       + w.z * pavageEchantillonDe( t, uv, s3, dx, dy );
+}
+
 vec4 pavageMap( vec2 uv ) {
   vec2 dx = dFdx( uv ), dy = dFdy( uv );
   vec3 w; vec2 s1; vec2 s2; vec2 s3;
@@ -210,6 +219,14 @@ export const GLSL_PAVAGE_NORMALE_APRES = `
 #endif
 `;
 
+/** three's `roughnessmap_fragment` for a paved Ground (#494a): its roughness map in the same cells as its colour. */
+export const GLSL_PAVAGE_RUGOSITE = `
+float roughnessFactor = roughness;
+#ifdef USE_ROUGHNESSMAP
+  roughnessFactor *= ( uPavage > 0.5 ? pavageMelange( roughnessMap, vUv ) : texture2D( roughnessMap, vUv ) ).g;
+#endif
+`;
+
 /** Le remplacement de `map_fragment` : le pavage quand il est demandé, le chemin d'origine sinon. */
 export const GLSL_MAP_FRAGMENT = `
 #ifdef USE_MAP
@@ -244,7 +261,8 @@ export function installerPavage3D(materiau, uniformes){
       .replace('#include <map_pars_fragment>', '#include <map_pars_fragment>\n' + GLSL_PAVAGE)
       .replace('#include <map_fragment>', GLSL_MAP_FRAGMENT)
       .replace('#include <normalmap_pars_fragment>', '#include <normalmap_pars_fragment>\n' + GLSL_PAVAGE_RELIEF)
-      .replace('#include <normal_fragment_maps>', GLSL_PAVAGE_NORMALE_AVANT + '#include <normal_fragment_maps>\n' + GLSL_PAVAGE_NORMALE_APRES);
+      .replace('#include <normal_fragment_maps>', GLSL_PAVAGE_NORMALE_AVANT + '#include <normal_fragment_maps>\n' + GLSL_PAVAGE_NORMALE_APRES)
+      .replace('#include <roughnessmap_fragment>', GLSL_PAVAGE_RUGOSITE);
   };
   materiau.customProgramCacheKey = () => 'sol-pavage-1';
   materiau.needsUpdate = true;

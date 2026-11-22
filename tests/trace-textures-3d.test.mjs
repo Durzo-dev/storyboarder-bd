@@ -16,7 +16,7 @@ import { TRACÉ_DEFAULTS, TRACÉ_TEXTURES, grainsDesTraces3D, couleurDeTrace3D }
 import {
   installerPlaquageMonde3D, materiauDeTrace3D, textureDeTrace3D, grainDeTracePret3D,
   GLSL_PLAQUAGE_FRAGMENT, GLSL_PLAQUAGE_TRACE, _viderTexturesDesTraces3D, libererMateriauDeTrace3D,
-  GLSL_RELIEF_MONDE, GLSL_RELIEF_TRACE, reliefDeTrace3D,
+  GLSL_RELIEF_MONDE, GLSL_RELIEF_TRACE, reliefDeTrace3D, rugositeDeTrace3D, GLSL_RUGOSITE_MONDE, GLSL_RUGOSITE_TRACE,
 } from '../src/trace-textures-3d.js';
 import { _setGrain3D, _viderGrains3D } from '../src/bubble-grain.js';
 import { installerTexturesUtilisateur } from '../src/textures-utilisateur.js';
@@ -285,6 +285,29 @@ describe('Traces : le relief d\'une texture de « Mes textures » (#494a)', () =
     _viderTexturesDesTraces3D(); _setGrain3D('tex:polyhaven-asphalt_02', { width: 4, height: 4 });
     assert.equal(materiauDeTrace3D('route', null, { texture: 'tex:polyhaven-asphalt_02' }).customProgramCacheKey(), 'trace-plaquage-1-monde',
       'a grey grain carries baked light: turned, it would be lit from everywhere');
+    installerTexturesUtilisateur([]); _viderGrains3D(); _viderTexturesDesTraces3D();
+  });
+
+  test('⚠️ SA RUGOSITÉ ET SON OCCLUSION (#494a) : attendues avant de dessiner, lues aux coordonnées de la couleur', () => {
+    _viderGrains3D(); _viderTexturesDesTraces3D();
+    const e = { ...entree, dossier: 'polyhaven-asphalt_04', matieres: ['asphalte'], usages: ['route'], cartes: ['normal', 'ao', 'rugosite'] };
+    installerTexturesUtilisateur([e]);
+    _setGrain3D('tex:polyhaven-asphalt_04.couleur', { width: 4, height: 4 }); _setGrain3D('tex:polyhaven-asphalt_04#normal', { width: 4, height: 4 });
+    assert.equal(grainDeTracePret3D('route', 'tex:polyhaven-asphalt_04'), false, 'its occlusion and roughness are awaited too');
+    _setGrain3D('tex:polyhaven-asphalt_04#ao', { width: 4, height: 4 }); _setGrain3D('tex:polyhaven-asphalt_04#rugosite', { width: 4, height: 4 });
+    assert.equal(grainDeTracePret3D('route', 'tex:polyhaven-asphalt_04'), true);
+    const m = materiauDeTrace3D('route', null, { texture: 'tex:polyhaven-asphalt_04', roughness: 0.85 });
+    assert.equal(m.roughnessMap, rugositeDeTrace3D('route', 'tex:polyhaven-asphalt_04'));
+    assert.equal(m.roughness, 1, 'the map gives it');
+    for (const mode of ['monde', 'trace']) {
+      const g = shader(mode).f;
+      assert.ok(!g.includes('#include <roughnessmap_fragment>'), 'three\'s reading (through vUv) stayed');
+    }
+    assert.ok(GLSL_RUGOSITE_TRACE.includes('texture2D( roughnessMap, vUv / uTuile )'));
+    for (const uv of ['vec2( vTraceMonde.z / uTuile.x, vTraceMonde.y / uTuile.y )', 'vec2( vTraceMonde.x / uTuile.x, vTraceMonde.y / uTuile.y )']) {
+      assert.ok(GLSL_RUGOSITE_MONDE.includes(uv), uv);
+    }
+    assert.ok(GLSL_RUGOSITE_MONDE.includes('pavageMelange( roughnessMap, uvG )'), 'on the ground, in the colour\'s cells');
     installerTexturesUtilisateur([]); _viderGrains3D(); _viderTexturesDesTraces3D();
   });
 });

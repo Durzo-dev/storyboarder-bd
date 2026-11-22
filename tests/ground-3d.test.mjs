@@ -606,6 +606,28 @@ describe('Sol : le relief d\'une texture de « Mes textures » (#494a)', () => {
     installerTexturesUtilisateur([]); _viderGrains3D(); _viderTexturesDuSol3D();
   });
 
+  test('⚠️ SA RUGOSITÉ (#494a) : la carte la donne (rugosité 1), lue dans les cellules du pavage ; partie avec la matière', async () => {
+    const { GLSL_PAVAGE_RUGOSITE } = await import('../src/ground-tiling-3d.js');
+    _viderGrains3D(); _viderTexturesDuSol3D();
+    installerTexturesUtilisateur([entree({ cartes: ['rugosite'] })]);
+    const mesh = solDEssai();
+    _setGrain3D('tex:polyhaven-clean_asphalt.couleur', faux());
+    _setGrain3D('tex:polyhaven-clean_asphalt#rugosite', faux());
+    applyGroundType({ groundType: 'tex:polyhaven-clean_asphalt' });
+    assert.ok(mesh.material.roughnessMap);
+    assert.equal(mesh.material.roughness, 1);
+    applyGroundType({ groundType: 'herbe' });
+    assert.equal(mesh.material.roughnessMap, null);
+    assert.equal(mesh.material.roughness, GROUND_TYPE_DEFS.find(d => d.id === 'herbe').roughness, 'its own roughness back');
+    const mat = new THREE.MeshStandardMaterial();
+    installerPavage3D(mat, { uPavage: { value: 1 }, uPavageMoyenne: { value: new THREE.Vector3() } });
+    const sh = { uniforms: {}, fragmentShader: THREE.ShaderLib.physical.fragmentShader };
+    assert.equal(sh.fragmentShader.split('#include <roughnessmap_fragment>').length, 2);
+    mat.onBeforeCompile(sh);
+    assert.ok(sh.fragmentShader.includes(GLSL_PAVAGE_RUGOSITE) && GLSL_PAVAGE_RUGOSITE.includes('pavageMelange( roughnessMap, vUv )'));
+    installerTexturesUtilisateur([]); _viderGrains3D(); _viderTexturesDuSol3D();
+  });
+
   test('⚠️ PAVÉ, LE RELIEF EST LU DANS LES MÊMES CELLULES QUE LA COULEUR, et l\'eau trouve encore son ancre', () => {
     const mat = new THREE.MeshStandardMaterial();
     installerPavage3D(mat, { uPavage: { value: 1 }, uPavageMoyenne: { value: new THREE.Vector3() } });

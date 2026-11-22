@@ -353,7 +353,13 @@ arrival. On the ground (world mapping, the top projection), a Path texture witho
 `ground-tiling-3d.js`, around the tile's mean colour), so a 3 m tile of asphalt does not show the same crack every 3 m.
 Its cells also TURN when it is a photographed albedo (`rotation` of `traceDe`: `nature` 'couleur'; the material defines
 `PAVAGE_PART_ROTATION` before the paving's code, the relief's slopes turned back with it, `pavageNormaleDe`), so its
-cracks do not all run one way; never a grey grain, whose baked light would turn with it. The Ground does not turn. It shows in its natural colour (the tint measured at baking); another colour tints it,
+cracks do not all run one way; never a grey grain, whose baked light would turn with it. The Ground does not turn.
+Its OCCLUSION and ROUGHNESS too (`ao`, `rugosite` of `batimentDe`, `traceDe`, `defSolDe`; `texture-maps-3d.js`): the
+occlusion is multiplied into the tile when it is drawn (`occulterLaTuile3D`, at `PART_OCCLUSION`; buildings, Paths,
+Ground), only on a photographed albedo (`.couleur`: a grey grain's hollows were shaded at baking); the roughness is
+three's `roughnessMap` (roughness 1 under it) on a building, a Zone and an unpaved Ground, read with the colour's
+coordinates on a Path (`GLSL_RUGOSITE_MONDE`, `GLSL_RUGOSITE_TRACE`) and in the colour's cells on a paved Ground
+(`GLSL_PAVAGE_RUGOSITE`, `pavageMelange`). A Path waits for all its maps before being drawn textured. It shows in its natural colour (the tint measured at baking); another colour tints it,
 like the shipped textures. Ground materials are ADDED to `GROUND_TYPE_DEFS` (flagged `importee`):
 all the code that looked a material up by its id finds it unchanged. Grains are read through IPC
 (`textures:image`) and served as blob URLs. The persisted id (`tex:<folder>`) is described in

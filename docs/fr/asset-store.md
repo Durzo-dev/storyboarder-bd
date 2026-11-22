@@ -362,7 +362,14 @@ de la couleur moyenne de la tuile), pour qu'une tuile d'asphalte de 3 m ne montr
 Ses cellules TOURNENT aussi quand c'est un albédo photographié (`rotation` de `traceDe` : `nature` 'couleur' ; le
 matériau définit `PAVAGE_PART_ROTATION` avant le code du pavage, les pentes du relief retournées avec, `pavageNormaleDe`),
 pour que ses fissures ne courent pas toutes dans le même sens ; jamais un grain gris, dont la lumière cuite tournerait
-avec. Le Sol ne tourne pas. Elle s'affiche au naturel (la teinte relevée à la
+avec. Le Sol ne tourne pas.
+Son OCCLUSION et sa RUGOSITÉ aussi (`ao`, `rugosite` de `batimentDe`, `traceDe`, `defSolDe` ; `texture-maps-3d.js`) :
+l'occlusion est multipliée dans la tuile quand elle est dessinée (`occulterLaTuile3D`, à `PART_OCCLUSION` ; bâtiments,
+Tracés, Sol), seulement sur un albédo photographié (`.couleur` : les creux d'un grain gris sont ombrés à la cuisson) ;
+la rugosité est le `roughnessMap` de three (rugosité 1 dessous) sur un bâtiment, une Zone et un Sol non pavé, lue aux
+coordonnées de la couleur sur un Tracé (`GLSL_RUGOSITE_MONDE`, `GLSL_RUGOSITE_TRACE`) et dans les cellules de la
+couleur sur un Sol pavé (`GLSL_PAVAGE_RUGOSITE`, `pavageMelange`). Un Tracé attend toutes ses cartes avant de se
+dessiner texturé. Elle s'affiche au naturel (la teinte relevée à la
 cuisson) ; une autre couleur la teinte, comme les textures livrées. Les matières du Sol sont
 AJOUTÉES à `GROUND_TYPE_DEFS` (marquées `importee`) : tout le code qui cherchait une matière par son
 identifiant la trouve sans changer. Les grains sont lus par l'IPC (`textures:image`) et servis en

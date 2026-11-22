@@ -77,6 +77,10 @@ describe('les textures de l\'utilisateur sur le Sol et les Tracés (#446d)', () 
     assert.equal(U.defSolDe(avec).normale, 'tex:polyhaven-rocky_trail#normal');
     assert.equal(U.traceDe(avec).normale, 'tex:polyhaven-rocky_trail#normal');
     assert.equal(U.batimentDe(avec).normale, 'tex:polyhaven-rocky_trail#normal');
+    const toutes = entree({ cartes: ['normal', 'ao', 'rugosite'], usages: ['sol', 'chemin', 'mur-ext'] });
+    for (const t of [U.defSolDe(toutes), U.traceDe(toutes), U.batimentDe(toutes)]) {
+      assert.deepEqual([t.ao, t.rugosite], ['tex:polyhaven-rocky_trail#ao', 'tex:polyhaven-rocky_trail#rugosite']);
+    }
     const sans = entree({ usages: ['sol', 'chemin', 'mur-ext'] });
     assert.ok(!('normale' in U.defSolDe(sans)) && !('normale' in U.traceDe(sans)) && !('normale' in U.batimentDe(sans)));
   });
