@@ -54,6 +54,7 @@ import { clearImageCache } from './image-cache.js';
 // 2D divergent de ce que le GPU affiche réellement.
 import { box3FromObjectSkinAwareCached3D, box3FromObjectSkinAware3D } from './skinned-box-3d.js';
 import { boiteDesOsMappes3D, applySkeletonPose } from './rig3d.js';
+import { dashSpans } from './road-marking.js';
 import { barkSettled } from './ez-trees.js';
 import { cloneSkinned } from './vendor/SkeletonUtils.js';
 // Le champ visible d'une Case : il sert de plan éloigné à l'ombre d'une source SANS portée (#422d).
@@ -2097,11 +2098,9 @@ function buildTracéRouteGeometry3D(worldPts, worldWidth, yOff, across = 1) {
   geo.computeVertexNormals();
   return geo;
 }
-// Builds the DASHED center-line geometry for roads.
-// Alternates quads (dashes) and gaps (spaces) along the worldPts path.
-// dashW = dash width in world units, dashL and gapL = dash/gap lengths.
-// Uses a state machine (inDash + dashPhase) instead of cumDist%period to avoid
-// any infinite loop from floating-point errors at the dash↔gap transition.
+// Builds the DASHED center-line geometry for roads: the pattern fitted to the Path (road-marking.js), so two Paths
+// end to end meet in one whole gap and a crossing's middle stays clear.
+// dashW = dash width in world units, dashL and gapL = the asked dash/gap lengths.
 function buildTracéDashGeometry3D(worldPts, dashW, dashL, gapL, yOff) {
   // Same Catmull-Rom smoothing as the ribbon: dashes follow the curve.
   const pts = smoothTracéPath3D(worldPts, 8);
@@ -2109,48 +2108,28 @@ function buildTracéDashGeometry3D(worldPts, dashW, dashL, gapL, yOff) {
   if (n < 2 || dashL <= 0 || gapL <= 0) return null;
   const y  = yOff !== undefined ? yOff : (GROUND_Y_DEFAULT_3D + 0.010);
   const hw = dashW / 2;
+  const cumul = [0];
+  for (let i = 1; i < n; i++) cumul.push(cumul[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].z - pts[i - 1].z));
   const verts = [];
-  // State machine persistent across segments.
-  let inDash    = true; // in a dash (true) or in a gap (false)
-  let dashPhase = 0;    // position within the current dash/gap (0 = start)
-
-  for (let i = 0; i < n - 1; i++) {
-    const ax = pts[i].x, az = pts[i].z;
-    const bx = pts[i+1].x, bz = pts[i+1].z;
-    const segLen = Math.hypot(bx - ax, bz - az);
-    if (segLen < 1e-8) continue;
-    const tx = (bx - ax) / segLen, tz = (bz - az) / segLen;
-    const nx = -tz, nz = tx;
-
-    let t = 0;
-    // Absolute guard: at most 5000 iterations per segment (avoids any freeze on extreme coords).
-    const MAX = Math.min(5000, Math.ceil(segLen / Math.min(dashL, gapL)) * 2 + 4);
-    for (let iter = 0; iter < MAX && t < segLen - 1e-9; iter++) {
-      const limit     = inDash ? dashL : gapL;
-      const remaining = limit - dashPhase;
-      if (remaining <= 1e-12) {
-        // Dash↔gap boundary: move to the next state without advancing t.
-        inDash    = !inDash;
-        dashPhase = 0;
-        continue;
-      }
-      const piece = Math.min(remaining, segLen - t);
-      if (inDash) {
-        const x1 = ax + tx * t,          z1 = az + tz * t;
-        const x2 = ax + tx * (t + piece), z2 = az + tz * (t + piece);
-        verts.push(x1 + nx * hw, y, z1 + nz * hw,
-                   x1 - nx * hw, y, z1 - nz * hw,
-                   x2 + nx * hw, y, z2 + nz * hw,
-                   x1 - nx * hw, y, z1 - nz * hw,
-                   x2 - nx * hw, y, z2 - nz * hw,
-                   x2 + nx * hw, y, z2 + nz * hw);
-      }
-      t         += piece;
-      dashPhase += piece;
-      if (dashPhase >= limit - 1e-12) {
-        inDash    = !inDash;
-        dashPhase = 0;
-      }
+  let i = 0;
+  for (const [from, to] of dashSpans(cumul[n - 1], dashL, gapL)) {
+    // A dash may run over several segments of the smoothed line: one quad per piece.
+    while (i < n - 2 && cumul[i + 1] <= from) i++;
+    for (let j = i; j < n - 1 && cumul[j] < to; j++) {
+      const segLen = cumul[j + 1] - cumul[j];
+      if (segLen < 1e-8) continue;
+      const a = Math.max(from, cumul[j]) - cumul[j], b = Math.min(to, cumul[j + 1]) - cumul[j];
+      if (b <= a) continue;
+      const ax = pts[j].x, az = pts[j].z;
+      const tx = (pts[j + 1].x - ax) / segLen, tz = (pts[j + 1].z - az) / segLen;
+      const nx = -tz, nz = tx;
+      const x1 = ax + tx * a, z1 = az + tz * a, x2 = ax + tx * b, z2 = az + tz * b;
+      verts.push(x1 + nx * hw, y, z1 + nz * hw,
+                 x1 - nx * hw, y, z1 - nz * hw,
+                 x2 + nx * hw, y, z2 + nz * hw,
+                 x1 - nx * hw, y, z1 - nz * hw,
+                 x2 - nx * hw, y, z2 - nz * hw,
+                 x2 + nx * hw, y, z2 + nz * hw);
     }
   }
   if (verts.length === 0) return null;
@@ -4249,7 +4228,7 @@ export function projectAxisDir3D(v, basis){
 // them from here would have prevented rig3d.js from using them without creating a cycle, see
 // rig3d.js's header). Imported from rig3d.js above, re-exported here for modules that were
 // already importing them from scene3d.js (events.js).
-export { useObjectFormat3D, useObjectBoxFormat3D };
+export { useObjectFormat3D, useObjectBoxFormat3D, buildTracéDashGeometry3D };
 
 /**
  * La boîte sur laquelle cadrer un modèle importé : celle de ses OS quand son squelette est reconnu,

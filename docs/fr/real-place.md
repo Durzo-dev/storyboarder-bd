@@ -19,6 +19,7 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
 | `src/vegetation-zones.js` | PUR. Les bois, vergers, landes et haies relevés par l'IGN (France), remplis d'arbres et d'arbustes intégrés (`readVegetation`, `fillVegetation`). La requête : `realplace:vegetation`. |
 | `src/landmarks.js` | PUR. Les croix, calvaires, éoliennes, antennes-relais et clochers relevés par l'IGN (France, BD TOPO `construction_ponctuelle`) : `readLandmarks`. La requête : `realplace:landmarks`. |
 | `src/realistic-textures.js` | PUR. Les textures du niveau « Réaliste » : pour chaque emplacement (enduit, pierre, brique, pavés, gravier, asphalte, route, muret) une texture Poly Haven par région (`REALISTIC_TEXTURES`), ce qu'un lieu traduit demande (`realisticNeeds`) et la substitution (`applyRealisticTextures`). |
+| `src/road-marking.js` | PUR. La ligne médiane en tirets d'une route, ajustée à son Tracé (`dashLayout`, `dashSpans`) : un nombre entier de périodes, un demi-espace à chaque bout. |
 | `src/soils.js` | PUR. La couleur de la terre nue (et, au niveau Réaliste, sa texture) d'après la carte des sols de l'INRAE (France) : `soilKindOf`, `readSoils`, `applySoils`. La requête : `realplace:soils`. |
 | `src/hedge-reading.js` | PUR. Les haies que personne n'a cartographiées, lues sur les hauteurs du LiDAR : crêtes du MNH (`ridgeMask`), là où les classes du LiDAR le permettent (`hedgeMayStand`, `hedgeCells`), suivies en lignes (`readHedges`). La requête : `realplace:lidarClasses`. |
 | `src/parcel-fences.js` | PUR. Les murs, clôtures et haies des jardins, le long des parcelles du cadastre, par des règles ; les murs que le LiDAR confirme à leur hauteur (`builtParcels`, `parcelFences`). Les parcelles viennent avec `realplace:extras`. |
@@ -52,7 +53,8 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
   `z`) : l'import le pose en Élément bâtiment (`creerElementBatiment`, `wxFloor`/`wzFloor`).
 - **Tracés** (`pathKindOf`) : les routes `highway` → `route` (largeur selon le type ; une ligne centrale
   (`markingOf`) à partir de 2 voies, aucune à 1 voie ou en sens unique, sinon seulement sur les grands
-  axes : autoroute à tertiaire et leurs bretelles), trottoirs cartographiés (`footway=sidewalk`) → `trottoir`, et les balises `sidewalk` d'une route
+  axes : autoroute à tertiaire et leurs bretelles ; ses tirets sont ajustés à chaque Tracé, `road-marking.js`, pour que
+  les Tracés en lesquels OSM découpe une rue se rejoignent sur un espace entier), trottoirs cartographiés (`footway=sidewalk`) → `trottoir`, et les balises `sidewalk` d'une route
   (`sidewalkSides`) donnent un `trottoir` à côté d'elle de chaque côté (`offsetPolyline`, 1,8 m sauf
   `sidewalk:width`) ; autres sentiers, pistes, escaliers → `chemin` ;
   `barrier` → `muret`, `cloture`, `haie`, `barriere` ; `waterway` → `riviere`. Une balise `width` l'emporte.

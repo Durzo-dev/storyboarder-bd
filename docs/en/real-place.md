@@ -19,6 +19,7 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
 | `src/vegetation-zones.js` | PURE. The woods, orchards, heaths and hedges the IGN surveys (France), filled with built-in trees and shrubs (`readVegetation`, `fillVegetation`). The request: `realplace:vegetation`. |
 | `src/landmarks.js` | PURE. The crosses, calvaries, wind turbines, relay masts and bell towers the IGN surveys (France, BD TOPO `construction_ponctuelle`): `readLandmarks`. The request: `realplace:landmarks`. |
 | `src/realistic-textures.js` | PURE. The « Realistic » level's textures: for each slot (render, stone, brick, cobbles, gravel, asphalt, road, low wall) a Poly Haven texture by region (`REALISTIC_TEXTURES`), what a translated place needs (`realisticNeeds`) and the swap (`applyRealisticTextures`). |
+| `src/road-marking.js` | PURE. A road's dashed centre line fitted to its Path (`dashLayout`, `dashSpans`): a whole number of periods, half a gap at each end. |
 | `src/soils.js` | PURE. The bare earth's colour (and, « Realistic », its texture) from the INRAE's soil map (France): `soilKindOf`, `readSoils`, `applySoils`. The request: `realplace:soils`. |
 | `src/hedge-reading.js` | PURE. The hedges no one mapped, read on the LiDAR's heights: ridges of the MNH (`ridgeMask`), where the LiDAR's classes allow (`hedgeMayStand`, `hedgeCells`), followed as lines (`readHedges`). The request: `realplace:lidarClasses`. |
 | `src/parcel-fences.js` | PURE. The walls, fences and hedges of the gardens, along the cadastre's parcels, by rules; the walls the LiDAR confirms at their height (`builtParcels`, `parcelFences`). The parcels come with `realplace:extras`. |
@@ -50,7 +51,8 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
   A footprint the editor refuses (crossing itself) is skipped. Each building comes with its centre
   (`x`, `z`): the importer places it as a building Element (`creerElementBatiment`, `wxFloor`/`wzFloor`).
 - **Paths** (`pathKindOf`): `highway` roads → `route` (width by type; a centre line (`markingOf`) with 2
-  lanes or more, none with 1 or one-way, else only on main roads: motorway to tertiary and their links), pavements (`footway=sidewalk`) → `trottoir`, and a road's `sidewalk` tags (`sidewalkSides`) give a
+  lanes or more, none with 1 or one-way, else only on main roads: motorway to tertiary and their links; its dashes are
+  fitted to each Path, `road-marking.js`, so the Paths OSM splits a street into meet in one whole gap), pavements (`footway=sidewalk`) → `trottoir`, and a road's `sidewalk` tags (`sidewalkSides`) give a
   `trottoir` beside it on each side (`offsetPolyline`, 1.8 m unless `sidewalk:width`); other footways, paths, tracks, steps → `chemin`; `barrier` → `muret`, `cloture`,
   `haie`, `barriere`; `waterway` → `riviere`. A `width` tag wins. Tunnels are skipped. Clipped to the zone
   (`clipPolyline`). `world` is the Path's own (`pts`, `width`). « Detailed » and « Realistic »: a bundled
