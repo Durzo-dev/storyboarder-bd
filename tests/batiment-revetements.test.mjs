@@ -12,6 +12,7 @@ import { ajouterMur, couperMur } from '../src/batiment-trace.js';
 import { actualiserPieces } from '../src/batiment-pieces.js';
 import { construireBatiment3D, materiauxBatiment3D } from '../src/batiment-3d.js';
 import * as R from '../src/batiment-revetements.js';
+import { installerTexturesUtilisateur } from '../src/textures-utilisateur.js';
 import { COULEURS_BATIMENT, texturesIntegrees, valeurChoisie, textureDeLaValeur } from '../src/textures-integrees.js';
 
 /** Une pièce de 4 × 3 m, fermée, au rez-de-chaussée. */
@@ -206,5 +207,19 @@ describe('a flat roof wears its covering', async () => {
     ajouterEtage(c, (en, fr) => fr);
     fixerToit(c, 'n0', { type: 'plat', revetement: { texture: null, couleur: '#8f8b84' } });
     assert.ok(!couleurs(c).has('#8f8b84'), 'the ground floor slab is a floor, not a roof');
+  });
+});
+
+describe('#494a: a texture of « My textures » brings its relief to the buildings', () => {
+  test('its normal map, when it came with one; none otherwise; the painting carries it', () => {
+    const entree = (dossier, cartes) => ({ cle: 'polyhaven:' + dossier, dossier, grain: 'grain.couleur.png', nature: 'couleur', teinte: '#aabbcc',
+      usages: ['mur-ext'], dimensions: [2, 2], cartes });
+    installerTexturesUtilisateur([entree('polyhaven-brick', ['couleur', 'normal', 'rugosite']), entree('import-flat', ['couleur'])]);
+    const p = R.peintureDuRevetement({ texture: 'tex:polyhaven-brick' }, 'mur-ext');
+    assert.equal(p.normale, 'tex:polyhaven-brick#normal');
+    assert.deepEqual(p.tuile, [2, 2]);
+    assert.equal(R.peintureDuRevetement({ texture: 'tex:import-flat' }, 'mur-ext').normale, undefined);
+    assert.equal(R.peintureDuRevetement({ texture: 'int:facade:pierre' }, 'mur-ext').normale, undefined, 'a bundled texture: flat, as before');
+    installerTexturesUtilisateur([]);
   });
 });

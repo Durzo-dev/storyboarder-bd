@@ -348,11 +348,14 @@ function supprimer(dossierProjets, cle){
   return { ok: true };
 }
 
-/** Une image d'une texture de « Mes textures » (la couleur pour la vignette, le grain pour la fiche). */
+/**
+ * Une image d'une texture de « Mes textures » : la couleur pour la vignette, le grain pour la fiche, sa normale
+ * pour le relief d'un bâtiment (#494a).
+ */
 function image(dossierProjets, cle, quoi){
   const t = mesTextures(dossierProjets).find(x => x.cle === cle);
   if (!t) return { ok: false };
-  const nom = quoi === 'grain' ? t.grain : fichierCarte(path.join(dossierProjets, B.DOSSIER, t.dossier), 'couleur');
+  const nom = quoi === 'grain' ? t.grain : fichierCarte(path.join(dossierProjets, B.DOSSIER, t.dossier), quoi === 'normal' ? 'normal' : 'couleur');
   if (!nom || !/^[a-z.]+\.(jpg|png)$/.test(nom)) return { ok: false };
   try {
     return { ok: true, data: new Uint8Array(fs.readFileSync(path.join(dossierProjets, B.DOSSIER, t.dossier, nom))),

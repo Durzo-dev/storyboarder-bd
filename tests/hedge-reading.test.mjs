@@ -38,6 +38,17 @@ describe('hedges read on the heights', () => {
     assert.equal(r[0].rise, 2.2);
     assert.ok(r[0].width >= 1 && r[0].width <= 2.5, `its width: ${r[0].width}`);
   });
+  test('two crests side by side are one hedge (a wide hedge read twice): the shorter goes; apart, both stay', () => {
+    const g = grid();
+    band(g, -20, 15, 0, 1, 2.5);
+    band(g, -18, 10, 2.5, 1, 2.5);    // 2.5 m beside it, but the cells between are low: two ridges
+    const r = readHedges(g);
+    assert.equal(r.length, 1, JSON.stringify(r.map(h => h.pts.length)));
+    const g2 = grid();
+    band(g2, -20, 15, 0, 1, 2.5);
+    band(g2, -18, 10, 8, 1, 2.5);
+    assert.equal(readHedges(g2).length, 2, '8 m apart: two hedges');
+  });
   test('an L: both arms, each as long as it is', () => {
     const g = grid();
     band(g, -20, 5, -10, 1, 1.8);

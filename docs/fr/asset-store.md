@@ -347,7 +347,10 @@ poids de leur grain et un aperçu 3D (couleur : le grain teint ; relief : une no
 nuances). Un clic droit sur une carte de « Mes textures » la renomme ou la supprime. Un Tracé peut porter
 une texture livrée d'une autre sorte qui sert son usage (pavés et gravier du Sol, `USAGES_TRACE_LIVREES` ;
 la pierre sur un muret) : `traceTexture: 'int:<id>'`, que `textureDuTrace` retrouve. Une texture
-livrée se renomme (son nom va dans `nomsIntegrees` de la bibliothèque) mais ne se supprime pas. Elle s'affiche au naturel (la teinte relevée à la
+livrée se renomme (son nom va dans `nomsIntegrees` de la bibliothèque) mais ne se supprime pas. Sur un
+bâtiment, une texture venue avec sa normale (celles de Poly Haven, d'ambientCG) montre aussi son relief
+(`normale` de `batimentDe`, chargée avec les grains par `textures:image` 'normal', `normalMap` à 0,8) ; les
+Tracés et le Sol restent plats. Elle s'affiche au naturel (la teinte relevée à la
 cuisson) ; une autre couleur la teinte, comme les textures livrées. Les matières du Sol sont
 AJOUTÉES à `GROUND_TYPE_DEFS` (marquées `importee`) : tout le code qui cherchait une matière par son
 identifiant la trouve sans changer. Les grains sont lus par l'IPC (`textures:image`) et servis en

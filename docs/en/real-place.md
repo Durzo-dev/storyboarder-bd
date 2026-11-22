@@ -271,7 +271,8 @@ The ground under buildings needs nothing: the rendered relief is already flatten
    under 70 % of that 3 m away on both sides, along one of four directions), out of the buildings' outlines and
    0.5 m around, of the roads (1 m wider: parked cars) and the known paths and barriers (`obstaclesOf`); the cells
    gathered, each part followed by its longest path, then the longest through what is left (cells within 3 m of a
-   path taken), kept from `MIN_LENGTH` 10 m, 200 at most: each a `haie` Path (`source: 'lidar'`, its median
+   path taken), kept from `MIN_LENGTH` 10 m, 200 at most, a shorter one left out when 70 % of it runs within
+   2.5 m of a longer one (a wide hedge read as two crests): each a `haie` Path (`source: 'lidar'`, its median
    height as `wallHeight`, its width 0.8 to 3 m). Walls are not read: the LiDAR sees most of them as vegetation
    or ground, and neither retaining walls nor fences; a ridge in doubt is a hedge. Without the class map: the
    heights alone; `wallCells` (the class map's ground and perennial above-ground) is kept for what follows.

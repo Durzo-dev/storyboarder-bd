@@ -80,7 +80,7 @@ export function peintureDuRevetement(rev, usage){
   }
   const t = textureDeBatiment(r.texture);
   if (!t) return uni;   // absente sur cette machine : l'uni, le fichier garde la référence
-  return { grain: t.grain, teinte: r.couleur || t.teinte, tuile: t.tuile };
+  return { grain: t.grain, teinte: r.couleur || t.teinte, tuile: t.tuile, ...(t.normale ? { normale: t.normale } : {}) };
 }
 
 // ── La fabrique de matières ─────────────────────────────────────────────────────────────────────
@@ -91,6 +91,8 @@ export function peintureDuRevetement(rev, usage){
  * bâtiment qui en employait une la refait à son prochain rendu.
  */
 const MATIERES_MAX = 48;
+/** How strongly a texture's normal map shows (#494a): 1 is its own; a facade seen from afar reads better softer. */
+const RELIEF = 0.8;
 
 /**
  * La fabrique des matières de revêtement d'un renderer : `(rev, usage) => MeshStandardMaterial`.
@@ -117,7 +119,9 @@ export function fabriqueDeRevetements(T){
     const p = peintureDuRevetement(rev, usage);
     const img = p.grain ? grainCharge3D(p.grain) : null;
     if (p.grain && !img) demanderLeGrain(p.grain);
-    const cle = p.grain ? `${p.grain}|${p.teinte}|${p.tuile.join('x')}|${img ? 'pret' : 'attente'}|${usage}` : `uni|${p.couleur}|${usage}`;
+    // Its relief (#494a): the normal map of a texture of « My textures », once loaded (else flat, as before).
+    const relief = p.normale ? grainCharge3D(p.normale) : null;
+    const cle = p.grain ? `${p.grain}|${p.teinte}|${p.tuile.join('x')}|${img ? 'pret' : 'attente'}|${relief ? 'relief' : ''}|${usage}` : `uni|${p.couleur}|${usage}`;
     if (cache.has(cle)) { const m = cache.get(cle); cache.delete(cle); cache.set(cle, m); return m; }
     const doubleFace = usage === 'sol-int' || usage === 'plafond' || usage === 'toit';
     let m;
@@ -135,6 +139,14 @@ export function fabriqueDeRevetements(T){
       carte.repeat.set(1 / p.tuile[0], 1 / p.tuile[1]);
       carte.anisotropy = 4;
       m = new T.MeshStandardMaterial({ map: carte, roughness: 0.9, side: doubleFace ? T.DoubleSide : T.FrontSide });
+      if (relief) {
+        const normale = new T.Texture(relief);
+        normale.wrapS = normale.wrapT = T.RepeatWrapping;
+        normale.repeat.copy(carte.repeat);
+        normale.needsUpdate = true;
+        m.normalMap = normale;
+        m.normalScale = new T.Vector2(RELIEF, RELIEF);
+      }
     } else {
       m = new T.MeshStandardMaterial({ color: new T.Color(p.teinte || p.couleur), roughness: 0.9, side: doubleFace ? T.DoubleSide : T.FrontSide });
     }
@@ -143,6 +155,7 @@ export function fabriqueDeRevetements(T){
       const [k, vieille] = cache.entries().next().value;
       cache.delete(k);
       if (vieille.map) vieille.map.dispose();
+      if (vieille.normalMap) vieille.normalMap.dispose();
       vieille.dispose();
     }
     cache.set(cle, m);

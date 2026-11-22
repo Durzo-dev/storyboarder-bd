@@ -24,6 +24,19 @@ const SIDE_SHARE = 0.7;
 export const MIN_LENGTH = 10;
 /** How far from a building's outline, beyond a road's or a known barrier's half width, nothing is read (m). */
 const CLEAR = 0.5;
+/** A hedge running within this much (m) of a longer one along this share of it is the same hedge: left out. */
+const ALONGSIDE = 2.5;
+const ALONGSIDE_SHARE = 0.7;
+/** A line's points every metre. */
+function densify(pts){
+  const out = [pts[0]];
+  for (let k = 1; k < pts.length; k++) {
+    const a = pts[k - 1], b = pts[k], L = Math.hypot(b.x - a.x, b.z - a.z);
+    for (let d = 1; d < L; d += 1) out.push({ x: a.x + (b.x - a.x) * d / L, z: a.z + (b.z - a.z) * d / L });
+    out.push(b);
+  }
+  return out;
+}
 /** The most hedges read in a zone. */
 export const MOST_HEDGES = 200;
 
@@ -208,5 +221,14 @@ export function readHedges(g, { rings = [], lines = [], cells = null } = {}){
         rise: Math.round(rise * 10) / 10, width: Math.round(width * 10) / 10, length });
     }
   }
-  return found.sort((x, y) => y.length - x.length).slice(0, MOST_HEDGES).map(({ length, ...b }) => b);
+  // Two ridges side by side are one hedge (seen in Plouguerneau: a wide hedge read as two crests, drawn as one
+  // thick block): the shorter goes when most of it runs within ALONGSIDE of a longer one.
+  const kept = [];
+  for (const f of found.sort((x, y) => y.length - x.length)) {
+    const near = (p) => kept.some(k => distanceToPolyline(p, k.pts) <= ALONGSIDE);
+    const dense = densify(f.pts);
+    if (dense.filter(near).length >= ALONGSIDE_SHARE * dense.length) continue;
+    kept.push(f);
+  }
+  return kept.slice(0, MOST_HEDGES).map(({ length, ...b }) => b);
 }

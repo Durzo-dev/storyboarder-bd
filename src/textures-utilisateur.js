@@ -104,8 +104,14 @@ export function batimentDe(entree){
   if (!usages.length) return null;
   const d = Array.isArray(entree.dimensions) && entree.dimensions.length === 2 && entree.dimensions.every(v => Number(v) > 0)
     ? entree.dimensions.map(Number) : TUILE_PAR_DEFAUT;
-  return { id: idDe(entree), grain: cleDuGrain(entree), teinte: couleur(entree.teinte), tuile: d, usages };
+  const t = { id: idDe(entree), grain: cleDuGrain(entree), teinte: couleur(entree.teinte), tuile: d, usages };
+  // Its relief (#494a): the normal map downloaded with it, when there is one (Poly Haven's, ambientCG's).
+  if (Array.isArray(entree.cartes) && entree.cartes.includes('normal')) t.normale = cleDeLaNormale(entree);
+  return t;
 }
+
+/** The key of a texture's normal map among the loaded images (bubble-grain.js). */
+export const cleDeLaNormale = (entree) => idDe(entree) + '#normal';
 
 /** Les textures de bâtiment de l'utilisateur, par identifiant (`tex:<dossier>`). */
 const _batiment = new Map();
@@ -223,6 +229,16 @@ export async function chargerTexturesUtilisateur(api, apres){
       definirAdresseDuGrain3D(cle, URL.createObjectURL(new Blob([r.data], { type: r.type || 'image/png' })));
       cles.push(cle);
     } catch (e) { /* ce grain manque : la matière retombe sur son aplat */ }
+  }));
+  // The buildings' textures' normal maps (#494a), likewise: a missing one leaves the texture flat.
+  await Promise.all([..._batiment.values()].filter(t => t.normale && !grainCharge3D(t.normale)).map(async (t) => {
+    const entree = entrees.find(e => idDe(e) === t.id);
+    try {
+      const r = entree && await api.texturesImage(entree.cle, 'normal');
+      if (!r || !r.ok || !r.data) return;
+      definirAdresseDuGrain3D(t.normale, URL.createObjectURL(new Blob([r.data], { type: r.type || 'image/jpeg' })));
+      cles.push(t.normale);
+    } catch (e) { /* no relief */ }
   }));
   if (cles.length) await prechargerGrains3D(cles, apres);
   else if (change && typeof apres === 'function') apres();

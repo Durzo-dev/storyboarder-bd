@@ -293,7 +293,8 @@ Le sol sous les bâtiments n'a besoin de rien : le relief rendu y est déjà apl
    directions), hors des contours des bâtiments et 0,5 m autour, des routes (1 m de plus : les voitures garées)
    et des tracés et clôtures connus (`obstaclesOf`) ; les cases réunies, chaque partie suivie par son plus long
    chemin, puis le plus long dans ce qui reste (les cases à 3 m d'un chemin sont prises), gardées dès
-   `MIN_LENGTH` 10 m, 200 au plus : chacune un Tracé `haie` (`source: 'lidar'`, sa hauteur médiane en
+   `MIN_LENGTH` 10 m, 200 au plus, la plus courte écartée quand 70 % d'elle court à 2,5 m d'une plus longue (une haie
+   large lue en deux crêtes) : chacune un Tracé `haie` (`source: 'lidar'`, sa hauteur médiane en
    `wallHeight`, sa largeur de 0,8 à 3 m). Les murs ne sont pas lus : le LiDAR voit la plupart en végétation ou en
    sol, et ni les murs de soutènement ni les clôtures ; une crête douteuse est une haie. Sans la carte des
    classes : les hauteurs seules ; `wallCells` (le sol et le sursol pérenne de la carte) est gardé pour la suite.
