@@ -24,7 +24,7 @@ export const REALISTIC_TEXTURES = Object.freeze({
   paving: { usages: ['sol', 'route', 'chemin'], south: 'cobblestone_floor_08', north: 'cobblestone_floor_08' },
   gravel: { usages: ['sol', 'chemin'], south: 'gravel_floor', north: 'gravel_floor' },
   asphalt: { usages: ['sol'], south: 'clean_asphalt', north: 'clean_asphalt' },
-  road: { usages: ['route'], south: 'asphalt_02', north: 'asphalt_02' },
+  road: { usages: ['route'], south: 'asphalt_01', north: 'asphalt_01' },
   lowWall: { usages: ['muret'], south: 'rustic_stone_wall_02', north: 'stone_wall' },
 });
 

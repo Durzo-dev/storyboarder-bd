@@ -1230,7 +1230,7 @@ describe('Sol : le pavage anti-répétition, ce qui se calcule sans GPU', () => 
     assert.equal(PAVAGE_ROTATION, 0, 'la rotation tourne la lumière cuite dans le grain, cf. le banc');
     assert.ok(GLSL_PAVAGE.includes(PAVAGE_ECHELLE.toFixed(4)));
     assert.ok(GLSL_PAVAGE.includes(PAVAGE_NETTETE.toFixed(4)));
-    assert.ok(GLSL_PAVAGE.includes('* ' + PAVAGE_ROTATION.toFixed(4)));
+    assert.ok(GLSL_PAVAGE.includes('#define PAVAGE_PART_ROTATION ' + PAVAGE_ROTATION.toFixed(4)), 'the Ground\'s share, unless a material defines its own');
     assert.ok(GLSL_PAVAGE.includes('texture2DGradEXT'),
       'sans dérivées explicites, chaque frontière de cellule tirerait un niveau de mipmap grossier');
   });

@@ -275,6 +275,16 @@ describe('Traces : le relief d\'une texture de « Mes textures » (#494a)', () =
     assert.ok(i('vec4 pavageMap(') < i('vec4 traceSol('), 'traceSol reads pavageMap');
     assert.ok(i('#include <normalmap_pars_fragment>') < i('vec3 pavageNormale(') && i('vec3 pavageNormale(') < i('vec3 traceReliefSol('));
     assert.ok(GLSL_RELIEF_MONDE.includes('wR.y * traceReliefSol('), 'the relief in the same cells as the colour');
+    // Its cells turn too (a photographed albedo: no light baked in), defined before the paving's code; not a grey grain.
+    const m = materiauDeTrace3D('route', null, { texture: 'tex:polyhaven-asphalt_02' });
+    assert.equal(m.customProgramCacheKey(), 'trace-plaquage-1-monde-tourne');
+    const sh = { uniforms: {}, vertexShader: THREE.ShaderLib.standard.vertexShader, fragmentShader: THREE.ShaderLib.standard.fragmentShader };
+    m.onBeforeCompile(sh);
+    assert.ok(sh.fragmentShader.indexOf('#define PAVAGE_PART_ROTATION 1.0') < sh.fragmentShader.indexOf('#ifndef PAVAGE_PART_ROTATION'));
+    installerTexturesUtilisateur([{ ...asphalte, nature: 'gris' }]);
+    _viderTexturesDesTraces3D(); _setGrain3D('tex:polyhaven-asphalt_02', { width: 4, height: 4 });
+    assert.equal(materiauDeTrace3D('route', null, { texture: 'tex:polyhaven-asphalt_02' }).customProgramCacheKey(), 'trace-plaquage-1-monde',
+      'a grey grain carries baked light: turned, it would be lit from everywhere');
     installerTexturesUtilisateur([]); _viderGrains3D(); _viderTexturesDesTraces3D();
   });
 });

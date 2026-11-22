@@ -124,7 +124,7 @@ export const GLSL_RELIEF_MONDE = `
 `;
 
 /** Installe le plaquage monde sur un matériau standard. */
-export function installerPlaquageMonde3D(materiau, tuile, mode = 'monde', moyenne = null){
+export function installerPlaquageMonde3D(materiau, tuile, mode = 'monde', moyenne = null, rotation = false){
   const THREE = globalThis.THREE;
   const uTuile = { value: new THREE.Vector2(tuile[0], tuile[1]) };
   // The ground's anti-repetition: on when the tile's mean colour is given (the blend keeps its variance around it).
@@ -140,14 +140,15 @@ export function installerPlaquageMonde3D(materiau, tuile, mode = 'monde', moyenn
         + 'vTraceMonde = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;\n'
         + 'vTraceNormale = mat3( modelMatrix ) * objectNormal;');
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <map_pars_fragment>', '#include <map_pars_fragment>\n' + GLSL_PAVAGE + GLSL_PLAQUAGE_DECLARATIONS)
+      .replace('#include <map_pars_fragment>', '#include <map_pars_fragment>\n'
+        + (rotation ? '#define PAVAGE_PART_ROTATION 1.0\n' : '') + GLSL_PAVAGE + GLSL_PLAQUAGE_DECLARATIONS)
       .replace('#include <map_fragment>', mode === 'trace' ? GLSL_PLAQUAGE_TRACE : GLSL_PLAQUAGE_FRAGMENT)
       .replace('#include <normalmap_pars_fragment>', '#include <normalmap_pars_fragment>\n' + GLSL_PAVAGE_RELIEF + GLSL_RELIEF_DECLARATIONS)
       .replace('#include <normal_fragment_maps>', mode === 'trace' ? GLSL_RELIEF_TRACE : GLSL_RELIEF_MONDE);
   };
   // Derivatives for the relief's frame (WebGL 1; WebGL 2 has them).
   materiau.extensions = Object.assign({}, materiau.extensions, { derivatives: true, shaderTextureLOD: true });
-  materiau.customProgramCacheKey = () => 'trace-plaquage-1-' + mode;
+  materiau.customProgramCacheKey = () => 'trace-plaquage-1-' + mode + (rotation ? '-tourne' : '');
   materiau.userData.uTuile = uTuile;
   materiau.userData.uPavage = uPavage;
   materiau.needsUpdate = true;
@@ -274,11 +275,12 @@ export function materiauDeTrace3D(type, couleur, options = {}){
   const tex = textureDuTrace(type, texture);
   const relief = reliefDeTrace3D(type, texture);
   const pave = !!(tex.pavage && plaquage === 'monde' && _moyennes.get(carte));
-  const cle = [type, tex.grain, teinteDe(type, couleur, tex), ombre, plaquage, relief ? tex.normale : '', pave, JSON.stringify(reste)].join('|');
+  const tourne = pave && !!tex.rotation;
+  const cle = [type, tex.grain, teinteDe(type, couleur, tex), ombre, plaquage, relief ? tex.normale : '', pave, tourne, JSON.stringify(reste)].join('|');
   if (_materiaux.has(cle)) return _materiaux.get(cle);
   const mat = new THREE.MeshStandardMaterial({ map: carte, color: new THREE.Color(ombre, ombre, ombre), ...reste });
   if (relief) { mat.normalMap = relief; mat.normalScale = new THREE.Vector2(RELIEF_DE_TRACE, RELIEF_DE_TRACE); }
-  installerPlaquageMonde3D(mat, tex.tuile, plaquage, pave ? _moyennes.get(carte) : null);
+  installerPlaquageMonde3D(mat, tex.tuile, plaquage, pave ? _moyennes.get(carte) : null, tourne);
   mat.userData.partage = true;
   _materiaux.set(cle, mat);
   return mat;

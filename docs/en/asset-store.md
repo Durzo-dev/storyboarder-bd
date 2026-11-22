@@ -350,7 +350,10 @@ A paved Ground reads it in the same cells as its colour (`pavageNormale` in `gro
 being drawn textured (`grainDeTracePret3D`), else drawn once without it, its signature would not change at its
 arrival. On the ground (world mapping, the top projection), a Path texture without a regular pattern (`pavage` of
 `traceDe`: not cobbles, bricks…) is paved as the Ground is (`traceSol`, `traceReliefSol`: the cells of
-`ground-tiling-3d.js`, around the tile's mean colour), so a 3 m tile of asphalt does not show the same crack every 3 m. It shows in its natural colour (the tint measured at baking); another colour tints it,
+`ground-tiling-3d.js`, around the tile's mean colour), so a 3 m tile of asphalt does not show the same crack every 3 m.
+Its cells also TURN when it is a photographed albedo (`rotation` of `traceDe`: `nature` 'couleur'; the material defines
+`PAVAGE_PART_ROTATION` before the paving's code, the relief's slopes turned back with it, `pavageNormaleDe`), so its
+cracks do not all run one way; never a grey grain, whose baked light would turn with it. The Ground does not turn. It shows in its natural colour (the tint measured at baking); another colour tints it,
 like the shipped textures. Ground materials are ADDED to `GROUND_TYPE_DEFS` (flagged `importee`):
 all the code that looked a material up by its id finds it unchanged. Grains are read through IPC
 (`textures:image`) and served as blob URLs. The persisted id (`tex:<folder>`) is described in

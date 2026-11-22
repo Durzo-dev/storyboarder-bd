@@ -358,7 +358,11 @@ lit dans les mêmes cellules que sa couleur (`pavageNormale` dans `ground-tiling
 dessiner texturé (`grainDeTracePret3D`), sinon, dessiné une fois sans, sa signature ne changerait pas à son arrivée. Au sol (plaquage
 monde, la projection du dessus), une texture de Tracé sans motif régulier (`pavage` de `traceDe` : pas des pavés,
 des briques…) est pavée comme le Sol (`traceSol`, `traceReliefSol` : les cellules de `ground-tiling-3d.js`, autour
-de la couleur moyenne de la tuile), pour qu'une tuile d'asphalte de 3 m ne montre pas la même fissure tous les 3 m. Elle s'affiche au naturel (la teinte relevée à la
+de la couleur moyenne de la tuile), pour qu'une tuile d'asphalte de 3 m ne montre pas la même fissure tous les 3 m.
+Ses cellules TOURNENT aussi quand c'est un albédo photographié (`rotation` de `traceDe` : `nature` 'couleur' ; le
+matériau définit `PAVAGE_PART_ROTATION` avant le code du pavage, les pentes du relief retournées avec, `pavageNormaleDe`),
+pour que ses fissures ne courent pas toutes dans le même sens ; jamais un grain gris, dont la lumière cuite tournerait
+avec. Le Sol ne tourne pas. Elle s'affiche au naturel (la teinte relevée à la
 cuisson) ; une autre couleur la teinte, comme les textures livrées. Les matières du Sol sont
 AJOUTÉES à `GROUND_TYPE_DEFS` (marquées `importee`) : tout le code qui cherchait une matière par son
 identifiant la trouve sans changer. Les grains sont lus par l'IPC (`textures:image`) et servis en

@@ -91,7 +91,10 @@ export function traceDe(entree){
     ? entree.dimensions.map(Number) : TUILE_PAR_DEFAUT;
   // Anti-repetition on the ground (#494a), as on the Ground: not for a regular pattern (cobbles, bricks).
   const pavage = !(Array.isArray(entree.matieres) ? entree.matieres : []).some(m => MOTIF_REGULIER.includes(m));
-  return { id: idDe(entree), nom: entree.nom || entree.dossier, grain: cleDuGrain(entree), teinte: couleur(entree.teinte), tuile: d, types, pavage, ...reliefDe(entree) };
+  // Its cells may also turn: a photographed albedo has no light baked in (a grey grain does: turned, it would show a
+  // light from everywhere, as the Ground's bench showed).
+  const rotation = pavage && entree.nature === 'couleur';
+  return { id: idDe(entree), nom: entree.nom || entree.dossier, grain: cleDuGrain(entree), teinte: couleur(entree.teinte), tuile: d, types, pavage, rotation, ...reliefDe(entree) };
 }
 
 /** Les textures de Tracé de l'utilisateur, par identifiant. Remplie par `installerTexturesUtilisateur`. */

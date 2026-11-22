@@ -114,12 +114,22 @@ vec2 pavageSommetUV( vec2 s ) {
   return vec2( s.x, ( s.y - ${INCL_A.toFixed(8)} * s.x ) / ${INCL_B.toFixed(8)} ) / ${PAVAGE_ECHELLE.toFixed(4)};
 }
 
-vec4 pavageEchantillonDe( sampler2D t, vec2 uv, vec2 s, vec2 dx, vec2 dy ) {
-  vec2 h = pavageHasard( s );
-  vec2 d = pavageHasard( s + 17.0 );
-  float a = h.x * 6.28318530718 * ${PAVAGE_ROTATION.toFixed(4)};
+// The share of rotation: the Ground's (none, see PAVAGE_ROTATION) unless a material defines its own BEFORE this code
+// (a Path's photographed albedo, which has no light baked in: trace-textures-3d.js).
+#ifndef PAVAGE_PART_ROTATION
+#define PAVAGE_PART_ROTATION ${PAVAGE_ROTATION.toFixed(4)}
+#endif
+
+// A cell's rotation (the texture turned by its inverse on the surface).
+mat2 pavageRotation( vec2 s ) {
+  float a = pavageHasard( s ).x * 6.28318530718 * PAVAGE_PART_ROTATION;
   float c = cos( a ), si = sin( a );
-  mat2 r = mat2( c, si, -si, c );
+  return mat2( c, si, -si, c );
+}
+
+vec4 pavageEchantillonDe( sampler2D t, vec2 uv, vec2 s, vec2 dx, vec2 dy ) {
+  vec2 d = pavageHasard( s + 17.0 );
+  mat2 r = pavageRotation( s );
   // Coordonnées LOCALES au sommet : de petites valeurs, donc toute la précision du flottant,
   // là où une coordonnée brute monte jusqu'à plusieurs milliers.
   vec2 u = r * ( uv - pavageSommetUV( s ) ) + d;
@@ -168,14 +178,17 @@ vec4 pavageMap( vec2 uv ) {
  */
 export const GLSL_PAVAGE_RELIEF = `
 #ifdef TANGENTSPACE_NORMALMAP
+// A cell's normal, in the surface's frame: a cell turned by r shows its slopes turned back (xy · r = rᵀ xy).
+vec3 pavageNormaleDe( vec2 uv, vec2 s, vec2 dx, vec2 dy ) {
+  vec3 m = pavageEchantillonDe( normalMap, uv, s, dx, dy ).xyz * 2.0 - 1.0;
+  return vec3( m.xy * pavageRotation( s ), m.z );
+}
 vec3 pavageNormale( vec2 uv ) {
   vec2 dx = dFdx( uv ), dy = dFdy( uv );
   vec3 w; vec2 s1; vec2 s2; vec2 s3;
   pavageTriangle( uv, w, s1, s2, s3 );
-  vec3 n = w.x * pavageEchantillonDe( normalMap, uv, s1, dx, dy ).xyz
-         + w.y * pavageEchantillonDe( normalMap, uv, s2, dx, dy ).xyz
-         + w.z * pavageEchantillonDe( normalMap, uv, s3, dx, dy ).xyz;
-  return normalize( n * 2.0 - 1.0 );
+  vec3 n = w.x * pavageNormaleDe( uv, s1, dx, dy ) + w.y * pavageNormaleDe( uv, s2, dx, dy ) + w.z * pavageNormaleDe( uv, s3, dx, dy );
+  return normalize( n );
 }
 #endif
 `;
