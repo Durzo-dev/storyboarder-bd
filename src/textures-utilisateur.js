@@ -75,8 +75,12 @@ export function defSolDe(entree){
     repeat: 3000, plaques: 0.12, grain: cleDuGrain(entree),
     pavage: !matieres.some(m => MOTIF_REGULIER.includes(m)),
     importee: true,
+    ...reliefDe(entree),
   };
 }
+
+/** Its relief (#494a): `{ normale }`, the key of the normal map downloaded with it (Poly Haven's, ambientCG's), or {}. */
+const reliefDe = (entree) => (Array.isArray(entree.cartes) && entree.cartes.includes('normal') ? { normale: cleDeLaNormale(entree) } : {});
 
 /** La texture de Tracé d'une texture (format de TRACÉ_TEXTURES), ou null si aucun Tracé ne la prend. */
 export function traceDe(entree){
@@ -85,7 +89,7 @@ export function traceDe(entree){
   if (!types.length) return null;
   const d = Array.isArray(entree.dimensions) && entree.dimensions.length === 2 && entree.dimensions.every(v => Number(v) > 0)
     ? entree.dimensions.map(Number) : TUILE_PAR_DEFAUT;
-  return { id: idDe(entree), nom: entree.nom || entree.dossier, grain: cleDuGrain(entree), teinte: couleur(entree.teinte), tuile: d, types };
+  return { id: idDe(entree), nom: entree.nom || entree.dossier, grain: cleDuGrain(entree), teinte: couleur(entree.teinte), tuile: d, types, ...reliefDe(entree) };
 }
 
 /** Les textures de Tracé de l'utilisateur, par identifiant. Remplie par `installerTexturesUtilisateur`. */
@@ -104,10 +108,7 @@ export function batimentDe(entree){
   if (!usages.length) return null;
   const d = Array.isArray(entree.dimensions) && entree.dimensions.length === 2 && entree.dimensions.every(v => Number(v) > 0)
     ? entree.dimensions.map(Number) : TUILE_PAR_DEFAUT;
-  const t = { id: idDe(entree), grain: cleDuGrain(entree), teinte: couleur(entree.teinte), tuile: d, usages };
-  // Its relief (#494a): the normal map downloaded with it, when there is one (Poly Haven's, ambientCG's).
-  if (Array.isArray(entree.cartes) && entree.cartes.includes('normal')) t.normale = cleDeLaNormale(entree);
-  return t;
+  return { id: idDe(entree), grain: cleDuGrain(entree), teinte: couleur(entree.teinte), tuile: d, usages, ...reliefDe(entree) };
 }
 
 /** The key of a texture's normal map among the loaded images (bubble-grain.js). */
@@ -230,14 +231,13 @@ export async function chargerTexturesUtilisateur(api, apres){
       cles.push(cle);
     } catch (e) { /* ce grain manque : la matière retombe sur son aplat */ }
   }));
-  // The buildings' textures' normal maps (#494a), likewise: a missing one leaves the texture flat.
-  await Promise.all([..._batiment.values()].filter(t => t.normale && !grainCharge3D(t.normale)).map(async (t) => {
-    const entree = entrees.find(e => idDe(e) === t.id);
+  // Their normal maps (#494a: buildings, Paths, Ground), likewise: a missing one leaves the texture flat.
+  await Promise.all(entrees.filter(e => utilisable(e) && reliefDe(e).normale && !grainCharge3D(cleDeLaNormale(e))).map(async (entree) => {
     try {
-      const r = entree && await api.texturesImage(entree.cle, 'normal');
+      const r = await api.texturesImage(entree.cle, 'normal');
       if (!r || !r.ok || !r.data) return;
-      definirAdresseDuGrain3D(t.normale, URL.createObjectURL(new Blob([r.data], { type: r.type || 'image/jpeg' })));
-      cles.push(t.normale);
+      definirAdresseDuGrain3D(cleDeLaNormale(entree), URL.createObjectURL(new Blob([r.data], { type: r.type || 'image/jpeg' })));
+      cles.push(cleDeLaNormale(entree));
     } catch (e) { /* no relief */ }
   }));
   if (cles.length) await prechargerGrains3D(cles, apres);

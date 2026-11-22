@@ -114,7 +114,7 @@ vec2 pavageSommetUV( vec2 s ) {
   return vec2( s.x, ( s.y - ${INCL_A.toFixed(8)} * s.x ) / ${INCL_B.toFixed(8)} ) / ${PAVAGE_ECHELLE.toFixed(4)};
 }
 
-vec4 pavageEchantillon( vec2 uv, vec2 s, vec2 dx, vec2 dy ) {
+vec4 pavageEchantillonDe( sampler2D t, vec2 uv, vec2 s, vec2 dx, vec2 dy ) {
   vec2 h = pavageHasard( s );
   vec2 d = pavageHasard( s + 17.0 );
   float a = h.x * 6.28318530718 * ${PAVAGE_ROTATION.toFixed(4)};
@@ -124,20 +124,21 @@ vec4 pavageEchantillon( vec2 uv, vec2 s, vec2 dx, vec2 dy ) {
   // là où une coordonnée brute monte jusqu'à plusieurs milliers.
   vec2 u = r * ( uv - pavageSommetUV( s ) ) + d;
   #if __VERSION__ >= 300 || defined( TEXTURE_LOD_EXT )
-    return texture2DGradEXT( map, u, r * dx, r * dy );
+    return texture2DGradEXT( t, u, r * dx, r * dy );
   #else
-    return texture2D( map, u );
+    return texture2D( t, u );
   #endif
 }
 
-vec4 pavageMap( vec2 uv ) {
-  vec2 dx = dFdx( uv ), dy = dFdy( uv );
+vec4 pavageEchantillon( vec2 uv, vec2 s, vec2 dx, vec2 dy ) { return pavageEchantillonDe( map, uv, s, dx, dy ); }
+
+// The triangle holding uv: its three vertices and their sharpened weights (as in grilleTriangulaire3D, poidsAiguises3D).
+void pavageTriangle( vec2 uv, out vec3 w, out vec2 s1, out vec2 s2, out vec2 s3 ) {
   vec2 g = uv * ${PAVAGE_ECHELLE.toFixed(4)};
   vec2 sk = vec2( g.x, ${INCL_A.toFixed(8)} * g.x + ${INCL_B.toFixed(8)} * g.y );
   vec2 b = floor( sk );
   vec2 f = fract( sk );
   float fz = 1.0 - f.x - f.y;
-  vec3 w; vec2 s1; vec2 s2; vec2 s3;
   if ( fz > 0.0 ) {
     w = vec3( fz, f.y, f.x ); s1 = b; s2 = b + vec2( 0.0, 1.0 ); s3 = b + vec2( 1.0, 0.0 );
   } else {
@@ -145,6 +146,12 @@ vec4 pavageMap( vec2 uv ) {
   }
   w = pow( max( w, vec3( 0.0 ) ), vec3( ${PAVAGE_NETTETE.toFixed(4)} ) );
   w /= ( w.x + w.y + w.z );
+}
+
+vec4 pavageMap( vec2 uv ) {
+  vec2 dx = dFdx( uv ), dy = dFdy( uv );
+  vec3 w; vec2 s1; vec2 s2; vec2 s3;
+  pavageTriangle( uv, w, s1, s2, s3 );
   vec4 e1 = mapTexelToLinear( pavageEchantillon( uv, s1, dx, dy ) );
   vec4 e2 = mapTexelToLinear( pavageEchantillon( uv, s2, dx, dy ) );
   vec4 e3 = mapTexelToLinear( pavageEchantillon( uv, s3, dx, dy ) );
@@ -152,6 +159,42 @@ vec4 pavageMap( vec2 uv ) {
   vec4 moy = vec4( uPavageMoyenne, m.a );
   return clamp( moy + ( m - moy ) / sqrt( dot( w, w ) ), 0.0, 1.0 );
 }
+`;
+
+/**
+ * The relief of a paved Ground (#494a): its normal map sampled in the SAME cells as its colour, else the bumps would
+ * not lie under the stones they belong to. A plain weighted blend, renormalized (a normal has no variance to keep).
+ * Inserted after `normalmap_pars_fragment` (`normalMap` is declared there).
+ */
+export const GLSL_PAVAGE_RELIEF = `
+#ifdef TANGENTSPACE_NORMALMAP
+vec3 pavageNormale( vec2 uv ) {
+  vec2 dx = dFdx( uv ), dy = dFdy( uv );
+  vec3 w; vec2 s1; vec2 s2; vec2 s3;
+  pavageTriangle( uv, w, s1, s2, s3 );
+  vec3 n = w.x * pavageEchantillonDe( normalMap, uv, s1, dx, dy ).xyz
+         + w.y * pavageEchantillonDe( normalMap, uv, s2, dx, dy ).xyz
+         + w.z * pavageEchantillonDe( normalMap, uv, s3, dx, dy ).xyz;
+  return normalize( n * 2.0 - 1.0 );
+}
+#endif
+`;
+
+/**
+ * Around three's `normal_fragment_maps`: the normal before it is kept, and on a paved Ground the relief is taken
+ * again from it with the paved sample. ⚠️ THE INCLUDE STAYS: the water (ground-water-3d.js) inserts itself right
+ * after it, and a Ground of water has no normal map, so the two never meet.
+ */
+export const GLSL_PAVAGE_NORMALE_AVANT = `vec3 solNormaleBase = normal;
+`;
+export const GLSL_PAVAGE_NORMALE_APRES = `
+#ifdef TANGENTSPACE_NORMALMAP
+  if ( uPavage > 0.5 ) {
+    vec3 mapNP = pavageNormale( vUv );
+    mapNP.xy *= normalScale;
+    normal = perturbNormal2Arb( -vViewPosition, solNormaleBase, mapNP, faceDirection );
+  }
+#endif
 `;
 
 /** Le remplacement de `map_fragment` : le pavage quand il est demandé, le chemin d'origine sinon. */
@@ -186,7 +229,9 @@ export function installerPavage3D(materiau, uniformes){
     // n'aurait pas compilé. Vérifié dans la source de three r128 avant d'écrire, pas après coup.
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <map_pars_fragment>', '#include <map_pars_fragment>\n' + GLSL_PAVAGE)
-      .replace('#include <map_fragment>', GLSL_MAP_FRAGMENT);
+      .replace('#include <map_fragment>', GLSL_MAP_FRAGMENT)
+      .replace('#include <normalmap_pars_fragment>', '#include <normalmap_pars_fragment>\n' + GLSL_PAVAGE_RELIEF)
+      .replace('#include <normal_fragment_maps>', GLSL_PAVAGE_NORMALE_AVANT + '#include <normal_fragment_maps>\n' + GLSL_PAVAGE_NORMALE_APRES);
   };
   materiau.customProgramCacheKey = () => 'sol-pavage-1';
   materiau.needsUpdate = true;

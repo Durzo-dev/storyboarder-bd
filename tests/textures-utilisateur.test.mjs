@@ -71,4 +71,13 @@ describe('les textures de l\'utilisateur sur le Sol et les Tracés (#446d)', () 
     assert.deepEqual(U.utilisationsDe(id, { tomes, scenes }), { tomes: 2, scenes: 1 });
     assert.deepEqual(U.utilisationsDe('tex:autre', { tomes, scenes }), { tomes: 0, scenes: 0 });
   });
+
+  test('#494a : une texture venue avec sa carte de normales la porte sur le Sol, les Tracés et les bâtiments ; aucune sinon', () => {
+    const avec = entree({ cartes: ['normal'], usages: ['sol', 'chemin', 'mur-ext'] });
+    assert.equal(U.defSolDe(avec).normale, 'tex:polyhaven-rocky_trail#normal');
+    assert.equal(U.traceDe(avec).normale, 'tex:polyhaven-rocky_trail#normal');
+    assert.equal(U.batimentDe(avec).normale, 'tex:polyhaven-rocky_trail#normal');
+    const sans = entree({ usages: ['sol', 'chemin', 'mur-ext'] });
+    assert.ok(!('normale' in U.defSolDe(sans)) && !('normale' in U.traceDe(sans)) && !('normale' in U.batimentDe(sans)));
+  });
 });

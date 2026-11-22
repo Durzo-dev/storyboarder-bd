@@ -16,8 +16,10 @@ import { TRACÉ_DEFAULTS, TRACÉ_TEXTURES, grainsDesTraces3D, couleurDeTrace3D }
 import {
   installerPlaquageMonde3D, materiauDeTrace3D, textureDeTrace3D, grainDeTracePret3D,
   GLSL_PLAQUAGE_FRAGMENT, GLSL_PLAQUAGE_TRACE, _viderTexturesDesTraces3D, libererMateriauDeTrace3D,
+  GLSL_RELIEF_MONDE, GLSL_RELIEF_TRACE, reliefDeTrace3D,
 } from '../src/trace-textures-3d.js';
 import { _setGrain3D, _viderGrains3D } from '../src/bubble-grain.js';
+import { installerTexturesUtilisateur } from '../src/textures-utilisateur.js';
 
 const THREE = globalThis.THREE;
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -213,3 +215,48 @@ describe('Traces : les programmes ne se recompilent pas à chaque glissé (#437c
     assert.equal(scene.split('libererMateriauDeTrace3D(ch.material)').length - 1, 2);
   });
 });
+
+describe('Traces : le relief d\'une texture de « Mes textures » (#494a)', () => {
+  const entree = { cle: 'polyhaven:gravel_floor', dossier: 'polyhaven-gravel_floor', nom: 'Gravel', grain: 'grain.couleur.png',
+    nature: 'couleur', teinte: '#8a8070', matieres: ['gravier'], usages: ['chemin', 'muret'], dimensions: [2, 2], cartes: ['normal'] };
+  const shader = (mode, relief) => {
+    const m = new THREE.MeshStandardMaterial();
+    installerPlaquageMonde3D(m, [2, 2], mode);
+    const s = { uniforms: {}, vertexShader: THREE.ShaderLib.standard.vertexShader, fragmentShader: THREE.ShaderLib.standard.fragmentShader };
+    m.onBeforeCompile(s);
+    return { m, f: s.fragmentShader, relief };
+  };
+
+  test('⚠️ SA CARTE DE NORMALES ARRIVE SUR LE MATÉRIAU, et la Trace l\'attend avant de se dessiner texturée', () => {
+    _viderGrains3D(); _viderTexturesDesTraces3D();
+    installerTexturesUtilisateur([entree]);
+    _setGrain3D('tex:polyhaven-gravel_floor.couleur', { width: 4, height: 4 });
+    assert.equal(grainDeTracePret3D('chemin', 'tex:polyhaven-gravel_floor'), false, 'drawn without it, it would stay flat');
+    assert.equal(materiauDeTrace3D('chemin', null, { texture: 'tex:polyhaven-gravel_floor' }).normalMap, null);
+    _setGrain3D('tex:polyhaven-gravel_floor#normal', { width: 4, height: 4 });
+    assert.equal(grainDeTracePret3D('chemin', 'tex:polyhaven-gravel_floor'), true);
+    const m = materiauDeTrace3D('chemin', null, { texture: 'tex:polyhaven-gravel_floor' });
+    assert.equal(m.normalMap, reliefDeTrace3D('chemin', 'tex:polyhaven-gravel_floor'));
+    assert.equal(m.normalScale.x, 0.8);
+    assert.equal(m.extensions.derivatives, true);
+    assert.equal(materiauDeTrace3D('cloture', '#7A5230').normalMap, null, 'a bundled texture has no relief');
+    installerTexturesUtilisateur([]); _viderGrains3D(); _viderTexturesDesTraces3D();
+  });
+
+  test('⚠️ LE RELIEF EST LU AUX MÊMES COORDONNÉES QUE LA COULEUR, et inséré où normalMap est déclaré', () => {
+    const f = THREE.ShaderLib.standard.fragmentShader;
+    for (const a of ['#include <normalmap_pars_fragment>', '#include <normal_fragment_maps>', '#include <normal_fragment_begin>']) assert.equal(f.split(a).length, 2, a);
+    for (const mode of ['monde', 'trace']) {
+      const g = shader(mode).f, i = (x) => { const n = g.indexOf(x); assert.ok(n >= 0, x); return n; };
+      assert.ok(i('#include <normalmap_pars_fragment>') < i('vec3 traceRelief('));
+      assert.ok(i('#include <normal_fragment_begin>') < i('normal = '), 'faceDirection is declared there');
+      assert.ok(!g.includes('#include <normal_fragment_maps>'), 'three\'s reading (through vUv) stayed');
+    }
+    assert.ok(GLSL_RELIEF_TRACE.includes('traceRelief( -vViewPosition, normal, vUv / uTuile, faceDirection )'));
+    for (const uv of ['vec2( vTraceMonde.z / uTuile.x, vTraceMonde.y / uTuile.y )', 'vec2( vTraceMonde.x / uTuile.x, vTraceMonde.y / uTuile.y )',
+      'vec2( vTraceMonde.x / uTuile.x, vTraceMonde.z / uTuile.x )']) {
+      assert.ok(GLSL_RELIEF_MONDE.includes(uv) && GLSL_PLAQUAGE_FRAGMENT.includes(uv), uv);
+    }
+  });
+});
+

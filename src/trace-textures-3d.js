@@ -66,6 +66,53 @@ export const GLSL_PLAQUAGE_FRAGMENT = `
 #endif
 `;
 
+/** How strong a texture's relief is drawn (#494a), as on the buildings (batiment-revetements.js). */
+export const RELIEF_DE_TRACE = 0.8;
+
+/**
+ * A texture's RELIEF (#494a) on a Path: its normal map, read with the same coordinates as its colour. three's own
+ * reading takes `vUv`, which these Paths do not use; `traceRelief` is three's `perturbNormal2Arb` (the frame from
+ * the screen's derivatives, no tangents needed) with the coordinates given. Inserted after
+ * `normalmap_pars_fragment`, where `normalMap` and `normalScale` are declared.
+ */
+export const GLSL_RELIEF_DECLARATIONS = `
+#ifdef TANGENTSPACE_NORMALMAP
+vec3 traceRelief( vec3 eye, vec3 N, vec2 uv, float fd ) {
+  vec3 m = texture2D( normalMap, uv ).xyz * 2.0 - 1.0;
+  m.xy *= normalScale;
+  vec3 q0 = dFdx( eye ), q1 = dFdy( eye );
+  vec2 s0 = dFdx( uv ), s1 = dFdy( uv );
+  vec3 q1p = cross( q1, N ), q0p = cross( N, q0 );
+  vec3 T = q1p * s0.x + q0p * s1.x, B = q1p * s0.y + q0p * s1.y;
+  float d = max( dot( T, T ), dot( B, B ) );
+  float k = d == 0.0 ? 0.0 : fd * inversesqrt( d );
+  return normalize( T * ( m.x * k ) + B * ( m.y * k ) + N * m.z );
+}
+#endif
+`;
+
+/** The relief along the Path (walls): the same (abscissa, height) as the colour. Replaces `normal_fragment_maps`. */
+export const GLSL_RELIEF_TRACE = `
+#ifdef TANGENTSPACE_NORMALMAP
+  normal = traceRelief( -vViewPosition, normal, vUv / uTuile, faceDirection );
+#endif
+`;
+
+/**
+ * The relief projected on the three axes, weighted as the colour: each projection's own frame (its coordinates
+ * are continuous, so are their derivatives), blended.
+ */
+export const GLSL_RELIEF_MONDE = `
+#ifdef TANGENTSPACE_NORMALMAP
+  vec3 nR = abs( normalize( vTraceNormale ) );
+  vec3 wR = pow( nR, vec3( ${PLAQUAGE_NETTETE.toFixed(1)} ) );
+  wR /= ( wR.x + wR.y + wR.z );
+  normal = normalize( wR.x * traceRelief( -vViewPosition, normal, vec2( vTraceMonde.z / uTuile.x, vTraceMonde.y / uTuile.y ), faceDirection )
+                    + wR.z * traceRelief( -vViewPosition, normal, vec2( vTraceMonde.x / uTuile.x, vTraceMonde.y / uTuile.y ), faceDirection )
+                    + wR.y * traceRelief( -vViewPosition, normal, vec2( vTraceMonde.x / uTuile.x, vTraceMonde.z / uTuile.x ), faceDirection ) );
+#endif
+`;
+
 /** Installe le plaquage monde sur un matériau standard. */
 export function installerPlaquageMonde3D(materiau, tuile, mode = 'monde'){
   const uTuile = { value: new globalThis.THREE.Vector2(tuile[0], tuile[1]) };
@@ -78,8 +125,12 @@ export function installerPlaquageMonde3D(materiau, tuile, mode = 'monde'){
         + 'vTraceNormale = mat3( modelMatrix ) * objectNormal;');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <map_pars_fragment>', '#include <map_pars_fragment>\n' + GLSL_PLAQUAGE_DECLARATIONS)
-      .replace('#include <map_fragment>', mode === 'trace' ? GLSL_PLAQUAGE_TRACE : GLSL_PLAQUAGE_FRAGMENT);
+      .replace('#include <map_fragment>', mode === 'trace' ? GLSL_PLAQUAGE_TRACE : GLSL_PLAQUAGE_FRAGMENT)
+      .replace('#include <normalmap_pars_fragment>', '#include <normalmap_pars_fragment>\n' + GLSL_RELIEF_DECLARATIONS)
+      .replace('#include <normal_fragment_maps>', mode === 'trace' ? GLSL_RELIEF_TRACE : GLSL_RELIEF_MONDE);
   };
+  // Derivatives for the relief's frame (WebGL 1; WebGL 2 has them).
+  materiau.extensions = Object.assign({}, materiau.extensions, { derivatives: true });
   materiau.customProgramCacheKey = () => 'trace-plaquage-1-' + mode;
   materiau.userData.uTuile = uTuile;
   materiau.needsUpdate = true;
@@ -129,6 +180,24 @@ export function textureDeTrace3D(type, couleur, texture = null){
   return carte;
 }
 
+/** The relief maps (#494a), by key: never tinted, one per texture. */
+const _reliefs = new Map();
+
+/** A Path texture's normal map, or null (none, or not loaded yet). */
+export function reliefDeTrace3D(type, texture = null){
+  const tex = textureDuTrace(type, texture);
+  const img = tex && tex.normale ? grainCharge3D(tex.normale) : null;
+  if (!img) return null;
+  if (_reliefs.has(tex.normale)) return _reliefs.get(tex.normale);
+  const THREE = globalThis.THREE;
+  const carte = new THREE.Texture(img);
+  carte.wrapS = carte.wrapT = THREE.RepeatWrapping;
+  carte.anisotropy = 4;
+  carte.needsUpdate = true;
+  _reliefs.set(tex.normale, carte);
+  return carte;
+}
+
 /**
  * ⚠️ PLAFONNÉES : la couleur d'un Tracé s'applique EN DIRECT au glissé du sélecteur (demandé), et
  * chaque nuance traversée ferait une tuile (4 Mo) et un matériau. On garde les plus récentes ; une
@@ -148,7 +217,9 @@ function evincerTexturesDeTrace3D(){
 /** Le grain d'une Trace est-il là ? Pour les signatures. */
 export function grainDeTracePret3D(type, texture = null){
   const tex = textureDuTrace(type, texture);
-  return !!(tex && grainCharge3D(tex.grain));
+  // A texture with a relief waits for it too: else the Path, drawn once without it, would keep it so (its
+  // signature would not change when the relief arrives).
+  return !!(tex && grainCharge3D(tex.grain) && (!tex.normale || grainCharge3D(tex.normale)));
 }
 
 /**
@@ -175,9 +246,11 @@ export function materiauDeTrace3D(type, couleur, options = {}){
     return new THREE.MeshStandardMaterial({ color: new THREE.Color(couleurAplat || couleur), ...reste });
   }
   const tex = textureDuTrace(type, texture);
-  const cle = [type, tex.grain, teinteDe(type, couleur, tex), ombre, plaquage, JSON.stringify(reste)].join('|');
+  const relief = reliefDeTrace3D(type, texture);
+  const cle = [type, tex.grain, teinteDe(type, couleur, tex), ombre, plaquage, relief ? tex.normale : '', JSON.stringify(reste)].join('|');
   if (_materiaux.has(cle)) return _materiaux.get(cle);
   const mat = new THREE.MeshStandardMaterial({ map: carte, color: new THREE.Color(ombre, ombre, ombre), ...reste });
+  if (relief) { mat.normalMap = relief; mat.normalScale = new THREE.Vector2(RELIEF_DE_TRACE, RELIEF_DE_TRACE); }
   installerPlaquageMonde3D(mat, tex.tuile, plaquage);
   mat.userData.partage = true;
   _materiaux.set(cle, mat);
@@ -190,4 +263,4 @@ export function libererMateriauDeTrace3D(materiau){
 }
 
 /** Pour les tests : oublier les textures. */
-export function _viderTexturesDesTraces3D(){ _textures.clear(); _materiaux.clear(); }
+export function _viderTexturesDesTraces3D(){ _textures.clear(); _materiaux.clear(); _reliefs.clear(); }

@@ -57,9 +57,10 @@ import {
 import { coutureCarrelage3D } from '../tools/bake-textures.mjs';
 import {
   grilleTriangulaire3D, poidsAiguises3D, melangePreservant3D, installerPavage3D,
-  GLSL_PAVAGE, GLSL_MAP_FRAGMENT, PAVAGE_ECHELLE, PAVAGE_NETTETE, PAVAGE_ROTATION,
+  GLSL_PAVAGE, GLSL_MAP_FRAGMENT, GLSL_PAVAGE_RELIEF, GLSL_PAVAGE_NORMALE_APRES, PAVAGE_ECHELLE, PAVAGE_NETTETE, PAVAGE_ROTATION,
 } from '../src/ground-tiling-3d.js';
 import { grainsDuSol3D } from '../src/constants.js';
+import { installerTexturesUtilisateur } from '../src/textures-utilisateur.js';
 import { _setGrain3D, _viderGrains3D } from '../src/bubble-grain.js';
 import { existsSync } from 'node:fs';
 
@@ -565,6 +566,48 @@ describe('Sol : la matière photographiée, et le manque qui doit rester un manq
     assert.equal(avec.map.image.width, cote,
       'la texture de l’herbe ne vient pas du grain chargé : la recette dessinée a gagné');
     _viderGrains3D(); _viderTexturesDuSol3D();
+  });
+});
+
+describe('Sol : le relief d\'une texture de « Mes textures » (#494a)', () => {
+  const entree = (x = {}) => ({ cle: 'polyhaven:clean_asphalt', dossier: 'polyhaven-clean_asphalt', nom: 'Asphalt',
+    grain: 'grain.couleur.png', nature: 'couleur', teinte: '#555555', matieres: ['bitume'], usages: ['sol'], ...x });
+  const faux = () => { const c = document.createElement('canvas'); c.width = c.height = 4; return c; };
+
+  test('⚠️ SA CARTE DE NORMALES ARRIVE SUR LE SOL ; aucune sans carte, aucune pour l\'eau', () => {
+    _viderGrains3D(); _viderTexturesDuSol3D();
+    installerTexturesUtilisateur([entree({ cartes: ['normal'] }), entree({ dossier: 'sans-relief' })]);
+    const mesh = solDEssai();
+    _setGrain3D('tex:polyhaven-clean_asphalt.couleur', faux());
+    _setGrain3D('tex:sans-relief.couleur', faux());
+    applyGroundType({ groundType: 'tex:polyhaven-clean_asphalt' });
+    assert.equal(mesh.material.normalMap, null, 'sa carte pas encore chargée : plat');
+    _setGrain3D('tex:polyhaven-clean_asphalt#normal', faux());
+    applyGroundType({ groundType: 'tex:polyhaven-clean_asphalt' });
+    assert.ok(mesh.material.normalMap, 'arrivée après la couleur, la carte doit refaire l\'entrée du cache');
+    assert.equal(mesh.material.normalScale.x, 0.8);
+    applyGroundType({ groundType: 'tex:sans-relief' });
+    assert.equal(mesh.material.normalMap, null, 'sans carte de normales, la précédente doit partir');
+    applyGroundType({ groundType: 'eau' });
+    assert.equal(mesh.material.normalMap, null);
+    installerTexturesUtilisateur([]); _viderGrains3D(); _viderTexturesDuSol3D();
+  });
+
+  test('⚠️ PAVÉ, LE RELIEF EST LU DANS LES MÊMES CELLULES QUE LA COULEUR, et l\'eau trouve encore son ancre', () => {
+    const mat = new THREE.MeshStandardMaterial();
+    installerPavage3D(mat, { uPavage: { value: 1 }, uPavageMoyenne: { value: new THREE.Vector3() } });
+    const f = THREE.ShaderLib.physical.fragmentShader;
+    for (const a of ['#include <normalmap_pars_fragment>', '#include <normal_fragment_maps>']) assert.equal(f.split(a).length, 2, a);
+    const shader = { uniforms: {}, fragmentShader: f };
+    mat.onBeforeCompile(shader);
+    const g = shader.fragmentShader, i = (x) => { const n = g.indexOf(x); assert.ok(n >= 0, x); return n; };
+    assert.ok(GLSL_PAVAGE_RELIEF.includes('pavageTriangle( uv, w, s1, s2, s3 );'), 'the colour\'s cells');
+    assert.ok(GLSL_PAVAGE_RELIEF.includes('pavageEchantillonDe( normalMap,'));
+    assert.ok(GLSL_PAVAGE_NORMALE_APRES.includes('perturbNormal2Arb( -vViewPosition, solNormaleBase, mapNP, faceDirection )'));
+    assert.equal(g.split('#include <normal_fragment_maps>').length, 2, 'the water inserts itself after this include');
+    assert.ok(i('#include <normalmap_pars_fragment>') < i('vec3 pavageNormale('), 'normalMap would be read before its declaration');
+    assert.ok(i('vec3 solNormaleBase = normal;') < i('#include <normal_fragment_maps>'));
+    assert.ok(i('#include <normal_fragment_maps>') < i('vec3 mapNP = pavageNormale( vUv );'));
   });
 });
 

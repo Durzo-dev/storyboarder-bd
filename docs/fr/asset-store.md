@@ -348,9 +348,14 @@ nuances). Un clic droit sur une carte de « Mes textures » la renomme ou la sup
 une texture livrée d'une autre sorte qui sert son usage (pavés et gravier du Sol, `USAGES_TRACE_LIVREES` ;
 la pierre sur un muret) : `traceTexture: 'int:<id>'`, que `textureDuTrace` retrouve. Une texture
 livrée se renomme (son nom va dans `nomsIntegrees` de la bibliothèque) mais ne se supprime pas. Sur un
-bâtiment, une texture venue avec sa normale (celles de Poly Haven, d'ambientCG) montre aussi son relief
-(`normale` de `batimentDe`, chargée avec les grains par `textures:image` 'normal', `normalMap` à 0,8) ; les
-Tracés et le Sol restent plats. Elle s'affiche au naturel (la teinte relevée à la
+bâtiment, un Tracé, une Zone et le Sol, une texture venue avec sa normale (celles de Poly Haven, d'ambientCG) montre
+aussi son relief (`normale` de `batimentDe`, `traceDe`, `defSolDe`, chargée avec les grains par `textures:image`
+'normal', dessinée à 0,8). Un bâtiment et une Zone passent par la lecture de three (`vUv`). Un Tracé la lit aux mêmes
+coordonnées que sa couleur (`traceRelief` dans `trace-textures-3d.js` : le `perturbNormal2Arb` de three avec les
+coordonnées données ; sur les trois axes, le repère de chaque projection, pondéré comme la couleur). Un Sol pavé la
+lit dans les mêmes cellules que sa couleur (`pavageNormale` dans `ground-tiling-3d.js`), après le
+`normal_fragment_maps` de three, qui reste (l'eau s'insère après lui). Piège : un Tracé attend son relief avant de se
+dessiner texturé (`grainDeTracePret3D`), sinon, dessiné une fois sans, sa signature ne changerait pas à son arrivée. Elle s'affiche au naturel (la teinte relevée à la
 cuisson) ; une autre couleur la teinte, comme les textures livrées. Les matières du Sol sont
 AJOUTÉES à `GROUND_TYPE_DEFS` (marquées `importee`) : tout le code qui cherchait une matière par son
 identifiant la trouve sans changer. Les grains sont lus par l'IPC (`textures:image`) et servis en

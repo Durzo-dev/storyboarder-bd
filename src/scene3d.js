@@ -64,7 +64,7 @@ import {
   applyGroundType,
   applyStyle3DLighting, appliquerEclairageDeCase3D, appliquerOmbresDeCase3D, appliquerOmbreSourcePosee3D,
   marquerProjectionDOmbre3D, reposerOmbresPartagees3D,
-  buildGroundTexture,
+  buildGroundTexture, RELIEF_DU_SOL,
   buildWallRig3D,
   disposeObjectRig3D,
   disposePersonaRig3D,
@@ -3506,7 +3506,7 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
         const tType = o.terrainType || 'herbe';
         const tDef  = GROUND_TYPE_DEFS.find(d => d.id === tType) || GROUND_TYPE_DEFS[0];
         // Sa couleur (terrainColor) teint la texture, comme le Sol d'une Case.
-        const { map: tMap } = buildGroundTexture(tType, teinteDuSol3D(tDef, o.terrainColor));
+        const { map: tMap, normale: tRelief } = buildGroundTexture(tType, teinteDuSol3D(tDef, o.terrainColor));
         const tMapClone = tMap.clone();
         tMapClone.wrapS = tMapClone.wrapT = THREE.RepeatWrapping;
         tMapClone.repeat.set(Math.max(0.5, w.w * (tDef.repeat || 60) / 100),
@@ -3521,6 +3521,8 @@ function renderPanelSceneUncached3D(panel, page, styleKey, scale, sig){
           side: THREE.DoubleSide,
           polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
         });
+        // Its relief (#494a): the normal map read through the same `vUv` (the clone's repeat).
+        if (tRelief) { mat.normalMap = tRelief; mat.normalScale.set(RELIEF_DU_SOL, RELIEF_DU_SOL); }
         // Une Zone PEINTE (au pinceau) : ses cases, posées dans le monde, avec les coordonnées de texture
         // du rectangle qui l'englobe (la même texture qu'une Zone rectangulaire de cette taille).
         const terrMesh = new THREE.Mesh(w.masque ? (geo.dispose(), geometrieDuMasque3D(w, GROUND_Y_DEFAULT_3D + 0.005, _trianglesZones.par.get(o.id))) : geo, mat);

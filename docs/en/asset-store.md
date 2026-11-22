@@ -340,9 +340,15 @@ the tinted grain; relief: a normal map drawn from its shades). A right-click on 
 renames or deletes it. A path may wear a bundled texture of another kind that serves its use (cobbles
 and gravel of the Ground, `USAGES_TRACE_LIVREES`; the stone on a low wall): `traceTexture: 'int:<id>'`,
 which `textureDuTrace` finds. A bundled texture can be renamed (its name goes in the library's
-`nomsIntegrees`) but not deleted. On a building, a texture that came with a normal map (Poly Haven's, ambientCG's) shows its relief too
-(`normale` of `batimentDe`, loaded with the grains through `textures:image` 'normal', `normalMap` at 0.8);
-the paths and the Ground stay flat. It shows in its natural colour (the tint measured at baking); another colour tints it,
+`nomsIntegrees`) but not deleted. A texture that came with a normal map (Poly Haven's, ambientCG's) shows its relief
+too, on a building, a Path, a Zone and the Ground (`normale` of `batimentDe`, `traceDe`, `defSolDe`, loaded with the
+grains through `textures:image` 'normal', drawn at 0.8). A building and a Zone use three's own reading (`vUv`). A
+Path reads it with the same coordinates as its colour (`traceRelief` in `trace-textures-3d.js`: three's
+`perturbNormal2Arb` with the coordinates given; on the three axes, each projection's frame, weighted as the colour).
+A paved Ground reads it in the same cells as its colour (`pavageNormale` in `ground-tiling-3d.js`), after three's
+`normal_fragment_maps`, which stays (the water inserts itself after it). Pitfall: a Path waits for its relief before
+being drawn textured (`grainDeTracePret3D`), else drawn once without it, its signature would not change at its
+arrival. It shows in its natural colour (the tint measured at baking); another colour tints it,
 like the shipped textures. Ground materials are ADDED to `GROUND_TYPE_DEFS` (flagged `importee`):
 all the code that looked a material up by its id finds it unchanged. Grains are read through IPC
 (`textures:image`) and served as blob URLs. The persisted id (`tex:<folder>`) is described in

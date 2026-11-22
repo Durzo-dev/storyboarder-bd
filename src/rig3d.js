@@ -1036,8 +1036,25 @@ function evincerTeintesDuSol3D(nouvelle){
     const k = teintees.shift();
     const e = _groundTexCache[k];
     if (e && e.map && e.map.dispose) e.map.dispose();
+    if (e && e.normale && e.normale.dispose) e.normale.dispose();
     delete _groundTexCache[k];
   }
+}
+
+/** How strong a Ground texture's relief is drawn (#494a), as on the buildings and the Paths. */
+export const RELIEF_DU_SOL = 0.8;
+
+/**
+ * A Ground texture's relief (#494a): its normal map (one of « My textures » that came with one), never tinted, on
+ * the same coordinates as its colour (three reads both through `vUv`, which the colour's repeat sets), or null.
+ */
+function reliefDuSol3D(def){
+  const img = def.normale ? grainCharge3D(def.normale) : null;
+  if (!img) return null;
+  const carte = new THREE.Texture(img);
+  carte.wrapS = carte.wrapT = THREE.RepeatWrapping;
+  carte.needsUpdate = true;
+  return carte;
 }
 
 export function buildGroundTexture(type, teinte = null) {
@@ -1059,7 +1076,9 @@ export function buildGroundTexture(type, teinte = null) {
   // ⚠️ ET LA PREMIÈRE CORRECTION ÉTAIT PIRE QUE LE DÉFAUT : ne rien mettre en cache tant que le
   // grain manque faisait redessiner cinquante dégradés et 1 400 brins À CHAQUE RENDU DE CASE.
   // On garde donc l'entrée, MARQUÉE, et on ne la refait que le jour où le grain est là.
-  if (garde && !(garde.enAttenteDeGrain && grainCharge3D(def.grain))) return garde;
+  // Its relief (#494a) likewise: an entry made before its normal map arrived is made again once it is there.
+  const reliefArrive = !!(garde && def.normale && !garde.normale && grainCharge3D(def.normale));
+  if (garde && !(garde.enAttenteDeGrain && grainCharge3D(def.grain)) && !reliefArrive) return garde;
 
   // ⚠️ UNE MATIÈRE PHOTOGRAPHIÉE COURT-CIRCUITE LA RECETTE DESSINÉE.
   if (def.grain) {
@@ -1069,7 +1088,7 @@ export function buildGroundTexture(type, teinte = null) {
       carte.wrapS = carte.wrapT = THREE.RepeatWrapping;
       carte.repeat.set(def.repeat || 60, def.repeat || 60);
       carte.needsUpdate = true;
-      const entree = { map: carte, enAttenteDeGrain: false, moyenne: tuile.moyenne || null };
+      const entree = { map: carte, enAttenteDeGrain: false, moyenne: tuile.moyenne || null, normale: reliefDuSol3D(def) };
       if (cleCache !== type) evincerTeintesDuSol3D(cleCache);
       _groundTexCache[cleCache] = entree;
       return entree;
@@ -1401,6 +1420,13 @@ export function applyGroundType(panel, ciel) {
   }
   let dirty = false;
   if (mat.map !== map)                                 { mat.map = map; dirty = true; }
+  // Its relief (#494a), when it has one (a texture of « My textures » that came with its normal map).
+  const relief = entreeSol.normale || null;
+  if (mat.normalMap !== relief) {
+    mat.normalMap = relief;
+    if (relief) mat.normalScale.set(RELIEF_DU_SOL, RELIEF_DU_SOL);
+    dirty = true;
+  }
   if (mat.aoMap !== plaques)                           { mat.aoMap = plaques; dirty = true; }
   // `plaques` vaut 0 pour le Sol neutre, qui est un aplat volontaire : l'intensité l'éteint sans
   // qu'il faille retirer la carte, donc sans recompiler le shader à chaque changement de matière.
