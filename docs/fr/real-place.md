@@ -352,6 +352,17 @@ recopie dans la Case ; l'export les dessine une fois chacune (`creditsDuLieu`, e
 crédits des modèles. Les lignes : OpenStreetMap, la BD TOPO de l'IGN quand un bâtiment relevé a servi
 (`surveyAttribution`), le fournisseur du relief.
 
+### L'étape des monuments
+
+La dernière étape de « Nouvelle scène », quand le lieu a des monuments connus (`monuments.js`, `monumentsOf`).
+Demandé avant (`monumentsTrouves`) : une recherche dans le store par monument, en parallèle ; un monument est gardé
+quand l'un de ses `FIRST_RESULTS` (24) premiers résultats, sous une licence que l'étape accepte (`licenceAccepted` :
+pas de « pas de modification »), porte chaque mot distinctif de son nom (`modelFound`, `distinctiveWords` : ni les
+petits mots, ni « église », « tour »…). Aucun gardé : pas d'étape. Chaque gardé : « Chercher un modèle 3D » (le store,
+ce que vous avez déjà d'abord), « Terminer » pose les modèles choisis, fermer garde les bâtiments générés. Un import
+demandé par une IA ne l'attend pas (`importer({ pourIA })`) : il répond dès la Scène faite, la fenêtre restant
+ouverte sur l'étape pour l'utilisateur ; un nouvel import de l'IA est refusé entre-temps.
+
 ## Les sources par pays
 
 `rulesFor(pays)` (code ISO) : les règles des bâtiments (hauteur d'un niveau, niveaux par type, types à

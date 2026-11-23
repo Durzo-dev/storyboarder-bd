@@ -326,6 +326,17 @@ the Panel; the export draws them once each (`creditsDuLieu`, export-credits.js) 
 The lines: OpenStreetMap, the IGN BD TOPO when a surveyed building was used (`surveyAttribution`), the
 relief's provider.
 
+### The monuments' step
+
+The last step of « New scene », when the place holds known monuments (`monuments.js`, `monumentsOf`). Asked
+beforehand (`monumentsTrouves`): one store search each, in parallel; a monument is kept when one of its first
+`FIRST_RESULTS` (24) results, under a licence the step accepts (`licenceAccepted`: no « no derivatives »), has every
+distinctive word of its name (`modelFound`, `distinctiveWords`: neither the little words nor « church », « tower »…).
+None kept: no step. Each kept one: « Find a 3D model » (the store, what you already have first), « Finish » lays the
+models chosen, closing keeps the generated buildings. An import asked by an AI does not wait for it (`importer({ pourIA })`):
+it answers once the Scene is made, the window staying open on the step for the user; a new AI import is refused
+meanwhile.
+
 ## The sources per country
 
 `rulesFor(country)` (ISO code): the building rules (level height, levels per type, flat-roof types, roof

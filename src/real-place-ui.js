@@ -28,7 +28,7 @@ import { sceneContentOf, IMPORT_STEPS, importProgress, downloadDetail } from './
 import { projector } from './geo-local.js';
 import { aerialPhotoPlan, AERIAL_CREDIT } from './aerial-photo.js';
 import { classGrid, readAerialPhoto } from './aerial-reading.js';
-import { monumentsOf } from './monuments.js';
+import { monumentsOf, modelFound, searchFor } from './monuments.js';
 import { heightPlan, heightGrid, treeHeightAt, LIDAR_CREDIT } from './height-reading.js';
 import { readHedges, hedgeCells, wallCells } from './hedge-reading.js';
 import { builtParcels, parcelFences } from './parcel-fences.js';
@@ -667,8 +667,11 @@ async function importer({ pourIA = false } = {}){
     // ⚠️ AN IMPORT ASKED BY AN AI DOES NOT WAIT FOR IT (#480d, decided with Durzo: the window stays open on it for
     // the user, it blocks no one else). It waited for a click nobody gave: the AI's call never ended, and its
     // previews waited for the window to close, in vain.
-    if (fini && monumentsOf(scene.pages[0].objects).length) {
-      const revue = etapeMonuments(scene).then(() => { if (V === moi) fermer(); });
+    // Only the monuments the store has a model of (#480d, decided with Durzo): asked beforehand; none, no step.
+    const trouves = fini ? await monumentsTrouves(scene) : [];
+    if (V !== moi) return { scene };
+    if (fini && trouves.length) {
+      const revue = etapeMonuments(scene, trouves).then(() => { if (V === moi) fermer(); });
       if (!pourIA) await revue;
       return { scene };
     }
@@ -889,13 +892,34 @@ async function lireLaVueAerienne(translated, { toGeo, halfSize, country, south }
 }
 
 /**
+ * THE MONUMENTS THE STORE HAS A MODEL OF (#480d): one search each (as « Find a 3D model » would make it, in
+ * parallel), kept when one of its first results is the monument (monuments.js, modelFound). Without network or an
+ * answer, none: nothing could be downloaded anyway.
+ */
+async function monumentsTrouves(scene){
+  const api = window.storyboarderAPI;
+  const liste = monumentsOf(scene.pages[0].objects);
+  if (!liste.length || !api || !api.storeChercher) return [];
+  montrerLeDetail(tr('Looking for models of the monuments…', 'Recherche de modèles des monuments…'));
+  const vus = await Promise.all(liste.map(async (o) => {
+    try {
+      const page = await api.storeChercher('sketchfab', { texte: searchFor(o.monument), tri: 'pertinence' });
+      return page && !page.erreur && modelFound(o.monument, page.resultats);
+    } catch (e) { return false; }
+  }));
+  montrerLeDetail('');
+  const trouves = liste.filter((o, i) => vus[i]);
+  console.info(`[real-place] monuments: ${trouves.length} of ${liste.length} with a model in the store`);
+  return trouves;
+}
+
+/**
  * THE MONUMENTS' STEP (#475, asked: the last of « New scene », in its window). One row per monument, its
  * name on the left, « Find a 3D model » on the right (the store; the model chosen and downloaded comes back
  * here, the button then « Replace with a building », which drops it). « Finish » lays the models chosen
  * (monuments-ui.js); closing (the cross, Esc) keeps the generated buildings. Resolves once done.
  */
-function etapeMonuments(scene){
-  const liste = monumentsOf(scene.pages[0].objects);
+function etapeMonuments(scene, liste){
   const choisis = new Map();   // building → model file
   $('realPlacePlace').hidden = true;
   $('realPlaceChoice').hidden = true;

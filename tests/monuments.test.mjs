@@ -98,7 +98,7 @@ describe('monuments, a model taking a monument\'s place in a laid Scene', async 
 describe('monuments, the last step of « New scene » (asked)', () => {
   const ui = readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8');
   test('after the Scene is built, in the same window, only when there are monuments', () => {
-    assert.match(ui, /if \(fini && monumentsOf\(scene\.pages\[0\]\.objects\)\.length\) \{\n      const revue = etapeMonuments\(scene\)/);
+    assert.match(ui, /if \(fini && trouves\.length\) \{\n      const revue = etapeMonuments\(scene, trouves\)/);
   });
   test('« Finish » lays the models chosen; closing keeps the generated buildings', () => {
     assert.match(ui, /if \(poser\) for \(const \[o, f\] of choisis\) await remplacerLeBatiment\(scene, o, f\);/);
@@ -116,7 +116,7 @@ describe('#480d: an import asked by an AI does not wait for the review', () => {
   const link = readFileSync(new URL('../src/mcp-link.js', import.meta.url), 'utf8');
   test('⚠️ THE AI\'S IMPORT ANSWERS ONCE THE SCENE IS MADE; the window stays open on the review for the user', () => {
     // It waited for a click on « Finish » nobody gave: the AI's call never ended.
-    assert.ok(ui.includes('const revue = etapeMonuments(scene).then(() => { if (V === moi) fermer(); });'));
+    assert.ok(ui.includes('const revue = etapeMonuments(scene, trouves).then(() => { if (V === moi) fermer(); });'));
     assert.ok(ui.includes('if (!pourIA) await revue;'), 'the user\'s own import still ends with its review');
     assert.ok(ui.includes('return importer({ pourIA: true });'));
   });
@@ -128,5 +128,31 @@ describe('#480d: an import asked by an AI does not wait for the review', () => {
   test('a new AI import while the review waits is refused, said to the AI (it would drop the user\'s choices)', () => {
     assert.ok(ui.includes("if (V && V.monuments) return { error: 'The « New scene » window waits for the user to review the last import"));
     assert.ok(ui.includes('if (!V.monuments) { rendreLaConsigne(); majBoutons(); }'), 'the review is not covered by the instructions');
+  });
+});
+
+const { modelFound, distinctiveWords } = await import('../src/monuments.js');
+describe('#480d: a monument is proposed only when the store has a model of it', () => {
+  const ui = readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8');
+  const res = (nom, code = 'by') => ({ nom, licence: { code } });
+  test('its distinctive words: neither the little words nor what every church or tower is called', () => {
+    assert.deepEqual(distinctiveWords('Cathédrale Saint-Pierre de Montpellier'), ['saint', 'pierre', 'montpellier']);
+    assert.deepEqual(distinctiveWords('Tour Eiffel'), ['eiffel']);
+    assert.deepEqual(distinctiveWords('La Tour'), ['la', 'tour'], 'all generic: all its words');
+  });
+  test('⚠️ MEASURED ON SKETCHFAB (23 Nov.): the famous found, the local ones not, an ND licence never', () => {
+    // The first results Sketchfab gave (downloadable), as measured.
+    assert.equal(modelFound({ name: 'Tour Eiffel', nameEn: 'Eiffel Tower' }, [res('Eiffel Tower Telephone'), res('Eiffel Tower, Paris, France')]), true);
+    assert.equal(modelFound({ name: 'Maison Carrée' }, [res('Maison Carree Cieling Flower'), res('Roman Temple of Evora', 'by-nc')]), true,
+      'accents aside');
+    assert.equal(modelFound({ name: 'Pont du Gard' }, [res('Pont du Gard')]), true);
+    assert.equal(modelFound({ name: 'Arènes de Nîmes' }, []), false, 'Sketchfab found nothing');
+    assert.equal(modelFound({ name: 'Cathédrale Saint-Pierre de Montpellier' }, [res('Saint Pierre de Rome')]), false, 'not every word');
+    assert.equal(modelFound({ name: 'Arc de Triomphe' }, [res('Arc de Triomphe Wrapped', 'by-nc-nd')]), false, 'no derivatives: never laid in place');
+    assert.equal(modelFound({ name: 'Pont du Gard' }, [...Array(24).fill(res('Roman bridge')), res('Pont du Gard')]), false, 'beyond the first page');
+  });
+  test('⚠️ THE STEP SHOWS THE FOUND ONLY, AND NONE WHEN NONE IS (the search asked beforehand)', () => {
+    assert.ok(ui.includes('const trouves = fini ? await monumentsTrouves(scene) : [];'));
+    assert.ok(ui.includes('if (fini && trouves.length) {'));
   });
 });
