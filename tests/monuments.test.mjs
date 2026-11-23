@@ -98,7 +98,7 @@ describe('monuments, a model taking a monument\'s place in a laid Scene', async 
 describe('monuments, the last step of « New scene » (asked)', () => {
   const ui = readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8');
   test('after the Scene is built, in the same window, only when there are monuments', () => {
-    assert.match(ui, /if \(fini && trouves\.length\) \{\n      const revue = etapeMonuments\(scene, trouves\)/);
+    assert.match(ui, /if \(fini && \(trouves\.length \|\| modeles\.length\)\) \{\n      const revue = etapeMonuments\(scene, trouves, modeles\)/);
   });
   test('« Finish » lays the models chosen; closing keeps the generated buildings', () => {
     assert.match(ui, /if \(poser\) for \(const \[o, f\] of choisis\) await remplacerLeBatiment\(scene, o, f\);/);
@@ -116,7 +116,7 @@ describe('#480d: an import asked by an AI does not wait for the review', () => {
   const link = readFileSync(new URL('../src/mcp-link.js', import.meta.url), 'utf8');
   test('⚠️ THE AI\'S IMPORT ANSWERS ONCE THE SCENE IS MADE; the window stays open on the review for the user', () => {
     // It waited for a click on « Finish » nobody gave: the AI's call never ended.
-    assert.ok(ui.includes('const revue = etapeMonuments(scene, trouves).then(() => { if (V === moi) fermer(); });'));
+    assert.ok(ui.includes('const revue = etapeMonuments(scene, trouves, modeles).then(() => { if (V === moi) fermer(); });'));
     assert.ok(ui.includes('if (!pourIA) await revue;'), 'the user\'s own import still ends with its review');
     assert.ok(ui.includes('return importer({ pourIA: true });'));
   });
@@ -153,6 +153,6 @@ describe('#480d: a monument is proposed only when the store has a model of it', 
   });
   test('⚠️ THE STEP SHOWS THE FOUND ONLY, AND NONE WHEN NONE IS (the search asked beforehand)', () => {
     assert.ok(ui.includes('const trouves = fini ? await monumentsTrouves(scene) : [];'));
-    assert.ok(ui.includes('if (fini && trouves.length) {'));
+    assert.ok(ui.includes('if (fini && (trouves.length || modeles.length)) {'));
   });
 });

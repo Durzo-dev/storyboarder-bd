@@ -326,7 +326,7 @@ the Panel; the export draws them once each (`creditsDuLieu`, export-credits.js) 
 The lines: OpenStreetMap, the IGN BD TOPO when a surveyed building was used (`surveyAttribution`), the
 relief's provider.
 
-### The monuments' step
+### The review step (monuments, models)
 
 The last step of « New scene », when the place holds known monuments (`monuments.js`, `monumentsOf`). Asked
 beforehand (`monumentsTrouves`): one store search each, in parallel; a monument is kept when one of its first
@@ -335,7 +335,10 @@ distinctive word of its name (`modelFound`, `distinctiveWords`: neither the litt
 None kept: no step. Each kept one: « Find a 3D model » (the store, what you already have first), « Finish » lays the
 models chosen, closing keeps the generated buildings. An import asked by an AI does not wait for it (`importer({ pourIA })`):
 it answers once the Scene is made, the window staying open on the step for the user; a new AI import is refused
-meanwhile.
+meanwhile. The same step lists the models the stores gave the objects (Realistic; `reviewRows`: one row per model,
+never the bank's nor a monument's): « Replace » opens the store on its use's search (`reviewQuery`), « Remove » takes
+its objects back to the built-in object at their place and turn; « Finish » lays the choices (`appliquerLaRevue`, one
+undo step, the model's credit line removed), closing changes nothing. A step with models only shows them only.
 
 ## The sources per country
 

@@ -352,7 +352,7 @@ recopie dans la Case ; l'export les dessine une fois chacune (`creditsDuLieu`, e
 crédits des modèles. Les lignes : OpenStreetMap, la BD TOPO de l'IGN quand un bâtiment relevé a servi
 (`surveyAttribution`), le fournisseur du relief.
 
-### L'étape des monuments
+### L'étape de revue (monuments, modèles)
 
 La dernière étape de « Nouvelle scène », quand le lieu a des monuments connus (`monuments.js`, `monumentsOf`).
 Demandé avant (`monumentsTrouves`) : une recherche dans le store par monument, en parallèle ; un monument est gardé
@@ -361,7 +361,11 @@ pas de « pas de modification »), porte chaque mot distinctif de son nom (`mode
 petits mots, ni « église », « tour »…). Aucun gardé : pas d'étape. Chaque gardé : « Chercher un modèle 3D » (le store,
 ce que vous avez déjà d'abord), « Terminer » pose les modèles choisis, fermer garde les bâtiments générés. Un import
 demandé par une IA ne l'attend pas (`importer({ pourIA })`) : il répond dès la Scène faite, la fenêtre restant
-ouverte sur l'étape pour l'utilisateur ; un nouvel import de l'IA est refusé entre-temps.
+ouverte sur l'étape pour l'utilisateur ; un nouvel import de l'IA est refusé entre-temps. La même étape liste les
+modèles que les stores ont donnés aux objets (Réaliste ; `reviewRows` : une ligne par modèle, jamais ceux de la banque
+ni d'un monument) : « Remplacer » ouvre le store sur la recherche de son usage (`reviewQuery`), « Retirer » rend à ses
+objets l'objet intégré à leur place et leur orientation ; « Terminer » pose les choix (`appliquerLaRevue`, une seule
+annulation, la ligne de crédit du modèle retirée), fermer ne change rien. Une étape sans monument ne montre que les modèles.
 
 ## Les sources par pays
 

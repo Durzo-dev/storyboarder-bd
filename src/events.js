@@ -9336,7 +9336,7 @@ function retourApresChargement(previous){
   renderAll();
 }
 cablerChargementDeScene({ render: renderAll, retour: retourApresChargement });
-cablerMonuments({ snapshot: () => snapshot(), render: () => renderAll() });
+cablerMonuments({ snapshot: () => snapshot(), render: () => renderAll(), newObject: objetIntegreNeuf });
 // The AI connection (MCP): its tools use the application's gestures (mcp-link.js).
 cablerConnexionIA({
   openScene: (id) => openScene(id), redessiner: () => drawCurrentPage(), version: APP_VERSION,

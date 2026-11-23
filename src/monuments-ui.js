@@ -13,6 +13,7 @@ import { createModelElement } from './model-store.js';
 import { preloadModels, getLoadedModel } from './model-cache.js';
 import { encombrementDuBatiment } from './batiment-element.js';
 import { placeOnGround } from './real-place-lay.js';
+import { reviewQuery } from './realistic-models.js';
 
 const $ = (id) => document.getElementById(id);
 let _rappels = { snapshot: () => {}, render: () => {} };
@@ -40,6 +41,56 @@ export function chercherUnModele(monument, quandChoisi){
     accepter: (e) => !e.batiment && !e.introuvable,
     licence: licenceAccepted,
   });
+}
+
+// ── The review's models (#480d): replaced or removed, on « Finish » ────────────────────────────────
+
+/** « Replace » a model of the review: the store on Sketchfab, on its use's search (what you have shows first). */
+export function chercherUnModeleDUsage(usage, quandChoisi){
+  ouvrirStore({ onglet: 'sketchfab', texte: reviewQuery(usage), choisir: quandChoisi, accepter: (e) => !e.batiment && !e.introuvable });
+}
+
+/** The place's credits without the line of a model the review took away (its name, as the import wrote it). */
+function sansSonCredit(panel, nom){
+  if (!panel || !Array.isArray(panel.creditsDuLieu) || !nom) return;
+  panel.creditsDuLieu = panel.creditsDuLieu.filter(l => !l.includes(`« ${nom} »`) && !l.includes(`"${nom}"`));
+}
+
+/**
+ * THE REVIEW'S CHOICES, LAID (« Finish »), in one undo step: `choix` maps a model file to `{ retirer: true }` (its
+ * objects become their built-in object again, at their place and turn) or `{ fichier }` (another model, each object
+ * keeping its place, turn and height). Its credit line goes; a new model is credited by the export's own list.
+ */
+export async function appliquerLaRevue(scene, rows, choix){
+  const page = pageOf(scene), panel = panelOf(scene);
+  if (!page || !panel || !choix || !choix.size) return 0;
+  const nouveaux = [...choix.values()].map(c => c.fichier).filter(Boolean);
+  if (nouveaux.length) await preloadModels(nouveaux);
+  _rappels.snapshot();
+  const view = { w: scene.w, h: scene.h, scale: scene.scale, format: scene.format, style3d: scene.style3d, objects: page.objects };
+  let n = 0;
+  for (const row of rows) {
+    const c = choix.get(row.fichier);
+    if (!c) continue;
+    sansSonCredit(panel, row.nom);
+    for (const o of page.objects.filter(x => x.modelFile === row.fichier && x.usage)) {
+      if (c.fichier) {
+        const m = getLoadedModel(c.fichier);
+        o.modelFile = c.fichier;
+        o.name = c.fichier.replace(/\.glb$/i, '');
+        if (m && m.ratioLargeur > 0) { o.w = o.h * m.ratioLargeur; o.baseW = o.w; }
+      } else if (_rappels.newObject) {
+        const b = _rappels.newObject(panel, view, o.usage);
+        if (Number.isFinite(o.rotY)) b.rotY = o.rotY;
+        placeOnGround(b, panel, o.wxFloor || 0, o.wzFloor || 0);
+        page.objects.splice(page.objects.indexOf(o), 1, b);
+      }
+      n++;
+    }
+  }
+  S.projectDirty = true;
+  _rappels.render();
+  return n;
 }
 
 /** A ground floor's outline, in the building's own frame. */

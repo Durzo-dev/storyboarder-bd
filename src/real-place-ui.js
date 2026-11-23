@@ -33,11 +33,11 @@ import { heightPlan, heightGrid, treeHeightAt, LIDAR_CREDIT } from './height-rea
 import { readHedges, hedgeCells, wallCells } from './hedge-reading.js';
 import { builtParcels, parcelFences } from './parcel-fences.js';
 import { floraOf, applyFlora, FLORA_CREDIT, FLORA_RADIUS_KM } from './flora.js';
-import { MODEL_USAGES, FACES, MAX_DOWNLOADS, queriesFor, candidatesFor, usagesOf, applyModels } from './realistic-models.js';
+import { MODEL_USAGES, FACES, MAX_DOWNLOADS, queriesFor, candidatesFor, usagesOf, applyModels, reviewRows } from './realistic-models.js';
 import { telechargerEnSilence, dejaPossede, rafraichirPossedes, sketchfabConnecte, signIn } from './store-ui.js';
 import { preloadModels, getLoadedModel } from './model-cache.js';
 import { applyBank, bankCredit, BANK_PREFIX } from './model-bank.js';
-import { chercherUnModele, remplacerLeBatiment } from './monuments-ui.js';
+import { chercherUnModele, remplacerLeBatiment, chercherUnModeleDUsage, appliquerLaRevue } from './monuments-ui.js';
 import { nomDuTrace } from './canvas-tools.js';
 import { enregistrerFermeture } from './modal-stack.js';
 
@@ -670,8 +670,10 @@ async function importer({ pourIA = false } = {}){
     // Only the monuments the store has a model of (#480d, decided with Durzo): asked beforehand; none, no step.
     const trouves = fini ? await monumentsTrouves(scene) : [];
     if (V !== moi) return { scene };
-    if (fini && trouves.length) {
-      const revue = etapeMonuments(scene, trouves).then(() => { if (V === moi) fermer(); });
+    // And the models the stores gave its objects (#480d, decided by Durzo: reviewed, replaced or removed).
+    const modeles = fini ? reviewRows(scene.pages[0].objects, BANK_PREFIX) : [];
+    if (fini && (trouves.length || modeles.length)) {
+      const revue = etapeMonuments(scene, trouves, modeles).then(() => { if (V === moi) fermer(); });
       if (!pourIA) await revue;
       return { scene };
     }
@@ -919,8 +921,9 @@ async function monumentsTrouves(scene){
  * here, the button then « Replace with a building », which drops it). « Finish » lays the models chosen
  * (monuments-ui.js); closing (the cross, Esc) keeps the generated buildings. Resolves once done.
  */
-function etapeMonuments(scene, liste){
+function etapeMonuments(scene, liste, modeles = []){
   const choisis = new Map();   // building → model file
+  const choixModeles = new Map();   // model file → { retirer: true } | { fichier }
   $('realPlacePlace').hidden = true;
   $('realPlaceChoice').hidden = true;
   $('realPlaceMonuments').hidden = false;
@@ -945,18 +948,58 @@ function etapeMonuments(scene, liste){
     };
     ligne.replaceChildren(texte, bouton);
   };
-  $('realPlaceMonumentsList').replaceChildren(...liste.map(o => {
+  // A model the stores gave (#480d): « Replace » (the store, on its use's search; what you have shows first) and
+  // « Remove » (its objects back to the built-in one); a choice made is said, and undone by « Keep ».
+  const dessinerModele = (row, ligne) => {
+    const c = choixModeles.get(row.fichier);
+    const nom = document.createElement('span');
+    nom.className = 'monument-nom'; nom.textContent = row.nom;
+    const detail = document.createElement('span');
+    detail.className = 'monument-modele';
+    detail.textContent = c && c.retirer ? tr('Removed: the built-in object instead', 'Retiré : l\'objet intégré à la place')
+      : c ? tr(`Replaced by ${c.fichier}`, `Remplacé par ${c.fichier}`)
+        : tr(`${row.count} object(s)`, `${row.count} objet(s)`);
+    const texte = document.createElement('span');
+    texte.className = 'monument-texte';
+    texte.append(nom, detail);
+    const bouton = (libelle, faire) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'nav-btn'; b.textContent = libelle; b.onclick = faire;
+      return b;
+    };
+    const boutons = c
+      ? [bouton(tr('Keep', 'Garder'), () => { choixModeles.delete(row.fichier); dessinerModele(row, ligne); })]
+      : [bouton(tr('Replace', 'Remplacer'), () => chercherUnModeleDUsage(row.usage, (f) => { choixModeles.set(row.fichier, { fichier: f }); dessinerModele(row, ligne); })),
+        bouton(tr('Remove', 'Retirer'), () => { choixModeles.set(row.fichier, { retirer: true }); dessinerModele(row, ligne); })];
+    ligne.replaceChildren(texte, ...boutons);
+  };
+  const titre = (texteEn, texteFr) => {
+    const h = document.createElement('h4');
+    h.className = 'real-place-revue-titre'; h.textContent = tr(texteEn, texteFr);
+    return h;
+  };
+  const ligneDe = (dessiner) => (x) => {
     const ligne = document.createElement('div');
     ligne.className = 'monument-ligne';
-    dessinerLigne(o, ligne);
+    dessiner(x, ligne);
     return ligne;
-  }));
+  };
+  $('realPlaceMonumentsIntro').hidden = !liste.length;
+  $('realPlaceMonumentsList').replaceChildren(
+    ...(liste.length && modeles.length ? [titre('Monuments', 'Monuments')] : []),
+    ...liste.map(ligneDe(dessinerLigne)),
+    ...(modeles.length ? [titre('3D models found in the stores', 'Modèles 3D trouvés dans les stores'),
+      Object.assign(document.createElement('p'), { className: 'real-place-monuments-intro',
+        textContent: tr('Chosen for you: replace one, or remove it to keep the built-in object.',
+          'Choisis pour vous : remplacez-en un, ou retirez-le pour garder l\'objet intégré.') })] : []),
+    ...modeles.map(ligneDe(dessinerModele)));
   return new Promise((resolve) => {
     const finir = async (poser) => {
       if (!V || !V.monuments) return;
       V.monuments = null;
       $('realPlaceMonumentsDone').onclick = null;
       if (poser) for (const [o, f] of choisis) await remplacerLeBatiment(scene, o, f);
+      if (poser) await appliquerLaRevue(scene, modeles, choixModeles);
       $('realPlaceMonuments').hidden = true;
       resolve();
     };

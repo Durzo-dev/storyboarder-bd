@@ -119,3 +119,23 @@ export function applyModels(elements, models){
   }
   return n;
 }
+
+/**
+ * THE REVIEW (#480d, the last step of « New scene », as the monuments): the models the stores gave the Scene's
+ * objects (`usage` and `modelFile`; never the bank's, `bankPrefix`, nor a monument's), one row per model:
+ * `{ fichier, nom, usage, count }`, the most used first.
+ */
+export function reviewRows(objects, bankPrefix){
+  const rows = new Map();
+  for (const o of objects || []) {
+    if (!o || !o.usage || typeof o.modelFile !== 'string' || o.monument || (bankPrefix && o.modelFile.startsWith(bankPrefix))) continue;
+    const r = rows.get(o.modelFile) || { fichier: o.modelFile, nom: o.name || o.modelFile.replace(/\.glb$/i, ''), usage: o.usage, count: 0 };
+    r.count++;
+    rows.set(o.modelFile, r);
+  }
+  return [...rows.values()].sort((a, b) => b.count - a.count || a.nom.localeCompare(b.nom));
+}
+
+/** What « Replace » searches for a use: its first search (the store shows what you already have first). */
+export const reviewQuery = (usage) => (MODEL_USAGES[usage] ? MODEL_USAGES[usage].queries[0] : '');
+

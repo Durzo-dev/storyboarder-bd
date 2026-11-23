@@ -6,7 +6,8 @@
  */
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { MODEL_USAGES, FACES, MAX_BYTES, queriesFor, candidatesFor, usagesOf, applyModels } from '../src/realistic-models.js';
+import { MODEL_USAGES, FACES, MAX_BYTES, queriesFor, candidatesFor, usagesOf, applyModels, reviewRows, reviewQuery } from '../src/realistic-models.js';
+import { readFileSync } from 'node:fs';
 import { OBJECT_REAL_HEIGHT_M } from '../src/constants.js';
 
 let n = 0;
@@ -69,3 +70,26 @@ describe('the models given to an import', () => {
     assert.equal(a.find(e => e.objType === 'banc').modelFile, undefined, 'no model: the built-in object');
   });
 });
+
+describe('#480d: the review of the models the stores gave', () => {
+  test('⚠️ ONE ROW PER MODEL OF THE STORES, the most used first; never the bank\'s, a monument\'s or a model laid by hand', () => {
+    const o = (modelFile, usage, name) => ({ type: 'objet3d', modelFile, usage, name });
+    const rows = reviewRows([o('Oak.glb', 'arbre', 'Oak'), o('Bench.glb', 'banc', 'Bench'), o('Oak.glb', 'arbre', 'Oak'),
+      o('bank--plane.glb', 'arbre', 'Plane'), { ...o('Eiffel.glb', 'monument'), monument: { name: 'Tour Eiffel' } },
+      { type: 'objet3d', modelFile: 'Mine.glb', name: 'Mine' }], 'bank--');
+    assert.deepEqual(rows, [{ fichier: 'Oak.glb', nom: 'Oak', usage: 'arbre', count: 2 }, { fichier: 'Bench.glb', nom: 'Bench', usage: 'banc', count: 1 }]);
+  });
+  test('« Replace » searches the use\'s first search', () => {
+    assert.equal(reviewQuery('banc'), 'park bench');
+    assert.equal(reviewQuery('nothing'), '');
+  });
+  test('⚠️ THE STEP SHOWS THEM WITH THE MONUMENTS, LAID ON « FINISH », its credit line removed', () => {
+    const ui = readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8');
+    const m = readFileSync(new URL('../src/monuments-ui.js', import.meta.url), 'utf8');
+    assert.ok(ui.includes('if (fini && (trouves.length || modeles.length)) {'), 'a step for models alone too');
+    assert.ok(ui.includes('if (poser) await appliquerLaRevue(scene, modeles, choixModeles);'), 'closing changes nothing');
+    assert.ok(m.includes('sansSonCredit(panel, row.nom);'));
+    assert.ok(m.includes('page.objects.splice(page.objects.indexOf(o), 1, b);'), 'removed: the built-in object in its place');
+  });
+});
+
