@@ -29,6 +29,7 @@ import { reduireTexturesGlb } from './glb-reduction.js';
 import { MODEL_BANK } from './model-bank-data.js';
 import { BANK_PREFIX, bankLabel } from './model-bank.js';
 import { TREE_TYPES } from './constants.js';
+import { ownedFirst } from './owned-first.js';
 // #454a-4b : les bâtiments, rangés à part (Batiments/) mais listés avec les modèles.
 import { listerBatiments, lireBatimentDuDisque } from './batiment-store.js';
 import { entreesBatiments } from './batiment-bibliotheque.js';
@@ -303,7 +304,8 @@ export function fichierPossede(r){
 export async function rafraichirPossedes(){
   const pont = window.storyboarderAPI;
   const liste = pont && pont.storeTelecharges ? await pont.storeTelecharges() : [];
-  possedes = new Map((Array.isArray(liste) ? liste : []).map(e => [`${e.source}:${e.id}`, { fichier: e.fichier, resolution: e.resolution || null }]));
+  // The whole entry (name, author, licence): the downloaded ones are shown first in a search (owned-first.js).
+  possedes = new Map((Array.isArray(liste) ? liste : []).map(e => [`${e.source}:${e.id}`, { ...e, fichier: e.fichier, resolution: e.resolution || null }]));
 }
 
 /**
@@ -986,6 +988,14 @@ function chargerLaSuiteSiBesoin(){
   if (suiteADemander({ zone, suivant, enCours, ficheOuverte: !$('storeFiche').hidden })) chercher(true);
 }
 
+/** The downloaded models shown first in this search (their `source:id`): a next page does not show them again. */
+let possedesMontres = new Set();
+const cleDuResultat = (r) => `${r.source}:${r.id}`;
+
+/** A downloaded model as a store result (its attribution entry): its card, its record. */
+const resultatPossede = (e) => ({ source: e.source, id: e.id, nom: e.nom || e.fichier, auteur: e.auteur || { nom: '' },
+  licence: e.licence || { libelle: '', commercial: true }, url: e.url || null, vignettes: {}, poids: null });
+
 async function chercher(suite = false){
   if (suite && enCours) return;
   const t = textesStore(langue());
@@ -1008,7 +1018,19 @@ async function chercher(suite = false){
   enCours = false;
   if (indicateurSuite) indicateurSuite.hidden = true;
   if (!page || page.erreur) { message(t.erreurs[page && page.erreur] || t.erreurs.reponse, true); return; }
-  page.resultats.forEach(r => { affiches.push(r); $('storeGrille').appendChild(carte(r)); });
+  // What was downloaded before and matches the search comes first (owned-first.js, every store), never twice.
+  const proprietaires = suite ? [] : [...possedes.values()].filter(e => e.source === source);
+  const tri = ownedFirst(page.resultats, proprietaires, { search: (derniereRecherche && derniereRecherche.texte) || '',
+    ownedKey: cleDuResultat, resultKey: cleDuResultat, nameOf: (e) => e.nom || e.fichier });
+  if (!suite) possedesMontres = new Set(tri.owned.map(cleDuResultat));
+  for (const e of tri.owned) {
+    const r = resultatPossede(e);
+    affiches.push(r);
+    const c = carte(r);
+    $('storeGrille').appendChild(c);
+    poserVignette(c, e.fichier);   // no thumbnail of the store's: its own, rendered
+  }
+  tri.results.filter(r => !possedesMontres.has(cleDuResultat(r))).forEach(r => { affiches.push(r); $('storeGrille').appendChild(carte(r)); });
   suivant = page.suivant;
   message($('storeGrille').children.length ? '' : t.aucun);
   // La page ne remplit pas la fenêtre : la suite vient aussitôt (sinon rien ne défilerait jamais).

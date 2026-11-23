@@ -15,6 +15,7 @@
  * electron/bibliotheque/, les décisions d'affichage dans polices-utilisateur.js.
  */
 
+import { ownedFirst } from './owned-first.js';
 import { S, tr } from './state.js';
 import { POLICES_BULLES, BUBBLE_FONT_FALLBACK, LICENCES_POLICES } from './constants.js';
 import {
@@ -185,8 +186,14 @@ function carte(p){
 /** L'onglet « En ligne » : les résultats du store, et « Charger plus » s'il y a une suite. */
 function rendreEnLigne(){
   const { resultats } = resultatsEnLigne();
+  // The fonts added before that match the search come first (owned-first.js, every store), as « My fonts » shows
+  // them, never twice (a font is one by its name, as dejaPossedee says).
+  const nomDe = (x) => String(x.nom).toLowerCase();
+  const tri = ownedFirst(resultats, policesImportees().map(f => ({ ...f, integree: false })),
+    { search: $('policesEnLigneTexte').value, ownedKey: nomDe, resultKey: nomDe, nameOf: (f) => f.nom });
+  const cartes = [...tri.owned.map(carte), ...tri.results.map(r => carte({ ...r, enLigne: true }))];
   const zone = $('policesListe');
-  zone.replaceChildren(...(resultats.length ? [el('div', { classe: vue() === 'liste' ? 'polices-lignes' : 'polices-grille' }, resultats.map(r => carte({ ...r, enLigne: true })))] : []));
+  zone.replaceChildren(...(cartes.length ? [el('div', { classe: vue() === 'liste' ? 'polices-lignes' : 'polices-grille' }, cartes)] : []));
   placerVariantes();
 }
 

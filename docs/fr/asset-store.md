@@ -87,6 +87,15 @@ La fiche reprend les gestes du reste de l'application, injectés par events.js :
 Squelette…), Renommer…, Supprimer, et le clic droit sur une carte. La fenêtre est
 placée AVANT les autres modales dans le document : celles qu'elle ouvre passent devant elle.
 
+## Ce que vous avez déjà, d'abord
+
+Dans chaque store (modèles, textures, polices), une recherche montre d'abord ce qui a déjà été téléchargé de ce store
+et lui correspond, puis les résultats du serveur, jamais deux fois le même (`owned-first.js` : `matchesSearch`, chaque
+mot de la recherche commence un mot du nom, sans accents ni casse ; `ownedFirst`). Modèles : les entrées
+d'attribution de la source de l'onglet (`possedes`, une carte avec sa vignette rendue ; une page suivante ne les
+remontre pas, `possedesMontres`). Textures : « Mes textures » de la source de l'onglet (`cle` `source:id`). Polices :
+les polices ajoutées (`policesImportees`), une par son nom.
+
 ## Catégorie choisie et tags
 
 Dans la fiche d'un modèle de « Mes modèles », sous la source : la **catégorie** (une seule, prise

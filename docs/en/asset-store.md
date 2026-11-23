@@ -87,6 +87,15 @@ The details reuse the gestures of the rest of the application, injected by event
 Skeleton…), Rename…, Delete, and right-click on a card. The window sits BEFORE the
 other modals in the document: the ones it opens come in front of it.
 
+## What you already have, first
+
+In every store (models, textures, fonts), a search shows first what was downloaded before from that store and
+matches it, then the server's results, never the same twice (`owned-first.js`: `matchesSearch`, each word of the
+search begins a word of the name, accents and case aside; `ownedFirst`). Models: the attribution entries of the tab's
+source (`possedes`, a card with its own rendered thumbnail; a next page does not show them again, `possedesMontres`).
+Textures: « My textures » of the tab's source (`cle` `source:id`). Fonts: the fonts added (`policesImportees`), one
+by its name.
+
 ## Chosen category and tags
 
 In the details of a model in "My models", under the source: the **category** (one, from the common

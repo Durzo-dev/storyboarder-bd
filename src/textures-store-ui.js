@@ -12,6 +12,7 @@
  * Reprend la présentation du store de modèles (grille, cartes, fiche qui remplace la grille, pied
  * collé en bas) avec ses classes : une seule apparence pour les deux fenêtres.
  */
+import { ownedFirst } from './owned-first.js';
 import { tr, S } from './state.js';
 import { utilisationsDe, PREFIXE, chargerTexturesUtilisateur } from './textures-utilisateur.js';
 import { texturesIntegrees, valeurChoisie, textureDeLaValeur, SOURCE as INTEGREE, USAGE_BULLE, TAG_BULLE } from './textures-integrees.js';
@@ -448,7 +449,11 @@ function rendreGrilleSeule(){
     if (!liste.length) message(tr('No texture matches these filters.', 'Aucune texture ne correspond à ces filtres.'));
     return;
   }
-  g.replaceChildren(...page.resultats.map(r => carte(r, false)));
+  // What was downloaded before from this store and matches the search comes first (owned-first.js, every store),
+  // never twice: as « My textures » shows it.
+  const tri = ownedFirst(page.resultats, mes.filter(t => String(t.cle || '').startsWith(onglet + ':')),
+    { search: parametres().texte, ownedKey: (t) => t.cle, resultKey: cle, nameOf: nomTexture });
+  g.replaceChildren(...tri.owned.map(t => carte(t, true)), ...tri.results.map(r => carte(r, false)));
 }
 
 /** La page suivante arrive d'elle-même en approchant du bas, comme dans le store de modèles. */
