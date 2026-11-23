@@ -98,7 +98,7 @@ describe('monuments, a model taking a monument\'s place in a laid Scene', async 
 describe('monuments, the last step of « New scene » (asked)', () => {
   const ui = readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8');
   test('after the Scene is built, in the same window, only when there are monuments', () => {
-    assert.match(ui, /if \(fini && monumentsOf\(scene\.pages\[0\]\.objects\)\.length\) await etapeMonuments\(scene\);\n    fermer\(\);/);
+    assert.match(ui, /if \(fini && monumentsOf\(scene\.pages\[0\]\.objects\)\.length\) \{\n      const revue = etapeMonuments\(scene\)/);
   });
   test('« Finish » lays the models chosen; closing keeps the generated buildings', () => {
     assert.match(ui, /if \(poser\) for \(const \[o, f\] of choisis\) await remplacerLeBatiment\(scene, o, f\);/);
@@ -108,5 +108,25 @@ describe('monuments, the last step of « New scene » (asked)', () => {
   test('a model chosen turns the button into « Replace with a building », which drops it', () => {
     assert.match(ui, /fichier \? tr\('Replace with a building', 'Remplacer par un bâtiment'\) : tr\('Find a 3D model', 'Chercher un modèle 3D'\)/);
     assert.match(ui, /if \(choisis\.has\(o\)\) \{ choisis\.delete\(o\);/);
+  });
+});
+
+describe('#480d: an import asked by an AI does not wait for the review', () => {
+  const ui = readFileSync(new URL('../src/real-place-ui.js', import.meta.url), 'utf8');
+  const link = readFileSync(new URL('../src/mcp-link.js', import.meta.url), 'utf8');
+  test('⚠️ THE AI\'S IMPORT ANSWERS ONCE THE SCENE IS MADE; the window stays open on the review for the user', () => {
+    // It waited for a click on « Finish » nobody gave: the AI's call never ended.
+    assert.ok(ui.includes('const revue = etapeMonuments(scene).then(() => { if (V === moi) fermer(); });'));
+    assert.ok(ui.includes('if (!pourIA) await revue;'), 'the user\'s own import still ends with its review');
+    assert.ok(ui.includes('return importer({ pourIA: true });'));
+  });
+  test('⚠️ THE AI\'S PREVIEWS WAIT FOR AN IMPORT UNDER WAY, NOT FOR THE WINDOW (open on the review, they waited 80 s in vain)', () => {
+    assert.ok(link.includes("if ((!loading || loading.hidden) && !importEnCours()) return;"));
+    assert.ok(!link.includes("$('realPlaceModal')"), 'the window\'s being open blocks no preview');
+    assert.ok(ui.includes('export const importEnCours = () => !!(V && V.busy);'));
+  });
+  test('a new AI import while the review waits is refused, said to the AI (it would drop the user\'s choices)', () => {
+    assert.ok(ui.includes("if (V && V.monuments) return { error: 'The « New scene » window waits for the user to review the last import"));
+    assert.ok(ui.includes('if (!V.monuments) { rendreLaConsigne(); majBoutons(); }'), 'the review is not covered by the instructions');
   });
 });

@@ -8,7 +8,7 @@
 import { S, tr } from './state.js';
 import { handleMessage, describeTool } from './mcp-protocol.js';
 import { makeTools, INSTRUCTIONS } from './mcp-tools.js';
-import { importerPourIA } from './real-place-ui.js';
+import { importerPourIA, importEnCours } from './real-place-ui.js';
 import { connectionTexts, iaPrete } from './mcp-status.js';
 
 const $ = (id) => document.getElementById(id);
@@ -51,12 +51,15 @@ export function boardImage(canvas){
   } catch (e) { return null; }
 }
 
-/** Waits until nothing is being built or imported (the cards over the Scene and the « New scene » window). */
+/**
+ * Waits until nothing is being built or imported (the cards over the Scene, an import under way). ⚠️ NOT « the
+ * « New scene » window is open » (#480d): it stays open on the review of an import, waiting for the user, and the
+ * AI's previews waited for it in vain.
+ */
 async function untilBuilt(){
   for (let i = 0; i < 1200; i++) {
     const loading = $('sceneLoading');
-    const importing = $('realPlaceModal') && !$('realPlaceModal').classList.contains('hidden');
-    if ((!loading || loading.hidden) && !importing) return;
+    if ((!loading || loading.hidden) && !importEnCours()) return;
     await new Promise(ok => setTimeout(ok, 250));
   }
 }

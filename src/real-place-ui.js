@@ -440,7 +440,7 @@ function cablerLaCarte(c){
 // ── Import ──────────────────────────────────────────────────────────────────────────────────────
 
 /** Imports the chosen zone. Resolves to { scene } once built, or { error } (a sentence, for an AI's tool). */
-async function importer(){
+async function importer({ pourIA = false } = {}){
   if (!V || !V.zone || V.busy) return { error: 'No zone is chosen, or an import is already under way.' };
   const annule = { error: 'The import was cancelled by the user.' };
   const api = window.storyboarderAPI;
@@ -664,7 +664,14 @@ async function importer(){
     if (V !== moi) return fini ? { scene } : annule;
     V.busy = false;
     // The last step, when the place holds known monuments (#475): models chosen, laid on « Finish ».
-    if (fini && monumentsOf(scene.pages[0].objects).length) await etapeMonuments(scene);
+    // ⚠️ AN IMPORT ASKED BY AN AI DOES NOT WAIT FOR IT (#480d, decided with Durzo: the window stays open on it for
+    // the user, it blocks no one else). It waited for a click nobody gave: the AI's call never ended, and its
+    // previews waited for the window to close, in vain.
+    if (fini && monumentsOf(scene.pages[0].objects).length) {
+      const revue = etapeMonuments(scene).then(() => { if (V === moi) fermer(); });
+      if (!pourIA) await revue;
+      return { scene };
+    }
     fermer();
     return fini ? { scene } : annule;
   } catch (e) {
@@ -674,8 +681,9 @@ async function importer(){
     dire(erreur('response'), true);
     return { error: `The import failed inside Storyboarder: ${e && e.message ? e.message : e}` };
   } finally {
-    // Still open (failed): the instructions come back; the error stays said.
-    if (V === moi) { V.busy = false; rendreLaConsigne(); majBoutons(); }
+    // Still open (failed): the instructions come back; the error stays said. Not over the review an AI's import
+    // left open (#480d): it is the window's step now.
+    if (V === moi) { V.busy = false; if (!V.monuments) { rendreLaConsigne(); majBoutons(); } }
   }
 }
 
@@ -686,6 +694,8 @@ async function importer(){
  */
 export async function importerPourIA({ query = null, lat, lon, sideM = 200, detail = 'detailed', name = null }){
   if (V && V.busy) return { error: 'An import is already under way in Storyboarder: wait for it to end, then try again.' };
+  // The last import's review waits for the user (its window open): a new import would drop it.
+  if (V && V.monuments) return { error: 'The « New scene » window waits for the user to review the last import: ask them to finish it, then try again.' };
   const api = window.storyboarderAPI;
   let place;
   if (query) {
@@ -704,8 +714,14 @@ export async function importerPourIA({ query = null, lat, lon, sideM = 200, deta
   if ([...taille.options].some(o => Number(o.value) === sideM)) taille.value = String(sideM);
   if (DETAIL_LEVELS.includes(detail)) { $('realPlaceDetailLevel').value = detail; direLeNiveau(); }
   dessiner();
-  return importer();
+  return importer({ pourIA: true });
 }
+
+/**
+ * Is an import being made (for the AI's previews, mcp-link.js)? Not once it waits for the user's review: the
+ * Scene is made, it may be drawn.
+ */
+export const importEnCours = () => !!(V && V.busy);
 
 /**
  * THE LIDAR'S HEIGHTS (height-reading.js reads them; here the network): the MNH of the zone as floats, or null
