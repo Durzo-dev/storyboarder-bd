@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import {
-  translateOsm, clipPolyline, maskOfPolygon, cleanFootprint, levelsOf, roofOf, pathKindOf, zoneTypeOf,
+  translateOsm, clipPolyline, maskOfPolygon, cleanFootprint, levelsOf, roofOf, pathKindOf, zoneTypeOf, roadWidthOf,
   OSM_ATTRIBUTION, ZONE_SIDE_MAX,
 } from '../src/osm-scene.js';
 import { lireBatiment, ecrireBatiment } from '../src/batiment.js';
@@ -147,6 +147,12 @@ describe('#457b-2, the pieces', () => {
   });
   test('which ways are paths, which are Zones', () => {
     assert.deepEqual(pathKindOf({ highway: 'primary' }), { kind: 'route', width: 8, marking: true });
+    // Its lanes widen a road, never narrow it (the Étoile's ring: 12 lanes, 8 m before).
+    assert.equal(roadWidthOf({ highway: 'primary', lanes: '12' }), 39);
+    assert.equal(roadWidthOf({ highway: 'primary', lanes: '2' }), 8, 'never under its type\'s');
+    assert.equal(roadWidthOf({ highway: 'residential', lanes: '2' }), 6.5);
+    assert.equal(roadWidthOf({ highway: 'primary', lanes: '40' }), 40, 'a count beyond reason is capped');
+    assert.equal(pathKindOf({ highway: 'primary', lanes: '12', width: '20' }).width, 20, 'a width tag wins');
     assert.deepEqual(pathKindOf({ highway: 'track', width: '2.5' }), { kind: 'chemin', width: 2.5 });
     assert.equal(pathKindOf({ highway: 'primary', tunnel: 'yes' }), null);
     assert.deepEqual(pathKindOf({ barrier: 'hedge' }), { kind: 'haie' });
@@ -155,6 +161,12 @@ describe('#457b-2, the pieces', () => {
     assert.equal(zoneTypeOf({ leisure: 'park' }), 'gazon');
     assert.equal(zoneTypeOf({ natural: 'water' }), 'eau');
     assert.equal(zoneTypeOf({ amenity: 'parking' }), 'bitume');
+    // The Place de l'Étoile (OSM, 25 Nov.): its island a pedestrian MULTIPOLYGON without area=yes, its ring an area:highway.
+    assert.equal(zoneTypeOf({ highway: 'pedestrian', type: 'multipolygon', surface: 'sett' }), 'paves', 'left as grass before');
+    assert.equal(zoneTypeOf({ highway: 'pedestrian' }), null, 'a closed pedestrian way may be a loop of a street');
+    assert.equal(zoneTypeOf({ 'area:highway': 'primary', type: 'multipolygon' }), 'bitume');
+    assert.equal(zoneTypeOf({ 'area:highway': 'footway' }), 'béton');
+    assert.equal(zoneTypeOf({ 'area:highway': 'primary', surface: 'sett' }), 'paves');
     assert.equal(zoneTypeOf({ amenity: 'parking', surface: 'gravel' }), 'gravier');
     assert.equal(zoneTypeOf({ highway: 'pedestrian', area: 'yes' }), 'béton', 'a square is paved');
     assert.equal(zoneTypeOf({ highway: 'pedestrian', area: 'yes', surface: 'asphalt' }), 'bitume', 'unless asphalted');
@@ -357,5 +369,15 @@ describe('OSM translator, street furniture and trees (#477c)', async () => {
       { type: 'node', id: 2, lat: 48, lon: 7, tags: { natural: 'tree' } },
     ] }, { centre, halfSize: 100, detail: 'simple' });
     assert.deepEqual(r.elements.map(e => e.objType), ['arbre']);
+  });
+});
+
+describe('the Overpass query asks what the translator reads', () => {
+  test('⚠️ THE PEDESTRIAN SQUARES AND CARRIAGEWAYS MAPPED AS AREAS (the Étoile\'s island and ring were never asked)', async () => {
+    const { readFileSync } = await import('node:fs');
+    const q = readFileSync(new URL('../electron/bibliotheque/real-place.js', import.meta.url), 'utf8');
+    for (const f of ['relation["highway"="pedestrian"]["type"="multipolygon"]', 'relation["area:highway"]["type"="multipolygon"]', 'way["area:highway"]']) {
+      assert.ok(q.includes(f), f);
+    }
   });
 });

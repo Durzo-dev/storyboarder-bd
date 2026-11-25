@@ -57,7 +57,7 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
   les Tracés en lesquels OSM découpe une rue se rejoignent sur un espace entier), trottoirs cartographiés (`footway=sidewalk`) → `trottoir`, et les balises `sidewalk` d'une route
   (`sidewalkSides`) donnent un `trottoir` à côté d'elle de chaque côté (`offsetPolyline`, 1,8 m sauf
   `sidewalk:width`) ; autres sentiers, pistes, escaliers → `chemin` ;
-  `barrier` → `muret`, `cloture`, `haie`, `barriere` ; `waterway` → `riviere`. Une balise `width` l'emporte.
+  `barrier` → `muret`, `cloture`, `haie`, `barriere` ; `waterway` → `riviere`. Une balise `width` l'emporte ; sans elle, les voies (`lanes`) élargissent une route (`roadWidthOf` : 3,25 m par voie, 40 m au plus), jamais sous la largeur de son type.
   Les tunnels sont écartés. Découpés à la zone (`clipPolyline`). `world` est celui d'un Tracé (`pts`,
   `width`). Aux niveaux « Détaillé » et « Réaliste » : une texture livrée d'une autre sorte quand OSM le dit
   (`pathTextureOf`, posée en `traceTexture`) : des pavés (`int:sol:paves`) sur une route ou un chemin dont le
@@ -66,7 +66,8 @@ et lampadaires. « Nouvelle scène » ouvre un choix : « Création manuelle » 
   plastique (il garde les briques du muret).
 - **Zones** (`zoneTypeOf`) : prairie, pelouse, forêt… → `herbe` ; parc, jardin, terrain de sport →
   `gazon` ; champs, vignes… → `terre` ; sable, plage → `sable` ; eau → `eau` ; parkings → `bitume`, place
-  piétonne → `béton` (dallée) ; les deux suivent le `surface` d'OSM quand il nomme un des sols (asphalte,
+  piétonne → `béton` (dallée ; `area=yes`, ou un multipolygone, qui n'en a pas besoin), une chaussée dessinée en
+  surface (`area:highway`) → `bitume` pour une route, `béton` pour un trottoir ; tous suivent le `surface` d'OSM quand il nomme un des sols (asphalte,
   gravier… ; sett, cobblestone et paving_stones → `paves`, les pavés, que « Simple » garde en `béton`). `landuse=residential` et ses pareils sont trop vastes : ce n'est pas un sol. Le
   polygone devient un masque de Zone peinte en cases de 1 m (`maskOfPolygon`), `world` par
   `mondeDuMasque`.

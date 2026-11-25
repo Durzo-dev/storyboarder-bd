@@ -539,12 +539,27 @@ function areaOfLevel(b, levelId){
 
 // ── The extract ─────────────────────────────────────────────────────────────────────────────────
 
+/** A lane's width (metres), for a road whose `lanes` OSM gives and no `width`. */
+const LANE_WIDTH = 3.25;
+/** The widest road read from its lanes (metres): beyond, a count is more likely a mistake than a road. */
+const LANES_WIDTH_MAX = 40;
+
+/**
+ * A road's width without a `width` tag: its type's, or wider when its `lanes` say so (seen: the Étoile's ring,
+ * 12 lanes, drawn 8 m wide as any primary road). Never narrower than its type's.
+ */
+export function roadWidthOf(tags){
+  const lanes = parseInt(tags.lanes, 10);
+  const byType = ROADS[tags.highway] || 0;
+  return lanes > 0 ? Math.max(byType, Math.min(LANES_WIDTH_MAX, lanes * LANE_WIDTH)) : byType;
+}
+
 /** The `kind` and width of a way that is a path (road, dirt path, wall, river), or null. */
 export function pathKindOf(tags){
   if (tags.tunnel && tags.tunnel !== 'no') return null;   // under the ground: not drawn
   const width = parseFloat(tags.width);
   if (tags.highway && tags.area !== 'yes') {
-    if (ROADS[tags.highway]) return { kind: 'route', width: width > 0 ? width : ROADS[tags.highway], marking: markingOf(tags) };
+    if (ROADS[tags.highway]) return { kind: 'route', width: width > 0 ? width : roadWidthOf(tags), marking: markingOf(tags) };
     if (tags.highway === 'footway' && tags.footway === 'sidewalk') return { kind: 'trottoir', width: width > 0 ? width : SIDEWALK_WIDTH };
     if (DIRT_PATHS[tags.highway]) return { kind: 'chemin', width: width > 0 ? width : DIRT_PATHS[tags.highway] };
   }
@@ -587,8 +602,12 @@ export function pathTextureOf(kind, tags = {}){
 /** The ground of a closed way that is a Zone, or null. */
 export function zoneTypeOf(tags){
   if (tags.amenity === 'parking') return SURFACES[tags.surface] || 'bitume';
-  // A pedestrian square is paved, not asphalted, unless its `surface` says otherwise.
-  if (tags.highway === 'pedestrian' && tags.area === 'yes') return SURFACES[tags.surface] || 'béton';
+  // A pedestrian square is paved, not asphalted, unless its `surface` says otherwise. Mapped as a multipolygon it is
+  // an area without `area=yes` (seen: the Place Charles-de-Gaulle around the Arc de Triomphe, left as grass).
+  if (tags.highway === 'pedestrian' && (tags.area === 'yes' || tags.type === 'multipolygon')) return SURFACES[tags.surface] || 'béton';
+  // A carriageway drawn as an area (`area:highway`, seen: the Étoile's ring): a road's ground, a footway's paved.
+  const aire = tags['area:highway'];
+  if (aire) return SURFACES[tags.surface] || (ROADS[aire] ? 'bitume' : 'béton');
   return ZONE_TYPES[tags.landuse] || ZONE_TYPES[tags.leisure] || ZONE_TYPES[tags.natural] || null;
 }
 

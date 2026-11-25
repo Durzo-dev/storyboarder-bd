@@ -54,7 +54,7 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
   lanes or more, none with 1 or one-way, else only on main roads: motorway to tertiary and their links; its dashes are
   fitted to each Path, `road-marking.js`, so the Paths OSM splits a street into meet in one whole gap), pavements (`footway=sidewalk`) → `trottoir`, and a road's `sidewalk` tags (`sidewalkSides`) give a
   `trottoir` beside it on each side (`offsetPolyline`, 1.8 m unless `sidewalk:width`); other footways, paths, tracks, steps → `chemin`; `barrier` → `muret`, `cloture`,
-  `haie`, `barriere`; `waterway` → `riviere`. A `width` tag wins. Tunnels are skipped. Clipped to the zone
+  `haie`, `barriere`; `waterway` → `riviere`. A `width` tag wins; without it, a road's `lanes` widen it (`roadWidthOf`: 3.25 m a lane, 40 m at most), never under its type's width. Tunnels are skipped. Clipped to the zone
   (`clipPolyline`). `world` is the Path's own (`pts`, `width`). « Detailed » and « Realistic »: a bundled
   texture of another kind when OSM says so (`pathTextureOf`, laid as `traceTexture`): cobbles
   (`int:sol:paves`) on a road or path whose `surface` is sett, cobblestone or paving stones, gravel
@@ -62,7 +62,8 @@ Building a Scene from OpenStreetMap: buildings, roads, paths, walls, rivers, gro
   material is brick, concrete, wood, metal or plastic (it keeps the low wall's bricks).
 - **Zones** (`zoneTypeOf`): grass, meadow, forest… → `herbe`; park, garden, pitch → `gazon`; farmland,
   vineyard… → `terre`; sand, beach → `sable`; water → `eau`; parking → `bitume`, a pedestrian square →
-  `béton` (paved); both follow the OSM `surface` when it names one of the grounds (asphalt, gravel…; sett,
+  `béton` (paved; `area=yes`, or a multipolygon, which needs none), a carriageway drawn as an area (`area:highway`)
+  → `bitume` for a road, `béton` for a footway; all follow the OSM `surface` when it names one of the grounds (asphalt, gravel…; sett,
   cobblestone and paving stones → `paves`, cobbles, which « Simple » keeps as `béton`).
   `landuse=residential` and the like are too wide: not a ground. The polygon becomes a painted Zone mask
   of 1 m cells (`maskOfPolygon`), `world` from `mondeDuMasque`.
