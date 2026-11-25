@@ -78,7 +78,7 @@ describe('Le branchement dans l’export', () => {
   });
   test('les crédits sont TOUJOURS dessinés, quel que soit le réglage des descriptions', () => {
     assert.match(corps, /const credits = creditsDeLaPage\(page, attributions, visibleDansSaCase\);/);
-    assert.match(corps, /off\.height = pageH \+ infoHeight \+ creditsHeight;/);
+    assert.match(corps, /off\.height = pageH \+ infoHeight \+ creditsHeight \+ liensHeight;/);
     // The model credits and those of a real place (OpenStreetMap, the relief's source) are blocks of one section.
     assert.match(corps, /if \(creditBlocs\.length\) \{\n    const y0 = pageH \+ infoHeight;/);
     assert.match(corps, /const lieu = creditsDuLieu\(page\);/);

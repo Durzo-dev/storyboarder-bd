@@ -11,6 +11,7 @@
  * This module is now the application's real entry point: app.js is now just a
  * simple redirect (`import './events.js'`) kept so index.html doesn't have to change.
  */
+import { hasRealPlace, viewOfPanel, mapsLinkOf } from './maps-link.js';
 import { debutDeRotation3D, angleDeRotation3D, quartDeTour3D, modeSelonLaCamera3D } from './rotation-objet-3d.js';
 import { cablerChampsDOrientation } from './orientation-champs.js';
 import { icone } from './icones.js';
@@ -4228,6 +4229,8 @@ canvas.addEventListener('contextmenu', (e) => {
   setTrailingText(document.querySelector('#ctxClearPanel'), isSceneCanvas ? 'Clear scene' : 'Clear panel',
     isSceneCanvas ? 'Vider la scène' : 'Vider la case', S.appLang);
   ctxLoadSceneTrigger.style.display = (isSceneCanvas || !_img.ajouter3D) ? 'none' : '';
+  // #492 : la Case (ou la Scène) d'un lieu réel ouvre le lieu dans Google Maps ; l'entrée est absente sinon.
+  document.getElementById('ctxLienMaps').style.display = hit && hit.type === 'panel' && hasRealPlace(hit) ? '' : 'none';
   document.getElementById('ctxBringForward').style.display = isSceneCanvas ? 'none' : '';
   document.getElementById('ctxSendBackward').style.display = isSceneCanvas ? 'none' : '';
   placerMenu3D(panelContextMenu, e.clientX, e.clientY);
@@ -6170,6 +6173,17 @@ document.getElementById('openTerrainEditorBtn').onclick = () => {
   if (editeurDeTerrainOuvert()) fermerEditeurDeTerrain(); else ouvrirChoixDeScene();
 };
 // « Modifier le terrain », au clic droit dans une Scène : l'éditeur s'ouvre sur elle.
+// #492 : le lieu tel que la caméra de la Case le voit (maps-link.js), ouvert dans le navigateur et copié.
+document.getElementById('ctxLienMaps').onclick = () => {
+  hideContextMenu();
+  const page = currentPage();
+  const panel = page && page.objects.find(o => o.id === S.selectedId && o.type === 'panel');
+  const vue = panel && viewOfPanel(panel, page);
+  if (!vue) return;
+  const lien = mapsLinkOf(vue);
+  try { navigator.clipboard.writeText(lien); } catch { /* opened all the same */ }
+  window.open(lien, '_blank');
+};
 document.getElementById('ctxModifierTerrain').onclick = () => {
   hideContextMenu();
   if (S.editingSceneId) ouvrirEditeurDeTerrain(S.editingSceneId);

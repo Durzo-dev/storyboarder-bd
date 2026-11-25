@@ -27,6 +27,8 @@ export const ICONES = {
   scene: '<path d="M3 10h18v10H3z"/><path d="m3 10 2-6 15 0-1 6"/><path d="m9 4-2 6M15 4l-2 6"/>',
   batiment: '<path d="M3 11 12 4l9 7"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-6h4v6"/>',
   modele: '<path d="M12 3 4 7v10l8 4 8-4V7z"/><path d="m4 7 8 4 8-4M12 11v10"/>',
+  // Un lieu réel ouvert dans une carte (le lien Google Maps d'une Case) : l'épingle.
+  lieuReel: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
   image: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>',
   deplacer: '<path d="M12 3v18M3 12h18"/><path d="m9 6 3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/>',
   tracer: '<path d="M5 21 9 3M19 21 15 3"/><path d="M12 6v2M12 12v2M12 18v2"/>',

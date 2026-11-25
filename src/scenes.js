@@ -345,6 +345,11 @@ export async function loadSceneIntoPanel(scene, panel){
   // the export (export-credits.js, creditsDuLieu).
   if (scenePanel && Array.isArray(scenePanel.creditsDuLieu) && scenePanel.creditsDuLieu.length) panel.creditsDuLieu = scenePanel.creditsDuLieu.slice();
   else delete panel.creditsDuLieu;
+  // And its place (#492, maps-link.js): the Panel's camera then opens the true place in Google Maps, the content's
+  // shift in X kept (`decalageX`: a point of the Panel at x is the Scene's x + decalageX).
+  if (scenePanel && scenePanel.lieu && Number.isFinite(scenePanel.lieu.lat)) {
+    panel.lieu = { ...scenePanel.lieu, decalageX: (Number(scenePanel.lieu.decalageX) || 0) + worldBboxCx };
+  } else delete panel.lieu;
   S.selectedId = panel.id; S.selectedRoomId = null;
   // Reset the target Panel's camera: a previously tilted (camRotX ≠ 0) or zoomed
   // (camDist ≠ PANEL_CAM_DEFAULT_DIST_3D) camera could make the Ground dominant and make Elements

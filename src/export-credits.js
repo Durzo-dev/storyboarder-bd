@@ -16,6 +16,7 @@
  * Page suffisent, il n'y a pas de Scène à suivre.
  */
 
+import { viewOfPanel, mapsLinkOf } from './maps-link.js';
 import { isImportedModel } from './model-store.js';
 
 /** Les noms d'affichage des sources ; à défaut, l'identifiant. */
@@ -114,3 +115,23 @@ export function replierLigne(mesurer, texte, largeur){
   if (ligne) lignes.push(ligne);
   return lignes;
 }
+
+/**
+ * #492: THE GOOGLE MAPS LINKS OF A PAGE'S PANELS that show a real place (maps-link.js), by Panel number:
+ * `[{ panel, numero, lien, ligne }]` (`ligne`: the line printed under the Page, « Panel 3 — Google Maps: … »).
+ */
+export function liensDesCases(page, panels, lang = 'fr'){
+  const out = [];
+  for (const p of panels || []) {
+    const vue = viewOfPanel(p, page);
+    if (!vue) continue;
+    const lien = mapsLinkOf(vue);
+    const numero = p.caseNumber || '?';
+    out.push({ panel: p, numero, lien, ligne: `${lang === 'en' ? 'Panel' : 'Case'} ${numero} — Google Maps : ${lien}` });
+  }
+  return out;
+}
+
+/** The title of the links' block under the Page. */
+export const titreLiens = (lang = 'fr') => (lang === 'en' ? 'The real places, as each Panel sees them' : 'Les lieux réels, comme chaque Case les voit');
+

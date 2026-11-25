@@ -412,6 +412,7 @@ export const I18N_TRAILING = [
   ['#ctxAddTrigger > span:first-child', 'Add', 'Ajouter'],
   ['#ctxLoadSceneTrigger > span:first-child', 'Load a scene', 'Charger une scène'],
   ['#ctxToggleCamera', 'Camera', 'Caméra'],
+  ['#ctxLienMaps', 'Generate the Google Maps link', 'Générer le lien Google Maps'],
   ['#ctxBringForward', 'Bring forward', 'Avancer'],
   ['#ctxSendBackward', 'Send backward', 'Reculer'],
   ['#ctxClearPanel', 'Clear panel', 'Vider la case'],

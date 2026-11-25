@@ -55,7 +55,7 @@ import {
   drawPersona3D,
 } from './rig3d.js';
 import { noDescriptionLabel } from './i18n.js';
-import { creditsDeLaPage, creditsDuLieu, lignesCredit, replierLigne, titreCredits } from './export-credits.js';
+import { creditsDeLaPage, creditsDuLieu, liensDesCases, lignesCredit, replierLigne, titreCredits, titreLiens } from './export-credits.js';
 // L'image d'une Case : ce qu'elle porte (image-store) et ce qui est décodé (image-cache). Les deux
 // lectures sont SYNCHRONES, seule condition pour vivre dans le chemin de dessin.
 import {
@@ -2844,11 +2844,15 @@ export function renderAll(){
 // MediaBox exactly matches the image's pixel dimensions, filling the whole page. This
 // manual implementation (XObject /Image in /DCTDecode + xref table) avoids having to vendor a
 // full PDF library just to export a single-page Page.
-export function buildSinglePageImagePdf(jpegBytes, pxW, pxH){
+// `liens` (#492): clickable rectangles over the image, `[{ x, y, w, h, uri }]` in image pixels (origin top left),
+// each a /Link annotation opening its https URI.
+export function buildSinglePageImagePdf(jpegBytes, pxW, pxH, liens = []){
+  const annots = (liens || []).filter(l => /^https:\/\//.test(l.uri));
+  const nObj = 5 + annots.length;
   const enc = (s) => new TextEncoder().encode(s);
   const chunks = [];
   let offset = 0;
-  const offsets = [0, 0, 0, 0, 0, 0];
+  const offsets = new Array(nObj + 1).fill(0);
   function push(part){
     const bytes = (typeof part === 'string') ? enc(part) : part;
     chunks.push(bytes);
@@ -2860,7 +2864,7 @@ export function buildSinglePageImagePdf(jpegBytes, pxW, pxH){
   offsets[2] = offset;
   push('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
   offsets[3] = offset;
-  push(`3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pxW} ${pxH}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n`);
+  push(`3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pxW} ${pxH}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R${annots.length ? ` /Annots [${annots.map((_, i) => `${6 + i} 0 R`).join(' ')}]` : ''} >>\nendobj\n`);
   offsets[4] = offset;
   push(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${pxW} /Height ${pxH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`);
   push(jpegBytes);
@@ -2868,11 +2872,17 @@ export function buildSinglePageImagePdf(jpegBytes, pxW, pxH){
   const contentStr = `q ${pxW} 0 0 ${pxH} 0 0 cm /Im0 Do Q`;
   offsets[5] = offset;
   push(`5 0 obj\n<< /Length ${contentStr.length} >>\nstream\n${contentStr}\nendstream\nendobj\n`);
+  annots.forEach((l, i) => {
+    offsets[6 + i] = offset;
+    const uri = l.uri.replace(/[\\()]/g, c => '\\' + c);
+    const r = [l.x, pxH - l.y - l.h, l.x + l.w, pxH - l.y].map(v => Math.round(v));
+    push(`${6 + i} 0 obj\n<< /Type /Annot /Subtype /Link /Rect [${r.join(' ')}] /Border [0 0 0] /A << /S /URI /URI (${uri}) >> >>\nendobj\n`);
+  });
   const xrefOffset = offset;
-  let xref = 'xref\n0 6\n0000000000 65535 f \n';
-  for (let i = 1; i <= 5; i++) xref += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+  let xref = `xref\n0 ${nObj + 1}\n0000000000 65535 f \n`;
+  for (let i = 1; i <= nObj; i++) xref += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
   push(xref);
-  push(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`);
+  push(`trailer\n<< /Size ${nObj + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`);
   const total = chunks.reduce((sum, c) => sum + c.length, 0);
   const out = new Uint8Array(total);
   let pos = 0;
@@ -2882,13 +2892,13 @@ export function buildSinglePageImagePdf(jpegBytes, pxW, pxH){
 
 // Converts a canvas's content to a single-page PDF and triggers the download (cf. the
 // "Export this Page" buttons -> PDF submenu, and exportVolume during a batch PDF export).
-export function downloadCanvasAsPdf(canvas, filename){
+export function downloadCanvasAsPdf(canvas, filename, liens = []){
   const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
   const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
   const binary = atob(base64);
   const jpegBytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) jpegBytes[i] = binary.charCodeAt(i);
-  const pdfBytes = buildSinglePageImagePdf(jpegBytes, canvas.width, canvas.height);
+  const pdfBytes = buildSinglePageImagePdf(jpegBytes, canvas.width, canvas.height, liens);
   const blobUrl = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' }));
   const a = document.createElement('a');
   a.href = blobUrl; a.download = filename;
@@ -2987,9 +2997,20 @@ export async function exportPage(volumeIdx, pageIdx, format = 'png'){
     creditBlocs.push(lignes);
   }
   if (creditBlocs.length) creditsHeight += padTop + creditTitre + 10 + padBottom - creditEcart;
+  // #492: the Panels showing a real place, their Google Maps link (maps-link.js), always (like the credits): a line
+  // each under the Page, and in the PDF the Panel itself clickable.
+  const liens = liensDesCases(page, panelsInPage(page).slice().sort((a, b) => (a.caseNumber || 0) - (b.caseNumber || 0)), S.appLang);
+  let liensHeight = 0;
+  const lienBlocs = liens.map(l => {
+    measureCtx.font = `${creditTaille}px system-ui, sans-serif`;
+    const lignes = replierLigne(x => measureCtx.measureText(x).width, l.ligne, contentWidth);
+    liensHeight += lignes.length * (creditTaille + creditInterligne) + creditEcart;
+    return lignes;
+  });
+  if (lienBlocs.length) liensHeight += padTop + creditTitre + 10 + padBottom - creditEcart;
 
   const off = document.createElement('canvas');
-  off.width = pageW; off.height = pageH + infoHeight + creditsHeight;
+  off.width = pageW; off.height = pageH + infoHeight + creditsHeight + liensHeight;
   const octx = off.getContext('2d');
   octx.drawImage(planche, 0, 0);
 
@@ -3041,8 +3062,31 @@ export async function exportPage(volumeIdx, pageIdx, format = 'png'){
     octx.restore();
   }
 
+  if (lienBlocs.length) {
+    const y0 = pageH + infoHeight + creditsHeight;
+    octx.save();
+    octx.fillStyle = '#fff';
+    octx.fillRect(0, y0, pageW, liensHeight);
+    octx.strokeStyle = '#ddd'; octx.lineWidth = 1;
+    octx.beginPath(); octx.moveTo(0, y0 + 0.5); octx.lineTo(pageW, y0 + 0.5); octx.stroke();
+    let cy = y0 + padTop + creditTitre;
+    octx.textAlign = 'left'; octx.textBaseline = 'alphabetic';
+    octx.fillStyle = '#1a1a1a';
+    octx.font = `bold ${creditTitre}px system-ui, sans-serif`;
+    octx.fillText(titreLiens(S.appLang), padX, cy);
+    cy += 10;
+    octx.fillStyle = '#444';
+    octx.font = `${creditTaille}px system-ui, sans-serif`;
+    lienBlocs.forEach(lignes => {
+      lignes.forEach(l => { cy += creditTaille; octx.fillText(l, padX, cy); cy += creditInterligne; });
+      cy += creditEcart;
+    });
+    octx.restore();
+  }
+
   if (format === 'pdf') {
-    downloadCanvasAsPdf(off, `tome-${volumeIdx + 1}-planche-${pageIdx + 1}.pdf`);
+    const zones = liens.map(l => ({ x: l.panel.x * exportScale, y: l.panel.y * exportScale, w: l.panel.w * exportScale, h: l.panel.h * exportScale, uri: l.lien }));
+    downloadCanvasAsPdf(off, `tome-${volumeIdx + 1}-planche-${pageIdx + 1}.pdf`, zones);
     return null;
   }
   const url = off.toDataURL('image/png');

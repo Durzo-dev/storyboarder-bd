@@ -341,6 +341,27 @@ never the bank's nor a monument's): « Replace » opens the store on its use's s
 its objects back to the built-in object at their place and turn; « Finish » lays the choices (`appliquerLaRevue`, one
 undo step, the model's credit line removed), closing changes nothing. A step with models only shows them only.
 
+## The place in Google Maps
+
+A Scene made from a real place keeps it on its panel (`lieu`: lat, lon of its centre, size, detail). Loading that
+Scene into a Panel (`loadSceneIntoPanel`, scenes.js) copies it, with `decalageX` the X shift the content took to be
+centred (a Panel point at x is the Scene's x + decalageX); a Scene without a place clears it.
+
+`src/maps-link.js` (pure) turns the Panel's camera into a place: the eye is the orbit target plus the backward vector
+(`panelCamBasis3D`) times camDist, projected back with `projector(lieu).toGeo`; heading = −camRotY, pitch = −camRotX
+(Street View counts up), field = the Page's (`framePanelCamera3D`) narrowed to the Panel, which crops the Page's
+render. `mapsLinkOf` picks Street View (`map_action=pano`, official form) up to `STREET_HEIGHT_MAX` metres, Google's 3D
+view (`@lat,lon,{alt}a,{fov}y,{heading}h,{tilt}t/data=!3m1!1e3`, unofficial but stable) above.
+
+Two uses: the Panel menu's « Generate the Google Maps link » (present only on a Panel with a place) opens it in the
+browser and copies it; `exportPage` lists one line per such Panel under the Page (`liensDesCases`, export-credits.js,
+always, like the credits) and, in a PDF, makes each Panel's rectangle a `/Link` annotation
+(`buildSinglePageImagePdf(…, liens)`).
+
+Pitfalls: the eye's height counts from y = 0, not from the relief; Street View shows the NEAREST street photo, which
+may be some metres off; a Panel off the Page's centre looks a little to the side of the camera axis, which the link
+does not follow. Tests: `tests/maps-link.test.mjs`.
+
 ## The sources per country
 
 `rulesFor(country)` (ISO code): the building rules (level height, levels per type, flat-roof types, roof
