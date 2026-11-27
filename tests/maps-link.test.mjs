@@ -8,7 +8,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const { MAPS_WINDOW_ASPECT, hasRealPlace, orbitCentreOf, viewOfPanel, streetViewLink, view3dLink, mapsLinkOf, STREET_HEIGHT_MAX } = await import('../src/maps-link.js');
+const { MAPS_WINDOW_ASPECT, hasRealPlace, orbitCentreOf, viewOfPanel, streetViewLink, satelliteLink, zoomForWidth, mapsLinkOf, STREET_HEIGHT_MAX } = await import('../src/maps-link.js');
 const { liensDesCases } = await import('../src/export-credits.js');
 const { buildSinglePageImagePdf } = await import('../src/draw.js');
 const { projector } = await import('../src/geo-local.js');
@@ -59,6 +59,21 @@ describe('viewOfPanel', () => {
     const releve = viewOfPanel(panel({ camRotX: 0.5, camDist: 40, relief }), page);
     assert.ok(Math.abs(plat.height - releve.height - 8) < 0.2, `${plat.height} − ${releve.height}`);
   });
+  test('Durzo\'s high-angle Panel (logged): the target is the ground point ~100 m SSE of the eye, ~25 m wide', () => {
+    const lieu = { lat: 43.60821631795422, lon: 3.878958933359428, decalageX: 0.203 };
+    const v = viewOfPanel(panel({ lieu, camRotX: 0.3274986726481221, camRotY: -2.6125, camDist: 85.75090052607455,
+      camWx: 6.357, camWy: 7.8155, camWz: -73.1685, w: 278.917, h: 254.667 }), { w: 480, h: 735 });
+    const pr = projector(lieu), oeil = pr.toLocal(v), cible = pr.toLocal(v.target);
+    const dx = cible.x - oeil.x, dz = cible.z - oeil.z;
+    assert.ok(Math.abs(Math.hypot(dx, dz) - 100) < 10, String(Math.hypot(dx, dz)));
+    assert.ok(Math.abs(((Math.atan2(dx, -dz) * 180 / Math.PI) + 360) % 360 - 150) < 2, 'towards the heading');
+    assert.ok(v.target.width > 15 && v.target.width < 40, String(v.target.width));
+    assert.match(mapsLinkOf(v), /map_action=map/);
+  });
+  test('looking level or up, the orbit centre stands in for the point looked at', () => {
+    const v = viewOfPanel(panel({ camRotX: -0.2, _orbitCx: 30, _orbitCy: 2, _orbitCz: 0 }), page);
+    assert.ok(Math.abs(projector(ETOILE).toLocal(v.target).x - 30) < 0.5);
+  });
   test('the content shift carried from the Scene (decalageX) moves the place east', () => {
     const a = viewOfPanel(panel(), page), b = viewOfPanel(panel({ lieu: { ...ETOILE, decalageX: 100 } }), page);
     const dx = projector(ETOILE).toLocal(b).x - projector(ETOILE).toLocal(a).x;
@@ -83,11 +98,19 @@ describe('the links', () => {
   const v = { lat: 48.87, lon: 2.29, height: 1.6, heading: 45, pitch: -10, fov: 70, vfov: 50 };
   test('Street View: the official pano form', () =>
     assert.equal(streetViewLink(v), 'https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=48.87,2.29&heading=45&pitch=-10&fov=70'));
-  test('the 3D view: height, field, heading, tilt (90 + pitch)', () =>
-    assert.equal(view3dLink({ ...v, height: 200 }), 'https://www.google.com/maps/@48.87,2.29,200a,50y,45h,80t/data=!3m1!1e3'));
-  test('street height → Street View, above → 3D view', () => {
+  test('the satellite map: official form, centred on the point looked at, its zoom from the width', () =>
+    assert.equal(satelliteLink({ ...v, target: { lat: 43.6, lon: 3.88, width: 100 } }),
+      'https://www.google.com/maps/@?api=1&map_action=map&center=43.6,3.88&zoom=20&basemap=satellite'));
+  test('the zoom: one step out per doubled width, within 0-21', () => {
+    assert.equal(zoomForWidth(200, 43.6), zoomForWidth(100, 43.6) - 1);
+    assert.equal(zoomForWidth(1, 0), 21);
+    assert.equal(zoomForWidth(1e9, 0), 0);
+  });
+  test('street height → Street View, above → the satellite map (never Google\'s unofficial 3D link)', () => {
     assert.match(mapsLinkOf(v), /map_action=pano/);
-    assert.match(mapsLinkOf({ ...v, height: STREET_HEIGHT_MAX + 1 }), /data=!3m1!1e3/);
+    const haut = mapsLinkOf({ ...v, height: STREET_HEIGHT_MAX + 1, target: { lat: 1, lon: 2, width: 50 } });
+    assert.match(haut, /map_action=map&center=1,2&/);
+    assert.doesNotMatch(haut, /\dt\/data=/);
   });
 });
 

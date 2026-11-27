@@ -380,18 +380,20 @@ que le dernier rendu l'a résolu : une cible d'orbite ou un Élément sélection
 (Street View compte vers le haut), champ = celui de la Planche (`framePanelCamera3D`) réduit à la hauteur de la Case (elle recadre le
 centre du rendu de la Planche), donné à Google comme champ horizontal d'une fenêtre 16:9 (`MAPS_WINDOW_ASPECT`) : le
 `fov` de Google est la largeur de la fenêtre, et la largeur propre de la Case ouvrait une Case presque carrée trop zoomée. `mapsLinkOf` choisit Street View (`map_action=pano`, forme officielle) jusqu'à
-`STREET_HEIGHT_MAX` mètres, la vue 3D de Google (`@lat,lon,{alt}a,{fov}y,{heading}h,{tilt}t/data=!3m1!1e3`, non
-officielle mais stable) au-dessus.
+`STREET_HEIGHT_MAX` mètres, au-dessus, la carte
+satellite (`map_action=map`, forme officielle elle aussi), centrée sur le point du sol au centre de la vue (son axe
+rencontré avec le relief sous l'œil ; vue à l'horizontale ou vers le haut, le centre de l'orbite) et zoomée
+(`zoomForWidth`) pour qu'une fenêtre de `MAPS_WINDOW_WIDTH_PX` montre la largeur de sol que la Case montre là.
 
 Deux usages : l'entrée « Générer le lien Google Maps » du menu de la Case (présente seulement sur une Case qui a un
 lieu) l'ouvre dans le navigateur et le copie ; `exportPage` écrit le lien sous la description de la Case
 (`liensDesCases`, export-credits.js), ou, descriptions désactivées, dans un bloc à part sous les crédits ; en PDF, le
 rectangle de la Case et le lien écrit sont des annotations `/Link` (`buildSinglePageImagePdf(…, liens)`).
 
-Le lien 3D de Google prend sa lat/lon pour la CAMÉRA et `a` pour sa hauteur au-dessus du sol (mesuré : 100a, 45t, cap 0
-ouvre sur le point 100 m au nord) ; un navigateur sans la 3D de Google retombe sur une vue de dessus de ce point. La
-hauteur de l'œil se compte donc depuis le relief sous lui (`hauteurDuRelief`). Générer le lien écrit ses entrées en
-console (`[maps-link]`).
+Pas le lien 3D de Google (`@lat,lon,{a}a,{y}y,{h}h,{t}t`) : non officiel, il prend sa lat/lon pour la CAMÉRA et
+calcule lui-même le point regardé (mesuré : 100a, 45t, cap 0 ouvre sur le point 100 m au nord), et une Case en
+plongée s'ouvrait ailleurs dans un autre navigateur. La hauteur de l'œil se compte depuis le relief sous lui
+(`hauteurDuRelief`). Générer le lien écrit ses entrées en console (`[maps-link]`).
 
 Pièges : Street View montre la photo de rue la PLUS
 PROCHE, parfois à quelques mètres (Google la choisit, dans un rayon d'environ 50 m) ; le chargement de Street View
