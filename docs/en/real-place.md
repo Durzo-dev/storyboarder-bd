@@ -350,8 +350,9 @@ centred (a Panel point at x is the Scene's x + decalageX); a Scene without a pla
 `src/maps-link.js` (pure) turns the Panel's camera into a place: the eye is the orbit centre (`_orbitCx/Cy/Cz`, as
 the last render resolved it: an orbit target or a selected Element moves it; `camWx/Wy/Wz` otherwise) plus the backward vector
 (`panelCamBasis3D`) times camDist, projected back with `projector(lieu).toGeo`; heading = −camRotY, pitch = −camRotX
-(Street View counts up), field = the Page's (`framePanelCamera3D`) narrowed to the Panel, which crops the centre of the
-Page's render. `mapsLinkOf` picks Street View (`map_action=pano`, official form) up to `STREET_HEIGHT_MAX` metres, Google's 3D
+(Street View counts up), field = the Page's (`framePanelCamera3D`) narrowed to the Panel's height (it crops the centre of
+the Page's render), given to Google as the horizontal field of a 16:9 window (`MAPS_WINDOW_ASPECT`): Google's `fov`
+is the window's width, and the Panel's own width made a near-square Panel open zoomed in. `mapsLinkOf` picks Street View (`map_action=pano`, official form) up to `STREET_HEIGHT_MAX` metres, Google's 3D
 view (`@lat,lon,{alt}a,{fov}y,{heading}h,{tilt}t/data=!3m1!1e3`, unofficial but stable) above.
 
 Two uses: the Panel menu's « Generate the Google Maps link » (present only on a Panel with a place) opens it in the

@@ -8,7 +8,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const { hasRealPlace, orbitCentreOf, viewOfPanel, streetViewLink, view3dLink, mapsLinkOf, STREET_HEIGHT_MAX } = await import('../src/maps-link.js');
+const { MAPS_WINDOW_ASPECT, hasRealPlace, orbitCentreOf, viewOfPanel, streetViewLink, view3dLink, mapsLinkOf, STREET_HEIGHT_MAX } = await import('../src/maps-link.js');
 const { liensDesCases } = await import('../src/export-credits.js');
 const { buildSinglePageImagePdf } = await import('../src/draw.js');
 const { projector } = await import('../src/geo-local.js');
@@ -58,10 +58,18 @@ describe('viewOfPanel', () => {
     const dx = projector(ETOILE).toLocal(b).x - projector(ETOILE).toLocal(a).x;
     assert.ok(Math.abs(dx - 100) < 0.5, String(dx));
   });
-  test('the field narrows with the Panel (it crops the Page), within Street View bounds', () => {
-    const large = viewOfPanel(panel({ w: 1200 }), page).fov, etroit = viewOfPanel(panel({ w: 300 }), page).fov;
-    assert.ok(etroit < large, `${etroit} < ${large}`);
-    assert.ok(etroit >= 10 && large <= 120);
+  test('the field follows the Panel\'s HEIGHT (it crops the Page), within Street View bounds', () => {
+    const haute = viewOfPanel(panel({ h: 1200 }), page).fov, basse = viewOfPanel(panel({ h: 300 }), page).fov;
+    assert.ok(basse < haute, `${basse} < ${haute}`);
+    assert.ok(basse >= 10 && haute <= 120);
+    assert.equal(viewOfPanel(panel({ w: 300 }), page).fov, viewOfPanel(panel({ w: 1200 }), page).fov, 'the width does not count');
+  });
+  test('the window\'s vertical field is the Panel\'s: a near-square Panel no longer comes out zoomed in', () => {
+    // Measured case (Durzo, a Panel of 720 × 655 on a 1200 × 1600 page): was 13°, about one zoom step too close.
+    const v = viewOfPanel(panel({ w: 720, h: 655 }), page);
+    const attendu = 2 * Math.atan(Math.tan(v.vfov / 2 * Math.PI / 180) * MAPS_WINDOW_ASPECT) * 180 / Math.PI;
+    assert.ok(Math.abs(v.fov - attendu) <= 1.5, `${v.fov} ≈ ${attendu}`);
+    assert.ok(v.fov > v.vfov * 1.5);
   });
 });
 

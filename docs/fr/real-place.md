@@ -377,8 +377,9 @@ contenu pour être centré (un point de la Case en x est le x de la Scène + dec
 `src/maps-link.js` (pur) fait de la caméra de la Case un lieu : l'œil est le centre de l'orbite (`_orbitCx/Cy/Cz`, tel
 que le dernier rendu l'a résolu : une cible d'orbite ou un Élément sélectionné le déplace ; `camWx/Wy/Wz` sinon) plus le vecteur arrière
 (`panelCamBasis3D`) fois camDist, reprojeté par `projector(lieu).toGeo` ; cap = −camRotY, inclinaison = −camRotX
-(Street View compte vers le haut), champ = celui de la Planche (`framePanelCamera3D`) réduit à la Case, qui recadre le
-centre du rendu de la Planche. `mapsLinkOf` choisit Street View (`map_action=pano`, forme officielle) jusqu'à
+(Street View compte vers le haut), champ = celui de la Planche (`framePanelCamera3D`) réduit à la hauteur de la Case (elle recadre le
+centre du rendu de la Planche), donné à Google comme champ horizontal d'une fenêtre 16:9 (`MAPS_WINDOW_ASPECT`) : le
+`fov` de Google est la largeur de la fenêtre, et la largeur propre de la Case ouvrait une Case presque carrée trop zoomée. `mapsLinkOf` choisit Street View (`map_action=pano`, forme officielle) jusqu'à
 `STREET_HEIGHT_MAX` mètres, la vue 3D de Google (`@lat,lon,{alt}a,{fov}y,{heading}h,{tilt}t/data=!3m1!1e3`, non
 officielle mais stable) au-dessus.
 

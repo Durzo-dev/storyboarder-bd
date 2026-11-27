@@ -16,6 +16,12 @@
 import { projector } from './geo-local.js';
 import { PANEL_CAM_DEFAULT_DIST_3D, WALL_PX_PER_UNIT_3D } from './constants.js';
 
+/**
+ * The browser window Google Maps fills, width over height. Its `fov` is the window's HORIZONTAL field: given the
+ * Panel's own, a near-square Panel came out zoomed in (seen by Durzo, about one zoom step). The window's vertical
+ * field is matched to the Panel's instead, so the Panel's height is what the window shows.
+ */
+export const MAPS_WINDOW_ASPECT = 16 / 9;
 /** Up to this height (metres), the camera stands in a street: Street View; above, the 3D view. */
 export const STREET_HEIGHT_MAX = 15;
 const DEG = 180 / Math.PI;
@@ -37,7 +43,7 @@ export function orbitCentreOf(panel){
 
 /**
  * The Panel's view as a place: `{ lat, lon, height, heading, pitch, fov }` (height metres above the ground, heading
- * compass degrees, pitch degrees UP as Street View counts it, fov the Panel's horizontal field), or null. `page`:
+ * compass degrees, pitch degrees UP as Street View counts it, fov the window's horizontal field for the Panel's vertical one, MAPS_WINDOW_ASPECT), or null. `page`:
  * its page's size (`w`, `h`, in page pixels), which sets the field (framePanelCamera3D).
  */
 export function viewOfPanel(panel, page){
@@ -54,8 +60,8 @@ export function viewOfPanel(panel, page){
   const halfH = (page.h / WALL_PX_PER_UNIT_3D) / 2;
   const vfov = 2 * Math.atan(halfH / PANEL_CAM_DEFAULT_DIST_3D);
   // The Panel crops the Page's render (framePanelCamera3D): its field is the Page's, narrowed to its own size.
-  const hfov = 2 * Math.atan(Math.tan(vfov / 2) * ((panel.w || page.w) / page.h));
   const vfovCase = 2 * Math.atan(Math.tan(vfov / 2) * ((panel.h || page.h) / page.h));
+  const hfov = 2 * Math.atan(Math.tan(vfovCase / 2) * MAPS_WINDOW_ASPECT);
   return {
     lat: round(geo.lat, 6), lon: round(geo.lon, 6), height: round(Math.max(1, eye.y), 1),
     heading: round(((-y * DEG) % 360 + 360) % 360, 0), pitch: round(clamp(-p * DEG, -90, 90), 0),
