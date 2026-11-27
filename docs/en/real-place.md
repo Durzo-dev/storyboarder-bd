@@ -360,7 +360,12 @@ browser and copies it; `exportPage` prints the link under that Panel's descripti
 export-credits.js), or, the descriptions turned off, in a block of its own under the credits; in a PDF, the Panel's
 rectangle and the printed link are `/Link` annotations (`buildSinglePageImagePdf(…, liens)`).
 
-Pitfalls: the eye's height counts from y = 0, not from the relief; Street View shows the NEAREST street photo, which
+Google's 3D link takes its lat/lon as the CAMERA and `a` as its height above the ground (measured: 100a, 45t, heading 0
+opens on the point 100 m north); a browser without Google's 3D falls back to a top view of that point. The eye's
+height therefore counts from the relief under it (`hauteurDuRelief`). Generating the link logs its inputs to the
+console (`[maps-link]`).
+
+Pitfalls: Street View shows the NEAREST street photo, which
 may be some metres off (Google picks it, within about 50 m); Street View's own loading takes a few seconds. Tests: `tests/maps-link.test.mjs`.
 
 ## The sources per country

@@ -15,6 +15,7 @@
  */
 import { projector } from './geo-local.js';
 import { PANEL_CAM_DEFAULT_DIST_3D, WALL_PX_PER_UNIT_3D } from './constants.js';
+import { hauteurDuRelief } from './terrain-relief.js';
 
 /**
  * The browser window Google Maps fills, width over height. Its `fov` is the window's HORIZONTAL field: given the
@@ -63,7 +64,9 @@ export function viewOfPanel(panel, page){
   const vfovCase = 2 * Math.atan(Math.tan(vfov / 2) * ((panel.h || page.h) / page.h));
   const hfov = 2 * Math.atan(Math.tan(vfovCase / 2) * MAPS_WINDOW_ASPECT);
   return {
-    lat: round(geo.lat, 6), lon: round(geo.lon, 6), height: round(Math.max(1, eye.y), 1),
+    lat: round(geo.lat, 6), lon: round(geo.lon, 6),
+    // Above the ground under the eye (the relief, in the Panel's frame), as Google counts its `a` (measured).
+    height: round(Math.max(1, eye.y - (panel.relief ? hauteurDuRelief(panel.relief, eye.x, eye.z) : 0)), 1),
     heading: round(((-y * DEG) % 360 + 360) % 360, 0), pitch: round(clamp(-p * DEG, -90, 90), 0),
     fov: round(clamp(hfov * DEG, 10, 120), 0), vfov: round(clamp(vfovCase * DEG, 10, 120), 0),
   };

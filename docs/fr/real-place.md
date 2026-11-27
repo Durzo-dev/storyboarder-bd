@@ -388,7 +388,12 @@ lieu) l'ouvre dans le navigateur et le copie ; `exportPage` écrit le lien sous 
 (`liensDesCases`, export-credits.js), ou, descriptions désactivées, dans un bloc à part sous les crédits ; en PDF, le
 rectangle de la Case et le lien écrit sont des annotations `/Link` (`buildSinglePageImagePdf(…, liens)`).
 
-Pièges : la hauteur de l'œil se compte depuis y = 0, pas depuis le relief ; Street View montre la photo de rue la PLUS
+Le lien 3D de Google prend sa lat/lon pour la CAMÉRA et `a` pour sa hauteur au-dessus du sol (mesuré : 100a, 45t, cap 0
+ouvre sur le point 100 m au nord) ; un navigateur sans la 3D de Google retombe sur une vue de dessus de ce point. La
+hauteur de l'œil se compte donc depuis le relief sous lui (`hauteurDuRelief`). Générer le lien écrit ses entrées en
+console (`[maps-link]`).
+
+Pièges : Street View montre la photo de rue la PLUS
 PROCHE, parfois à quelques mètres (Google la choisit, dans un rayon d'environ 50 m) ; le chargement de Street View
 lui-même prend quelques secondes. Tests : `tests/maps-link.test.mjs`.
 

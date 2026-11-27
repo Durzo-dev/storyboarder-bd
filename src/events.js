@@ -6181,6 +6181,10 @@ document.getElementById('ctxLienMaps').onclick = () => {
   const vue = panel && viewOfPanel(panel, page);
   if (!vue) return;
   const lien = mapsLinkOf(vue);
+  // What the link was made from, for a link that opens elsewhere than the Panel shows.
+  console.info('[maps-link]', JSON.stringify({ vue, lien, camera: { rotX: panel.camRotX, rotY: panel.camRotY, dist: panel.camDist,
+    w: [panel.camWx, panel.camWy, panel.camWz], orbite: [panel._orbitCx, panel._orbitCy, panel._orbitCz], cible: panel.camOrbitTargetId || null },
+  lieu: panel.lieu, case: [panel.w, panel.h], page: [page.w, page.h] }));
   try { navigator.clipboard.writeText(lien); } catch { /* opened all the same */ }
   window.open(lien, '_blank');
 };

@@ -53,6 +53,12 @@ describe('viewOfPanel', () => {
     assert.ok(Math.abs(dx - 50) < 0.5, String(dx));
     assert.deepEqual(orbitCentreOf(panel({ _orbitCx: 1, _orbitCy: NaN, _orbitCz: 3 })), { x: 0, y: 1.6, z: 0 });
   });
+  test('the height counts from the relief under the eye, not from y = 0 (Google\'s `a` is above the ground)', () => {
+    const relief = { pas: 10, x0: -100, z0: -100, nx: 21, nz: 21, h: new Array(21 * 21).fill(8), v: 0 };
+    const plat = viewOfPanel(panel({ camRotX: 0.5, camDist: 40 }), page);
+    const releve = viewOfPanel(panel({ camRotX: 0.5, camDist: 40, relief }), page);
+    assert.ok(Math.abs(plat.height - releve.height - 8) < 0.2, `${plat.height} − ${releve.height}`);
+  });
   test('the content shift carried from the Scene (decalageX) moves the place east', () => {
     const a = viewOfPanel(panel(), page), b = viewOfPanel(panel({ lieu: { ...ETOILE, decalageX: 100 } }), page);
     const dx = projector(ETOILE).toLocal(b).x - projector(ETOILE).toLocal(a).x;
