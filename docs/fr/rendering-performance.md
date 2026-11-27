@@ -19,6 +19,13 @@ du mainteneur.
 - **Le renderer est unique et hors écran**, plafonné à `PANEL_SCENE_RENDER_MAX_PX` (1400 px) : chaque
   consommateur le redimensionne, rend, puis recopie dans un canevas 2D.
 
+## Une Case pas encore rendue
+
+Une Case est rendue par frame (`RENDUS_3D_PAR_FRAME`) ; les autres gardent leur image précédente. Une Case encore
+sans image (une Planche qu'on vient d'ouvrir) est dessinée sous un voile léger avec « Chargement de la scène… »
+(`drawPanelLoading3D`, scene3d.js) : une Case qui porte une Scène lourde attend son tour, puis construit tous ses
+bâtiments en un seul rendu synchrone, la fenêtre figée sur ce voile. Tests : `tests/panel-loading.test.mjs`.
+
 ## Le cache des images de Case
 
 Les images rendues sont gardées dans une liste de récence, sous un **plafond en octets** (« Planches en

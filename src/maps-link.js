@@ -9,11 +9,14 @@
  * orbit target or a selected Element moves it off camWx/Wy/Wz; those are the fallback) at camDist, pitch camRotX (down), yaw camRotY (compass facing =
  * −camRotY), as scene3d.js places it (panelCamBasis3D).
  *
- * Two links, both of Google's official form (`api=1`): Street View (`map_action=pano`: the nearest street photo,
- * faithful at street level) for a camera near the ground; for a camera up in the air, which no street photo shows,
- * the satellite map (`map_action=map`) centred on the ground point the Panel looks at, zoomed to the width it shows.
- * ⚠️ NOT GOOGLE'S 3D LINK (`@lat,lon,{a}a,{y}y,{h}h,{t}t`, unofficial): measured, it takes its lat/lon as the camera
- * and works out the point looked at itself, and opened elsewhere in another browser (decided with Durzo).
+ * Two links: Street View (official `map_action=pano`: the nearest street photo, faithful at street level) for a
+ * camera near the ground; for a camera up in the air, which no street photo shows, the satellite seen STRAIGHT DOWN
+ * over the ground point the Panel looks at, turned to the camera's heading (asked by Durzo: north–south follows the
+ * camera), zoomed to the width the Panel shows.
+ * ⚠️ That one is Google's unofficial form `@lat,lon,{a}a,35y,{h}h,0t` (the official `map_action=map` has no heading).
+ * Measured: the form takes its lat/lon as the CAMERA and works out the point looked at from the tilt; with a TILT OF 0
+ * the camera stands right above that point, so no browser can open it elsewhere (a tilted one opened ~1.5 km off in
+ * Durzo's browser). A browser without Google's 3D keeps north up (measured), the place and zoom unchanged.
  */
 import { projector } from './geo-local.js';
 import { PANEL_CAM_DEFAULT_DIST_3D, WALL_PX_PER_UNIT_3D } from './constants.js';
@@ -25,10 +28,6 @@ import { hauteurDuRelief } from './terrain-relief.js';
  * field is matched to the Panel's instead, so the Panel's height is what the window shows.
  */
 export const MAPS_WINDOW_ASPECT = 16 / 9;
-/** The browser window's width (px) the satellite zoom is reckoned for: a desktop window. */
-export const MAPS_WINDOW_WIDTH_PX = 1600;
-/** Metres per pixel at zoom 0 on the equator (Web Mercator, 256 px tiles). */
-const MERCATOR_M_PER_PX = 156543.03392;
 /** Up to this height (metres), the camera stands in a street: Street View; above, the satellite map. */
 export const STREET_HEIGHT_MAX = 15;
 const DEG = 180 / Math.PI;
@@ -95,16 +94,17 @@ export function streetViewLink(v){
   return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${v.lat},${v.lon}&heading=${v.heading}&pitch=${v.pitch}&fov=${v.fov}`;
 }
 
-/** The map zoom (0-21) that shows `width` metres across MAPS_WINDOW_WIDTH_PX at latitude `lat`, rounded down. */
-export function zoomForWidth(width, lat){
-  const z = Math.log2(MERCATOR_M_PER_PX * Math.cos(lat * Math.PI / 180) * MAPS_WINDOW_WIDTH_PX / Math.max(1, width));
-  return clamp(Math.floor(z), 0, 21);
-}
+/** Ground height shown per metre of `a` in the straight-down view at 35y (measured: 60a showed 41 m). */
+export const TOP_VIEW_M_PER_A = 41 / 60;
 
-/** The satellite map centred on the point the view looks at, as wide as the Panel shows it. */
+/**
+ * The satellite seen straight down over the point the view looks at, turned to its heading, the window
+ * (MAPS_WINDOW_ASPECT) as wide as the ground the Panel shows.
+ */
 export function satelliteLink(v){
   const t = v.target;
-  return `https://www.google.com/maps/@?api=1&map_action=map&center=${t.lat},${t.lon}&zoom=${zoomForWidth(t.width, t.lat)}&basemap=satellite`;
+  const a = Math.max(20, Math.round(t.width / MAPS_WINDOW_ASPECT / TOP_VIEW_M_PER_A));
+  return `https://www.google.com/maps/@${t.lat},${t.lon},${a}a,35y,${v.heading}h,0t/data=!3m1!1e3`;
 }
 
 /** The link that fits the view: Street View in a street, the satellite map from above. */

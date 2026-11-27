@@ -381,17 +381,20 @@ que le dernier rendu l'a résolu : une cible d'orbite ou un Élément sélection
 centre du rendu de la Planche), donné à Google comme champ horizontal d'une fenêtre 16:9 (`MAPS_WINDOW_ASPECT`) : le
 `fov` de Google est la largeur de la fenêtre, et la largeur propre de la Case ouvrait une Case presque carrée trop zoomée. `mapsLinkOf` choisit Street View (`map_action=pano`, forme officielle) jusqu'à
 `STREET_HEIGHT_MAX` mètres, au-dessus, la carte
-satellite (`map_action=map`, forme officielle elle aussi), centrée sur le point du sol au centre de la vue (son axe
-rencontré avec le relief sous l'œil ; vue à l'horizontale ou vers le haut, le centre de l'orbite) et zoomée
-(`zoomForWidth`) pour qu'une fenêtre de `MAPS_WINDOW_WIDTH_PX` montre la largeur de sol que la Case montre là.
+vue satellite à la verticale (`satelliteLink` : `@lat,lon,{a}a,35y,{cap}h,0t`, forme non officielle de Google, la
+forme officielle `map_action=map` n'ayant pas de cap) au-dessus du point du sol au centre de la vue (son axe rencontré
+avec le relief sous l'œil ; vue à l'horizontale ou vers le haut, le centre de l'orbite), tournée au cap de la caméra,
+`a` choisi pour qu'une fenêtre 16:9 montre la largeur de sol que la Case montre là (`TOP_VIEW_M_PER_A`, mesuré : 60a
+montre 41 m). L'inclinaison reste à 0 : la forme prend sa lat/lon pour la caméra, une caméra à la verticale est donc
+au-dessus du point même ; un navigateur sans la 3D de Google garde le nord en haut (mesuré).
 
 Deux usages : l'entrée « Générer le lien Google Maps » du menu de la Case (présente seulement sur une Case qui a un
 lieu) l'ouvre dans le navigateur et le copie ; `exportPage` écrit le lien sous la description de la Case
 (`liensDesCases`, export-credits.js), ou, descriptions désactivées, dans un bloc à part sous les crédits ; en PDF, le
 rectangle de la Case et le lien écrit sont des annotations `/Link` (`buildSinglePageImagePdf(…, liens)`).
 
-Pas le lien 3D de Google (`@lat,lon,{a}a,{y}y,{h}h,{t}t`) : non officiel, il prend sa lat/lon pour la CAMÉRA et
-calcule lui-même le point regardé (mesuré : 100a, 45t, cap 0 ouvre sur le point 100 m au nord), et une Case en
+Jamais de vue inclinée dans cette forme (`{t}t` au-dessus de 0) : elle prend sa lat/lon pour la CAMÉRA et
+calcule elle-même le point regardé (mesuré : 100a, 45t, cap 0 ouvre sur le point 100 m au nord), et une Case en
 plongée s'ouvrait ailleurs dans un autre navigateur. La hauteur de l'œil se compte depuis le relief sous lui
 (`hauteurDuRelief`). Générer le lien écrit ses entrées en console (`[maps-link]`).
 

@@ -8,7 +8,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const { MAPS_WINDOW_ASPECT, hasRealPlace, orbitCentreOf, viewOfPanel, streetViewLink, satelliteLink, zoomForWidth, mapsLinkOf, STREET_HEIGHT_MAX } = await import('../src/maps-link.js');
+const { MAPS_WINDOW_ASPECT, hasRealPlace, orbitCentreOf, viewOfPanel, streetViewLink, satelliteLink, mapsLinkOf, STREET_HEIGHT_MAX } = await import('../src/maps-link.js');
 const { liensDesCases } = await import('../src/export-credits.js');
 const { buildSinglePageImagePdf } = await import('../src/draw.js');
 const { projector } = await import('../src/geo-local.js');
@@ -68,7 +68,7 @@ describe('viewOfPanel', () => {
     assert.ok(Math.abs(Math.hypot(dx, dz) - 100) < 10, String(Math.hypot(dx, dz)));
     assert.ok(Math.abs(((Math.atan2(dx, -dz) * 180 / Math.PI) + 360) % 360 - 150) < 2, 'towards the heading');
     assert.ok(v.target.width > 15 && v.target.width < 40, String(v.target.width));
-    assert.match(mapsLinkOf(v), /map_action=map/);
+    assert.match(mapsLinkOf(v), /@43\.6086\d+,3\.8791\d+,\d+a,35y,150h,0t/);
   });
   test('looking level or up, the orbit centre stands in for the point looked at', () => {
     const v = viewOfPanel(panel({ camRotX: -0.2, _orbitCx: 30, _orbitCy: 2, _orbitCz: 0 }), page);
@@ -98,19 +98,15 @@ describe('the links', () => {
   const v = { lat: 48.87, lon: 2.29, height: 1.6, heading: 45, pitch: -10, fov: 70, vfov: 50 };
   test('Street View: the official pano form', () =>
     assert.equal(streetViewLink(v), 'https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=48.87,2.29&heading=45&pitch=-10&fov=70'));
-  test('the satellite map: official form, centred on the point looked at, its zoom from the width', () =>
+  test('the satellite from above: straight down (0t) over the point looked at, turned to the heading, a from the width', () =>
     assert.equal(satelliteLink({ ...v, target: { lat: 43.6, lon: 3.88, width: 100 } }),
-      'https://www.google.com/maps/@?api=1&map_action=map&center=43.6,3.88&zoom=20&basemap=satellite'));
-  test('the zoom: one step out per doubled width, within 0-21', () => {
-    assert.equal(zoomForWidth(200, 43.6), zoomForWidth(100, 43.6) - 1);
-    assert.equal(zoomForWidth(1, 0), 21);
-    assert.equal(zoomForWidth(1e9, 0), 0);
-  });
+      'https://www.google.com/maps/@43.6,3.88,82a,35y,45h,0t/data=!3m1!1e3'));
+  test('never tilted: a tilted view is placed by Google from the camera, and opened elsewhere', () =>
+    assert.match(satelliteLink({ ...v, heading: 150, target: { lat: 1, lon: 2, width: 5 } }), /,20a,35y,150h,0t\//));
   test('street height → Street View, above → the satellite map (never Google\'s unofficial 3D link)', () => {
     assert.match(mapsLinkOf(v), /map_action=pano/);
     const haut = mapsLinkOf({ ...v, height: STREET_HEIGHT_MAX + 1, target: { lat: 1, lon: 2, width: 50 } });
-    assert.match(haut, /map_action=map&center=1,2&/);
-    assert.doesNotMatch(haut, /\dt\/data=/);
+    assert.match(haut, /@1,2,\d+a,35y,45h,0t\/data=/);
   });
 });
 

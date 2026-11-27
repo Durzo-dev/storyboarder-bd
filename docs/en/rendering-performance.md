@@ -18,6 +18,13 @@ fixing. The detailed measurement campaigns are in the maintainer's private docum
 - **The renderer is single and off-screen**, capped at `PANEL_SCENE_RENDER_MAX_PX` (1400 px): each
   consumer resizes it, renders, then copies into a 2D canvas.
 
+## A Panel not rendered yet
+
+One Panel is rendered per frame (`RENDUS_3D_PAR_FRAME`); the others keep their previous image. A Panel with no image
+yet (a Page just opened) is drawn as a light veil with « Loading the scene… » (`drawPanelLoading3D`, scene3d.js):
+a Panel holding a heavy Scene waits its turn, then builds every building in one synchronous render, the window
+frozen on that veil. Tests: `tests/panel-loading.test.mjs`.
+
 ## The Panel image cache
 
 Rendered images are kept in a recency list, under a **byte cap** ("Pages kept in memory" in Settings,

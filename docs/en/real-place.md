@@ -353,16 +353,19 @@ the last render resolved it: an orbit target or a selected Element moves it; `ca
 (Street View counts up), field = the Page's (`framePanelCamera3D`) narrowed to the Panel's height (it crops the centre of
 the Page's render), given to Google as the horizontal field of a 16:9 window (`MAPS_WINDOW_ASPECT`): Google's `fov`
 is the window's width, and the Panel's own width made a near-square Panel open zoomed in. `mapsLinkOf` picks Street View (`map_action=pano`, official form) up to `STREET_HEIGHT_MAX` metres, above, the
-satellite map (`map_action=map`, official form too), centred on the ground point at the centre of the view (its axis
-met with the relief under the eye; looking level or up, the orbit centre) and zoomed (`zoomForWidth`) so that a
-`MAPS_WINDOW_WIDTH_PX` window shows the width of ground the Panel shows there.
+satellite seen straight down (`satelliteLink`: `@lat,lon,{a}a,35y,{heading}h,0t`, Google's unofficial form, the
+official `map_action=map` having no heading) over the ground point at the centre of the view (its axis met with the
+relief under the eye; looking level or up, the orbit centre), turned to the camera's heading, `a` set so that a 16:9
+window shows the width of ground the Panel shows there (`TOP_VIEW_M_PER_A`, measured: 60a shows 41 m). The tilt stays
+0: the form takes its lat/lon as the camera, so a straight-down camera stands over the very point; a browser without
+Google's 3D keeps north up (measured).
 
 Two uses: the Panel menu's « Generate the Google Maps link » (present only on a Panel with a place) opens it in the
 browser and copies it; `exportPage` prints the link under that Panel's description (`liensDesCases`,
 export-credits.js), or, the descriptions turned off, in a block of its own under the credits; in a PDF, the Panel's
 rectangle and the printed link are `/Link` annotations (`buildSinglePageImagePdf(…, liens)`).
 
-Not Google's 3D link (`@lat,lon,{a}a,{y}y,{h}h,{t}t`): it is unofficial, takes its lat/lon as the CAMERA and works
+Never a tilted view in that form (`{t}t` above 0): it takes its lat/lon as the CAMERA and works
 out the point looked at itself (measured: 100a, 45t, heading 0 opens on the point 100 m north), and a high-angle
 Panel opened on another place in another browser. The eye's height counts from the relief under it
 (`hauteurDuRelief`). Generating the link logs its inputs to the console (`[maps-link]`).

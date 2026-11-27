@@ -1557,8 +1557,10 @@ describe('#405d : une frame ne reconstruit qu\'une Case', () => {
     // de la Planche, pas seulement la Case concernée.
     const i = SCENE.indexOf('export function drawPanelScene3D');
     const corps = SCENE.slice(i, SCENE.indexOf('\n}', i));
-    assert.match(corps, /if \(!rendu\) return;/, 'un report lèverait au lieu de sauter la Case');
-    assert.ok(corps.indexOf('if (!rendu) return;') < corps.indexOf('const { canvas: cnv'),
+    // The guard now draws the « Loading » veil before leaving (tests/panel-loading.test.mjs).
+    const garde = 'if (!rendu) { drawPanelLoading3D(c, panel); return; }';
+    assert.ok(corps.includes(garde), 'un report lèverait au lieu de sauter la Case');
+    assert.ok(corps.indexOf(garde) < corps.indexOf('const { canvas: cnv'),
       'la garde est APRÈS la déstructuration : elle ne protège rien');
   });
 

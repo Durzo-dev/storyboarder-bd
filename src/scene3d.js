@@ -38,7 +38,7 @@ import {
 // imported, a guaranteed ReferenceError on that path. Trace creation normally fills wallHeight in
 // from these very defaults, which is why it stayed hidden.
 import { clamp, getElementDepth, wrapAngle, tracéBBox, estHorsChamp3D } from './utils.js';
-import { S, currentPage } from './state.js';
+import { S, currentPage, tr } from './state.js';
 // L'éclairage réglé sur une Case : la DÉCISION vit dans lighting-3d.js, pure et testée ; ici on ne
 // fait que l'appliquer. Cf. docs/en/lighting.md.
 import { resoudreEclairage3D, lumiereDeCase3D } from './lighting-3d.js';
@@ -3980,9 +3980,10 @@ export function drawPanelScene3D(c, panel, page, styleKey, scale = 1){
   const style = resolveStyle3D(styleKey);
   const rendu = renderPanelScene3D(panel, page, style, scale);
   // `null` veut dire « remis à plus tard » (budget de la frame épuisé, et aucune image antérieure).
-  // On ne dessine rien : la Case reste à son fond et à sa bordure, et se remplira à la frame
-  // suivante. Sans cette garde, la déstructuration ci-dessous lèverait et emporterait tout le dessin.
-  if (!rendu) return;
+  // Sans cette garde, la déstructuration ci-dessous lèverait et emporterait tout le dessin.
+  // The Panel says it is loading (asked by Durzo: a Panel holding a heavy Scene stayed blank for seconds, its
+  // render waiting its turn, then building every building in one go, the window frozen on this very image).
+  if (!rendu) { drawPanelLoading3D(c, panel); return; }
   const { canvas: cnv, rw, rh } = rendu;
   // Crop (never stretch): the camera (see framePanelCamera3D) always aims at the Panel's OWN
   // center, so that center falls exactly at the center of the rendered bitmap (rw x rh), the
@@ -4001,6 +4002,22 @@ export function drawPanelScene3D(c, panel, page, styleKey, scale = 1){
   // displayed in the side panel's Camera menu (see renderSideCameraGizmo), per user
   // request ("the 3D gizmo should no longer show at the bottom-left of a Panel but in the
   // Camera menu").
+}
+
+/**
+ * A Panel whose 3D image is not made yet: a light veil and « Loading… » in its middle, sized to the Panel. The window
+ * may freeze on it while the Scene is built (renderPanelScene3D, one synchronous render): it is what stays seen.
+ */
+export function drawPanelLoading3D(c, panel){
+  const size = Math.max(10, Math.min(28, Math.min(panel.w, panel.h) / 10));
+  c.save();
+  c.fillStyle = 'rgba(128, 128, 128, 0.12)';
+  c.fillRect(panel.x, panel.y, panel.w, panel.h);
+  c.fillStyle = '#6b6b6b';
+  c.font = `${Math.round(size)}px system-ui, sans-serif`;
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText(tr('Loading the scene…', 'Chargement de la scène…'), panel.x + panel.w / 2, panel.y + panel.h / 2);
+  c.restore();
 }
 
 // Reconstructs the orthonormal basis (right/up/backward, in WORLD coordinates) of a Panel's orbital
