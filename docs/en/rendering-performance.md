@@ -21,9 +21,9 @@ fixing. The detailed measurement campaigns are in the maintainer's private docum
 ## A Panel not rendered yet
 
 One Panel is rendered per frame (`RENDUS_3D_PAR_FRAME`); the others keep their previous image. A Panel with no image
-yet (a Page just opened) is drawn as a light veil with « Loading the scene… » (`drawPanelLoading3D`, scene3d.js):
+yet (a Page just opened) is drawn on an opaque light background with « Loading the scene… », kept clear of its sides (`drawPanelLoading3D`, scene3d.js):
 a Panel holding a heavy Scene waits its turn, then builds every building in one synchronous render, the window
-frozen on that veil. Tests: `tests/panel-loading.test.mjs`.
+frozen on it. Tests: `tests/panel-loading.test.mjs`.
 
 ## The Panel image cache
 

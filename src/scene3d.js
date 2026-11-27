@@ -4005,18 +4005,25 @@ export function drawPanelScene3D(c, panel, page, styleKey, scale = 1){
 }
 
 /**
- * A Panel whose 3D image is not made yet: a light veil and « Loading… » in its middle, sized to the Panel. The window
+ * A Panel whose 3D image is not made yet: an opaque light background and « Loading the scene… » in its middle, kept
+ * clear of its sides. The window
  * may freeze on it while the Scene is built (renderPanelScene3D, one synchronous render): it is what stays seen.
  */
 export function drawPanelLoading3D(c, panel){
-  const size = Math.max(10, Math.min(28, Math.min(panel.w, panel.h) / 10));
+  const label = tr('Loading the scene…', 'Chargement de la scène…');
+  // A margin on each side (asked by Durzo: the text touched the Panel's edges), the font shrunk to fit within it.
+  const margin = Math.max(8, panel.w * 0.08);
+  let size = Math.max(10, Math.min(28, Math.min(panel.w, panel.h) / 10));
   c.save();
-  c.fillStyle = 'rgba(128, 128, 128, 0.12)';
+  // Opaque (asked by Durzo): what lies under the Panel does not show through.
+  c.fillStyle = '#efefef';
   c.fillRect(panel.x, panel.y, panel.w, panel.h);
   c.fillStyle = '#6b6b6b';
-  c.font = `${Math.round(size)}px system-ui, sans-serif`;
   c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillText(tr('Loading the scene…', 'Chargement de la scène…'), panel.x + panel.w / 2, panel.y + panel.h / 2);
+  c.font = `${Math.round(size)}px system-ui, sans-serif`;
+  const width = c.measureText(label).width, room = panel.w - 2 * margin;
+  if (width > room && width > 0) { size = Math.max(8, size * room / width); c.font = `${Math.round(size)}px system-ui, sans-serif`; }
+  c.fillText(label, panel.x + panel.w / 2, panel.y + panel.h / 2);
   c.restore();
 }
 

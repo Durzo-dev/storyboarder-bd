@@ -22,9 +22,9 @@ du mainteneur.
 ## Une Case pas encore rendue
 
 Une Case est rendue par frame (`RENDUS_3D_PAR_FRAME`) ; les autres gardent leur image précédente. Une Case encore
-sans image (une Planche qu'on vient d'ouvrir) est dessinée sous un voile léger avec « Chargement de la scène… »
+sans image (une Planche qu'on vient d'ouvrir) est dessinée sur un fond clair opaque avec « Chargement de la scène… », à distance de ses bords
 (`drawPanelLoading3D`, scene3d.js) : une Case qui porte une Scène lourde attend son tour, puis construit tous ses
-bâtiments en un seul rendu synchrone, la fenêtre figée sur ce voile. Tests : `tests/panel-loading.test.mjs`.
+bâtiments en un seul rendu synchrone, la fenêtre figée dessus. Tests : `tests/panel-loading.test.mjs`.
 
 ## Le cache des images de Case
 

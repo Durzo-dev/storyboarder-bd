@@ -380,23 +380,23 @@ que le dernier rendu l'a résolu : une cible d'orbite ou un Élément sélection
 (Street View compte vers le haut), champ = celui de la Planche (`framePanelCamera3D`) réduit à la hauteur de la Case (elle recadre le
 centre du rendu de la Planche), donné à Google comme champ horizontal d'une fenêtre 16:9 (`MAPS_WINDOW_ASPECT`) : le
 `fov` de Google est la largeur de la fenêtre, et la largeur propre de la Case ouvrait une Case presque carrée trop zoomée. `mapsLinkOf` choisit Street View (`map_action=pano`, forme officielle) jusqu'à
-`STREET_HEIGHT_MAX` mètres, au-dessus, la carte
-vue satellite à la verticale (`satelliteLink` : `@lat,lon,{a}a,35y,{cap}h,0t`, forme non officielle de Google, la
-forme officielle `map_action=map` n'ayant pas de cap) au-dessus du point du sol au centre de la vue (son axe rencontré
-avec le relief sous l'œil ; vue à l'horizontale ou vers le haut, le centre de l'orbite), tournée au cap de la caméra,
-`a` choisi pour qu'une fenêtre 16:9 montre la largeur de sol que la Case montre là (`TOP_VIEW_M_PER_A`, mesuré : 60a
-montre 41 m). L'inclinaison reste à 0 : la forme prend sa lat/lon pour la caméra, une caméra à la verticale est donc
-au-dessus du point même ; un navigateur sans la 3D de Google garde le nord en haut (mesuré).
+`STREET_HEIGHT_MAX` mètres, au-dessus, Google
+Earth (`earthLink` : `earth.google.com/web/@lat,lon,{alt}a,{distance}d,{champ}y,{cap}h,{inclinaison}t,0r`), toujours en
+3D et caméra en orbite comme la nôtre : le point du sol au centre de la vue (son axe rencontré avec le relief sous
+l'œil ; vue à l'horizontale ou vers le haut, le centre de l'orbite), son altitude au-dessus de la mer (l'`altitude` du
+relief plus le sol à cet endroit, mesuré : Earth compte `a` ainsi), la distance jusqu'à lui, le cap, l'inclinaison
+(0 à la verticale, 90 à l'horizontale). Earth garde la caméra et recale le point sur son propre sol 3D (mesuré).
 
 Deux usages : l'entrée « Générer le lien Google Maps » du menu de la Case (présente seulement sur une Case qui a un
 lieu) l'ouvre dans le navigateur et le copie ; `exportPage` écrit le lien sous la description de la Case
 (`liensDesCases`, export-credits.js), ou, descriptions désactivées, dans un bloc à part sous les crédits ; en PDF, le
 rectangle de la Case et le lien écrit sont des annotations `/Link` (`buildSinglePageImagePdf(…, liens)`).
 
-Jamais de vue inclinée dans cette forme (`{t}t` au-dessus de 0) : elle prend sa lat/lon pour la CAMÉRA et
-calcule elle-même le point regardé (mesuré : 100a, 45t, cap 0 ouvre sur le point 100 m au nord), et une Case en
-plongée s'ouvrait ailleurs dans un autre navigateur. La hauteur de l'œil se compte depuis le relief sous lui
-(`hauteurDuRelief`). Générer le lien écrit ses entrées en console (`[maps-link]`).
+Pas Google Maps vu d'en haut (mesuré) : sa forme 3D (`@lat,lon,{a}a,{y}y,{h}h,{t}t`) prend sa lat/lon pour la CAMÉRA
+et calcule elle-même le point regardé (100a, 45t, cap 0 ouvre sur le point 100 m au nord), une Case en plongée
+s'ouvrait à ~1,5 km dans un autre navigateur, et un navigateur sans sa 3D l'aplatit en carte nord en haut, sans le
+cap. La hauteur de l'œil se compte depuis le relief sous lui (`hauteurDuRelief`). Générer le lien écrit ses entrées
+en console (`[maps-link]`).
 
 Pièges : Street View montre la photo de rue la PLUS
 PROCHE, parfois à quelques mètres (Google la choisit, dans un rayon d'environ 50 m) ; le chargement de Street View

@@ -352,23 +352,23 @@ the last render resolved it: an orbit target or a selected Element moves it; `ca
 (`panelCamBasis3D`) times camDist, projected back with `projector(lieu).toGeo`; heading = −camRotY, pitch = −camRotX
 (Street View counts up), field = the Page's (`framePanelCamera3D`) narrowed to the Panel's height (it crops the centre of
 the Page's render), given to Google as the horizontal field of a 16:9 window (`MAPS_WINDOW_ASPECT`): Google's `fov`
-is the window's width, and the Panel's own width made a near-square Panel open zoomed in. `mapsLinkOf` picks Street View (`map_action=pano`, official form) up to `STREET_HEIGHT_MAX` metres, above, the
-satellite seen straight down (`satelliteLink`: `@lat,lon,{a}a,35y,{heading}h,0t`, Google's unofficial form, the
-official `map_action=map` having no heading) over the ground point at the centre of the view (its axis met with the
-relief under the eye; looking level or up, the orbit centre), turned to the camera's heading, `a` set so that a 16:9
-window shows the width of ground the Panel shows there (`TOP_VIEW_M_PER_A`, measured: 60a shows 41 m). The tilt stays
-0: the form takes its lat/lon as the camera, so a straight-down camera stands over the very point; a browser without
-Google's 3D keeps north up (measured).
+is the window's width, and the Panel's own width made a near-square Panel open zoomed in. `mapsLinkOf` picks Street View (`map_action=pano`, official form) up to `STREET_HEIGHT_MAX` metres, above, Google
+Earth (`earthLink`: `earth.google.com/web/@lat,lon,{alt}a,{range}d,{fov}y,{heading}h,{tilt}t,0r`), always in 3D and
+an orbit camera like ours: the ground point at the centre of the view (its axis met with the relief under the eye;
+looking level or up, the orbit centre), its altitude above sea level (the relief's `altitude` plus the ground there,
+measured: Earth counts `a` so), the distance to it, the heading, the tilt (0 straight down, 90 level). Earth keeps the
+camera and settles the point on its own 3D ground (measured).
 
 Two uses: the Panel menu's « Generate the Google Maps link » (present only on a Panel with a place) opens it in the
 browser and copies it; `exportPage` prints the link under that Panel's description (`liensDesCases`,
 export-credits.js), or, the descriptions turned off, in a block of its own under the credits; in a PDF, the Panel's
 rectangle and the printed link are `/Link` annotations (`buildSinglePageImagePdf(…, liens)`).
 
-Never a tilted view in that form (`{t}t` above 0): it takes its lat/lon as the CAMERA and works
-out the point looked at itself (measured: 100a, 45t, heading 0 opens on the point 100 m north), and a high-angle
-Panel opened on another place in another browser. The eye's height counts from the relief under it
-(`hauteurDuRelief`). Generating the link logs its inputs to the console (`[maps-link]`).
+Not Google Maps from above (measured): its 3D form (`@lat,lon,{a}a,{y}y,{h}h,{t}t`) takes its lat/lon as the CAMERA
+and works out the point looked at itself (100a, 45t, heading 0 opens on the point 100 m north), a high-angle Panel
+opened ~1.5 km off in another browser, and a browser without its 3D flattens it to a north-up map, losing the
+heading. The eye's height counts from the relief under it (`hauteurDuRelief`). Generating the link logs its inputs to
+the console (`[maps-link]`).
 
 Pitfalls: Street View shows the NEAREST street photo, which
 may be some metres off (Google picks it, within about 50 m); Street View's own loading takes a few seconds. Tests: `tests/maps-link.test.mjs`.

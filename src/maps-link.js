@@ -10,13 +10,13 @@
  * −camRotY), as scene3d.js places it (panelCamBasis3D).
  *
  * Two links: Street View (official `map_action=pano`: the nearest street photo, faithful at street level) for a
- * camera near the ground; for a camera up in the air, which no street photo shows, the satellite seen STRAIGHT DOWN
- * over the ground point the Panel looks at, turned to the camera's heading (asked by Durzo: north–south follows the
- * camera), zoomed to the width the Panel shows.
- * ⚠️ That one is Google's unofficial form `@lat,lon,{a}a,35y,{h}h,0t` (the official `map_action=map` has no heading).
- * Measured: the form takes its lat/lon as the CAMERA and works out the point looked at from the tilt; with a TILT OF 0
- * the camera stands right above that point, so no browser can open it elsewhere (a tilted one opened ~1.5 km off in
- * Durzo's browser). A browser without Google's 3D keeps north up (measured), the place and zoom unchanged.
+ * camera near the ground; for a camera up in the air, which no street photo shows, GOOGLE EARTH (web), which is
+ * always in 3D: `earth.google.com/web/@lat,lon,{alt}a,{range}d,{fov}y,{heading}h,{tilt}t,0r`, an orbit camera like
+ * ours (the point looked at, the distance to it, the heading, the tilt: 0 straight down, 90 level).
+ * ⚠️ NOT GOOGLE MAPS from above (measured with Durzo): its 3D form takes its lat/lon as the camera (a tilted view
+ * opened ~1.5 km off in his browser), and any browser without its 3D flattens it to a north-up map, so the camera's
+ * heading is lost. Measured on Earth: `a` is the point's altitude ABOVE SEA LEVEL (the relief's `altitude`); Earth
+ * keeps the camera and settles the point on its own 3D ground.
  */
 import { projector } from './geo-local.js';
 import { PANEL_CAM_DEFAULT_DIST_3D, WALL_PX_PER_UNIT_3D } from './constants.js';
@@ -76,11 +76,15 @@ export function viewOfPanel(panel, page){
   const seen = t && t > 0 ? { x: eye.x + f.x * t, z: eye.z + f.z * t } : { x: c.x, z: c.z };
   const range = t && t > 0 ? t : d;
   const seenGeo = projector(panel.lieu).toGeo({ x: seen.x + (Number(panel.lieu.decalageX) || 0), z: seen.z });
+  // Its altitude above sea level, as Earth counts it: the relief's base plus the ground (or the orbit's centre).
+  const base = panel.relief && Number.isFinite(panel.relief.altitude) ? panel.relief.altitude : 0;
+  const seenY = t && t > 0 ? (panel.relief ? hauteurDuRelief(panel.relief, seen.x, seen.z) : 0) : c.y;
   // The width of ground the Panel shows there: its own horizontal field (it crops the Page's render) at that range.
   const hfovCase = 2 * Math.atan(Math.tan(vfov / 2) * ((panel.w || page.w) / page.h));
   const width = 2 * range * Math.tan(hfovCase / 2);
   return {
-    target: { lat: round(seenGeo.lat, 6), lon: round(seenGeo.lon, 6), width: round(width, 1) },
+    target: { lat: round(seenGeo.lat, 6), lon: round(seenGeo.lon, 6), width: round(width, 1), range: round(range, 1),
+      altitude: round(base + seenY, 1) },
     lat: round(geo.lat, 6), lon: round(geo.lon, 6),
     // Above the ground under the eye (the relief, in the Panel's frame), as Google counts its `a` (measured).
     height: round(Math.max(1, eye.y - (panel.relief ? hauteurDuRelief(panel.relief, eye.x, eye.z) : 0)), 1),
@@ -94,18 +98,12 @@ export function streetViewLink(v){
   return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${v.lat},${v.lon}&heading=${v.heading}&pitch=${v.pitch}&fov=${v.fov}`;
 }
 
-/** Ground height shown per metre of `a` in the straight-down view at 35y (measured: 60a showed 41 m). */
-export const TOP_VIEW_M_PER_A = 41 / 60;
-
-/**
- * The satellite seen straight down over the point the view looks at, turned to its heading, the window
- * (MAPS_WINDOW_ASPECT) as wide as the ground the Panel shows.
- */
-export function satelliteLink(v){
+/** Google Earth (web, always 3D), the camera orbiting the point the view looks at as the Panel's does. */
+export function earthLink(v){
   const t = v.target;
-  const a = Math.max(20, Math.round(t.width / MAPS_WINDOW_ASPECT / TOP_VIEW_M_PER_A));
-  return `https://www.google.com/maps/@${t.lat},${t.lon},${a}a,35y,${v.heading}h,0t/data=!3m1!1e3`;
+  const tilt = clamp(90 + v.pitch, 0, 90);
+  return `https://earth.google.com/web/@${t.lat},${t.lon},${t.altitude}a,${t.range}d,${v.fov}y,${v.heading}h,${tilt}t,0r`;
 }
 
-/** The link that fits the view: Street View in a street, the satellite map from above. */
-export const mapsLinkOf = (v) => (v.height <= STREET_HEIGHT_MAX ? streetViewLink(v) : satelliteLink(v));
+/** The link that fits the view: Street View in a street, Google Earth from above. */
+export const mapsLinkOf = (v) => (v.height <= STREET_HEIGHT_MAX ? streetViewLink(v) : earthLink(v));
