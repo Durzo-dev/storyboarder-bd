@@ -374,21 +374,22 @@ Une Scène venue d'un lieu réel le garde sur son panneau (`lieu` : lat, lon de 
 cette Scène dans une Case (`loadSceneIntoPanel`, scenes.js) le recopie, avec `decalageX` le décalage en X pris par le
 contenu pour être centré (un point de la Case en x est le x de la Scène + decalageX) ; une Scène sans lieu l'efface.
 
-`src/maps-link.js` (pur) fait de la caméra de la Case un lieu : l'œil est la cible de l'orbite plus le vecteur arrière
+`src/maps-link.js` (pur) fait de la caméra de la Case un lieu : l'œil est le centre de l'orbite (`_orbitCx/Cy/Cz`, tel
+que le dernier rendu l'a résolu : une cible d'orbite ou un Élément sélectionné le déplace ; `camWx/Wy/Wz` sinon) plus le vecteur arrière
 (`panelCamBasis3D`) fois camDist, reprojeté par `projector(lieu).toGeo` ; cap = −camRotY, inclinaison = −camRotX
 (Street View compte vers le haut), champ = celui de la Planche (`framePanelCamera3D`) réduit à la Case, qui recadre le
-rendu de la Planche. `mapsLinkOf` choisit Street View (`map_action=pano`, forme officielle) jusqu'à
+centre du rendu de la Planche. `mapsLinkOf` choisit Street View (`map_action=pano`, forme officielle) jusqu'à
 `STREET_HEIGHT_MAX` mètres, la vue 3D de Google (`@lat,lon,{alt}a,{fov}y,{heading}h,{tilt}t/data=!3m1!1e3`, non
 officielle mais stable) au-dessus.
 
 Deux usages : l'entrée « Générer le lien Google Maps » du menu de la Case (présente seulement sur une Case qui a un
-lieu) l'ouvre dans le navigateur et le copie ; `exportPage` liste une ligne par Case concernée sous la Planche
-(`liensDesCases`, export-credits.js, toujours, comme les crédits) et, en PDF, fait du rectangle de chaque Case une
-annotation `/Link` (`buildSinglePageImagePdf(…, liens)`).
+lieu) l'ouvre dans le navigateur et le copie ; `exportPage` écrit le lien sous la description de la Case
+(`liensDesCases`, export-credits.js), ou, descriptions désactivées, dans un bloc à part sous les crédits ; en PDF, le
+rectangle de la Case et le lien écrit sont des annotations `/Link` (`buildSinglePageImagePdf(…, liens)`).
 
 Pièges : la hauteur de l'œil se compte depuis y = 0, pas depuis le relief ; Street View montre la photo de rue la PLUS
-PROCHE, parfois à quelques mètres ; une Case loin du centre de la Planche regarde un peu à côté de l'axe de la caméra,
-ce que le lien ne suit pas. Tests : `tests/maps-link.test.mjs`.
+PROCHE, parfois à quelques mètres (Google la choisit, dans un rayon d'environ 50 m) ; le chargement de Street View
+lui-même prend quelques secondes. Tests : `tests/maps-link.test.mjs`.
 
 ## Les sources par pays
 

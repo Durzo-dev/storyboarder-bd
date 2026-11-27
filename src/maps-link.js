@@ -5,7 +5,8 @@
  *
  * A Scene made from a real place keeps it (`panel.lieu`: lat, lon of its centre); a Panel loading that Scene keeps it
  * too, with the shift its content took (`decalageX`, metres: loadSceneIntoPanel centres the content in X). The
- * camera: an orbit around (camWx, camWy, camWz) at camDist, pitch camRotX (down), yaw camRotY (compass facing =
+ * camera: an orbit around its resolved centre (`_orbitCx/Cy/Cz`, written by framePanelCamera3D at each render: an
+ * orbit target or a selected Element moves it off camWx/Wy/Wz; those are the fallback) at camDist, pitch camRotX (down), yaw camRotY (compass facing =
  * −camRotY), as scene3d.js places it (panelCamBasis3D).
  *
  * Two links: Street View (`map_action=pano`: the nearest street photo, faithful at street level) for a camera near
@@ -27,6 +28,13 @@ export function hasRealPlace(panel){
   return !!(l && Number.isFinite(l.lat) && Number.isFinite(l.lon));
 }
 
+/** The centre the camera orbits, as the render resolved it, else the free orbit's (camWx/Wy/Wz). */
+export function orbitCentreOf(panel){
+  const resolved = ['_orbitCx', '_orbitCy', '_orbitCz'].every(k => Number.isFinite(panel[k]));
+  return resolved ? { x: panel._orbitCx, y: panel._orbitCy, z: panel._orbitCz }
+    : { x: Number(panel.camWx) || 0, y: Number(panel.camWy) || 0, z: Number(panel.camWz) || 0 };
+}
+
 /**
  * The Panel's view as a place: `{ lat, lon, height, heading, pitch, fov }` (height metres above the ground, heading
  * compass degrees, pitch degrees UP as Street View counts it, fov the Panel's horizontal field), or null. `page`:
@@ -36,10 +44,11 @@ export function viewOfPanel(panel, page){
   if (!hasRealPlace(panel)) return null;
   const p = Number(panel.camRotX) || 0, y = Number(panel.camRotY) || 0;
   const d = Number(panel.camDist) > 0 ? Number(panel.camDist) : PANEL_CAM_DEFAULT_DIST_3D;
+  const c = orbitCentreOf(panel);
   const eye = {
-    x: (Number(panel.camWx) || 0) + d * Math.cos(p) * Math.sin(y),
-    y: (Number(panel.camWy) || 0) + d * Math.sin(p),
-    z: (Number(panel.camWz) || 0) + d * Math.cos(p) * Math.cos(y),
+    x: c.x + d * Math.cos(p) * Math.sin(y),
+    y: c.y + d * Math.sin(p),
+    z: c.z + d * Math.cos(p) * Math.cos(y),
   };
   const geo = projector(panel.lieu).toGeo({ x: eye.x + (Number(panel.lieu.decalageX) || 0), z: eye.z });
   const halfH = (page.h / WALL_PX_PER_UNIT_3D) / 2;

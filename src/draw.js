@@ -2945,13 +2945,20 @@ export async function exportPage(volumeIdx, pageIdx, format = 'png'){
   const contentWidth = pageW - padX * 2;
   const measureCtx = document.createElement('canvas').getContext('2d');
   let infoHeight = 0;
+  // #492: a Panel showing a real place has its Google Maps link right under its description (asked by Durzo).
+  const lienSize = 17;
+  const liens = liensDesCases(page, panelsInPage(page).slice().sort((a, b) => (a.caseNumber || 0) - (b.caseNumber || 0)), S.appLang);
+  const lienDe = new Map(liens.map(l => [l.panel.id, l]));
   const panelBlocks = panels.map(p => {
     const title = `${S.appLang === 'en' ? 'Panel' : 'Case'} ${p.caseNumber || '?'}`;
     measureCtx.font = `${descSize}px system-ui, sans-serif`;
     const lines = wrapTextLines(measureCtx, p.description || noDescriptionLabel(), contentWidth);
-    const blockHeight = titleSize + 8 + lines.length * (descSize + lineGap);
+    measureCtx.font = `${lienSize}px system-ui, sans-serif`;
+    const l = lienDe.get(p.id);
+    const lienLines = l ? replierLigne(x => measureCtx.measureText(x).width, `Google Maps : ${l.lien}`, contentWidth) : [];
+    const blockHeight = titleSize + 8 + lines.length * (descSize + lineGap) + lienLines.length * (lienSize + lineGap);
     infoHeight += blockHeight + gapBetween;
-    return { title, lines, blockHeight };
+    return { title, lines, lienLines, lien: l && l.lien, blockHeight };
   });
   if (panels.length) infoHeight += padTop + padBottom - gapBetween;
 
@@ -2997,11 +3004,10 @@ export async function exportPage(volumeIdx, pageIdx, format = 'png'){
     creditBlocs.push(lignes);
   }
   if (creditBlocs.length) creditsHeight += padTop + creditTitre + 10 + padBottom - creditEcart;
-  // #492: the Panels showing a real place, their Google Maps link (maps-link.js), always (like the credits): a line
-  // each under the Page, and in the PDF the Panel itself clickable.
-  const liens = liensDesCases(page, panelsInPage(page).slice().sort((a, b) => (a.caseNumber || 0) - (b.caseNumber || 0)), S.appLang);
+  // #492: the descriptions turned off (Settings), the links get their own block under the credits, so an export
+  // never loses them; in the PDF, each such Panel is clickable either way.
   let liensHeight = 0;
-  const lienBlocs = liens.map(l => {
+  const lienBlocs = (panels.length ? [] : liens).map(l => {
     measureCtx.font = `${creditTaille}px system-ui, sans-serif`;
     const lignes = replierLigne(x => measureCtx.measureText(x).width, l.ligne, contentWidth);
     liensHeight += lignes.length * (creditTaille + creditInterligne) + creditEcart;
@@ -3014,6 +3020,7 @@ export async function exportPage(volumeIdx, pageIdx, format = 'png'){
   const octx = off.getContext('2d');
   octx.drawImage(planche, 0, 0);
 
+  const zonesDesLiens = [];
   if (panels.length) {
     octx.save();
     octx.fillStyle = '#fff';
@@ -3033,6 +3040,15 @@ export async function exportPage(volumeIdx, pageIdx, format = 'png'){
       block.lines.forEach(line => {
         cy += descSize;
         octx.fillText(line, padX, cy);
+        cy += lineGap;
+      });
+      octx.font = `${lienSize}px system-ui, sans-serif`;
+      octx.fillStyle = '#1a56c4';
+      block.lienLines.forEach(line => {
+        cy += lienSize;
+        octx.fillText(line, padX, cy);
+        // In the PDF, the printed link is clickable too.
+        zonesDesLiens.push({ x: padX, y: cy - lienSize, w: octx.measureText(line).width, h: lienSize + lineGap, uri: block.lien });
         cy += lineGap;
       });
       cy += gapBetween;
@@ -3085,7 +3101,8 @@ export async function exportPage(volumeIdx, pageIdx, format = 'png'){
   }
 
   if (format === 'pdf') {
-    const zones = liens.map(l => ({ x: l.panel.x * exportScale, y: l.panel.y * exportScale, w: l.panel.w * exportScale, h: l.panel.h * exportScale, uri: l.lien }));
+    const zones = liens.map(l => ({ x: l.panel.x * exportScale, y: l.panel.y * exportScale, w: l.panel.w * exportScale, h: l.panel.h * exportScale, uri: l.lien }))
+      .concat(zonesDesLiens);
     downloadCanvasAsPdf(off, `tome-${volumeIdx + 1}-planche-${pageIdx + 1}.pdf`, zones);
     return null;
   }

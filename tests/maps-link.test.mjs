@@ -8,7 +8,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const { hasRealPlace, viewOfPanel, streetViewLink, view3dLink, mapsLinkOf, STREET_HEIGHT_MAX } = await import('../src/maps-link.js');
+const { hasRealPlace, orbitCentreOf, viewOfPanel, streetViewLink, view3dLink, mapsLinkOf, STREET_HEIGHT_MAX } = await import('../src/maps-link.js');
 const { liensDesCases } = await import('../src/export-credits.js');
 const { buildSinglePageImagePdf } = await import('../src/draw.js');
 const { projector } = await import('../src/geo-local.js');
@@ -45,6 +45,13 @@ describe('viewOfPanel', () => {
     const v = viewOfPanel(panel({ camRotX: Math.PI / 6, camDist: 100 }), page);
     assert.equal(v.pitch, -30);
     assert.ok(v.height > 50);
+  });
+  test('the centre the render resolved (an orbit target, a selected Element) wins over camWx/Wy/Wz', () => {
+    const libre = viewOfPanel(panel(), page);
+    const cible = viewOfPanel(panel({ _orbitCx: 50, _orbitCy: 1.6, _orbitCz: 0 }), page);
+    const dx = projector(ETOILE).toLocal(cible).x - projector(ETOILE).toLocal(libre).x;
+    assert.ok(Math.abs(dx - 50) < 0.5, String(dx));
+    assert.deepEqual(orbitCentreOf(panel({ _orbitCx: 1, _orbitCy: NaN, _orbitCz: 3 })), { x: 0, y: 1.6, z: 0 });
   });
   test('the content shift carried from the Scene (decalageX) moves the place east', () => {
     const a = viewOfPanel(panel(), page), b = viewOfPanel(panel({ lieu: { ...ETOILE, decalageX: 100 } }), page);
@@ -115,4 +122,10 @@ describe('wiring (sources)', () => {
   });
   test('exportPage takes all the Panels for the links, not only the described ones', () =>
     assert.match(dr, /liensDesCases\(page, panelsInPage\(page\)/));
+  test('the link goes under its Panel\'s description; its own block only when the descriptions are off', () => {
+    assert.match(dr, /const lienLines = l \? replierLigne/);
+    assert.match(dr, /block\.lienLines\.forEach/);
+    assert.match(dr, /const lienBlocs = \(panels\.length \? \[\] : liens\)\.map/);
+  });
+  test('in the PDF, the printed link is clickable too', () => assert.match(dr, /\.concat\(zonesDesLiens\)/));
 });
